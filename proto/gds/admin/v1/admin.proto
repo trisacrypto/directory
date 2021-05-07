@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package trisads.admin.v1;
-option go_package = "github.com/trisacrypto/directory/pkg/trisads/admin/v1;admin";
+package gds.admin.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/gds/admin/v1;admin";
 
-import "trisads/api/v1beta1/api.proto";
-import "trisads/models/v1beta1/models.proto";
+import "trisa/gds/api/v1beta1/api.proto";
+import "trisa/gds/models/v1beta1/models.proto";
 
 // An administrative service that is implemented side-by-side with most directory
 // services to review registration requests and perform remote certificate management.
@@ -34,9 +34,9 @@ message ReviewRequest {
 
 message ReviewReply {
     // If no error is specified, the verify email request was successful
-    trisads.api.v1beta1.Error error = 1;
+    trisa.gds.api.v1beta1.Error error = 1;
 
     // The verification status of the VASP entity.
-    trisads.models.v1beta1.VerificationState status = 2;
+    trisa.gds.models.v1beta1.VerificationState status = 2;
     string message = 3;
 }
