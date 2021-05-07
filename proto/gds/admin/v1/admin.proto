@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package trisads.admin.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/trisads/admin/v1;admin";
+
+import "trisads/api/v1beta1/api.proto";
+import "trisads/models/v1beta1/models.proto";
+
+// An administrative service that is implemented side-by-side with most directory
+// services to review registration requests and perform remote certificate management.
+// Because this endpoint necessarily must be authenticated, it is deliberately
+// lightweight for the MVP implementation.
+service DirectoryAdministration {
+    rpc Review(ReviewRequest) returns (ReviewReply) {}
+}
+
+// Registration review requests are sent via email to the TRISA admin email address with
+// a lightweight token for review. This endpoint allows administrators to submit a review
+// determination back to the directory server.
+message ReviewRequest {
+    // The ID of the VASP to perform the review for.
+    string id = 1;
+
+    // The verification token sent in the review email.
+    // This token provides lightweight authentication but should be replaced with a more
+    // robust authentication and authorization scheme.
+    string admin_verification_token = 2;
+
+    // If accept is false then the request will be rejected and a reject reason must be
+    // specified. If it is true, then the certificate issuance process will begin.
+    bool accept = 3;
+    string reject_reason = 4;
+}
+
+message ReviewReply {
+    // If no error is specified, the verify email request was successful
+    trisads.api.v1beta1.Error error = 1;
+
+    // The verification status of the VASP entity.
+    trisads.models.v1beta1.VerificationState status = 2;
+    string message = 3;
+}
