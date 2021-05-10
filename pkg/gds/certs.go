@@ -390,7 +390,7 @@ func (s *Server) getCertStorage() (path string, err error) {
 			if os.IsNotExist(err) {
 				// Create the directory if it does not exist and return
 				if err = os.MkdirAll(path, 0755); err != nil {
-					return "", err
+					return "", fmt.Errorf("could not create cert storage directory: %s", err)
 				}
 				return s.conf.CertManStorage, nil
 			}
