@@ -2,8 +2,8 @@
   "name": "gds-ui",
   "version": "0.1.0",
   "private": true,
-  "description": "GDS web user interface",
-  "author": "Benjamin Bengfort",
+  "description": "User interface for TRISA's global directory service",
+  "author": "TRISA & Rotational Labs",
   "license": "MIT",
   "repository": {
     "type": "git",
