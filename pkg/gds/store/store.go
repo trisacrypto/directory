@@ -66,3 +66,9 @@ type CertificateStore interface {
 type Indexer interface {
 	Reindex() error
 }
+
+// Backup means that the Store can be backed up to a compressed location on disk,
+// optionally with encryption if its required.
+type Backup interface {
+	Backup(string) error
+}

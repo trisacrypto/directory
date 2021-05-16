@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
@@ -28,8 +29,10 @@ var (
 )
 
 func main() {
-	app := cli.NewApp()
+	// Load the dotenv file if it exists
+	godotenv.Load()
 
+	app := cli.NewApp()
 	app.Name = "gds"
 	app.Version = pkg.Version()
 	app.Usage = "the global directory service for TRISA"
@@ -55,7 +58,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "a, addr",
 					Usage:  "the address and port to bind the server on",
-					EnvVar: "TRISADS_BIND_ADDR",
+					EnvVar: "GDS_BIND_ADDR",
 				},
 			},
 		},
@@ -69,7 +72,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 			},
 		},

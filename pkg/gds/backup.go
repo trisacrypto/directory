@@ -1,6 +1,16 @@
 package gds
 
-import "github.com/rs/zerolog/log"
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/store"
+)
 
 // BackupManager is a go routine that periodically copies the directory storage to a
 // compressed backup location, either locally on disk or to a cloud location. The
@@ -15,7 +25,87 @@ func (s *Server) BackupManager() {
 		return
 	}
 
-	log.Info().Dur("interval", s.conf.Backup.Interval).Str("store", s.conf.Backup.Storage).Msg("backup manager started")
+	// Test that the store is backupable
+	if _, ok := s.db.(store.Backup); !ok {
+		log.Fatal().Msg("currently configured store cannot be backed up")
+	}
+
+	// Check backup directory
+	backupDir, err := s.getBackupStorage()
+	if err != nil {
+		log.Fatal().Err(err).Msg("backup manager cannot access backup directory")
+	}
+
+	ticker := time.NewTicker(s.conf.Backup.Interval)
+	log.Info().Dur("interval", s.conf.Backup.Interval).Str("store", backupDir).Msg("backup manager started")
+
+	for {
+		// Wait for next tick
+		<-ticker.C
+
+		// Begin the backup process
+		start := time.Now()
+		log.Debug().Msg("starting backup")
+
+		// Conduct the backup, logging errors if needed
+		if err := s.db.(store.Backup).Backup(backupDir); err != nil {
+			log.Error().Err(err).Msg("could not backup database")
+		} else {
+			log.Info().Dur("duration", time.Since(start)).Msg("backup complete")
+		}
+
+		// Remove any previous backups that may be in the directory
+		// NOTE: this requires the backup to write filenames as gdsdb-200601021504.*
+		var archives []string
+		if archives, err = listArchives(backupDir); err != nil {
+			log.Error().Err(err).Msg("could not list backup directory")
+		} else {
+			if len(archives) > s.conf.Backup.Keep {
+				var removed int
+				for _, archive := range archives[:len(archives)-s.conf.Backup.Keep] {
+					log.Debug().Str("archive", archive).Msg("deleting archive")
+					if err = os.Remove(archive); err == nil {
+						removed++
+					}
+				}
+				log.Debug().Int("kept", s.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
+			}
+		}
+	}
 }
 
-// get the configured backup directory storage
+// get the configured backup directory storage or return an error
+func (s *Server) getBackupStorage() (path string, err error) {
+	if s.conf.Backup.Storage == "" {
+		return "", errors.New("incorrectly configured: backups enabled but no backup storage")
+	}
+
+	var stat os.FileInfo
+	path = s.conf.Backup.Storage
+	if stat, err = os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// Create the directory if it does not exist
+			if err = os.MkdirAll(path, 0755); err != nil {
+				return "", fmt.Errorf("could not create backup storage directory: %s", err)
+			}
+			return path, nil
+		}
+		return "", err
+	}
+
+	if !stat.IsDir() {
+		return "", errors.New("incorrectly configured: backup storage is not a directory")
+	}
+	return path, nil
+}
+
+// list all backup archives ordered by date descending
+func listArchives(path string) (paths []string, err error) {
+	if paths, err = filepath.Glob(filepath.Join(path, "gdsdb-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].*")); err != nil {
+		return nil, err
+	}
+
+	// Sort the paths by timestamp ascending
+	sort.Strings(paths)
+	return paths, nil
+}

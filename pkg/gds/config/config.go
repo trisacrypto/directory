@@ -40,6 +40,7 @@ type BackupConfig struct {
 	Enabled  bool          `split_words:"true" default:"false"`
 	Interval time.Duration `split_words:"true" default:"24h"`
 	Storage  string        `split_words:"true" required:"false"`
+	Keep     int           `split_words:"true" default:"1"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
