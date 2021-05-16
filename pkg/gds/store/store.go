@@ -4,29 +4,27 @@ Package store provides an interface to database storage for the TRISA directory 
 package store
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
+	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // Open a directory storage provider with the specified URI. Database URLs should either
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
-// protocol:/path/to/file for embedded databases.
-func Open(uri string) (Store, error) {
-	dsn, err := url.Parse(uri)
-	if err != nil {
+// protocol://path/to/file for embedded databases.
+func Open(uri string) (_ Store, err error) {
+	var dsn *DSN
+	if dsn, err = ParseDSN(uri); err != nil {
 		return nil, err
-	}
-
-	// If no scheme is specified, default to leveldb expecting a path
-	if dsn.Scheme == "" && dsn.Path != "" {
-		return OpenLevelDB(uri)
 	}
 
 	switch dsn.Scheme {
 	case "leveldb":
-		return OpenLevelDB(uri)
+		return leveldb.Open(dsn.Path)
 	default:
 		return nil, fmt.Errorf("unhandled database scheme %q", dsn.Scheme)
 	}
@@ -71,4 +69,27 @@ type Indexer interface {
 // optionally with encryption if its required.
 type Backup interface {
 	Backup(string) error
+}
+
+// DSN represents the parsed components of an embedded database service.
+type DSN struct {
+	Scheme string
+	Path   string
+}
+
+// DSN Parsing and Handling
+func ParseDSN(uri string) (_ *DSN, err error) {
+	dsn, err := url.Parse(uri)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse dsn: %s", err)
+	}
+
+	if dsn.Scheme == "" || dsn.Path == "" {
+		return nil, errors.New("could not parse dsn, specify scheme:///relative/path/to/db")
+	}
+
+	return &DSN{
+		Scheme: dsn.Scheme,
+		Path:   strings.TrimPrefix(dsn.Path, "/"),
+	}, nil
 }

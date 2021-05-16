@@ -1,4 +1,4 @@
-package store
+package leveldb
 
 import (
 	"testing"
@@ -52,7 +52,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, val, id1)
 
-	val, ok = names.find("BaZ", normalize)
+	_, ok = names.find("BaZ", normalize)
 	require.False(t, ok)
 
 	// Create some duplicate values
