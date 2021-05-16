@@ -1,4 +1,4 @@
-package trisads
+package gds
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -27,10 +28,10 @@ func init() {
 
 // New creates a TRISA Directory Service with the specified configuration and prepares
 // it to listen for and serve GRPC requests.
-func New(conf *Settings) (s *Server, err error) {
+func New(conf config.Config) (s *Server, err error) {
 	// Load the default configuration from the environment
-	if conf == nil {
-		if conf, err = Config(); err != nil {
+	if conf.IsZero() {
+		if conf, err = config.New(); err != nil {
 			return nil, err
 		}
 	}
@@ -40,12 +41,12 @@ func New(conf *Settings) (s *Server, err error) {
 
 	// Create the server and open the connection to the database
 	s = &Server{conf: conf, echan: make(chan error, 1)}
-	if s.db, err = store.Open(conf.DatabaseDSN); err != nil {
+	if s.db, err = store.Open(conf.DatabaseURL); err != nil {
 		return nil, err
 	}
 
 	// Create the Sectigo API client
-	if s.certs, err = sectigo.New(conf.SectigoUsername, conf.SectigoPassword); err != nil {
+	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password); err != nil {
 		return nil, err
 	}
 
@@ -67,7 +68,7 @@ type Server struct {
 	admin.UnimplementedDirectoryAdministrationServer
 	db    store.Store
 	srv   *grpc.Server
-	conf  *Settings
+	conf  config.Config
 	certs *sectigo.Sectigo
 	email *sendgrid.Client
 	echan chan error
@@ -90,6 +91,9 @@ func (s *Server) Serve() (err error) {
 
 	// Start the certificate manager go routine process
 	go s.CertManager()
+
+	// Start the backup manager go routine process
+	go s.BackupManager()
 
 	// Listen for TCP requests on the specified address and port
 	var sock net.Listener

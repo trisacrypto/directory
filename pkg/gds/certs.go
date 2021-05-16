@@ -1,4 +1,4 @@
-package trisads
+package gds
 
 import (
 	"bytes"
@@ -39,8 +39,8 @@ func (s *Server) CertManager() {
 
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
-	ticker := time.NewTicker(s.conf.CertManInterval)
-	log.Info().Dur("interval", s.conf.CertManInterval).Msg("cert-manager process started")
+	ticker := time.NewTicker(s.conf.CertMan.Interval)
+	log.Info().Dur("interval", s.conf.CertMan.Interval).Msg("cert-manager process started")
 
 	for {
 		// Wait for next tick
@@ -384,15 +384,15 @@ func extractCertificate(path, pkcs12password string) (pub *pb.Certificate, err e
 
 // get the configured cert storage directory or return a temporary directory/
 func (s *Server) getCertStorage() (path string, err error) {
-	if s.conf.CertManStorage != "" {
+	if s.conf.CertMan.Storage != "" {
 		var stat os.FileInfo
-		if stat, err = os.Stat(s.conf.CertManStorage); err != nil {
+		if stat, err = os.Stat(s.conf.CertMan.Storage); err != nil {
 			if os.IsNotExist(err) {
 				// Create the directory if it does not exist and return
 				if err = os.MkdirAll(path, 0755); err != nil {
 					return "", fmt.Errorf("could not create cert storage directory: %s", err)
 				}
-				return s.conf.CertManStorage, nil
+				return s.conf.CertMan.Storage, nil
 			}
 
 			// Other permissions error, cannot access cert storage
@@ -402,11 +402,11 @@ func (s *Server) getCertStorage() (path string, err error) {
 		if !stat.IsDir() {
 			return "", errors.New("not a directory")
 		}
-		return s.conf.CertManStorage, nil
+		return s.conf.CertMan.Storage, nil
 	}
 
 	// Create a temporary directory
-	if path, err = ioutil.TempDir("", "trisads_certs"); err != nil {
+	if path, err = ioutil.TempDir("", "gds_certs"); err != nil {
 		return "", err
 	}
 	log.Warn().Str("certs", path).Msg("using a temporary directory for cert downloads")
