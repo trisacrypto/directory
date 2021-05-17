@@ -10,12 +10,14 @@ import (
 	"strings"
 
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // Open a directory storage provider with the specified URI. Database URLs should either
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
-// protocol://path/to/file for embedded databases.
+// protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
+// protocol:////absolute/path/to/file).
 func Open(uri string) (_ Store, err error) {
 	var dsn *DSN
 	if dsn, err = ParseDSN(uri); err != nil {
@@ -25,6 +27,8 @@ func Open(uri string) (_ Store, err error) {
 	switch dsn.Scheme {
 	case "leveldb":
 		return leveldb.Open(dsn.Path)
+	case "sqlite", "sqlite3":
+		return sqlite.Open(dsn.Path)
 	default:
 		return nil, fmt.Errorf("unhandled database scheme %q", dsn.Scheme)
 	}

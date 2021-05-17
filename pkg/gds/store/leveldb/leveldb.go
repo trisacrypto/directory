@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,13 +22,8 @@ import (
 )
 
 // Open LevelDB directory Store at the specified path.
-func Open(uri string) (*Store, error) {
-	dsn, err := url.Parse(uri)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse leveldb uri: %s", err)
-	}
-
-	db, err := leveldb.OpenFile(dsn.Path, nil)
+func Open(path string) (*Store, error) {
+	db, err := leveldb.OpenFile(path, nil)
 	if err != nil {
 		return nil, err
 	}
