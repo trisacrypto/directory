@@ -1,12 +1,14 @@
 package sqlite
 
 import (
+	"errors"
+
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // Open SQLite directory Store at the specified path.
 func Open(path string) (*Store, error) {
-	return &Store{}, nil
+	return &Store{}, errors.New("sqlite3 store is not implemented yet")
 }
 
 type Store struct{}
