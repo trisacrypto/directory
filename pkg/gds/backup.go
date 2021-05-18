@@ -39,6 +39,7 @@ func (s *Server) BackupManager() {
 	ticker := time.NewTicker(s.conf.Backup.Interval)
 	log.Info().Dur("interval", s.conf.Backup.Interval).Str("store", backupDir).Msg("backup manager started")
 
+backups:
 	for {
 		// Wait for next tick
 		<-ticker.C
@@ -49,7 +50,10 @@ func (s *Server) BackupManager() {
 
 		// Conduct the backup, logging errors if needed
 		if err := s.db.(store.Backup).Backup(backupDir); err != nil {
+			// Do not continue if there was a backup error; all code in the rest of the
+			// loop should expect that the backup was successful.
 			log.Error().Err(err).Msg("could not backup database")
+			continue backups
 		} else {
 			log.Info().Dur("duration", time.Since(start)).Msg("backup complete")
 		}
@@ -99,7 +103,8 @@ func (s *Server) getBackupStorage() (path string, err error) {
 	return path, nil
 }
 
-// list all backup archives ordered by date descending
+// list all backup archives ordered by date ascending using string sorting that depends
+// on the backup archive format gdsdb-YYYYmmddHHMM.
 func listArchives(path string) (paths []string, err error) {
 	if paths, err = filepath.Glob(filepath.Join(path, "gdsdb-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].*")); err != nil {
 		return nil, err
