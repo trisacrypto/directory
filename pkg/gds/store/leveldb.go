@@ -1,9 +1,15 @@
 package store
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -492,6 +499,126 @@ func (s *ldbStore) Reindex() (err error) {
 		Int("countries", len(s.countries)).
 		Int("categories", len(s.categories)).
 		Msg("reindex complete")
+	return nil
+}
+
+//===========================================================================
+// Backup
+//===========================================================================
+
+// Backup copies the leveldb database to a new directory and archives it as gzip tar.
+// See: https://github.com/wbolster/plyvel/issues/46
+func (s *ldbStore) Backup(path string) (err error) {
+	// Create the directory for the copied leveldb database
+	archive := filepath.Join(path, time.Now().UTC().Format("gdsdb-200601021504"))
+	if err = os.Mkdir(archive, 0744); err != nil {
+		return fmt.Errorf("could not create archive directory: %s", err)
+	}
+
+	// Ensure the archive directory is cleaned up when the backup is complete
+	defer func() {
+		os.RemoveAll(archive)
+	}()
+
+	// Open a second leveldb database at the backup location
+	arcdb, err := leveldb.OpenFile(archive, nil)
+	if err != nil {
+		return fmt.Errorf("could not open archive database: %s", err)
+	}
+
+	// Create a new batch write to the archive database, writing every 100 records as
+	// we iterate over all of the data in the store database.
+	var nrows, narchived uint64
+	batch := new(leveldb.Batch)
+	iter := s.db.NewIterator(nil, nil)
+	for iter.Next() {
+		nrows++
+		batch.Put(iter.Key(), iter.Value())
+
+		if nrows%100 == 0 {
+			if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+				return fmt.Errorf("could not write next 100 rows after %d rows: %s", narchived, err)
+			}
+			batch.Reset()
+			narchived += 100
+		}
+	}
+
+	// Release the iterator and check for errors, just in case we didn't write anything
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return fmt.Errorf("could not iterate over gds store: %s", err)
+	}
+
+	// Write final rows to the database
+	if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+		return fmt.Errorf("could not write final %d rows after %d rows: %s", nrows-narchived, narchived, err)
+	}
+	batch.Reset()
+	narchived += (nrows - narchived)
+	log.Info().Uint64("records", narchived).Msg("leveldb archive complete")
+
+	// Close the archive database
+	if err = arcdb.Close(); err != nil {
+		return fmt.Errorf("could not close archive database: %s", err)
+	}
+
+	// Create the compressed tar archive with tar and gzip
+	out, err := os.OpenFile(archive+".tgz", os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return fmt.Errorf("could not create archive file: %s", err)
+	}
+
+	// Create write chains: gzip writes to disk, tar writes to gzip
+	gz := gzip.NewWriter(out)
+	tw := tar.NewWriter(gz)
+
+	// Walk the archive directory, removing the prefix
+	prefix := filepath.Dir(archive) + "/"
+	err = filepath.Walk(archive, func(file string, fi os.FileInfo, _ error) error {
+		// Generate tar header
+		header, err := tar.FileInfoHeader(fi, file)
+		if err != nil {
+			return err
+		}
+
+		// Provide real name without directory prefix (so that archive is self-contained)
+		// See: https://golang.org/src/archive/tar/common.go?#L626
+		header.Name = filepath.ToSlash(strings.TrimPrefix(file, prefix))
+
+		// Write header
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// If not a directory, write the file content
+		if !fi.IsDir() {
+			data, err := os.Open(file)
+			if err != nil {
+				return err
+			}
+
+			if _, err := io.Copy(tw, data); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("could not walk and tar archive directory: %s", err)
+	}
+
+	// Produce the tar
+	if err = tw.Close(); err != nil {
+		return fmt.Errorf("could not create tar: %s", err)
+	}
+
+	// Produce the gzip
+	if err = gz.Close(); err != nil {
+		return fmt.Errorf("could not create gzip tar: %s", err)
+	}
+
 	return nil
 }
 

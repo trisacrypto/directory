@@ -18,9 +18,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	rvasp "github.com/trisacrypto/testnet/pkg/rvasp/pb/v1"
@@ -33,14 +33,18 @@ import (
 	"github.com/trisacrypto/trisa/pkg/trust"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 func main() {
+	// Load the dotenv file if it exists
+	godotenv.Load()
+
 	app := cli.NewApp()
 	app.Name = "debug"
-	app.Version = "alpha"
-	app.Usage = "debugging utilities for the TRISA TestNet"
+	app.Version = "beta"
+	app.Usage = "debugging utilities for the TRISA directory service"
 	app.Commands = []cli.Command{
 		{
 			Name:     "store:keys",
@@ -51,7 +55,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 				cli.BoolFlag{
 					Name:  "s, stringify",
@@ -73,7 +77,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 				cli.BoolFlag{
 					Name:  "b, b64decode",
@@ -90,7 +94,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 				cli.BoolFlag{
 					Name:  "b, b64decode",
@@ -120,7 +124,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 				cli.BoolFlag{
 					Name:  "b, b64decode",
@@ -138,7 +142,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "k, key",
 					Usage:  "secret key to decrypt the cipher text",
-					EnvVar: "TRISADS_SECRET_KEY",
+					EnvVar: "GDS_SECRET_KEY",
 				},
 			},
 		},
@@ -720,13 +724,13 @@ func transfer(c *cli.Context) (err error) {
 
 	data = new(transferData)
 	if transactionPath := c.String("transaction"); transactionPath != "" {
-		var f *os.File
-		if f, err = os.Open(transactionPath); err != nil {
+		var f []byte
+		if f, err = ioutil.ReadFile(transactionPath); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
 		var t rvasp.Transaction
-		if err = jsonpb.Unmarshal(f, &t); err != nil {
+		if err = protojson.Unmarshal(f, &t); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
@@ -737,13 +741,13 @@ func transfer(c *cli.Context) (err error) {
 	}
 
 	if identityPath := c.String("identity"); identityPath != "" {
-		var f *os.File
-		if f, err = os.Open(identityPath); err != nil {
+		var f []byte
+		if f, err = ioutil.ReadFile(identityPath); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
 		var t ivms101.IdentityPayload
-		if err = jsonpb.Unmarshal(f, &t); err != nil {
+		if err = protojson.Unmarshal(f, &t); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 

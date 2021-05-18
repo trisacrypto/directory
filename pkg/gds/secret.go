@@ -1,4 +1,4 @@
-package trisads
+package gds
 
 import (
 	"bytes"

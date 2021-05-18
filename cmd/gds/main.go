@@ -10,9 +10,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
-	trisads "github.com/trisacrypto/directory/pkg/gds"
+	"github.com/trisacrypto/directory/pkg/gds"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -27,11 +29,13 @@ var (
 )
 
 func main() {
-	app := cli.NewApp()
+	// Load the dotenv file if it exists
+	godotenv.Load()
 
-	app.Name = "trisads"
+	app := cli.NewApp()
+	app.Name = "gds"
 	app.Version = pkg.Version()
-	app.Usage = "a gRPC based directory service for TRISA identity lookups"
+	app.Usage = "the global directory service for TRISA"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "e, endpoint",
@@ -54,7 +58,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "a, addr",
 					Usage:  "the address and port to bind the server on",
-					EnvVar: "TRISADS_BIND_ADDR",
+					EnvVar: "GDS_BIND_ADDR",
 				},
 			},
 		},
@@ -68,7 +72,7 @@ func main() {
 				cli.StringFlag{
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "TRISADS_DATABASE",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 			},
 		},
@@ -205,8 +209,8 @@ func main() {
 
 // Serve the TRISA directory service
 func serve(c *cli.Context) (err error) {
-	var conf *trisads.Settings
-	if conf, err = trisads.Config(); err != nil {
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
@@ -214,8 +218,8 @@ func serve(c *cli.Context) (err error) {
 		conf.BindAddr = addr
 	}
 
-	var srv *trisads.Server
-	if srv, err = trisads.New(conf); err != nil {
+	var srv *gds.Server
+	if srv, err = gds.New(conf); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

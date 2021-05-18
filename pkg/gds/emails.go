@@ -1,4 +1,4 @@
-package trisads
+package gds
 
 import (
 	"encoding/base64"
@@ -254,7 +254,7 @@ VerifyEmail RPC in the TRISA directory service protocol:
 ID: {{ .VID }}
 Token: {{ .Token }}
 
-This can be done with the trisads CLI utility or using the protocol buffers library in
+This can be done with the gds CLI utility or using the protocol buffers library in
 the programming language of your choice.
 
 Note that we're working to create a URL endpoint for the vaspdirectory.net site to
@@ -277,7 +277,7 @@ VerifyEmail RPC in the TRISA directory service protocol:</p>
 	<li>Token: <strong>{{ .Token }}</strong></li>
 </ul>
 
-<p>This can be done with the trisads CLI utility or using the protocol buffers library in
+<p>This can be done with the gds CLI utility or using the protocol buffers library in
 the programming language of your choice.</p>
 
 <p>Note that we're working to create a URL endpoint for the
@@ -307,7 +307,7 @@ certificate that will be generated if you approve this request. The request JSON
 {{ .Request }}
 
 To verify or reject the registration request, use the following metadata with the
-trisads verify command:
+gds verify command:
 
 ID: {{ .VID }}
 Token: {{ .Token }}
@@ -330,7 +330,7 @@ a certificate that will be generated if you approve this request. The request JS
 <pre>{{ .Request }}</pre>
 
 <p>To verify or reject the registration request, use the following metadata with the
-<code>trisads verify</code> command:</p>
+<code>gds verify</code> command:</p>
 
 <ul>
 	<li>ID: <strong>{{ .VID }}</strong></li>
