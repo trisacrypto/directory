@@ -41,7 +41,7 @@ class Registration extends React.Component {
         must_comply_travel_rule: false,
         applicable_regulations: ["FATF Recommendation 16"],
         compliance_threshold: 0.0,
-        compliance_threshold_currency: "",
+        compliance_threshold_currency: "USD",
         must_safeguard_pii: false,
         safegaurds_pii: false,
       }
@@ -71,6 +71,8 @@ class Registration extends React.Component {
   }
 
   render() {
+    const summaryFormData = JSON.stringify(this.state.formData, null, "  ");
+
     return (
       <Form noValidate validated={this.state.validated} onSubmit={this.handleSubmit}>
         <Tab.Container id="registration-form" activeKey={this.state.tabKey} onSelect={(k) => this.setState({tabKey: k})}>
@@ -246,6 +248,7 @@ class Registration extends React.Component {
                 <Tab.Pane eventKey="summary">
                   <fieldset>
                     <legend>Summary</legend>
+                    <p><pre>{summaryFormData}</pre></p>
                     <Form.Group>
                       <Button type="reset" disabled variant="secondary">Reset</Button>{' '}
                       <Button type="submit">Download</Button>
