@@ -10,14 +10,8 @@ class GDS {
     this.client = new api.TRISADirectoryClient(endpoint);
   }
 
-  verificationStatus = (num) => {
-    for (const key in models.VerificationState) {
-      if (num === models.VerificationState[key]) {
-        return key;
-      }
-    };
-  }
-
+  // Utilize the Lookup RPC to query for a single VASP record either by UUID or by
+  // common name depending on the inputType.
   lookup = (query, inputType) => {
     const req = new api.LookupRequest();
     switch (inputType) {
@@ -33,18 +27,18 @@ class GDS {
     }
 
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       self.client.lookup(req, {}, (err, rep) => {
         if (err || !rep) {
-          console.log(err);
-          resolve(undefined);
+          reject(err);
+        } else {
+          resolve(rep.toObject());
         }
-        resolve(rep.toObject());
       });
     });
   }
 
-  getStatus = (commonName) => {
+  status = (commonName) => {
     const req = new api.StatusRequest();
     req.setCommonName(commonName);
     this.client.status(req, {}, (err, rep) => {
@@ -56,6 +50,14 @@ class GDS {
       console.log(rep.toObject());
     });
   };
+
+  verificationStatus = (num) => {
+    for (const key in models.VerificationState) {
+      if (num === models.VerificationState[key]) {
+        return key;
+      }
+    };
+  }
 
 }
 
