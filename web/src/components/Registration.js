@@ -27,7 +27,8 @@ class Registration extends React.Component {
       trisa_endpoint: "",
       common_name: "",
       website: "",
-      business_category: "",
+      business_category: 0,
+      vasp_category: [],
       established_on: "",
       trixo: {
         primary_national_jurisdiction: "",
@@ -68,6 +69,11 @@ class Registration extends React.Component {
     // Create an immutable copy of the data first to avoid changes by reference.
     const formData = update(this.state.formData, changes);
     this.setState({formData: formData})
+  }
+
+  createFlatChangeHandler = (field, ...parents) => (event) => {
+    const onChange = this.createChangeHandler(field, ...parents);
+    onChange(null, event.target.value);
   }
 
   render() {
@@ -122,7 +128,78 @@ class Registration extends React.Component {
                 <Tab.Pane eventKey="entity-details">
                   <fieldset>
                     <legend>Entity Details</legend>
-                    <p></p>
+                    <p>
+                      To get started, please tell us a bit about your organization. In addition to
+                      some basic organizational details, we'll collect IVMS 101 LegalPerson data,
+                      which is required KYC information for TRISA compliance information transfers.
+                    </p>
+                    <fieldset>
+                      <legend className="sublegend">Basic Details</legend>
+                      <Form.Group>
+                        <Form.Label>Website</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={this.state.formData.website}
+                          onChange={this.createFlatChangeHandler("website")}
+                        />
+                      </Form.Group>
+                      <Form.Group>
+                        <Form.Label>Date of Incorporation/Establishment</Form.Label>
+                        <Form.Control
+                          type="date"
+                          value={this.state.formData.established_on}
+                          onChange={this.createFlatChangeHandler("established_on")}
+                        />
+                      </Form.Group>
+                      <Form.Group>
+                        <Form.Label>Business Category</Form.Label>
+                        <Form.Control
+                          as="select" custom
+                          value={this.state.formData.business_category}
+                          onChange={this.createFlatChangeHandler("business_category")}
+                        >
+                          <option value={0}></option>
+                          <option value={1}>Private Organization</option>
+                          <option value={2}>Government Entity</option>
+                          <option value={3}>Business Entity</option>
+                          <option value={4}>Non-Commercial Entity</option>
+                        </Form.Control>
+                        <Form.Text className="text-muted">
+                        </Form.Text>
+                      </Form.Group>
+                      <Form.Group>
+                        <Form.Label>VASP Category</Form.Label>
+                        <Form.Control
+                          as="select" custom multiple
+                          value={this.state.formData.vasp_category}
+                          onChange={this.createFlatChangeHandler("vasp_category")}
+                        >
+                          <option value={1}>Exchange</option>
+                          <option value={2}>DEX</option>
+                          <option value={3}>P2P Vendor</option>
+                          <option value={4}>P2P Exchange</option>
+                          <option value={5}>Custodial Wallet/Custody Provider</option>
+                          <option value={6}>Non-Custodial Wallet</option>
+                          <option value={7}>Mixer</option>
+                          <option value={8}>Crypto ATM Provider</option>
+                          <option value={9}>Crypto ATM Services</option>
+                          <option value={10}>Crypto ATM Technology Provider</option>
+                          <option value={11}>Crypto ATM Operator</option>
+                          <option value={12}>OTC Desk</option>
+                          <option value={13}>Payment Processor</option>
+                          <option value={14}>P2P Payment Service</option>
+                          <option value={15}>Crypto Hedge Fund</option>
+                          <option value={16}>Blockchain (DLT) Project</option>
+                          <option value={17}>Family Office</option>
+                          <option value={18}>Gambling</option>
+                        </Form.Control>
+                        <Form.Text className="text-muted">
+                        </Form.Text>
+                      </Form.Group>
+                    </fieldset>
+                    <fieldset>
+                      <legend className="sublegend">Legal Person</legend>
+                    </fieldset>
                     <Form.Group>
                       <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}>Back</Button>{' '}
                       <Button variant="primary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Next</Button>
@@ -132,7 +209,35 @@ class Registration extends React.Component {
                 <Tab.Pane eventKey="trisa-implementation">
                   <fieldset>
                     <legend>TRISA Implementation</legend>
-                    <p></p>
+                    <p>
+                      Each VASP is required to establish a TRISA endpoint for inter-VASP
+                      communication. Please specify the details of your endpoint for
+                      certificate issuance.
+                    </p>
+                    <Form.Group>
+                      <Form.Label>TRISA Endpoint</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.formData.trisa_endpoint}
+                        onChange={this.createFlatChangeHandler("trisa_endpoint")}
+                        placeholder="trisa.example.com:443"
+                      />
+                      <Form.Text className="text-muted">
+                        The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+                      </Form.Text>
+                    </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Certificate Common Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.formData.common_name}
+                        onChange={this.createFlatChangeHandler("common_name")}
+                        placeholder="trisa.example.com"
+                      />
+                      <Form.Text className="text-muted">
+                        The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+                      </Form.Text>
+                    </Form.Group>
                     <Form.Group>
                       <Button variant="secondary" onClick={(e) => this.setState({tabKey:"entity-details"})}>Back</Button>{' '}
                       <Button variant="primary" onClick={(e) => this.setState({tabKey:"contacts"})}>Next</Button>
