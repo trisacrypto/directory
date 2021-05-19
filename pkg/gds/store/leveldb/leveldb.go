@@ -1,4 +1,4 @@
-package store
+package leveldb
 
 import (
 	"archive/tar"
@@ -6,35 +6,29 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
-// OpenLevelDB directory Store at the specified path. This is the default storage provider.
-func OpenLevelDB(uri string) (Store, error) {
-	dsn, err := url.Parse(uri)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse leveldb uri: %s", err)
-	}
-
-	db, err := leveldb.OpenFile(dsn.Path, nil)
+// Open LevelDB directory Store at the specified path.
+func Open(path string) (*Store, error) {
+	db, err := leveldb.OpenFile(path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	store := &ldbStore{db: db}
+	store := &Store{db: db}
 	if err = store.sync(); err != nil {
 		return nil, err
 	}
@@ -72,8 +66,9 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
-// Implements Store for some basic LevelDB operations and simple protocol buffer storage.
-type ldbStore struct {
+// Store implements store.Store for some basic LevelDB operations and simple protocol
+// buffer storage in a key/value database.
+type Store struct {
 	sync.RWMutex
 	db         *leveldb.DB
 	pkseq      sequence       // autoincrement sequence for ID values
@@ -89,7 +84,7 @@ type ldbStore struct {
 
 // Close the database, allowing no further interactions. This method also synchronizes
 // the indices to ensure that they are saved between sessions.
-func (s *ldbStore) Close() error {
+func (s *Store) Close() error {
 	defer s.db.Close()
 	if err := s.sync(); err != nil {
 		return err
@@ -103,7 +98,7 @@ func (s *ldbStore) Close() error {
 
 // Create a VASP into the directory. This method requires the VASP to have a unique
 // name and ignores any ID fields that are set on the VASP, instead assigning new IDs.
-func (s *ldbStore) Create(v *pb.VASP) (id string, err error) {
+func (s *Store) Create(v *pb.VASP) (id string, err error) {
 	// Create UUID for record
 	// TODO: check uniqueness of the ID
 	v.Id = uuid.New().String()
@@ -150,7 +145,7 @@ func (s *ldbStore) Create(v *pb.VASP) (id string, err error) {
 }
 
 // Retrieve a VASP record by id; returns an error if the record does not exist.
-func (s *ldbStore) Retrieve(id string) (v *pb.VASP, err error) {
+func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
 	var val []byte
 	key := s.vaspKey(id)
 	if val, err = s.db.Get(key, nil); err != nil {
@@ -170,7 +165,7 @@ func (s *ldbStore) Retrieve(id string) (v *pb.VASP, err error) {
 
 // Update the VASP entry by the VASP ID (required). This method simply overwrites the
 // entire VASP record and does not update individual fields.
-func (s *ldbStore) Update(v *pb.VASP) (err error) {
+func (s *Store) Update(v *pb.VASP) (err error) {
 	if v.Id == "" {
 		return ErrIncompleteRecord
 	}
@@ -220,7 +215,7 @@ func (s *ldbStore) Update(v *pb.VASP) (err error) {
 }
 
 // Destroy a record, removing it completely from the database and indices.
-func (s *ldbStore) Destroy(id string) (err error) {
+func (s *Store) Destroy(id string) (err error) {
 	key := s.vaspKey(id)
 
 	// Lookup the record in order to remove data from indices
@@ -253,7 +248,7 @@ func (s *ldbStore) Destroy(id string) (err error) {
 // VASP by name, a case insensitive search is performed if the query exists in
 // any of the VASP entity names. Alternatively a list of names can be given or a country
 // or list of countries for case-insensitive exact matches.
-func (s *ldbStore) Search(query map[string]interface{}) (vasps []*pb.VASP, err error) {
+func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
 
@@ -335,7 +330,7 @@ func (s *ldbStore) Search(query map[string]interface{}) (vasps []*pb.VASP, err e
 //===========================================================================
 
 // ListCertRequests returns all certificate requests that are currently in the store.
-func (s *ldbStore) ListCertRequests() (reqs []*pb.CertificateRequest, err error) {
+func (s *Store) ListCertRequests() (reqs []*pb.CertificateRequest, err error) {
 	reqs = make([]*pb.CertificateRequest, 0)
 	iter := s.db.NewIterator(util.BytesPrefix(preCertReqs), nil)
 	defer iter.Release()
@@ -355,7 +350,7 @@ func (s *ldbStore) ListCertRequests() (reqs []*pb.CertificateRequest, err error)
 }
 
 // GetCertRequest returns a certificate request by certificate request ID.
-func (s *ldbStore) GetCertRequest(id string) (r *pb.CertificateRequest, err error) {
+func (s *Store) GetCertRequest(id string) (r *pb.CertificateRequest, err error) {
 	if id == "" {
 		return nil, ErrEntityNotFound
 	}
@@ -378,7 +373,7 @@ func (s *ldbStore) GetCertRequest(id string) (r *pb.CertificateRequest, err erro
 
 // SaveCertRequest can create or update a certificate request. The request should be as
 // complete as possible, including an ID generated by the caller.
-func (s *ldbStore) SaveCertRequest(r *pb.CertificateRequest) (err error) {
+func (s *Store) SaveCertRequest(r *pb.CertificateRequest) (err error) {
 	if r.Id == "" {
 		return ErrIncompleteRecord
 	}
@@ -403,7 +398,7 @@ func (s *ldbStore) SaveCertRequest(r *pb.CertificateRequest) (err error) {
 }
 
 // DeleteCertRequest removes a certificate request from the store.
-func (s *ldbStore) DeleteCertRequest(id string) (err error) {
+func (s *Store) DeleteCertRequest(id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
 	key := s.careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
@@ -417,7 +412,7 @@ func (s *ldbStore) DeleteCertRequest(id string) (err error) {
 //===========================================================================
 
 // creates a []byte key from the vasp id using a prefix to act as a leveldb bucket
-func (s *ldbStore) makeKey(prefix []byte, id string) (key []byte) {
+func (s *Store) makeKey(prefix []byte, id string) (key []byte) {
 	buf := []byte(id)
 	key = make([]byte, 0, len(prefix)+len(buf))
 	key = append(key, prefix...)
@@ -426,12 +421,12 @@ func (s *ldbStore) makeKey(prefix []byte, id string) (key []byte) {
 }
 
 // creates a []byte key from the vasp id using a prefix to act as a leveldb bucket
-func (s *ldbStore) vaspKey(id string) (key []byte) {
+func (s *Store) vaspKey(id string) (key []byte) {
 	return s.makeKey(preVASPs, id)
 }
 
 // creates a []byte key from the cert request id using a prefix to act as a leveldb bucket
-func (s *ldbStore) careqKey(id string) (key []byte) {
+func (s *Store) careqKey(id string) (key []byte) {
 	return s.makeKey(preCertReqs, id)
 }
 
@@ -441,7 +436,7 @@ func (s *ldbStore) careqKey(id string) (key []byte) {
 
 // Reindex rebuilds the name and country indices for the server and synchronizes them
 // back to disk to ensure they're complete and accurate.
-func (s *ldbStore) Reindex() (err error) {
+func (s *Store) Reindex() (err error) {
 	names := make(uniqueIndex)
 	websites := make(uniqueIndex)
 	countries := make(containerIndex)
@@ -508,7 +503,7 @@ func (s *ldbStore) Reindex() (err error) {
 
 // Backup copies the leveldb database to a new directory and archives it as gzip tar.
 // See: https://github.com/wbolster/plyvel/issues/46
-func (s *ldbStore) Backup(path string) (err error) {
+func (s *Store) Backup(path string) (err error) {
 	// Create the directory for the copied leveldb database
 	archive := filepath.Join(path, time.Now().UTC().Format("gdsdb-200601021504"))
 	if err = os.Mkdir(archive, 0744); err != nil {
@@ -626,7 +621,7 @@ func (s *ldbStore) Backup(path string) (err error) {
 // Indices and Synchronization
 //===========================================================================
 
-func (s *ldbStore) insertIndices(v *pb.VASP) (err error) {
+func (s *Store) insertIndices(v *pb.VASP) (err error) {
 	s.names.add(v.CommonName, v.Id, normalize)
 	for _, name := range v.Entity.Names() {
 		s.names.add(name, v.Id, normalize)
@@ -641,7 +636,7 @@ func (s *ldbStore) insertIndices(v *pb.VASP) (err error) {
 	return nil
 }
 
-func (s *ldbStore) removeIndices(v *pb.VASP) (err error) {
+func (s *Store) removeIndices(v *pb.VASP) (err error) {
 	s.names.rm(v.CommonName, normalize)
 	for _, name := range v.Entity.Names() {
 		s.names.rm(name, normalize)
@@ -657,7 +652,7 @@ func (s *ldbStore) removeIndices(v *pb.VASP) (err error) {
 }
 
 // sync all indices with the underlying database
-func (s *ldbStore) sync() (err error) {
+func (s *Store) sync() (err error) {
 	if err = s.seqsync(); err != nil {
 		return err
 	}
@@ -688,7 +683,7 @@ func (s *ldbStore) sync() (err error) {
 }
 
 // sync the autoincrement sequence with the leveldb auto sequence key
-func (s *ldbStore) seqsync() (err error) {
+func (s *Store) seqsync() (err error) {
 	var pk sequence
 	var data []byte
 	if data, err = s.db.Get(keyAutoSequence, nil); err != nil {
@@ -728,7 +723,7 @@ func (s *ldbStore) seqsync() (err error) {
 }
 
 // sync the names index with the leveldb names key
-func (s *ldbStore) syncnames() (err error) {
+func (s *Store) syncnames() (err error) {
 	var val []byte
 
 	// Critical section (optimizing for safety rather than speed)
@@ -772,7 +767,7 @@ func (s *ldbStore) syncnames() (err error) {
 }
 
 // sync the websites index with the leveldb websites key
-func (s *ldbStore) syncwebsites() (err error) {
+func (s *Store) syncwebsites() (err error) {
 	var val []byte
 
 	// Critical section (optimizing for safety rather than speed)
@@ -816,7 +811,7 @@ func (s *ldbStore) syncwebsites() (err error) {
 }
 
 // sync the countries index with the leveldb countries key
-func (s *ldbStore) synccountries() (err error) {
+func (s *Store) synccountries() (err error) {
 	var val []byte
 
 	// Critical section (optimizing for safety rather than speed)
@@ -860,7 +855,7 @@ func (s *ldbStore) synccountries() (err error) {
 }
 
 // sync the categories index with the leveldb categories key
-func (s *ldbStore) synccategories() (err error) {
+func (s *Store) synccategories() (err error) {
 	var val []byte
 
 	// Critical section (optimizing for safety rather than speed)
