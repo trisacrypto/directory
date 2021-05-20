@@ -108,7 +108,7 @@ class Registration extends React.Component {
   createMultiselectChangeHandler = (field, ...parents) => {
     const onChange = this.createChangeHandler(field, ...parents);
     return (event) => {
-      const value = Array.from(event.target.selectedOptions, option => parseInt(option.value));
+      const value = Array.from(event.target.selectedOptions, option => option.value);
       onChange(null, value);
     }
   }
@@ -211,24 +211,19 @@ class Registration extends React.Component {
                           value={this.state.formData.vasp_categories}
                           onChange={this.createMultiselectChangeHandler("vasp_categories")}
                         >
-                          <option value={1}>Exchange</option>
-                          <option value={2}>DEX</option>
-                          <option value={3}>P2P Vendor</option>
-                          <option value={4}>P2P Exchange</option>
-                          <option value={5}>Custodial Wallet/Custody Provider</option>
-                          <option value={6}>Non-Custodial Wallet</option>
-                          <option value={7}>Mixer</option>
-                          <option value={8}>Crypto ATM Provider</option>
-                          <option value={9}>Crypto ATM Services</option>
-                          <option value={10}>Crypto ATM Technology Provider</option>
-                          <option value={11}>Crypto ATM Operator</option>
-                          <option value={12}>OTC Desk</option>
-                          <option value={13}>Payment Processor</option>
-                          <option value={14}>P2P Payment Service</option>
-                          <option value={15}>Crypto Hedge Fund</option>
-                          <option value={16}>Blockchain (DLT) Project</option>
-                          <option value={17}>Family Office</option>
-                          <option value={18}>Gambling</option>
+                          <option value="Exchange">Centralized Exchange</option>
+                          <option value="DEX">Decentralized Exchange</option>
+                          <option value="P2P">Person-to-Person Exchange</option>
+                          <option value="Kiosk">Kiosk / Crypto ATM Operator</option>
+                          <option value="Custodian">Custody Provider</option>
+                          <option value="OTC">Over-The-Counter Trading Desk</option>
+                          <option value="Fund">Investment Fund - hedge funds, ETFs, and family offices</option>
+                          <option value="Project">Token Project</option>
+                          <option value="Gambling">Gambling or Gaming Site</option>
+                          <option value="Miner">Mining Pool</option>
+                          <option value="Mixer">Mixing Service</option>
+                          <option value="Individual">Legal person</option>
+                          <option value="Other">Other</option>
                         </Form.Control>
                         <Form.Text className="text-muted">
                           Please select as many categories needed to represent the types of virtual asset services your organization provides.
