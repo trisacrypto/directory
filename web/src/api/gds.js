@@ -1,12 +1,27 @@
 const api = require('./trisa/gds/api/v1beta1/api_grpc_web_pb');
 const models = require('./trisa/gds/models/v1beta1/models_pb');
 
-// TODO: configure to Proxy endpoint of GDS
-const endpoint = "http://localhost:8080"
+const defaultEndpoint = () => {
+  // Use environment configured variable by default
+  if (process.env.REACT_APP_GDS_API_ENDPOINT) {
+    return process.env.REACT_APP_GDS_API_ENDPOINT;
+  }
+
+  // Make an educated guess based on the node environment
+  switch (process.env.NODE_ENV) {
+    case "development":
+      return "http://localhost:8080"
+    case "production":
+      return "https://proxy.vaspdirectory.net"
+    default:
+      throw new Error("could not identify default GDS api endpoint");
+  }
+}
 
 
 class GDS {
   constructor(endpoint) {
+    console.log("accessing GDS API at", endpoint)
     this.client = new api.TRISADirectoryClient(endpoint);
   }
 
@@ -62,4 +77,4 @@ class GDS {
 }
 
 
-export default new GDS(endpoint);
+export default new GDS(defaultEndpoint());

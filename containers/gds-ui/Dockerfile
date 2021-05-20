@@ -1,0 +1,24 @@
+FROM node:15 AS builder
+
+WORKDIR /usr/src/app
+
+# Dependencies
+COPY web/package*.json ./
+RUN npm install
+
+# Set production environment variable for build context
+ENV REACT_APP_GDS_API_ENDPOINT="https://proxy.vaspdirectory.net"
+
+# Build app with browserify
+COPY web/ ./
+RUN npm run build
+
+FROM nginx:stable
+
+LABEL maintainer="TRISA <admin@trisa.io>"
+LABEL description="Global TRISA Directory Service User Interface"
+
+COPY --from=builder /usr/src/app/build/ /usr/share/nginx/html
+
+ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
+CMD [ "nginx", "-g", "daemon off;" ]
