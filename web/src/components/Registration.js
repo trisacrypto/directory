@@ -10,6 +10,7 @@ import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Accordion from 'react-bootstrap/Accordion';
 import update from 'immutability-helper';
+import LegalPerson from './ivms101/LegalPerson';
 
 
 class Registration extends React.Component {
@@ -17,7 +18,26 @@ class Registration extends React.Component {
     tabKey: "introduction",
     validated: false,
     formData: {
-      entity: {},
+      entity: {
+        name: {
+          name_identifiers: [{legal_person_name: "", legal_person_name_identifier_type: 0}],
+          local_name_identifiers: [],
+          phonetic_name_identifiers: [],
+        },
+        geographic_addresses: [{
+          address_type: 1,
+          address_line: ["", "", ""],
+          country: "",
+        }],
+        customer_number: "",
+        national_identification: {
+          national_identifier: "",
+          national_identifier_type: 8,
+          country_of_issue: "",
+          registration_authority: "",
+        },
+        country_of_registration: "",
+      },
       contacts: {
         technical: {name: "", email: "", phone: ""},
         legal: {name: "", email: "", phone: ""},
@@ -28,7 +48,7 @@ class Registration extends React.Component {
       common_name: "",
       website: "",
       business_category: 0,
-      vasp_category: [],
+      vasp_categories: [],
       established_on: "",
       trixo: {
         primary_national_jurisdiction: "",
@@ -71,9 +91,26 @@ class Registration extends React.Component {
     this.setState({formData: formData})
   }
 
-  createFlatChangeHandler = (field, ...parents) => (event) => {
+  createFlatChangeHandler = (field, ...parents) => {
     const onChange = this.createChangeHandler(field, ...parents);
-    onChange(null, event.target.value);
+    return (event) => {
+      onChange(null, event.target.value);
+    }
+  }
+
+  createIntChangeHandler = (field, ...parents) => {
+    const onChange = this.createChangeHandler(field, ...parents);
+    return (event) => {
+      onChange(null, parseInt(event.target.value));
+    }
+  }
+
+  createMultiselectChangeHandler = (field, ...parents) => {
+    const onChange = this.createChangeHandler(field, ...parents);
+    return (event) => {
+      const value = Array.from(event.target.selectedOptions, option => parseInt(option.value));
+      onChange(null, value);
+    }
   }
 
   render() {
@@ -138,7 +175,7 @@ class Registration extends React.Component {
                       <Form.Group>
                         <Form.Label>Website</Form.Label>
                         <Form.Control
-                          type="text"
+                          type="url"
                           value={this.state.formData.website}
                           onChange={this.createFlatChangeHandler("website")}
                         />
@@ -156,7 +193,7 @@ class Registration extends React.Component {
                         <Form.Control
                           as="select" custom
                           value={this.state.formData.business_category}
-                          onChange={this.createFlatChangeHandler("business_category")}
+                          onChange={this.createIntChangeHandler("business_category")}
                         >
                           <option value={0}></option>
                           <option value={1}>Private Organization</option>
@@ -165,14 +202,15 @@ class Registration extends React.Component {
                           <option value={4}>Non-Commercial Entity</option>
                         </Form.Control>
                         <Form.Text className="text-muted">
+                          Please select the entity category that most closely matches your organization.
                         </Form.Text>
                       </Form.Group>
                       <Form.Group>
                         <Form.Label>VASP Category</Form.Label>
                         <Form.Control
                           as="select" custom multiple
-                          value={this.state.formData.vasp_category}
-                          onChange={this.createFlatChangeHandler("vasp_category")}
+                          value={this.state.formData.vasp_categories}
+                          onChange={this.createMultiselectChangeHandler("vasp_categories")}
                         >
                           <option value={1}>Exchange</option>
                           <option value={2}>DEX</option>
@@ -194,11 +232,16 @@ class Registration extends React.Component {
                           <option value={18}>Gambling</option>
                         </Form.Control>
                         <Form.Text className="text-muted">
+                          Please select as many categories needed to represent the types of virtual asset services your organization provides.
                         </Form.Text>
                       </Form.Group>
                     </fieldset>
                     <fieldset>
                       <legend className="sublegend">Legal Person</legend>
+                      <LegalPerson
+                        person={this.state.formData.entity}
+                        onChange={this.createChangeHandler("entity")}
+                      />
                     </fieldset>
                     <Form.Group>
                       <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}>Back</Button>{' '}
@@ -217,7 +260,7 @@ class Registration extends React.Component {
                     <Form.Group>
                       <Form.Label>TRISA Endpoint</Form.Label>
                       <Form.Control
-                        type="text"
+                        type="url"
                         value={this.state.formData.trisa_endpoint}
                         onChange={this.createFlatChangeHandler("trisa_endpoint")}
                         placeholder="trisa.example.com:443"
@@ -353,10 +396,10 @@ class Registration extends React.Component {
                 <Tab.Pane eventKey="summary">
                   <fieldset>
                     <legend>Summary</legend>
-                    <p><pre>{summaryFormData}</pre></p>
+                    <div><pre>{summaryFormData}</pre></div>
                     <Form.Group>
                       <Button type="reset" disabled variant="secondary">Reset</Button>{' '}
-                      <Button type="submit">Download</Button>
+                      <Button type="submit" disabled variant="primary">Download</Button>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>

@@ -29,3 +29,7 @@ body {
 legend.sublegend {
   font-size: 1.3rem;
 }
+
+legend.subsublegend {
+  font-size: 1.1rem;
+}

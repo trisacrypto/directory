@@ -71,7 +71,7 @@ const TRIXO = ({data, onChange}) => {
             variant="danger"
             onClick={createArrayRemoveHandler("other_jurisdictions", idx)}
           >
-            <i class="fa fa-trash"></i>
+            <i className="fa fa-trash"></i>
           </Button>
         </Form.Group>
       </Form.Row>
@@ -93,7 +93,7 @@ const TRIXO = ({data, onChange}) => {
             variant="danger"
             onClick={createArrayRemoveHandler("applicable_regulations", idx)}
           >
-            <i class="fa fa-trash"></i>
+            <i className="fa fa-trash"></i>
           </Button>
         </Form.Group>
       </Form.Row>
@@ -128,7 +128,7 @@ const TRIXO = ({data, onChange}) => {
         <p>Please add any other regulatory jurisdictions your organization complies with.</p>
         {otherJursidictions}
         <Form.Group>
-          <Button onClick={createArrayPushHandler('other_jurisdictions', {'country': '', 'regulator_name': ''})}>Add Jurisdiction</Button>
+          <Button size="sm" onClick={createArrayPushHandler('other_jurisdictions', {'country': '', 'regulator_name': ''})}>Add Jurisdiction</Button>
         </Form.Group>
       </fieldset>
       <Form.Group>
@@ -210,7 +210,7 @@ const TRIXO = ({data, onChange}) => {
           </p>
           {applicableRegulations}
           <Form.Group>
-            <Button onClick={createArrayPushHandler("applicable_regulations", "")}>Add Regulation</Button>
+            <Button size="sm" onClick={createArrayPushHandler("applicable_regulations", "")}>Add Regulation</Button>
           </Form.Group>
         </fieldset>
         <Form.Group>
