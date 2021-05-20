@@ -244,8 +244,8 @@ const TRIXO = ({data, onChange}) => {
           <Form.Label>Is your organization required by law to safeguard PII?</Form.Label>
           <Form.Check
             type="switch"
-            id="mustSafegaurdPII"
-            label="Must Safegaurd PII"
+            id="mustSafeguardPII"
+            label="Must Safeguard PII"
             checked={data.must_safeguard_pii}
             onChange={createBoolChangeHandler("must_safeguard_pii")}
           />
@@ -254,10 +254,10 @@ const TRIXO = ({data, onChange}) => {
           <Form.Label>Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?</Form.Label>
           <Form.Check
             type="switch"
-            id="safegaurdsPII"
-            label="Safegaurds PII"
-            checked={data.safegaurds_pii}
-            onChange={createBoolChangeHandler("safegaurds_pii")}
+            id="safeguardsPII"
+            label="Safeguards PII"
+            checked={data.safeguards_pii}
+            onChange={createBoolChangeHandler("safeguards_pii")}
           />
         </Form.Group>
       </fieldset>

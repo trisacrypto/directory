@@ -64,7 +64,7 @@ class Registration extends React.Component {
         compliance_threshold: 0.0,
         compliance_threshold_currency: "USD",
         must_safeguard_pii: false,
-        safegaurds_pii: false,
+        safeguards_pii: false,
       }
     },
   }
@@ -142,7 +142,7 @@ class Registration extends React.Component {
                       This multi-part form is the first step in the registration and certificate
                       issuance process. The information you provide will be used to verify the
                       legal entity that you represent and, where appropriate, will be available to
-                      verified TRISA members to facilitate compliance-decisions.
+                      verified TRISA members to facilitate compliance decisions.
                     </p>
                     <p>
                       To assist in completing the registration form, which is somewhat lengthy, the
@@ -151,10 +151,9 @@ class Registration extends React.Component {
                       information is sent until you submit the form in the summary section</strong>.
                     </p>
                     <p className="text-danger">
-                      The registration form is currently in its beta implementation. You will not be
-                      able to submit the form now, but can download the form to submit it via the CLI
-                      registration interface. The registration form will be completed when the TRISA
-                      v1beta1 protocol is released.
+                      This registration form is currently in its beta implementation. You will not be able
+                      to submit the form now, but can download it and submit via the CLI registration interface.
+                      This registration form will become live when the TRISA v1beta1 protocol is released.
                     </p>
                     <Form.Group>
                       <Button type="reset" disabled variant="secondary">Reset</Button>{' '}
@@ -378,10 +377,10 @@ class Registration extends React.Component {
                   <fieldset>
                     <legend>TRIXO Questionnaire</legend>
                     <p>
-                      This questionnaire is designed to help the TRISA working group and other
-                      TRISA members understand the regulatory regime of your organization to ensure
-                      that required compliance information exchanges are conducted correctly and
-                      safely. All verified TRISA members will have access to this information.
+                      This questionnaire is designed to help the TRISA working group and TRISA members
+                      understand the regulatory regime of your organization. The information you provide
+                      will help ensure that required compliance information exchanges are conducted
+                      correctly and safely. All verified TRISA members will have access to this information.
                     </p>
                     <TRIXO
                       data={this.state.formData.trixo}
