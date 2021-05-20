@@ -25,3 +25,11 @@ body {
 .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
 
 .lh-condensed { line-height: 1.25; }
+
+legend.sublegend {
+  font-size: 1.3rem;
+}
+
+legend.subsublegend {
+  font-size: 1.1rem;
+}

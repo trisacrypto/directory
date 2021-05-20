@@ -1,0 +1,33 @@
+version: '3'
+services:
+  gds:
+    build:
+      context: ../
+      dockerfile: ./containers/gds/Dockerfile
+    image: trisa/gds
+    ports:
+      - 4433:4433
+    volumes:
+      - ../fixtures:/data
+    environment:
+      - GDS_DATABASE_URL=/data/db
+      - GDS_BIND_ADDR=:4433
+      - SECTIGO_USERNAME
+      - SECTIGO_PASSWORD
+      - SENDGRID_API_KEY
+      - GDS_SECRET_KEY=supersecretsquirrel
+      - GDS_CERTMAN_INTERVAL=30s
+      - GDS_CERTMAN_STORAGE=/data/certs
+      - GDS_LOG_LEVEL=debug
+      - GDS_BACKUP_ENABLED=true
+      - GDS_BACKUP_INTERVAL=15m
+      - GDS_BACKUP_STORAGE=/data/backups
+      - GDS_BACKUP_KEEP=1
+  envoy:
+    build:
+      context: ../
+      dockerfile: ./containers/grpc-proxy/Dockerfile
+    image: trisa/grpc-proxy
+    ports:
+      - 8080:8080
+
