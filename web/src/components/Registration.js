@@ -12,6 +12,7 @@ import Accordion from 'react-bootstrap/Accordion';
 import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
 
+const registrationFormVersion = "v1beta1";
 
 // Returns a legal person object with default values populated.
 const makeLegalPerson = () => {
@@ -110,7 +111,7 @@ class Registration extends React.Component {
   }
 
   handleDownload = (event) => {
-    const blob = new Blob([JSON.stringify(this.state.formData, null, "  ")]);
+    const blob = new Blob([JSON.stringify({version: registrationFormVersion, registrationForm: this.state.formData}, null, "  ")]);
     const fileDownloadURL = URL.createObjectURL(blob);
     this.setState({fileDownloadURL: fileDownloadURL},
       () => {
@@ -134,8 +135,15 @@ class Registration extends React.Component {
       const fileContents = e.target.result;
       console.log(`File name: ${fileObj.name}, Length: ${fileContents.length} bytes.`);
 
-      // TODO: validate the form data
-      this.setState({formData: JSON.parse(fileContents)});
+      const data = JSON.parse(fileContents);
+      if (data.version != registrationFormVersion) {
+        console.warn(`current form version is ${registrationFormVersion} cannot load version ${data.version}`);
+        this.props.onAlert("danger", "Could not load data: invalid version");
+        return
+      }
+
+      // TODO: validate the form data better
+      this.setState({formData: data.registrationForm});
     }
 
     fileloaded = fileloaded.bind(this);
@@ -181,8 +189,8 @@ class Registration extends React.Component {
     }
   }
 
-  componentDidUpdate(nextProps, nextState) {
-    this.saveToLocalStorage(nextState.formData);
+  componentDidUpdate(prevProps, prevState) {
+    this.saveToLocalStorage(this.state.formData);
   }
 
   createChangeHandler = (field, ...parents) => (event, value, selectedKey) => {
