@@ -173,7 +173,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Label>At what threshold and currency does your organization conduct KYC?</Form.Label>
           <Form.Row>
             <Col>
-              <Form.Control as={Col}
+              <Form.Control
                 type="number"
                 value={data.kyc_threshold}
                 onChange={createChangeHandler("kyc_threshold")}
@@ -217,7 +217,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Label>What is the minimum threshold for Travel Rule compliance?</Form.Label>
           <Form.Row>
             <Col>
-              <Form.Control as={Col}
+              <Form.Control
                 type="number"
                 value={data.compliance_threshold}
                 onChange={createChangeHandler("compliance_threshold")}

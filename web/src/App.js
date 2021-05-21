@@ -23,8 +23,14 @@ class App extends React.Component {
         results: {},
         alerts: [...prevState.alerts, {variant: 'danger', message: err.message}]
       }));
-      console.log(err);
+      console.warn(err);
     }
+  }
+
+  onAlert = (variant, message) => {
+    this.setState(prevState => ({
+      alerts: [...prevState.alerts, {variant: variant, message: message}]
+    }));
   }
 
   onDismissAlert = (idx) => {
@@ -63,7 +69,7 @@ class App extends React.Component {
             </Row>
           </Tab>
           <Tab eventKey="register" title="Register">
-            <Registration />
+            <Registration onAlert={this.onAlert} />
           </Tab>
         </Tabs>
 

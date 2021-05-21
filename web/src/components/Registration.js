@@ -12,61 +12,85 @@ import Accordion from 'react-bootstrap/Accordion';
 import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
 
+const registrationFormVersion = "v1beta1";
 
-class Registration extends React.Component {
-  state = {
-    tabKey: "introduction",
-    validated: false,
-    formData: {
-      entity: {
-        name: {
-          name_identifiers: [{legal_person_name: "", legal_person_name_identifier_type: 0}],
-          local_name_identifiers: [],
-          phonetic_name_identifiers: [],
-        },
-        geographic_addresses: [{
-          address_type: 1,
-          address_line: ["", "", ""],
-          country: "",
-        }],
-        customer_number: "",
-        national_identification: {
-          national_identifier: "",
-          national_identifier_type: 8,
-          country_of_issue: "",
-          registration_authority: "",
-        },
-        country_of_registration: "",
-      },
-      contacts: {
-        technical: {name: "", email: "", phone: ""},
-        legal: {name: "", email: "", phone: ""},
-        administrative: {name: "", email: "", phone: ""},
-        billing: {name: "", email: "", phone: ""},
-      },
+// Returns a legal person object with default values populated.
+const makeLegalPerson = () => {
+  return {
+    name: {
+      name_identifiers: [{legal_person_name: "", legal_person_name_identifier_type: 0}],
+      local_name_identifiers: [],
+      phonetic_name_identifiers: [],
+    },
+    geographic_addresses: [{
+      address_type: 1,
+      address_line: ["", "", ""],
+      country: "",
+    }],
+    customer_number: "",
+    national_identification: {
+      national_identifier: "",
+      national_identifier_type: 8,
+      country_of_issue: "",
+      registration_authority: "",
+    },
+    country_of_registration: "",
+  };
+}
+
+// Returns a TRIXO form with default values populated
+const makeTRIXOForm = () => {
+  return {
+    primary_national_jurisdiction: "",
+    primary_regulator: "",
+    other_jurisdictions: [],
+    financial_transfers_permitted: "",
+    has_required_regulatory_program: "",
+    conducts_customer_kyc: false,
+    kyc_threshold: 0.0,
+    kyc_threshold_currency: "USD",
+    must_comply_travel_rule: false,
+    applicable_regulations: ["FATF Recommendation 16"],
+    compliance_threshold: 0.0,
+    compliance_threshold_currency: "USD",
+    must_safeguard_pii: false,
+    safeguards_pii: false,
+  }
+}
+
+const makeContacts = () => {
+  const reducer = (contacts, contactType) => {
+    contacts[contactType] = {
+      name: "",
+      email: "",
+      phone: "",
+    };
+    return contacts;
+  }
+  return ["technical", "legal", "administrative", "billing"].reduce(reducer, {})
+}
+
+// Returns an empty form data state with default values populated
+const makeFormData = () => {
+  return {
+    entity: makeLegalPerson(),
+      contacts: makeContacts(),
       trisa_endpoint: "",
       common_name: "",
       website: "",
       business_category: 0,
       vasp_categories: [],
       established_on: "",
-      trixo: {
-        primary_national_jurisdiction: "",
-        primary_regulator: "",
-        other_jurisdictions: [],
-        financial_transfers_permitted: "",
-        has_required_regulatory_program: "",
-        conducts_customer_kyc: false,
-        kyc_threshold: 0.0,
-        kyc_threshold_currency: "USD",
-        must_comply_travel_rule: false,
-        applicable_regulations: ["FATF Recommendation 16"],
-        compliance_threshold: 0.0,
-        compliance_threshold_currency: "USD",
-        must_safeguard_pii: false,
-        safeguards_pii: false,
-      }
-    },
+      trixo: makeTRIXOForm(),
+  }
+}
+
+class Registration extends React.Component {
+  state = {
+    tabKey: "introduction",
+    validated: false,
+    formData: makeFormData(),
+    formDownloadURL: "",
   }
 
   handleSubmit = (event) => {
@@ -78,7 +102,95 @@ class Registration extends React.Component {
     }
 
     this.setState({validated: true});
-    console.log(this.state.formData);
+  }
+
+  handleReset = (event) => {
+    event.preventDefault();
+    this.setState({validated: false, formData: makeFormData()});
+    this.deleteLocalStorage();
+  }
+
+  handleDownload = (event) => {
+    const blob = new Blob([JSON.stringify({version: registrationFormVersion, registrationForm: this.state.formData}, null, "  ")]);
+    const fileDownloadURL = URL.createObjectURL(blob);
+    this.setState({fileDownloadURL: fileDownloadURL},
+      () => {
+        this.dofileDownload.click();
+        URL.revokeObjectURL(fileDownloadURL);
+        this.setState({fileDownloadURL: ""});
+    });
+  }
+
+  upload = (e) => {
+    e.preventDefault();
+    this.dofileUpload.click();
+  }
+
+  openFile = (e) => {
+    const fileObj = e.target.files[0];
+    const reader = new FileReader();
+
+    let fileloaded = e => {
+      // e.target.result is the file's content as text
+      const fileContents = e.target.result;
+      console.log(`File name: ${fileObj.name}, Length: ${fileContents.length} bytes.`);
+
+      const data = JSON.parse(fileContents);
+      if (data.version != registrationFormVersion) {
+        console.warn(`current form version is ${registrationFormVersion} cannot load version ${data.version}`);
+        this.props.onAlert("danger", "Could not load data: invalid version");
+        return
+      }
+
+      // TODO: validate the form data better
+      this.setState({formData: data.registrationForm});
+    }
+
+    fileloaded = fileloaded.bind(this);
+    reader.onload = fileloaded;
+    reader.readAsText(fileObj);
+  }
+
+  saveToLocalStorage = (formData) => {
+    try {
+      const serialized = JSON.stringify(formData);
+      localStorage.setItem("registrationForm", serialized);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  loadFromLocalStorage = () => {
+    try {
+      const serialized = localStorage.getItem("registrationForm");
+      if (serialized === null) return undefined;
+      console.log("data loaded from local storage");
+      return JSON.parse(serialized);
+    } catch (e) {
+      console.warn(e);
+      return undefined;
+    }
+  }
+
+  deleteLocalStorage = () => {
+    try {
+      localStorage.removeItem("registrationForm");
+      console.log("data deleted from local storage");
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  // React Life Cycle
+  componentDidMount() {
+    const formData = this.loadFromLocalStorage();
+    if (formData) {
+      this.setState({formData: formData})
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    this.saveToLocalStorage(this.state.formData);
   }
 
   createChangeHandler = (field, ...parents) => (event, value, selectedKey) => {
@@ -124,9 +236,10 @@ class Registration extends React.Component {
               <Nav variant="pills" className="flex-column">
                 <Nav.Item>
                   <Nav.Link eventKey="introduction">Introduction</Nav.Link>
-                  <Nav.Link eventKey="entity-details">Entity Details</Nav.Link>
-                  <Nav.Link eventKey="trisa-implementation">TRISA Implementation</Nav.Link>
+                  <Nav.Link eventKey="basic-details">Basic Details</Nav.Link>
+                  <Nav.Link eventKey="legal-person">Legal Person</Nav.Link>
                   <Nav.Link eventKey="contacts">Contacts</Nav.Link>
+                  <Nav.Link eventKey="trisa-implementation">TRISA Implementation</Nav.Link>
                   <Nav.Link eventKey="trixo">TRIXO Questionnaire</Nav.Link>
                   <Nav.Link eventKey="summary">Summary</Nav.Link>
                 </Nav.Item>
@@ -156,130 +269,105 @@ class Registration extends React.Component {
                       This registration form will become live when the TRISA v1beta1 protocol is released.
                     </p>
                     <Form.Group>
-                      <Button type="reset" disabled variant="secondary">Reset</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"entity-details"})}>Next</Button>
-                    </Form.Group>
-                  </fieldset>
-                </Tab.Pane>
-                <Tab.Pane eventKey="entity-details">
-                  <fieldset>
-                    <legend>Entity Details</legend>
-                    <p>
-                      To get started, please tell us a bit about your organization. In addition to
-                      some basic organizational details, we'll collect IVMS 101 LegalPerson data,
-                      which is required KYC information for TRISA compliance information transfers.
-                    </p>
-                    <fieldset>
-                      <legend className="sublegend">Basic Details</legend>
-                      <Form.Group>
-                        <Form.Label>Website</Form.Label>
-                        <Form.Control
-                          type="url"
-                          value={this.state.formData.website}
-                          onChange={this.createFlatChangeHandler("website")}
-                        />
-                      </Form.Group>
-                      <Form.Group>
-                        <Form.Label>Date of Incorporation/Establishment</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={this.state.formData.established_on}
-                          onChange={this.createFlatChangeHandler("established_on")}
-                        />
-                      </Form.Group>
-                      <Form.Group>
-                        <Form.Label>Business Category</Form.Label>
-                        <Form.Control
-                          as="select" custom
-                          value={this.state.formData.business_category}
-                          onChange={this.createIntChangeHandler("business_category")}
-                        >
-                          <option value={0}></option>
-                          <option value={1}>Private Organization</option>
-                          <option value={2}>Government Entity</option>
-                          <option value={3}>Business Entity</option>
-                          <option value={4}>Non-Commercial Entity</option>
-                        </Form.Control>
-                        <Form.Text className="text-muted">
-                          Please select the entity category that most closely matches your organization.
-                        </Form.Text>
-                      </Form.Group>
-                      <Form.Group>
-                        <Form.Label>VASP Category</Form.Label>
-                        <Form.Control
-                          as="select" custom multiple
-                          value={this.state.formData.vasp_categories}
-                          onChange={this.createMultiselectChangeHandler("vasp_categories")}
-                        >
-                          <option value="Exchange">Centralized Exchange</option>
-                          <option value="DEX">Decentralized Exchange</option>
-                          <option value="P2P">Person-to-Person Exchange</option>
-                          <option value="Kiosk">Kiosk / Crypto ATM Operator</option>
-                          <option value="Custodian">Custody Provider</option>
-                          <option value="OTC">Over-The-Counter Trading Desk</option>
-                          <option value="Fund">Investment Fund - hedge funds, ETFs, and family offices</option>
-                          <option value="Project">Token Project</option>
-                          <option value="Gambling">Gambling or Gaming Site</option>
-                          <option value="Miner">Mining Pool</option>
-                          <option value="Mixer">Mixing Service</option>
-                          <option value="Individual">Legal person</option>
-                          <option value="Other">Other</option>
-                        </Form.Control>
-                        <Form.Text className="text-muted">
-                          Please select as many categories needed to represent the types of virtual asset services your organization provides.
-                        </Form.Text>
-                      </Form.Group>
-                    </fieldset>
-                    <fieldset>
-                      <legend className="sublegend">Legal Person</legend>
-                      <LegalPerson
-                        person={this.state.formData.entity}
-                        onChange={this.createChangeHandler("entity")}
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"basic-details"})}>Next</Button>{' '}
+                      <Button type="button" onClick={this.upload} variant="info">Load</Button>
+                      <input type="file" className="d-none"
+                        multiple={false}
+                        accept=".json,application/json"
+                        onChange={e=>this.openFile(e)}
+                        ref={e=>this.dofileUpload=e}
                       />
-                    </fieldset>
-                    <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}>Back</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Next</Button>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
-                <Tab.Pane eventKey="trisa-implementation">
+                <Tab.Pane eventKey="basic-details">
                   <fieldset>
-                    <legend>TRISA Implementation</legend>
+                    <legend>Basic Details</legend>
                     <p>
-                      Each VASP is required to establish a TRISA endpoint for inter-VASP
-                      communication. Please specify the details of your endpoint for
-                      certificate issuance.
+                      To get started, please tell us a bit about your organization.
                     </p>
                     <Form.Group>
-                      <Form.Label>TRISA Endpoint</Form.Label>
+                      <Form.Label>Website</Form.Label>
                       <Form.Control
                         type="url"
-                        value={this.state.formData.trisa_endpoint}
-                        onChange={this.createFlatChangeHandler("trisa_endpoint")}
-                        placeholder="trisa.example.com:443"
+                        value={this.state.formData.website}
+                        onChange={this.createFlatChangeHandler("website")}
                       />
-                      <Form.Text className="text-muted">
-                        The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
-                      </Form.Text>
                     </Form.Group>
                     <Form.Group>
-                      <Form.Label>Certificate Common Name</Form.Label>
+                      <Form.Label>Date of Incorporation/Establishment</Form.Label>
                       <Form.Control
-                        type="text"
-                        value={this.state.formData.common_name}
-                        onChange={this.createFlatChangeHandler("common_name")}
-                        placeholder="trisa.example.com"
+                        type="date"
+                        value={this.state.formData.established_on}
+                        onChange={this.createFlatChangeHandler("established_on")}
                       />
+                    </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Business Category</Form.Label>
+                      <Form.Control
+                        as="select" custom
+                        value={this.state.formData.business_category}
+                        onChange={this.createIntChangeHandler("business_category")}
+                      >
+                        <option value={0}></option>
+                        <option value={1}>Private Organization</option>
+                        <option value={2}>Government Entity</option>
+                        <option value={3}>Business Entity</option>
+                        <option value={4}>Non-Commercial Entity</option>
+                      </Form.Control>
                       <Form.Text className="text-muted">
-                        The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+                        Please select the entity category that most closely matches your organization.
                       </Form.Text>
                     </Form.Group>
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"entity-details"})}>Back</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"contacts"})}>Next</Button>
+                      <Form.Label>VASP Category</Form.Label>
+                      <Form.Control
+                        as="select" custom multiple
+                        value={this.state.formData.vasp_categories}
+                        onChange={this.createMultiselectChangeHandler("vasp_categories")}
+                      >
+                        <option value="Exchange">Centralized Exchange</option>
+                        <option value="DEX">Decentralized Exchange</option>
+                        <option value="P2P">Person-to-Person Exchange</option>
+                        <option value="Kiosk">Kiosk / Crypto ATM Operator</option>
+                        <option value="Custodian">Custody Provider</option>
+                        <option value="OTC">Over-The-Counter Trading Desk</option>
+                        <option value="Fund">Investment Fund - hedge funds, ETFs, and family offices</option>
+                        <option value="Project">Token Project</option>
+                        <option value="Gambling">Gambling or Gaming Site</option>
+                        <option value="Miner">Mining Pool</option>
+                        <option value="Mixer">Mixing Service</option>
+                        <option value="Individual">Legal person</option>
+                        <option value="Other">Other</option>
+                      </Form.Control>
+                      <Form.Text className="text-muted">
+                        Please select as many categories needed to represent the types of virtual asset services your organization provides.
+                      </Form.Text>
                     </Form.Group>
                   </fieldset>
+                  <Form.Group>
+                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}>Back</Button>{' '}
+                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"legal-person"})}>Next</Button>
+                  </Form.Group>
+                </Tab.Pane>
+                <Tab.Pane eventKey="legal-person">
+                  <fieldset>
+                    <legend className="legend">Legal Person</legend>
+                    <p>
+                      Please enter the information that identify your organization as a
+                      Legal Person. This form represents the IVMS 101 data structure for
+                      legal persons and is strongly suggested for use as KYC information
+                      exchanged in TRISA transfers.
+                    </p>
+                    <LegalPerson
+                      person={this.state.formData.entity}
+                      onChange={this.createChangeHandler("entity")}
+                    />
+                  </fieldset>
+                  <Form.Group>
+                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"basic-details"})}>Back</Button>{' '}
+                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"contacts"})}>Next</Button>
+                  </Form.Group>
                 </Tab.Pane>
                 <Tab.Pane eventKey="contacts">
                   <fieldset>
@@ -363,7 +451,45 @@ class Registration extends React.Component {
                     </Accordion>
 
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Back</Button>{' '}
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"legal-person"})}>Back</Button>{' '}
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Next</Button>
+                    </Form.Group>
+                  </fieldset>
+                </Tab.Pane>
+                <Tab.Pane eventKey="trisa-implementation">
+                  <fieldset>
+                    <legend>TRISA Implementation</legend>
+                    <p>
+                      Each VASP is required to establish a TRISA endpoint for inter-VASP
+                      communication. Please specify the details of your endpoint for
+                      certificate issuance.
+                    </p>
+                    <Form.Group>
+                      <Form.Label>TRISA Endpoint</Form.Label>
+                      <Form.Control
+                        type="url"
+                        value={this.state.formData.trisa_endpoint}
+                        onChange={this.createFlatChangeHandler("trisa_endpoint")}
+                        placeholder="trisa.example.com:443"
+                      />
+                      <Form.Text className="text-muted">
+                        The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+                      </Form.Text>
+                    </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Certificate Common Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.formData.common_name}
+                        onChange={this.createFlatChangeHandler("common_name")}
+                        placeholder="trisa.example.com"
+                      />
+                      <Form.Text className="text-muted">
+                        The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+                      </Form.Text>
+                    </Form.Group>
+                    <Form.Group>
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"contacts"})}>Back</Button>{' '}
                       <Button variant="primary" onClick={(e) => this.setState({tabKey:"trixo"})}>Next</Button>
                     </Form.Group>
                   </fieldset>
@@ -382,7 +508,7 @@ class Registration extends React.Component {
                       onChange={this.createChangeHandler("trixo")}
                     />
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"contacts"})}>Back</Button>{' '}
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Back</Button>{' '}
                       <Button variant="primary" onClick={(e) => this.setState({tabKey:"summary"})}>Next</Button>
                     </Form.Group>
                   </fieldset>
@@ -392,8 +518,15 @@ class Registration extends React.Component {
                     <legend>Summary</legend>
                     <div><pre>{summaryFormData}</pre></div>
                     <Form.Group>
-                      <Button type="reset" disabled variant="secondary">Reset</Button>{' '}
-                      <Button type="submit" disabled variant="primary">Download</Button>
+                      <Button type="reset" variant="secondary" onClick={this.handleReset}>Reset</Button>{' '}
+                      <Button type="submit" variant="primary" onClick={this.handleDownload}>Download</Button>
+                      <a className="d-none"
+                         download="trisa_registration.json"
+                         href={this.state.fileDownloadURL}
+                         ref={e=>this.dofileDownload = e}
+                      >
+                      download data
+                      </a>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
