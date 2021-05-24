@@ -77,7 +77,7 @@ type Server struct {
 // Serve GRPC requests on the specified address.
 func (s *Server) Serve() (err error) {
 	// Initialize the gRPC server
-	s.srv = grpc.NewServer()
+	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.serverInterceptor))
 	api.RegisterTRISADirectoryServer(s.srv, s)
 	admin.RegisterDirectoryAdministrationServer(s.srv, s)
 
@@ -94,6 +94,10 @@ func (s *Server) Serve() (err error) {
 
 	// Start the backup manager go routine process
 	go s.BackupManager()
+
+	if s.conf.Maintenance {
+		log.Warn().Msg("starting server in maintenance mode")
+	}
 
 	// Listen for TCP requests on the specified address and port
 	var sock net.Listener
