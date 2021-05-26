@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -14,11 +15,14 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func init() {
@@ -146,11 +150,11 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		CommonName:          in.CommonName,
 		Website:             in.Website,
 		BusinessCategory:    in.BusinessCategory,
-		VaspCategory:        in.VaspCategory,
+		VaspCategories:      in.VaspCategories,
 		EstablishedOn:       in.EstablishedOn,
 		Trixo:               in.Trixo,
 		VerificationStatus:  pb.VerificationState_SUBMITTED,
-		Version:             1,
+		Version:             &pb.Version{Version: 1},
 	}
 
 	// Compute the common name from the trisa endpoint if not specified
@@ -201,12 +205,38 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 	log.Info().Msg("contact email verifications sent")
 
+	// Create and encrypt PKCS12 password along with certificate request.
+	password := CreateToken(16)
+	certRequest := &models.CertificateRequest{
+		Id:         uuid.New().String(),
+		Vasp:       vasp.Id,
+		CommonName: vasp.CommonName,
+		Status:     models.CertificateRequestState_INITIALIZED,
+	}
+
+	if certRequest.Pkcs12Password, certRequest.Pkcs12Signature, err = s.Encrypt(password); err != nil {
+		log.Error().Err(err).Msg("could not encrypt password to store in database")
+		out.Error = &api.Error{
+			Code:    500,
+			Message: "could not create certificate request password",
+		}
+	}
+
+	if err = s.db.SaveCertRequest(certRequest); err != nil {
+		log.Error().Err(err).Msg("could save certificate request for VASP")
+		out.Error = &api.Error{
+			Code:    500,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+
 	out.Id = vasp.Id
 	out.RegisteredDirectory = vasp.RegisteredDirectory
 	out.CommonName = vasp.CommonName
 	out.Status = vasp.VerificationStatus
-	out.Message = "verification code sent to contact emails, please check spam folder if not arrived"
-
+	out.Message = "verification code sent to contact emails, please check spam folder if not arrived; pkcs12 password attached, this is the only time it will be available - do not lose!"
+	out.Pkcs12Password = password
 	return out, nil
 }
 
@@ -294,7 +324,7 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 		categories = append(categories, category.String())
 	}
 	for _, category := range in.VaspCategory {
-		categories = append(categories, category.String())
+		categories = append(categories, category)
 	}
 	query["category"] = categories
 
@@ -334,18 +364,15 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 
 // Status returns the status of a VASP including its verification and service status if
 // the directory service is performing health check monitoring.
-func (s *Server) Status(ctx context.Context, in *api.StatusRequest) (out *api.StatusReply, err error) {
+func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
 	var vasp *pb.VASP
-	out = &api.StatusReply{}
+	out = &api.VerificationReply{}
 
 	if in.Id != "" {
 		// TODO: add registered directory to lookup
 		if vasp, err = s.db.Retrieve(in.Id); err != nil {
 			log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-			out.Error = &api.Error{
-				Code:    404,
-				Message: err.Error(),
-			}
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 
 	} else if in.CommonName != "" {
@@ -353,39 +380,27 @@ func (s *Server) Status(ctx context.Context, in *api.StatusRequest) (out *api.St
 		var vasps []*pb.VASP
 		if vasps, err = s.db.Search(map[string]interface{}{"name": in.CommonName}); err != nil {
 			log.Error().Err(err).Str("name", in.CommonName).Msg("could not retrieve vasp")
-			out.Error = &api.Error{
-				Code:    404,
-				Message: err.Error(),
-			}
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 
 		if len(vasps) == 1 {
 			vasp = vasps[0]
 		} else {
-			out.Error = &api.Error{
-				Code:    404,
-				Message: "not found",
-			}
+			log.Warn().Int("results", len(vasps)).Msg("vasp not found")
+			return nil, status.Error(codes.NotFound, "VASP not found")
 		}
 	} else {
-		out.Error = &api.Error{
-			Code:    400,
-			Message: "no lookup query provided",
-		}
-		return out, nil
+		log.Warn().Msg("no lookup query provided")
+		return nil, status.Error(codes.InvalidArgument, "no lookup query provided")
 	}
 
-	if out.Error == nil {
-		// TODO: should lookups only return verified peers?
-		out.VerificationStatus = vasp.VerificationStatus
-		out.ServiceStatus = vasp.ServiceStatus
-		out.VerifiedOn = vasp.VerifiedOn
-		out.FirstListed = vasp.FirstListed
-		out.LastUpdated = vasp.LastUpdated
-		log.Info().Str("id", vasp.Id).Msg("VASP status succeeded")
-	} else {
-		log.Warn().Err(out.Error).Msg("could not lookup VASP for status")
-	}
+	// TODO: should lookups only return verified peers?
+	out.VerificationStatus = vasp.VerificationStatus
+	out.ServiceStatus = vasp.ServiceStatus
+	out.VerifiedOn = vasp.VerifiedOn
+	out.FirstListed = vasp.FirstListed
+	out.LastUpdated = vasp.LastUpdated
+	log.Info().Str("id", vasp.Id).Msg("VASP status succeeded")
 	return out, nil
 }
 
@@ -393,8 +408,8 @@ func (s *Server) Status(ctx context.Context, in *api.StatusRequest) (out *api.St
 // contact email verification. If successful, this method then sends the verification
 // request to the TRISA Admins for review and generates a PKCS12 password in the RPC
 // response to decrypt the certificate private keys when they're emailed.
-func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (out *api.VerifyEmailReply, err error) {
-	out = &api.VerifyEmailReply{}
+func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
+	out = &api.VerifyContactReply{}
 
 	var vasp *pb.VASP
 	if vasp, err = s.db.Retrieve(in.Id); err != nil {
@@ -406,7 +421,7 @@ func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (o
 		return out, nil
 	}
 
-	verified := 0
+	nVerified := 0
 	found := false
 	contacts := []*pb.Contact{
 		vasp.Contacts.Technical,
@@ -418,18 +433,28 @@ func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (o
 		if contact == nil {
 			continue
 		}
-		if contact.Token == in.Token {
-			log.Info().Str("email", contact.Email).Msg("contact email verified")
-			contact.Verified = true
-			contact.Token = ""
-			found = true
+
+		token, verified, err := models.GetContactVerification(contact)
+		if err != nil {
+			log.Error().Err(err).Msg("could not retrieve verification from contact extra data field")
+			return nil, status.Error(codes.Internal, "could not verify contact")
 		}
-		if contact.Verified {
-			verified++
+
+		if token == in.Token {
+			found = true
+			log.Info().Str("email", contact.Email).Msg("contact email verified")
+			if err = models.SetContactVerification(contact, "", true); err != nil {
+				log.Error().Err(err).Msg("could not set verification on contact extra data field")
+				return nil, status.Error(codes.Internal, "could not verify contact")
+			}
+
+		}
+		if verified {
+			nVerified++
 		}
 	}
 
-	if !found || verified == 0 {
+	if !found || nVerified == 0 {
 		log.Error().Err(err).Str("token", in.Token).Msg("could not find contact with token")
 		out.Error = &api.Error{
 			Code:    404,
@@ -440,7 +465,7 @@ func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (o
 
 	// Ensures that we only send the verification email to the admins once.
 	// NOTE: we will only generate the password on the first email verification.
-	if verified > 1 {
+	if nVerified > 1 {
 		// Save the updated contact
 		if err = s.db.Update(vasp); err != nil {
 			log.Error().Err(err).Msg("could not update vasp after contact verification")
@@ -473,34 +498,9 @@ func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (o
 	// Now that the email has been sent out the vasp is pending review
 	vasp.VerificationStatus = pb.VerificationState_PENDING_REVIEW
 
-	// Create and encrypt PKCS12 password
-	password := CreateToken(16)
-	certRequest := &pb.CertificateRequest{
-		Id:         uuid.New().String(),
-		Vasp:       vasp.Id,
-		CommonName: vasp.CommonName,
-		Status:     pb.CertificateRequestState_INITIALIZED,
-	}
-
-	if certRequest.Pkcs12Password, certRequest.Pkcs12Signature, err = s.Encrypt(password); err != nil {
-		log.Error().Err(err).Msg("could not encrypt password to store in database")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: "could not create certificate request password",
-		}
-	}
-
 	// Save the VASP and newly created certificate request
 	if err = s.db.Update(vasp); err != nil {
-		log.Error().Err(err).Msg("could not update vasp after certificate request creation")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
-	}
-	if err = s.db.SaveCertRequest(certRequest); err != nil {
-		log.Error().Err(err).Msg("could save certificate request for VASP")
+		log.Error().Err(err).Msg("could not update vasp status to pending review")
 		out.Error = &api.Error{
 			Code:    500,
 			Message: err.Error(),
@@ -509,7 +509,25 @@ func (s *Server) VerifyEmail(ctx context.Context, in *api.VerifyEmailRequest) (o
 	}
 
 	out.Status = vasp.VerificationStatus
-	out.Message = "email successfully verified and verification review sent to TRISA admins; pkcs12 password to decrypt your emailed certificates attached - do not lose!"
-	out.Pkcs12Password = password
+	out.Message = "email successfully verified and verification review sent to TRISA admins"
+	return out, nil
+}
+
+func (s *Server) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
+	log.Info().
+		Uint32("attempts", in.Attempts).
+		Str("last_checked_at", in.LastCheckedAt).
+		Msg("status check")
+
+	// Request another health check between 30-60 min from now
+	now := time.Now()
+
+	// Create the service state as unhealthy unless we have callback streams
+	out = &api.ServiceState{
+		Status:    api.ServiceState_HEALTHY,
+		NotBefore: now.Add(30 * time.Minute).Format(time.RFC3339),
+		NotAfter:  now.Add(60 * time.Minute).Format(time.RFC3339),
+	}
+
 	return out, nil
 }

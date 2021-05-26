@@ -18,19 +18,19 @@ const registrationFormVersion = "v1beta1";
 const makeLegalPerson = () => {
   return {
     name: {
-      name_identifiers: [{legal_person_name: "", legal_person_name_identifier_type: 0}],
+      name_identifiers: [{legal_person_name: "", legal_person_name_identifier_type: 1}],
       local_name_identifiers: [],
       phonetic_name_identifiers: [],
     },
     geographic_addresses: [{
-      address_type: 1,
+      address_type: 2,
       address_line: ["", "", ""],
       country: "",
     }],
     customer_number: "",
     national_identification: {
       national_identifier: "",
-      national_identifier_type: 8,
+      national_identifier_type: 9,
       country_of_issue: "",
       registration_authority: "",
     },
@@ -78,7 +78,7 @@ const makeFormData = () => {
       trisa_endpoint: "",
       common_name: "",
       website: "",
-      business_category: 0,
+      business_category: 3,
       vasp_categories: [],
       established_on: "",
       trixo: makeTRIXOForm(),

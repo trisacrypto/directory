@@ -57,3 +57,17 @@ enum CertificateRequestState {
     CR_REJECTED = 6;
     CR_ERRORED = 7;
 }
+
+// GDSExtraData contains all GDS-specific extra data for a VASP record.
+message GDSExtraData {
+    // Temporary: verification token for light weight authentication for verification
+    // TODO: replace with admin API that uses authentication
+    string admin_verification_token = 1;
+}
+
+// GDSContactExtraData contains all GDS-specific extra data for a Contact record.
+message GDSContactExtraData {
+    // Token for email verification
+    bool verified = 1;
+    string token = 2;
+}

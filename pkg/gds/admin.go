@@ -7,8 +7,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Review a registration request and either accept or reject it. On accept, the
@@ -50,7 +53,12 @@ func (s *Server) Review(ctx context.Context, in *admin.ReviewRequest) (out *admi
 	}
 
 	// Check that the administration verification token is correct
-	if in.AdminVerificationToken != vasp.AdminVerificationToken {
+	var adminVerificationToken string
+	if adminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
+		log.Error().Err(err).Msg("could not retrieve admin token from extra data field on VASP")
+		return nil, status.Error(codes.Internal, "could not retrieve admin token from data")
+	}
+	if in.AdminVerificationToken != adminVerificationToken {
 		log.Error().Err(err).Str("token", in.AdminVerificationToken).Msg("incorrect admin verification token")
 		out.Error = &api.Error{
 			Code:    403,
@@ -83,7 +91,9 @@ func (s *Server) Review(ctx context.Context, in *admin.ReviewRequest) (out *admi
 // Accept the VASP registration and begin the certificate issuance process.
 func (s *Server) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 	// Change the VASP verification status
-	vasp.AdminVerificationToken = ""
+	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
+		return "", err
+	}
 	vasp.VerificationStatus = pb.VerificationState_REVIEWED
 	if err = s.db.Update(vasp); err != nil {
 		return "", err
@@ -93,14 +103,14 @@ func (s *Server) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 	// NOTE: there should only be one certificate request per VASP, but no errors occur
 	// if there are more than one (other than a logged warning).
 	var ncertreqs int
-	var careqs []*pb.CertificateRequest
+	var careqs []*models.CertificateRequest
 	if careqs, err = s.db.ListCertRequests(); err != nil {
 		return "", err
 	}
 
 	for _, req := range careqs {
-		if req.Vasp == vasp.Id && req.Status == pb.CertificateRequestState_INITIALIZED {
-			req.Status = pb.CertificateRequestState_READY_TO_SUBMIT
+		if req.Vasp == vasp.Id && req.Status == models.CertificateRequestState_INITIALIZED {
+			req.Status = models.CertificateRequestState_READY_TO_SUBMIT
 			if err = s.db.SaveCertRequest(req); err != nil {
 				return "", err
 			}
@@ -129,7 +139,9 @@ func (s *Server) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 // Reject the VASP registration and notify the contacts of the result.
 func (s *Server) rejectRegistration(vasp *pb.VASP, reason string) (msg string, err error) {
 	// Change the VASP verification status
-	vasp.AdminVerificationToken = ""
+	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
+		return "", err
+	}
 	vasp.VerificationStatus = pb.VerificationState_REJECTED
 	if err = s.db.Update(vasp); err != nil {
 		return "", err
@@ -137,7 +149,7 @@ func (s *Server) rejectRegistration(vasp *pb.VASP, reason string) (msg string, e
 
 	// Delete all pending certificate requests
 	var ncertreqs int
-	var careqs []*pb.CertificateRequest
+	var careqs []*models.CertificateRequest
 	if careqs, err = s.db.ListCertRequests(); err != nil {
 		return "", err
 	}

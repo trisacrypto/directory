@@ -165,10 +165,10 @@ func main() {
 			},
 		},
 		{
-			Name:     "status",
+			Name:     "verification",
 			Usage:    "check on the verification and service status of a VASP",
 			Category: "client",
-			Action:   status,
+			Action:   verification,
 			Before:   initClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -186,10 +186,10 @@ func main() {
 			},
 		},
 		{
-			Name:     "verify",
+			Name:     "verify-contact",
 			Usage:    "verify your email address with the token",
 			Category: "client",
-			Action:   verifyEmail,
+			Action:   verifyContact,
 			Before:   initClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -199,6 +199,23 @@ func main() {
 				cli.StringFlag{
 					Name:  "t, token",
 					Usage: "token that was emailed to you for verification",
+				},
+			},
+		},
+		{
+			Name:     "status",
+			Usage:    "send a health check request to the directory service",
+			Category: "client",
+			Action:   status,
+			Before:   initClient,
+			Flags: []cli.Flag{
+				&cli.UintFlag{
+					Name:  "a, attempts",
+					Usage: "set the number of previous attempts",
+				},
+				&cli.DurationFlag{
+					Name:  "l, last-checked",
+					Usage: "set the last checked field as this long ago",
 				},
 			},
 		},
@@ -354,19 +371,15 @@ func search(c *cli.Context) (err error) {
 		Website:          c.StringSlice("web"),
 		Country:          c.StringSlice("country"),
 		BusinessCategory: make([]models.BusinessCategory, 0, len(c.StringSlice("category"))),
-		VaspCategory:     make([]models.VASPCategory, 0, len(c.StringSlice("category"))),
+		VaspCategory:     make([]string, 0, len(c.StringSlice("category"))),
 	}
 
 	for _, cat := range c.StringSlice("category") {
 		if enum, ok := models.BusinessCategory_value[cat]; ok {
 			req.BusinessCategory = append(req.BusinessCategory, models.BusinessCategory(enum))
-			continue
+		} else {
+			req.VaspCategory = append(req.VaspCategory, cat)
 		}
-		if enum, ok := models.VASPCategory_value[cat]; ok {
-			req.VaspCategory = append(req.VaspCategory, models.VASPCategory(enum))
-			continue
-		}
-		return cli.NewExitError(fmt.Errorf("unknown category %q", cat), 1)
 	}
 
 	if len(req.Name) == 0 && len(req.Website) == 0 {
@@ -393,8 +406,8 @@ func search(c *cli.Context) (err error) {
 }
 
 // Check on verification and service status of a VASP
-func status(c *cli.Context) (err error) {
-	req := &api.StatusRequest{
+func verification(c *cli.Context) (err error) {
+	req := &api.VerificationRequest{
 		Id:                  c.String("id"),
 		RegisteredDirectory: c.String("directory"),
 		CommonName:          c.String("common-name"),
@@ -407,7 +420,7 @@ func status(c *cli.Context) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	rep, err := client.Status(ctx, req)
+	rep, err := client.Verification(ctx, req)
 	if err != nil {
 		return cli.NewExitError(err, 1)
 	}
@@ -416,8 +429,8 @@ func status(c *cli.Context) (err error) {
 }
 
 // Send email verification code to the directory serivce
-func verifyEmail(c *cli.Context) (err error) {
-	req := &api.VerifyEmailRequest{
+func verifyContact(c *cli.Context) (err error) {
+	req := &api.VerifyContactRequest{
 		Id:    c.String("id"),
 		Token: c.String("token"),
 	}
@@ -429,8 +442,28 @@ func verifyEmail(c *cli.Context) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	rep, err := client.VerifyEmail(ctx, req)
+	rep, err := client.VerifyContact(ctx, req)
 	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func status(c *cli.Context) (err error) {
+	req := &api.HealthCheck{
+		Attempts: uint32(c.Uint("attempts")),
+	}
+
+	if lastCheckedAgo := c.Duration("last-checked"); lastCheckedAgo != 0 {
+		req.LastCheckedAt = time.Now().Add(-1 * lastCheckedAgo).Format(time.RFC3339)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *api.ServiceState
+	if rep, err = client.Status(ctx, req); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
