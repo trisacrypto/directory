@@ -3,6 +3,7 @@ package sqlite
 import (
 	"errors"
 
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -37,15 +38,15 @@ func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err erro
 	return nil, nil
 }
 
-func (s *Store) ListCertRequests() (reqs []*pb.CertificateRequest, err error) {
+func (s *Store) ListCertRequests() (reqs []*models.CertificateRequest, err error) {
 	return nil, nil
 }
 
-func (s *Store) GetCertRequest(id string) (r *pb.CertificateRequest, err error) {
+func (s *Store) GetCertRequest(id string) (r *models.CertificateRequest, err error) {
 	return nil, nil
 }
 
-func (s *Store) SaveCertRequest(r *pb.CertificateRequest) (err error) {
+func (s *Store) SaveCertRequest(r *models.CertificateRequest) (err error) {
 	return nil
 }
 

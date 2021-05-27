@@ -23,6 +23,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	rvasp "github.com/trisacrypto/testnet/pkg/rvasp/pb/v1"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	api "github.com/trisacrypto/trisa/pkg/trisa/api/v1beta1"
@@ -386,7 +387,7 @@ func storeGet(c *cli.Context) (err error) {
 			}
 			value = vasp
 		} else if bytes.HasPrefix(key, []byte("certreqs")) {
-			careq := new(pb.CertificateRequest)
+			careq := new(models.CertificateRequest)
 			if err = proto.Unmarshal(data, careq); err != nil {
 				return cli.NewExitError(err, 1)
 			}
@@ -489,7 +490,7 @@ func storePut(c *cli.Context) (err error) {
 				return cli.NewExitError(err, 1)
 			}
 		} else if bytes.HasPrefix(key, []byte("certreqs")) {
-			careq := new(pb.CertificateRequest)
+			careq := new(models.CertificateRequest)
 			if err = json.Unmarshal(data, &careq); err != nil {
 				return cli.NewExitError(err, 1)
 			}
