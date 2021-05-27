@@ -28,23 +28,9 @@ message CertificateRequest {
     string profile = 11;
     string reject_reason = 12;
 
-    // Currently there is no choice but to store the PKCS12 password on the server
-    // because the certificate issuance command is separated in time by human review,
-    // which means it cannot be ephemerally kept in memory during the certificate
-    // generation request handoff. Moreover, the value cannot be hashed since it must
-    // be sent in plaintext via the Sectigo API and used to decrypt the downloaded
-    // packet in order to retrieve the public key material. To mitigate issues with the
-    // storage of this data, it is encrypted so that only a directory service with the
-    // correct secret key (e.g. the directory service process that created the request)
-    // can read the original value. Because this value should not be replicated it is
-    // stored in the certificate request which is maintained by independent replicas.
-    // TODO: Rebecca to remove for Google Secrets
-    bytes pkcs12password = 13;
-    bytes pkcs12signature = 14;
-
     // Logging information timestamps
-    string created = 15;
-    string modified = 16;
+    string created = 13;
+    string modified = 14;
 }
 
 enum CertificateRequestState {

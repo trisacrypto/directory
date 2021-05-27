@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -140,6 +141,8 @@ func (s *Server) Shutdown() (err error) {
 // Register a new VASP entity with the directory service. After registration, the new
 // entity must go through the verification process to get issued a certificate. The
 // status of verification can be obtained by using the lookup RPC call.
+// Register generates a PKCS12 password, provided in the RPC response which can be
+// used to access the certificate private keys when they're emailed.
 func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
 	out = &api.RegisterReply{}
 	vasp := &pb.VASP{
@@ -214,16 +217,41 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
 
-	if certRequest.Pkcs12Password, certRequest.Pkcs12Signature, err = s.Encrypt(password); err != nil {
-		log.Error().Err(err).Msg("could not encrypt password to store in database")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: "could not create certificate request password",
+	// Create a secret in Secret Manager, using the path
+	// "projects" + conf.SecretConfig.Project + conf.DirectoryID + vasp.CommonName
+	parent := fmt.Sprintf("projects/%s/%s/%s", s.conf.Secrets.Project, s.conf.DirectoryID, vasp.CommonName)
+	secretPath, err := CreateSecret(parent, "password")
+	if err != nil {
+		// If the application can't write to secret manager, raise a permissions error
+		if strings.Contains(err.Error(), "service account doesn't have permissions to create client") {
+			log.Error().Err(err).Msg("unable to write new secret to secret manager")
+			out.Error = &api.Error{
+				Code:    403,
+				Message: err.Error(),
+			}
+			return out, nil
+		}
+		// If the VASP already has a password set up, we'll get an already exists error
+		// This means we can skip to the next step and create a new secret version
+		if strings.Contains(err.Error(), "rpc error: code = AlreadyExists") {
+			secretPath = fmt.Sprintf("projects/%s/%s/%s/secrets/password", s.conf.Secrets.Number, s.conf.DirectoryID, vasp.CommonName)
+			log.Info().Msg("password already exists, new version will be created")
 		}
 	}
 
+	// Create a new secret version in Secret Manager, using the path returned in the previous step & the password as payload
+	err = AddSecretVersion(secretPath, password)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to write new secret version to secret manager")
+		out.Error = &api.Error{
+			Code:    403,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+
 	if err = s.db.SaveCertRequest(certRequest); err != nil {
-		log.Error().Err(err).Msg("could save certificate request for VASP")
+		log.Error().Err(err).Msg("could not save certificate request for VASP")
 		out.Error = &api.Error{
 			Code:    500,
 			Message: err.Error(),
@@ -406,8 +434,7 @@ func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) 
 
 // VerifyEmail checks the contact tokens for the specified VASP and registers the
 // contact email verification. If successful, this method then sends the verification
-// request to the TRISA Admins for review and generates a PKCS12 password in the RPC
-// response to decrypt the certificate private keys when they're emailed.
+// request to the TRISA Admins for review.
 func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
 	out = &api.VerifyContactReply{}
 

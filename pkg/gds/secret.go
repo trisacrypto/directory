@@ -1,22 +1,18 @@
 package gds
 
 import (
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/hmac"
-	crand "crypto/rand"
-	"crypto/sha256"
-	"errors"
-	"io"
+	"context"
 	"math/rand"
 	"strings"
 	"time"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"google.golang.org/api/iterator"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-const nonceSize = 12
-
-var chars = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890")
+var chars = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&'()*+,-./:;<=>?@[]^_`{|}~")
 
 // CreateToken creates a variable length random token that can be used for passwords or API keys.
 func CreateToken(length int) string {
@@ -28,108 +24,192 @@ func CreateToken(length int) string {
 	return b.String()
 }
 
-// Encrypt is a helper utility to encrypt a plain text string with the server's secret
-// token, returns a cipher string which is the base64 encoded
-func (s *Server) Encrypt(plaintext string) (ciphertext, signature []byte, err error) {
-	// Create a 32 byte signature of the key
-	hash := sha256.New()
-	hash.Write([]byte(s.conf.SecretKey))
-	key := hash.Sum(nil)
 
-	block, err := aes.NewCipher(key)
+// PingManager checks to make sure we can create a new client.
+// This validates IAM permissions to some extent.
+func PingManager(parent string) error {
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		return nil, nil, err
+			return err
+		}
 	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	nonce, err := genNonce(nonceSize)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ciphertext = aesgcm.Seal(nil, nonce, []byte(plaintext), nil)
-	if len(ciphertext) == 0 {
-		return nil, nil, errors.New("could not encrypt secret with aes gcm")
-	}
-
-	sig, err := createHMAC(key, ciphertext)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Concatenate the ciphertext and the nonce to facilitate decryption
-	ciphertext = append(ciphertext, nonce...)
-	return ciphertext, sig, nil
+	client.Close()
+	return nil
 }
 
-// Decrypt the ciphertext with the server's secret key and verify the HMAC.
-func (s *Server) Decrypt(ciphertext, signature []byte) (plaintext string, err error) {
-	if len(ciphertext) == 0 {
-		return "", errors.New("empty cipher text")
-	}
+// CreateSecret creates a new secret in the Google Cloud Manager top-
+// level directory, specified as `parent`, using the `secretID` provided
+// as the name, to expire after `expiration` seconds.
+// The parent should be a path, e.g.
+//     "projects/project-name"
+// This function returns a string representation of the path where the
+// new secret is stored, e.g.
+//     "projects/projectID/secrets/secretID"
+// and an error if any occurs.
+// Note: A secret is a logical wrapper around a collection of secret versions.
+// Secret versions hold the actual secret material.
+func CreateSecret(parent string, secretID string, expiration int64) (string, error) {
 
-	// Create a 32 byte signature of the key
-	hash := sha256.New()
-	hash.Write([]byte(s.conf.SecretKey))
-	key := hash.Sum(nil)
-
-	// Separate the data from the nonce
-	data := ciphertext[:len(ciphertext)-nonceSize]
-	nonce := ciphertext[len(ciphertext)-nonceSize:]
-
-	// Validate HMAC signature
-	if err = validateHMAC(key, data, signature); err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return "", err
 	}
+	defer client.Close()
 
-	aesgcm, err := cipher.NewGCM(block)
+	// Build the request.
+	req := &secretmanagerpb.CreateSecretRequest{
+		Parent:   parent,
+		SecretId: secretID,
+		Secret: &secretmanagerpb.Secret{
+			Replication: &secretmanagerpb.Replication{
+				Replication: &secretmanagerpb.Replication_Automatic_{
+					Automatic: &secretmanagerpb.Replication_Automatic{},
+				},
+			},
+			Expiration: &secretmanagerpb.Secret_Ttl{
+				Ttl: &durationpb.Duration{
+					Seconds: expiration,
+				},
+			},
+		},
+	}
+
+	// Call the API.
+	result, err := client.CreateSecret(ctx, req)
 	if err != nil {
 		return "", err
 	}
+	return result.Name, nil
+}
 
-	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
+// AddSecretVersion adds a new secret version to the given secret path with the
+// provided payload. The path should be the full path to the secret, e.g.
+//     "projects/projectID/secrets/secretID"
+// Returns an error if one occurs.
+func AddSecretVersion(path string, payload []byte) error {
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		return "", err
+		return err
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.AddSecretVersionRequest{
+		Parent: path,
+		Payload: &secretmanagerpb.SecretPayload{
+			Data: payload,
+		},
 	}
 
-	return string(plainbytes), nil
-}
-
-func genNonce(n int) ([]byte, error) {
-	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
-	nonce := make([]byte, n)
-	if _, err := io.ReadFull(crand.Reader, nonce); err != nil {
-		return nil, err
-	}
-	return nonce, nil
-}
-
-func createHMAC(key, data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, errors.New("cannot sign empty data")
-	}
-	hm := hmac.New(sha256.New, key)
-	hm.Write(data)
-	return hm.Sum(nil), nil
-}
-
-func validateHMAC(key, data, sig []byte) error {
-	hmac, err := createHMAC(key, data)
+	// Call the API.
+	result, err := client.AddSecretVersion(ctx, req)
 	if err != nil {
 		return err
 	}
 
-	if !bytes.Equal(sig, hmac) {
-		return errors.New("HMAC mismatch")
+	return nil
+}
+
+// AccessSecretVersion returns the payload for the given secret version if one
+// exists. The `version` is the full path to the secret version, and can be a
+// version number as a string (e.g. "5") or an alias (e.g. "latest"), i.e.
+//     "projects/projectID/secrets/secretID/versions/latest"
+//     "projects/projectID/secrets/secretID/versions/5"
+func AccessSecretVersion(version string) ([]byte, error) {
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: version,
+	}
+
+	// Call the API.
+	result, err := client.AccessSecretVersion(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Payload.Data, nil
+}
+
+// DeleteSecret deletes the secret with the given `name`, and all of its versions.
+// `name` should be the root path to the secret, e.g.:
+//     "projects/projectID/secrets/secretID"
+// This is an irreversible operation. Any service or workload that attempts to
+// access a deleted secret receives a Not Found error.
+func DeleteSecret(name string) error {
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.DeleteSecretRequest{
+		Name: name,
+	}
+
+	// Call the API.
+	if err := client.DeleteSecret(ctx, req); err != nil {
+		return err
 	}
 	return nil
+}
+
+// ListSecrets retrieves the names of all secrets in the project,
+// given the `parent`, e.g.:
+//     "projects/my-project"
+// It returns a slice of strings representing the paths to the retrieved secrets,
+// and a matching slice of errors for each failed retrieval.
+func ListSecrets(parent string) (secrets []string, errors []error) {
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return secrets, append(errors, err)
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.ListSecretsRequest{
+		Parent: parent,
+	}
+
+	// Call the API.
+	it := client.ListSecrets(ctx, req)
+
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		if err != nil {
+			errors = append(errors, err)
+			secrets = append(secrets, "")
+			continue
+		}
+		secrets = append(secrets, resp.Name)
+		errors = append(errors, nil)
+	}
+	return secrets, errors
 }

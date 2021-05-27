@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,23 +27,6 @@ func main() {
 	app.Usage = "local disk certificate management and test CA"
 	app.Flags = []cli.Flag{}
 	app.Commands = []cli.Command{
-		{
-			Name:      "decrypt",
-			Usage:     "decrypt a PKCS12 zip file from Sectigo and save as gzip provider",
-			ArgsUsage: "src",
-			Category:  "certs",
-			Action:    decrypt,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "o, outpath",
-					Usage: "location to write the decrypted PEM file out to",
-				},
-				cli.StringFlag{
-					Name:  "p, password",
-					Usage: "the PKCS12 password to decrypt the file with",
-				},
-			},
-		},
 		{
 			Name:      "pool",
 			Usage:     "create a trust chain pool from certificates on disk",
@@ -129,40 +111,6 @@ func main() {
 	}
 
 	app.Run(os.Args)
-}
-
-func decrypt(c *cli.Context) (err error) {
-	if c.NArg() != 1 {
-		return cli.NewExitError("specify one source PKCS12 file", 1)
-	}
-
-	path := c.Args()[0]
-	var outpath, password string
-	if password = c.String("password"); password == "" {
-		return cli.NewExitError("specify password to decrypt", 1)
-	}
-	if outpath = c.String("outpath"); outpath == "" {
-		outpath = strings.TrimSuffix(path, filepath.Ext(path)) + ".gz"
-	}
-
-	var sz *trust.Serializer
-	if sz, err = trust.NewSerializer(true, password); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	var provider *trust.Provider
-	if provider, err = sz.ReadFile(path); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	if sz, err = trust.NewSerializer(false); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	if err = sz.WriteFile(provider, outpath); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	return nil
 }
 
 func pool(c *cli.Context) (err error) {

@@ -11,21 +11,24 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_BIND_ADDR":        ":443",
-	"GDS_DATABASE_URL":     "fixtures/db",
-	"SECTIGO_USERNAME":     "foo",
-	"SECTIGO_PASSWORD":     "supersecret",
-	"SENDGRID_API_KEY":     "bar1234",
-	"GDS_SERVICE_EMAIL":    "test@example.com",
-	"GDS_ADMIN_EMAIL":      "admin@example.com",
-	"GDS_LOG_LEVEL":        "debug",
-	"GDS_DIRECTORY_ID":     "testdirectory.org",
-	"GDS_SECRET_KEY":       "theeaglefliesatmidnight",
-	"GDS_CERTMAN_INTERVAL": "60s",
-	"GDS_CERTMAN_STORAGE":  "fixtures/certs",
-	"GDS_BACKUP_ENABLED":   "true",
-	"GDS_BACKUP_INTERVAL":  "36h",
-	"GDS_BACKUP_STORAGE":   "fixtures/backups",
+	"GDS_BIND_ADDR":                  ":443",
+	"GDS_DATABASE_URL":               "fixtures/db",
+	"SECTIGO_USERNAME":               "foo",
+	"SECTIGO_PASSWORD":               "supersecret",
+	"SENDGRID_API_KEY":               "bar1234",
+	"GDS_SERVICE_EMAIL":              "test@example.com",
+	"GDS_ADMIN_EMAIL":                "admin@example.com",
+	"GDS_LOG_LEVEL":                  "debug",
+	"GDS_DIRECTORY_ID":               "testdirectory.org",
+	"GDS_SECRET_KEY":                 "theeaglefliesatmidnight",
+	"GDS_CERTMAN_INTERVAL":           "60s",
+	"GDS_CERTMAN_STORAGE":            "fixtures/certs",
+	"GDS_BACKUP_ENABLED":             "true",
+	"GDS_BACKUP_INTERVAL":            "36h",
+	"GDS_BACKUP_STORAGE":             "fixtures/backups",
+	"GOOGLE_APPLICATION_CREDENTIALS": "test.json",
+	"GOOGLE_PROJECT_NAME":            "test",
+	"GOOGLE_PROJECT_NUMBER":          "12345",
 }
 
 func TestConfig(t *testing.T) {
@@ -61,6 +64,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Backup.Enabled)
 	require.Equal(t, 36*time.Hour, conf.Backup.Interval)
 	require.Equal(t, testEnv["GDS_BACKUP_STORAGE"], conf.Backup.Storage)
+	require.Equal(t, testEnv["GOOGLE_APPLICATION_CREDENTIALS"], conf.Secrets.Credentials)
+	require.Equal(t, testEnv["GOOGLE_PROJECT_NAME"], conf.Secrets.Project)
+	require.Equal(t, testEnv["GOOGLE_PROJECT_NUMBER"], conf.Secrets.Number)
 }
 
 func TestRequiredConfig(t *testing.T) {

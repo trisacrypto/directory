@@ -37,6 +37,13 @@ func (s *Server) CertManager() {
 		log.Fatal().Err(err).Msg("cert-manager cannot access certificate storage")
 	}
 
+	// Naive check to see if CertMan can connect to secret manager
+	parent := fmt.Sprintf("projects/%s/%s/%s", s.conf.Secrets.Project)
+	err := PingManager(parent)
+	if err != nil {
+		log.Fatal().Err(err).Msg("cert-manager cannot access secret manager")
+	}
+
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
 	ticker := time.NewTicker(s.conf.CertMan.Interval)
@@ -92,21 +99,15 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 		return err
 	}
 
-	// Step 2: create the certificate params, decrypting the PKCS 12 password
-	params := make(map[string]string)
-	params["commonName"] = r.CommonName
-	if params["pkcs12Password"], err = s.Decrypt(r.Pkcs12Password, r.Pkcs12Signature); err != nil {
-		return fmt.Errorf("could not decrypt pkcs12password: %s", err)
-	}
-
-	// Step 3: submit the certificate
+	// Step 2: submit the certificate
 	var rep *sectigo.BatchResponse
+	params := make(map[string]string)
 	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		return fmt.Errorf("could not create single certificate batch: %s", err)
 	}
 
-	// Step 4: update the certificate request with the batch details
+	// Step 3: update the certificate request with the batch details
 	r.AuthorityId = int64(authority)
 	r.BatchId = int64(rep.BatchID)
 	r.BatchName = rep.BatchName
@@ -277,10 +278,10 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
-	// Unpack the certificate and fetch the public key material
-	var pkcs12password string
-	if pkcs12password, err = s.Decrypt(r.Pkcs12Password, r.Pkcs12Signature); err != nil {
-		log.Error().Err(err).Msg("could not decrypt pkcs12password to extract public key")
+	// Retrieve password from secret manager using the path
+	version := fmt.Sprintf("projects/%s/%s/%s/secrets/password/latest", s.conf.Secrets.Number, s.conf.DirectoryID, vasp.CommonName)
+	if pkcs12password, err = AccessSecretVersion(version); err != nil {
+		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
 	}
 
@@ -301,7 +302,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		log.Error().Err(err).Msg("could not deliver certificates to technical contact")
 	}
 
-	// Mark certficate request as complete.
+	// Mark certificate request as complete.
 	r.Status = models.CertificateRequestState_COMPLETED
 	if err = s.db.SaveCertRequest(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
