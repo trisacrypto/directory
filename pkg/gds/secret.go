@@ -24,7 +24,6 @@ func CreateToken(length int) string {
 	return b.String()
 }
 
-
 // PingManager checks to make sure we can create a new client.
 // This validates IAM permissions to some extent.
 func PingManager(parent string) error {
@@ -33,8 +32,7 @@ func PingManager(parent string) error {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-			return err
-		}
+		return err
 	}
 	client.Close()
 	return nil
@@ -110,7 +108,7 @@ func AddSecretVersion(path string, payload []byte) error {
 	}
 
 	// Call the API.
-	result, err := client.AddSecretVersion(ctx, req)
+	_, err = client.AddSecretVersion(ctx, req)
 	if err != nil {
 		return err
 	}

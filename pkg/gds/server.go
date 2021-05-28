@@ -240,7 +240,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 
 	// Create a new secret version in Secret Manager, using the path returned in the previous step & the password as payload
-	err = AddSecretVersion(secretPath, password)
+	err = AddSecretVersion(secretPath, []byte(password))
 	if err != nil {
 		log.Error().Err(err).Msg("unable to write new secret version to secret manager")
 		out.Error = &api.Error{
