@@ -2,6 +2,7 @@ package models
 
 import (
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // GetAdminVerificationToken from the extra data on the VASP record.
@@ -21,11 +22,14 @@ func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 
 // SetAdminVerificationToken on the extra data on the VASP record (completely replaces
 // the old record, which may not be ideal).
-func SetAdminVerificationToken(vasp *pb.VASP, token string) error {
+func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 	extra := &GDSExtraData{
 		AdminVerificationToken: token,
 	}
-	return vasp.Extra.MarshalFrom(extra)
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetContactVerification token and verified status from the extra data field on the Contact.
@@ -45,10 +49,13 @@ func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 
 // SetContactVerification token and verified status on the Contact record (completely
 // replaces the old record, which may not be ideal).
-func SetContactVerification(contact *pb.Contact, token string, verified bool) error {
+func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
 	extra := &GDSContactExtraData{
 		Verified: verified,
 		Token:    token,
 	}
-	return contact.Extra.MarshalFrom(extra)
+	if contact.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
 }
