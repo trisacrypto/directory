@@ -2,11 +2,11 @@ package gds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -217,31 +217,75 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
 
-	// Create a secret in Secret Manager, using the path
-	// "projects" + conf.SecretConfig.Project + conf.DirectoryID + vasp.CommonName
-	parent := fmt.Sprintf("projects/%s/%s/%s", s.conf.Secrets.Project, s.conf.DirectoryID, vasp.CommonName)
-	secretPath, err := CreateSecret(parent, "password")
+	// Create a new Secret Manager
+	sm, err := NewSecretManager(s.conf, certRequest.Id)
+
+	// If the application can't access secret manager, we won't be able to keep going
+	// so raise a permissions error and return.
 	if err != nil {
-		// If the application can't write to secret manager, raise a permissions error
-		if strings.Contains(err.Error(), "service account doesn't have permissions to create client") {
-			log.Error().Err(err).Msg("unable to write new secret to secret manager")
+		log.Error().Err(err).Msg("unable to access secret manager")
+		out.Error = &api.Error{
+			Code:    403,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+
+	// Make a new secret of type "password"
+	secret := "password"
+	err = sm.CreateSecret(ctx, secret)
+
+	// If the application can't create a new secret, check to see what the problem is.
+	if err != nil {
+		// If it's a timeout, that means the secret manager API call was bad
+		if errors.Is(err, context.DeadlineExceeded) {
+			log.Error().Err(err).Msg("malformed call to secret manager")
 			out.Error = &api.Error{
-				Code:    403,
+				Code:    400,
 				Message: err.Error(),
 			}
 			return out, nil
 		}
-		// If the VASP already has a password set up, we'll get an already exists error
-		// This means we can skip to the next step and create a new secret version
-		if strings.Contains(err.Error(), "rpc error: code = AlreadyExists") {
-			secretPath = fmt.Sprintf("projects/%s/%s/%s/secrets/password", s.conf.Secrets.Number, s.conf.DirectoryID, vasp.CommonName)
-			log.Info().Msg("password already exists, new version will be created")
+		// If the secret already exists (which means that the client has previously
+		// created a password), that's okay
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.AlreadyExists {
+			log.Error().Err(err).Msg("password already exists for client; creating new password")
 		}
+		// If it's a more serious problem, that likely signals a permissions error
+		// and merits a return.
+		log.Error().Err(err).Msg("secret manager error; is GOOGLE_PROJECT_NAME set?")
+		out.Error = &api.Error{
+			Code:    403,
+			Message: err.Error(),
+		}
+		return out, nil
 	}
 
-	// Create a new secret version in Secret Manager, using the path returned in the previous step & the password as payload
-	err = AddSecretVersion(secretPath, []byte(password))
+	// Create a new version for the secret using the password as payload
+	err = sm.AddSecretVersion(ctx, secret, []byte(password))
 	if err != nil {
+		// If it's a timeout, that means the secret manager API call was bad
+		if errors.Is(err, context.DeadlineExceeded) {
+			log.Error().Err(err).Msg("malformed call to secret manager")
+			out.Error = &api.Error{
+				Code:    400,
+				Message: err.Error(),
+			}
+			return out, nil
+		}
+
+		// If the secret is not Not Found, something bad happened.
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.NotFound {
+			log.Error().Err(err).Msg("secret does not exist, unable to add new secret version")
+			out.Error = &api.Error{
+				Code:    500,
+				Message: err.Error(),
+			}
+			return out, nil
+		}
+
 		log.Error().Err(err).Msg("unable to write new secret version to secret manager")
 		out.Error = &api.Error{
 			Code:    403,

@@ -2,14 +2,17 @@ package gds
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"google.golang.org/api/iterator"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var chars = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&'()*+,-./:;<=>?@[]^_`{|}~")
@@ -24,190 +27,180 @@ func CreateToken(length int) string {
 	return b.String()
 }
 
-// PingManager checks to make sure we can create a new client.
-// This validates IAM permissions to some extent.
-func PingManager(parent string) error {
+// SecretManager holds a client to the Google secret manager, and the path to the `parent` project for the secret manager.
+type SecretManager struct {
+	requestId string
+	parent    string
+	client    *secretmanager.Client
+}
 
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return err
+// NewSecretManager creates and returns a new secret manager client and an error if one occurs.
+// Note that the `secretmanager` package leverages the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable which specifies the json path to the service account
+// credentials, meaning that this function is a lightweight method for testing
+// that the application can successfully connect to the secret manager API.
+// However, this function does not validate the parent path.
+func NewSecretManager(config config.Config, certRequest string) (sm *SecretManager, err error) {
+
+	sm = &SecretManager{
+		parent:    fmt.Sprintf("projects/%s", config.Secrets.Project),
+		requestId: certRequest,
 	}
-	client.Close()
-	return nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if sm.client, err = secretmanager.NewClient(ctx); err != nil {
+		return nil, fmt.Errorf("could not connect to secret manager: %s", err)
+	}
+
+	return sm, nil
 }
 
 // CreateSecret creates a new secret in the Google Cloud Manager top-
-// level directory, specified as `parent`, using the `secretID` provided
-// as the name, to expire after `expiration` seconds.
-// The parent should be a path, e.g.
-//     "projects/project-name"
-// This function returns a string representation of the path where the
-// new secret is stored, e.g.
-//     "projects/projectID/secrets/secretID"
-// and an error if any occurs.
+// level directory using the `secret` name provided.
+// This function returns an error if any occurs.
 // Note: A secret is a logical wrapper around a collection of secret versions.
-// Secret versions hold the actual secret material.
-func CreateSecret(parent string, secretID string, expiration int64) (string, error) {
+// To store a secret payload, you must first CreateSecret and then AddSecretVersion.
+func (sm *SecretManager) CreateSecret(ctx context.Context, secret string) error {
 
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return "", err
-	}
-	defer client.Close()
+	secretName := fmt.Sprintf("%s-%s", sm.requestId, secret)
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	// Build the request.
 	req := &secretmanagerpb.CreateSecretRequest{
-		Parent:   parent,
-		SecretId: secretID,
+		Parent:   sm.parent,
+		SecretId: secretName,
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
 				Replication: &secretmanagerpb.Replication_Automatic_{
 					Automatic: &secretmanagerpb.Replication_Automatic{},
 				},
 			},
-			Expiration: &secretmanagerpb.Secret_Ttl{
-				Ttl: &durationpb.Duration{
-					Seconds: expiration,
-				},
-			},
 		},
 	}
 
-	// Call the API.
-	result, err := client.CreateSecret(ctx, req)
+	// Call the API. Note: We don't actually need the result that comes back from the API call
+	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
+	_, err := sm.client.CreateSecret(sctx, req)
 	if err != nil {
-		return "", err
-	}
-	return result.Name, nil
-}
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
 
-// AddSecretVersion adds a new secret version to the given secret path with the
-// provided payload. The path should be the full path to the secret, e.g.
-//     "projects/projectID/secrets/secretID"
-// Returns an error if one occurs.
-func AddSecretVersion(path string, payload []byte) error {
+		// If the secret already exists, that means the client already has a password set up
+		// This is fine because we'll just create a new version with a new password for them
+		// and CertMan will always look for the most recent secret version.
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.AlreadyExists {
+			return err
+		}
 
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
+		// If the error is something else, something went wrong.
 		return err
 	}
-	defer client.Close()
+	return nil
+}
+
+// AddSecretVersion adds a new secret version to the given secret and the
+// provided payload. Returns an error if one occurs.
+// Note: to add a secret version, the secret must first be created using CreateSecret.
+func (sm *SecretManager) AddSecretVersion(ctx context.Context, secret string, payload []byte) error {
+
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", sm.parent, sm.requestId, secret)
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	// Build the request.
 	req := &secretmanagerpb.AddSecretVersionRequest{
-		Parent: path,
+		Parent: secretPath,
 		Payload: &secretmanagerpb.SecretPayload{
 			Data: payload,
 		},
 	}
 
-	// Call the API.
-	_, err = client.AddSecretVersion(ctx, req)
+	// Call the API. Note: We don't actually need the result that comes back from the API call
+	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
+	_, err := sm.client.AddSecretVersion(sctx, req)
 	if err != nil {
-		return err
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+
+		// If the secret does not exist (e.g. has been deleted or hasn't been created yet)
+		// we'll get a Not Found error
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.NotFound {
+			return err
+		}
+
+		// If the error is something else, something went wrong.
+		return errors.New("unknown error: unable to create secret version")
 	}
 
 	return nil
 }
 
-// AccessSecretVersion returns the payload for the given secret version if one
-// exists. The `version` is the full path to the secret version, and can be a
-// version number as a string (e.g. "5") or an alias (e.g. "latest"), i.e.
-//     "projects/projectID/secrets/secretID/versions/latest"
-//     "projects/projectID/secrets/secretID/versions/5"
-func AccessSecretVersion(version string) ([]byte, error) {
+// GetLatestVersion returns the payload for the latest version of the given secret,
+// if one exists, else an error.
+func (sm *SecretManager) GetLatestVersion(ctx context.Context, secret string) ([]byte, error) {
 
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
+	versionPath := fmt.Sprintf("%s/secrets/%s-%s/versions/latest", sm.parent, sm.requestId, secret)
+
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	// Build the request.
 	req := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: version,
+		Name: versionPath,
 	}
 
 	// Call the API.
-	result, err := client.AccessSecretVersion(ctx, req)
+	result, err := sm.client.AccessSecretVersion(sctx, req)
 	if err != nil {
-		return nil, err
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
+		}
+
+		// If the error is something else, something went wrong.
+		return nil, errors.New("unknown error: unable to access latest secret version")
 	}
 
 	return result.Payload.Data, nil
 }
 
-// DeleteSecret deletes the secret with the given `name`, and all of its versions.
-// `name` should be the root path to the secret, e.g.:
-//     "projects/projectID/secrets/secretID"
-// This is an irreversible operation. Any service or workload that attempts to
+// DeleteSecret deletes the secret with the given the name, and all of its versions.
+// Note: this is an irreversible operation. Any service or workload that attempts to
 // access a deleted secret receives a Not Found error.
-func DeleteSecret(name string) error {
+func (sm *SecretManager) DeleteSecret(ctx context.Context, secret string) error {
 
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", sm.parent, sm.requestId, secret)
+
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	// Build the request.
 	req := &secretmanagerpb.DeleteSecretRequest{
-		Name: name,
+		Name: secretPath,
 	}
 
 	// Call the API.
-	if err := client.DeleteSecret(ctx, req); err != nil {
-		return err
+	err := sm.client.DeleteSecret(sctx, req)
+	if err != nil {
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		// If the error is something else, something went wrong.
+		return errors.New("unknown error: unable to delete secret")
 	}
 	return nil
-}
-
-// ListSecrets retrieves the names of all secrets in the project,
-// given the `parent`, e.g.:
-//     "projects/my-project"
-// It returns a slice of strings representing the paths to the retrieved secrets,
-// and a matching slice of errors for each failed retrieval.
-func ListSecrets(parent string) (secrets []string, errors []error) {
-
-	// Create the client.
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return secrets, append(errors, err)
-	}
-	defer client.Close()
-
-	// Build the request.
-	req := &secretmanagerpb.ListSecretsRequest{
-		Parent: parent,
-	}
-
-	// Call the API.
-	it := client.ListSecrets(ctx, req)
-
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-
-		if err != nil {
-			errors = append(errors, err)
-			secrets = append(secrets, "")
-			continue
-		}
-		secrets = append(secrets, resp.Name)
-		errors = append(errors, nil)
-	}
-	return secrets, errors
 }

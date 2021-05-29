@@ -2,6 +2,7 @@ package gds
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
@@ -37,9 +38,11 @@ func (s *Server) CertManager() {
 		log.Fatal().Err(err).Msg("cert-manager cannot access certificate storage")
 	}
 
-	// Naive check to see if CertMan can connect to secret manager
-	parent := fmt.Sprintf("projects/%s/%s/%s", s.conf.Secrets.Project)
-	err := PingManager(parent)
+	// Create a new Secret Manager to see if CertMan can connect; pass in an empty string
+	// for requestID since we're only validating that GOOGLE_APPLICATION_CREDENTIALS is
+	// properly set and CertMan has access
+	_, err = NewSecretManager(s.conf, "")
+
 	if err != nil {
 		log.Fatal().Err(err).Msg("cert-manager cannot access secret manager")
 	}
@@ -99,15 +102,27 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 		return err
 	}
 
-	// Step 2: submit the certificate
-	var rep *sectigo.BatchResponse
+	// Step 2: get the password
+	sm, err := NewSecretManager(s.conf, r.Id)
+	secretType := "password"
+	pkcs12Password, err := sm.GetLatestVersion(context.Background(), secretType)
+	if err != nil {
+		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
+	}
+
 	params := make(map[string]string)
+	params["commonName"] = r.CommonName
+	params["pkcs12Password"] = string(pkcs12Password)
+
+	// Step 3: submit the certificate
+	var rep *sectigo.BatchResponse
+
 	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		return fmt.Errorf("could not create single certificate batch: %s", err)
 	}
 
-	// Step 3: update the certificate request with the batch details
+	// Step 4: update the certificate request with the batch details
 	r.AuthorityId = int64(authority)
 	r.BatchId = int64(rep.BatchID)
 	r.BatchName = rep.BatchName
@@ -278,14 +293,18 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
-	// Retrieve password from secret manager using the path
-	version := fmt.Sprintf("projects/%s/%s/%s/secrets/password/latest", s.conf.Secrets.Number, s.conf.DirectoryID, vasp.CommonName)
-	if pkcs12password, err = AccessSecretVersion(version); err != nil {
+	// Create a request-specific secret manager to connect to the API
+	sm, err := NewSecretManager(s.conf, r.Id)
+
+	// Retrieve the latest secret version for the password
+	secretType := "password"
+	pkcs12password, err := sm.GetLatestVersion(context.Background(), secretType)
+	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
 	}
 
-	if vasp.IdentityCertificate, err = extractCertificate(path, pkcs12password); err != nil {
+	if vasp.IdentityCertificate, err = extractCertificate(path, string(pkcs12password)); err != nil {
 		log.Error().Err(err).Msg("could not extract certificate")
 		return
 	}
