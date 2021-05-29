@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -29,8 +30,7 @@ func (s *Server) VerifyContactEmail(vasp *pb.VASP) (err error) {
 
 	for _, contact := range contacts {
 		if contact != nil && contact.Email != "" {
-			contact.Token = CreateToken(48)
-			contact.Verified = false
+			models.SetContactVerification(contact, CreateToken(48), false)
 		}
 	}
 
@@ -45,9 +45,11 @@ func (s *Server) VerifyContactEmail(vasp *pb.VASP) (err error) {
 		}
 
 		ctx := verifyContactContext{
-			Name:  contact.Name,
-			Token: contact.Token,
-			VID:   vasp.Id,
+			Name: contact.Name,
+			VID:  vasp.Id,
+		}
+		if ctx.Token, _, err = models.GetContactVerification(contact); err != nil {
+			return err
 		}
 
 		var text, html string
@@ -72,7 +74,9 @@ func (s *Server) VerifyContactEmail(vasp *pb.VASP) (err error) {
 func (s *Server) ReviewRequestEmail(vasp *pb.VASP) (err error) {
 	// Create verification token for admin and update database
 	// TODO: replace with actual authentication
-	vasp.AdminVerificationToken = CreateToken(48)
+	if err = models.SetAdminVerificationToken(vasp, CreateToken(48)); err != nil {
+		return err
+	}
 	if err = s.db.Update(vasp); err != nil {
 		return fmt.Errorf("could not save admin verification token: %s", err)
 	}
@@ -85,7 +89,9 @@ func (s *Server) ReviewRequestEmail(vasp *pb.VASP) (err error) {
 	ctx := reviewRequestContext{
 		VID:     vasp.Id,
 		Request: string(data),
-		Token:   vasp.AdminVerificationToken,
+	}
+	if ctx.Token, err = models.GetAdminVerificationToken(vasp); err != nil {
+		return err
 	}
 
 	var text, html string
@@ -117,7 +123,12 @@ func (s *Server) RejectRegistrationEmail(vasp *pb.VASP, reason string) (err erro
 	}
 
 	for _, contact := range contacts {
-		if contact != nil && contact.Verified {
+		var verified bool
+		if _, verified, err = models.GetContactVerification(contact); err != nil {
+			return err
+		}
+
+		if contact != nil && verified {
 			ctx.Name = contact.Name
 			var text, html string
 			if text, err = execTemplateString(rejectRegistrationPlainText, ctx); err != nil {
@@ -152,7 +163,11 @@ func (s *Server) DeliverCertificatesEmail(vasp *pb.VASP, path string) (err error
 	}
 
 	for _, contact := range contacts {
-		if contact != nil && contact.Verified {
+		var verified bool
+		if _, verified, err = models.GetContactVerification(contact); err != nil {
+			return err
+		}
+		if contact != nil && verified {
 			ctx.Name = contact.Name
 			var text, html string
 			if text, err = execTemplateString(deliverCertsPlainText, ctx); err != nil {

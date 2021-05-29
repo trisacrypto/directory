@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/trisacrypto/testnet v0.0.0-20210507152725-a3a61183deaf
-	github.com/trisacrypto/trisa v0.1.0
+	github.com/trisacrypto/trisa v0.2.0
 	github.com/urfave/cli v1.22.5
 	google.golang.org/grpc v1.37.0
 	google.golang.org/protobuf v1.26.0

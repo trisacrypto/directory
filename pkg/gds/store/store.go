@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -56,9 +57,9 @@ type DirectoryStore interface {
 
 // CertificateStore describes how the service interacts with Certificate requests.
 type CertificateStore interface {
-	ListCertRequests() ([]*pb.CertificateRequest, error)
-	GetCertRequest(id string) (*pb.CertificateRequest, error)
-	SaveCertRequest(r *pb.CertificateRequest) error
+	ListCertRequests() ([]*models.CertificateRequest, error)
+	GetCertRequest(id string) (*models.CertificateRequest, error)
+	SaveCertRequest(r *models.CertificateRequest) error
 	DeleteCertRequest(id string) error
 }
 

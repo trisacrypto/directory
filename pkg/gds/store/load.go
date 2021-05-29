@@ -90,9 +90,8 @@ func Load(db Store, path string) (err error) {
 			vasp.Entity.GeographicAddresses[0].Country = "XX"
 		}
 
-		if vasp.VaspCategory, err = pb.ParseVASPCategory(record[2]); err != nil {
-			return err
-		}
+		// TODO: better handling of VASP category in record[2]
+		vasp.VaspCategories = []string{record[2]}
 
 		var website *url.URL
 		if website, err = url.Parse(record[3]); err != nil {

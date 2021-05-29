@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -47,7 +48,7 @@ func (s *Server) CertManager() {
 
 		// Retrieve all certificate requests from the database
 		var err error
-		var careqs []*pb.CertificateRequest
+		var careqs []*models.CertificateRequest
 		if careqs, err = s.db.ListCertRequests(); err != nil {
 			log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
 		}
@@ -57,13 +58,13 @@ func (s *Server) CertManager() {
 			logctx := log.With().Str("id", req.Id).Str("domain", req.CommonName).Logger()
 
 			switch req.Status {
-			case pb.CertificateRequestState_READY_TO_SUBMIT:
+			case models.CertificateRequestState_READY_TO_SUBMIT:
 				if err = s.submitCertificateRequest(req); err != nil {
 					logctx.Error().Err(err).Msg("cert-manager could not submit certificate request")
 				} else {
 					logctx.Info().Msg("certificate request submitted")
 				}
-			case pb.CertificateRequestState_PROCESSING:
+			case models.CertificateRequestState_PROCESSING:
 				if err = s.checkCertificateRequest(req); err != nil {
 					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
 				} else {
@@ -74,7 +75,7 @@ func (s *Server) CertManager() {
 	}
 }
 
-func (s *Server) submitCertificateRequest(r *pb.CertificateRequest) (err error) {
+func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err error) {
 	// Step 0: mark the VASP status as issuing certificates
 	var vasp *pb.VASP
 	if vasp, err = s.db.Retrieve(r.Vasp); err != nil {
@@ -116,7 +117,7 @@ func (s *Server) submitCertificateRequest(r *pb.CertificateRequest) (err error) 
 	r.RejectReason = rep.RejectReason
 
 	// Mark the certificate request as processing so downstream status checks occur
-	r.Status = pb.CertificateRequestState_PROCESSING
+	r.Status = models.CertificateRequestState_PROCESSING
 	if err = s.db.SaveCertRequest(r); err != nil {
 		return fmt.Errorf("could not update certificate with batch details: %s", err)
 	}
@@ -124,7 +125,7 @@ func (s *Server) submitCertificateRequest(r *pb.CertificateRequest) (err error) 
 	return nil
 }
 
-func (s *Server) checkCertificateRequest(r *pb.CertificateRequest) (err error) {
+func (s *Server) checkCertificateRequest(r *models.CertificateRequest) (err error) {
 	if r.BatchId == 0 {
 		return errors.New("missing batch ID - cannot retrieve status")
 	}
@@ -156,7 +157,7 @@ func (s *Server) checkCertificateRequest(r *pb.CertificateRequest) (err error) {
 
 	// Step 3: check active - if there is still an active batch then delay
 	if proc.Active > 0 {
-		r.Status = pb.CertificateRequestState_PROCESSING
+		r.Status = models.CertificateRequestState_PROCESSING
 		if err = s.db.SaveCertRequest(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
@@ -182,11 +183,11 @@ func (s *Server) checkCertificateRequest(r *pb.CertificateRequest) (err error) {
 			// and do not continue processing the certificate request
 			if r.RejectReason != "" || r.BatchStatus == sectigo.BatchStatusRejected {
 				// Assume the certificate was rejected
-				r.Status = pb.CertificateRequestState_CR_REJECTED
+				r.Status = models.CertificateRequestState_CR_REJECTED
 				logctx.Warn().Msg("certificate request rejected")
 			} else {
 				// Assume the certificate errored and wasn't rejected
-				r.Status = pb.CertificateRequestState_CR_ERRORED
+				r.Status = models.CertificateRequestState_CR_ERRORED
 				logctx.Warn().Msg("certificate request errored")
 			}
 
@@ -202,7 +203,7 @@ func (s *Server) checkCertificateRequest(r *pb.CertificateRequest) (err error) {
 		// We should not be in this state, it should have been handled in Step 4
 		// so this is a developer error on our part, or a change in the Sectigo API
 		log.Error().Str("status", info.Status).Msg("unhandled sectigo state")
-		r.Status = pb.CertificateRequestState_PROCESSING
+		r.Status = models.CertificateRequestState_PROCESSING
 		if err = s.db.SaveCertRequest(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
@@ -210,7 +211,7 @@ func (s *Server) checkCertificateRequest(r *pb.CertificateRequest) (err error) {
 	}
 
 	// Step 6: Mark the status as ready for download!
-	r.Status = pb.CertificateRequestState_DOWNLOADING
+	r.Status = models.CertificateRequestState_DOWNLOADING
 	if err = s.db.SaveCertRequest(r); err != nil {
 		return fmt.Errorf("could not save updated cert request: %s", err)
 	}
@@ -242,7 +243,7 @@ func (s *Server) findCertAuthority() (id int, err error) {
 
 // a go routine that downloads the certificate in the background, then sends the certs
 // as an attachment to the technical contact if available.
-func (s *Server) downloadCertificateRequest(r *pb.CertificateRequest) {
+func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	var (
 		err     error
 		path    string
@@ -262,7 +263,7 @@ func (s *Server) downloadCertificateRequest(r *pb.CertificateRequest) {
 	}
 
 	// Mark as downloaded.
-	r.Status = pb.CertificateRequestState_DOWNLOADED
+	r.Status = models.CertificateRequestState_DOWNLOADED
 	if err = s.db.SaveCertRequest(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
@@ -301,7 +302,7 @@ func (s *Server) downloadCertificateRequest(r *pb.CertificateRequest) {
 	}
 
 	// Mark certficate request as complete.
-	r.Status = pb.CertificateRequestState_COMPLETED
+	r.Status = models.CertificateRequestState_COMPLETED
 	if err = s.db.SaveCertRequest(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
