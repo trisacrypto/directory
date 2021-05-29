@@ -40,10 +40,10 @@ type SecretManager struct {
 // credentials, meaning that this function is a lightweight method for testing
 // that the application can successfully connect to the secret manager API.
 // However, this function does not validate the parent path.
-func NewSecretManager(config config.Config, certRequest string) (sm *SecretManager, err error) {
+func NewSecretManager(config config.SecretsConfig, certRequest string) (sm *SecretManager, err error) {
 
 	sm = &SecretManager{
-		parent:    fmt.Sprintf("projects/%s", config.Secrets.Project),
+		parent:    fmt.Sprintf("projects/%s", config.Project),
 		requestId: certRequest,
 	}
 

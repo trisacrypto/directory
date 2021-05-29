@@ -41,7 +41,7 @@ func (s *Server) CertManager() {
 	// Create a new Secret Manager to see if CertMan can connect; pass in an empty string
 	// for requestID since we're only validating that GOOGLE_APPLICATION_CREDENTIALS is
 	// properly set and CertMan has access
-	_, err = NewSecretManager(s.conf, "")
+	_, err = NewSecretManager(s.conf.Secrets, "")
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("cert-manager cannot access secret manager")
@@ -103,7 +103,7 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 	}
 
 	// Step 2: get the password
-	sm, err := NewSecretManager(s.conf, r.Id)
+	sm, err := NewSecretManager(s.conf.Secrets, r.Id)
 	secretType := "password"
 	pkcs12Password, err := sm.GetLatestVersion(context.Background(), secretType)
 	if err != nil {
@@ -294,7 +294,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Create a request-specific secret manager to connect to the API
-	sm, err := NewSecretManager(s.conf, r.Id)
+	sm, err := NewSecretManager(s.conf.Secrets, r.Id)
 
 	// Retrieve the latest secret version for the password
 	secretType := "password"

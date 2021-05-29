@@ -218,7 +218,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 
 	// Create a new Secret Manager
-	sm, err := NewSecretManager(s.conf, certRequest.Id)
+	sm, err := NewSecretManager(s.conf.Secrets, certRequest.Id)
 
 	// If the application can't access secret manager, we won't be able to keep going
 	// so raise a permissions error and return.
