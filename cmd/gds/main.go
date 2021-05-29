@@ -79,6 +79,32 @@ func main() {
 			},
 		},
 		{
+			Name:     "migrate",
+			Usage:    "migrate v1alpha1 store to v1beta1",
+			Category: "server",
+			Action:   migrate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "s, src",
+					Usage: "dsn to connect to trisa v1alpha1 directory storage or path to json files",
+				},
+				cli.StringFlag{
+					Name:  "S, src-format",
+					Usage: "source format (leveldb or json)",
+					Value: "leveldb",
+				},
+				cli.StringFlag{
+					Name:  "d, dst",
+					Usage: "dsn to connect to trisa v1beta1 directory storage or path to json files",
+				},
+				cli.StringFlag{
+					Name:  "D, dst-format",
+					Usage: "source format (leveldb or json)",
+					Value: "leveldb",
+				},
+			},
+		},
+		{
 			Name:     "review",
 			Usage:    "submit a VASP registration review response",
 			Category: "admin",
@@ -272,6 +298,28 @@ func load(c *cli.Context) (err error) {
 		}
 	}
 
+	return nil
+}
+
+func migrate(c *cli.Context) (err error) {
+	src, srcFormat := c.String("src"), c.String("src-format")
+	dst, dstFormat := c.String("dst"), c.String("dst-format")
+
+	if src == "" || dst == "" {
+		return cli.NewExitError("specify both source and destination", 1)
+	}
+
+	if srcFormat != "json" && srcFormat != "leveldb" {
+		return cli.NewExitError("src format should be either 'leveldb' or 'json'", 1)
+	}
+
+	if dstFormat != "json" && dstFormat != "leveldb" {
+		return cli.NewExitError("src format should be either 'leveldb' or 'json'", 1)
+	}
+
+	if err = store.Migrate(src, srcFormat, dst, dstFormat); err != nil {
+		return cli.NewExitError(err, 1)
+	}
 	return nil
 }
 
