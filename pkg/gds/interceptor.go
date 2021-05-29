@@ -14,8 +14,8 @@ func (s *Server) serverInterceptor(ctx context.Context, in interface{}, info *gr
 	// Track how long the method takes to execute.
 	start := time.Now()
 
-	// Check if we're in maintenance mode
-	if s.conf.Maintenance {
+	// Check if we're in maintenance mode - status method should still return a full response.
+	if s.conf.Maintenance && info.FullMethod != "/trisa.gds.api.v1beta1.TRISADirectory/Status" {
 		return nil, status.Error(codes.Unavailable, "the GDS service is currently in maintenance mode")
 	}
 
