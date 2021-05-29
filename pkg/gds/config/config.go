@@ -19,6 +19,7 @@ type Config struct {
 	SendGridAPIKey string          `envconfig:"SENDGRID_API_KEY" required:"false"`
 	ServiceEmail   string          `split_words:"true" default:"admin@vaspdirectory.net"`
 	AdminEmail     string          `split_words:"true" default:"admin@trisa.io"`
+	Maintenance    bool            `split_words:"true" default:"false"`
 	LogLevel       LogLevelDecoder `split_words:"true" default:"info"`
 	Sectigo        SectigoConfig
 	CertMan        CertManConfig

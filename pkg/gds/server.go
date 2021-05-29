@@ -81,7 +81,7 @@ type Server struct {
 // Serve GRPC requests on the specified address.
 func (s *Server) Serve() (err error) {
 	// Initialize the gRPC server
-	s.srv = grpc.NewServer()
+	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.serverInterceptor))
 	api.RegisterTRISADirectoryServer(s.srv, s)
 	admin.RegisterDirectoryAdministrationServer(s.srv, s)
 
@@ -98,6 +98,10 @@ func (s *Server) Serve() (err error) {
 
 	// Start the backup manager go routine process
 	go s.BackupManager()
+
+	if s.conf.Maintenance {
+		log.Warn().Msg("starting server in maintenance mode")
+	}
 
 	// Listen for TCP requests on the specified address and port
 	var sock net.Listener
@@ -323,9 +327,7 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 	for _, category := range in.BusinessCategory {
 		categories = append(categories, category.String())
 	}
-	for _, category := range in.VaspCategory {
-		categories = append(categories, category)
-	}
+	categories = append(categories, in.VaspCategory...)
 	query["category"] = categories
 
 	var vasps []*pb.VASP
@@ -522,11 +524,16 @@ func (s *Server) Status(ctx context.Context, in *api.HealthCheck) (out *api.Serv
 	// Request another health check between 30-60 min from now
 	now := time.Now()
 
-	// Create the service state as unhealthy unless we have callback streams
+	// Default service state is healthy.
 	out = &api.ServiceState{
 		Status:    api.ServiceState_HEALTHY,
 		NotBefore: now.Add(30 * time.Minute).Format(time.RFC3339),
 		NotAfter:  now.Add(60 * time.Minute).Format(time.RFC3339),
+	}
+
+	// If we're in maintenance mode, update the service state.
+	if s.conf.Maintenance {
+		out.Status = api.ServiceState_MAINTENANCE
 	}
 
 	return out, nil

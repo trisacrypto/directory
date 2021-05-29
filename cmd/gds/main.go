@@ -21,6 +21,8 @@ import (
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -490,8 +492,17 @@ func initClient(c *cli.Context) (err error) {
 }
 
 // helper function to print JSON response and exit
-func printJSON(v interface{}) error {
-	data, err := json.MarshalIndent(v, "", "  ")
+func printJSON(m proto.Message) error {
+	opts := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	data, err := opts.Marshal(m)
 	if err != nil {
 		return cli.NewExitError(err, 1)
 	}
