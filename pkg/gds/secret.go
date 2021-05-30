@@ -29,9 +29,22 @@ func CreateToken(length int) string {
 
 // SecretManager holds a client to the Google secret manager, and the path to the `parent` project for the secret manager.
 type SecretManager struct {
-	requestId string
-	parent    string
-	client    *secretmanager.Client
+	parent string
+	client *secretmanager.Client
+}
+
+type SecretManagerContext struct {
+	manager    *SecretManager
+	requestId  string
+	secretType string
+}
+
+func (sm *SecretManager) With(certRequest, secretType string) *SecretManagerContext {
+	return &SecretManagerContext{
+		manager:    sm,
+		requestId:  certRequest,
+		secretType: secretType,
+	}
 }
 
 // NewSecretManager creates and returns a new secret manager client and an error if one occurs.
@@ -40,11 +53,10 @@ type SecretManager struct {
 // credentials, meaning that this function is a lightweight method for testing
 // that the application can successfully connect to the secret manager API.
 // However, this function does not validate the parent path.
-func NewSecretManager(config config.SecretsConfig, certRequest string) (sm *SecretManager, err error) {
+func NewSecretManager(config config.SecretsConfig) (sm *SecretManager, err error) {
 
 	sm = &SecretManager{
-		parent:    fmt.Sprintf("projects/%s", config.Project),
-		requestId: certRequest,
+		parent: fmt.Sprintf("projects/%s", config.Project),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -62,16 +74,16 @@ func NewSecretManager(config config.SecretsConfig, certRequest string) (sm *Secr
 // This function returns an error if any occurs.
 // Note: A secret is a logical wrapper around a collection of secret versions.
 // To store a secret payload, you must first CreateSecret and then AddSecretVersion.
-func (sm *SecretManager) CreateSecret(ctx context.Context, secret string) error {
+func (smc *SecretManagerContext) CreateSecret(ctx context.Context, secret string) error {
 
-	secretName := fmt.Sprintf("%s-%s", sm.requestId, secret)
+	secretName := fmt.Sprintf("%s-%s", smc.requestId, secret)
 	// Create an internal context, since a failed API call will result in infinite hang
 	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	// Build the request.
 	req := &secretmanagerpb.CreateSecretRequest{
-		Parent:   sm.parent,
+		Parent:   smc.manager.parent,
 		SecretId: secretName,
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
@@ -84,7 +96,7 @@ func (sm *SecretManager) CreateSecret(ctx context.Context, secret string) error 
 
 	// Call the API. Note: We don't actually need the result that comes back from the API call
 	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
-	_, err := sm.client.CreateSecret(sctx, req)
+	_, err := smc.manager.client.CreateSecret(sctx, req)
 	if err != nil {
 		// If the API call is malformed, it will hang until the internal context times out
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -108,9 +120,9 @@ func (sm *SecretManager) CreateSecret(ctx context.Context, secret string) error 
 // AddSecretVersion adds a new secret version to the given secret and the
 // provided payload. Returns an error if one occurs.
 // Note: to add a secret version, the secret must first be created using CreateSecret.
-func (sm *SecretManager) AddSecretVersion(ctx context.Context, secret string, payload []byte) error {
+func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret string, payload []byte) error {
 
-	secretPath := fmt.Sprintf("%s/secrets/%s-%s", sm.parent, sm.requestId, secret)
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", smc.manager.parent, smc.requestId, secret)
 	// Create an internal context, since a failed API call will result in infinite hang
 	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -125,7 +137,7 @@ func (sm *SecretManager) AddSecretVersion(ctx context.Context, secret string, pa
 
 	// Call the API. Note: We don't actually need the result that comes back from the API call
 	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
-	_, err := sm.client.AddSecretVersion(sctx, req)
+	_, err := smc.manager.client.AddSecretVersion(sctx, req)
 	if err != nil {
 		// If the API call is malformed, it will hang until the internal context times out
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -148,9 +160,9 @@ func (sm *SecretManager) AddSecretVersion(ctx context.Context, secret string, pa
 
 // GetLatestVersion returns the payload for the latest version of the given secret,
 // if one exists, else an error.
-func (sm *SecretManager) GetLatestVersion(ctx context.Context, secret string) ([]byte, error) {
+func (smc *SecretManagerContext) GetLatestVersion(ctx context.Context, secret string) ([]byte, error) {
 
-	versionPath := fmt.Sprintf("%s/secrets/%s-%s/versions/latest", sm.parent, sm.requestId, secret)
+	versionPath := fmt.Sprintf("%s/secrets/%s-%s/versions/latest", smc.manager.parent, smc.requestId, secret)
 
 	// Create an internal context, since a failed API call will result in infinite hang
 	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -162,7 +174,7 @@ func (sm *SecretManager) GetLatestVersion(ctx context.Context, secret string) ([
 	}
 
 	// Call the API.
-	result, err := sm.client.AccessSecretVersion(sctx, req)
+	result, err := smc.manager.client.AccessSecretVersion(sctx, req)
 	if err != nil {
 		// If the API call is malformed, it will hang until the internal context times out
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -179,9 +191,9 @@ func (sm *SecretManager) GetLatestVersion(ctx context.Context, secret string) ([
 // DeleteSecret deletes the secret with the given the name, and all of its versions.
 // Note: this is an irreversible operation. Any service or workload that attempts to
 // access a deleted secret receives a Not Found error.
-func (sm *SecretManager) DeleteSecret(ctx context.Context, secret string) error {
+func (smc *SecretManagerContext) DeleteSecret(ctx context.Context, secret string) error {
 
-	secretPath := fmt.Sprintf("%s/secrets/%s-%s", sm.parent, sm.requestId, secret)
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", smc.manager.parent, smc.requestId, secret)
 
 	// Create an internal context, since a failed API call will result in infinite hang
 	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -193,7 +205,7 @@ func (sm *SecretManager) DeleteSecret(ctx context.Context, secret string) error 
 	}
 
 	// Call the API.
-	err := sm.client.DeleteSecret(sctx, req)
+	err := smc.manager.client.DeleteSecret(sctx, req)
 	if err != nil {
 		// If the API call is malformed, it will hang until the internal context times out
 		if errors.Is(err, context.DeadlineExceeded) {

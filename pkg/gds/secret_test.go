@@ -28,21 +28,25 @@ func TestSecrets(t *testing.T) {
 	}
 
 	// create secret manager
-	sm, err := gds.NewSecretManager(testConf, "foo")
+	sm, err := gds.NewSecretManager(testConf)
 	require.NoError(t, err)
 
+	testRequestId := "123"
+	testSecretType := "test"
+	testPayload := []byte("test payload")
+
 	// create a secret
-	require.NoError(t, sm.CreateSecret(context.Background(), "test"))
+	require.NoError(t, sm.With(testRequestId, testSecretType).CreateSecret(context.Background(), testSecretType))
 
 	// create a version
-	require.NoError(t, sm.AddSecretVersion(context.Background(), "test", []byte("test payload")))
+	require.NoError(t, sm.With(testRequestId, testSecretType).AddSecretVersion(context.Background(), testSecretType, testPayload))
 
 	// access version
-	result, err := sm.GetLatestVersion(context.Background(), "test")
-	require.Equal(t, result, []byte("test payload"))
+	result, err := sm.With(testRequestId, testSecretType).GetLatestVersion(context.Background(), testSecretType)
+	require.Equal(t, result, testPayload)
 	require.NoError(t, err)
 
 	// delete the secret
-	require.NoError(t, sm.DeleteSecret(context.Background(), "test"))
+	require.NoError(t, sm.With(testRequestId, testSecretType).DeleteSecret(context.Background(), testSecretType))
 
 }

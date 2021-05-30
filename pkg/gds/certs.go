@@ -38,13 +38,6 @@ func (s *Server) CertManager() {
 		log.Fatal().Err(err).Msg("cert-manager cannot access certificate storage")
 	}
 
-	// Create a new Secret Manager to see if CertMan can connect; pass in an empty string
-	// for requestID since we're only validating that GOOGLE_APPLICATION_CREDENTIALS is
-	// properly set and CertMan has access
-	if _, err = NewSecretManager(s.conf.Secrets, ""); err != nil {
-		log.Fatal().Err(err).Msg("cert-manager cannot access secret manager")
-	}
-
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
 	ticker := time.NewTicker(s.conf.CertMan.Interval)
@@ -101,9 +94,8 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 	}
 
 	// Step 2: get the password
-	sm, err := NewSecretManager(s.conf.Secrets, r.Id)
 	secretType := "password"
-	pkcs12Password, err := sm.GetLatestVersion(context.Background(), secretType)
+	pkcs12Password, err := s.secret.With(r.Id, secretType).GetLatestVersion(context.Background(), secretType)
 	if err != nil {
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
@@ -291,12 +283,9 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
-	// Create a request-specific secret manager to connect to the API
-	sm, err := NewSecretManager(s.conf.Secrets, r.Id)
-
 	// Retrieve the latest secret version for the password
 	secretType := "password"
-	pkcs12password, err := sm.GetLatestVersion(context.Background(), secretType)
+	pkcs12password, err := s.secret.With(r.Id, secretType).GetLatestVersion(context.Background(), secretType)
 	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return

@@ -63,6 +63,9 @@ func New(conf config.Config) (s *Server, err error) {
 	s.email = sendgrid.NewSendClient(conf.SendGridAPIKey)
 
 	// Configuration complete!
+
+	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
+	}
 	return s, nil
 }
 
@@ -70,12 +73,13 @@ func New(conf config.Config) (s *Server, err error) {
 type Server struct {
 	api.UnimplementedTRISADirectoryServer
 	admin.UnimplementedDirectoryAdministrationServer
-	db    store.Store
-	srv   *grpc.Server
-	conf  config.Config
-	certs *sectigo.Sectigo
-	email *sendgrid.Client
-	echan chan error
+	db     store.Store
+	srv    *grpc.Server
+	conf   config.Config
+	certs  *sectigo.Sectigo
+	email  *sendgrid.Client
+	secret *SecretManager
+	echan  chan error
 }
 
 // Serve GRPC requests on the specified address.
@@ -216,28 +220,14 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
 
-	// Create a new Secret Manager
-	sm, err := NewSecretManager(s.conf.Secrets, certRequest.Id)
-
-	// If the application can't access secret manager, we won't be able to keep going
-	// so raise a permissions error and return.
-	if err != nil {
-		log.Error().Err(err).Msg("unable to access secret manager")
-		out.Error = &api.Error{
-			Code:    403,
-			Message: err.Error(),
-		}
-		return out, nil
-	}
-
 	// Make a new secret of type "password"
-	secret := "password"
-	if err = sm.CreateSecret(ctx, secret); err != nil {
+	secretType := "password"
+	if err = s.secret.With(certRequest.Id, secretType).CreateSecret(ctx, secretType); err != nil {
 		log.Error().Err(err).Msg("could not create new secret on registration")
 		out.Error = &api.Error{Code: 500, Message: "internal error with registration, please contact admins"}
 		return out, nil
 	}
-	if err = sm.AddSecretVersion(ctx, secret, []byte(password)); err != nil {
+	if err = s.secret.With(certRequest.Id, secretType).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
 		log.Error().Err(err).Msg("unable to add secret version on registration")
 		out.Error = &api.Error{Code: 500, Message: "internal error during registration, please contact admins"}
 		return out, nil
