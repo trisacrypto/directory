@@ -8,7 +8,7 @@ import "fmt"
 // Version component constants for the current build.
 const (
 	VersionMajor = 0
-	VersionMinor = 1
+	VersionMinor = 2
 	VersionPatch = 0
 )
 
