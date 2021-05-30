@@ -136,7 +136,7 @@ class Registration extends React.Component {
       console.log(`File name: ${fileObj.name}, Length: ${fileContents.length} bytes.`);
 
       const data = JSON.parse(fileContents);
-      if (data.version != registrationFormVersion) {
+      if (data.version !== registrationFormVersion) {
         console.warn(`current form version is ${registrationFormVersion} cannot load version ${data.version}`);
         this.props.onAlert("danger", "Could not load data: invalid version");
         return
