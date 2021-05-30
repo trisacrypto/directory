@@ -65,6 +65,7 @@ func New(conf config.Config) (s *Server, err error) {
 	// Configuration complete!
 
 	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
+		return s, nil
 	}
 	return s, nil
 }
