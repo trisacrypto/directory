@@ -63,6 +63,10 @@ func New(conf config.Config) (s *Server, err error) {
 	s.email = sendgrid.NewSendClient(conf.SendGridAPIKey)
 
 	// Configuration complete!
+
+	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
+		return s, nil
+	}
 	return s, nil
 }
 
@@ -70,12 +74,13 @@ func New(conf config.Config) (s *Server, err error) {
 type Server struct {
 	api.UnimplementedTRISADirectoryServer
 	admin.UnimplementedDirectoryAdministrationServer
-	db    store.Store
-	srv   *grpc.Server
-	conf  config.Config
-	certs *sectigo.Sectigo
-	email *sendgrid.Client
-	echan chan error
+	db     store.Store
+	srv    *grpc.Server
+	conf   config.Config
+	certs  *sectigo.Sectigo
+	email  *sendgrid.Client
+	secret *SecretManager
+	echan  chan error
 }
 
 // Serve GRPC requests on the specified address.
@@ -144,6 +149,8 @@ func (s *Server) Shutdown() (err error) {
 // Register a new VASP entity with the directory service. After registration, the new
 // entity must go through the verification process to get issued a certificate. The
 // status of verification can be obtained by using the lookup RPC call.
+// Register generates a PKCS12 password, provided in the RPC response which can be
+// used to access the certificate private keys when they're emailed.
 func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
 	out = &api.RegisterReply{}
 	vasp := &pb.VASP{
@@ -209,7 +216,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 	log.Info().Msg("contact email verifications sent")
 
-	// Create and encrypt PKCS12 password along with certificate request.
+	// Create PKCS12 password along with certificate request.
 	password := CreateToken(16)
 	certRequest := &models.CertificateRequest{
 		Id:         uuid.New().String(),
@@ -218,16 +225,21 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
 
-	if certRequest.Pkcs12Password, certRequest.Pkcs12Signature, err = s.Encrypt(password); err != nil {
-		log.Error().Err(err).Msg("could not encrypt password to store in database")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: "could not create certificate request password",
-		}
+	// Make a new secret of type "password"
+	secretType := "password"
+	if err = s.secret.With(certRequest.Id, secretType).CreateSecret(ctx, secretType); err != nil {
+		log.Error().Err(err).Msg("could not create new secret on registration")
+		out.Error = &api.Error{Code: 500, Message: "internal error with registration, please contact admins"}
+		return out, nil
+	}
+	if err = s.secret.With(certRequest.Id, secretType).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
+		log.Error().Err(err).Msg("unable to add secret version on registration")
+		out.Error = &api.Error{Code: 500, Message: "internal error during registration, please contact admins"}
+		return out, nil
 	}
 
 	if err = s.db.SaveCertRequest(certRequest); err != nil {
-		log.Error().Err(err).Msg("could save certificate request for VASP")
+		log.Error().Err(err).Msg("could not save certificate request for VASP")
 		out.Error = &api.Error{
 			Code:    500,
 			Message: err.Error(),
@@ -408,8 +420,7 @@ func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) 
 
 // VerifyEmail checks the contact tokens for the specified VASP and registers the
 // contact email verification. If successful, this method then sends the verification
-// request to the TRISA Admins for review and generates a PKCS12 password in the RPC
-// response to decrypt the certificate private keys when they're emailed.
+// request to the TRISA Admins for review.
 func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
 	out = &api.VerifyContactReply{}
 

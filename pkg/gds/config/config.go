@@ -24,6 +24,7 @@ type Config struct {
 	Sectigo        SectigoConfig
 	CertMan        CertManConfig
 	Backup         BackupConfig
+	Secrets        SecretsConfig
 	processed      bool
 }
 
@@ -42,6 +43,11 @@ type BackupConfig struct {
 	Interval time.Duration `split_words:"true" default:"24h"`
 	Storage  string        `split_words:"true" required:"false"`
 	Keep     int           `split_words:"true" default:"1"`
+}
+
+type SecretsConfig struct {
+	Credentials string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"false"`
+	Project     string `envconfig:"GOOGLE_PROJECT_NAME" required:"false"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
