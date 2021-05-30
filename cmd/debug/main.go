@@ -134,6 +134,20 @@ func main() {
 			},
 		},
 		{
+			Name:      "decrypt",
+			Usage:     "decrypt base64 encoded ciphertext with an HMAC signature",
+			ArgsUsage: "ciphertext hmac",
+			Category:  "cipher",
+			Action:    cipherDecrypt,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "k, key",
+					Usage:  "secret key to decrypt the cipher text",
+					EnvVar: "GDS_SECRET_KEY",
+				},
+			},
+		},
+		{
 			Name:     "transfer",
 			Usage:    "send a generated unary transfer request to VASP",
 			Category: "trisa",
@@ -560,7 +574,6 @@ func storeDelete(c *cli.Context) (err error) {
 
 const nonceSize = 12
 
-// TODO Delete this too?
 func cipherDecrypt(c *cli.Context) (err error) {
 	if c.NArg() != 2 {
 		return cli.NewExitError("must specify ciphertext and hmac arguments", 1)
