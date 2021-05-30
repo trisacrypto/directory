@@ -2,7 +2,6 @@ package gds
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -233,64 +232,14 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 	// Make a new secret of type "password"
 	secret := "password"
-	err = sm.CreateSecret(ctx, secret)
-
-	// If the application can't create a new secret, check to see what the problem is.
-	if err != nil {
-		// If it's a timeout, that means the secret manager API call was bad
-		if errors.Is(err, context.DeadlineExceeded) {
-			log.Error().Err(err).Msg("malformed call to secret manager")
-			out.Error = &api.Error{
-				Code:    400,
-				Message: err.Error(),
-			}
-			return out, nil
-		}
-		// If the secret already exists (which means that the client has previously
-		// created a password), that's okay
-		serr, ok := status.FromError(err)
-		if ok && serr.Code() == codes.AlreadyExists {
-			log.Error().Err(err).Msg("password already exists for client; creating new password")
-		}
-		// If it's a more serious problem, that likely signals a permissions error
-		// and merits a return.
-		log.Error().Err(err).Msg("secret manager error; is GOOGLE_PROJECT_NAME set?")
-		out.Error = &api.Error{
-			Code:    403,
-			Message: err.Error(),
-		}
+	if err = sm.CreateSecret(ctx, secret); err != nil {
+		log.Error().Err(err).Msg("could not create new secret on registration")
+		out.Error = &api.Error{Code: 500, Message: "internal error with registration, please contact admins"}
 		return out, nil
 	}
-
-	// Create a new version for the secret using the password as payload
-	err = sm.AddSecretVersion(ctx, secret, []byte(password))
-	if err != nil {
-		// If it's a timeout, that means the secret manager API call was bad
-		if errors.Is(err, context.DeadlineExceeded) {
-			log.Error().Err(err).Msg("malformed call to secret manager")
-			out.Error = &api.Error{
-				Code:    400,
-				Message: err.Error(),
-			}
-			return out, nil
-		}
-
-		// If the secret is not Not Found, something bad happened.
-		serr, ok := status.FromError(err)
-		if ok && serr.Code() == codes.NotFound {
-			log.Error().Err(err).Msg("secret does not exist, unable to add new secret version")
-			out.Error = &api.Error{
-				Code:    500,
-				Message: err.Error(),
-			}
-			return out, nil
-		}
-
-		log.Error().Err(err).Msg("unable to write new secret version to secret manager")
-		out.Error = &api.Error{
-			Code:    403,
-			Message: err.Error(),
-		}
+	if err = sm.AddSecretVersion(ctx, secret, []byte(password)); err != nil {
+		log.Error().Err(err).Msg("unable to add secret version on registration")
+		out.Error = &api.Error{Code: 500, Message: "internal error during registration, please contact admins"}
 		return out, nil
 	}
 

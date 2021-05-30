@@ -41,9 +41,7 @@ func (s *Server) CertManager() {
 	// Create a new Secret Manager to see if CertMan can connect; pass in an empty string
 	// for requestID since we're only validating that GOOGLE_APPLICATION_CREDENTIALS is
 	// properly set and CertMan has access
-	_, err = NewSecretManager(s.conf.Secrets, "")
-
-	if err != nil {
+	if _, err = NewSecretManager(s.conf.Secrets, ""); err != nil {
 		log.Fatal().Err(err).Msg("cert-manager cannot access secret manager")
 	}
 

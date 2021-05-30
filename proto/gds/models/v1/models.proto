@@ -29,8 +29,8 @@ message CertificateRequest {
     string reject_reason = 12;
 
     // Logging information timestamps
-    string created = 13;
-    string modified = 14;
+    string created = 15;
+    string modified = 16;
 }
 
 enum CertificateRequestState {
