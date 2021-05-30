@@ -15,7 +15,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var chars = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&'()*+,-./:;<=>?@[]^_`{|}~")
+var (
+	chars             = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
+	ErrSecretNotFound = errors.New("could not add secret version - not found")
+)
 
 // CreateToken creates a variable length random token that can be used for passwords or API keys.
 func CreateToken(length int) string {
@@ -108,7 +111,7 @@ func (smc *SecretManagerContext) CreateSecret(ctx context.Context, secret string
 		// and CertMan will always look for the most recent secret version.
 		serr, ok := status.FromError(err)
 		if ok && serr.Code() == codes.AlreadyExists {
-			return err
+			return nil
 		}
 
 		// If the error is something else, something went wrong.
@@ -148,11 +151,11 @@ func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret st
 		// we'll get a Not Found error
 		serr, ok := status.FromError(err)
 		if ok && serr.Code() == codes.NotFound {
-			return err
+			return ErrSecretNotFound
 		}
 
 		// If the error is something else, something went wrong.
-		return errors.New("unknown error: unable to create secret version")
+		return fmt.Errorf("unable to create secret version: %s", err)
 	}
 
 	return nil
@@ -182,7 +185,7 @@ func (smc *SecretManagerContext) GetLatestVersion(ctx context.Context, secret st
 		}
 
 		// If the error is something else, something went wrong.
-		return nil, errors.New("unknown error: unable to access latest secret version")
+		return nil, fmt.Errorf("unable to access latest secret version: %s", err)
 	}
 
 	return result.Payload.Data, nil
@@ -212,7 +215,7 @@ func (smc *SecretManagerContext) DeleteSecret(ctx context.Context, secret string
 			return err
 		}
 		// If the error is something else, something went wrong.
-		return errors.New("unknown error: unable to delete secret")
+		return fmt.Errorf("unable to delete secret; %s", err)
 	}
 	return nil
 }

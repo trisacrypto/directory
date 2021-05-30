@@ -316,7 +316,7 @@ var reviewRequestPlainText = template.Must(template.New("reviewRequestPlainText"
 Hello TRISA Admin,
 
 We have received a new registration request from a VASP that needs to be reviewed. The
-requestor has verified their email address and received a PKCS12 password to access a
+requestor has verified their email address and received a PKCS12 password to decrypt a
 certificate that will be generated if you approve this request. The request JSON is:
 
 {{ .Request }}
@@ -339,7 +339,7 @@ var reviewRequestHTML = template.Must(template.New("reviewRequestHTML").Parse(`
 <p>Hello TRISA Admin,</p>
 
 <p>We have received a new registration request from a VASP that needs to be reviewed.
-The requestor has verified their email address and received a PKCS12 password to access
+The requestor has verified their email address and received a PKCS12 password to decrypt
 a certificate that will be generated if you approve this request. The request JSON is:</p>
 
 <pre>{{ .Request }}</pre>
@@ -428,9 +428,9 @@ Common Name: {{ .CommonName }}
 Serial Number: {{ .SerialNumber }}
 Endpoint: {{ .Endpoint }}
 
-To access your certificates, you will need the PKCS12 password that you received when
+To decrypt your certificates, you will need the PKCS12 password that you received when
 you verified your email. Note that the first contact to verify their email received the
-password. To access the certificates on the command line, you can use openssl as
+password. To decrypt the certificates on the command line, you can use openssl as
 follows:
 
 openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
@@ -459,9 +459,9 @@ using mTLS with other network integration partners.</p>
 	<li><strong>Endpoint:</strong> {{ .Endpoint }}</li>
 </ul>
 
-To access your certificates, you will need the PKCS12 password that you received when
+To decrypt your certificates, you will need the PKCS12 password that you received when
 you verified your email. Note that <strong>the first contact to verify their email
-received the password</strong>. To access the certificates on the command line, you can
+received the password</strong>. To decrypt the certificates on the command line, you can
 use <code>openssl</code> as follows:
 
 <pre>$ openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes</pre>

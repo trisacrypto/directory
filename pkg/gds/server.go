@@ -211,7 +211,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 	log.Info().Msg("contact email verifications sent")
 
-	// Create and encrypt PKCS12 password along with certificate request.
+	// Create PKCS12 password along with certificate request.
 	password := CreateToken(16)
 	certRequest := &models.CertificateRequest{
 		Id:         uuid.New().String(),
