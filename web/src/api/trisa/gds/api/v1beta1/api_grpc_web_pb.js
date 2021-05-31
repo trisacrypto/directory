@@ -82,246 +82,6 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.trisa.gds.api.v1beta1.RegisterRequest,
- *   !proto.trisa.gds.api.v1beta1.RegisterReply>}
- */
-const methodDescriptor_TRISADirectory_Register = new grpc.web.MethodDescriptor(
-  '/trisa.gds.api.v1beta1.TRISADirectory/Register',
-  grpc.web.MethodType.UNARY,
-  proto.trisa.gds.api.v1beta1.RegisterRequest,
-  proto.trisa.gds.api.v1beta1.RegisterReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.RegisterReply.deserializeBinary
-);
-
-
-/**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.RegisterRequest,
- *   !proto.trisa.gds.api.v1beta1.RegisterReply>}
- */
-const methodInfo_TRISADirectory_Register = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.RegisterReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.RegisterReply.deserializeBinary
-);
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.RegisterReply)}
- *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.RegisterReply>|undefined}
- *     The XHR Node Readable Stream
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.register =
-    function(request, metadata, callback) {
-  return this.client_.rpcCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/Register',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_Register,
-      callback);
-};
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @return {!Promise<!proto.trisa.gds.api.v1beta1.RegisterReply>}
- *     Promise that resolves to the response
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.register =
-    function(request, metadata) {
-  return this.client_.unaryCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/Register',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_Register);
-};
-
-
-/**
- * @const
- * @type {!grpc.web.MethodDescriptor<
- *   !proto.trisa.gds.api.v1beta1.VerifyEmailRequest,
- *   !proto.trisa.gds.api.v1beta1.VerifyEmailReply>}
- */
-const methodDescriptor_TRISADirectory_VerifyEmail = new grpc.web.MethodDescriptor(
-  '/trisa.gds.api.v1beta1.TRISADirectory/VerifyEmail',
-  grpc.web.MethodType.UNARY,
-  proto.trisa.gds.api.v1beta1.VerifyEmailRequest,
-  proto.trisa.gds.api.v1beta1.VerifyEmailReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.VerifyEmailRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.VerifyEmailReply.deserializeBinary
-);
-
-
-/**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.VerifyEmailRequest,
- *   !proto.trisa.gds.api.v1beta1.VerifyEmailReply>}
- */
-const methodInfo_TRISADirectory_VerifyEmail = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.VerifyEmailReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.VerifyEmailRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.VerifyEmailReply.deserializeBinary
-);
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.VerifyEmailRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.VerifyEmailReply)}
- *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.VerifyEmailReply>|undefined}
- *     The XHR Node Readable Stream
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.verifyEmail =
-    function(request, metadata, callback) {
-  return this.client_.rpcCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/VerifyEmail',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_VerifyEmail,
-      callback);
-};
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.VerifyEmailRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @return {!Promise<!proto.trisa.gds.api.v1beta1.VerifyEmailReply>}
- *     Promise that resolves to the response
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.verifyEmail =
-    function(request, metadata) {
-  return this.client_.unaryCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/VerifyEmail',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_VerifyEmail);
-};
-
-
-/**
- * @const
- * @type {!grpc.web.MethodDescriptor<
- *   !proto.trisa.gds.api.v1beta1.StatusRequest,
- *   !proto.trisa.gds.api.v1beta1.StatusReply>}
- */
-const methodDescriptor_TRISADirectory_Status = new grpc.web.MethodDescriptor(
-  '/trisa.gds.api.v1beta1.TRISADirectory/Status',
-  grpc.web.MethodType.UNARY,
-  proto.trisa.gds.api.v1beta1.StatusRequest,
-  proto.trisa.gds.api.v1beta1.StatusReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.StatusRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.StatusReply.deserializeBinary
-);
-
-
-/**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.StatusRequest,
- *   !proto.trisa.gds.api.v1beta1.StatusReply>}
- */
-const methodInfo_TRISADirectory_Status = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.StatusReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.StatusRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.StatusReply.deserializeBinary
-);
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.StatusRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.StatusReply)}
- *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.StatusReply>|undefined}
- *     The XHR Node Readable Stream
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.status =
-    function(request, metadata, callback) {
-  return this.client_.rpcCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/Status',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_Status,
-      callback);
-};
-
-
-/**
- * @param {!proto.trisa.gds.api.v1beta1.StatusRequest} request The
- *     request proto
- * @param {?Object<string, string>} metadata User defined
- *     call metadata
- * @return {!Promise<!proto.trisa.gds.api.v1beta1.StatusReply>}
- *     Promise that resolves to the response
- */
-proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.status =
-    function(request, metadata) {
-  return this.client_.unaryCall(this.hostname_ +
-      '/trisa.gds.api.v1beta1.TRISADirectory/Status',
-      request,
-      metadata || {},
-      methodDescriptor_TRISADirectory_Status);
-};
-
-
-/**
- * @const
- * @type {!grpc.web.MethodDescriptor<
  *   !proto.trisa.gds.api.v1beta1.LookupRequest,
  *   !proto.trisa.gds.api.v1beta1.LookupReply>}
  */
@@ -476,6 +236,326 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.search =
       request,
       metadata || {},
       methodDescriptor_TRISADirectory_Search);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.trisa.gds.api.v1beta1.RegisterRequest,
+ *   !proto.trisa.gds.api.v1beta1.RegisterReply>}
+ */
+const methodDescriptor_TRISADirectory_Register = new grpc.web.MethodDescriptor(
+  '/trisa.gds.api.v1beta1.TRISADirectory/Register',
+  grpc.web.MethodType.UNARY,
+  proto.trisa.gds.api.v1beta1.RegisterRequest,
+  proto.trisa.gds.api.v1beta1.RegisterReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.RegisterReply.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.trisa.gds.api.v1beta1.RegisterRequest,
+ *   !proto.trisa.gds.api.v1beta1.RegisterReply>}
+ */
+const methodInfo_TRISADirectory_Register = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.trisa.gds.api.v1beta1.RegisterReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.RegisterReply.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.RegisterReply)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.RegisterReply>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.register =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Register',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Register,
+      callback);
+};
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.trisa.gds.api.v1beta1.RegisterReply>}
+ *     Promise that resolves to the response
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.register =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Register',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Register);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.trisa.gds.api.v1beta1.VerifyContactRequest,
+ *   !proto.trisa.gds.api.v1beta1.VerifyContactReply>}
+ */
+const methodDescriptor_TRISADirectory_VerifyContact = new grpc.web.MethodDescriptor(
+  '/trisa.gds.api.v1beta1.TRISADirectory/VerifyContact',
+  grpc.web.MethodType.UNARY,
+  proto.trisa.gds.api.v1beta1.VerifyContactRequest,
+  proto.trisa.gds.api.v1beta1.VerifyContactReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.VerifyContactReply.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.trisa.gds.api.v1beta1.VerifyContactRequest,
+ *   !proto.trisa.gds.api.v1beta1.VerifyContactReply>}
+ */
+const methodInfo_TRISADirectory_VerifyContact = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.trisa.gds.api.v1beta1.VerifyContactReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.VerifyContactReply.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.VerifyContactReply)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.VerifyContactReply>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.verifyContact =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/VerifyContact',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_VerifyContact,
+      callback);
+};
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.trisa.gds.api.v1beta1.VerifyContactReply>}
+ *     Promise that resolves to the response
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.verifyContact =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/VerifyContact',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_VerifyContact);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.trisa.gds.api.v1beta1.VerificationRequest,
+ *   !proto.trisa.gds.api.v1beta1.VerificationReply>}
+ */
+const methodDescriptor_TRISADirectory_Verification = new grpc.web.MethodDescriptor(
+  '/trisa.gds.api.v1beta1.TRISADirectory/Verification',
+  grpc.web.MethodType.UNARY,
+  proto.trisa.gds.api.v1beta1.VerificationRequest,
+  proto.trisa.gds.api.v1beta1.VerificationReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.VerificationReply.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.trisa.gds.api.v1beta1.VerificationRequest,
+ *   !proto.trisa.gds.api.v1beta1.VerificationReply>}
+ */
+const methodInfo_TRISADirectory_Verification = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.trisa.gds.api.v1beta1.VerificationReply,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.VerificationReply.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.VerificationReply)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.VerificationReply>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.verification =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Verification',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Verification,
+      callback);
+};
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.trisa.gds.api.v1beta1.VerificationReply>}
+ *     Promise that resolves to the response
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.verification =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Verification',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Verification);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.trisa.gds.api.v1beta1.HealthCheck,
+ *   !proto.trisa.gds.api.v1beta1.ServiceState>}
+ */
+const methodDescriptor_TRISADirectory_Status = new grpc.web.MethodDescriptor(
+  '/trisa.gds.api.v1beta1.TRISADirectory/Status',
+  grpc.web.MethodType.UNARY,
+  proto.trisa.gds.api.v1beta1.HealthCheck,
+  proto.trisa.gds.api.v1beta1.ServiceState,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.ServiceState.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.trisa.gds.api.v1beta1.HealthCheck,
+ *   !proto.trisa.gds.api.v1beta1.ServiceState>}
+ */
+const methodInfo_TRISADirectory_Status = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.trisa.gds.api.v1beta1.ServiceState,
+  /**
+   * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.trisa.gds.api.v1beta1.ServiceState.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.ServiceState)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.ServiceState>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.status =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Status',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Status,
+      callback);
+};
+
+
+/**
+ * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.trisa.gds.api.v1beta1.ServiceState>}
+ *     Promise that resolves to the response
+ */
+proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient.prototype.status =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/trisa.gds.api.v1beta1.TRISADirectory/Status',
+      request,
+      metadata || {},
+      methodDescriptor_TRISADirectory_Status);
 };
 
 
