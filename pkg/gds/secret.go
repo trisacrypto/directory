@@ -9,6 +9,7 @@ import (
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"google.golang.org/grpc/codes"
@@ -147,6 +148,8 @@ func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret st
 		if errors.Is(err, context.DeadlineExceeded) {
 			return err
 		}
+
+		log.Error().Err(err).Msg("error returned from secret manager")
 
 		serr, ok := status.FromError(err)
 		if ok {
