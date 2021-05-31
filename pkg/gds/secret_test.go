@@ -54,13 +54,13 @@ func TestSecrets(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a secret for the testSecretType
-	require.NoError(t, sm.With(testRequestId, testSecretType).CreateSecret(testContext, testSecretType))
+	require.NoError(t, sm.With(testRequestId).CreateSecret(testContext, testSecretType))
 
 	// Create a version to hold the testPayload
-	require.NoError(t, sm.With(testRequestId, testSecretType).AddSecretVersion(testContext, testSecretType, testPayload))
+	require.NoError(t, sm.With(testRequestId).AddSecretVersion(testContext, testSecretType, testPayload))
 
 	// Retrieve the testPayload
-	testResult, err := sm.With(testRequestId, testSecretType).GetLatestVersion(testContext, testSecretType)
+	testResult, err := sm.With(testRequestId).GetLatestVersion(testContext, testSecretType)
 	require.Equal(t, testResult, testPayload)
 	require.NoError(t, err)
 
@@ -87,5 +87,5 @@ func TestSecrets(t *testing.T) {
 	require.NotNil(t, cert)
 
 	// Delete the secret
-	require.NoError(t, sm.With(testRequestId, testSecretType).DeleteSecret(testContext, testSecretType))
+	require.NoError(t, sm.With(testRequestId).DeleteSecret(testContext, testSecretType))
 }

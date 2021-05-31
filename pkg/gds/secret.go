@@ -44,11 +44,10 @@ type SecretManagerContext struct {
 	secretType string
 }
 
-func (sm *SecretManager) With(certRequest, secretType string) *SecretManagerContext {
+func (sm *SecretManager) With(certRequest string) *SecretManagerContext {
 	return &SecretManagerContext{
-		manager:    sm,
-		requestId:  certRequest,
-		secretType: secretType,
+		manager:   sm,
+		requestId: certRequest,
 	}
 }
 

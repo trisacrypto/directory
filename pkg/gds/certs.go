@@ -95,7 +95,7 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 
 	// Step 2: get the password
 	secretType := "password"
-	pkcs12Password, err := s.secret.With(r.Id, secretType).GetLatestVersion(context.Background(), secretType)
+	pkcs12Password, err := s.secret.With(r.Id).GetLatestVersion(context.Background(), secretType)
 	if err != nil {
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
@@ -273,7 +273,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	// Store zipped cert in Google Secrets using certRequestId
 	sctx := context.Background()
 	secretType = "cert"
-	if err = s.secret.With(r.Id, secretType).CreateSecret(sctx, secretType); err != nil {
+	if err = s.secret.With(r.Id).CreateSecret(sctx, secretType); err != nil {
 		log.Error().Err(err).Msg("could not create cert secret")
 		return
 	}
@@ -281,7 +281,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		log.Error().Err(err).Msg("could not read in cert payload")
 		return
 	}
-	if err = s.secret.With(r.Id, secretType).AddSecretVersion(sctx, secretType, payload); err != nil {
+	if err = s.secret.With(r.Id).AddSecretVersion(sctx, secretType, payload); err != nil {
 		log.Error().Err(err).Msg("could not add secret version for cert payload")
 		return
 	}
@@ -307,7 +307,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 
 	// Retrieve the latest secret version for the password
 	secretType = "password"
-	pkcs12password, err := s.secret.With(r.Id, secretType).GetLatestVersion(sctx, secretType)
+	pkcs12password, err := s.secret.With(r.Id).GetLatestVersion(sctx, secretType)
 	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
