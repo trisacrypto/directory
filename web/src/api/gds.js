@@ -1,6 +1,8 @@
 const api = require('./trisa/gds/api/v1beta1/api_grpc_web_pb');
 const models = require('./trisa/gds/models/v1beta1/models_pb');
 
+const registeredDirectory = "vaspdirectory.net";
+
 const defaultEndpoint = () => {
   // Use environment configured variable by default
   if (process.env.REACT_APP_GDS_API_ENDPOINT) {
@@ -32,7 +34,7 @@ class GDS {
     switch (inputType) {
       case "uuid":
         req.setId(query);
-        req.setRegisteredDirectory("vaspdirectory.net");
+        req.setRegisteredDirectory(registeredDirectory);
         break
       case "common name":
         req.setCommonName(query);
@@ -41,9 +43,9 @@ class GDS {
         throw new Error("unacceptable input type to lookup query");
     }
 
-    let self = this;
+    let client = this.client;
     return new Promise((resolve, reject) => {
-      self.client.lookup(req, {}, (err, rep) => {
+      client.lookup(req, {}, (err, rep) => {
         if (err || !rep) {
           reject(err);
         } else {
@@ -53,16 +55,45 @@ class GDS {
     });
   }
 
-  status = (commonName) => {
-    const req = new api.StatusRequest();
+  verifyContact = (vaspID, token) => {
+    if (!vaspID || !token) {
+      throw new Error("vaspID and token are required");
+    }
+
+    const req = new api.VerifyContactRequest();
+    req.setId(vaspID);
+    req.setToken(token);
+
+    let client = this.client;
+    let verificationStatus = this.verificationStatus;
+    return new Promise((resolve, reject) => {
+      client.verifyContact(req, {}, (err, rep) => {
+        if (err || !rep) {
+          reject(err);
+        } else {
+          let data = rep.toObject();
+          data.status = verificationStatus(rep.getStatus());
+          resolve(data);
+        }
+      });
+    });
+  }
+
+  verification = (commonName) => {
+    const req = new api.VerificationRequest();
     req.setCommonName(commonName);
-    this.client.status(req, {}, (err, rep) => {
-      if (err || !rep) {
-        console.log(err);
-        return
-      }
-      console.log(this.verificationStatus(rep.getVerificationStatus()));
-      console.log(rep.toObject());
+
+    let client = this.client;
+    let verificationStatus = this.verificationStatus;
+    return new Promise((resolve, reject) => {
+      client.verification(req, {}, (err, rep) => {
+        if (err || !rep) {
+          reject(err);
+        } else {
+          console.log(verificationStatus(rep.getVerificationStatus()));
+          resolve(rep.toObject());
+        }
+      });
     });
   };
 
@@ -72,6 +103,20 @@ class GDS {
         return key;
       }
     };
+  }
+
+  status = () => {
+    const req = new api.HealthCheck();
+    let client = this.client;
+    return new Promise((resolve, reject) => {
+      client.status(req, {}, (err, rep) => {
+        if (err || !rep) {
+          reject(err);
+        } else {
+          resolve(rep.toObject());
+        }
+      });
+    });
   }
 
 }

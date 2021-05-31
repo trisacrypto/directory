@@ -18,7 +18,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -36,6 +35,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func main() {
@@ -479,11 +479,16 @@ func storePut(c *cli.Context) (err error) {
 	}
 
 	if len(data) > 0 {
+		jsonpb := &protojson.UnmarshalOptions{
+			AllowPartial:   true,
+			DiscardUnknown: true,
+		}
+
 		// Unmarshall the thing from JSON then
 		// Marshall the database representation
 		if bytes.HasPrefix(key, []byte("vasps")) {
 			vasp := new(pb.VASP)
-			if err = json.Unmarshal(data, &vasp); err != nil {
+			if err = jsonpb.Unmarshal(data, vasp); err != nil {
 				return cli.NewExitError(err, 1)
 			}
 			if value, err = proto.Marshal(vasp); err != nil {
@@ -491,7 +496,7 @@ func storePut(c *cli.Context) (err error) {
 			}
 		} else if bytes.HasPrefix(key, []byte("certreqs")) {
 			careq := new(models.CertificateRequest)
-			if err = json.Unmarshal(data, &careq); err != nil {
+			if err = jsonpb.Unmarshal(data, careq); err != nil {
 				return cli.NewExitError(err, 1)
 			}
 			if value, err = proto.Marshal(careq); err != nil {
@@ -521,7 +526,7 @@ func storePut(c *cli.Context) (err error) {
 			value = make([]byte, binary.MaxVarintLen64)
 			binary.PutUvarint(value, pk)
 		} else {
-			return cli.NewExitError("could not determine unmarshall type", 1)
+			return cli.NewExitError("could not determine unmarshal type", 1)
 		}
 	}
 
@@ -760,11 +765,11 @@ func transfer(c *cli.Context) (err error) {
 
 	// Create the transaction data
 	payload := &api.Payload{}
-	if payload.Identity, err = ptypes.MarshalAny(data.Identity); err != nil {
+	if payload.Identity, err = anypb.New(data.Identity); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
-	if payload.Transaction, err = ptypes.MarshalAny(data.Transaction); err != nil {
+	if payload.Transaction, err = anypb.New(data.Transaction); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

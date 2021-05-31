@@ -10,7 +10,7 @@ const Lookup = ({ onAlert }) => {
 
   const onLookup = async (query, inputType) => {
     try {
-      const response = await gds.lookup(query, inputType)
+      const response = await gds.lookup(query, inputType);
       setResults(response);
     } catch(err) {
       onAlert('danger', err.message);
