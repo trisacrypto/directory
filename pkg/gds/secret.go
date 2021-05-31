@@ -16,8 +16,10 @@ import (
 )
 
 var (
-	chars             = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
-	ErrSecretNotFound = errors.New("could not add secret version - not found")
+	chars                = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
+	ErrSecretNotFound    = errors.New("could not add secret version - not found")
+	ErrFileSizeLimit     = errors.New("could not add secret version - file size exceeds limit")
+	ErrPermissionsDenied = errors.New("could not add secret version - permissions denied at project level")
 )
 
 // CreateToken creates a variable length random token that can be used for passwords or API keys.
@@ -150,8 +152,15 @@ func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret st
 		// If the secret does not exist (e.g. has been deleted or hasn't been created yet)
 		// we'll get a Not Found error
 		serr, ok := status.FromError(err)
-		if ok && serr.Code() == codes.NotFound {
-			return ErrSecretNotFound
+		if ok {
+			switch serr.Code() {
+			case codes.NotFound:
+				return ErrSecretNotFound
+			case codes.InvalidArgument:
+				return ErrFileSizeLimit
+			case codes.PermissionDenied:
+				return ErrPermissionsDenied
+			}
 		}
 
 		// If the error is something else, something went wrong.
