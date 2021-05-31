@@ -9,6 +9,7 @@ import (
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"google.golang.org/grpc/codes"
@@ -16,8 +17,10 @@ import (
 )
 
 var (
-	chars             = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
-	ErrSecretNotFound = errors.New("could not add secret version - not found")
+	chars                = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
+	ErrSecretNotFound    = errors.New("could not add secret version - not found")
+	ErrFileSizeLimit     = errors.New("could not add secret version - file size exceeds limit")
+	ErrPermissionsDenied = errors.New("could not add secret version - permissions denied at project level")
 )
 
 // CreateToken creates a variable length random token that can be used for passwords or API keys.
@@ -36,17 +39,17 @@ type SecretManager struct {
 	client *secretmanager.Client
 }
 
+// SecretManagerContext maintains a single long-running secret manager that can be used for the duration of the certificate request process
 type SecretManagerContext struct {
-	manager    *SecretManager
-	requestId  string
-	secretType string
+	manager   *SecretManager
+	requestId string
 }
 
-func (sm *SecretManager) With(certRequest, secretType string) *SecretManagerContext {
+// With allows us to engage a single SecretManager across all required calls during the certificate request process
+func (sm *SecretManager) With(certRequest string) *SecretManagerContext {
 	return &SecretManagerContext{
-		manager:    sm,
-		requestId:  certRequest,
-		secretType: secretType,
+		manager:   sm,
+		requestId: certRequest,
 	}
 }
 
@@ -72,9 +75,8 @@ func NewSecretManager(config config.SecretsConfig) (sm *SecretManager, err error
 	return sm, nil
 }
 
-// CreateSecret creates a new secret in the Google Cloud Manager top-
-// level directory using the `secret` name provided.
-// This function returns an error if any occurs.
+// CreateSecret creates a new secret in the Google Cloud Manager top-level directory
+// using the `secret` name provided. This function returns an error if any occurs.
 // Note: A secret is a logical wrapper around a collection of secret versions.
 // To store a secret payload, you must first CreateSecret and then AddSecretVersion.
 func (smc *SecretManagerContext) CreateSecret(ctx context.Context, secret string) error {
@@ -147,11 +149,22 @@ func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret st
 			return err
 		}
 
-		// If the secret does not exist (e.g. has been deleted or hasn't been created yet)
-		// we'll get a Not Found error
+		log.Error().Err(err).Msg("error returned from secret manager")
+
 		serr, ok := status.FromError(err)
-		if ok && serr.Code() == codes.NotFound {
-			return ErrSecretNotFound
+		if ok {
+			switch serr.Code() {
+			// If the secret does not exist (e.g. has been deleted or hasn't been created yet)
+			// we'll get a Not Found error
+			case codes.NotFound:
+				return ErrSecretNotFound
+			// If the secret exceeds 65KiB we'll get a InvalidArgument error
+			case codes.InvalidArgument:
+				return ErrFileSizeLimit
+			// If we give the wrong path to the project, we get a Permission Denied error
+			case codes.PermissionDenied:
+				return ErrPermissionsDenied
+			}
 		}
 
 		// If the error is something else, something went wrong.

@@ -227,12 +227,12 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 	// Make a new secret of type "password"
 	secretType := "password"
-	if err = s.secret.With(certRequest.Id, secretType).CreateSecret(ctx, secretType); err != nil {
+	if err = s.secret.With(certRequest.Id).CreateSecret(ctx, secretType); err != nil {
 		log.Error().Err(err).Msg("could not create new secret on registration")
 		out.Error = &api.Error{Code: 500, Message: "internal error with registration, please contact admins"}
 		return out, nil
 	}
-	if err = s.secret.With(certRequest.Id, secretType).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
+	if err = s.secret.With(certRequest.Id).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
 		log.Error().Err(err).Msg("unable to add secret version on registration")
 		out.Error = &api.Error{Code: 500, Message: "internal error during registration, please contact admins"}
 		return out, nil
