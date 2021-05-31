@@ -1,3 +1,5 @@
+// Thanks to @thekelvinliu for providing this code snippet!
+// See: https://github.com/thekelvinliu/country-code-emoji/blob/main/src/index.js
 // country code regex
 const CC_REGEX = /^[a-z]{2}$/i;
 
