@@ -1,22 +1,24 @@
 package gds
 
 import (
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/hmac"
-	crand "crypto/rand"
-	"crypto/sha256"
+	"context"
 	"errors"
-	"io"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/trisacrypto/directory/pkg/gds/config"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-const nonceSize = 12
-
-var chars = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890")
+var (
+	chars             = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
+	ErrSecretNotFound = errors.New("could not add secret version - not found")
+)
 
 // CreateToken creates a variable length random token that can be used for passwords or API keys.
 func CreateToken(length int) string {
@@ -28,108 +30,192 @@ func CreateToken(length int) string {
 	return b.String()
 }
 
-// Encrypt is a helper utility to encrypt a plain text string with the server's secret
-// token, returns a cipher string which is the base64 encoded
-func (s *Server) Encrypt(plaintext string) (ciphertext, signature []byte, err error) {
-	// Create a 32 byte signature of the key
-	hash := sha256.New()
-	hash.Write([]byte(s.conf.SecretKey))
-	key := hash.Sum(nil)
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	nonce, err := genNonce(nonceSize)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ciphertext = aesgcm.Seal(nil, nonce, []byte(plaintext), nil)
-	if len(ciphertext) == 0 {
-		return nil, nil, errors.New("could not encrypt secret with aes gcm")
-	}
-
-	sig, err := createHMAC(key, ciphertext)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Concatenate the ciphertext and the nonce to facilitate decryption
-	ciphertext = append(ciphertext, nonce...)
-	return ciphertext, sig, nil
+// SecretManager holds a client to the Google secret manager, and the path to the `parent` project for the secret manager.
+type SecretManager struct {
+	parent string
+	client *secretmanager.Client
 }
 
-// Decrypt the ciphertext with the server's secret key and verify the HMAC.
-func (s *Server) Decrypt(ciphertext, signature []byte) (plaintext string, err error) {
-	if len(ciphertext) == 0 {
-		return "", errors.New("empty cipher text")
-	}
-
-	// Create a 32 byte signature of the key
-	hash := sha256.New()
-	hash.Write([]byte(s.conf.SecretKey))
-	key := hash.Sum(nil)
-
-	// Separate the data from the nonce
-	data := ciphertext[:len(ciphertext)-nonceSize]
-	nonce := ciphertext[len(ciphertext)-nonceSize:]
-
-	// Validate HMAC signature
-	if err = validateHMAC(key, data, signature); err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
-	if err != nil {
-		return "", err
-	}
-
-	return string(plainbytes), nil
+type SecretManagerContext struct {
+	manager    *SecretManager
+	requestId  string
+	secretType string
 }
 
-func genNonce(n int) ([]byte, error) {
-	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
-	nonce := make([]byte, n)
-	if _, err := io.ReadFull(crand.Reader, nonce); err != nil {
-		return nil, err
+func (sm *SecretManager) With(certRequest, secretType string) *SecretManagerContext {
+	return &SecretManagerContext{
+		manager:    sm,
+		requestId:  certRequest,
+		secretType: secretType,
 	}
-	return nonce, nil
 }
 
-func createHMAC(key, data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, errors.New("cannot sign empty data")
+// NewSecretManager creates and returns a new secret manager client and an error if one occurs.
+// Note that the `secretmanager` package leverages the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable which specifies the json path to the service account
+// credentials, meaning that this function is a lightweight method for testing
+// that the application can successfully connect to the secret manager API.
+// However, this function does not validate the parent path.
+func NewSecretManager(config config.SecretsConfig) (sm *SecretManager, err error) {
+
+	sm = &SecretManager{
+		parent: fmt.Sprintf("projects/%s", config.Project),
 	}
-	hm := hmac.New(sha256.New, key)
-	hm.Write(data)
-	return hm.Sum(nil), nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if sm.client, err = secretmanager.NewClient(ctx); err != nil {
+		return nil, fmt.Errorf("could not connect to secret manager: %s", err)
+	}
+
+	return sm, nil
 }
 
-func validateHMAC(key, data, sig []byte) error {
-	hmac, err := createHMAC(key, data)
+// CreateSecret creates a new secret in the Google Cloud Manager top-
+// level directory using the `secret` name provided.
+// This function returns an error if any occurs.
+// Note: A secret is a logical wrapper around a collection of secret versions.
+// To store a secret payload, you must first CreateSecret and then AddSecretVersion.
+func (smc *SecretManagerContext) CreateSecret(ctx context.Context, secret string) error {
+
+	secretName := fmt.Sprintf("%s-%s", smc.requestId, secret)
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build the request.
+	req := &secretmanagerpb.CreateSecretRequest{
+		Parent:   smc.manager.parent,
+		SecretId: secretName,
+		Secret: &secretmanagerpb.Secret{
+			Replication: &secretmanagerpb.Replication{
+				Replication: &secretmanagerpb.Replication_Automatic_{
+					Automatic: &secretmanagerpb.Replication_Automatic{},
+				},
+			},
+		},
+	}
+
+	// Call the API. Note: We don't actually need the result that comes back from the API call
+	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
+	_, err := smc.manager.client.CreateSecret(sctx, req)
 	if err != nil {
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+
+		// If the secret already exists, that means the client already has a password set up
+		// This is fine because we'll just create a new version with a new password for them
+		// and CertMan will always look for the most recent secret version.
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.AlreadyExists {
+			return nil
+		}
+
+		// If the error is something else, something went wrong.
 		return err
 	}
+	return nil
+}
 
-	if !bytes.Equal(sig, hmac) {
-		return errors.New("HMAC mismatch")
+// AddSecretVersion adds a new secret version to the given secret and the
+// provided payload. Returns an error if one occurs.
+// Note: to add a secret version, the secret must first be created using CreateSecret.
+func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret string, payload []byte) error {
+
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", smc.manager.parent, smc.requestId, secret)
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build the request.
+	req := &secretmanagerpb.AddSecretVersionRequest{
+		Parent: secretPath,
+		Payload: &secretmanagerpb.SecretPayload{
+			Data: payload,
+		},
+	}
+
+	// Call the API. Note: We don't actually need the result that comes back from the API call
+	// and not accessing it directly (e.g. logging plaintext, etc) provides added security
+	_, err := smc.manager.client.AddSecretVersion(sctx, req)
+	if err != nil {
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+
+		// If the secret does not exist (e.g. has been deleted or hasn't been created yet)
+		// we'll get a Not Found error
+		serr, ok := status.FromError(err)
+		if ok && serr.Code() == codes.NotFound {
+			return ErrSecretNotFound
+		}
+
+		// If the error is something else, something went wrong.
+		return fmt.Errorf("unable to create secret version: %s", err)
+	}
+
+	return nil
+}
+
+// GetLatestVersion returns the payload for the latest version of the given secret,
+// if one exists, else an error.
+func (smc *SecretManagerContext) GetLatestVersion(ctx context.Context, secret string) ([]byte, error) {
+
+	versionPath := fmt.Sprintf("%s/secrets/%s-%s/versions/latest", smc.manager.parent, smc.requestId, secret)
+
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build the request.
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: versionPath,
+	}
+
+	// Call the API.
+	result, err := smc.manager.client.AccessSecretVersion(sctx, req)
+	if err != nil {
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
+		}
+
+		// If the error is something else, something went wrong.
+		return nil, fmt.Errorf("unable to access latest secret version: %s", err)
+	}
+
+	return result.Payload.Data, nil
+}
+
+// DeleteSecret deletes the secret with the given the name, and all of its versions.
+// Note: this is an irreversible operation. Any service or workload that attempts to
+// access a deleted secret receives a Not Found error.
+func (smc *SecretManagerContext) DeleteSecret(ctx context.Context, secret string) error {
+
+	secretPath := fmt.Sprintf("%s/secrets/%s-%s", smc.manager.parent, smc.requestId, secret)
+
+	// Create an internal context, since a failed API call will result in infinite hang
+	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build the request.
+	req := &secretmanagerpb.DeleteSecretRequest{
+		Name: secretPath,
+	}
+
+	// Call the API.
+	err := smc.manager.client.DeleteSecret(sctx, req)
+	if err != nil {
+		// If the API call is malformed, it will hang until the internal context times out
+		if errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		// If the error is something else, something went wrong.
+		return fmt.Errorf("unable to delete secret; %s", err)
 	}
 	return nil
 }
