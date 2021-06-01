@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
-	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,36 +20,22 @@ import (
 // reject, the VASP and certificate request records are deleted and the reject reason is
 // sent to the technical contact.
 func (s *Server) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin.ReviewReply, err error) {
-	out = &admin.ReviewReply{}
-
 	// Validate review request
 	if in.Id == "" || in.AdminVerificationToken == "" {
-		out.Error = &api.Error{
-			Code:    400,
-			Message: "provide both the VASP id to review and the admin verification token",
-		}
-		log.Error().Err(out.Error).Msg("bad review request")
-		return out, nil
+		log.Error().Err(out.Error).Msg("no ID or verification token")
+		return nil, status.Error(codes.InvalidArgument, "provide both the VASP ID and the admin verification token")
 	}
 
 	if !in.Accept && in.RejectReason == "" {
-		out.Error = &api.Error{
-			Code:    400,
-			Message: "if rejecting the request, a reason must be supplied",
-		}
-		log.Error().Err(out.Error).Msg("bad review request")
-		return out, nil
+		log.Error().Err(out.Error).Msg("missing reject reason")
+		return nil, status.Error(codes.InvalidArgument, "if rejecting the request, a reason must be supplied")
 	}
 
 	// Lookup the VASP record associated with the request
 	var vasp *pb.VASP
 	if vasp, err = s.db.Retrieve(in.Id); err != nil {
-		log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-		out.Error = &api.Error{
-			Code:    404,
-			Message: err.Error(),
-		}
-		return out, nil
+		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
+		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
 	}
 
 	// Check that the administration verification token is correct
@@ -59,26 +45,21 @@ func (s *Server) Review(ctx context.Context, in *admin.ReviewRequest) (out *admi
 		return nil, status.Error(codes.Internal, "could not retrieve admin token from data")
 	}
 	if in.AdminVerificationToken != adminVerificationToken {
-		log.Error().Err(err).Str("token", in.AdminVerificationToken).Msg("incorrect admin verification token")
-		out.Error = &api.Error{
-			Code:    403,
-			Message: "admin verification token not accepted",
-		}
-		return out, nil
+		log.Warn().Err(err).Str("vaps", in.Id).Msg("incorrect admin verification token")
+		return nil, status.Error(codes.Unauthenticated, "admin verification token not accepted")
 	}
 
 	// Accept or reject the request
+	out = &admin.ReviewReply{}
 	if in.Accept {
 		if out.Message, err = s.acceptRegistration(vasp); err != nil {
-			log.Error().Err(out.Error).Msg("could not accept VASP registration")
-			out.Error = &api.Error{Code: 500, Message: "could not review VASP registration"}
-			return out, nil
+			log.Error().Err(err).Msg("could not accept VASP registration")
+			return nil, status.Error(codes.FailedPrecondition, "unable to accept VASP registration request")
 		}
 	} else {
 		if out.Message, err = s.rejectRegistration(vasp, in.RejectReason); err != nil {
-			log.Error().Err(out.Error).Msg("could not reject VASP registration")
-			out.Error = &api.Error{Code: 500, Message: "could not review VASP registration"}
-			return out, nil
+			log.Error().Err(err).Msg("could not reject VASP registration")
+			return nil, status.Error(codes.FailedPrecondition, "unable to reject VASP registration request")
 		}
 	}
 
@@ -94,6 +75,7 @@ func (s *Server) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
 	}
+	vasp.VerifiedOn = time.Now().Format(time.RFC3339)
 	vasp.VerificationStatus = pb.VerificationState_REVIEWED
 	if err = s.db.Update(vasp); err != nil {
 		return "", err
@@ -118,13 +100,12 @@ func (s *Server) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 		}
 	}
 
-	if ncertreqs == 0 {
+	switch ncertreqs {
+	case 0:
 		return "", errors.New("no certificate requests found for VASP registration")
-	}
-
-	if ncertreqs == 1 {
+	case 1:
 		log.Debug().Str("vasp", vasp.Id).Msg("certificate request marked as ready to submit")
-	} else {
+	default:
 		log.Warn().Str("vasp", vasp.Id).Int("requests", ncertreqs).Msg("multiple certificate requests marked as ready to submit")
 	}
 
