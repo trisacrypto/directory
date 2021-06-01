@@ -7,8 +7,7 @@ request. The request JSON is:
 
 {{ .Request }}
 
-To verify or reject the registration request, use the following metadata with the
-gds review command:
+To verify or reject the registration request, use the following metadata with the gds review command:
 
 ID: {{ .VID }}
 Token: {{ .Token }}
@@ -21,9 +20,7 @@ To reject the registration, provide a rejection message as the last argument:
 
 $ gds review -i {{ .VID }} -t {{ .Token }} -R -m ""
 
-Note that we're working to create a URL endpoint for the vaspdirectory.net site to
-simplify the review process. We're sorry about the inconvenience of this method at
-the early stage of the TRISA network.
+Note that we're working to create a URL endpoint for the vaspdirectory.net site to simplify the review process. We're sorry about the inconvenience of this method at the early stage of the TRISA network.
 
 Best Regards,
 The TRISA Global Directory Service
