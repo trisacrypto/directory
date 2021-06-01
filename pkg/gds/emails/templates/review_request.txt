@@ -23,4 +23,4 @@ $ gds review -i {{ .VID }} -t {{ .Token }} -R -m ""
 Note that we're working to create a URL endpoint for the vaspdirectory.net site to simplify the review process. We're sorry about the inconvenience of this method at the early stage of the TRISA network.
 
 Best Regards,
-The TRISA Global Directory Service
+TRISA Global Directory Service Team
