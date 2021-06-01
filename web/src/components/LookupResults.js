@@ -28,11 +28,19 @@ const LookupResults = (props) => {
             <dt className="col-sm-3">Country</dt>
             <dd className="col-sm-9">{countryCodeEmoji(results.country)} <span className="sr-only">{results.country}</span></dd>
 
-            <dt className="col-sm-3">TRISA Verification</dt>
-            <dd className="col-sm-9">VERIFIED on {results.verifiedOn}</dd>
+            {results.verifiedOn &&
+              <>
+              <dt className="col-sm-3">TRISA Verification</dt>
+              <dd className="col-sm-9">VERIFIED on {results.verifiedOn}</dd>
+              </>
+            }
 
-            <dt className="col-sm-3">TRISA Identity Signature</dt>
-            <dd className="col-sm-9">{results.identityCertificate.signature}</dd>
+            {results.identityCertificate && results.identityCertificate.signature &&
+              <>
+              <dt className="col-sm-3">TRISA Identity Signature</dt>
+              <dd className="col-sm-9">{results.identityCertificate.signature}</dd>
+              </>
+            }
           </dl>
         </Card.Body>
       </Card>

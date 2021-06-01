@@ -147,7 +147,7 @@ const TRIXO = ({data, onChange}) => {
       <fieldset>
         <legend className="sublegend">CDD & Travel Rule Policies</legend>
         <Form.Group>
-          <Form.Label>Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of hte jurisdiction(s) regulatory regimes where it is licensed/approved/registered?</Form.Label>
+          <Form.Label>Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?</Form.Label>
           <Form.Control
             as="select" custom
             value={data.has_required_regulatory_program}
