@@ -12,25 +12,29 @@ import (
 // Config uses envconfig to load required settings from the environment and validate
 // them in preparation for running the TRISA Global Directory Service.
 type Config struct {
-	BindAddr       string          `split_words:"true" default:":4433"`
-	DirectoryID    string          `split_words:"true" default:"vaspdirectory.net"`
-	SecretKey      string          `split_words:"true" required:"true"`
-	DatabaseURL    string          `split_words:"true" required:"true"`
-	SendGridAPIKey string          `envconfig:"SENDGRID_API_KEY" required:"false"`
-	ServiceEmail   string          `split_words:"true" default:"admin@vaspdirectory.net"`
-	AdminEmail     string          `split_words:"true" default:"admin@trisa.io"`
-	Maintenance    bool            `split_words:"true" default:"false"`
-	LogLevel       LogLevelDecoder `split_words:"true" default:"info"`
-	Sectigo        SectigoConfig
-	CertMan        CertManConfig
-	Backup         BackupConfig
-	Secrets        SecretsConfig
-	processed      bool
+	BindAddr    string          `split_words:"true" default:":4433"`
+	DirectoryID string          `split_words:"true" default:"vaspdirectory.net"`
+	SecretKey   string          `split_words:"true" required:"true"`
+	DatabaseURL string          `split_words:"true" required:"true"`
+	Maintenance bool            `split_words:"true" default:"false"`
+	LogLevel    LogLevelDecoder `split_words:"true" default:"info"`
+	Sectigo     SectigoConfig
+	Email       EmailConfig
+	CertMan     CertManConfig
+	Backup      BackupConfig
+	Secrets     SecretsConfig
+	processed   bool
 }
 
 type SectigoConfig struct {
 	Username string `envconfig:"SECTIGO_USERNAME" required:"false"`
 	Password string `envconfig:"SECTIGO_PASSWORD" required:"false"`
+}
+
+type EmailConfig struct {
+	ServiceEmail   string `envconfig:"GDS_SERVICE_EMAIL" default:"TRISA Directory Service <admin@vaspdirectory.net>"`
+	AdminEmail     string `envconfig:"GDS_ADMIN_EMAIL" default:"TRISA Admins <admin@trisa.io>"`
+	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
 }
 
 type CertManConfig struct {

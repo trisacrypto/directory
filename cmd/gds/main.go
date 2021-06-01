@@ -226,6 +226,10 @@ func main() {
 	app.Run(os.Args)
 }
 
+//===========================================================================
+// CLI Actions
+//===========================================================================
+
 // Serve the TRISA directory service
 func serve(c *cli.Context) (err error) {
 	var conf config.Config
@@ -471,6 +475,10 @@ func status(c *cli.Context) (err error) {
 
 	return printJSON(rep)
 }
+
+//===========================================================================
+// Helper Methods
+//===========================================================================
 
 // helper function to create the GRPC client with default options
 func initClient(c *cli.Context) (err error) {

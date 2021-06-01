@@ -5,7 +5,7 @@ WORKDIR /srv/build
 COPY . .
 RUN go test ./... && go build -v ./cmd/gds
 RUN go build -v ./cmd/sectigo
-RUN go build -v ./cmd/debug
+RUN go build -v ./cmd/gdsutil
 
 FROM ubuntu:bionic
 
@@ -17,6 +17,6 @@ RUN apt-get update && apt-get install -y wget gnupg
 
 COPY --from=builder /srv/build/gds /bin/
 COPY --from=builder /srv/build/sectigo /bin/
-COPY --from=builder /srv/build/debug /bin/
+COPY --from=builder /srv/build/gdsutil /bin/
 
 ENTRYPOINT [ "/bin/gds", "serve" ]

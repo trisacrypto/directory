@@ -1,6 +1,4 @@
-import './App.css';
 import React from 'react';
-import gds from './api/gds';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Tab from 'react-bootstrap/Tab';
@@ -8,24 +6,16 @@ import Tabs from 'react-bootstrap/Tabs';
 import Lookup from './components/Lookup';
 import Alerts from './components/Alerts';
 import Registration from './components/Registration';
-import LookupResults from './components/LookupResults';
+import VerifyContact from './components/VerifyContact';
+import Route from './components/nav/Route';
+import NoRoute from './components/nav/NoRoute';
+import MultiRoute from './components/nav/MultiRoute';
 
+const mainRoutes = new Set(["/", "/register"]);
+const allRoutes = new Set(["/", "/register", "/verify-contact"]);
 
 class App extends React.Component {
-  state = { results: {}, alerts: [] };
-
-  onLookup = async (query, inputType) => {
-    try {
-      const response = await gds.lookup(query, inputType)
-      this.setState({ results: response })
-    } catch(err) {
-      this.setState(prevState => ({
-        results: {},
-        alerts: [...prevState.alerts, {variant: 'danger', message: err.message}]
-      }));
-      console.warn(err);
-    }
-  }
+  state = { alerts: [], currentPath: window.location.pathname };
 
   onAlert = (variant, message) => {
     this.setState(prevState => ({
@@ -37,6 +27,11 @@ class App extends React.Component {
     let alerts = [...this.state.alerts];
     alerts.splice(idx, 1);
     this.setState({alerts: alerts});
+  }
+
+  onTabSelect = (key) => {
+    window.history.pushState({}, '', key);
+    this.setState({ currentPath: window.location.pathname });
   }
 
   render() {
@@ -55,23 +50,33 @@ class App extends React.Component {
           </Col>
         </Row>
 
-        <Tabs defaultActiveKey="directory" id="tab-nav" className="justify-content-center">
-          <Tab eventKey="directory" title="Directory">
-            <Row className="py-3">
-              <Col md={{span: 8, offset: 2}}>
-                <Lookup onSubmit={this.onLookup} />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <LookupResults results={this.state.results} />
-              </Col>
-            </Row>
-          </Tab>
-          <Tab eventKey="register" title="Register">
-            <Registration onAlert={this.onAlert} />
-          </Tab>
-        </Tabs>
+        <Route path="/verify-contact">
+          <VerifyContact />
+        </Route>
+
+        <MultiRoute paths={mainRoutes}>
+          <Tabs activeKey={this.state.currentPath} id="main-tab-nav" className="justify-content-center" onSelect={this.onTabSelect}>
+            <Tab eventKey="/" title="Directory">
+              <Lookup onAlert={this.onAlert} />
+            </Tab>
+            <Tab eventKey="/register" title="Register">
+              <Registration onAlert={this.onAlert} />
+            </Tab>
+          </Tabs>
+        </MultiRoute>
+
+        <NoRoute paths={allRoutes}>
+          <Row>
+          <Col md={{span: 6, offset: 3}} className="text-center">
+            <p className="big-number">404</p>
+            <h4>PAGE NOT FOUND</h4>
+            <p className="text-muted">
+              The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            </p>
+            <a href="/" className="btn btn-secondary mt-2">Directory Home</a>
+          </Col>
+        </Row>
+        </NoRoute>
 
       </main>
       <footer className="footer">

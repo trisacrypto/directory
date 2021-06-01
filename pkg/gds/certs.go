@@ -326,7 +326,7 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Email the certificates to the technical contacts
-	if err = s.DeliverCertificatesEmail(vasp, path); err != nil {
+	if err = s.email.SendDeliverCertificates(vasp, path); err != nil {
 		log.Error().Err(err).Msg("could not deliver certificates to technical contact")
 	}
 
