@@ -19,6 +19,7 @@ LABEL maintainer="TRISA <admin@trisa.io>"
 LABEL description="Global TRISA Directory Service User Interface"
 
 COPY --from=builder /usr/src/app/build/ /usr/share/nginx/html
+COPY containers/gds-ui/nginx.conf /etc/nginx/conf.d/default.conf
 
 ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
 CMD [ "nginx", "-g", "daemon off;" ]
