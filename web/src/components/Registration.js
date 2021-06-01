@@ -7,10 +7,13 @@ import Tab from 'react-bootstrap/Tab';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
+import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import Accordion from 'react-bootstrap/Accordion';
 import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
+import gds from '../api/gds';
 
 const registrationFormVersion = "v1beta1";
 
@@ -91,17 +94,47 @@ class Registration extends React.Component {
     validated: false,
     formData: makeFormData(),
     formDownloadURL: "",
+    submitting: false,
+    showSubmittedModal: false,
+    submissionResponse: {},
   }
 
   handleSubmit = (event) => {
     event.preventDefault();
 
+    // Collect form and validate it
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.stopPropagation();
+      this.setState({validated: true});
+      return;
     }
 
-    this.setState({validated: true});
+    this.setState({submitting: true})
+    // Submit the registration request to the server
+    try {
+      gds.register(this.state.formData)
+        .then(rep => {
+          this.setState({
+            submitting: false,
+            showSubmittedModal: true,
+            submissionResponse: rep
+          });
+        })
+        .catch(err => {
+          this.props.onAlert("danger", err.message);
+          console.warn(err);
+        });
+    } catch (err) {
+      this.setState({
+        submitting: false,
+        validated: false,
+        showSubmittedModal: false,
+        submissionResponse: {}
+      });
+      this.props.onAlert("danger", "There was a significant internal problem processing this form, please contact the admins for assistance.");
+      console.error(err);
+    }
   }
 
   handleReset = (event) => {
@@ -119,6 +152,10 @@ class Registration extends React.Component {
         URL.revokeObjectURL(fileDownloadURL);
         this.setState({fileDownloadURL: ""});
     });
+  }
+
+  handleModalClose = (event) => {
+    this.setState({showSubmittedModal: false, submissionResponse: {}});
   }
 
   upload = (e) => {
@@ -227,8 +264,24 @@ class Registration extends React.Component {
 
   render() {
     const summaryFormData = JSON.stringify(this.state.formData, null, "  ");
+    let submitBtn = <Button type="submit" variant="primary">Submit Registration</Button>;
+    if (this.state.submitting) {
+      submitBtn = (
+        <Button variant="primary" disabled>
+          <Spinner
+            as="span"
+            animation="border"
+            size="sm"
+            role="status"
+            aria-hidden="true"
+          />
+          <span className="pl-2">Submitting Registration &hellip;</span>
+        </Button>
+      );
+    }
 
     return (
+      <>
       <Form noValidate validated={this.state.validated} onSubmit={this.handleSubmit}>
         <Tab.Container id="registration-form" activeKey={this.state.tabKey} onSelect={(k) => this.setState({tabKey: k})}>
           <Row className="pt-3 pb-5">
@@ -263,10 +316,9 @@ class Registration extends React.Component {
                       browser storage</em> so that you can come back and complete the process. <strong>No
                       information is sent until you submit the form in the summary section</strong>.
                     </p>
-                    <p className="text-danger">
-                      This registration form is currently in its beta implementation. You will not be able
-                      to submit the form now, but can download it and submit via the CLI registration interface.
-                      This registration form will become live when the TRISA v1beta1 protocol is released.
+                    <p>
+                      This registration form is currently in its beta implementation. On the summary page
+                      you are able to download the form to save offline. You may also load a saved form below.
                     </p>
                     <Form.Group>
                       <Button variant="primary" onClick={(e) => this.setState({tabKey:"basic-details"})}>Next</Button>{' '}
@@ -516,17 +568,24 @@ class Registration extends React.Component {
                 <Tab.Pane eventKey="summary">
                   <fieldset>
                     <legend>Summary</legend>
-                    <div><pre>{summaryFormData}</pre></div>
-                    <Form.Group>
-                      <Button type="reset" variant="secondary" onClick={this.handleReset}>Reset</Button>{' '}
-                      <Button type="submit" variant="primary" onClick={this.handleDownload}>Download</Button>
-                      <a className="d-none"
-                         download="trisa_registration.json"
-                         href={this.state.fileDownloadURL}
-                         ref={e=>this.dofileDownload = e}
-                      >
-                      download data
-                      </a>
+                    <div className="mt-2 mb-5"><pre className="summaryJSON">{summaryFormData}</pre></div>
+                    <Form.Group className="mt-2">
+                      <Row>
+                        <Col xs={6}>
+                          {submitBtn}
+                        </Col>
+                        <Col xs={6} className="text-right">
+                          <Button type="button" variant="info" onClick={this.handleDownload}>Download</Button>{' '}
+                          <Button type="reset" variant="secondary" onClick={this.handleReset}>Reset</Button>
+                          <a className="d-none"
+                            download="trisa_registration.json"
+                            href={this.state.fileDownloadURL}
+                            ref={e=>this.dofileDownload = e}
+                          >
+                          download data
+                          </a>
+                        </Col>
+                      </Row>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
@@ -535,6 +594,53 @@ class Registration extends React.Component {
           </Row>
         </Tab.Container>
       </Form>
+      <Modal
+        show={this.state.showSubmittedModal}
+        onHide={this.handleModalClose}
+        backdrop="static"
+        keyboard={false}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>TRISA Registration Request Submitted!</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Your registration request has been successfully received by the Directory Service.
+            Verification emails have been sent to all contacts listed. Once your contact
+            information has been verified, the registration form will be sent to the
+            TRISA review board to verify your membership in the TRISA network.
+          </p>
+          <p>
+            When you are verified you will be issued PKCS12 encrypted identity certificates
+            for use in mTLS authentication between TRISA members. The password to decrypt
+            those certificates is shown below:
+          </p>
+          <p className="text-center mark"><strong>
+            {this.state.submissionResponse.pkcs12password}
+          </strong></p>
+          <p className="text-center text-danger">
+            This is the only time the PKCS12 password is shown during the registration process.
+            <br />
+            Please copy and paste this password and store somewhere safe!
+          </p>
+          <p className="text-muted text-center">
+            ID: {this.state.submissionResponse.id}
+            <br />
+            Verification Status: "{this.state.submissionResponse.status}"
+          </p>
+          <p className="text-muted small">
+            Message from server: "{this.state.submissionResponse.message}""
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="text-center">
+          <Button variant="danger" onClick={this.handleModalClose}>
+            Understood
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </>
     );
   }
 }

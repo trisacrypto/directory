@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	chars                = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890!#$%&()*+,-./:;<=>?@[]^_{|}~")
+	chars                = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890")
+	specialChars         = []rune("!#$%&()*+-<=>?@[]^_{|}~")
 	ErrSecretNotFound    = errors.New("could not add secret version - not found")
 	ErrFileSizeLimit     = errors.New("could not add secret version - file size exceeds limit")
 	ErrPermissionsDenied = errors.New("could not add secret version - permissions denied at project level")
@@ -28,7 +29,11 @@ func CreateToken(length int) string {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var b strings.Builder
 	for i := 0; i < length; i++ {
-		b.WriteRune(chars[random.Intn(len(chars))])
+		if rand.Float64() <= 0.85 {
+			b.WriteRune(chars[random.Intn(len(chars))])
+		} else {
+			b.WriteRune(specialChars[random.Intn(len(specialChars))])
+		}
 	}
 	return b.String()
 }

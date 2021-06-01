@@ -31,7 +31,6 @@ class VerifyContact extends React.Component {
     gds.verifyContact(this.state.vaspID, this.state.token)
       .then(rep => {
         this.setState({loading: false});
-        console.log(rep);
         if (rep.error) {
           this.setState({variant: "warning", message: rep.error.message});
         } else {

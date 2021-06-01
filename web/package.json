@@ -17,6 +17,7 @@
     "google-protobuf": "^3.17.0-rc.1",
     "grpc-web": "^1.2.1",
     "immutability-helper": "^3.1.1",
+    "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-bootstrap": "^1.6.0",
     "react-dom": "^17.0.2",

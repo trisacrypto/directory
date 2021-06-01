@@ -38,3 +38,8 @@ legend.subsublegend {
   font-weight: bold;
   font-size: 5.1rem;
 }
+
+.summaryJSON {
+  max-height: 400px;
+  overflow-y: scroll;
+}

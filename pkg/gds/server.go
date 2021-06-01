@@ -180,13 +180,13 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	// Validate partial VASP record to ensure that it can be registered.
 	if err = vasp.Validate(true); err != nil {
 		log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
-		return nil, status.Error(codes.InvalidArgument, "invalid or incomplete registration form, please review form and try again")
+		return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
 	// TODO: add signature to leveldb indices
 	// TODO: check already exists and uniqueness constraints
-	if out.Id, err = s.db.Create(vasp); err != nil {
+	if vasp.Id, err = s.db.Create(vasp); err != nil {
 		// Assuming uniqueness is the primary constraint here
 		// TODO: better database error checking or handling
 		log.Warn().Err(err).Msg("could not register VASP in database")
