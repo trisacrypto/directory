@@ -154,7 +154,6 @@ func (s *Server) Shutdown() (err error) {
 // Register generates a PKCS12 password, provided in the RPC response which can be
 // used to access the certificate private keys when they're emailed.
 func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
-	out = &api.RegisterReply{}
 	vasp := &pb.VASP{
 		RegisteredDirectory: s.conf.DirectoryID,
 		Entity:              in.Entity,
@@ -170,39 +169,31 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		Version:             &pb.Version{Version: 1},
 	}
 
-	// Compute the common name from the trisa endpoint if not specified
+	// Compute the common name from the TRISA endpoint if not specified
 	if vasp.CommonName == "" && vasp.TrisaEndpoint != "" {
 		if vasp.CommonName, _, err = net.SplitHostPort(in.TrisaEndpoint); err != nil {
 			log.Warn().Err(err).Msg("could not parse common name from endpoint")
-			out.Error = &api.Error{
-				Code:    400,
-				Message: err.Error(),
-			}
-			return out, nil
+			return nil, status.Error(codes.InvalidArgument, "no common name supplied, could not parse common name from endpoint")
 		}
 	}
 
 	// Validate partial VASP record to ensure that it can be registered.
 	if err = vasp.Validate(true); err != nil {
 		log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
-		out.Error = &api.Error{
-			Code:    400,
-			Message: err.Error(),
-		}
-		return out, nil
+		return nil, status.Error(codes.InvalidArgument, "invalid or incomplete registration form, please review form and try again")
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
 	// TODO: add signature to leveldb indices
+	// TODO: check already exists and uniqueness constraints
 	if out.Id, err = s.db.Create(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not register VASP")
-		out.Error = &api.Error{
-			Code:    400,
-			Message: err.Error(),
-		}
-		return out, nil
+		// Assuming uniqueness is the primary constraint here
+		// TODO: better database error checking or handling
+		log.Warn().Err(err).Msg("could not register VASP in database")
+		return nil, status.Error(codes.AlreadyExists, "could not complete registration, uniqueness constraints violated")
 	}
 
+	// Log successful registration
 	name, _ := vasp.Name()
 	log.Info().Str("name", name).Str("id", vasp.Id).Msg("registered VASP")
 
@@ -210,40 +201,33 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	// TODO: add to processing queue to return sooner/parallelize work
 	// Create the verification tokens and save the VASP back to the database
 	var contacts = []*pb.Contact{
-		vasp.Contacts.Technical, vasp.Contacts.Administrative,
-		vasp.Contacts.Billing, vasp.Contacts.Legal,
+		vasp.Contacts.Technical,
+		vasp.Contacts.Administrative,
+		vasp.Contacts.Billing,
+		vasp.Contacts.Legal,
 	}
 
-	for _, contact := range contacts {
+	for idx, contact := range contacts {
 		if contact != nil && contact.Email != "" {
 			if err = models.SetContactVerification(contact, CreateToken(48), false); err != nil {
-				out.Error = &api.Error{
-					Code:    500,
-					Message: err.Error(),
-				}
-				return out, nil
+				log.Error().Err(err).Int("index", idx).Str("vasp", vasp.Id).Msg("could not set contact verification token")
+				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 			}
 		}
 	}
 
 	if err = s.db.Update(vasp); err != nil {
-		log.Error().Err(err).Msg("could not update vasp")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with contact verification tokens")
+		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
 
 	// Send contacts with updated tokens
 	if err = s.email.SendVerifyContacts(vasp); err != nil {
-		log.Error().Err(err).Msg("could not verify contacts")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not sennd verify contacts emails")
+		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
+
+	// Log successful contact verification emails sent
 	log.Info().Msg("contact email verifications sent")
 
 	// Create PKCS12 password along with certificate request.
@@ -258,31 +242,27 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	// Make a new secret of type "password"
 	secretType := "password"
 	if err = s.secret.With(certRequest.Id).CreateSecret(ctx, secretType); err != nil {
-		log.Error().Err(err).Msg("could not create new secret on registration")
-		out.Error = &api.Error{Code: 500, Message: "internal error with registration, please contact admins"}
-		return out, nil
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not create new secret for pkcs12 password")
+		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
 	if err = s.secret.With(certRequest.Id).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
-		log.Error().Err(err).Msg("unable to add secret version on registration")
-		out.Error = &api.Error{Code: 500, Message: "internal error during registration, please contact admins"}
-		return out, nil
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("unable to add secret version for pkcs12 password")
+		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
 
 	if err = s.db.SaveCertRequest(certRequest); err != nil {
-		log.Error().Err(err).Msg("could not save certificate request for VASP")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not save certificate request")
+		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
 
-	out.Id = vasp.Id
-	out.RegisteredDirectory = vasp.RegisteredDirectory
-	out.CommonName = vasp.CommonName
-	out.Status = vasp.VerificationStatus
-	out.Message = "verification code sent to contact emails, please check spam folder if not arrived; pkcs12 password attached, this is the only time it will be available - do not lose!"
-	out.Pkcs12Password = password
+	out = &api.RegisterReply{
+		Id:                  vasp.Id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Status:              vasp.VerificationStatus,
+		Message:             "a verification code has been sent to contact emails, please check spam folder if it has not arrived; pkcs12 password attached, this is the only time it will be available -- do not lose!",
+		Pkcs12Password:      password,
+	}
 	return out, nil
 }
 
@@ -290,81 +270,66 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 // if it exists and the entity has been verified.
 func (s *Server) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
 	var vasp *pb.VASP
-	out = &api.LookupReply{}
-
-	if in.Id != "" {
+	switch {
+	case in.Id != "":
 		// TODO: add registered directory to lookup
 		if vasp, err = s.db.Retrieve(in.Id); err != nil {
-			out.Error = &api.Error{
-				Code:    404,
-				Message: err.Error(),
-			}
+			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
-
-	} else if in.CommonName != "" {
+	case in.CommonName != "":
 		var vasps []*pb.VASP
 		if vasps, err = s.db.Search(map[string]interface{}{"name": in.CommonName}); err != nil {
-			out.Error = &api.Error{
-				Code:    404,
-				Message: err.Error(),
-			}
+			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
+			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
-		if len(vasps) == 1 {
-			vasp = vasps[0]
-		} else {
-			out.Error = &api.Error{
-				Code:    404,
-				Message: "not found",
-			}
+		if len(vasps) != 1 {
+			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
-	} else {
-		out.Error = &api.Error{
-			Code:    400,
-			Message: "no lookup query provided",
-		}
-		return out, nil
+
+		vasp = vasps[0]
+	default:
+		log.Warn().Str("rpc", "lookup").Msg("no arguments supplied")
+		return nil, status.Error(codes.InvalidArgument, "please supply ID and registered directory or common name for lookup")
 	}
 
-	if out.Error == nil {
-		// TODO: should lookups only return verified peers?
-		out.Id = vasp.Id
-		out.RegisteredDirectory = vasp.RegisteredDirectory
-		out.CommonName = vasp.CommonName
-		out.Endpoint = vasp.TrisaEndpoint
-		out.IdentityCertificate = vasp.IdentityCertificate
-		out.Name, _ = vasp.Name()
-		out.Country = vasp.Entity.CountryOfRegistration
-		out.VerifiedOn = vasp.VerifiedOn
-
-		// TODO: how do we determine which signing certificate to send?
-		// Currently sending the last certificate in the array so that to update a
-		// signing certificate, a new cert just has to be appended to the slice.
-		if len(vasp.SigningCertificates) > 0 {
-			out.SigningCertificate = vasp.SigningCertificates[len(vasp.SigningCertificates)-1]
-		}
-
-		log.Info().Str("id", vasp.Id).Msg("VASP lookup succeeded")
-	} else {
-		log.Warn().
-			Err(out.Error).
-			Str("id", in.Id).
-			Str("name", in.CommonName).
-			Msg("could not lookup VASP")
+	// TODO: should lookups only return verified peers?
+	out = &api.LookupReply{
+		Id:                  vasp.Id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		IdentityCertificate: vasp.IdentityCertificate,
+		Country:             vasp.Entity.CountryOfRegistration,
+		VerifiedOn:          vasp.VerifiedOn,
 	}
+
+	// Ignore errors on name lookup
+	out.Name, _ = vasp.Name()
+
+	// TODO: how do we determine which signing certificate to send?
+	// Currently sending the last certificate in the array so that to update a
+	// signing certificate, a new cert just has to be appended to the slice.
+	if len(vasp.SigningCertificates) > 0 {
+		out.SigningCertificate = vasp.SigningCertificates[len(vasp.SigningCertificates)-1]
+	}
+
+	log.Info().Str("id", vasp.Id).Str("common_name", vasp.CommonName).Msg("VASP lookup succeeded")
 	return out, nil
 }
 
 // Search for VASP entity records by name or by country in order to perform more detailed
 // Lookup requests. The search process is purposefully simplistic at the moment.
 func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
-	out = &api.SearchReply{}
+	// Create search query to send to database
 	query := make(map[string]interface{})
 	query["name"] = in.Name
 	query["website"] = in.Website
 	query["country"] = in.Country
 
-	// Build category query
+	// Build categories query
 	categories := make([]string, 0, len(in.BusinessCategory)+len(in.VaspCategory))
 	for _, category := range in.BusinessCategory {
 		categories = append(categories, category.String())
@@ -374,13 +339,14 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 
 	var vasps []*pb.VASP
 	if vasps, err = s.db.Search(query); err != nil {
-		out.Error = &api.Error{
-			Code:    400,
-			Message: err.Error(),
-		}
+		log.Error().Err(err).Msg("vasp search failed")
+		return nil, status.Error(codes.Aborted, err.Error())
 	}
 
-	out.Results = make([]*api.SearchReply_Result, 0, len(vasps))
+	// Build search results to return
+	out = &api.SearchReply{
+		Results: make([]*api.SearchReply_Result, 0, len(vasps)),
+	}
 	for _, vasp := range vasps {
 		out.Results = append(out.Results, &api.SearchReply_Result{
 			Id:                  vasp.Id,
@@ -390,19 +356,14 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 		})
 	}
 
-	entry := log.With().
+	log.Info().
 		Strs("name", in.Name).
 		Strs("websites", in.Website).
 		Strs("country", in.Country).
 		Strs("categories", categories).
 		Int("results", len(out.Results)).
-		Logger()
+		Msg("search succeeded")
 
-	if out.Error != nil {
-		entry.Warn().Err(out.Error).Msg("unsuccessful search")
-	} else {
-		entry.Info().Msg("search succeeded")
-	}
 	return out, nil
 }
 
@@ -410,41 +371,40 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 // the directory service is performing health check monitoring.
 func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
 	var vasp *pb.VASP
-	out = &api.VerificationReply{}
-
-	if in.Id != "" {
-		// TODO: add registered directory to lookup
+	switch {
+	case in.Id != "":
+		// TODO: add registered directory to retrieve
 		if vasp, err = s.db.Retrieve(in.Id); err != nil {
-			log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-			return nil, status.Error(codes.NotFound, err.Error())
+			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
-
-	} else if in.CommonName != "" {
-		// TODO: change lookup to unique common name lookup
+	case in.CommonName != "":
 		var vasps []*pb.VASP
 		if vasps, err = s.db.Search(map[string]interface{}{"name": in.CommonName}); err != nil {
-			log.Error().Err(err).Str("name", in.CommonName).Msg("could not retrieve vasp")
-			return nil, status.Error(codes.NotFound, err.Error())
+			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
+			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
-		if len(vasps) == 1 {
-			vasp = vasps[0]
-		} else {
-			log.Warn().Int("results", len(vasps)).Msg("vasp not found")
-			return nil, status.Error(codes.NotFound, "VASP not found")
+		if len(vasps) != 1 {
+			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
-	} else {
-		log.Warn().Msg("no lookup query provided")
-		return nil, status.Error(codes.InvalidArgument, "no lookup query provided")
+
+		vasp = vasps[0]
+	default:
+		log.Warn().Str("rpc", "lookup").Msg("no arguments supplied")
+		return nil, status.Error(codes.InvalidArgument, "please supply ID and registered directory or common name for verification")
 	}
 
-	// TODO: should lookups only return verified peers?
-	out.VerificationStatus = vasp.VerificationStatus
-	out.ServiceStatus = vasp.ServiceStatus
-	out.VerifiedOn = vasp.VerifiedOn
-	out.FirstListed = vasp.FirstListed
-	out.LastUpdated = vasp.LastUpdated
-	log.Info().Str("id", vasp.Id).Msg("VASP status succeeded")
+	// TODO: also return RevokedOn, which needs to be stored on the VASP
+	out = &api.VerificationReply{
+		VerificationStatus: vasp.VerificationStatus,
+		ServiceStatus:      vasp.ServiceStatus,
+		VerifiedOn:         vasp.VerifiedOn,
+		FirstListed:        vasp.FirstListed,
+		LastUpdated:        vasp.LastUpdated,
+	}
+	log.Info().Str("id", vasp.Id).Str("common_name", vasp.CommonName).Msg("verification status check")
 	return out, nil
 }
 
@@ -452,19 +412,15 @@ func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) 
 // contact email verification. If successful, this method then sends the verification
 // request to the TRISA Admins for review.
 func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
-	out = &api.VerifyContactReply{}
-
+	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
 	if vasp, err = s.db.Retrieve(in.Id); err != nil {
 		log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-		out.Error = &api.Error{
-			Code:    404,
-			Message: err.Error(),
-		}
-		return out, nil
+		return nil, status.Error(codes.NotFound, "could not find associated VASP record by ID")
 	}
 
-	nVerified := 0
+	// Search through the contacts to determine the contacts verified by the supplied token.
+	prevVerified := 0
 	found := false
 	contacts := []*pb.Contact{
 		vasp.Contacts.Technical,
@@ -472,106 +428,93 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 		vasp.Contacts.Billing,
 		vasp.Contacts.Legal,
 	}
-	for _, contact := range contacts {
+	for idx, contact := range contacts {
+		// Ignore empty contacts
 		if contact == nil {
 			continue
 		}
 
+		// Get the verification status
 		token, verified, err := models.GetContactVerification(contact)
 		if err != nil {
 			log.Error().Err(err).Msg("could not retrieve verification from contact extra data field")
-			return nil, status.Error(codes.Internal, "could not verify contact")
+			return nil, status.Error(codes.Aborted, "could not verify contact")
 		}
 
+		// Perform token check and if token matches, mark contact as verified
 		if token == in.Token {
 			found = true
-			log.Info().Str("email", contact.Email).Msg("contact email verified")
+			log.Info().Str("vasp", vasp.Id).Int("index", idx).Msg("contact email verified")
 			if err = models.SetContactVerification(contact, "", true); err != nil {
 				log.Error().Err(err).Msg("could not set verification on contact extra data field")
-				return nil, status.Error(codes.Internal, "could not verify contact")
+				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
 
-		}
-		if verified {
-			nVerified++
+		} else if verified {
+			// Determine the total number of contacts previously verified, not including
+			// the current contact that was just verified. This will help prevent
+			// sending multiple emails to the TRISA Admins for review.
+			prevVerified++
 		}
 	}
 
-	if !found || nVerified == 0 {
-		log.Error().Err(err).Str("token", in.Token).Msg("could not find contact with token")
-		out.Error = &api.Error{
-			Code:    404,
-			Message: "could not find contact with specified token",
-		}
-		return out, nil
+	// Check if we haven't managed to verify the contact
+	if !found {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not find contact with token")
+		return nil, status.Error(codes.NotFound, "could not find contact with the specified token")
 	}
 
 	// Ensures that we only send the verification email to the admins once.
-	// NOTE: we will only generate the password on the first email verification.
-	if nVerified > 1 {
+	// If we have previously verified contacts, assume that we've already sent the
+	// registration review email and do nothing.
+	if prevVerified > 0 && vasp.VerificationStatus > pb.VerificationState_SUBMITTED {
 		// Save the updated contact
 		if err = s.db.Update(vasp); err != nil {
-			log.Error().Err(err).Msg("could not update vasp after contact verification")
-			out.Error = &api.Error{
-				Code:    500,
-				Message: err.Error(),
-			}
-			return out, nil
+			log.Error().Err(err).Msg("could not update VASP record after contact verification")
+			return nil, status.Error(codes.Internal, "could not update contact after verification")
 		}
 
-		out.Status = vasp.VerificationStatus
-		out.Message = "email successfully verified; verification review already sent to TRISA admins"
-		return out, nil
+		return &api.VerifyContactReply{
+			Status:  vasp.VerificationStatus,
+			Message: "email successfully verified",
+		}, nil
 	}
 
-	// Note that this status will get updated in the review request email
+	// Since we have one successful email verification at this point, begin the
+	// registration review process by sending an email to the TRISA admins.
+	// Step 1: mark the VASP as email verified and create an admin token.
 	vasp.VerificationStatus = pb.VerificationState_EMAIL_VERIFIED
 
-	// If this is the first verification, generate the PKCS12 password and send verification review email
 	// Create verification token for admin and update database
 	// TODO: replace with actual authentication
 	if err = models.SetAdminVerificationToken(vasp, CreateToken(48)); err != nil {
 		log.Error().Err(err).Msg("could not create admin verification token")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
 	if err = s.db.Update(vasp); err != nil {
 		log.Error().Err(err).Msg("could not save admin verification token")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
 
+	// Step 2: send review request email to the TRISA admins.
 	if err = s.email.SendReviewRequest(vasp); err != nil {
 		log.Error().Err(err).Msg("could not send verification review email")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: "could not send verification review email",
-		}
-		return out, nil
+		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
 
-	// Now that the email has been sent out the vasp is pending review
+	// Step 3: if the review email has been successfully sent, mark as pending review.
 	vasp.VerificationStatus = pb.VerificationState_PENDING_REVIEW
 
 	// Save the VASP and newly created certificate request
 	if err = s.db.Update(vasp); err != nil {
 		log.Error().Err(err).Msg("could not update vasp status to pending review")
-		out.Error = &api.Error{
-			Code:    500,
-			Message: err.Error(),
-		}
-		return out, nil
+		return nil, status.Error(codes.Internal, "there was a problem submitting your registration review request, please contact the admins")
 	}
 
-	out.Status = vasp.VerificationStatus
-	out.Message = "email successfully verified and verification review sent to TRISA admins"
-	return out, nil
+	return &api.VerifyContactReply{
+		Status:  vasp.VerificationStatus,
+		Message: "email successfully verified and verification review sent to TRISA admins",
+	}, nil
 }
 
 func (s *Server) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
