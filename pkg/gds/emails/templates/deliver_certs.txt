@@ -16,4 +16,4 @@ openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
 For more information on integrating with the TRISA network, please visit our documentation at https://trisatest.net/. If you have any questions, you may contact us at admin@trisa.io or join us on our Slack channel trisa-workspace.slack.com. Please do not reply directly to this email.
 
 Best Regards,
-The TRISA Global Directory Service Team
+TRISA Global Directory Service Team
