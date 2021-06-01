@@ -2,6 +2,7 @@ package gds
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
@@ -92,15 +93,20 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 		return err
 	}
 
-	// Step 2: create the certificate params, decrypting the PKCS 12 password
+	// Step 2: get the password
+	secretType := "password"
+	pkcs12Password, err := s.secret.With(r.Id).GetLatestVersion(context.Background(), secretType)
+	if err != nil {
+		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
+	}
+
 	params := make(map[string]string)
 	params["commonName"] = r.CommonName
-	if params["pkcs12Password"], err = s.Decrypt(r.Pkcs12Password, r.Pkcs12Signature); err != nil {
-		return fmt.Errorf("could not decrypt pkcs12password: %s", err)
-	}
+	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
+
 	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		return fmt.Errorf("could not create single certificate batch: %s", err)
@@ -245,9 +251,11 @@ func (s *Server) findCertAuthority() (id int, err error) {
 // as an attachment to the technical contact if available.
 func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	var (
-		err     error
-		path    string
-		certDir string
+		err        error
+		path       string
+		certDir    string
+		payload    []byte
+		secretType string
 	)
 
 	// Get the cert storage directory to download certs to
@@ -262,13 +270,33 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
+	// Store zipped cert in Google Secrets using certRequestId
+	sctx := context.Background()
+	secretType = "cert"
+	if err = s.secret.With(r.Id).CreateSecret(sctx, secretType); err != nil {
+		log.Error().Err(err).Msg("could not create cert secret")
+		return
+	}
+	if payload, err = ioutil.ReadFile(path); err != nil {
+		log.Error().Err(err).Msg("could not read in cert payload")
+		return
+	}
+	if err = s.secret.With(r.Id).AddSecretVersion(sctx, secretType, payload); err != nil {
+		log.Error().Err(err).Msg("could not add secret version for cert payload")
+		return
+	}
+
 	// Mark as downloaded.
 	r.Status = models.CertificateRequestState_DOWNLOADED
 	if err = s.db.SaveCertRequest(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
 	}
-	log.Info().Str(path, path).Msg("certificates downloaded")
+
+	// Delete the temporary file
+	defer os.Remove(path)
+
+	log.Info().Str(path, path).Msg("certificates written to secret manager")
 
 	// Fetch the VASP to get contact info and store certificate data
 	var vasp *pb.VASP
@@ -277,14 +305,15 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
-	// Unpack the certificate and fetch the public key material
-	var pkcs12password string
-	if pkcs12password, err = s.Decrypt(r.Pkcs12Password, r.Pkcs12Signature); err != nil {
-		log.Error().Err(err).Msg("could not decrypt pkcs12password to extract public key")
+	// Retrieve the latest secret version for the password
+	secretType = "password"
+	pkcs12password, err := s.secret.With(r.Id).GetLatestVersion(sctx, secretType)
+	if err != nil {
+		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
 	}
 
-	if vasp.IdentityCertificate, err = extractCertificate(path, pkcs12password); err != nil {
+	if vasp.IdentityCertificate, err = extractCertificate(path, string(pkcs12password)); err != nil {
 		log.Error().Err(err).Msg("could not extract certificate")
 		return
 	}
@@ -297,11 +326,11 @@ func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Email the certificates to the technical contacts
-	if err = s.DeliverCertificatesEmail(vasp, path); err != nil {
+	if err = s.email.SendDeliverCertificates(vasp, path); err != nil {
 		log.Error().Err(err).Msg("could not deliver certificates to technical contact")
 	}
 
-	// Mark certficate request as complete.
+	// Mark certificate request as complete.
 	r.Status = models.CertificateRequestState_COMPLETED
 	if err = s.db.SaveCertRequest(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")

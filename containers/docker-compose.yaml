@@ -10,19 +10,24 @@ services:
     volumes:
       - ../fixtures:/data
     environment:
-      - GDS_DATABASE_URL=/data/db
       - GDS_BIND_ADDR=:4433
+      - GDS_DIRECTORY_ID=local.directory.dev
+      - GDS_SECRET_KEY=supersecretsquirrel
+      - GDS_DATABASE_URL=leveldb:////data/db
+      - GDS_LOG_LEVEL=debug
       - SECTIGO_USERNAME
       - SECTIGO_PASSWORD
+      - GDS_SERVICE_EMAIL
+      - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
-      - GDS_SECRET_KEY=supersecretsquirrel
-      - GDS_CERTMAN_INTERVAL=30s
+      - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
-      - GDS_LOG_LEVEL=debug
       - GDS_BACKUP_ENABLED=true
-      - GDS_BACKUP_INTERVAL=15m
+      - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
       - GDS_BACKUP_KEEP=1
+      - GOOGLE_APPLICATION_CREDENTIALS=/data/creds/service-account.json
+      - GOOGLE_PROJECT_NAME
   envoy:
     build:
       context: ../

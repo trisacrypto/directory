@@ -1,0 +1,26 @@
+Hello TRISA Admins,
+
+We have received a new TRISA Global Directory registration request from a VASP that
+needs to be reviewed. The requestor has verified their email address(es) and received a
+PKCS12 password to decrypt a certificate which will be generated only if you approve this
+request. The request JSON is:
+
+{{ .Request }}
+
+To verify or reject the registration request, use the following metadata with the gds review command:
+
+ID: {{ .VID }}
+Token: {{ .Token }}
+
+To accept the registration, use the command line tool as follows:
+
+$ gds review -i {{ .VID }} -t {{ .Token }} -a
+
+To reject the registration, provide a rejection message as the last argument:
+
+$ gds review -i {{ .VID }} -t {{ .Token }} -R -m ""
+
+Note that we're working to create a URL endpoint for the vaspdirectory.net site to simplify the review process. We're sorry about the inconvenience of this method at the early stage of the TRISA network.
+
+Best Regards,
+The TRISA Global Directory Service

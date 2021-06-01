@@ -1,55 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react'
+import gds from '../api/gds';
+import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
+import LookupForm from './LookupForm';
+import LookupResults from './LookupResults';
 
-class Lookup extends React.Component {
-  state = { query: '', inputType: ''};
+const Lookup = ({ onAlert }) => {
+  const [results, setResults] = useState({});
 
-  onFormSubmit = (event) => {
-    event.preventDefault();
-    this.props.onSubmit(this.state.query, this.state.inputType);
-  }
-
-  uuidRE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-  cnameRE = /^[0-9a-zA-Z.]+$/
-
-  onTextInput = (event) => {
-    let inputType = '';
-    if (this.uuidRE.test(event.target.value)) {
-      inputType = 'uuid';
-    } else if (this.cnameRE.test(event.target.value)) {
-      inputType = 'common name'
+  const onLookup = async (query, inputType) => {
+    try {
+      const response = await gds.lookup(query, inputType);
+      if (response.error) {
+        onAlert('warning', response.error.message);
+      } else {
+        setResults(response);
+      }
+    } catch(err) {
+      onAlert('danger', err.message);
+      console.warn(err);
     }
-    this.setState({ query: event.target.value, inputType: inputType });
   }
 
-  render() {
-    const detectedType = this.state.inputType !== '' ? `Detected input type: ${this.state.inputType}` : '';
-
-    return (
-      <Form className="justify-content-center" onSubmit={this.onFormSubmit}>
-        <Form.Row className="align-items-top">
-          <Col>
-            <Form.Label htmlFor="lookupInput" srOnly>
-              Common Name or VASP ID
-            </Form.Label>
-            <Form.Control
-              id="lookupInput"
-              placeholder="Common Name or VASP ID"
-              onChange={this.onTextInput}
-            />
-            <Form.Text id="passwordHelpBlock" muted>
-              {detectedType}
-            </Form.Text>
-          </Col>
-          <Col xs="auto">
-            <Button type="submit">Submit</Button>
-          </Col>
-        </Form.Row>
-      </Form>
-    );
-  }
+  return (
+    <>
+    <Row className="py-3">
+      <Col md={{span: 8, offset: 2}}>
+        <LookupForm onSubmit={onLookup} />
+      </Col>
+    </Row>
+    <Row>
+      <Col>
+        <LookupResults results={results} />
+      </Col>
+    </Row>
+    </>
+  );
 }
 
 export default Lookup;

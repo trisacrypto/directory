@@ -1,0 +1,10 @@
+Hello {{ .Name }},
+
+Thank you for submitting a TRISA network registration request. To begin the review process, please verify your email by copy and pasting the link below into your browser:
+
+{{ .VerifyContactURL }}
+
+If you're having trouble verifying your contact email, please contact the TRISA admins at admin@trisa.io or on our community Slack channel trisa-workspace.slack.com.
+
+Best Regards,
+The TRISA Global Directory Service

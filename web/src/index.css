@@ -33,3 +33,13 @@ legend.sublegend {
 legend.subsublegend {
   font-size: 1.1rem;
 }
+
+.big-number {
+  font-weight: bold;
+  font-size: 5.1rem;
+}
+
+.summaryJSON {
+  max-height: 400px;
+  overflow-y: scroll;
+}
