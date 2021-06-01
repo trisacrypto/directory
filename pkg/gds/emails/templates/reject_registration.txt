@@ -1,12 +1,12 @@
 Hello {{ .Name }},
 
-Unfortunately, the TRISA review board has rejected your TRISA Global Directory Service registration request. The reason the request was rejected is as follows:
+Unfortunately, the TRISA Review Board has rejected your TRISA Global Directory Service registration request. The reason the request was rejected is as follows:
 
 ID: {{ .VID }}
 
 {{ .Reason }}
 
-Please note that in order to fix the problems mentioned above, you'll have to submit a registration appeal. Please send any questions to admin@trisa.io.
+Please note that in order to fix the problems mentioned above, you'll have to submit a registration appeal. Please send an appeal or questions to admin@trisa.io. Please do not reply directly to this email.
 
-Best Regards,
-The TRISA Global Directory Service
+Best regards,
+TRISA Global Directory Service Team
