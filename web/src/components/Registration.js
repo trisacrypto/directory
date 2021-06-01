@@ -122,6 +122,12 @@ class Registration extends React.Component {
           });
         })
         .catch(err => {
+          this.setState({
+            submitting: false,
+            validated: false,
+            showSubmittedModal: false,
+            submissionResponse: {}
+          });
           this.props.onAlert("danger", err.message);
           console.warn(err);
         });
@@ -631,7 +637,7 @@ class Registration extends React.Component {
             Verification Status: "{this.state.submissionResponse.status}"
           </p>
           <p className="text-muted small">
-            Message from server: "{this.state.submissionResponse.message}""
+            Message from server: "{this.state.submissionResponse.message}"
           </p>
         </Modal.Body>
         <Modal.Footer className="text-center">
