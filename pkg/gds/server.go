@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/sendgrid/sendgrid-go"
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -59,8 +59,10 @@ func New(conf config.Config) (s *Server, err error) {
 		return nil, err
 	}
 
-	// Create the SendGrid API client
-	s.email = sendgrid.NewSendClient(conf.SendGridAPIKey)
+	// Create the Email Manager with SendGrid API client
+	if s.email, err = emails.New(conf.Email); err != nil {
+		return nil, err
+	}
 
 	// Configuration complete!
 
@@ -78,7 +80,7 @@ type Server struct {
 	srv    *grpc.Server
 	conf   config.Config
 	certs  *sectigo.Sectigo
-	email  *sendgrid.Client
+	email  *emails.EmailManager
 	secret *SecretManager
 	echan  chan error
 }
@@ -206,7 +208,35 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 	// Begin verification process by sending emails to all contacts in the VASP record.
 	// TODO: add to processing queue to return sooner/parallelize work
-	if err = s.VerifyContactEmail(vasp); err != nil {
+	// Create the verification tokens and save the VASP back to the database
+	var contacts = []*pb.Contact{
+		vasp.Contacts.Technical, vasp.Contacts.Administrative,
+		vasp.Contacts.Billing, vasp.Contacts.Legal,
+	}
+
+	for _, contact := range contacts {
+		if contact != nil && contact.Email != "" {
+			if err = models.SetContactVerification(contact, CreateToken(48), false); err != nil {
+				out.Error = &api.Error{
+					Code:    500,
+					Message: err.Error(),
+				}
+				return out, nil
+			}
+		}
+	}
+
+	if err = s.db.Update(vasp); err != nil {
+		log.Error().Err(err).Msg("could not update vasp")
+		out.Error = &api.Error{
+			Code:    500,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+
+	// Send contacts with updated tokens
+	if err = s.email.SendVerifyContacts(vasp); err != nil {
 		log.Error().Err(err).Msg("could not verify contacts")
 		out.Error = &api.Error{
 			Code:    500,
@@ -498,8 +528,26 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 	vasp.VerificationStatus = pb.VerificationState_EMAIL_VERIFIED
 
 	// If this is the first verification, generate the PKCS12 password and send verification review email
-	// TODO: make this better
-	if err = s.ReviewRequestEmail(vasp); err != nil {
+	// Create verification token for admin and update database
+	// TODO: replace with actual authentication
+	if err = models.SetAdminVerificationToken(vasp, CreateToken(48)); err != nil {
+		log.Error().Err(err).Msg("could not create admin verification token")
+		out.Error = &api.Error{
+			Code:    500,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+	if err = s.db.Update(vasp); err != nil {
+		log.Error().Err(err).Msg("could not save admin verification token")
+		out.Error = &api.Error{
+			Code:    500,
+			Message: err.Error(),
+		}
+		return out, nil
+	}
+
+	if err = s.email.SendReviewRequest(vasp); err != nil {
 		log.Error().Err(err).Msg("could not send verification review email")
 		out.Error = &api.Error{
 			Code:    500,

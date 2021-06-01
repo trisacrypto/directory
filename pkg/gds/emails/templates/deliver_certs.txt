@@ -1,0 +1,27 @@
+Hello {{ .Name }},
+
+Your TRISA network registration has been approved! Your organization has been granted
+identity certificates validating your membership to other TRISA members via the TRISA
+Global Directory. Attached to this email are PKCS12 encrypted certificates so that you
+can implement the TRISA  protocol using mTLS with other network members to exchange
+Travel Rule compliance information.
+
+The primary details of your directory entry are as follows:
+
+ID: {{ .VID }}
+Common Name: {{ .CommonName }}
+Serial Number: {{ .SerialNumber }}
+Endpoint: {{ .Endpoint }}
+
+To decrypt your certificates, you will need the PKCS12 password that you received when
+you first submitted your registration. To decrypt the certificates on the command line,
+you can use openssl as follows:
+
+openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
+
+For more information on integrating with the TRISA network, please visit our
+documentation at https://trisatest.net/. If you have any questions, you may contact us
+at admin@trisa.io or join us on our Slack channel trisa-workspace.slack.com.
+
+Best Regards,
+The TRISA Global Directory Service

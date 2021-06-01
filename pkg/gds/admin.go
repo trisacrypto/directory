@@ -174,7 +174,7 @@ func (s *Server) rejectRegistration(vasp *pb.VASP, reason string) (msg string, e
 	}
 
 	// Notify the VASP contacts that the registration request has been rejected.
-	if err = s.RejectRegistrationEmail(vasp, reason); err != nil {
+	if err = s.email.SendRejectRegistration(vasp, reason); err != nil {
 		return "", err
 	}
 
