@@ -9,11 +9,11 @@ Common Name: {{ .CommonName }}
 Serial Number: {{ .SerialNumber }}
 Endpoint: {{ .Endpoint }}
 
-To decrypt your certificates, you will need the PKCS12 password that you received when you first submitted your registration. To decrypt the certificates on the command line, you can use openssl as follows:
+To decrypt your certificates, you will need the PKCS12 password that you received when you first submitted your registration. To decrypt the unzipped certificates on the command line, you can use openssl as follows (you will be prompted to enter your password):
 
 openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
 
 For more information on integrating with the TRISA network, please visit our documentation at https://trisatest.net/. If you have any questions, you may contact us at admin@trisa.io or join us on our Slack channel trisa-workspace.slack.com. Please do not reply directly to this email.
 
 Best Regards,
-TRISA Global Directory Service Team
+The TRISA Global Directory Service Team
