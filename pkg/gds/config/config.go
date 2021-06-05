@@ -18,6 +18,7 @@ type Config struct {
 	DatabaseURL string          `split_words:"true" required:"true"`
 	Maintenance bool            `split_words:"true" default:"false"`
 	LogLevel    LogLevelDecoder `split_words:"true" default:"info"`
+	ConsoleLog  bool            `split_words:"true" default:"false"`
 	Sectigo     SectigoConfig
 	Email       EmailConfig
 	CertMan     CertManConfig
