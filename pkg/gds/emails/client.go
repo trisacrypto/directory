@@ -2,17 +2,19 @@ package emails
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/mail"
 
+	"github.com/ghodss/yaml"
+	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // New email manager with the specified configuration.
@@ -64,7 +66,12 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (err error) {
 		vasp.Contacts.Billing, vasp.Contacts.Legal,
 	}
 
-	for _, contact := range contacts {
+	// Attempt at least one delivery, don't give up just because one email failed
+	// Track how many emails and errors occurred during delivery.
+	var nDelivered, nErrors uint8
+
+	for idx, contact := range contacts {
+		// Skip any null contacts or contacts without email addresses
 		if contact == nil || contact.Email == "" {
 			continue
 		}
@@ -74,6 +81,7 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (err error) {
 			VID:  vasp.Id,
 		}
 		if ctx.Token, _, err = models.GetContactVerification(contact); err != nil {
+			// If we can't get the verification token, this is a fatal error
 			return err
 		}
 
@@ -83,23 +91,47 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (err error) {
 			ctx,
 		)
 		if err != nil {
-			return err
+			log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create verify contact email")
+			nErrors++
+			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			return err
+			log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send verify contact email")
+			nErrors++
+			continue
 		}
+
+		nDelivered++
 	}
 
+	// Return an error if no emails were delivered
+	if nDelivered == 0 {
+		return fmt.Errorf("no verify contact emails were successfully sent (%d errors)", nErrors)
+	}
 	return nil
 }
 
 // SendReviewRequest is a shortcut for iComply verification in which we simply send
 // an email to the TRISA admins and have them manually verify registrations.
 func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (err error) {
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       false,
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
 	var data []byte
-	if data, err = json.MarshalIndent(vasp, "", "  "); err != nil {
+	if data, err = jsonpb.Marshal(vasp); err != nil {
 		return err
+	}
+
+	// Convert JSON to YAML to make it more human readable
+	// If the conversion fails, then the JSON data will be kept
+	if yamlData, err := yaml.JSONToYAML(data); err == nil {
+		data = yamlData
 	}
 
 	ctx := ReviewRequestData{
@@ -139,13 +171,23 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (err
 		vasp.Contacts.Billing, vasp.Contacts.Legal,
 	}
 
-	for _, contact := range contacts {
+	// Attempt at least one delivery, don't give up just because one email failed
+	// Track how many emails and errors occurred during delivery.
+	var nDelivered, nErrors uint8
+
+	for idx, contact := range contacts {
+		// Skip any contacts that we can't send emails to
+		if contact == nil || contact.Email == "" {
+			continue
+		}
+
 		var verified bool
 		if _, verified, err = models.GetContactVerification(contact); err != nil {
+			// If we can't get the verification, this is a fatal error
 			return err
 		}
 
-		if contact != nil && verified {
+		if verified {
 			ctx.Name = contact.Name
 			msg, err := RejectRegistrationEmail(
 				m.serviceEmail.Name, m.serviceEmail.Address,
@@ -153,15 +195,25 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (err
 				ctx,
 			)
 			if err != nil {
-				return err
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create reject registration email")
+				nErrors++
+				continue
 			}
 
 			if err = m.Send(msg); err != nil {
-				return err
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send reject registration email")
+				nErrors++
+				continue
 			}
+
+			nDelivered++
 		}
 	}
 
+	// Return an error if no emails were delivered
+	if nDelivered == 0 {
+		return fmt.Errorf("no registration rejection emails were successfully sent (%d errors)", nErrors)
+	}
 	return nil
 }
 
@@ -180,12 +232,23 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (err 
 		vasp.Contacts.Billing, vasp.Contacts.Legal,
 	}
 
-	for _, contact := range contacts {
+	// Attempt at least one delivery, don't give up just because one email failed
+	// Track how many emails and errors occurred during delivery.
+	var nDelivered, nErrors uint8
+
+	for idx, contact := range contacts {
+		// Skip any null contacts or contacts without email addresses
+		if contact == nil || contact.Email == "" {
+			continue
+		}
+
 		var verified bool
 		if _, verified, err = models.GetContactVerification(contact); err != nil {
+			// If we can't get the verification this is a fatal error
 			return err
 		}
-		if contact != nil && verified {
+
+		if verified {
 			ctx.Name = contact.Name
 			msg, err := DeliverCertsEmail(
 				m.serviceEmail.Name, m.serviceEmail.Address,
@@ -194,14 +257,24 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (err 
 			)
 
 			if err != nil {
-				return err
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create deliver certs email")
+				nErrors++
+				continue
 			}
 
 			if err = m.Send(msg); err != nil {
-				return err
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send deliver certs email")
+				nErrors++
+				continue
 			}
+
+			nDelivered++
 		}
 	}
 
+	// Return an error if no emails were delivered
+	if nDelivered == 0 {
+		return fmt.Errorf("no certificate delivery emails were successfully sent (%d errors)", nErrors)
+	}
 	return nil
 }

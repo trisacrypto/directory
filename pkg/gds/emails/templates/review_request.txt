@@ -3,7 +3,7 @@ Hello TRISA Admins,
 We have received a new TRISA Global Directory registration request from a VASP that
 needs to be reviewed. The requestor has verified their email address(es) and received a
 PKCS12 password to decrypt a certificate which will be generated only if you approve this
-request. The request JSON is:
+request. The request YAML is:
 
 {{ .Request }}
 

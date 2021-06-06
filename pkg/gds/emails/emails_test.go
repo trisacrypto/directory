@@ -74,11 +74,13 @@ func TestVerifyContactURL(t *testing.T) {
 }
 
 func TestSendEmails(t *testing.T) {
+	// NOTE: if you place a .env file in this directory alongside the test file, it
+	// will be read, making it simpler to run tests and set environment variables.
+	godotenv.Load()
+
 	if os.Getenv("GDS_TEST_SENDING_EMAILS") == "" {
 		t.Skip("skip generate and send emails test")
 	}
-
-	godotenv.Load()
 
 	// This test uses the environment to send rendered emails with context specific
 	// emails - this is to test the rendering of the emails with data only; it does not
