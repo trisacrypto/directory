@@ -207,8 +207,10 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 
 	// Update indices to match new record, removing the old indices and updating the
 	// new indices with any changes to ensure the index correctly reflects the state.
-	// TODO: check errors from index removal in case the index must be reset.
-	s.removeIndices(o)
+	if err = s.removeIndices(o); err != nil {
+		// NOTE: if this error is triggered, admins may want to reindex the database
+		log.Error().Err(err).Msg("could not remove previous indices on update: reindex required")
+	}
 	if err = s.insertIndices(v); err != nil {
 		return err
 	}
