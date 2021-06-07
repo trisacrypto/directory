@@ -15,6 +15,7 @@ import (
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/gds/logger"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -28,6 +29,15 @@ import (
 func init() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+	// Initialize zerolog with GCP logging requirements
+	zerolog.TimeFieldFormat = time.RFC3339
+	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
+	zerolog.MessageFieldName = logger.GCPFieldKeyMsg
+
+	// Add the severity hook for GCP logging
+	var gcpHook logger.SeverityHook
+	log.Logger = zerolog.New(os.Stdout).Hook(gcpHook).With().Timestamp().Logger()
 }
 
 // New creates a TRISA Directory Service with the specified configuration and prepares
@@ -42,6 +52,11 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Set the global level
 	zerolog.SetGlobalLevel(zerolog.Level(conf.LogLevel))
+
+	// Set human readable logging if specified
+	if conf.ConsoleLog {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
 
 	// Create the server and open the connection to the database
 	s = &Server{conf: conf, echan: make(chan error, 1)}
