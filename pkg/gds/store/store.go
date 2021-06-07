@@ -42,7 +42,11 @@ func Open(conf config.DatabaseConfig) (s Store, err error) {
 
 	if conf.ReindexOnBoot {
 		if indexer, ok := s.(Indexer); ok {
-			indexer.Reindex()
+			if err = indexer.Reindex(); err != nil {
+				// NOTE: the database is not closed here, so if reindexing fails,
+				// something very bad might have occurred and the server should stop.
+				return nil, err
+			}
 			log.Info().Str("scheme", dsn.Scheme).Msg("store reindexed")
 		} else {
 			log.Warn().Str("scheme", dsn.Scheme).Msg("store is not an indexer - skipping reindex")
