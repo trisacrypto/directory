@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
@@ -19,20 +21,38 @@ import (
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
 // protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
 // protocol:////absolute/path/to/file).
-func Open(uri string) (_ Store, err error) {
+func Open(conf config.DatabaseConfig) (s Store, err error) {
 	var dsn *DSN
-	if dsn, err = ParseDSN(uri); err != nil {
+	if dsn, err = ParseDSN(conf.URL); err != nil {
 		return nil, err
 	}
 
 	switch dsn.Scheme {
 	case "leveldb":
-		return leveldb.Open(dsn.Path)
+		if s, err = leveldb.Open(dsn.Path); err != nil {
+			return nil, err
+		}
 	case "sqlite", "sqlite3":
-		return sqlite.Open(dsn.Path)
+		if s, err = sqlite.Open(dsn.Path); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unhandled database scheme %q", dsn.Scheme)
 	}
+
+	if conf.ReindexOnBoot {
+		if indexer, ok := s.(Indexer); ok {
+			if err = indexer.Reindex(); err != nil {
+				// NOTE: the database is not closed here, so if reindexing fails,
+				// something very bad might have occurred and the server should stop.
+				return nil, err
+			}
+			log.Info().Str("scheme", dsn.Scheme).Msg("store reindexed")
+		} else {
+			log.Warn().Str("scheme", dsn.Scheme).Msg("store is not an indexer - skipping reindex")
+		}
+	}
+	return s, nil
 }
 
 // Store provides an interface for directory storage services to abstract the underlying

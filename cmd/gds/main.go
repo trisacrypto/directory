@@ -265,7 +265,7 @@ func load(c *cli.Context) (err error) {
 	}
 
 	var db store.Store
-	if db, err = store.Open(dsn); err != nil {
+	if db, err = store.Open(config.DatabaseConfig{URL: dsn}); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 	defer db.Close()

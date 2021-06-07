@@ -1,8 +1,11 @@
 package leveldb
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"sort"
 	"strings"
@@ -166,15 +169,40 @@ func (c uniqueIndex) reverse(value string, norm normalizer) ([]string, bool) {
 	return results, len(results) > 0
 }
 
-// Dump a container index to a byte representation for storage on disk.
-// TODO: make the serialized representation as compact as possible.
-func (c uniqueIndex) Dump() (data []byte, err error) {
-	return json.Marshal(c)
+// Dump a unique index to a byte representation for storage on disk.
+func (c uniqueIndex) Dump() (_ []byte, err error) {
+	// Create a compressed writer to encode JSON into
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+
+	// Marshal the JSON representation of the index
+	encoder := json.NewEncoder(gz)
+	if err = encoder.Encode(c); err != nil {
+		return nil, fmt.Errorf("could not encode index: %s", err)
+	}
+
+	if err = gz.Close(); err != nil {
+		return nil, fmt.Errorf("could not compress index: %s", err)
+	}
+
+	return buf.Bytes(), nil
 }
 
-// Load a container index from a byte representation on disk.
+// Load a unique index from a byte representation on disk.
 func (c uniqueIndex) Load(data []byte) (err error) {
-	return json.Unmarshal(data, &c)
+	// Create a compressed reader to decode the JSON from.
+	buf := bytes.NewBuffer(data)
+
+	var gz *gzip.Reader
+	if gz, err = gzip.NewReader(buf); err != nil {
+		return fmt.Errorf("could not decompress index: %s", err)
+	}
+
+	decoder := json.NewDecoder(gz)
+	if err = decoder.Decode(&c); err != nil {
+		return fmt.Errorf("could not decode index: %s", err)
+	}
+	return nil
 }
 
 //===========================================================================
@@ -287,14 +315,39 @@ func (c containerIndex) contains(key string, value string, norm normalizer) bool
 }
 
 // Dump a container index to a byte representation for storage on disk.
-// TODO: make the serialized representation as compact as possible.
 func (c containerIndex) Dump() (data []byte, err error) {
-	return json.Marshal(c)
+	// Create a compressed writer to encode JSON into
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+
+	// Marshal the JSON representation of the index
+	encoder := json.NewEncoder(gz)
+	if err = encoder.Encode(c); err != nil {
+		return nil, fmt.Errorf("could not encode index: %s", err)
+	}
+
+	if err = gz.Close(); err != nil {
+		return nil, fmt.Errorf("could not compress index: %s", err)
+	}
+
+	return buf.Bytes(), nil
 }
 
 // Load a container index from a byte representation on disk.
 func (c containerIndex) Load(data []byte) (err error) {
-	return json.Unmarshal(data, &c)
+	// Create a compressed reader to decode the JSON from.
+	buf := bytes.NewBuffer(data)
+
+	var gz *gzip.Reader
+	if gz, err = gzip.NewReader(buf); err != nil {
+		return fmt.Errorf("could not decompress index: %s", err)
+	}
+
+	decoder := json.NewDecoder(gz)
+	if err = decoder.Decode(&c); err != nil {
+		return fmt.Errorf("could not decode index: %s", err)
+	}
+	return nil
 }
 
 //===========================================================================

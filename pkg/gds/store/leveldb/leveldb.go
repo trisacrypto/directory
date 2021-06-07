@@ -207,8 +207,10 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 
 	// Update indices to match new record, removing the old indices and updating the
 	// new indices with any changes to ensure the index correctly reflects the state.
-	// TODO: check errors from index removal in case the index must be reset.
-	s.removeIndices(o)
+	if err = s.removeIndices(o); err != nil {
+		// NOTE: if this error is triggered, admins may want to reindex the database
+		log.Error().Err(err).Msg("could not remove previous indices on update: reindex required")
+	}
 	if err = s.insertIndices(v); err != nil {
 		return err
 	}
@@ -507,6 +509,11 @@ func (s *Store) Reindex() (err error) {
 // Backup copies the leveldb database to a new directory and archives it as gzip tar.
 // See: https://github.com/wbolster/plyvel/issues/46
 func (s *Store) Backup(path string) (err error) {
+	// Before backup ensure the indices are sync'd to disk
+	if err = s.sync(); err != nil {
+		return fmt.Errorf("could not syncrhonize indices prior to backup: %s", err)
+	}
+
 	// Create the directory for the copied leveldb database
 	archive := filepath.Join(path, time.Now().UTC().Format("gdsdb-200601021504"))
 	if err = os.Mkdir(archive, 0744); err != nil {

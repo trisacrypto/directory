@@ -58,9 +58,16 @@ func New(conf config.Config) (s *Server, err error) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	// Create the server and open the connection to the database
+	// Create the server and prepare to serve
 	s = &Server{conf: conf, echan: make(chan error, 1)}
-	if s.db, err = store.Open(conf.DatabaseURL); err != nil {
+
+	if s.conf.Maintenance {
+		// Stop configuration at this point for maintenance mode (no error)
+		return s, nil
+	}
+
+	// Everything that follows here assumes we're not in maintenance mode.
+	if s.db, err = store.Open(conf.Database); err != nil {
 		return nil, err
 	}
 
@@ -115,14 +122,15 @@ func (s *Server) Serve() (err error) {
 		s.echan <- s.Shutdown()
 	}()
 
-	// Start the certificate manager go routine process
-	go s.CertManager()
-
-	// Start the backup manager go routine process
-	go s.BackupManager()
-
+	// Run management routines only if we're not in maintenance mode
 	if s.conf.Maintenance {
 		log.Warn().Msg("starting server in maintenance mode")
+	} else {
+		// Start the certificate manager go routine process
+		go s.CertManager()
+
+		// Start the backup manager go routine process
+		go s.BackupManager()
 	}
 
 	// Listen for TCP requests on the specified address and port
@@ -155,10 +163,15 @@ func (s *Server) Serve() (err error) {
 func (s *Server) Shutdown() (err error) {
 	log.Info().Msg("gracefully shutting down")
 	s.srv.GracefulStop()
-	if err = s.db.Close(); err != nil {
-		log.Error().Err(err).Msg("could not shutdown database")
-		return err
+
+	if !s.conf.Maintenance {
+		// Close the database correctly
+		if err = s.db.Close(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown database")
+			return err
+		}
 	}
+
 	log.Debug().Msg("successful shutdown")
 	return nil
 }

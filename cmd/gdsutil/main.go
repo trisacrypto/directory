@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
@@ -239,12 +240,12 @@ func ldbGet(c *cli.Context) (err error) {
 			pbValue = careq
 		} else if bytes.Equal(key, indexNames) {
 			jsonValue = make(map[string]string)
-			if err = json.Unmarshal(data, &jsonValue); err != nil {
+			if err = unmarshalGZJSON(data, &jsonValue); err != nil {
 				return cli.NewExitError(err, 1)
 			}
 		} else if bytes.Equal(key, indexCountries) {
 			jsonValue = make(map[string][]string)
-			if err = json.Unmarshal(data, &jsonValue); err != nil {
+			if err = unmarshalGZJSON(data, &jsonValue); err != nil {
 				return cli.NewExitError(err, 1)
 			}
 		} else if bytes.HasPrefix(key, sequencePrefix) {
@@ -399,7 +400,13 @@ func ldbPut(c *cli.Context) (err error) {
 		} else if bytes.HasPrefix(key, indexPrefix) {
 			switch format {
 			case "json":
-				value = data
+				// gzip compress the index data
+				buf := &bytes.Buffer{}
+				gz := gzip.NewWriter(buf)
+				if _, err = gz.Write(data); err != nil {
+					return cli.NewExitError(err, 1)
+				}
+				value = buf.Bytes()
 			default:
 				return cli.NewExitError(fmt.Errorf("cannot unmarshal index format %q", format), 1)
 			}
@@ -492,6 +499,32 @@ func isFile(path string) bool {
 		return !os.IsNotExist(err)
 	}
 	return fi.Mode().IsRegular()
+}
+
+func unmarshalGZJSON(data []byte, val interface{}) (err error) {
+	buf := bytes.NewBuffer(data)
+	var gz *gzip.Reader
+	if gz, err = gzip.NewReader(buf); err != nil {
+		return fmt.Errorf("could not decompress data: %s", err)
+	}
+	decoder := json.NewDecoder(gz)
+	if err = decoder.Decode(&val); err != nil {
+		return fmt.Errorf("could not decode json data: %s", err)
+	}
+	return nil
+}
+
+func marshalGZJSON(val interface{}) (data []byte, err error) {
+	var buf *bytes.Buffer
+	gz := gzip.NewWriter(buf)
+	encoder := json.NewEncoder(gz)
+	if err = encoder.Encode(val); err != nil {
+		return data, fmt.Errorf("could not encode data: %s", err)
+	}
+	if err = gz.Close(); err != nil {
+		return data, fmt.Errorf("could not compress data: %s", err)
+	}
+	return buf.Bytes(), nil
 }
 
 //===========================================================================
