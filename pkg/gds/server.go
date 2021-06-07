@@ -60,7 +60,7 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Create the server and open the connection to the database
 	s = &Server{conf: conf, echan: make(chan error, 1)}
-	if s.db, err = store.Open(conf.DatabaseURL); err != nil {
+	if s.db, err = store.Open(conf.Database); err != nil {
 		return nil, err
 	}
 

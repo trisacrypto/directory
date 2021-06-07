@@ -15,16 +15,21 @@ type Config struct {
 	BindAddr    string          `split_words:"true" default:":4433"`
 	DirectoryID string          `split_words:"true" default:"vaspdirectory.net"`
 	SecretKey   string          `split_words:"true" required:"true"`
-	DatabaseURL string          `split_words:"true" required:"true"`
 	Maintenance bool            `split_words:"true" default:"false"`
 	LogLevel    LogLevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool            `split_words:"true" default:"false"`
+	Database    DatabaseConfig
 	Sectigo     SectigoConfig
 	Email       EmailConfig
 	CertMan     CertManConfig
 	Backup      BackupConfig
 	Secrets     SecretsConfig
 	processed   bool
+}
+
+type DatabaseConfig struct {
+	URL           string `split_words:"true" required:"true"`
+	ReindexOnBoot bool   `split_words:"true" default:"false"`
 }
 
 type SectigoConfig struct {

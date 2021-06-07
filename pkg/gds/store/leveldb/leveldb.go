@@ -507,6 +507,11 @@ func (s *Store) Reindex() (err error) {
 // Backup copies the leveldb database to a new directory and archives it as gzip tar.
 // See: https://github.com/wbolster/plyvel/issues/46
 func (s *Store) Backup(path string) (err error) {
+	// Before backup ensure the indices are sync'd to disk
+	if err = s.sync(); err != nil {
+		return fmt.Errorf("could not syncrhonize indices prior to backup: %s", err)
+	}
+
 	// Create the directory for the copied leveldb database
 	archive := filepath.Join(path, time.Now().UTC().Format("gdsdb-200601021504"))
 	if err = os.Mkdir(archive, 0744); err != nil {
