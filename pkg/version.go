@@ -11,7 +11,7 @@ const (
 	VersionMinor         = 0
 	VersionPatch         = 0
 	VersionReleaseLevel  = "rc"
-	VersionReleaseNumber = 3
+	VersionReleaseNumber = 4
 )
 
 // Version returns the semantic version for the current build.
