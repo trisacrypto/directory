@@ -33,7 +33,7 @@ func init() {
 	// Initialize zerolog with GCP logging requirements
 	zerolog.TimeFieldFormat = time.RFC3339
 	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
-	zerolog.MessageFieldName = logger.GCPFIeldKeyMsg
+	zerolog.MessageFieldName = logger.GCPFieldKeyMsg
 
 	// Add the severity hook for GCP logging
 	var gcpHook logger.SeverityHook

@@ -13,7 +13,7 @@ const (
 	GCPDebugLevel    severityGCP = "DEBUG"
 
 	GCPFieldKeySeverity = "severity"
-	GCPFIeldKeyMsg      = "message"
+	GCPFieldKeyMsg      = "message"
 	GCPFieldKeyTime     = "time"
 )
 
