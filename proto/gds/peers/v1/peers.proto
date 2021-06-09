@@ -21,14 +21,26 @@ message Peer {
 // anti-entropy network and to manage services. Note that administrators can also use
 // Gossip to perform the same requests, but this service simplifies things.
 service PeerManagement {
-    rpc GetPeers(GetPeersRequest) returns (GetPeersReply) {};
-    rpc AddPeers(AddPeersRequest) returns (AddPeersReply) {};
-    rpc RmPeers(RmPeersRequest) returns (RmPeersReply) {};
+    rpc GetPeers(PeersFilter) returns (PeersList) {};
+    rpc AddPeers(Peer) returns (PeersStatus) {};
+    rpc RmPeers(Peer) returns (PeersStatus) {};
 }
 
-message GetPeersRequest {}
-message GetPeersReply {}
-message AddPeersRequest {}
-message AddPeersReply {}
-message RmPeersRequest {}
-message RmPeersReply {}
+// Used to filter the peers that are returned. If no filters are specified then all
+// known peers on the remote replica are returned.
+message PeersFilter {
+    repeated string region = 1;      // Specify the region(s) to return the peers for.
+    bool status_only = 2;            // Return only the peers status, not a list of peers.
+}
+
+// Returns the list of peers currently known to the replica and its peer management status.
+message PeersList {
+    repeated Peer peers = 1;
+    PeersStatus status = 2;
+}
+
+// A response to a peer management command that describes the current state of the network.
+message PeersStatus {
+    int64 network_size = 1;          // The total number of peers known to the replica (including itself)
+    map<string, int64> regions = 2;  // The number of peers known to the replica per known region
+}

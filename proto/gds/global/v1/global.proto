@@ -3,9 +3,7 @@ syntax = "proto3";
 package gds.global.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/global/v1;global";
 
-import "gds/peers/v1/peers.proto";
-import "gds/models/v1/models.proto";
-import "trisa/gds/models/v1beta1/models.proto";
+import "google/protobuf/any.proto";
 
 // The Replication Service implements a gossip-based anti-entropy protocol for
 // synchronizing GDS replicas around the world. GDS expects total replication, meaning
@@ -75,14 +73,10 @@ message Object {
     string namespace = 2;            // The namespace of the object, used to disambiguate keys or different object types
     Version version = 3;             // A version vector representing this objects current or latest version
     string region = 4;               // The region code where the data originated
-    string owner = 5;                // The replica that created the object
+    string owner = 5;                // The replica that created the object (identified as "pid:name")
 
     // The object data that is only populated on Updates.
-    oneof data {
-        trisa.gds.models.v1beta1.VASP vasp = 9;
-        gds.models.v1.CertificateRequest certreq = 10;
-        gds.peers.v1.Peer peer = 11;
-    }
+    google.protobuf.Any data = 10;
 }
 
 // Implements a geo-distributed version as a Lamport Scalar

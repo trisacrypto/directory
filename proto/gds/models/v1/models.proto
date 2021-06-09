@@ -15,7 +15,7 @@ message CertificateRequest {
     // The replica that generated the certificate request should be the only replica
     // that handles the certificate request. The request is replicated for information
     // and backup purposes only.
-    string requesting_replica = 2;
+    string owner = 2;
 
     // VASP information for the request
     string vasp = 3;
