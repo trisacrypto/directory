@@ -2,6 +2,7 @@ package gds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
@@ -207,8 +209,12 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 	// Validate partial VASP record to ensure that it can be registered.
 	if err = vasp.Validate(true); err != nil {
-		log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
-		return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
+		// TODO: Ignore ErrCompleteNationalIdentifierLegalPErson until validation See #34
+		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
+			log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
+			return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
+		}
+		log.Warn().Err(err).Msg("ignoring validation error")
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
