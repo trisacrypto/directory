@@ -192,14 +192,14 @@ func (s *Server) Resend(ctx context.Context, in *admin.ResendRequest) (out *admi
 	case admin.ResendRequest_VERIFY_CONTACT:
 		if sent, err = s.email.SendVerifyContacts(vasp); err != nil {
 			log.Warn().Err(err).Int("sent", sent).Msg("could not resend verify contacts emails")
-			return nil, status.Error(codes.FailedPrecondition, "could not resend contact verification emails")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend contact verification emails: %s", err)
 		}
 		out.Message = "contact verification emails resent to all unverified contacts"
 
 	case admin.ResendRequest_REVIEW:
 		if sent, err = s.email.SendReviewRequest(vasp); err != nil {
 			log.Warn().Err(err).Int("sent", sent).Msg("could not resend review request")
-			return nil, status.Error(codes.FailedPrecondition, "could not resend review request")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend review request: %s", err)
 		}
 		out.Message = "review request resent to TRISA admins"
 
@@ -208,7 +208,7 @@ func (s *Server) Resend(ctx context.Context, in *admin.ResendRequest) (out *admi
 		// TODO: in order to implement this, we'd have to fetch the certs from Google Secrets
 		// TODO: if implemented, log which contact was sent the certs (e.g. technical, admin, etc.)
 		// TODO: when above implemented, also log which contact was sent certs in acceptRegistration
-		return nil, status.Error(codes.Unimplemented, "cannot redeliver certs yet")
+		return nil, status.Error(codes.Unimplemented, "resend cert delivery not yet implemented")
 
 	case admin.ResendRequest_REJECTION:
 		// Only send a rejection email if we're in the rejected state
@@ -224,7 +224,7 @@ func (s *Server) Resend(ctx context.Context, in *admin.ResendRequest) (out *admi
 		}
 		if sent, err = s.email.SendRejectRegistration(vasp, in.Reason); err != nil {
 			log.Warn().Err(err).Int("sent", sent).Msg("could not resend rejection emails")
-			return nil, status.Error(codes.FailedPrecondition, "could not resend rejection emails")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend rejection emails: %s", err)
 		}
 		out.Message = "rejection emails resent to all verified contacts"
 
