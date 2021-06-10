@@ -221,6 +221,39 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "resend",
+			Usage:    "request emails be resent in case of delivery errors",
+			Category: "admin",
+			Action:   resend,
+			Before:   initClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the ID of the VASP to submit the review for",
+				},
+				cli.BoolFlag{
+					Name:  "v, verify-contact",
+					Usage: "resend verify contact emails",
+				},
+				cli.BoolFlag{
+					Name:  "r, review",
+					Usage: "resend review request emails",
+				},
+				cli.BoolFlag{
+					Name:  "d, deliver-certs",
+					Usage: "resend certificate delivery email",
+				},
+				cli.BoolFlag{
+					Name:  "R, reject",
+					Usage: "resend rejection email",
+				},
+				cli.StringFlag{
+					Name:  "m, reason",
+					Usage: "provide a reason to reject the request",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -470,6 +503,41 @@ func status(c *cli.Context) (err error) {
 
 	var rep *api.ServiceState
 	if rep, err = client.Status(ctx, req); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func resend(c *cli.Context) (err error) {
+	req := &admin.ResendRequest{
+		Id:     c.String("id"),
+		Reason: c.String("reason"),
+	}
+
+	if req.Id == "" {
+		return cli.NewExitError("missing VASP record ID, specify with --id", 1)
+	}
+
+	// NOTE: if multiple type flags are specified, only one will be used
+	switch {
+	case c.Bool("verify-contact"):
+		req.Type = admin.ResendRequest_VERIFY_CONTACT
+	case c.Bool("review"):
+		req.Type = admin.ResendRequest_REVIEW
+	case c.Bool("deliver-certs"):
+		req.Type = admin.ResendRequest_DELIVER_CERTS
+	case c.Bool("reject"):
+		req.Type = admin.ResendRequest_REJECTION
+	default:
+		return cli.NewExitError("must specify request type (--verify-contact, --review, --deliver-certs, --reject)", 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.ResendReply
+	if rep, err = adminClient.Resend(ctx, req); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

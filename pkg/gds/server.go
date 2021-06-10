@@ -256,13 +256,14 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	}
 
 	// Send contacts with updated tokens
-	if err = s.email.SendVerifyContacts(vasp); err != nil {
-		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not sennd verify contacts emails")
+	var sent int
+	if sent, err = s.email.SendVerifyContacts(vasp); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")
 		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
 
 	// Log successful contact verification emails sent
-	log.Info().Msg("contact email verifications sent")
+	log.Info().Int("sent", sent).Msg("contact email verifications sent")
 
 	// Create PKCS12 password along with certificate request.
 	password := CreateToken(16)
@@ -531,7 +532,7 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 	}
 
 	// Step 2: send review request email to the TRISA admins.
-	if err = s.email.SendReviewRequest(vasp); err != nil {
+	if _, err = s.email.SendReviewRequest(vasp); err != nil {
 		log.Error().Err(err).Msg("could not send verification review email")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}

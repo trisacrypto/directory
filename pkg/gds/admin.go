@@ -155,7 +155,7 @@ func (s *Server) rejectRegistration(vasp *pb.VASP, reason string) (msg string, e
 	}
 
 	// Notify the VASP contacts that the registration request has been rejected.
-	if err = s.email.SendRejectRegistration(vasp, reason); err != nil {
+	if _, err = s.email.SendRejectRegistration(vasp, reason); err != nil {
 		return "", err
 	}
 
@@ -165,4 +165,75 @@ func (s *Server) rejectRegistration(vasp *pb.VASP, reason string) (msg string, e
 		name = vasp.Id
 	}
 	return fmt.Sprintf("registration request for %s has been rejected and its contacts notified", name), nil
+}
+
+func (s *Server) Resend(ctx context.Context, in *admin.ResendRequest) (out *admin.ResendReply, err error) {
+	if in.Id == "" {
+		log.Warn().Msg("invalid resend request: missing ID")
+		return nil, status.Error(codes.InvalidArgument, "VASP record ID is required")
+	}
+
+	// Lookup the VASP record associated with the resend request
+	var vasp *pb.VASP
+	if vasp, err = s.db.Retrieve(in.Id); err != nil {
+		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
+		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
+	}
+
+	var sent int
+	out = &admin.ResendReply{}
+
+	// Handle different resend request types
+	switch in.Type {
+	case admin.ResendRequest_UNKNOWN:
+		log.Warn().Msg("invalid resend request: unknown type")
+		return nil, status.Error(codes.InvalidArgument, "specify a resend emails type")
+
+	case admin.ResendRequest_VERIFY_CONTACT:
+		if sent, err = s.email.SendVerifyContacts(vasp); err != nil {
+			log.Warn().Err(err).Int("sent", sent).Msg("could not resend verify contacts emails")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend contact verification emails: %s", err)
+		}
+		out.Message = "contact verification emails resent to all unverified contacts"
+
+	case admin.ResendRequest_REVIEW:
+		if sent, err = s.email.SendReviewRequest(vasp); err != nil {
+			log.Warn().Err(err).Int("sent", sent).Msg("could not resend review request")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend review request: %s", err)
+		}
+		out.Message = "review request resent to TRISA admins"
+
+	case admin.ResendRequest_DELIVER_CERTS:
+		// TODO: check verification state and cert request state
+		// TODO: in order to implement this, we'd have to fetch the certs from Google Secrets
+		// TODO: if implemented, log which contact was sent the certs (e.g. technical, admin, etc.)
+		// TODO: when above implemented, also log which contact was sent certs in acceptRegistration
+		return nil, status.Error(codes.Unimplemented, "resend cert delivery not yet implemented")
+
+	case admin.ResendRequest_REJECTION:
+		// Only send a rejection email if we're in the rejected state
+		if vasp.VerificationStatus != pb.VerificationState_REJECTED {
+			log.Warn().Err(err).Str("status", vasp.VerificationStatus.String()).Msg("cannot resend rejection emails in current state")
+			return nil, status.Error(codes.FailedPrecondition, "VASP record verification status cannot send rejection email")
+		}
+
+		// A reason must be specified to send a rejection email (it's not stored)
+		if in.Reason == "" {
+			log.Warn().Str("resend_type", in.Type.String()).Msg("invalid resend request: missing reason argument")
+			return nil, status.Error(codes.InvalidArgument, "must specify reason for rejection to resend email")
+		}
+		if sent, err = s.email.SendRejectRegistration(vasp, in.Reason); err != nil {
+			log.Warn().Err(err).Int("sent", sent).Msg("could not resend rejection emails")
+			return nil, status.Errorf(codes.FailedPrecondition, "could not resend rejection emails: %s", err)
+		}
+		out.Message = "rejection emails resent to all verified contacts"
+
+	default:
+		log.Warn().Str("resend_type", in.Type.String()).Msg("invalid resend request: unhandled resend request type")
+		return nil, status.Errorf(codes.FailedPrecondition, "unknown resend request type %q", in.Type)
+	}
+
+	out.Sent = int64(sent)
+	log.Info().Str("id", vasp.Id).Int64("sent", out.Sent).Str("resend_type", in.Type.String()).Msg("resend request complete")
+	return out, nil
 }
