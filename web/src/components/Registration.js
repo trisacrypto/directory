@@ -107,6 +107,7 @@ class Registration extends React.Component {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       this.setState({validated: true});
+      this.props.onAlert("warning", "some fields could not be validated, please review form");
       return;
     }
 
