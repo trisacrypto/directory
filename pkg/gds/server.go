@@ -258,7 +258,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	// Send contacts with updated tokens
 	var sent int
 	if sent, err = s.email.SendVerifyContacts(vasp); err != nil {
-		log.Error().Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not sennd verify contacts emails")
+		log.Error().Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")
 		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
 
