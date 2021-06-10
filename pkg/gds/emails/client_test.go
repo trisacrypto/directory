@@ -47,13 +47,23 @@ func TestClientSendEmails(t *testing.T) {
 				Name:  receipient.Name,
 				Email: receipient.Address,
 			},
+			Administrative: &pb.Contact{
+				Name:  receipient.Name,
+				Email: receipient.Address,
+			},
+			Legal: &pb.Contact{
+				Name:  receipient.Name,
+				Email: receipient.Address,
+			},
 		},
 		IdentityCertificate: &pb.Certificate{
 			SerialNumber: []byte("notarealcertificate"),
 		},
 	}
 
-	err = models.SetContactVerification(vasp.Contacts.Technical, "", true)
+	err = models.SetContactVerification(vasp.Contacts.Administrative, "", true)
+	require.NoError(t, err)
+	err = models.SetContactVerification(vasp.Contacts.Legal, "", true)
 	require.NoError(t, err)
 
 	sent, err := email.SendVerifyContacts(vasp)
@@ -66,7 +76,7 @@ func TestClientSendEmails(t *testing.T) {
 
 	sent, err = email.SendRejectRegistration(vasp, "this is a test rejection from the test runner")
 	require.NoError(t, err)
-	require.Equal(t, 1, sent)
+	require.Equal(t, 2, sent)
 
 	sent, err = email.SendDeliverCertificates(vasp, "testdata/foo.zip")
 	require.NoError(t, err)
