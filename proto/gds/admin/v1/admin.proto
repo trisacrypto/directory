@@ -12,6 +12,7 @@ import "trisa/gds/models/v1beta1/models.proto";
 // lightweight for the MVP implementation.
 service DirectoryAdministration {
     rpc Review(ReviewRequest) returns (ReviewReply) {}
+    rpc Resend(ResendRequest) returns (ResendReply) {}
 }
 
 // Registration review requests are sent via email to the TRISA admin email address with
@@ -39,4 +40,26 @@ message ReviewReply {
     // The verification status of the VASP entity.
     trisa.gds.models.v1beta1.VerificationState status = 2;
     string message = 3;
+}
+
+// Resend requests allow extra attempts to resend emails to be made if they were not
+// delivered or recieved the first time. This is a routine action that may need to be
+// carried out from time to time.
+message ResendRequest {
+    enum ResendType {
+        UNKNOWN = 0;
+        VERIFY_CONTACT = 1;
+        REVIEW = 2;
+        DELIVER_CERTS = 3;
+        REJECTION = 4;
+    }
+
+    string id = 1;                   // The ID of the VASP to resend emails for
+    ResendType type = 2;             // The type of message to attempt to resend
+    string reason = 3;               // If a rejection email, supply the reason for the rejection.
+}
+
+message ResendReply {
+    int64 sent = 1;                  // The number of emails sent
+    string message = 2;              // Any message from the server about status
 }

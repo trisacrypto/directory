@@ -56,8 +56,19 @@ func TestClientSendEmails(t *testing.T) {
 	err = models.SetContactVerification(vasp.Contacts.Technical, "", true)
 	require.NoError(t, err)
 
-	require.NoError(t, email.SendVerifyContacts(vasp))
-	require.NoError(t, email.SendReviewRequest(vasp))
-	require.NoError(t, email.SendRejectRegistration(vasp, "this is a test rejection from the test runner"))
-	require.NoError(t, email.SendDeliverCertificates(vasp, "testdata/foo.zip"))
+	sent, err := email.SendVerifyContacts(vasp)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
+	sent, err = email.SendReviewRequest(vasp)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
+	sent, err = email.SendRejectRegistration(vasp, "this is a test rejection from the test runner")
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
+	sent, err = email.SendDeliverCertificates(vasp, "testdata/foo.zip")
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
 }
