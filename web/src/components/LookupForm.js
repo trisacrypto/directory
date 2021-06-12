@@ -12,7 +12,7 @@ class Lookup extends React.Component {
   }
 
   uuidRE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-  cnameRE = /^[0-9a-zA-Z.]+$/
+  cnameRE = /^[0-9a-zA-Z\.\-]+$/
 
   onTextInput = (event) => {
     let inputType = '';
