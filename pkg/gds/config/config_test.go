@@ -12,11 +12,16 @@ import (
 
 var testEnv = map[string]string{
 	"GDS_MAINTENANCE":                "false",
-	"GDS_BIND_ADDR":                  ":443",
 	"GDS_DIRECTORY_ID":               "testdirectory.org",
 	"GDS_SECRET_KEY":                 "theeaglefliesatmidnight",
 	"GDS_LOG_LEVEL":                  "debug",
 	"GDS_CONSOLE_LOG":                "true",
+	"GDS_API_ENABLED":                "true",
+	"GDS_BIND_ADDR":                  ":443",
+	"GDS_ADMIN_ENABLED":              "true",
+	"GDS_ADMIN_BIND_ADDR":            ":444",
+	"GDS_REPLICA_ENABLED":            "true",
+	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_DATABASE_URL":               "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":   "false",
 	"SECTIGO_USERNAME":               "foo",
@@ -53,11 +58,16 @@ func TestConfig(t *testing.T) {
 
 	// Test configuration set from the environment
 	require.Equal(t, false, conf.Maintenance)
-	require.Equal(t, testEnv["GDS_BIND_ADDR"], conf.BindAddr)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.DirectoryID)
 	require.Equal(t, testEnv["GDS_SECRET_KEY"], conf.SecretKey)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.Equal(t, true, conf.ConsoleLog)
+	require.Equal(t, true, conf.GDS.Enabled)
+	require.Equal(t, testEnv["GDS_BIND_ADDR"], conf.GDS.BindAddr)
+	require.Equal(t, true, conf.Admin.Enabled)
+	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
+	require.Equal(t, true, conf.Replica.Enabled)
+	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)

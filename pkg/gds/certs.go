@@ -31,7 +31,7 @@ import (
 // isn't continuously handling a growing number of requests over time.
 //
 // TODO: notify admins if cert-manager errors since this will block integration.
-func (s *Server) CertManager() {
+func (s *Service) CertManager() {
 	// Check certificate download directory
 	certDir, err := s.getCertStorage()
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *Server) CertManager() {
 	}
 }
 
-func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err error) {
+func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err error) {
 	// Step 0: mark the VASP status as issuing certificates
 	var vasp *pb.VASP
 	if vasp, err = s.db.Retrieve(r.Vasp); err != nil {
@@ -131,7 +131,7 @@ func (s *Server) submitCertificateRequest(r *models.CertificateRequest) (err err
 	return nil
 }
 
-func (s *Server) checkCertificateRequest(r *models.CertificateRequest) (err error) {
+func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err error) {
 	if r.BatchId == 0 {
 		return errors.New("missing batch ID - cannot retrieve status")
 	}
@@ -228,7 +228,7 @@ func (s *Server) checkCertificateRequest(r *models.CertificateRequest) (err erro
 }
 
 // finds the first authority with an available balance greater than 0.
-func (s *Server) findCertAuthority() (id int, err error) {
+func (s *Service) findCertAuthority() (id int, err error) {
 	var authorities []*sectigo.AuthorityResponse
 	if authorities, err = s.certs.UserAuthorities(); err != nil {
 		return 0, fmt.Errorf("could not fetch user authorities: %s", err)
@@ -249,7 +249,7 @@ func (s *Server) findCertAuthority() (id int, err error) {
 
 // a go routine that downloads the certificate in the background, then sends the certs
 // as an attachment to the technical contact if available.
-func (s *Server) downloadCertificateRequest(r *models.CertificateRequest) {
+func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 	var (
 		err        error
 		path       string
@@ -414,7 +414,7 @@ func extractCertificate(path, pkcs12password string) (pub *pb.Certificate, err e
 }
 
 // get the configured cert storage directory or return a temporary directory
-func (s *Server) getCertStorage() (path string, err error) {
+func (s *Service) getCertStorage() (path string, err error) {
 	if s.conf.CertMan.Storage != "" {
 		var stat os.FileInfo
 		if stat, err = os.Stat(s.conf.CertMan.Storage); err != nil {

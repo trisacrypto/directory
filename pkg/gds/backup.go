@@ -19,7 +19,7 @@ import (
 //
 // TODO: allow storage to cloud storage rather than to disk
 // TODO: encrypt the backup storage file
-func (s *Server) BackupManager() {
+func (s *Service) BackupManager() {
 	if !s.conf.Backup.Enabled {
 		log.Warn().Msg("backup manager is not enabled")
 		return
@@ -79,7 +79,7 @@ backups:
 }
 
 // get the configured backup directory storage or return an error
-func (s *Server) getBackupStorage() (path string, err error) {
+func (s *Service) getBackupStorage() (path string, err error) {
 	if s.conf.Backup.Storage == "" {
 		return "", errors.New("incorrectly configured: backups enabled but no backup storage")
 	}

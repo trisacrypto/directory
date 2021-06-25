@@ -12,12 +12,14 @@ import (
 // Config uses envconfig to load required settings from the environment and validate
 // them in preparation for running the TRISA Global Directory Service.
 type Config struct {
-	BindAddr    string          `split_words:"true" default:":4433"`
 	DirectoryID string          `split_words:"true" default:"vaspdirectory.net"`
 	SecretKey   string          `split_words:"true" required:"true"`
 	Maintenance bool            `split_words:"true" default:"false"`
 	LogLevel    LogLevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool            `split_words:"true" default:"false"`
+	GDS         GDSConfig
+	Admin       AdminConfig
+	Replica     ReplicaConfig
 	Database    DatabaseConfig
 	Sectigo     SectigoConfig
 	Email       EmailConfig
@@ -25,6 +27,21 @@ type Config struct {
 	Backup      BackupConfig
 	Secrets     SecretsConfig
 	processed   bool
+}
+
+type GDSConfig struct {
+	Enabled  bool   `envconfig:"GDS_API_ENABLED" default:"true"`
+	BindAddr string `envconfig:"GDS_BIND_ADDR" default:":4433"`
+}
+
+type AdminConfig struct {
+	Enabled  bool   `split_words:"true" default:"true"`
+	BindAddr string `split_words:"true" default:":4434"`
+}
+
+type ReplicaConfig struct {
+	Enabled  bool   `split_words:"true" default:"true"`
+	BindAddr string `split_words:"true" default:":4435"`
 }
 
 type DatabaseConfig struct {

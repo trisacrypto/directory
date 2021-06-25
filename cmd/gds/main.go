@@ -45,6 +45,12 @@ func main() {
 			Value:  "api.vaspdirectory.net:443",
 			EnvVar: "TRISA_DIRECTORY_URL",
 		},
+		cli.StringFlag{
+			Name:   "a, admin-endpoint",
+			Usage:  "the url to connect the directory administration client",
+			Value:  "api.vaspdirectory.net:443",
+			EnvVar: "TRISA_DIRECTORY_ADMIN_URL",
+		},
 		cli.BoolFlag{
 			Name:  "S, no-secure",
 			Usage: "do not connect via TLS (e.g. for development)",
@@ -271,10 +277,10 @@ func serve(c *cli.Context) (err error) {
 	}
 
 	if addr := c.String("addr"); addr != "" {
-		conf.BindAddr = addr
+		conf.GDS.BindAddr = addr
 	}
 
-	var srv *gds.Server
+	var srv *gds.Service
 	if srv, err = gds.New(conf); err != nil {
 		return cli.NewExitError(err, 1)
 	}
@@ -558,12 +564,19 @@ func initClient(c *cli.Context) (err error) {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
 	}
 
+	// Connect the directory client
 	var cc *grpc.ClientConn
 	if cc, err = grpc.Dial(c.GlobalString("endpoint"), opts...); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 	client = api.NewTRISADirectoryClient(cc)
-	adminClient = admin.NewDirectoryAdministrationClient(cc)
+
+	// Connect the admin client
+	var acc *grpc.ClientConn
+	if acc, err = grpc.Dial(c.GlobalString("admin-endpoint"), opts...); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	adminClient = admin.NewDirectoryAdministrationClient(acc)
 	return nil
 }
 
