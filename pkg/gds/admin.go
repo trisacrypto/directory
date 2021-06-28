@@ -38,10 +38,10 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 // users that are performing secure commands with authentication.
 type Admin struct {
 	admin.UnimplementedDirectoryAdministrationServer
-	svc  *Service            // The parent Service GDS uses to interact with other components
+	svc  *Service            // The parent Service the admin server uses to interact with other components
 	srv  *grpc.Server        // The gRPC server that listens on its own independent port
-	conf *config.AdminConfig // The GDS service specific configuration (helper alias to s.svc.conf.GDS)
-	db   store.Store         // Database connection for loading objects (helper alias to s.svc.db)
+	conf *config.AdminConfig // The admin server specific configuration (alias to s.svc.conf.Admin)
+	db   store.Store         // Database connection for loading objects (alias to s.svc.db)
 }
 
 // Serve GRPC requests on the specified address.

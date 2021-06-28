@@ -93,6 +93,10 @@ func New(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
+	if s.replica, err = NewReplica(s); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }
 
@@ -102,14 +106,15 @@ func New(conf config.Config) (s *Service, err error) {
 // routines and managers to handle email, secrets, backups, and certificates. E.g. this
 // is the parent service that coordinates all subservices.
 type Service struct {
-	db     store.Store
-	gds    *GDS
-	admin  *Admin
-	conf   config.Config
-	certs  *sectigo.Sectigo
-	email  *emails.EmailManager
-	secret *SecretManager
-	echan  chan error
+	db      store.Store
+	gds     *GDS
+	admin   *Admin
+	replica *Replica
+	conf    config.Config
+	certs   *sectigo.Sectigo
+	email   *emails.EmailManager
+	secret  *SecretManager
+	echan   chan error
 }
 
 // Serve GRPC requests on the specified address.
@@ -134,6 +139,11 @@ func (s *Service) Serve() (err error) {
 
 		// Start the admin service
 		if err = s.admin.Serve(); err != nil {
+			return err
+		}
+
+		// Start the replica service
+		if err = s.replica.Serve(); err != nil {
 			return err
 		}
 	}
@@ -164,6 +174,11 @@ func (s *Service) Shutdown() (err error) {
 		// Shutdown the DirectoryAdministration service gracefully
 		if err = s.admin.Shutdown(); err != nil {
 			log.Error().Err(err).Msg("could not shutdown DirectoryAdministration service")
+		}
+
+		// Shutdown the ReplicationServer gracefully
+		if err = s.replica.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown Replication service")
 		}
 
 		// Close the database correctly
