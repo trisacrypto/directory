@@ -26,6 +26,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
@@ -189,6 +190,7 @@ var (
 	ldb            *leveldb.DB
 	vaspPrefix     = []byte("vasps::")
 	certreqsPrefix = []byte("certreqs::")
+	replicaPrefix  = []byte("peers::")
 	indexPrefix    = []byte("index::")
 	sequencePrefix = []byte("sequence::")
 	indexNames     = []byte("index::names")
@@ -751,8 +753,11 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 		}
 		return careq.Metadata, nil
 	case "peers":
-		// TODO: implement peers replication
-		return nil, nil
+		peer := &peers.Peer{}
+		if err = proto.Unmarshal(data, peer); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
+		}
+		return peer.Metadata, nil
 	default:
 		return nil, fmt.Errorf("could not parse namespace %q", namespace)
 	}

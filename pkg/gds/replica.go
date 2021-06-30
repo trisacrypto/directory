@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"google.golang.org/grpc"
 )
@@ -50,6 +51,7 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 // globally distributed by implementing auto-adapting anti-entropy.
 type Replica struct {
 	global.UnimplementedReplicationServer
+	peers.UnimplementedPeerManagementServer
 	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
@@ -148,4 +150,47 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 	// }
 
 	return &global.Updates{}, nil
+}
+
+// TODO: what are we doing with Status?
+// GetPeers queries the data store to determine which peers it contains, and returns them
+func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
+
+	// TODO: Not sure what StatusOnly is for
+	if in.StatusOnly {
+		return nil, errors.New("StatusOnly not supported yet")
+	}
+
+	// Initialize var for candidate peers
+	var peers []*peers.Peer
+
+	// Get all the peers
+	if peers, err = r.db.ListPeers(); err != nil {
+		// TODO: Not sure what error we want here
+		return nil, errors.New("No peers retrieved from the database")
+	}
+
+	// If there is no region filter on the request, return all peers
+	if in.Region == nil {
+		out.Peers = peers
+	}
+
+	// Otherwise, use the regions to determin which peers to keep
+	for _, peer := range peers {
+		for _, region := range in.Region {
+			if peer.Region == region {
+				out.Peers = append(out.Peers, peer)
+			}
+		}
+	}
+
+	return out, nil
+}
+
+func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	return nil, nil
+}
+
+func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	return nil, nil
 }
