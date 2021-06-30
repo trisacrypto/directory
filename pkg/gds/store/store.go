@@ -45,6 +45,15 @@ import (
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
+// Namespace constants for all managed objects in GDS
+const (
+	NamespaceVASPs    = "vasps"
+	NamespaceCertReqs = "certreqs"
+)
+
+// Namespaces defines all possible namespaces that GDS manages
+var Namespaces = [2]string{NamespaceVASPs, NamespaceCertReqs}
+
 // Open a directory storage provider with the specified URI. Database URLs should either
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
 // protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
