@@ -68,6 +68,13 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
+// HACK: Make sure these match what's in store.go -- they're not imported here to
+// prevent a recursive import! If namespaces becomes complex, add to own package.
+const (
+	nsVASPs    = "vasps"
+	nsCertReqs = "certreqs"
+)
+
 // Store implements store.Store for some basic LevelDB operations and simple protocol
 // buffer storage in a key/value database.
 type Store struct {
@@ -127,7 +134,10 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	}
 
 	// Because this is a create operation initialize the first version of the VASP.
-	meta := &global.Object{}
+	meta := &global.Object{
+		Key:       string(s.vaspKey(v.Id)),
+		Namespace: nsVASPs,
+	}
 	if err = s.updateVersion(meta); err != nil {
 		return "", fmt.Errorf("could not create object version: %s", err)
 	}
@@ -433,7 +443,10 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 	}
 
 	// Because this is a create operation, initialize the first version
-	r.Metadata = &global.Object{}
+	r.Metadata = &global.Object{
+		Key:       string(s.careqKey(r.Id)),
+		Namespace: nsCertReqs,
+	}
 	if err = s.updateVersion(r.Metadata); err != nil {
 		return "", fmt.Errorf("could not create object version: %s", err)
 	}
@@ -493,7 +506,10 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 
 	// If metadata has not been add it, add it now
 	if r.Metadata == nil || r.Metadata.Version == nil || r.Metadata.Version.IsZero() {
-		r.Metadata = &global.Object{}
+		r.Metadata = &global.Object{
+			Key:       string(s.careqKey(r.Id)),
+			Namespace: nsCertReqs,
+		}
 	}
 
 	// Update the version on the metdata
