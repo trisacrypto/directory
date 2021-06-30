@@ -514,6 +514,7 @@ func unmarshalGZJSON(data []byte, val interface{}) (err error) {
 	return nil
 }
 
+//lint:ignore U1000 leaving this function to pair with unmarshalGZJSON in the future
 func marshalGZJSON(val interface{}) (data []byte, err error) {
 	var buf *bytes.Buffer
 	gz := gzip.NewWriter(buf)
