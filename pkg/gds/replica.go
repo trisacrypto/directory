@@ -10,8 +10,15 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -114,38 +121,108 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 		Strs("namespaces", in.Namespaces).
 		Msg("incoming anti-entropy")
 
-	// // TODO: don't use leveldb forever
-	// ldb := r.db.DB()
+	// TODO: don't use leveldb for v1.1; this is just for prototype purposes.
+	ldb := r.db.DB()
 
-	// out = &global.Updates{
-	// 	Objects: make([]*global.Object, 0),
-	// }
+	out = &global.Updates{
+		Objects: make([]*global.Object, 0),
+	}
 
-	// // Step 1: determine if any of the incoming objects have a later version locally
-	// // or if the remote version is later than our local version.
-	// seen := make(map[string]struct{})
-	// fetch := make(map[string]struct{})
+	// Step 1: determine if any of the incoming objects have a later version locally
+	// or if the remote version is later than our local version.
+	seen := make(map[string]struct{})
+	fetch := make(map[string]struct{})
 
-	// // Step 1a: determine the namespaces to iterate over
-	// namespaces := in.Namespaces
-	// if len(namespaces) == 0 {
-	// 	namespaces = allNamespaces
-	// }
+	// Loop over all incoming objects
+incomingLoop:
+	for _, remoteObj := range in.Objects {
+		// Fetch data from database (determining if the data is not found)
+		// TODO: move object fetching logic back to Store; ensure tombstones are included.
+		var data []byte
+		if data, err = ldb.Get([]byte(remoteObj.Key), nil); err != nil {
+			if errors.Is(err, leveldb.ErrEntityNotFound) {
+				// This exists on the remote, but not locally; so add to fetch.
+				if !in.Partial {
+					fetch[remoteObj.Key] = struct{}{}
+				}
+				continue incomingLoop
+			} else {
+				// This is an unhandled error; log it and return replica requires repair
+				log.Error().Err(err).Msg("could not get key from leveldb")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
+		}
 
-	// // Step
+		// Get the localObj representation
+		var localObj *global.Object
+		switch remoteObj.Namespace {
+		case store.NamespaceVASPs:
+			vasp := &pb.VASP{}
+			if err = proto.Unmarshal(data, vasp); err != nil {
+				// This is an unhandled error; log it and return unavailable
+				log.Error().Err(err).Msg("could not unmarshal VASP from leveldb")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
 
-	// // Step 2: if not partial, determine if any new objects exist locally to send back
-	// // to the remote.
+			if localObj, _, err = models.GetMetadata(vasp); err != nil {
+				// This is an unhandled error; log it and return unavailable
+				log.Error().Err(err).Msg("could not get metadata from VASP")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
 
-	// // Step 3: request updates if any via a partial request back to the remote.
-	// // NOTE: do not send a request to a partial update (assuming we're at the end of
-	// // bilateral anti-entropy) to prevent possible infinite recursion.
+			if localObj.Data, err = anypb.New(vasp); err != nil {
+				log.Error().Err(err).Msg("could not marshal VASP Any back to remote replica")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
 
-	// if in.Partial {
-	// 	// Only consider the objects sent in the version vectors
-	// } else {
-	// 	// Consider all objects
-	// }
+		case store.NamespaceCertReqs:
+			certreq := &models.CertificateRequest{}
+			if err = proto.Unmarshal(data, certreq); err != nil {
+				// This is an unhandled error; log it and return unavailable
+				log.Error().Err(err).Msg("could not unmarshal CertificateRequest from leveldb")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
+			localObj = certreq.Metadata
+			if localObj.Data, err = anypb.New(certreq); err != nil {
+				log.Error().Err(err).Msg("could not marshal CertificateRequest Any back to remote replica")
+				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+			}
+		default:
+			// Log error but continue processing, foreign namespace will be ignored
+			log.Warn().Str("namespace", remoteObj.Namespace).Msg("unknown namespace")
+			continue incomingLoop
+		}
+
+		// Check which version is later, local or remote.
+		switch {
+		case localObj.Version.IsLater(remoteObj.Version):
+			// Send the local object back to the remote in the updates
+			out.Objects = append(out.Objects, localObj)
+		case remoteObj.Version.IsLater(localObj.Version):
+			// Mark the remoteObj to be fetched
+			fetch[remoteObj.Key] = struct{}{}
+		default:
+			// The versions are equal; do nothing
+		}
+
+		// Add the remoteObj to seen to make sure that we do not handle it in the next phase
+		seen[remoteObj.Key] = struct{}{}
+	}
+
+	// Step 2: if not partial, determine if any new objects exist locally to send back
+	// to the remote.
+
+	// Step 3: request updates if any via a partial request back to the remote.
+	// NOTE: do not send a request to a partial update (assuming we're at the end of
+	// bilateral anti-entropy) to prevent possible infinite recursion.
+
+	if in.Partial {
+		// Only consider the objects sent in the version vectors
+		log.Debug().Msg("sending updates")
+	} else {
+		// Consider all objects
+		log.Debug().Msg("determining what is available locally and not on the remote")
+	}
 
 	return &global.Updates{}, nil
 }
