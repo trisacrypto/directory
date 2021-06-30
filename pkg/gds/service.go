@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/logger"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -62,6 +63,17 @@ func New(conf config.Config) (s *Service, err error) {
 	// Everything that follows here assumes we're not in maintenance mode.
 	if s.db, err = store.Open(conf.Database); err != nil {
 		return nil, err
+	}
+
+	// If replication is enabled, then add a global version manager to the store.
+	if s.conf.Replica.Enabled {
+		var versionManager *global.VersionManager
+		if versionManager, err = global.New(s.conf.Replica); err != nil {
+			return nil, err
+		}
+		if err = s.db.WithVersionManager(versionManager); err != nil {
+			return nil, err
+		}
 	}
 
 	// Create the Sectigo API client

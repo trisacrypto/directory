@@ -1,5 +1,32 @@
 /*
-Package store provides an interface to database storage for the TRISA directory service.
+Package store provides an interface to multiple types of embedded storage across
+multiple objects. Unlike a SQL interface, the TRISA directory service relies on embedded
+databases (e.g. like LevelDB) and replication using anti-entropy. It also manages
+multiple namespaces (object types) - VASP records, CertificateRequests, Peers, etc. In
+general an object store interface provides accesses to the objects, with one interface
+per namespace as follows:
+
+	type ObjectStore interface {
+		List() *Iterator                               // Iterate over all objects
+		Search(query map[string]interface{}) *Iterator // Create a query to list filtered objects
+		Create(o *Object) (id string, err error)       // Make the object
+		Retrieve(id string) (o *Object, err error)     // Fetch an object by ID or by key
+		Update(o *Object) error                        // Make changes to an object
+		Delete(id string) error                        // Delete an object
+	}
+
+Ideally there would be a store per namespace, but in order to generalize the store to
+multiple embedded databases, the store interface affixes the object store methods with
+the namespace. E.g. ListVASPs, CreateCertReq, etc.
+
+For Replication, the replica needs special access to the store to list all objects
+including tombstones and to place objects without updating their metadata. For a
+namespace that can be replicated the interface is:
+
+	type ReplicatedObjectStore interface {
+		Scan(ns string) *Iterator          // Lists all objects including tombstones in the namespace
+		Place(ns string, o *Object) error  // Puts an object into the namespace without metadata changes
+	}
 */
 package store
 
@@ -11,6 +38,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
@@ -64,23 +92,25 @@ type Store interface {
 	Close() error
 	DirectoryStore
 	CertificateStore
+	VersionManager
 }
 
 // DirectoryStore describes how the service interacts with VASP identity records.
 type DirectoryStore interface {
-	Create(v *pb.VASP) (string, error)
-	Retrieve(id string) (*pb.VASP, error)
-	Update(v *pb.VASP) error
-	Destroy(id string) error
-	Search(query map[string]interface{}) ([]*pb.VASP, error)
+	SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error)
+	CreateVASP(v *pb.VASP) (string, error)
+	RetrieveVASP(id string) (*pb.VASP, error)
+	UpdateVASP(v *pb.VASP) error
+	DeleteVASP(id string) error
 }
 
 // CertificateStore describes how the service interacts with Certificate requests.
 type CertificateStore interface {
-	ListCertRequests() ([]*models.CertificateRequest, error)
-	GetCertRequest(id string) (*models.CertificateRequest, error)
-	SaveCertRequest(r *models.CertificateRequest) error
-	DeleteCertRequest(id string) error
+	ListCertReqs() ([]*models.CertificateRequest, error)
+	CreateCertReq(r *models.CertificateRequest) (string, error)
+	RetrieveCertReq(id string) (*models.CertificateRequest, error)
+	UpdateCertReq(r *models.CertificateRequest) error
+	DeleteCertReq(id string) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has
@@ -94,6 +124,12 @@ type Indexer interface {
 // optionally with encryption if its required.
 type Backup interface {
 	Backup(string) error
+}
+
+// VersionManager stores implement the global.VersionManager for updating object
+// metadata in place. This is a convienience interface for testing purposes.
+type VersionManager interface {
+	WithVersionManager(*global.VersionManager) error
 }
 
 // DSN represents the parsed components of an embedded database service.

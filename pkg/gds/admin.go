@@ -107,7 +107,7 @@ func (s *Admin) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin
 
 	// Lookup the VASP record associated with the request
 	var vasp *pb.VASP
-	if vasp, err = s.db.Retrieve(in.Id); err != nil {
+	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
 		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
 		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
 	}
@@ -151,7 +151,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 	}
 	vasp.VerifiedOn = time.Now().Format(time.RFC3339)
 	vasp.VerificationStatus = pb.VerificationState_REVIEWED
-	if err = s.db.Update(vasp); err != nil {
+	if err = s.db.UpdateVASP(vasp); err != nil {
 		return "", err
 	}
 
@@ -160,14 +160,14 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 	// if there are more than one (other than a logged warning).
 	var ncertreqs int
 	var careqs []*models.CertificateRequest
-	if careqs, err = s.db.ListCertRequests(); err != nil {
+	if careqs, err = s.db.ListCertReqs(); err != nil {
 		return "", err
 	}
 
 	for _, req := range careqs {
 		if req.Vasp == vasp.Id && req.Status == models.CertificateRequestState_INITIALIZED {
 			req.Status = models.CertificateRequestState_READY_TO_SUBMIT
-			if err = s.db.SaveCertRequest(req); err != nil {
+			if err = s.db.UpdateCertReq(req); err != nil {
 				return "", err
 			}
 			ncertreqs++
@@ -198,20 +198,20 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string) (msg string, er
 		return "", err
 	}
 	vasp.VerificationStatus = pb.VerificationState_REJECTED
-	if err = s.db.Update(vasp); err != nil {
+	if err = s.db.UpdateVASP(vasp); err != nil {
 		return "", err
 	}
 
 	// Delete all pending certificate requests
 	var ncertreqs int
 	var careqs []*models.CertificateRequest
-	if careqs, err = s.db.ListCertRequests(); err != nil {
+	if careqs, err = s.db.ListCertReqs(); err != nil {
 		return "", err
 	}
 
 	for _, req := range careqs {
 		if req.Vasp == vasp.Id {
-			if err = s.db.DeleteCertRequest(req.Id); err != nil {
+			if err = s.db.DeleteCertReq(req.Id); err != nil {
 				log.Error().Err(err).Str("id", req.Id).Msg("could not delete certificate request")
 			}
 			ncertreqs++
@@ -249,7 +249,7 @@ func (s *Admin) Resend(ctx context.Context, in *admin.ResendRequest) (out *admin
 
 	// Lookup the VASP record associated with the resend request
 	var vasp *pb.VASP
-	if vasp, err = s.db.Retrieve(in.Id); err != nil {
+	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
 		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
 		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
 	}

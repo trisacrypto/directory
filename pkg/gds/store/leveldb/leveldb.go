@@ -73,11 +73,12 @@ var (
 type Store struct {
 	sync.RWMutex
 	db         *leveldb.DB
-	pkseq      sequence       // autoincrement sequence for ID values
-	names      uniqueIndex    // case insensitive name index
-	websites   uniqueIndex    // website/url index
-	countries  containerIndex // lookup vasps in a specific country
-	categories containerIndex // lookup vasps based on specified categories
+	vm         *global.VersionManager // manage object versions for global replication
+	pkseq      sequence               // autoincrement sequence for ID values
+	names      uniqueIndex            // case insensitive name index
+	websites   uniqueIndex            // website/url index
+	countries  containerIndex         // lookup vasps in a specific country
+	categories containerIndex         // lookup vasps based on specified categories
 }
 
 //===========================================================================
@@ -106,9 +107,9 @@ func (s *Store) DB() *leveldb.DB {
 // DirectoryStore Implementation
 //===========================================================================
 
-// Create a VASP into the directory. This method requires the VASP to have a unique
+// CreateVASP into the directory. This method requires the VASP to have a unique
 // name and ignores any ID fields that are set on the VASP, instead assigning new IDs.
-func (s *Store) Create(v *pb.VASP) (id string, err error) {
+func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	// Create UUID for record
 	// TODO: check uniqueness of the ID
 	v.Id = uuid.New().String()
@@ -125,15 +126,14 @@ func (s *Store) Create(v *pb.VASP) (id string, err error) {
 		v.FirstListed = v.LastUpdated
 	}
 
-	// TODO: How do we access the process id and region?
-	if v.Version == nil || v.Version.Version == 0 {
-		v.Version = &pb.Version{Version: 1}
+	// Because this is a create operation initialize the first version of the VASP.
+	meta := &global.Object{}
+	if err = s.updateVersion(meta); err != nil {
+		return "", fmt.Errorf("could not create object version: %s", err)
 	}
 
-	// TODO: create the object metadata record
-	// NOTE: there is some duplication with VASP version records due to the VASP
-	// definition being part of TRISA and GDS managing object metadata separately.
-	if err = models.SetMetadata(v, &global.Object{Version: &global.Version{Version: v.Version.Version}}, time.Time{}); err != nil {
+	// Set the version metadata on the VASP
+	if err = models.SetMetadata(v, meta, time.Time{}); err != nil {
 		return "", err
 	}
 
@@ -163,30 +163,39 @@ func (s *Store) Create(v *pb.VASP) (id string, err error) {
 	return v.Id, nil
 }
 
-// Retrieve a VASP record by id; returns an error if the record does not exist.
-func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
+// RetrieveVASP record by id; returns an error if the record does not exist.
+func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 	var val []byte
 	key := s.vaspKey(id)
 	if val, err = s.db.Get(key, nil); err != nil {
 		if err == leveldb.ErrNotFound {
-			return v, ErrEntityNotFound
+			return nil, ErrEntityNotFound
 		}
 		return v, err
 	}
 
 	v = new(pb.VASP)
 	if err = proto.Unmarshal(val, v); err != nil {
-		return v, err
+		return nil, err
 	}
 
-	// TODO: if is tombstone/deleted then return not found.
+	// Check if this is a tombstone version
+	var deletedOn time.Time
+	if _, deletedOn, err = models.GetMetadata(v); err != nil {
+		return nil, err
+	} else {
+		if !deletedOn.IsZero() {
+			// This is a tombstone record
+			return nil, ErrEntityNotFound
+		}
+	}
 
 	return v, nil
 }
 
-// Update the VASP entry by the VASP ID (required). This method simply overwrites the
+// UpdateVASP by the VASP ID (required). This method simply overwrites the
 // entire VASP record and does not update individual fields.
-func (s *Store) Update(v *pb.VASP) (err error) {
+func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	if v.Id == "" {
 		return ErrIncompleteRecord
 	}
@@ -199,21 +208,25 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 
 	// Retrieve the original record to ensure that the indices are updated properly
 	key := s.vaspKey(v.Id)
-	o, err := s.Retrieve(v.Id)
+	o, err := s.RetrieveVASP(v.Id)
 	if err != nil {
 		return err
 	}
 
-	// Update the record metadata
-	// TODO: how do we get the PID and region?
-	v.Version.Version++
+	// Update management timestamps and record metadata
 	v.LastUpdated = time.Now().Format(time.RFC3339)
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
 	}
 
-	// TODO: update extra metadata record
-	if err = models.SetMetadata(v, &global.Object{Version: &global.Version{Version: v.Version.Version}}, time.Time{}); err != nil {
+	// Update object version metadata
+	var meta *global.Object
+	if meta, _, err = models.GetMetadata(v); err != nil {
+		return err
+	}
+	s.updateVersion(meta)
+
+	if err = models.SetMetadata(v, meta, time.Time{}); err != nil {
 		return err
 	}
 
@@ -243,12 +256,12 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 	return nil
 }
 
-// Destroy a record, removing it completely from the database and indices.
-func (s *Store) Destroy(id string) (err error) {
+// DeleteVASP record, removing it completely from the database and indices.
+func (s *Store) DeleteVASP(id string) (err error) {
 	key := s.vaspKey(id)
 
 	// Lookup the record in order to remove data from indices
-	record, err := s.Retrieve(id)
+	record, err := s.RetrieveVASP(id)
 	if err != nil {
 		if err == ErrEntityNotFound {
 			return nil
@@ -262,17 +275,33 @@ func (s *Store) Destroy(id string) (err error) {
 	}
 
 	// Create a tombstone record now that the original VASP record is deleted.
-	// TODO: how to get PID and region?
-	// TODO: increment version to reflect the deletion operation
 	tombstone := &pb.VASP{
-		Id:      record.Id,
-		Version: record.Version,
+		Id:          record.Id,
+		FirstListed: record.FirstListed,
+		LastUpdated: time.Now().Format(time.RFC3339),
 	}
 
-	// TODO: update global object with deletion information
-	models.SetMetadata(tombstone, nil, time.Now())
+	// Update object version metadata
+	var meta *global.Object
+	if meta, _, err = models.GetMetadata(record); err != nil {
+		return err
+	}
+	if err = s.updateVersion(meta); err != nil {
+		return fmt.Errorf("could not update tombstone version: %s", err)
+	}
 
-	// TODO: save the tombstone back to disk with the key
+	if err = models.SetMetadata(tombstone, meta, time.Now()); err != nil {
+		return err
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(tombstone); err != nil {
+		return fmt.Errorf("could not marshal tombstone: %s", err)
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return fmt.Errorf("could not put tombstone: %s", err)
+	}
 
 	// Critical section (optimizing for safety rather than speed)
 	s.Lock()
@@ -285,12 +314,12 @@ func (s *Store) Destroy(id string) (err error) {
 	return nil
 }
 
-// Search uses the names and countries index to find VASPS that match the specified
+// SearchVASPs uses the names and countries index to find VASPS that match the specified
 // query. This is a very simple search and is not intended for robust usage. To find a
 // VASP by name, a case insensitive search is performed if the query exists in
 // any of the VASP entity names. Alternatively a list of names can be given or a country
 // or list of countries for case-insensitive exact matches.
-func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err error) {
+func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
 
@@ -354,7 +383,7 @@ func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err erro
 		vasps = make([]*pb.VASP, 0, len(records))
 		for id := range records {
 			var vasp *pb.VASP
-			if vasp, err = s.Retrieve(id); err != nil {
+			if vasp, err = s.RetrieveVASP(id); err != nil {
 				if err == ErrEntityNotFound {
 					continue
 				}
@@ -371,8 +400,8 @@ func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err erro
 // CertificateStore Implementation
 //===========================================================================
 
-// ListCertRequests returns all certificate requests that are currently in the store.
-func (s *Store) ListCertRequests() (reqs []*models.CertificateRequest, err error) {
+// ListCertReqs returns all certificate requests that are currently in the store.
+func (s *Store) ListCertReqs() (reqs []*models.CertificateRequest, err error) {
 	reqs = make([]*models.CertificateRequest, 0)
 	iter := s.db.NewIterator(util.BytesPrefix(preCertReqs), nil)
 	defer iter.Release()
@@ -391,8 +420,39 @@ func (s *Store) ListCertRequests() (reqs []*models.CertificateRequest, err error
 	return reqs, nil
 }
 
-// GetCertRequest returns a certificate request by certificate request ID.
-func (s *Store) GetCertRequest(id string) (r *models.CertificateRequest, err error) {
+// CreateCertReq and assign a new ID and return the version.
+func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
+	// Create UUID for record
+	// TODO: check uniqueness of the ID
+	r.Id = uuid.New().String()
+
+	// Update management timestamps and record metadata
+	r.Created = time.Now().Format(time.RFC3339)
+	if r.Modified == "" {
+		r.Modified = r.Created
+	}
+
+	// Because this is a create operation, initialize the first version
+	r.Metadata = &global.Object{}
+	if err = s.updateVersion(r.Metadata); err != nil {
+		return "", fmt.Errorf("could not create object version: %s", err)
+	}
+
+	var data []byte
+	key := s.careqKey(r.Id)
+	if data, err = proto.Marshal(r); err != nil {
+		return "", err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return "", err
+	}
+
+	return r.Id, nil
+}
+
+// RetrieveCertReq returns a certificate request by certificate request ID.
+func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err error) {
 	if id == "" {
 		return nil, ErrEntityNotFound
 	}
@@ -410,12 +470,17 @@ func (s *Store) GetCertRequest(id string) (r *models.CertificateRequest, err err
 		return nil, err
 	}
 
+	// Check if this is a tombstone version
+	if r.Deleted != "" {
+		return nil, ErrEntityNotFound
+	}
+
 	return r, nil
 }
 
-// SaveCertRequest can create or update a certificate request. The request should be as
+// UpdateCertReq can create or update a certificate request. The request should be as
 // complete as possible, including an ID generated by the caller.
-func (s *Store) SaveCertRequest(r *models.CertificateRequest) (err error) {
+func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 	if r.Id == "" {
 		return ErrIncompleteRecord
 	}
@@ -424,6 +489,16 @@ func (s *Store) SaveCertRequest(r *models.CertificateRequest) (err error) {
 	r.Modified = time.Now().Format(time.RFC3339)
 	if r.Created == "" {
 		r.Created = r.Modified
+	}
+
+	// If metadata has not been add it, add it now
+	if r.Metadata == nil || r.Metadata.Version == nil || r.Metadata.Version.IsZero() {
+		r.Metadata = &global.Object{}
+	}
+
+	// Update the version on the metdata
+	if err = s.updateVersion(r.Metadata); err != nil {
+		return fmt.Errorf("could not update object version: %s", err)
 	}
 
 	var data []byte
@@ -439,13 +514,45 @@ func (s *Store) SaveCertRequest(r *models.CertificateRequest) (err error) {
 	return nil
 }
 
-// DeleteCertRequest removes a certificate request from the store.
-func (s *Store) DeleteCertRequest(id string) (err error) {
+// DeleteCertReq removes a certificate request from the store.
+func (s *Store) DeleteCertReq(id string) (err error) {
+	// Lookup the record in order to create the tombstone and check if exists.
+	record, err := s.RetrieveCertReq(id)
+	if err != nil {
+		if err == ErrEntityNotFound {
+			return nil
+		}
+		return err
+	}
+
 	// LevelDB will not return an error if the entity does not exist
 	key := s.careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
+
+	// Create a tombstone record now that the original CertificateRequest is deleted.
+	tombstone := &models.CertificateRequest{
+		Id:       record.Id,
+		Created:  record.Created,
+		Modified: record.Modified,
+		Deleted:  time.Now().Format(time.RFC3339),
+		Metadata: record.Metadata,
+	}
+
+	if err = s.updateVersion(tombstone.Metadata); err != nil {
+		return fmt.Errorf("could not update tombstone version: %s", err)
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(tombstone); err != nil {
+		return fmt.Errorf("could not marshal tombstone: %s", err)
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return fmt.Errorf("could not put tombstone: %s", err)
+	}
+
 	return nil
 }
 
@@ -664,6 +771,38 @@ func (s *Store) Backup(path string) (err error) {
 	}
 
 	return nil
+}
+
+//===========================================================================
+// Version Management
+//===========================================================================
+
+// WithVersionManager adds a global replica version manager to the VASP storage process.
+func (s *Store) WithVersionManager(vm *global.VersionManager) error {
+	s.Lock()
+	s.vm = vm
+	s.Unlock()
+	return nil
+}
+
+func (s *Store) updateVersion(meta *global.Object) (err error) {
+	s.RLock()
+	if s.vm != nil {
+		err = s.vm.Update(meta)
+	} else {
+		// If there is no version manager, then only increment the version number.
+		// Don't worry about PID, Region, Owner, etc.
+		if meta.Version != nil && !meta.Version.IsZero() {
+			meta.Version.Parent = &global.Version{
+				Version: meta.Version.Version,
+			}
+		} else {
+			meta.Version = &global.Version{}
+		}
+		meta.Version.Version++
+	}
+	s.RUnlock()
+	return err
 }
 
 //===========================================================================

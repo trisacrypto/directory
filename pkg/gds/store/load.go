@@ -100,11 +100,11 @@ func Load(db Store, path string) (err error) {
 		vasp.CommonName = website.Hostname()
 
 		var id string
-		if id, err = db.Create(vasp); err != nil {
+		if id, err = db.CreateVASP(vasp); err != nil {
 			return err
 		}
 
-		if _, err = db.Retrieve(id); err != nil {
+		if _, err = db.RetrieveVASP(id); err != nil {
 			return err
 		}
 	}
