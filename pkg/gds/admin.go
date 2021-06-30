@@ -51,6 +51,11 @@ func (s *Admin) Serve() (err error) {
 		return errors.New("could not start directory administration service in maintenance mode")
 	}
 
+	if !s.conf.Enabled {
+		log.Warn().Msg("directory administration service is not enabled")
+		return nil
+	}
+
 	// Listen for TCP requests on the specified address and port
 	var sock net.Listener
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {

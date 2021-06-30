@@ -22,6 +22,9 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_BIND_ADDR":            ":444",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
+	"GDS_REPLICA_PID":                "8",
+	"GDS_REPLICA_NAME":               "mitchell",
+	"GDS_REPLICA_REGION":             "us-east-1c",
 	"GDS_DATABASE_URL":               "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":   "false",
 	"SECTIGO_USERNAME":               "foo",
@@ -68,6 +71,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
 	require.Equal(t, true, conf.Replica.Enabled)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
+	require.Equal(t, uint64(8), conf.Replica.PID)
+	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
+	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
@@ -87,7 +93,13 @@ func TestConfig(t *testing.T) {
 
 func TestRequiredConfig(t *testing.T) {
 	// Set required environment variables and cleanup after
-	prevEnv := curEnv("GDS_DATABASE_URL", "GDS_SECRET_KEY")
+	prevEnv := curEnv(
+		"GDS_DATABASE_URL",
+		"GDS_SECRET_KEY",
+		"GDS_REPLICA_ENABLED",
+		"GDS_REPLICA_PID",
+		"GDS_REPLICA_REGION",
+	)
 	t.Cleanup(func() {
 		for key, val := range prevEnv {
 			if val != "" {
@@ -100,7 +112,13 @@ func TestRequiredConfig(t *testing.T) {
 
 	_, err := config.New()
 	require.Error(t, err)
-	setEnv("GDS_DATABASE_URL", "GDS_SECRET_KEY")
+	setEnv(
+		"GDS_DATABASE_URL",
+		"GDS_SECRET_KEY",
+		"GDS_REPLICA_ENABLED",
+		"GDS_REPLICA_PID",
+		"GDS_REPLICA_REGION",
+	)
 
 	conf, err := config.New()
 	require.NoError(t, err)
@@ -108,6 +126,9 @@ func TestRequiredConfig(t *testing.T) {
 	// Test required configuration
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, testEnv["GDS_SECRET_KEY"], conf.SecretKey)
+	require.True(t, conf.Replica.Enabled)
+	require.Equal(t, uint64(8), conf.Replica.PID)
+	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified

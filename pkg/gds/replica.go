@@ -10,8 +10,19 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"google.golang.org/grpc"
+)
+
+const (
+	vaspPrefix    = "vasps::"
+	certreqPrefix = "certreqs::"
+	peerPrefix    = "peers::"
+)
+
+var (
+	// All of the namespaces that are allowed for replication.
+	AllNamespaces = []string{vaspPrefix, certreqPrefix, peerPrefix}
 )
 
 // NewReplica creates a new GDS replica server derived from a parent Service.
@@ -19,7 +30,13 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 	r = &Replica{
 		svc:  svc,
 		conf: &svc.conf.Replica,
-		db:   svc.db,
+	}
+
+	// TODO: right now replica only works with LevelDB need to adapt the Store to work
+	// for other store types such as sqlite3.
+	var ok bool
+	if r.db, ok = svc.db.(*leveldb.Store); !ok {
+		return nil, fmt.Errorf("replica currently only works with leveldb, not %T", r.db)
 	}
 
 	// Initialize the gRPC server
@@ -36,7 +53,7 @@ type Replica struct {
 	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
-	db   store.Store           // Database connection for managing objects (alias to s.svc.db)
+	db   *leveldb.Store        // Database connection for managing objects (alias to s.svc.db)
 }
 
 // Serve gRPC requests on the specified bind address.
@@ -44,6 +61,11 @@ func (r *Replica) Serve() (err error) {
 	// This service should not be started in maintenance mode.
 	if r.svc.conf.Maintenance {
 		return errors.New("could not start replication service in maintenance mode")
+	}
+
+	if !r.conf.Enabled {
+		log.Warn().Msg("replication service is not enabled")
+		return nil
 	}
 
 	// Listen for TCP requests on the specified address and port
@@ -91,5 +113,39 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 		Int("nobjects", len(in.Objects)).
 		Strs("namespaces", in.Namespaces).
 		Msg("incoming anti-entropy")
+
+	// // TODO: don't use leveldb forever
+	// ldb := r.db.DB()
+
+	// out = &global.Updates{
+	// 	Objects: make([]*global.Object, 0),
+	// }
+
+	// // Step 1: determine if any of the incoming objects have a later version locally
+	// // or if the remote version is later than our local version.
+	// seen := make(map[string]struct{})
+	// fetch := make(map[string]struct{})
+
+	// // Step 1a: determine the namespaces to iterate over
+	// namespaces := in.Namespaces
+	// if len(namespaces) == 0 {
+	// 	namespaces = allNamespaces
+	// }
+
+	// // Step
+
+	// // Step 2: if not partial, determine if any new objects exist locally to send back
+	// // to the remote.
+
+	// // Step 3: request updates if any via a partial request back to the remote.
+	// // NOTE: do not send a request to a partial update (assuming we're at the end of
+	// // bilateral anti-entropy) to prevent possible infinite recursion.
+
+	// if in.Partial {
+	// 	// Only consider the objects sent in the version vectors
+	// } else {
+	// 	// Consider all objects
+	// }
+
 	return &global.Updates{}, nil
 }

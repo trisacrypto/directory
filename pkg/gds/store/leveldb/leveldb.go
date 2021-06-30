@@ -17,6 +17,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -93,6 +94,14 @@ func (s *Store) Close() error {
 	return nil
 }
 
+// DB returns the underlying leveldb connection for direct access. Use with care, you'll
+// have to manage your own thread safety and this will go around any of the indices.
+// NOTE: Only use to read from the database, not to write!
+// TODO: remove this when the Replica can interact with generic stores.
+func (s *Store) DB() *leveldb.DB {
+	return s.db
+}
+
 //===========================================================================
 // DirectoryStore Implementation
 //===========================================================================
@@ -115,8 +124,17 @@ func (s *Store) Create(v *pb.VASP) (id string, err error) {
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
 	}
+
+	// TODO: How do we access the process id and region?
 	if v.Version == nil || v.Version.Version == 0 {
 		v.Version = &pb.Version{Version: 1}
+	}
+
+	// TODO: create the object metadata record
+	// NOTE: there is some duplication with VASP version records due to the VASP
+	// definition being part of TRISA and GDS managing object metadata separately.
+	if err = models.SetMetadata(v, &global.Object{Version: &global.Version{Version: v.Version.Version}}, time.Time{}); err != nil {
+		return "", err
 	}
 
 	// Critical section (optimizing for safety rather than speed)
@@ -161,6 +179,8 @@ func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
 		return v, err
 	}
 
+	// TODO: if is tombstone/deleted then return not found.
+
 	return v, nil
 }
 
@@ -185,10 +205,16 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 	}
 
 	// Update the record metadata
+	// TODO: how do we get the PID and region?
 	v.Version.Version++
 	v.LastUpdated = time.Now().Format(time.RFC3339)
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
+	}
+
+	// TODO: update extra metadata record
+	if err = models.SetMetadata(v, &global.Object{Version: &global.Version{Version: v.Version.Version}}, time.Time{}); err != nil {
+		return err
 	}
 
 	// Critical section (optimizing for safety rather than speed)
@@ -234,6 +260,19 @@ func (s *Store) Destroy(id string) (err error) {
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
+
+	// Create a tombstone record now that the original VASP record is deleted.
+	// TODO: how to get PID and region?
+	// TODO: increment version to reflect the deletion operation
+	tombstone := &pb.VASP{
+		Id:      record.Id,
+		Version: record.Version,
+	}
+
+	// TODO: update global object with deletion information
+	models.SetMetadata(tombstone, nil, time.Now())
+
+	// TODO: save the tombstone back to disk with the key
 
 	// Critical section (optimizing for safety rather than speed)
 	s.Lock()

@@ -51,6 +51,11 @@ type GDS struct {
 
 // Serve GRPC requests on the specified address.
 func (s *GDS) Serve() (err error) {
+	if !s.conf.Enabled {
+		log.Warn().Msg("trisa directory service is not enabled")
+		return nil
+	}
+
 	// This service must run even if we're in maintenance mode to send service state
 	// MAINTENANCE in status replies.
 	if s.svc.conf.Maintenance {

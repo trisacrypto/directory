@@ -3,6 +3,8 @@ syntax="proto3";
 package gds.models.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/models/v1;models";
 
+import "gds/global/v1/global.proto";
+
 // Certificate requests are maintained separately from the VASP record since they should
 // not be replicated. E.g. every directory process is responsible for certificate
 // issuance and only public keys and certificate metadata should be exchanged between
@@ -38,6 +40,7 @@ message CertificateRequest {
     string created = 15;
     string modified = 16;
     string deleted = 17;
+    gds.global.v1.Object metadata = 18;
 }
 
 enum CertificateRequestState {
@@ -59,6 +62,8 @@ message GDSExtraData {
 
     // RFC3339 timestamp that indicates the VASP record was deleted.
     string deleted_on = 2;
+
+    gds.global.v1.Object metadata = 3;
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.

@@ -727,42 +727,34 @@ func gossip(c *cli.Context) (err error) {
 // Just to start, we'll ignore metadata for now and just get objects
 // TODO: store object metadata in the database as an index
 func loadMetadata(key string) (obj *global.Object, err error) {
+	// Load object from the data
 	var data []byte
 	if data, err = ldb.Get([]byte(key), nil); err != nil {
 		return nil, fmt.Errorf("could not get %q: %s", key, err)
 	}
 
-	obj = &global.Object{
-		Key:       key,
-		Namespace: strings.Split(key, ":")[0],
-	}
-
-	switch obj.Namespace {
+	// Detect the type of object, deserialize, and extract object metadata
+	namespace := strings.Split(key, ":")[0]
+	switch namespace {
 	case "vasps":
 		vasp := &pb.VASP{}
 		if err = proto.Unmarshal(data, vasp); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %q into vasp: %s", key, err)
 		}
-		obj.Version = &global.Version{
-			Pid:     vasp.Version.Pid,
-			Version: vasp.Version.Version,
-		}
+		obj, _, err = models.GetMetadata(vasp)
+		return obj, err
 	case "certreqs":
-		// TODO: certreqs need versions
 		careq := &models.CertificateRequest{}
 		if err = proto.Unmarshal(data, careq); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
 		}
-		obj.Version = &global.Version{
-			Pid:     9999,
-			Version: 9999,
-		}
+		return careq.Metadata, nil
 	case "peers":
+		// TODO: implement peers replication
 		return nil, nil
 	default:
-		return nil, fmt.Errorf("could not parse namespace %q", obj.Namespace)
+		return nil, fmt.Errorf("could not parse namespace %q", namespace)
 	}
-	return obj, nil
 }
 
 // Helper function to load all object metadata for a namespace
