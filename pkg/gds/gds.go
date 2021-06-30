@@ -5,21 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
-	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/emails"
-	"github.com/trisacrypto/directory/pkg/gds/logger"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
-	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -28,111 +21,45 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func init() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+// NewGDS creates a new GDS server derived from a parent Service.
+func NewGDS(svc *Service) (gds *GDS, err error) {
+	gds = &GDS{
+		svc:  svc,
+		conf: &svc.conf.GDS,
+		db:   svc.db,
+	}
 
-	// Initialize zerolog with GCP logging requirements
-	zerolog.TimeFieldFormat = time.RFC3339
-	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
-	zerolog.MessageFieldName = logger.GCPFieldKeyMsg
-
-	// Add the severity hook for GCP logging
-	var gcpHook logger.SeverityHook
-	log.Logger = zerolog.New(os.Stdout).Hook(gcpHook).With().Timestamp().Logger()
+	// Initialize the gRPC server
+	gds.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
+	api.RegisterTRISADirectoryServer(gds.srv, gds)
+	return gds, nil
 }
 
-// New creates a TRISA Directory Service with the specified configuration and prepares
-// it to listen for and serve GRPC requests.
-func New(conf config.Config) (s *Server, err error) {
-	// Load the default configuration from the environment
-	if conf.IsZero() {
-		if conf, err = config.New(); err != nil {
-			return nil, err
-		}
-	}
-
-	// Set the global level
-	zerolog.SetGlobalLevel(zerolog.Level(conf.LogLevel))
-
-	// Set human readable logging if specified
-	if conf.ConsoleLog {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	}
-
-	// Create the server and prepare to serve
-	s = &Server{conf: conf, echan: make(chan error, 1)}
-
-	if s.conf.Maintenance {
-		// Stop configuration at this point for maintenance mode (no error)
-		return s, nil
-	}
-
-	// Everything that follows here assumes we're not in maintenance mode.
-	if s.db, err = store.Open(conf.Database); err != nil {
-		return nil, err
-	}
-
-	// Create the Sectigo API client
-	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password); err != nil {
-		return nil, err
-	}
-
-	// Ensure the certificate storage can be reached
-	if _, err = s.getCertStorage(); err != nil {
-		return nil, err
-	}
-
-	// Create the Email Manager with SendGrid API client
-	if s.email, err = emails.New(conf.Email); err != nil {
-		return nil, err
-	}
-
-	// Configuration complete!
-
-	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
-		return s, nil
-	}
-	return s, nil
-}
-
-// Server implements the GRPC TRISADirectoryService.
-type Server struct {
+// GDS implements the TRISADirectoryService as defined by the v1beta1 or later TRISA
+// protocol buffers. This service is the primary interaction point with TRISA service
+// implementations that lookup information from the directory service, and this service
+// also allows users to register and verify with the directory.
+//
+// SEE FIRST: Service as defined in service.go (the main entrypoint of the server)
+type GDS struct {
 	api.UnimplementedTRISADirectoryServer
-	admin.UnimplementedDirectoryAdministrationServer
-	db     store.Store
-	srv    *grpc.Server
-	conf   config.Config
-	certs  *sectigo.Sectigo
-	email  *emails.EmailManager
-	secret *SecretManager
-	echan  chan error
+	svc  *Service          // The parent Service GDS uses to interact with other components
+	srv  *grpc.Server      // The gRPC server that listens on its own independent port
+	conf *config.GDSConfig // The GDS service specific configuration (helper alias to s.svc.conf.GDS)
+	db   store.Store       // Database connection for loading objects (helper alias to s.svc.db)
 }
 
 // Serve GRPC requests on the specified address.
-func (s *Server) Serve() (err error) {
-	// Initialize the gRPC server
-	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.serverInterceptor))
-	api.RegisterTRISADirectoryServer(s.srv, s)
-	admin.RegisterDirectoryAdministrationServer(s.srv, s)
+func (s *GDS) Serve() (err error) {
+	if !s.conf.Enabled {
+		log.Warn().Msg("trisa directory service is not enabled")
+		return nil
+	}
 
-	// Catch OS signals for graceful shutdowns
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	go func() {
-		<-quit
-		s.echan <- s.Shutdown()
-	}()
-
-	// Run management routines only if we're not in maintenance mode
-	if s.conf.Maintenance {
-		log.Warn().Msg("starting server in maintenance mode")
-	} else {
-		// Start the certificate manager go routine process
-		go s.CertManager()
-
-		// Start the backup manager go routine process
-		go s.BackupManager()
+	// This service must run even if we're in maintenance mode to send service state
+	// MAINTENANCE in status replies.
+	if s.svc.conf.Maintenance {
+		log.Debug().Msg("starting GDS server in maintenance mode")
 	}
 
 	// Listen for TCP requests on the specified address and port
@@ -140,41 +67,30 @@ func (s *Server) Serve() (err error) {
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
 		return fmt.Errorf("could not listen on %q", s.conf.BindAddr)
 	}
-	defer sock.Close()
 
 	// Run the server
 	go func() {
+		defer sock.Close()
 		log.Info().
 			Str("listen", s.conf.BindAddr).
 			Str("version", pkg.Version()).
-			Msg("server started")
+			Msg("trisa directory server started")
 
 		if err := s.srv.Serve(sock); err != nil {
-			s.echan <- err
+			s.svc.echan <- err
 		}
 	}()
 
-	// Listen for any errors that might have occurred and wait for all go routines to finish
-	if err = <-s.echan; err != nil {
-		return err
-	}
+	// Now that the go routine is started return nil, meaning the service has started
+	// successfully with no problems.
 	return nil
 }
 
 // Shutdown the TRISA Directory Service gracefully
-func (s *Server) Shutdown() (err error) {
-	log.Info().Msg("gracefully shutting down")
+func (s *GDS) Shutdown() (err error) {
+	log.Debug().Msg("gracefully shutting down GDS server")
 	s.srv.GracefulStop()
-
-	if !s.conf.Maintenance {
-		// Close the database correctly
-		if err = s.db.Close(); err != nil {
-			log.Error().Err(err).Msg("could not shutdown database")
-			return err
-		}
-	}
-
-	log.Debug().Msg("successful shutdown")
+	log.Debug().Msg("successful shutdown of GDS server")
 	return nil
 }
 
@@ -183,9 +99,9 @@ func (s *Server) Shutdown() (err error) {
 // status of verification can be obtained by using the lookup RPC call.
 // Register generates a PKCS12 password, provided in the RPC response which can be
 // used to access the certificate private keys when they're emailed.
-func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
+func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
 	vasp := &pb.VASP{
-		RegisteredDirectory: s.conf.DirectoryID,
+		RegisteredDirectory: s.svc.conf.DirectoryID,
 		Entity:              in.Entity,
 		Contacts:            in.Contacts,
 		TrisaEndpoint:       in.TrisaEndpoint,
@@ -220,7 +136,7 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 	// TODO: create legal entity hash to detect a repeat registration without ID
 	// TODO: add signature to leveldb indices
 	// TODO: check already exists and uniqueness constraints
-	if vasp.Id, err = s.db.Create(vasp); err != nil {
+	if vasp.Id, err = s.db.CreateVASP(vasp); err != nil {
 		// Assuming uniqueness is the primary constraint here
 		// TODO: better database error checking or handling
 		log.Warn().Err(err).Msg("could not register VASP in database")
@@ -250,14 +166,14 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 		}
 	}
 
-	if err = s.db.Update(vasp); err != nil {
+	if err = s.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with contact verification tokens")
 		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
 
 	// Send contacts with updated tokens
 	var sent int
-	if sent, err = s.email.SendVerifyContacts(vasp); err != nil {
+	if sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")
 		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
@@ -276,16 +192,16 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 	// Make a new secret of type "password"
 	secretType := "password"
-	if err = s.secret.With(certRequest.Id).CreateSecret(ctx, secretType); err != nil {
+	if err = s.svc.secret.With(certRequest.Id).CreateSecret(ctx, secretType); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not create new secret for pkcs12 password")
 		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
-	if err = s.secret.With(certRequest.Id).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
+	if err = s.svc.secret.With(certRequest.Id).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("unable to add secret version for pkcs12 password")
 		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
 
-	if err = s.db.SaveCertRequest(certRequest); err != nil {
+	if err = s.db.UpdateCertReq(certRequest); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not save certificate request")
 		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
@@ -303,18 +219,18 @@ func (s *Server) Register(ctx context.Context, in *api.RegisterRequest) (out *ap
 
 // Lookup a VASP entity by name or ID to get full details including the TRISA certification
 // if it exists and the entity has been verified.
-func (s *Server) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
+func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
 		// TODO: add registered directory to lookup
-		if vasp, err = s.db.Retrieve(in.Id); err != nil {
+		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
 			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
 		var vasps []*pb.VASP
-		if vasps, err = s.db.Search(map[string]interface{}{"name": in.CommonName}); err != nil {
+		if vasps, err = s.db.SearchVASPs(map[string]interface{}{"name": in.CommonName}); err != nil {
 			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
@@ -357,7 +273,7 @@ func (s *Server) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Lo
 
 // Search for VASP entity records by name or by country in order to perform more detailed
 // Lookup requests. The search process is purposefully simplistic at the moment.
-func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
+func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
 	// Create search query to send to database
 	query := make(map[string]interface{})
 	query["name"] = in.Name
@@ -373,7 +289,7 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 	query["category"] = categories
 
 	var vasps []*pb.VASP
-	if vasps, err = s.db.Search(query); err != nil {
+	if vasps, err = s.db.SearchVASPs(query); err != nil {
 		log.Error().Err(err).Msg("vasp search failed")
 		return nil, status.Error(codes.Aborted, err.Error())
 	}
@@ -404,18 +320,18 @@ func (s *Server) Search(ctx context.Context, in *api.SearchRequest) (out *api.Se
 
 // Status returns the status of a VASP including its verification and service status if
 // the directory service is performing health check monitoring.
-func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
+func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
 		// TODO: add registered directory to retrieve
-		if vasp, err = s.db.Retrieve(in.Id); err != nil {
+		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
 			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
 		var vasps []*pb.VASP
-		if vasps, err = s.db.Search(map[string]interface{}{"name": in.CommonName}); err != nil {
+		if vasps, err = s.db.SearchVASPs(map[string]interface{}{"name": in.CommonName}); err != nil {
 			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
@@ -446,10 +362,10 @@ func (s *Server) Verification(ctx context.Context, in *api.VerificationRequest) 
 // VerifyEmail checks the contact tokens for the specified VASP and registers the
 // contact email verification. If successful, this method then sends the verification
 // request to the TRISA Admins for review.
-func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
+func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
 	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
-	if vasp, err = s.db.Retrieve(in.Id); err != nil {
+	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
 		log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
 		return nil, status.Error(codes.NotFound, "could not find associated VASP record by ID")
 	}
@@ -504,7 +420,7 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 	// registration review email and do nothing.
 	if prevVerified > 0 && vasp.VerificationStatus > pb.VerificationState_SUBMITTED {
 		// Save the updated contact
-		if err = s.db.Update(vasp); err != nil {
+		if err = s.db.UpdateVASP(vasp); err != nil {
 			log.Error().Err(err).Msg("could not update VASP record after contact verification")
 			return nil, status.Error(codes.Internal, "could not update contact after verification")
 		}
@@ -526,13 +442,13 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 		log.Error().Err(err).Msg("could not create admin verification token")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
-	if err = s.db.Update(vasp); err != nil {
+	if err = s.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Msg("could not save admin verification token")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
 
 	// Step 2: send review request email to the TRISA admins.
-	if _, err = s.email.SendReviewRequest(vasp); err != nil {
+	if _, err = s.svc.email.SendReviewRequest(vasp); err != nil {
 		log.Error().Err(err).Msg("could not send verification review email")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
@@ -541,7 +457,7 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 	vasp.VerificationStatus = pb.VerificationState_PENDING_REVIEW
 
 	// Save the VASP and newly created certificate request
-	if err = s.db.Update(vasp); err != nil {
+	if err = s.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Msg("could not update vasp status to pending review")
 		return nil, status.Error(codes.Internal, "there was a problem submitting your registration review request, please contact the admins")
 	}
@@ -552,7 +468,7 @@ func (s *Server) VerifyContact(ctx context.Context, in *api.VerifyContactRequest
 	}, nil
 }
 
-func (s *Server) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
+func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
 	log.Info().
 		Uint32("attempts", in.Attempts).
 		Str("last_checked_at", in.LastCheckedAt).
@@ -569,7 +485,7 @@ func (s *Server) Status(ctx context.Context, in *api.HealthCheck) (out *api.Serv
 	}
 
 	// If we're in maintenance mode, update the service state.
-	if s.conf.Maintenance {
+	if s.svc.conf.Maintenance {
 		out.Status = api.ServiceState_MAINTENANCE
 	}
 
