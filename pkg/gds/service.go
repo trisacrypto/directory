@@ -93,7 +93,7 @@ func New(conf config.Config) (s *Service, err error) {
 
 	// Create secret manager and connect to backend vault service
 	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
-		return s, nil
+		return nil, err
 	}
 
 	// Initialize the gRPC API services at the very end.

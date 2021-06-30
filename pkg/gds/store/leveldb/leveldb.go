@@ -657,7 +657,7 @@ func (s *Store) Reindex() (err error) {
 func (s *Store) Backup(path string) (err error) {
 	// Before backup ensure the indices are sync'd to disk
 	if err = s.sync(); err != nil {
-		return fmt.Errorf("could not syncrhonize indices prior to backup: %s", err)
+		return fmt.Errorf("could not synchronize indices prior to backup: %s", err)
 	}
 
 	// Create the directory for the copied leveldb database
