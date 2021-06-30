@@ -24,6 +24,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
@@ -169,6 +170,44 @@ func main() {
 				cli.StringSliceFlag{
 					Name:  "o, objects",
 					Usage: "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
+				},
+				cli.BoolFlag{
+					Name:  "D, dryrun",
+					Usage: "show changes that would occur, does not modify database",
+				},
+			},
+		},
+		{
+			Name:     "gossip:migrate",
+			Usage:    "migrate objects to replication context",
+			Category: "replica",
+			Before:   openLevelDB,
+			Action:   gossipMigrate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.StringFlag{
+					Name:   "a, addr",
+					Usage:  "bind addr of the local replica (for name processing)",
+					EnvVar: "GDS_REPLICA_BIND_ADDR",
+				},
+				cli.Uint64Flag{
+					Name:   "p, pid",
+					Usage:  "process id of the local replica",
+					EnvVar: "GDS_REPLICA_PID",
+				},
+				cli.StringFlag{
+					Name:   "r, region",
+					Usage:  "geographic region of the local replica",
+					EnvVar: "GDS_REPLICA_REGION",
+				},
+				cli.StringFlag{
+					Name:   "n, name",
+					Usage:  "human readable name of the local replica",
+					EnvVar: "GDS_REPLICA_NAME",
 				},
 				cli.BoolFlag{
 					Name:  "D, dryrun",
@@ -689,7 +728,7 @@ func gossip(c *cli.Context) (err error) {
 			// Specify "all" namespaces manually (opt-in to what is replicated).
 			// NOTE: if there is a namespace being omitted from gossip without being
 			// specified in the command line, it's likely it needs to be added here.
-			namespaces = []string{"vasps", "certreqs", "peers"}
+			namespaces = store.Namespaces[:]
 		}
 
 		for _, ns := range namespaces {
@@ -724,9 +763,165 @@ func gossip(c *cli.Context) (err error) {
 	return nil
 }
 
+func gossipMigrate(c *cli.Context) (err error) {
+	// Create a replica config to create a new version manager
+	conf := config.ReplicaConfig{
+		Enabled:  true,
+		BindAddr: c.String("addr"),
+		PID:      c.Uint64("pid"),
+		Region:   c.String("region"),
+		Name:     c.String("name"),
+	}
+	dryrun := c.Bool("dryrun")
+
+	if err = conf.Validate(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	var vm *global.VersionManager
+	if vm, err = global.New(conf); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Migrate VASP objects
+	migrated := 0
+	iter := ldb.NewIterator(util.BytesPrefix([]byte("vasps::")), nil)
+vaspLoop:
+	for iter.Next() {
+		vasp := &pb.VASP{}
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			fmt.Printf("could not unmarshal %q: %s\n", iter.Key(), err)
+			continue vaspLoop
+		}
+
+		key := string(iter.Key())
+		meta, deletedOn, err := models.GetMetadata(vasp)
+		if err != nil {
+			fmt.Printf("could not get metadata %q: %s\n", key, err)
+			continue vaspLoop
+		}
+
+		if !deletedOn.IsZero() {
+			// Handle tombstone
+			fmt.Printf("cannot handle tombstone %q\n", key)
+			continue vaspLoop
+		}
+
+		if meta == nil {
+			meta = &global.Object{}
+		}
+
+		// Update metadata
+		meta.Key = key
+		meta.Namespace = store.NamespaceVASPs
+		meta.Owner = vm.Owner
+		meta.Region = vm.Region
+		meta.Version = &global.Version{
+			Pid:     vasp.Version.Pid,
+			Version: vasp.Version.Version,
+		}
+		if err = vm.Update(meta); err != nil {
+			fmt.Printf("could not update metadata %q: %s\n", iter.Key(), err)
+			continue vaspLoop
+		}
+
+		if err = models.SetMetadata(vasp, meta, deletedOn); err != nil {
+			fmt.Printf("could not set metadata %q: %s\n", key, err)
+			continue vaspLoop
+		}
+
+		if !dryrun {
+			var data []byte
+			if data, err = proto.Marshal(vasp); err != nil {
+				fmt.Printf("could not marshal %q: %s\n", iter.Key(), err)
+				continue vaspLoop
+			}
+
+			if err = ldb.Put([]byte(key), data, nil); err != nil {
+				fmt.Printf("could not write %q: %s\n", iter.Key(), err)
+				continue vaspLoop
+			}
+		} else {
+			fmt.Printf("%+v\n", meta)
+		}
+
+		migrated++
+	}
+
+	if err = iter.Error(); err != nil {
+		iter.Release()
+		return cli.NewExitError(fmt.Errorf("could not iterate over VASPs: %s", err), 1)
+	}
+	iter.Release()
+
+	fmt.Printf("migrated %d VASP objects\n", migrated)
+
+	// Migrate CertReq objects
+	migrated = 0
+	iter = ldb.NewIterator(util.BytesPrefix([]byte("certreqs::")), nil)
+certreqLoop:
+	for iter.Next() {
+		certreq := &models.CertificateRequest{}
+		if err = proto.Unmarshal(iter.Value(), certreq); err != nil {
+			fmt.Printf("could not unmarshal %q: %s\n", iter.Key(), err)
+			continue certreqLoop
+		}
+
+		key := string(iter.Key())
+		if certreq.Deleted != "" {
+			// Handle tombstone
+			fmt.Printf("cannot handle tombstone %q\n", key)
+			continue certreqLoop
+		}
+
+		// Create metadata if it does not exist
+		if certreq.Metadata == nil {
+			certreq.Metadata = &global.Object{}
+		}
+
+		// Update metadata
+		certreq.Metadata.Key = key
+		certreq.Metadata.Namespace = store.NamespaceCertReqs
+		certreq.Metadata.Owner = vm.Owner
+		certreq.Metadata.Region = vm.Region
+		certreq.Metadata.Version = &global.Version{
+			Pid:     0,
+			Version: 2,
+		}
+		if err = vm.Update(certreq.Metadata); err != nil {
+			fmt.Printf("could not update metadata %q: %s\n", iter.Key(), err)
+			continue certreqLoop
+		}
+
+		if !dryrun {
+			var data []byte
+			if data, err = proto.Marshal(certreq); err != nil {
+				fmt.Printf("could not marshal %q: %s\n", iter.Key(), err)
+				continue certreqLoop
+			}
+
+			if err = ldb.Put([]byte(key), data, nil); err != nil {
+				fmt.Printf("could not write %q: %s\n", iter.Key(), err)
+				continue certreqLoop
+			}
+		} else {
+			fmt.Printf("%+v\n", certreq.Metadata)
+		}
+
+		migrated++
+	}
+
+	if err = iter.Error(); err != nil {
+		iter.Release()
+		return cli.NewExitError(fmt.Errorf("could not iterate over CertificateRequests: %s", err), 1)
+	}
+	iter.Release()
+
+	fmt.Printf("migrated %d CertificateRequest objects\n", migrated)
+	return nil
+}
+
 // Helper function to load object metadata from leveldb
-// Just to start, we'll ignore metadata for now and just get objects
-// TODO: store object metadata in the database as an index
 func loadMetadata(key string) (obj *global.Object, err error) {
 	// Load object from the data
 	var data []byte
@@ -737,14 +932,14 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 	// Detect the type of object, deserialize, and extract object metadata
 	namespace := strings.Split(key, ":")[0]
 	switch namespace {
-	case "vasps":
+	case store.NamespaceVASPs:
 		vasp := &pb.VASP{}
 		if err = proto.Unmarshal(data, vasp); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %q into vasp: %s", key, err)
 		}
 		obj, _, err = models.GetMetadata(vasp)
 		return obj, err
-	case "certreqs":
+	case store.NamespaceCertReqs:
 		careq := &models.CertificateRequest{}
 		if err = proto.Unmarshal(data, careq); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
