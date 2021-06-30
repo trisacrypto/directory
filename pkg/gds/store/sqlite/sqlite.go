@@ -3,6 +3,7 @@ package sqlite
 import (
 	"errors"
 
+	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -18,42 +19,50 @@ func (s *Store) Close() error {
 	return nil
 }
 
-func (s *Store) Create(v *pb.VASP) (id string, err error) {
+func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	return "", nil
 }
 
-func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
+func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 	return nil, nil
 }
 
-func (s *Store) Update(v *pb.VASP) (err error) {
+func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	return nil
 }
 
-func (s *Store) Destroy(id string) (err error) {
+func (s *Store) DeleteVASP(id string) (err error) {
 	return nil
 }
 
-func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err error) {
+func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	return nil, nil
 }
 
-func (s *Store) ListCertRequests() (reqs []*models.CertificateRequest, err error) {
+func (s *Store) ListCertReqs() (reqs []*models.CertificateRequest, err error) {
 	return nil, nil
 }
 
-func (s *Store) GetCertRequest(id string) (r *models.CertificateRequest, err error) {
+func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
+	return "", nil
+}
+
+func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err error) {
 	return nil, nil
 }
 
-func (s *Store) SaveCertRequest(r *models.CertificateRequest) (err error) {
+func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 	return nil
 }
 
-func (s *Store) DeleteCertRequest(id string) (err error) {
+func (s *Store) DeleteCertReq(id string) (err error) {
 	return nil
 }
 
 func (s *Store) Backup(path string) (err error) {
+	return nil
+}
+
+func (s *Store) WithVersionManager(vm *global.VersionManager) error {
 	return nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
@@ -17,15 +18,18 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -138,6 +142,37 @@ func main() {
 					Name:   "k, key",
 					Usage:  "secret key to decrypt the cipher text",
 					EnvVar: "GDS_SECRET_KEY",
+				},
+			},
+		},
+		{
+			Name:      "gossip",
+			Usage:     "initiate a gossip session with a remote replica (for debugging)",
+			ArgsUsage: "remote:port",
+			Category:  "replica",
+			Before:    openLevelDB,
+			Action:    gossip,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.BoolFlag{
+					Name:  "p, partial",
+					Usage: "ignore any objects not specified in request",
+				},
+				cli.StringSliceFlag{
+					Name:  "n, namespaces",
+					Usage: "specify the namespaces to replicate (if empty, all are replicated)",
+				},
+				cli.StringSliceFlag{
+					Name:  "o, objects",
+					Usage: "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
+				},
+				cli.BoolFlag{
+					Name:  "D, dryrun",
+					Usage: "show changes that would occur, does not modify database",
 				},
 			},
 		},
@@ -610,5 +645,152 @@ func validateHMAC(key, data, sig []byte) error {
 	if !bytes.Equal(sig, hmac) {
 		return errors.New("HMAC mismatch")
 	}
+	return nil
+}
+
+//===========================================================================
+// Replica Actions
+//===========================================================================
+
+func gossip(c *cli.Context) (err error) {
+	defer ldb.Close()
+	if c.NArg() != 1 {
+		return cli.NewExitError("must specify the remote replica addr:port", 1)
+	}
+
+	// If objects is specified then load them from the database
+	objs := c.StringSlice("objects")
+	namespaces := c.StringSlice("namespaces")
+
+	versions := &global.VersionVectors{
+		Objects:    make([]*global.Object, 0),
+		Partial:    c.Bool("partial"),
+		Namespaces: namespaces,
+	}
+
+	// Sanity check to ensure no duplicates and no ignored objects
+	if len(objs) > 0 && len(namespaces) > 0 {
+		return cli.NewExitError("specify objects or namespaces not both", 1)
+	}
+
+	// Load objects
+	if len(objs) > 0 {
+		for _, key := range objs {
+			var obj *global.Object
+			if obj, err = loadMetadata(key); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			versions.Objects = append(versions.Objects, obj)
+		}
+	} else {
+
+		if len(versions.Namespaces) == 0 {
+			// Specify "all" namespaces manually (opt-in to what is replicated).
+			// NOTE: if there is a namespace being omitted from gossip without being
+			// specified in the command line, it's likely it needs to be added here.
+			namespaces = []string{"vasps", "certreqs", "peers"}
+		}
+
+		for _, ns := range namespaces {
+			var objs []*global.Object
+			if objs, err = loadNamespaceMetadata(ns); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			versions.Objects = append(versions.Objects, objs...)
+		}
+	}
+
+	// Initialize the gossip client
+	// TODO: move to its own helper function
+	// TODO: make secure
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	client := global.NewReplicationClient(cc)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	var rep *global.Updates
+	if rep, err = client.Gossip(ctx, versions); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	printJSON(rep)
+
+	// TODO: repair database locally or dry run
+	return nil
+}
+
+// Helper function to load object metadata from leveldb
+// Just to start, we'll ignore metadata for now and just get objects
+// TODO: store object metadata in the database as an index
+func loadMetadata(key string) (obj *global.Object, err error) {
+	// Load object from the data
+	var data []byte
+	if data, err = ldb.Get([]byte(key), nil); err != nil {
+		return nil, fmt.Errorf("could not get %q: %s", key, err)
+	}
+
+	// Detect the type of object, deserialize, and extract object metadata
+	namespace := strings.Split(key, ":")[0]
+	switch namespace {
+	case "vasps":
+		vasp := &pb.VASP{}
+		if err = proto.Unmarshal(data, vasp); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %q into vasp: %s", key, err)
+		}
+		obj, _, err = models.GetMetadata(vasp)
+		return obj, err
+	case "certreqs":
+		careq := &models.CertificateRequest{}
+		if err = proto.Unmarshal(data, careq); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
+		}
+		return careq.Metadata, nil
+	case "peers":
+		// TODO: implement peers replication
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("could not parse namespace %q", namespace)
+	}
+}
+
+// Helper function to load all object metadata for a namespace
+func loadNamespaceMetadata(ns string) (objs []*global.Object, err error) {
+	prefix := util.BytesPrefix([]byte(ns))
+	iter := ldb.NewIterator(prefix, nil)
+	defer iter.Release()
+
+	objs = make([]*global.Object, 0)
+	for iter.Next() {
+		var obj *global.Object
+		if obj, err = loadMetadata(string(iter.Key())); err != nil {
+			return nil, err
+		}
+		objs = append(objs, obj)
+	}
+
+	return objs, nil
+}
+
+// helper function to print JSON response and exit
+func printJSON(m proto.Message) error {
+	opts := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	data, err := opts.Marshal(m)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Println(string(data))
 	return nil
 }
