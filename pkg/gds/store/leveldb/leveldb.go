@@ -602,23 +602,68 @@ func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
 func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	// The ID on a Peer is a uint64 representing the PID
 	// convert to string for a consistent interface across Create and Retrieve methods
-	sid := fmt.Sprint(p.Id)
+	sid := fmt.Sprintf("%04x", p.Id)
+	key := s.peerKey(sid)
 
-	// Because this is a create operation, initialize the first version
-	p.Metadata = &global.Object{
-		Key:       string(s.peerKey(sid)),
-		Namespace: nsReplicas,
+	// Check to see if the Peer was previously created and deleted
+	var val []byte
+	if val, err = s.db.Get(key, nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			// New peer, not a tombstone
+			// Initialize the first version
+			p.Metadata = &global.Object{
+				Key:       string(s.peerKey(sid)),
+				Namespace: nsReplicas,
+			}
+			if err = s.updateVersion(p.Metadata); err != nil {
+				return "", fmt.Errorf("could not create object version: %s", err)
+			}
+
+			var data []byte
+			if data, err = proto.Marshal(p); err != nil {
+				return "", err
+			}
+
+			if err = s.db.Put(key, data, nil); err != nil {
+				return "", err
+			}
+		} else {
+			return "", fmt.Errorf("error when creating peer %s: %s", id, err)
+		}
 	}
-	if err = s.updateVersion(p.Metadata); err != nil {
+
+	// Peer exists, unmarshall to check if it has been tombstoned?
+	np := &peers.Peer{}
+	if err = proto.Unmarshal(val, np); err != nil {
+		return "", fmt.Errorf("peer %s found in database but could not be unmarshalled", sid)
+	}
+
+	// Check if this is a tombstone version
+	if np.Deleted == "" {
+		// Peer exists and has not be deleted, can't create
+		return "", fmt.Errorf("cannot create %s, already exists", sid)
+	}
+	// Reincarnate peer from tombstone
+	// Update management timestamps, record metadata, and undelete
+	np.Modified = time.Now().Format(time.RFC3339)
+	if np.Created == "" {
+		np.Created = np.Modified
+	}
+	np.Deleted = ""
+
+	// TODO: do we have to worry about the Region or Name changing?
+
+	if err = s.updateVersion(np.Metadata); err != nil {
 		return "", fmt.Errorf("could not create object version: %s", err)
 	}
 
+	// Remarshall
 	var data []byte
-	key := s.peerKey(sid)
-	if data, err = proto.Marshal(p); err != nil {
+	if data, err = proto.Marshal(np); err != nil {
 		return "", err
 	}
 
+	// Put back to the database
 	if err = s.db.Put(key, data, nil); err != nil {
 		return "", err
 	}
@@ -1164,7 +1209,7 @@ func (s *Store) synccategories() (err error) {
 	defer s.Unlock()
 
 	if s.categories == nil {
-		// Create the categories index an dload from the database
+		// Create the categories index and load from the database
 		s.categories = make(containerIndex)
 
 		// fetch the categories from the database

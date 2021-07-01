@@ -126,7 +126,7 @@ type CertificateStore interface {
 
 // ReplicaStore describes how the service interacts with and manages Peers.
 type ReplicaStore interface {
-	ListPeers() (*peers.PeersList, error)
+	ListPeers() ([]*peers.Peer, error)
 	CreatePeer(p *peers.Peer) (string, error)
 	RetrievePeer(id string) (*peers.Peer, error)
 	DeletePeer(id string) error

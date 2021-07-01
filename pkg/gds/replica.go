@@ -13,6 +13,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -152,38 +154,39 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 	return &global.Updates{}, nil
 }
 
-// TODO: what are we doing with Status?
 // GetPeers queries the data store to determine which peers it contains, and returns them
 func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
-
-	// TODO: Not sure what StatusOnly is for
-	if in.StatusOnly {
-		return nil, errors.New("StatusOnly not supported yet")
-	}
 
 	// Initialize var for candidate peers
 	var peers []*peers.Peer
 
 	// Get all the peers
 	if peers, err = r.db.ListPeers(); err != nil {
-		// TODO: Not sure what error we want here
-		return nil, errors.New("No peers retrieved from the database")
+		log.Error().Err(err).Msg("unable to retrieve peers from the database")
+		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
 	}
 
-	// If there is no region filter on the request, return all peers
-	if in.Region == nil {
-		out.Peers = peers
-	}
+	// Get an overall replica count - we need this regardless
+	// TODO: delete self from the list?
+	out.Status.NetworkSize = int64(len(peers))
 
-	// Otherwise, use the regions to determin which peers to keep
 	for _, peer := range peers {
-		for _, region := range in.Region {
-			if peer.Region == region {
+		out.Status.Regions[peer.Region]++
+
+		// If it's not a status only, get the details
+		if !in.StatusOnly {
+			// If we've been asked to filter by region
+			if in.Region != nil {
+				for _, region := range in.Region {
+					if peer.Region == region {
+						out.Peers = append(out.Peers, peer)
+					}
+				}
+			} else {
 				out.Peers = append(out.Peers, peer)
 			}
 		}
 	}
-
 	return out, nil
 }
 

@@ -14,6 +14,11 @@ message Peer {
     string name = 3;                 // optional - a unique, human readable name for the peer
     string region = 4;               // optional? - the region the peer is running in
 
+    // Logging information timestamps
+    string created = 9;
+    string modified = 10;
+    string deleted = 11;
+
     // extra information that might be relevant to process-specific functions; e.g. for
     // specific clouds or data that's been parsed (optional).
     map<string, string> extra = 14;
@@ -32,7 +37,7 @@ service PeerManagement {
 // Used to filter the peers that are returned. If no filters are specified then all
 // known peers on the remote replica are returned.
 message PeersFilter {
-    repeated string region = 1;      // Specify the region(s) to return the peers for.
+    repeated string region = 1;      // Specify the region(s) to return the peers for. Only effects PeersList not PeersStatus
     bool status_only = 2;            // Return only the peers status, not a list of peers.
 }
 
