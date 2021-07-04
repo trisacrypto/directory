@@ -755,7 +755,7 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 	case "peers":
 		peer := &peers.Peer{}
 		if err = proto.Unmarshal(data, peer); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
+			return nil, fmt.Errorf("could not unmarshal %q into peer: %s", key, err)
 		}
 		return peer.Metadata, nil
 	default:

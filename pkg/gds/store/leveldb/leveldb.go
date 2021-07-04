@@ -608,8 +608,8 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	// Check to see if the Peer was previously created and deleted
 	var val []byte
 	if val, err = s.db.Get(key, nil); err != nil {
+		// New peer, not a tombstone
 		if err == leveldb.ErrNotFound {
-			// New peer, not a tombstone
 			// Initialize the first version
 			p.Metadata = &global.Object{
 				Key:       string(s.peerKey(sid)),
@@ -628,19 +628,21 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 				return "", err
 			}
 		} else {
+			// TODO: Or just ignore other Get errors?
 			return "", fmt.Errorf("error when creating peer %s: %s", id, err)
 		}
 	}
 
-	// Peer exists, unmarshall to check if it has been tombstoned?
+	// Peer exists, unmarshall it
 	np := &peers.Peer{}
 	if err = proto.Unmarshal(val, np); err != nil {
+		// TODO: if old peer can't be unmarshalled, just overwrite with the new data?
 		return "", fmt.Errorf("peer %s found in database but could not be unmarshalled", sid)
 	}
 
 	// Check if this is a tombstone version
 	if np.Deleted == "" {
-		// Peer exists and has not be deleted, can't create
+		// Peer exists but has not be deleted, can't create
 		return "", fmt.Errorf("cannot create %s, already exists", sid)
 	}
 	// Reincarnate peer from tombstone
@@ -654,7 +656,7 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	// TODO: do we have to worry about the Region or Name changing?
 
 	if err = s.updateVersion(np.Metadata); err != nil {
-		return "", fmt.Errorf("could not create object version: %s", err)
+		return "", fmt.Errorf("could not update object version: %s", err)
 	}
 
 	// Remarshall
@@ -695,10 +697,40 @@ func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
 
 // DeletePeer removes a peer from the store.
 func (s *Store) DeletePeer(id string) error {
+	// Lookup the record in order to create the tombstone and check if exists.
+	record, err := s.RetrievePeer(id)
+	if err != nil {
+		if err == ErrEntityNotFound {
+			return nil
+		}
+		return err
+	}
+
 	// LevelDB will not return an error if the entity does not exist
 	key := s.peerKey(id)
 	if err := s.db.Delete(key, nil); err != nil {
 		return err
+	}
+
+	tombstone := &peers.Peer{
+		Id:       record.Id,
+		Created:  record.Created,
+		Modified: record.Modified,
+		Deleted:  time.Now().Format(time.RFC3339),
+		Metadata: record.Metadata,
+	}
+
+	if err = s.updateVersion(tombstone.Metadata); err != nil {
+		return fmt.Errorf("could not update tombstone version: %s", err)
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(tombstone); err != nil {
+		return fmt.Errorf("could not marshal tombstone: %s", err)
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return fmt.Errorf("could not put tombstone: %s", err)
 	}
 
 	return nil

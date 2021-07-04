@@ -157,6 +157,55 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 // GetPeers queries the data store to determine which peers it contains, and returns them
 func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
 
+	if out, err = r.peerStatus(ctx, in); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// AddPeers adds a peer and returns a report of the status of all peers in the network
+func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	// CreatePeer handles possibility of an already-existing or previously deleted peer
+	if _, err := r.db.CreatePeer(in); err != nil {
+		log.Error().Err(err).Msg("unable to add peer")
+		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be added")
+	}
+
+	// Assuming we don't need all the Peer details in this case
+	ftr := &peers.PeersFilter{
+		StatusOnly: true,
+	}
+	if pl, err := r.peerStatus(ctx, ftr); err != nil {
+		return nil, err
+	} else {
+		out = pl.Status
+	}
+	return out, nil
+}
+
+func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	key := fmt.Sprintf("%04x", in.Id)
+	if err := r.db.DeletePeer(key); err != nil {
+		log.Error().Err(err).Msg("unable to remove peer")
+		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be removed")
+	}
+
+	// Assuming we don't need all the Peer details in this case
+	ftr := &peers.PeersFilter{
+		StatusOnly: true,
+	}
+	if pl, err := r.peerStatus(ctx, ftr); err != nil {
+		return nil, err
+	} else {
+		out = pl.Status
+	}
+	return out, nil
+}
+
+// Helper to get the peer network status
+func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
+
 	// Initialize var for candidate peers
 	var peers []*peers.Peer
 
@@ -173,7 +222,7 @@ func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *pee
 	for _, peer := range peers {
 		out.Status.Regions[peer.Region]++
 
-		// If it's not a status only, get the details
+		// If it's not a status only, get the details for each Peer
 		if !in.StatusOnly {
 			// If we've been asked to filter by region
 			if in.Region != nil {
@@ -183,17 +232,10 @@ func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *pee
 					}
 				}
 			} else {
+				// Otherwise don't filter and keep all the Peers
 				out.Peers = append(out.Peers, peer)
 			}
 		}
 	}
 	return out, nil
-}
-
-func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
-	return nil, nil
-}
-
-func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
-	return nil, nil
 }
