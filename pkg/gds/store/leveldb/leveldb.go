@@ -669,7 +669,7 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 		return "", err
 	}
 
-	return , nil
+	return p.Key(), nil
 }
 
 // RetrievePeer returns a peer by it's stringified PID.
@@ -691,7 +691,7 @@ func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
 		return nil, err
 	}
 
-	return p.Key(), nil
+	return p, nil
 }
 
 // DeletePeer removes a peer from the store.
