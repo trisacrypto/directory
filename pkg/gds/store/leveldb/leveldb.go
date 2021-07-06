@@ -602,8 +602,7 @@ func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
 func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	// The ID on a Peer is a uint64 representing the PID
 	// convert to string for a consistent interface across Create and Retrieve methods
-	sid := fmt.Sprintf("%04x", p.Id)
-	key := s.peerKey(sid)
+	key := s.peerKey(p.Key())
 
 	// Check to see if the Peer was previously created and deleted
 	var val []byte
@@ -612,7 +611,7 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 		if err == leveldb.ErrNotFound {
 			// Initialize the first version
 			p.Metadata = &global.Object{
-				Key:       string(s.peerKey(sid)),
+				Key:       string(key),
 				Namespace: nsReplicas,
 			}
 			if err = s.updateVersion(p.Metadata); err != nil {
@@ -637,13 +636,13 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	np := &peers.Peer{}
 	if err = proto.Unmarshal(val, np); err != nil {
 		// TODO: if old peer can't be unmarshalled, just overwrite with the new data?
-		return "", fmt.Errorf("peer %s found in database but could not be unmarshalled", sid)
+		return "", fmt.Errorf("peer %d found in database but could not be unmarshalled", p.Id)
 	}
 
 	// Check if this is a tombstone version
 	if np.Deleted == "" {
 		// Peer exists but has not be deleted, can't create
-		return "", fmt.Errorf("cannot create %s, already exists", sid)
+		return "", fmt.Errorf("cannot create %d, already exists", p.Id)
 	}
 	// Reincarnate peer from tombstone
 	// Update management timestamps, record metadata, and undelete
@@ -670,7 +669,7 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 		return "", err
 	}
 
-	return sid, nil
+	return , nil
 }
 
 // RetrievePeer returns a peer by it's stringified PID.
@@ -692,7 +691,7 @@ func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
 		return nil, err
 	}
 
-	return p, nil
+	return p.Key(), nil
 }
 
 // DeletePeer removes a peer from the store.

@@ -158,6 +158,7 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
 
 	if out, err = r.peerStatus(ctx, in); err != nil {
+		// peerStatus returns status error and does logging
 		return nil, err
 	}
 
@@ -185,8 +186,7 @@ func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.Peer
 }
 
 func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
-	key := fmt.Sprintf("%04x", in.Id)
-	if err := r.db.DeletePeer(key); err != nil {
+	if err := r.db.DeletePeer(in.Key()); err != nil {
 		log.Error().Err(err).Msg("unable to remove peer")
 		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be removed")
 	}
@@ -209,7 +209,7 @@ func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *p
 	// Initialize var for candidate peers
 	var peers []*peers.Peer
 
-	// Get all the peers
+	// Get all the peers (necessary for both list and status-only)
 	if peers, err = r.db.ListPeers(); err != nil {
 		log.Error().Err(err).Msg("unable to retrieve peers from the database")
 		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
@@ -225,7 +225,7 @@ func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *p
 		// If it's not a status only, get the details for each Peer
 		if !in.StatusOnly {
 			// If we've been asked to filter by region
-			if in.Region != nil {
+			if len(in.Region) > 0 {
 				for _, region := range in.Region {
 					if peer.Region == region {
 						out.Peers = append(out.Peers, peer)
