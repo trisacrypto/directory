@@ -26,6 +26,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
@@ -176,6 +177,69 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:      "peers:add",
+			Usage:     "add peers to the network by pid",
+			ArgsUsage: "pid",
+			Category:  "replica",
+			Before:    openLevelDB,
+			Action:    addPeers,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO allow the user to add multiple peers at a time?
+				cli.Uint64Flag{
+					Name:  "p, pid",
+					Usage: "specify the pid for the peer to add",
+				},
+			},
+		},
+		{
+			Name:      "peers:delete",
+			Usage:     "tombstone a peer by pid (does not remove from ldb)",
+			ArgsUsage: "pid",
+			Category:  "replica",
+			Before:    openLevelDB,
+			Action:    delPeers,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO allow the user to rm multiple peers at a time?
+				cli.Uint64Flag{
+					Name:  "p, pid",
+					Usage: "specify the pid for the peer to tombstone",
+				},
+			},
+		},
+		{
+			Name:     "peers:list",
+			Usage:    "get a status report of all peers in the network",
+			Category: "replica",
+			Before:   openLevelDB,
+			Action:   listPeers,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO: have we standardized on how to reference regions?
+				cli.StringSliceFlag{
+					Name:  "r, region",
+					Usage: "specify a region for peers to be returned",
+				},
+				cli.BoolFlag{
+					Name:  "s, status",
+					Usage: "specify for status-only, will not return peer details",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -189,6 +253,7 @@ var (
 	ldb            *leveldb.DB
 	vaspPrefix     = []byte("vasps::")
 	certreqsPrefix = []byte("certreqs::")
+	// replicaPrefix  = []byte("peers::")
 	indexPrefix    = []byte("index::")
 	sequencePrefix = []byte("sequence::")
 	indexNames     = []byte("index::names")
@@ -751,8 +816,11 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 		}
 		return careq.Metadata, nil
 	case "peers":
-		// TODO: implement peers replication
-		return nil, nil
+		peer := &peers.Peer{}
+		if err = proto.Unmarshal(data, peer); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %q into peer: %s", key, err)
+		}
+		return peer.Metadata, nil
 	default:
 		return nil, fmt.Errorf("could not parse namespace %q", namespace)
 	}
@@ -793,5 +861,103 @@ func printJSON(m proto.Message) error {
 	}
 
 	fmt.Println(string(data))
+	return nil
+}
+
+func addPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+	if c.NArg() != 1 {
+		return cli.NewExitError("must specify pid for peer", 1)
+	}
+	pid := c.Uint64("pid")
+	peer := &peers.Peer{
+		Id: pid,
+	}
+
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	client := peers.NewPeerManagementClient(cc)
+
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	// call client.AddPeer with the pid
+	var out *peers.PeersStatus
+	if out, err = client.AddPeers(ctx, peer); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	// print the status
+	printJSON(out)
+
+	return nil
+}
+
+func delPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+	if c.NArg() != 1 {
+		return cli.NewExitError("must specify pid for peer", 1)
+	}
+	pid := c.Uint64("pid")
+	peer := &peers.Peer{
+		Id: pid,
+	}
+
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	client := peers.NewPeerManagementClient(cc)
+
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	// call client.RmPeer with the pid
+	var out *peers.PeersStatus
+	if out, err = client.RmPeers(ctx, peer); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// print the status
+	printJSON(out)
+
+	return nil
+}
+
+func listPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	// determine if this is a region-specific or status only request
+	so := c.GlobalBool("status")
+	regions := c.StringSlice("region")
+	filter := &peers.PeersFilter{
+		Region:     regions,
+		StatusOnly: so,
+	}
+
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	client := peers.NewPeerManagementClient(cc)
+
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	// call client.GetPeers with filter
+	var out *peers.PeersList
+	if out, err = client.GetPeers(ctx, filter); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	// print the peers
+	printJSON(out)
+
 	return nil
 }

@@ -40,6 +40,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -49,10 +50,11 @@ import (
 const (
 	NamespaceVASPs    = "vasps"
 	NamespaceCertReqs = "certreqs"
+	NamespaceReplicas = "peers"
 )
 
 // Namespaces defines all possible namespaces that GDS manages
-var Namespaces = [2]string{NamespaceVASPs, NamespaceCertReqs}
+var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas}
 
 // Open a directory storage provider with the specified URI. Database URLs should either
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
@@ -102,6 +104,7 @@ type Store interface {
 	DirectoryStore
 	CertificateStore
 	VersionManager
+	ReplicaStore
 }
 
 // DirectoryStore describes how the service interacts with VASP identity records.
@@ -120,6 +123,14 @@ type CertificateStore interface {
 	RetrieveCertReq(id string) (*models.CertificateRequest, error)
 	UpdateCertReq(r *models.CertificateRequest) error
 	DeleteCertReq(id string) error
+}
+
+// ReplicaStore describes how the service interacts with and manages Peers.
+type ReplicaStore interface {
+	ListPeers() ([]*peers.Peer, error)
+	CreatePeer(p *peers.Peer) (string, error)
+	RetrievePeer(id string) (*peers.Peer, error)
+	DeletePeer(id string) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

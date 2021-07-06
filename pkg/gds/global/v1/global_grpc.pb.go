@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // ReplicationClient is the client API for Replication service.
@@ -76,7 +77,7 @@ type UnsafeReplicationServer interface {
 }
 
 func RegisterReplicationServer(s grpc.ServiceRegistrar, srv ReplicationServer) {
-	s.RegisterService(&_Replication_serviceDesc, srv)
+	s.RegisterService(&Replication_ServiceDesc, srv)
 }
 
 func _Replication_Gossip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -97,7 +98,10 @@ func _Replication_Gossip_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Replication_serviceDesc = grpc.ServiceDesc{
+// Replication_ServiceDesc is the grpc.ServiceDesc for Replication service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Replication_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "gds.global.v1.Replication",
 	HandlerType: (*ReplicationServer)(nil),
 	Methods: []grpc.MethodDesc{
