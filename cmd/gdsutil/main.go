@@ -191,7 +191,7 @@ func main() {
 					EnvVar: "GDS_DATABASE_URL",
 				},
 				// TODO allow the user to add multiple peers at a time?
-				cli.Int64Flag{
+				cli.Uint64Flag{
 					Name:  "p, pid",
 					Usage: "specify the pid for the peer to add",
 				},
@@ -211,7 +211,7 @@ func main() {
 					EnvVar: "GDS_DATABASE_URL",
 				},
 				// TODO allow the user to rm multiple peers at a time?
-				cli.Int64Flag{
+				cli.Uint64Flag{
 					Name:  "p, pid",
 					Usage: "specify the pid for the peer to tombstone",
 				},
@@ -869,7 +869,7 @@ func addPeers(c *cli.Context) (err error) {
 	if c.NArg() != 1 {
 		return cli.NewExitError("must specify pid for peer", 1)
 	}
-	pid := uint64(c.GlobalInt64("pid"))
+	pid := c.Uint64("pid")
 	peer := &peers.Peer{
 		Id: pid,
 	}
@@ -901,7 +901,7 @@ func delPeers(c *cli.Context) (err error) {
 	if c.NArg() != 1 {
 		return cli.NewExitError("must specify pid for peer", 1)
 	}
-	pid := uint64(c.GlobalInt64("pid"))
+	pid := c.Uint64("pid")
 	peer := &peers.Peer{
 		Id: pid,
 	}
