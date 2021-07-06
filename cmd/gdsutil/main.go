@@ -253,7 +253,7 @@ var (
 	ldb            *leveldb.DB
 	vaspPrefix     = []byte("vasps::")
 	certreqsPrefix = []byte("certreqs::")
-	replicaPrefix  = []byte("peers::")
+	// replicaPrefix  = []byte("peers::")
 	indexPrefix    = []byte("index::")
 	sequencePrefix = []byte("sequence::")
 	indexNames     = []byte("index::names")

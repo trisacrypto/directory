@@ -691,6 +691,10 @@ func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
 		return nil, err
 	}
 
+	if p.Deleted != "" {
+		return nil, ErrEntityNotFound
+	}
+
 	return p, nil
 }
 
@@ -699,7 +703,7 @@ func (s *Store) DeletePeer(id string) error {
 	// Lookup the record in order to create the tombstone and check if exists.
 	record, err := s.RetrievePeer(id)
 	if err != nil {
-		if err == ErrEntityNotFound {
+		if errors.Is(err, ErrEntityNotFound) {
 			return nil
 		}
 		return err

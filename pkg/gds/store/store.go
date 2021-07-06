@@ -104,6 +104,7 @@ type Store interface {
 	DirectoryStore
 	CertificateStore
 	VersionManager
+	ReplicaStore
 }
 
 // DirectoryStore describes how the service interacts with VASP identity records.

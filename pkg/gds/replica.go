@@ -207,19 +207,24 @@ func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.Peers
 func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
 
 	// Initialize var for candidate peers
-	var peers []*peers.Peer
+	var ps []*peers.Peer
 
 	// Get all the peers (necessary for both list and status-only)
-	if peers, err = r.db.ListPeers(); err != nil {
+	if ps, err = r.db.ListPeers(); err != nil {
 		log.Error().Err(err).Msg("unable to retrieve peers from the database")
 		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
 	}
 
 	// Get an overall replica count - we need this regardless
 	// TODO: delete self from the list?
-	out.Status.NetworkSize = int64(len(peers))
+	out = &peers.PeersList{
+		Peers:  make([]*peers.Peer, 0, len(ps)),
+		Status: &peers.PeersStatus{},
+	}
 
-	for _, peer := range peers {
+	out.Status.NetworkSize = int64(len(ps))
+
+	for _, peer := range ps {
 		out.Status.Regions[peer.Region]++
 
 		// If it's not a status only, get the details for each Peer
