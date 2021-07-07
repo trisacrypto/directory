@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -117,6 +118,7 @@ func (r *Replica) Shutdown() error {
 // use a partial flag to indicate that it is requesting specific versions. This
 // mechanism implements bilateral anti-entropy: a push and pull gossip.
 func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *global.Updates, err error) {
+	// TODO: identify remote peer via context
 	log.Debug().
 		Bool("partial", in.Partial).
 		Int("nobjects", len(in.Objects)).
@@ -135,10 +137,10 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 	seen := make(map[string]struct{})
 	fetch := make(map[string]struct{})
 
-	// Loop over all incoming objects
+	// Step 1a: Loop over all incoming objects
 incomingLoop:
 	for _, remoteObj := range in.Objects {
-		// Fetch data from database (determining if the data is not found)
+		// Step 1b: Fetch data from database (determining if the data is not found)
 		// TODO: move object fetching logic back to Store; ensure tombstones are included.
 		var data []byte
 		if data, err = ldb.Get([]byte(remoteObj.Key), nil); err != nil {
@@ -155,7 +157,8 @@ incomingLoop:
 			}
 		}
 
-		// Get the localObj representation
+		// Step 1c: Get the localObj representation based on the object namespace
+		// TODO: create an interface that returns the object representation
 		var localObj *global.Object
 		switch remoteObj.Namespace {
 		case store.NamespaceVASPs:
@@ -166,12 +169,14 @@ incomingLoop:
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
 
+			// VASP specific retrieval of object metadata
 			if localObj, _, err = models.GetMetadata(vasp); err != nil {
 				// This is an unhandled error; log it and return unavailable
 				log.Error().Err(err).Msg("could not get metadata from VASP")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
 
+			// Ensure vasp is stored on the object in case it is sent back to remote
 			if localObj.Data, err = anypb.New(vasp); err != nil {
 				log.Error().Err(err).Msg("could not marshal VASP Any back to remote replica")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
@@ -184,7 +189,11 @@ incomingLoop:
 				log.Error().Err(err).Msg("could not unmarshal CertificateRequest from leveldb")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
+
+			// Certreq specific method to retrieve metadata
 			localObj = certreq.Metadata
+
+			// Ensure certreq is stored on the object in case it is sent back to remote
 			if localObj.Data, err = anypb.New(certreq); err != nil {
 				log.Error().Err(err).Msg("could not marshal CertificateRequest Any back to remote replica")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
@@ -195,7 +204,7 @@ incomingLoop:
 			continue incomingLoop
 		}
 
-		// Check which version is later, local or remote.
+		// Step 1d: Check which version is later, local or remote.
 		switch {
 		case localObj.Version.IsLater(remoteObj.Version):
 			// Send the local object back to the remote in the updates
@@ -212,21 +221,106 @@ incomingLoop:
 	}
 
 	// Step 2: if not partial, determine if any new objects exist locally to send back
-	// to the remote.
+	// to the remote (if partial, is likely the pull phase of bilateral anti-entropy)
+	var nLocalObjs uint64
+	if !in.Partial {
+		// Step 2a: loop over all keys in the database, ignoring any that have already been seen
+		iter := ldb.NewIterator(nil, nil)
+	outgoingLoop:
+		for iter.Next() {
+			nLocalObjs++
+			key := string(iter.Key())
+			if _, ok := seen[key]; ok {
+				// We've already handled this key in the incomingLoop, ignore
+				continue outgoingLoop
+			}
+
+			// Step 2b: if this key hasn't been seen then it is a new local key that
+			// needs to be pushed back to the remote replica. Load the object from
+			// the database and add to outgoing objects.
+			data := iter.Value()
+			prefix := strings.Split(key, "::")[0]
+
+			// TODO: create an interface that handles the object
+			var localObj *global.Object
+			switch prefix {
+			case store.NamespaceVASPs:
+				vasp := &pb.VASP{}
+				if err = proto.Unmarshal(data, vasp); err != nil {
+					// This is an unhandled error; log it and return unavailable
+					log.Error().Err(err).Msg("could not unmarshal VASP from leveldb")
+					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+				}
+
+				// VASP specific retrieval of object metadata
+				if localObj, _, err = models.GetMetadata(vasp); err != nil {
+					// This is an unhandled error; log it and return unavailable
+					log.Error().Err(err).Msg("could not get metadata from VASP")
+					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+				}
+
+				// Ensure vasp is stored on the object in case it is sent back to remote
+				if localObj.Data, err = anypb.New(vasp); err != nil {
+					log.Error().Err(err).Msg("could not marshal VASP Any back to remote replica")
+					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+				}
+
+			case store.NamespaceCertReqs:
+				certreq := &models.CertificateRequest{}
+				if err = proto.Unmarshal(data, certreq); err != nil {
+					// This is an unhandled error; log it and return unavailable
+					log.Error().Err(err).Msg("could not unmarshal CertificateRequest from leveldb")
+					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+				}
+
+				// Certreq specific method to retrieve metadata
+				localObj = certreq.Metadata
+
+				// Ensure certreq is stored on the object in case it is sent back to remote
+				if localObj.Data, err = anypb.New(certreq); err != nil {
+					log.Error().Err(err).Msg("could not marshal CertificateRequest Any back to remote replica")
+					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+				}
+			case store.NamespaceIndices:
+				// Ignore indices without warning and don't count as part of local objects
+				nLocalObjs--
+				continue outgoingLoop
+			default:
+				// Log error but continue processing, foreign namespace will be ignored
+				log.Warn().Str("namespace", prefix).Msg("unknown namespace")
+				continue outgoingLoop
+			}
+
+			// Step 2c: Add the local object to send back in the response
+			out.Objects = append(out.Objects, localObj)
+		}
+
+		// Step 2d: Cleanup after database iteration
+		if err = iter.Error(); err != nil {
+			iter.Release()
+			return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
+		}
+		iter.Release()
+	}
 
 	// Step 3: request updates if any via a partial request back to the remote.
 	// NOTE: do not send a request to a partial update (assuming we're at the end of
 	// bilateral anti-entropy) to prevent possible infinite recursion.
-
-	if in.Partial {
-		// Only consider the objects sent in the version vectors
-		log.Debug().Msg("sending updates")
-	} else {
-		// Consider all objects
-		log.Debug().Msg("determining what is available locally and not on the remote")
+	// TODO: for this step to work, the remote peer must be identified.
+	// TODO: implement step 3 after remote peer can be identified
+	if len(fetch) > 0 {
+		log.Warn().Int("fetch", len(fetch)).Msg("remote peer not identified, cannot pull objects")
 	}
 
-	return &global.Updates{}, nil
+	log.Info().
+		Bool("partial", in.Partial).
+		Int("nLocal", int(nLocalObjs)).
+		Int("nRemote", len(in.Objects)).
+		Int("nRepairRemote", len(out.Objects)).
+		Int("nRepairLocal", len(fetch)).
+		Msg("anti-entropy gossip request handled")
+
+	return out, nil
 }
 
 // GetPeers queries the data store to determine which peers it contains, and returns them

@@ -838,9 +838,46 @@ func gossip(c *cli.Context) (err error) {
 		return cli.NewExitError(err, 1)
 	}
 
-	printJSON(rep)
+	// If dryrun only print objects retrieved from remote; do not modify database.
+	if c.Bool("dryrun") {
+		fmt.Printf("sent %d versions to remote\n", len(versions.Objects))
+		fmt.Printf("received %d repairs from remote\n", len(rep.Objects))
+		for _, obj := range rep.Objects {
+			fmt.Printf("  - %s (v%d.p%d)\n", obj.Key, obj.Version.Version, obj.Version.Pid)
+		}
+		return nil
+	}
 
-	// TODO: repair database locally or dry run
+	// Repair local database as last step if not dryrun
+	for _, obj := range rep.Objects {
+		// Get the struct from the any in the object
+		// This isn't totally necessary but is some sanity checking to make sure things aren't totally out of whack
+		var msg proto.Message
+		if msg, err = obj.Data.UnmarshalNew(); err != nil {
+			return cli.NewExitError(fmt.Errorf("could not unmarshal %s in %s from any: %s", obj.Key, obj.Namespace, err), 1)
+		}
+
+		switch msg := msg.(type) {
+		case *pb.VASP:
+			if obj.Namespace != store.NamespaceVASPs {
+				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
+			}
+		case *models.CertificateRequest:
+			if obj.Namespace != store.NamespaceCertReqs {
+				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
+			}
+		default:
+			return cli.NewExitError(fmt.Errorf("could not handle %s in %s from any type %T", obj.Key, obj.Namespace, msg), 1)
+		}
+
+		// Store the data in the database
+		if err = ldb.Put([]byte(obj.Key), obj.Data.Value, nil); err != nil {
+			return cli.NewExitError(fmt.Errorf("could not put %s in %s to database: %s", obj.Key, obj.Namespace, err), 1)
+		}
+	}
+
+	fmt.Printf("sent %d versions to remote\n", len(versions.Objects))
+	fmt.Printf("received %d repairs from remote\n", len(rep.Objects))
 	return nil
 }
 
