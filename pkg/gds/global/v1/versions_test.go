@@ -99,3 +99,11 @@ func TestVersionManager(t *testing.T) {
 	require.Equal(t, uint64(1), obj.Version.Parent.Version)
 	require.Equal(t, vers1.Region, obj.Version.Parent.Region)
 }
+
+func TestVersionIsLater(t *testing.T) {
+	v1 := &Version{Pid: 8, Version: 42}
+	require.True(t, v1.IsLater(&Version{Pid: 8, Version: 40}))
+	require.True(t, v1.IsLater(&Version{Pid: 9, Version: 42}))
+	require.False(t, v1.IsLater(&Version{Pid: 7, Version: 42}))
+	require.False(t, v1.IsLater(&Version{Pid: 8, Version: 44}))
+}
