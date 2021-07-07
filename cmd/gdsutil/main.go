@@ -749,6 +749,10 @@ func gossip(c *cli.Context) (err error) {
 			if obj.Namespace != store.NamespaceCertReqs {
 				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
 			}
+		case *peers.Peer:
+			if obj.Namespace != store.NamespaceReplicas {
+				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
+			}
 		default:
 			return cli.NewExitError(fmt.Errorf("could not handle %s in %s from any type %T", obj.Key, obj.Namespace, msg), 1)
 		}
@@ -919,6 +923,10 @@ certreqLoop:
 	iter.Release()
 
 	fmt.Printf("migrated %d CertificateRequest objects\n", migrated)
+
+	// NOTE: currently required to migrate peers since they are already versioned
+	// If we decide to maintain unversioned databases, this will have to be added here
+
 	return nil
 }
 
@@ -932,29 +940,13 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 
 	// Detect the type of object, deserialize, and extract object metadata
 	namespace := strings.Split(key, ":")[0]
-	switch namespace {
-	case store.NamespaceVASPs:
-		vasp := &pb.VASP{}
-		if err = proto.Unmarshal(data, vasp); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into vasp: %s", key, err)
-		}
-		obj, _, err = models.GetMetadata(vasp)
-		return obj, err
-	case store.NamespaceCertReqs:
-		careq := &models.CertificateRequest{}
-		if err = proto.Unmarshal(data, careq); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
-		}
-		return careq.Metadata, nil
-	case "peers":
-		peer := &peers.Peer{}
-		if err = proto.Unmarshal(data, peer); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into peer: %s", key, err)
-		}
-		return peer.Metadata, nil
-	default:
-		return nil, fmt.Errorf("could not parse namespace %q", namespace)
+	if obj, err = wire.UnmarshalObject(namespace, data); err != nil {
+		return nil, err
 	}
+
+	// Do not send data (message size would be too big)
+	obj.Data = nil
+	return obj, err
 }
 
 // Helper function to load all object metadata for a namespace
