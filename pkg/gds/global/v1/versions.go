@@ -73,3 +73,21 @@ func (v VersionManager) Update(meta *Object) error {
 func (v *Version) IsZero() bool {
 	return v.Pid == 0 && v.Version == 0
 }
+
+// IsLater returns true if the specified version is later than the other version. It
+// returns false if the other version is later or equal to the specified version.
+func (v *Version) IsLater(other *Version) bool {
+	// Version is monotonically increasing, if it's greater than the other, then this
+	// version is later than the other.
+	if v.Version > other.Version {
+		return true
+	}
+
+	// If the versions are equal, then the version with the lower PID has higher precedence
+	if v.Version == other.Version && v.Pid < other.Pid {
+		return true
+	}
+
+	// Either v.Version < other.Version or other.Pid > v.Pid
+	return false
+}
