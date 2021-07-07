@@ -11,6 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -57,6 +58,7 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 // globally distributed by implementing auto-adapting anti-entropy.
 type Replica struct {
 	global.UnimplementedReplicationServer
+	peers.UnimplementedPeerManagementServer
 	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
@@ -225,4 +227,95 @@ incomingLoop:
 	}
 
 	return &global.Updates{}, nil
+}
+
+// GetPeers queries the data store to determine which peers it contains, and returns them
+func (r *Replica) GetPeers(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
+
+	if out, err = r.peerStatus(ctx, in); err != nil {
+		// peerStatus returns status error and does logging
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// AddPeers adds a peer and returns a report of the status of all peers in the network
+func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	// CreatePeer handles possibility of an already-existing or previously deleted peer
+	if _, err := r.db.CreatePeer(in); err != nil {
+		log.Error().Err(err).Msg("unable to add peer")
+		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be added")
+	}
+
+	// Assuming we don't need all the Peer details in this case
+	ftr := &peers.PeersFilter{
+		StatusOnly: true,
+	}
+	if pl, err := r.peerStatus(ctx, ftr); err != nil {
+		return nil, err
+	} else {
+		out = pl.Status
+	}
+	return out, nil
+}
+
+func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	if err := r.db.DeletePeer(in.Key()); err != nil {
+		log.Error().Err(err).Msg("unable to remove peer")
+		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be removed")
+	}
+
+	// Assuming we don't need all the Peer details in this case
+	ftr := &peers.PeersFilter{
+		StatusOnly: true,
+	}
+	if pl, err := r.peerStatus(ctx, ftr); err != nil {
+		return nil, err
+	} else {
+		out = pl.Status
+	}
+	return out, nil
+}
+
+// Helper to get the peer network status
+func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
+
+	// Initialize var for candidate peers
+	var ps []*peers.Peer
+
+	// Get all the peers (necessary for both list and status-only)
+	if ps, err = r.db.ListPeers(); err != nil {
+		log.Error().Err(err).Msg("unable to retrieve peers from the database")
+		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
+	}
+
+	// Get an overall replica count - we need this regardless
+	// TODO: delete self from the list?
+	out = &peers.PeersList{
+		Peers:  make([]*peers.Peer, 0, len(ps)),
+		Status: &peers.PeersStatus{},
+	}
+
+	out.Status.NetworkSize = int64(len(ps))
+
+	for _, peer := range ps {
+		out.Status.Regions[peer.Region]++
+
+		// If it's not a status only, get the details for each Peer
+		if !in.StatusOnly {
+			// If we've been asked to filter by region
+			if len(in.Region) > 0 {
+				for _, region := range in.Region {
+					if peer.Region == region {
+						out.Peers = append(out.Peers, peer)
+					}
+				}
+			} else {
+				// Otherwise don't filter and keep all the Peers
+				out.Peers = append(out.Peers, peer)
+			}
+		}
+	}
+	return out, nil
 }

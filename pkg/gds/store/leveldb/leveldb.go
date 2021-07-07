@@ -19,6 +19,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -66,6 +67,7 @@ var (
 	keyCategoryIndex = []byte("index::categories")
 	preVASPs         = []byte("vasps::")
 	preCertReqs      = []byte("certreqs::")
+	preReplicas      = []byte("peers::")
 )
 
 // HACK: Make sure these match what's in store.go -- they're not imported here to
@@ -73,6 +75,7 @@ var (
 const (
 	nsVASPs    = "vasps"
 	nsCertReqs = "certreqs"
+	nsReplicas = "peers"
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -573,6 +576,170 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 }
 
 //===========================================================================
+// ReplicaStore Implementation
+//===========================================================================
+// ListPeers returns all peers currently in the store.
+func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
+	pl = make([]*peers.Peer, 0)
+	iter := s.db.NewIterator(util.BytesPrefix(preReplicas), nil)
+	defer iter.Release()
+	for iter.Next() {
+		peer := new(peers.Peer)
+		if err = proto.Unmarshal(iter.Value(), peer); err != nil {
+			return nil, err
+		}
+		pl = append(pl, peer)
+	}
+
+	if err = iter.Error(); err != nil {
+		return nil, err
+	}
+
+	return pl, nil
+}
+
+// CreatePeer using its PID (can't be nil) to create the LDB key and return the version.
+func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
+	// The ID on a Peer is a uint64 representing the PID
+	// convert to string for a consistent interface across Create and Retrieve methods
+	key := s.peerKey(p.Key())
+
+	// Check to see if the Peer was previously created and deleted
+	var val []byte
+	if val, err = s.db.Get(key, nil); err != nil {
+		// New peer, not a tombstone
+		if err == leveldb.ErrNotFound {
+			// Initialize the first version
+			p.Metadata = &global.Object{
+				Key:       string(key),
+				Namespace: nsReplicas,
+			}
+			if err = s.updateVersion(p.Metadata); err != nil {
+				return "", fmt.Errorf("could not create object version: %s", err)
+			}
+
+			var data []byte
+			if data, err = proto.Marshal(p); err != nil {
+				return "", err
+			}
+
+			if err = s.db.Put(key, data, nil); err != nil {
+				return "", err
+			}
+		} else {
+			// TODO: Or just ignore other Get errors?
+			return "", fmt.Errorf("error when creating peer %s: %s", id, err)
+		}
+	}
+
+	// Peer exists, unmarshall it
+	np := &peers.Peer{}
+	if err = proto.Unmarshal(val, np); err != nil {
+		// TODO: if old peer can't be unmarshalled, just overwrite with the new data?
+		return "", fmt.Errorf("peer %d found in database but could not be unmarshalled", p.Id)
+	}
+
+	// Check if this is a tombstone version
+	if np.Deleted == "" {
+		// Peer exists but has not be deleted, can't create
+		return "", fmt.Errorf("cannot create %d, already exists", p.Id)
+	}
+	// Reincarnate peer from tombstone
+	// Update management timestamps, record metadata, and undelete
+	np.Modified = time.Now().Format(time.RFC3339)
+	if np.Created == "" {
+		np.Created = np.Modified
+	}
+	np.Deleted = ""
+
+	// TODO: do we have to worry about the Region or Name changing?
+
+	if err = s.updateVersion(np.Metadata); err != nil {
+		return "", fmt.Errorf("could not update object version: %s", err)
+	}
+
+	// Remarshall
+	var data []byte
+	if data, err = proto.Marshal(np); err != nil {
+		return "", err
+	}
+
+	// Put back to the database
+	if err = s.db.Put(key, data, nil); err != nil {
+		return "", err
+	}
+
+	return p.Key(), nil
+}
+
+// RetrievePeer returns a peer by it's stringified PID.
+func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
+	if id == "" {
+		return nil, ErrEntityNotFound
+	}
+
+	var val []byte
+	if val, err = s.db.Get(s.peerKey(id), nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	p = new(peers.Peer)
+	if err = proto.Unmarshal(val, p); err != nil {
+		return nil, err
+	}
+
+	if p.Deleted != "" {
+		return nil, ErrEntityNotFound
+	}
+
+	return p, nil
+}
+
+// DeletePeer removes a peer from the store.
+func (s *Store) DeletePeer(id string) error {
+	// Lookup the record in order to create the tombstone and check if exists.
+	record, err := s.RetrievePeer(id)
+	if err != nil {
+		if errors.Is(err, ErrEntityNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	// LevelDB will not return an error if the entity does not exist
+	key := s.peerKey(id)
+	if err := s.db.Delete(key, nil); err != nil {
+		return err
+	}
+
+	tombstone := &peers.Peer{
+		Id:       record.Id,
+		Created:  record.Created,
+		Modified: record.Modified,
+		Deleted:  time.Now().Format(time.RFC3339),
+		Metadata: record.Metadata,
+	}
+
+	if err = s.updateVersion(tombstone.Metadata); err != nil {
+		return fmt.Errorf("could not update tombstone version: %s", err)
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(tombstone); err != nil {
+		return fmt.Errorf("could not marshal tombstone: %s", err)
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return fmt.Errorf("could not put tombstone: %s", err)
+	}
+
+	return nil
+}
+
+//===========================================================================
 // Key Handlers
 //===========================================================================
 
@@ -593,6 +760,11 @@ func (s *Store) vaspKey(id string) (key []byte) {
 // creates a []byte key from the cert request id using a prefix to act as a leveldb bucket
 func (s *Store) careqKey(id string) (key []byte) {
 	return s.makeKey(preCertReqs, id)
+}
+
+// creates a []byte key from the peer id using a prefix to act as a leveldb bucket
+func (s *Store) peerKey(id string) (key []byte) {
+	return s.makeKey(preReplicas, id)
 }
 
 //===========================================================================
@@ -1072,7 +1244,7 @@ func (s *Store) synccategories() (err error) {
 	defer s.Unlock()
 
 	if s.categories == nil {
-		// Create the categories index an dload from the database
+		// Create the categories index and load from the database
 		s.categories = make(containerIndex)
 
 		// fetch the categories from the database

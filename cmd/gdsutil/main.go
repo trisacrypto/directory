@@ -27,6 +27,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
@@ -133,16 +134,65 @@ func main() {
 			},
 		},
 		{
-			Name:      "decrypt",
-			Usage:     "decrypt base64 encoded ciphertext with an HMAC signature",
-			ArgsUsage: "ciphertext hmac",
-			Category:  "cipher",
-			Action:    cipherDecrypt,
+			Name:      "peers:add",
+			Usage:     "add peers to the network by pid",
+			ArgsUsage: "pid",
+			Category:  "replica",
+			Before:    openLevelDB,
+			Action:    addPeers,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "k, key",
-					Usage:  "secret key to decrypt the cipher text",
-					EnvVar: "GDS_SECRET_KEY",
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO allow the user to add multiple peers at a time?
+				cli.Uint64Flag{
+					Name:  "p, pid",
+					Usage: "specify the pid for the peer to add",
+				},
+			},
+		},
+		{
+			Name:      "peers:delete",
+			Usage:     "tombstone a peer by pid (does not remove from ldb)",
+			ArgsUsage: "pid",
+			Category:  "replica",
+			Before:    openLevelDB,
+			Action:    delPeers,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO allow the user to rm multiple peers at a time?
+				cli.Uint64Flag{
+					Name:  "p, pid",
+					Usage: "specify the pid for the peer to tombstone",
+				},
+			},
+		},
+		{
+			Name:     "peers:list",
+			Usage:    "get a status report of all peers in the network",
+			Category: "replica",
+			Before:   openLevelDB,
+			Action:   listPeers,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				// TODO: have we standardized on how to reference regions?
+				cli.StringSliceFlag{
+					Name:  "r, region",
+					Usage: "specify a region for peers to be returned",
+				},
+				cli.BoolFlag{
+					Name:  "s, status",
+					Usage: "specify for status-only, will not return peer details",
 				},
 			},
 		},
@@ -215,6 +265,20 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:      "decrypt",
+			Usage:     "decrypt base64 encoded ciphertext with an HMAC signature",
+			ArgsUsage: "ciphertext hmac",
+			Category:  "cipher",
+			Action:    cipherDecrypt,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "k, key",
+					Usage:  "secret key to decrypt the cipher text",
+					EnvVar: "GDS_SECRET_KEY",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -228,6 +292,7 @@ var (
 	ldb            *leveldb.DB
 	vaspPrefix     = []byte("vasps::")
 	certreqsPrefix = []byte("certreqs::")
+	// replicaPrefix  = []byte("peers::")
 	indexPrefix    = []byte("index::")
 	sequencePrefix = []byte("sequence::")
 	indexNames     = []byte("index::names")
@@ -603,93 +668,109 @@ func marshalGZJSON(val interface{}) (data []byte, err error) {
 }
 
 //===========================================================================
-// Cipher Actions
+// Peer Management Replica Actions
 //===========================================================================
 
-const nonceSize = 12
-
-func cipherDecrypt(c *cli.Context) (err error) {
-	if c.NArg() != 2 {
-		return cli.NewExitError("must specify ciphertext and hmac arguments", 1)
+func addPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+	if c.NArg() != 1 {
+		return cli.NewExitError("must specify pid for peer", 1)
+	}
+	pid := c.Uint64("pid")
+	peer := &peers.Peer{
+		Id: pid,
 	}
 
-	var secret string
-	if secret = c.String("key"); secret == "" {
-		return cli.NewExitError("cipher key required", 1)
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	client := peers.NewPeerManagementClient(cc)
+
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	// call client.AddPeer with the pid
+	var out *peers.PeersStatus
+	if out, err = client.AddPeers(ctx, peer); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	// print the status
+	printJSON(out)
+
+	return nil
+}
+
+func delPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+	if c.NArg() != 1 {
+		return cli.NewExitError("must specify pid for peer", 1)
+	}
+	pid := c.Uint64("pid")
+	peer := &peers.Peer{
+		Id: pid,
 	}
 
-	var ciphertext, signature []byte
-	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args()[0]); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
 	}
-	if signature, err = base64.RawStdEncoding.DecodeString(c.Args()[1]); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
-	}
+	client := peers.NewPeerManagementClient(cc)
 
-	if len(ciphertext) == 0 {
-		return cli.NewExitError("empty cipher text", 1)
-	}
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
 
-	// Create a 32 byte signature of the key
-	hash := sha256.New()
-	hash.Write([]byte(secret))
-	key := hash.Sum(nil)
-
-	// Separate the data from the nonce
-	data := ciphertext[:len(ciphertext)-nonceSize]
-	nonce := ciphertext[len(ciphertext)-nonceSize:]
-
-	// Validate HMAC signature
-	if err = validateHMAC(key, data, signature); err != nil {
+	// call client.RmPeer with the pid
+	var out *peers.PeersStatus
+	if out, err = client.RmPeers(ctx, peer); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return cli.NewExitError(err, 1)
+	// print the status
+	printJSON(out)
+
+	return nil
+}
+
+func listPeers(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	// determine if this is a region-specific or status only request
+	so := c.GlobalBool("status")
+	regions := c.StringSlice("region")
+	filter := &peers.PeersFilter{
+		Region:     regions,
+		StatusOnly: so,
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
 		return cli.NewExitError(err, 1)
 	}
+	client := peers.NewPeerManagementClient(cc)
 
-	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
-	if err != nil {
+	// create a new context and pass the parent context in
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	// call client.GetPeers with filter
+	var out *peers.PeersList
+	if out, err = client.GetPeers(ctx, filter); err != nil {
 		return cli.NewExitError(err, 1)
 	}
+	// print the peers
+	printJSON(out)
 
-	fmt.Println(string(plainbytes))
 	return nil
 }
 
 //===========================================================================
-// Cipher Helper Functions
-//===========================================================================
-
-func createHMAC(key, data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, errors.New("cannot sign empty data")
-	}
-	hm := hmac.New(sha256.New, key)
-	hm.Write(data)
-	return hm.Sum(nil), nil
-}
-
-func validateHMAC(key, data, sig []byte) error {
-	hmac, err := createHMAC(key, data)
-	if err != nil {
-		return err
-	}
-
-	if !bytes.Equal(sig, hmac) {
-		return errors.New("HMAC mismatch")
-	}
-	return nil
-}
-
-//===========================================================================
-// Replica Actions
+// Replica Gossip Actions
 //===========================================================================
 
 func gossip(c *cli.Context) (err error) {
@@ -946,8 +1027,11 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 		}
 		return careq.Metadata, nil
 	case "peers":
-		// TODO: implement peers replication
-		return nil, nil
+		peer := &peers.Peer{}
+		if err = proto.Unmarshal(data, peer); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %q into peer: %s", key, err)
+		}
+		return peer.Metadata, nil
 	default:
 		return nil, fmt.Errorf("could not parse namespace %q", namespace)
 	}
@@ -970,6 +1054,96 @@ func loadNamespaceMetadata(ns string) (objs []*global.Object, err error) {
 
 	return objs, nil
 }
+
+//===========================================================================
+// Cipher Actions
+//===========================================================================
+
+const nonceSize = 12
+
+func cipherDecrypt(c *cli.Context) (err error) {
+	if c.NArg() != 2 {
+		return cli.NewExitError("must specify ciphertext and hmac arguments", 1)
+	}
+
+	var secret string
+	if secret = c.String("key"); secret == "" {
+		return cli.NewExitError("cipher key required", 1)
+	}
+
+	var ciphertext, signature []byte
+	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args()[0]); err != nil {
+		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
+	}
+	if signature, err = base64.RawStdEncoding.DecodeString(c.Args()[1]); err != nil {
+		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
+	}
+
+	if len(ciphertext) == 0 {
+		return cli.NewExitError("empty cipher text", 1)
+	}
+
+	// Create a 32 byte signature of the key
+	hash := sha256.New()
+	hash.Write([]byte(secret))
+	key := hash.Sum(nil)
+
+	// Separate the data from the nonce
+	data := ciphertext[:len(ciphertext)-nonceSize]
+	nonce := ciphertext[len(ciphertext)-nonceSize:]
+
+	// Validate HMAC signature
+	if err = validateHMAC(key, data, signature); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Println(string(plainbytes))
+	return nil
+}
+
+//===========================================================================
+// Cipher Helper Functions
+//===========================================================================
+
+func createHMAC(key, data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return nil, errors.New("cannot sign empty data")
+	}
+	hm := hmac.New(sha256.New, key)
+	hm.Write(data)
+	return hm.Sum(nil), nil
+}
+
+func validateHMAC(key, data, sig []byte) error {
+	hmac, err := createHMAC(key, data)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(sig, hmac) {
+		return errors.New("HMAC mismatch")
+	}
+	return nil
+}
+
+//===========================================================================
+// Helper Functions
+//===========================================================================
 
 // helper function to print JSON response and exit
 func printJSON(m proto.Message) error {
