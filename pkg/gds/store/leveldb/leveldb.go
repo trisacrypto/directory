@@ -374,18 +374,6 @@ func (s *Store) Search(query map[string]interface{}) (vasps []*pb.VASP, err erro
 		}
 	}
 
-	// Lookup by verfication status
-	VerificationState_VERIFIED
-	verified, ok := parseQuery("ver", query, normalize)
-	if ok {
-		log.Debug().Strs("verification_status", names).Msg("search verified query")
-		for _, v := range verified {
-			if id := s.names[name]; id != "" {
-				records[id] = struct{}{}
-			}
-		}
-	}
-
 	s.RUnlock()
 
 	// Perform the lookup of records if there are any
