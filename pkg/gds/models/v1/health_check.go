@@ -7,14 +7,17 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type HealthCheck struct {
+// HealthCheckExtra represents "extra" health check data.
+type HealthCheckExtra struct {
 	CheckAfter  string
 	CheckBefore string
 	Attempts    int32
 	LastChecked string
 }
 
-func (h *HealthCheck) DelayCheck() bool {
+// DelayCheck returns true if the health check
+// should be skipped.
+func (h *HealthCheckExtra) DelayCheck() bool {
 	ca, err := time.Parse(
 		time.RFC3339,
 		h.CheckAfter)
@@ -25,7 +28,7 @@ func (h *HealthCheck) DelayCheck() bool {
 }
 
 // GetHealthCheckInfo from the extra data on the VASP record.
-func GetHealthCheckInfo(vasp *pb.VASP) (*HealthCheck, error) {
+func GetHealthCheckInfo(vasp *pb.VASP) (*HealthCheckExtra, error) {
 	// If the extra data is nil, return empty string with no error
 	if vasp.Extra == nil {
 		return nil, nil
@@ -37,7 +40,7 @@ func GetHealthCheckInfo(vasp *pb.VASP) (*HealthCheck, error) {
 		return nil, nil
 	}
 
-	return &HealthCheck{
+	return &HealthCheckExtra{
 		CheckAfter:  extra.GetHealthCheckAfter(),
 		CheckBefore: extra.GetHealthCheckBefore(),
 		Attempts:    extra.GetHealthCheckAttempts(),
@@ -46,9 +49,9 @@ func GetHealthCheckInfo(vasp *pb.VASP) (*HealthCheck, error) {
 }
 
 // SetHealthCheckInfo on the extra data on the VASP record.
-func SetHealthCheckInfo(vasp *pb.VASP, healthCheck HealthCheck) (err error) {
+func SetHealthCheckInfo(vasp *pb.VASP, healthCheck HealthCheckExtra) (err error) {
 	// maintains any other fields already in extra
-	var extra *GDSExtraData
+	extra := &GDSExtraData{}
 	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
 		return err
 	}

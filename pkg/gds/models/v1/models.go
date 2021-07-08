@@ -30,7 +30,7 @@ func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 // SetAdminVerificationToken on the extra data on the VASP record.
 func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 	// maintains any other fields already in extra
-	var extra *GDSExtraData
+	extra := &GDSExtraData{}
 	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
 		return err
 	}

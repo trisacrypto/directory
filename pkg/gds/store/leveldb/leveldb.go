@@ -192,7 +192,6 @@ func (s *Store) RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error
 	if err := iter.Error(); err != nil {
 		return err
 	}
-	c <- nil // used to close the channel
 
 	return nil
 }

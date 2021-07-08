@@ -19,7 +19,7 @@ import (
 
 type healthCheckJob struct {
 	vasp *pb.VASP
-	hc   *models.HealthCheck
+	hc   *models.HealthCheckExtra
 }
 
 func main() {
@@ -39,11 +39,6 @@ func main() {
 	// retrieve the health info for each vasp and determine if it needs to be checked
 	go func() {
 		for vasp := range all {
-			if vasp == nil {
-				close(all)
-				check <- nil
-				return // done
-			}
 			healthCheck, err := models.GetHealthCheckInfo(vasp)
 			if err != nil {
 				panic(err)
@@ -63,10 +58,6 @@ func main() {
 	// call the vasp endpoint and save the results
 	go func() {
 		for v := range check {
-			if v == nil {
-				close(check)
-				return // done
-			}
 			client, err := initClient(ctx, v.vasp.TrisaEndpoint)
 			if err != nil {
 				cntCheckedErrs++
@@ -88,7 +79,7 @@ func main() {
 				log.Warn().Err(err).Str("health_check", "could not update status")
 				continue
 			}
-			if err := models.SetHealthCheckInfo(v.vasp, models.HealthCheck{
+			if err := models.SetHealthCheckInfo(v.vasp, models.HealthCheckExtra{
 				CheckAfter:  state.NotBefore,
 				CheckBefore: state.NotAfter,
 				Attempts:    attempts,
@@ -101,16 +92,20 @@ func main() {
 		}
 	}()
 
-	// retrieve all the vasps that are verified
-	verificationStatus := pb.VerificationState_VERIFIED
-	if err := db.RetrieveAll(&models.RetrieveAllOpts{
-		VerificationStatus:  &verificationStatus,
-		TrisaEndpointExists: true,
-	}, all); err != nil {
-		log.Warn().Err(err).Str("health_check", "could not retrieve vasps")
-		// return nil, status.Error(codes.NotFound, "could not find VASP by ID")
-		panic(err)
-	}
+	go func() {
+		for range time.Tick(6 * time.Hour) {
+			// retrieve all the vasps that are verified
+			verificationStatus := pb.VerificationState_VERIFIED
+			if err := db.RetrieveAll(&models.RetrieveAllOpts{
+				VerificationStatus:  &verificationStatus,
+				TrisaEndpointExists: true,
+			}, all); err != nil {
+				log.Warn().Err(err).Str("health_check", "could not retrieve vasps")
+				// return nil, status.Error(codes.NotFound, "could not find VASP by ID")
+				panic(err)
+			}
+		}
+	}()
 
 	fmt.Println("checked ", cntCheckedVASPS, " vasps with ", cntCheckedErrs, " errors")
 }
