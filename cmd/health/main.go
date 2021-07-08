@@ -17,41 +17,42 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type healthCheckJob struct {
-	vasp *pb.VASP
-	hc   *models.HealthCheckExtra
-}
-
 func main() {
 	// open database
 	db, err := store.Open(config.DatabaseConfig{URL: "leveldb:///fixtures/db"}) // TODO replace
 	if err != nil {
 		panic(err)
 	}
+
+	run(db, 6*time.Hour)
+}
+
+type healthCheckJob struct {
+	vasp *pb.VASP
+	hc   *models.HealthCheckExtra
+}
+
+func run(db store.Store, duration time.Duration) {
 	ctx := context.TODO()
 	now := time.Now()
 
 	all := make(chan *pb.VASP)
 	check := make(chan *healthCheckJob)
-	var cntCheckedVASPS int
-	var cntCheckedErrs int
 
 	// retrieve the health info for each vasp and determine if it needs to be checked
 	go func() {
 		for vasp := range all {
 			healthCheck, err := models.GetHealthCheckInfo(vasp)
 			if err != nil {
-				panic(err)
+				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not retrieve info for vasp id %s", vasp.Id))
 			} else if healthCheck.DelayCheck() {
+				log.Info().Err(err).Str("health_check", fmt.Sprintf("delay for vasp id %s", vasp.Id))
 				continue
 			}
-			// TODO if we want to check the last check time, we would do that here but
-			// it is probably not necessary yet
 			check <- &healthCheckJob{
 				vasp: vasp,
 				hc:   healthCheck,
 			}
-			cntCheckedVASPS++
 		}
 	}()
 
@@ -60,14 +61,12 @@ func main() {
 		for v := range check {
 			client, err := initClient(ctx, v.vasp.TrisaEndpoint)
 			if err != nil {
-				cntCheckedErrs++
-				log.Warn().Err(err).Str("health_check", "could not init client")
+				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not init client for vasp id %s", v.vasp.Id))
 				continue
 			}
 			var state api.ServiceState
 			if err := client.Invoke(ctx, "/Status", v.hc, &state); err != nil {
-				cntCheckedErrs++
-				log.Warn().Err(err).Str("health_check", "could not retrieve status")
+				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not retrieve status for vasp id %s", v.vasp.Id))
 				continue
 			}
 			attempts := int32(v.hc.Attempts + 1)
@@ -75,8 +74,7 @@ func main() {
 				attempts = 0
 			}
 			if err := db.UpdateStatus(v.vasp.Id, int32(state.Status)); err != nil {
-				cntCheckedErrs++
-				log.Warn().Err(err).Str("health_check", "could not update status")
+				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not update status for vasp id %s", v.vasp.Id))
 				continue
 			}
 			if err := models.SetHealthCheckInfo(v.vasp, models.HealthCheckExtra{
@@ -85,15 +83,14 @@ func main() {
 				Attempts:    attempts,
 				LastChecked: now.Format(time.RFC3339),
 			}); err != nil {
-				cntCheckedErrs++
-				log.Warn().Err(err).Str("health_check", "could not save extra data")
+				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not save extra data for vasp id %s", v.vasp.Id))
 				continue
 			}
 		}
 	}()
 
 	go func() {
-		for range time.Tick(6 * time.Hour) {
+		for range time.Tick(duration) {
 			// retrieve all the vasps that are verified
 			verificationStatus := pb.VerificationState_VERIFIED
 			if err := db.RetrieveAll(&models.RetrieveAllOpts{
@@ -101,13 +98,9 @@ func main() {
 				TrisaEndpointExists: true,
 			}, all); err != nil {
 				log.Warn().Err(err).Str("health_check", "could not retrieve vasps")
-				// return nil, status.Error(codes.NotFound, "could not find VASP by ID")
-				panic(err)
 			}
 		}
 	}()
-
-	fmt.Println("checked ", cntCheckedVASPS, " vasps with ", cntCheckedErrs, " errors")
 }
 
 func initClient(ctx context.Context, endpoint string) (*grpc.ClientConn, error) {
