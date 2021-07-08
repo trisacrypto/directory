@@ -170,6 +170,7 @@ func RemarshalJSON(namespace string, in []byte) (out []byte, err error) {
 		if _, err = gz.Write(in); err != nil {
 			return nil, fmt.Errorf("could not compress index: %s", err)
 		}
+		gz.Close()
 		return buf.Bytes(), nil
 	case store.NamespaceSequence:
 		var seq uint64
