@@ -5,6 +5,13 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// RetrieveAllOpts contains all the options RetrieveAll can filter on. All are optional.
+// If no filters are desired, pass nil to RetreiveAll.
+type RetrieveAllOpts struct {
+	VerificationStatus  *pb.VerificationState
+	TrisaEndpointExists bool
+}
+
 // GetAdminVerificationToken from the extra data on the VASP record.
 func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 	// If the extra data is nil, return empty string with no error

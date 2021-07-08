@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/frankienicoletti/directory/pkg/gds/models/v1"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
@@ -22,7 +24,7 @@ type healthCheckJob struct {
 
 func main() {
 	// open database
-	db, err := store.Open("database")
+	db, err := store.Open(config.DatabaseConfig{URL: "leveldb:///fixtures/db"}) // TODO replace
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +83,7 @@ func main() {
 			if state.Status == api.ServiceState_Status(pb.ServiceState_HEALTHY) {
 				attempts = 0
 			}
-			if err := db.UpdateStatus(v.vasp.Id, state.Status); err != nil {
+			if err := db.UpdateStatus(v.vasp.Id, int32(state.Status)); err != nil {
 				cntCheckedErrs++
 				log.Warn().Err(err).Str("health_check", "could not update status")
 				continue
@@ -101,7 +103,7 @@ func main() {
 
 	// retrieve all the vasps that are verified
 	verificationStatus := pb.VerificationState_VERIFIED
-	if err := db.RetrieveAll(&store.RetrieveAllOpts{
+	if err := db.RetrieveAll(&models.RetrieveAllOpts{
 		VerificationStatus:  &verificationStatus,
 		TrisaEndpointExists: true,
 	}, all); err != nil {

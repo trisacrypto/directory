@@ -70,17 +70,11 @@ type Store interface {
 type DirectoryStore interface {
 	Create(v *pb.VASP) (string, error)
 	Retrieve(id string) (*pb.VASP, error)
-	RetrieveAll(opts *RetrieveAllOpts) (a []*pb.VASP, err error)
+	RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error
 	Update(v *pb.VASP) error
+	UpdateStatus(id string, status int32) error
 	Destroy(id string) error
 	Search(query map[string]interface{}) ([]*pb.VASP, error)
-}
-
-// RetrieveAllOpts contains all the options RetrieveAll can filter on. All are optional.
-// If no filters are desired, pass nil to RetreiveAll.
-type RetrieveAllOpts struct {
-	VerificationStatus  *pb.VerificationState
-	TrisaEndpointExists bool
 }
 
 // CertificateStore describes how the service interacts with Certificate requests.
