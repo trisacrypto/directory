@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // DirectoryAdministrationClient is the client API for DirectoryAdministration service.
@@ -77,7 +78,7 @@ type UnsafeDirectoryAdministrationServer interface {
 }
 
 func RegisterDirectoryAdministrationServer(s grpc.ServiceRegistrar, srv DirectoryAdministrationServer) {
-	s.RegisterService(&_DirectoryAdministration_serviceDesc, srv)
+	s.RegisterService(&DirectoryAdministration_ServiceDesc, srv)
 }
 
 func _DirectoryAdministration_Review_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -116,7 +117,10 @@ func _DirectoryAdministration_Resend_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-var _DirectoryAdministration_serviceDesc = grpc.ServiceDesc{
+// DirectoryAdministration_ServiceDesc is the grpc.ServiceDesc for DirectoryAdministration service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DirectoryAdministration_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "gds.admin.v1.DirectoryAdministration",
 	HandlerType: (*DirectoryAdministrationServer)(nil),
 	Methods: []grpc.MethodDesc{

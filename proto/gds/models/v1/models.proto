@@ -49,6 +49,10 @@ message GDSExtraData {
     // Temporary: verification token for light weight authentication for verification
     // TODO: replace with admin API that uses authentication
     string admin_verification_token = 1;
+    string health_check_after = 2; // not before 
+    string health_check_before = 3; // not after 
+    int32 health_check_attempts = 4; // how many not-successful attempts 
+    string health_check_last_checked = 5; 
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.
