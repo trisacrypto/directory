@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -19,6 +21,7 @@ import (
 
 func main() {
 	// open database
+	fmt.Println("hi", os.Getenv("GDS_DATABASE_URL"))
 	db, err := store.Open(config.DatabaseConfig{URL: "leveldb:///fixtures/db"}) // TODO replace
 	if err != nil {
 		panic(err)
@@ -42,6 +45,7 @@ func run(db store.Store, duration time.Duration) {
 	// retrieve the health info for each vasp and determine if it needs to be checked
 	go func() {
 		for vasp := range all {
+			fmt.Println("vasp", vasp)
 			healthCheck, err := models.GetHealthCheckInfo(vasp)
 			if err != nil {
 				log.Warn().Err(err).Str("health_check", fmt.Sprintf("could not retrieve info for vasp id %s", vasp.Id))
@@ -89,18 +93,31 @@ func run(db store.Store, duration time.Duration) {
 		}
 	}()
 
-	go func() {
-		for range time.Tick(duration) {
-			// retrieve all the vasps that are verified
-			verificationStatus := pb.VerificationState_VERIFIED
-			if err := db.RetrieveAll(&models.RetrieveAllOpts{
-				VerificationStatus:  &verificationStatus,
-				TrisaEndpointExists: true,
-			}, all); err != nil {
-				log.Warn().Err(err).Str("health_check", "could not retrieve vasps")
-			}
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+
+loop:
+	for {
+		fmt.Println("tik")
+		// retrieve all the vasps that are verified
+		verificationStatus := pb.VerificationState_VERIFIED
+		if err := db.RetrieveAll(&models.RetrieveAllOpts{
+			VerificationStatus:  &verificationStatus,
+			TrisaEndpointExists: true,
+		}, all); err != nil {
+			log.Warn().Err(err).Str("health_check", "could not retrieve vasps")
 		}
-	}()
+
+		select {
+		case <-ticker.C:
+			continue
+		case <-interrupt:
+			break loop
+		}
+	}
 }
 
 func initClient(ctx context.Context, endpoint string) (*grpc.ClientConn, error) {

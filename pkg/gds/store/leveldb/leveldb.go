@@ -169,10 +169,12 @@ func (s *Store) RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error
 	iter := s.db.NewIterator(nil, nil)
 	defer iter.Release()
 	for iter.Next() {
-		var v *pb.VASP
+		v := new(pb.VASP)
 		if err := proto.Unmarshal(iter.Value(), v); err != nil {
+			fmt.Println("err", err)
 			return err
 		}
+		fmt.Println("result", v)
 		if v == nil {
 			continue // safety measure since a nil in this channel is a signal
 		}
@@ -188,7 +190,7 @@ func (s *Store) RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error
 		}
 		c <- v
 	}
-
+	fmt.Println("bye")
 	if err := iter.Error(); err != nil {
 		return err
 	}
