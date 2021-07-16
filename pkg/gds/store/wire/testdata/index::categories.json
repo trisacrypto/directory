@@ -1,0 +1,27 @@
+{
+  "business_entity": [
+    "84e60a41-37b2-4d52-bfa5-b2af8da7eae7",
+    "99917cee-31cb-43a9-86c9-44e29cbb3a1a"
+  ],
+  "exchange": [
+    "99917cee-31cb-43a9-86c9-44e29cbb3a1a",
+    "dd9ad626-b68f-47cd-a1fc-ae3a0ca371be",
+    "d42e6807-3835-49da-9a07-5ef5f445383d",
+    "838b1f57-1646-488d-a231-d71d88681cfa"
+  ],
+  "individual": [
+    "84e60a41-37b2-4d52-bfa5-b2af8da7eae7",
+    "a91d6094-9b88-4d5f-91ed-1f1d0407b75d"
+  ],
+  "non_commercial_entity": [
+    "a91d6094-9b88-4d5f-91ed-1f1d0407b75d"
+  ],
+  "other": [
+    "84e60a41-37b2-4d52-bfa5-b2af8da7eae7"
+  ],
+  "private_organization": [
+    "dd9ad626-b68f-47cd-a1fc-ae3a0ca371be",
+    "d42e6807-3835-49da-9a07-5ef5f445383d",
+    "838b1f57-1646-488d-a231-d71d88681cfa"
+  ]
+}
