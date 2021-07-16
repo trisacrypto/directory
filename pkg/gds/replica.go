@@ -12,7 +12,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -37,14 +37,13 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 		conf: &svc.conf.Replica,
 	}
 
-	// TODO: right now replica only works with LevelDB need to adapt the Store to work
-	// for other store types such as sqlite3.
-	var ok bool
-	if r.db, ok = svc.db.(*leveldb.Store); !ok {
-		return nil, fmt.Errorf("replica currently only works with leveldb, not %T", r.db)
+	// Check if the database Store is an ObjectStore, if not then the Replica cannot Gossip.
+	if _, ok := svc.db.(global.ObjectStore); !ok {
+		return nil, fmt.Errorf("replica %T does not implement global.ObjectStore", r.db)
 	}
 
 	// Initialize the gRPC server
+	r.db = svc.db
 	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
 	global.RegisterReplicationServer(r.srv, r)
 	return r, nil
@@ -59,7 +58,7 @@ type Replica struct {
 	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
-	db   *leveldb.Store        // Database connection for managing objects (alias to s.svc.db)
+	db   store.Store           // Database connection for managing objects (alias to s.svc.db)
 }
 
 // Serve gRPC requests on the specified bind address.
@@ -121,8 +120,8 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 		Strs("namespaces", in.Namespaces).
 		Msg("incoming anti-entropy")
 
-	// TODO: don't use leveldb for v1.1; this is just for prototype purposes.
-	ldb := r.db.DB()
+	// Get the object store
+	db := r.db.(global.ObjectStore)
 
 	out = &global.Updates{
 		Objects: make([]*global.Object, 0),
@@ -137,42 +136,28 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 incomingLoop:
 	for _, remoteObj := range in.Objects {
 		// Step 1b: Fetch data from database (determining if the data is not found)
-		// TODO: move object fetching logic back to Store; ensure tombstones are included.
-		var data []byte
-		if data, err = ldb.Get([]byte(remoteObj.Key), nil); err != nil {
-			if errors.Is(err, leveldb.ErrEntityNotFound) {
+		var localObj *global.Object
+		if localObj, err = db.Get(remoteObj.Namespace, remoteObj.Key, true); err != nil {
+			if errors.Is(err, wire.ErrObjectNotFound) {
 				// This exists on the remote, but not locally; so add to fetch.
 				if !in.Partial {
 					fetch[remoteObj.Key] = struct{}{}
 				}
 				continue incomingLoop
-			} else {
-				// This is an unhandled error; log it and return replica requires repair
-				log.Error().Err(err).Msg("could not get key from leveldb")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-		}
-
-		// Step 1c: Get the localObj representation based on the object namespace
-
-		var localObj *global.Object
-		if localObj, err = wire.UnmarshalObject(remoteObj.Namespace, data); err != nil {
-			if errors.Is(err, wire.ErrCannotReplicate) {
+			} else if errors.Is(err, wire.ErrCannotReplicate) {
 				log.Warn().
 					Str("namespace", remoteObj.Namespace).
 					Str("key", remoteObj.Key).
 					Msg("received known object namespace that should not be replicated")
 				continue incomingLoop
 			} else {
-				log.Error().
-					Err(err).
-					Str("namespace", remoteObj.Namespace).
-					Msg("could not unmarshal object from database")
+				// This is an unhandled error; log it and return replica requires repair
+				log.Error().Err(err).Msg("could not get key from object store")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
 		}
 
-		// Step 1d: Check which version is later, local or remote.
+		// Step 1c: Check which version is later, local or remote.
 		switch {
 		case localObj.Version.IsLater(remoteObj.Version):
 			// Send the local object back to the remote in the updates
@@ -193,7 +178,7 @@ incomingLoop:
 	var nLocalObjs uint64
 	if !in.Partial {
 		// Step 2a: loop over all keys in the database, ignoring any that have already been seen
-		iter := ldb.NewIterator(nil, nil)
+		iter := db.Iter("")
 	outgoingLoop:
 		for iter.Next() {
 			nLocalObjs++
@@ -206,11 +191,8 @@ incomingLoop:
 			// Step 2b: if this key hasn't been seen then it is a new local key that
 			// needs to be pushed back to the remote replica. Load the object from
 			// the database and add to outgoing objects.
-			data := iter.Value()
-			prefix := strings.Split(key, "::")[0]
-
 			var localObj *global.Object
-			if localObj, err = wire.UnmarshalObject(prefix, data); err != nil {
+			if localObj, err = iter.Object(true); err != nil {
 				if errors.Is(err, wire.ErrCannotReplicate) {
 					// Ignore objects that cannot be replicated without warning and
 					// don't count as part of local objects
@@ -219,7 +201,7 @@ incomingLoop:
 				} else {
 					log.Error().
 						Err(err).
-						Str("namespace", prefix).
+						Str("namespace", strings.Split(iter.Key(), "::")[0]).
 						Msg("could not unmarshal object from database")
 					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 				}
