@@ -11,16 +11,12 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -158,50 +154,22 @@ incomingLoop:
 		}
 
 		// Step 1c: Get the localObj representation based on the object namespace
-		// TODO: create an interface that returns the object representation
+
 		var localObj *global.Object
-		switch remoteObj.Namespace {
-		case store.NamespaceVASPs:
-			vasp := &pb.VASP{}
-			if err = proto.Unmarshal(data, vasp); err != nil {
-				// This is an unhandled error; log it and return unavailable
-				log.Error().Err(err).Msg("could not unmarshal VASP from leveldb")
+		if localObj, err = wire.UnmarshalObject(remoteObj.Namespace, data); err != nil {
+			if errors.Is(err, wire.ErrCannotReplicate) {
+				log.Warn().
+					Str("namespace", remoteObj.Namespace).
+					Str("key", remoteObj.Key).
+					Msg("received known object namespace that should not be replicated")
+				continue incomingLoop
+			} else {
+				log.Error().
+					Err(err).
+					Str("namespace", remoteObj.Namespace).
+					Msg("could not unmarshal object from database")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
-
-			// VASP specific retrieval of object metadata
-			if localObj, _, err = models.GetMetadata(vasp); err != nil {
-				// This is an unhandled error; log it and return unavailable
-				log.Error().Err(err).Msg("could not get metadata from VASP")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-
-			// Ensure vasp is stored on the object in case it is sent back to remote
-			if localObj.Data, err = anypb.New(vasp); err != nil {
-				log.Error().Err(err).Msg("could not marshal VASP Any back to remote replica")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-
-		case store.NamespaceCertReqs:
-			certreq := &models.CertificateRequest{}
-			if err = proto.Unmarshal(data, certreq); err != nil {
-				// This is an unhandled error; log it and return unavailable
-				log.Error().Err(err).Msg("could not unmarshal CertificateRequest from leveldb")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-
-			// Certreq specific method to retrieve metadata
-			localObj = certreq.Metadata
-
-			// Ensure certreq is stored on the object in case it is sent back to remote
-			if localObj.Data, err = anypb.New(certreq); err != nil {
-				log.Error().Err(err).Msg("could not marshal CertificateRequest Any back to remote replica")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-		default:
-			// Log error but continue processing, foreign namespace will be ignored
-			log.Warn().Str("namespace", remoteObj.Namespace).Msg("unknown namespace")
-			continue incomingLoop
 		}
 
 		// Step 1d: Check which version is later, local or remote.
@@ -241,54 +209,20 @@ incomingLoop:
 			data := iter.Value()
 			prefix := strings.Split(key, "::")[0]
 
-			// TODO: create an interface that handles the object
 			var localObj *global.Object
-			switch prefix {
-			case store.NamespaceVASPs:
-				vasp := &pb.VASP{}
-				if err = proto.Unmarshal(data, vasp); err != nil {
-					// This is an unhandled error; log it and return unavailable
-					log.Error().Err(err).Msg("could not unmarshal VASP from leveldb")
+			if localObj, err = wire.UnmarshalObject(prefix, data); err != nil {
+				if errors.Is(err, wire.ErrCannotReplicate) {
+					// Ignore objects that cannot be replicated without warning and
+					// don't count as part of local objects
+					nLocalObjs--
+					continue outgoingLoop
+				} else {
+					log.Error().
+						Err(err).
+						Str("namespace", prefix).
+						Msg("could not unmarshal object from database")
 					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 				}
-
-				// VASP specific retrieval of object metadata
-				if localObj, _, err = models.GetMetadata(vasp); err != nil {
-					// This is an unhandled error; log it and return unavailable
-					log.Error().Err(err).Msg("could not get metadata from VASP")
-					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-				}
-
-				// Ensure vasp is stored on the object in case it is sent back to remote
-				if localObj.Data, err = anypb.New(vasp); err != nil {
-					log.Error().Err(err).Msg("could not marshal VASP Any back to remote replica")
-					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-				}
-
-			case store.NamespaceCertReqs:
-				certreq := &models.CertificateRequest{}
-				if err = proto.Unmarshal(data, certreq); err != nil {
-					// This is an unhandled error; log it and return unavailable
-					log.Error().Err(err).Msg("could not unmarshal CertificateRequest from leveldb")
-					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-				}
-
-				// Certreq specific method to retrieve metadata
-				localObj = certreq.Metadata
-
-				// Ensure certreq is stored on the object in case it is sent back to remote
-				if localObj.Data, err = anypb.New(certreq); err != nil {
-					log.Error().Err(err).Msg("could not marshal CertificateRequest Any back to remote replica")
-					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-				}
-			case store.NamespaceIndices:
-				// Ignore indices without warning and don't count as part of local objects
-				nLocalObjs--
-				continue outgoingLoop
-			default:
-				// Log error but continue processing, foreign namespace will be ignored
-				log.Warn().Str("namespace", prefix).Msg("unknown namespace")
-				continue outgoingLoop
 			}
 
 			// Step 2c: Add the local object to send back in the response

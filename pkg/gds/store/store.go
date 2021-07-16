@@ -52,6 +52,7 @@ const (
 	NamespaceCertReqs = "certreqs"
 	NamespaceReplicas = "peers"
 	NamespaceIndices  = "index"
+	NamespaceSequence = "sequence"
 )
 
 // Namespaces defines all possible namespaces that GDS manages

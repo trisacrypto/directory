@@ -2,14 +2,12 @@ package main
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +27,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -58,8 +57,8 @@ func main() {
 					EnvVar: "GDS_DATABASE_URL",
 				},
 				cli.BoolFlag{
-					Name:  "s, stringify",
-					Usage: "stringify keys otherwise they are base64 encoded",
+					Name:  "b, b64encode",
+					Usage: "base64 encode keys (otherwise they will be utf-8 decoded)",
 				},
 				cli.StringFlag{
 					Name:  "p, prefix",
@@ -288,17 +287,7 @@ func main() {
 // LevelDB Actions
 //===========================================================================
 
-var (
-	ldb            *leveldb.DB
-	vaspPrefix     = []byte("vasps::")
-	certreqsPrefix = []byte("certreqs::")
-	// replicaPrefix  = []byte("peers::")
-	indexPrefix    = []byte("index::")
-	sequencePrefix = []byte("sequence::")
-	indexNames     = []byte("index::names")
-	indexCountries = []byte("index::countries")
-	sequencePK     = []byte("sequence::pks")
-)
+var ldb *leveldb.DB
 
 func ldbKeys(c *cli.Context) (err error) {
 	defer ldb.Close()
@@ -311,13 +300,9 @@ func ldbKeys(c *cli.Context) (err error) {
 	iter := ldb.NewIterator(prefix, nil)
 	defer iter.Release()
 
-	stringify := c.Bool("stringify")
+	b64encode := c.Bool("b64encode")
 	for iter.Next() {
-		if stringify {
-			fmt.Printf("- %s\n", string(iter.Key()))
-		} else {
-			fmt.Printf("- %s\n", base64.RawStdEncoding.EncodeToString(iter.Key()))
-		}
+		fmt.Printf("- %s\n", wire.EncodeKey(iter.Key(), b64encode))
 	}
 
 	if err = iter.Error(); err != nil {
@@ -335,7 +320,7 @@ func ldbGet(c *cli.Context) (err error) {
 		// Check that out is a directory
 		var info fs.FileInfo
 		if info, err = os.Stat(out); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.NewExitError("specify an existing, writeable directory to output files to", 1)
 		}
 		if !info.IsDir() {
 			return cli.NewExitError("specify a directory to write files out to", 1)
@@ -345,12 +330,8 @@ func ldbGet(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
 	for _, keys := range c.Args() {
 		var key []byte
-		if b64decode {
-			if key, err = base64.RawStdEncoding.DecodeString(keys); err != nil {
-				return cli.NewExitError(err, 1)
-			}
-		} else {
-			key = []byte(keys)
+		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
+			return cli.NewExitError(fmt.Errorf("could not decode key: %s", err), 1)
 		}
 
 		var data []byte
@@ -364,47 +345,32 @@ func ldbGet(c *cli.Context) (err error) {
 			pbValue   proto.Message
 		)
 
-		// Determine how to unmarshal the data
-		if bytes.HasPrefix(key, vaspPrefix) {
-			vasp := new(pb.VASP)
-			if err = proto.Unmarshal(data, vasp); err != nil {
+		prefix := strings.Split(keys, "::")[0]
+		switch prefix {
+		case store.NamespaceVASPs, store.NamespaceCertReqs, store.NamespaceReplicas:
+			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-			pbValue = vasp
-		} else if bytes.HasPrefix(key, certreqsPrefix) {
-			careq := new(models.CertificateRequest)
-			if err = proto.Unmarshal(data, careq); err != nil {
+		case store.NamespaceIndices:
+			if jsonValue, err = wire.UnmarshalIndex(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-			pbValue = careq
-		} else if bytes.Equal(key, indexNames) {
-			jsonValue = make(map[string]string)
-			if err = unmarshalGZJSON(data, &jsonValue); err != nil {
+		case store.NamespaceSequence:
+			if jsonValue, err = wire.UnmarshalSequence(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		} else if bytes.Equal(key, indexCountries) {
-			jsonValue = make(map[string][]string)
-			if err = unmarshalGZJSON(data, &jsonValue); err != nil {
-				return cli.NewExitError(err, 1)
-			}
-		} else if bytes.HasPrefix(key, sequencePrefix) {
-			pk, n := binary.Uvarint(data)
-			if n <= 0 {
-				return cli.NewExitError("could not parse sequence", 1)
-			}
-			jsonValue = pk
-		} else {
-			return cli.NewExitError("could not determine unmarshal type", 1)
+		default:
+			fmt.Fprintf(os.Stderr, "warning: cannot unmarshal unknown namespace %q, printing raw data\n", prefix)
 		}
 
-		// Marshal JSON representation
+		// Marshal JSON representation for pretty-printing
 		var outdata []byte
-		if jsonValue != nil {
+		switch {
+		case jsonValue != nil:
 			if outdata, err = json.MarshalIndent(jsonValue, "", "  "); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		}
-		if pbValue != nil {
+		case pbValue != nil:
 			jsonpb := protojson.MarshalOptions{
 				Multiline:       true,
 				Indent:          "  ",
@@ -416,6 +382,8 @@ func ldbGet(c *cli.Context) (err error) {
 			if outdata, err = jsonpb.Marshal(pbValue); err != nil {
 				return cli.NewExitError(err, 1)
 			}
+		default:
+			outdata = data
 		}
 
 		if out != "" {
@@ -494,77 +462,23 @@ func ldbPut(c *cli.Context) (err error) {
 	// Unmarshal the thing from data then
 	// Marshal the database representation
 	if format != "raw" && format != "bytes" {
-		jsonpb := &protojson.UnmarshalOptions{
-			AllowPartial:   true,
-			DiscardUnknown: true,
+		// Prefix is required on key to determine how to unmarshal the data
+		prefix := strings.Split(string(key), "::")[0]
+		switch format {
+		case "json":
+			if value, err = wire.RemarshalJSON(prefix, data); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+		case "pb", "proto", "protobuf":
+			// Check if the protocol buffers can be unmarshaled; if so, the data is good to go
+			if _, err = wire.UnmarshalProto(prefix, data); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			value = data
+		default:
+			return cli.NewExitError("unknown format: specify raw, bytes, json, or proto", 1)
 		}
 
-		if bytes.HasPrefix(key, vaspPrefix) {
-			vasp := new(pb.VASP)
-			switch format {
-			case "json":
-				if err = jsonpb.Unmarshal(data, vasp); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				if value, err = proto.Marshal(vasp); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-			case "pb", "proto", "protobuf":
-				if err = proto.Unmarshal(data, vasp); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				value = data
-			default:
-				return cli.NewExitError(fmt.Errorf("cannot unmarshal VASP format %q", format), 1)
-			}
-
-		} else if bytes.HasPrefix(key, certreqsPrefix) {
-			careq := new(models.CertificateRequest)
-			switch format {
-			case "json":
-				if err = jsonpb.Unmarshal(data, careq); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				if value, err = proto.Marshal(careq); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-			case "pb", "proto", "protobuf":
-				if err = proto.Unmarshal(data, careq); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				value = data
-			default:
-				return cli.NewExitError(fmt.Errorf("cannot unmarshal Certificate Request format %q", format), 1)
-			}
-		} else if bytes.HasPrefix(key, indexPrefix) {
-			switch format {
-			case "json":
-				// gzip compress the index data
-				buf := &bytes.Buffer{}
-				gz := gzip.NewWriter(buf)
-				if _, err = gz.Write(data); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				value = buf.Bytes()
-			default:
-				return cli.NewExitError(fmt.Errorf("cannot unmarshal index format %q", format), 1)
-			}
-		} else if bytes.Equal(key, sequencePK) {
-			switch format {
-			case "json":
-				var pk uint64
-				if err = json.Unmarshal(data, &pk); err != nil {
-					return cli.NewExitError(err, 1)
-				}
-				value = make([]byte, binary.MaxVarintLen64)
-				binary.PutUvarint(value, pk)
-			default:
-				return cli.NewExitError(fmt.Errorf("cannot unmarshal sequence format %q", format), 1)
-			}
-
-		} else {
-			return cli.NewExitError("could not determine unmarshal type from key", 1)
-		}
 	} else {
 		// Raw or bytes data is just the data
 		value = data
@@ -591,12 +505,8 @@ func ldbDelete(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
 	for _, keys := range c.Args() {
 		var key []byte
-		if b64decode {
-			if key, err = base64.RawStdEncoding.DecodeString(keys); err != nil {
-				return cli.NewExitError(err, 1)
-			}
-		} else {
-			key = []byte(keys)
+		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
+			return cli.NewExitError(err, 1)
 		}
 
 		if err = ldb.Delete(key, nil); err != nil {
@@ -638,33 +548,6 @@ func isFile(path string) bool {
 		return !os.IsNotExist(err)
 	}
 	return fi.Mode().IsRegular()
-}
-
-func unmarshalGZJSON(data []byte, val interface{}) (err error) {
-	buf := bytes.NewBuffer(data)
-	var gz *gzip.Reader
-	if gz, err = gzip.NewReader(buf); err != nil {
-		return fmt.Errorf("could not decompress data: %s", err)
-	}
-	decoder := json.NewDecoder(gz)
-	if err = decoder.Decode(&val); err != nil {
-		return fmt.Errorf("could not decode json data: %s", err)
-	}
-	return nil
-}
-
-//lint:ignore U1000 leaving this function to pair with unmarshalGZJSON in the future
-func marshalGZJSON(val interface{}) (data []byte, err error) {
-	var buf *bytes.Buffer
-	gz := gzip.NewWriter(buf)
-	encoder := json.NewEncoder(gz)
-	if err = encoder.Encode(val); err != nil {
-		return data, fmt.Errorf("could not encode data: %s", err)
-	}
-	if err = gz.Close(); err != nil {
-		return data, fmt.Errorf("could not compress data: %s", err)
-	}
-	return buf.Bytes(), nil
 }
 
 //===========================================================================
@@ -866,6 +749,10 @@ func gossip(c *cli.Context) (err error) {
 			if obj.Namespace != store.NamespaceCertReqs {
 				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
 			}
+		case *peers.Peer:
+			if obj.Namespace != store.NamespaceReplicas {
+				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
+			}
 		default:
 			return cli.NewExitError(fmt.Errorf("could not handle %s in %s from any type %T", obj.Key, obj.Namespace, msg), 1)
 		}
@@ -1036,6 +923,10 @@ certreqLoop:
 	iter.Release()
 
 	fmt.Printf("migrated %d CertificateRequest objects\n", migrated)
+
+	// NOTE: currently required to migrate peers since they are already versioned
+	// If we decide to maintain unversioned databases, this will have to be added here
+
 	return nil
 }
 
@@ -1049,29 +940,13 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 
 	// Detect the type of object, deserialize, and extract object metadata
 	namespace := strings.Split(key, ":")[0]
-	switch namespace {
-	case store.NamespaceVASPs:
-		vasp := &pb.VASP{}
-		if err = proto.Unmarshal(data, vasp); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into vasp: %s", key, err)
-		}
-		obj, _, err = models.GetMetadata(vasp)
-		return obj, err
-	case store.NamespaceCertReqs:
-		careq := &models.CertificateRequest{}
-		if err = proto.Unmarshal(data, careq); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into certreq: %s", key, err)
-		}
-		return careq.Metadata, nil
-	case "peers":
-		peer := &peers.Peer{}
-		if err = proto.Unmarshal(data, peer); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %q into peer: %s", key, err)
-		}
-		return peer.Metadata, nil
-	default:
-		return nil, fmt.Errorf("could not parse namespace %q", namespace)
+	if obj, err = wire.UnmarshalObject(namespace, data); err != nil {
+		return nil, err
 	}
+
+	// Do not send data (message size would be too big)
+	obj.Data = nil
+	return obj, err
 }
 
 // Helper function to load all object metadata for a namespace
