@@ -42,7 +42,7 @@ func (s *Store) Get(namespace, key string, withData bool) (obj *global.Object, e
 // Put puts an object into the specified key, the Data Any field should be present.
 // NOTE: there is no delete method because replication requires the Put of a tombstone.
 // TODO: implementation required!
-func (s *Store) Put(namespace, key string, obj *global.Object) error {
+func (s *Store) Put(obj *global.Object) error {
 	return errors.New("not implemented yet")
 }
 

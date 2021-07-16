@@ -6,7 +6,7 @@ package global
 type ObjectStore interface {
 	Iter(namespace string) ObjectIterator
 	Get(namespace, key string, withData bool) (*Object, error)
-	Put(namespace, key string, obj *Object) error
+	Put(obj *Object) error
 }
 
 // ObjectIterator mirrors the leveldb iterator interface but requires the Store to

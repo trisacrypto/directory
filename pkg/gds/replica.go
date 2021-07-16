@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
+	"github.com/trisacrypto/directory/pkg/gds/jitter"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
@@ -92,6 +95,9 @@ func (r *Replica) Serve() (err error) {
 		}
 	}()
 
+	// Run the Gossip background routine
+	go r.AntiEntropy()
+
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
 	return nil
@@ -102,6 +108,130 @@ func (r *Replica) Shutdown() error {
 	log.Debug().Msg("gracefully shutting down replication server")
 	r.srv.GracefulStop()
 	log.Debug().Msg("successful shutdown of replica server")
+	return nil
+}
+
+// AntiEntropy is a service that periodically selects a remote peer to synchronize with
+// via bilateral anti-entropy using the Gossip service. Jitter is applied to the
+// interval between anti-entropy synchronizations to ensure that message traffic isn't
+// bursty to disrupt normal messages to the GDS service.
+// TODO: this background routine is currently untested.
+func (r *Replica) AntiEntropy() {
+	// Create the anti-entropy ticker
+	ticker := jitter.New(r.conf.GossipInterval, r.conf.GossipSigma)
+
+	// Run anti-entropy forever
+bayou:
+	for {
+		<-ticker.C // Block until the next anti-entropy synchronization
+		log.Debug().Msg("starting anti-entropy")
+
+		// Randomly select a remote peer to synchronize with, continuing if we cannot
+		// select a peer or no remote peers exist yet.
+		var peer *peers.Peer
+		if peer = r.selectPeer(); peer == nil {
+			log.Debug().Msg("no remote peer available, skipping synchronization")
+			continue bayou
+		}
+
+		// Ensure we can dial the client before we prepare the version vector
+		// TODO: better initialization of gossip client and connection management
+		cc, err := grpc.Dial(peer.Addr, grpc.WithInsecure())
+		if err != nil {
+			log.Error().Err(err).Str("addr", peer.Addr).Msg("could not dial remote peer")
+		}
+		client := global.NewReplicationClient(cc)
+		log.Debug().Str("addr", peer.Addr).Str("peer", peer.String()).Msg("dialed remote peer")
+
+		// Perepare a version vector to send to the remote peer
+		// Because this is the initiation of anti-entropy this is not a partial request.
+		versions := &global.VersionVectors{
+			Objects:    make([]*global.Object, 0),
+			Partial:    false,
+			Namespaces: global.Namespaces[:],
+		}
+
+		// Access the objects in the object-store by namespace
+		db := r.db.(global.ObjectStore)
+
+		for _, ns := range versions.Namespaces {
+			iter := db.Iter(ns)
+		namespace:
+			for iter.Next() {
+				// Load the object metadata without the data itself, otherwise anti-entropy
+				// would exchange way more data than required, putting pressure on memory.
+				obj, err := iter.Object(false)
+				if err != nil {
+					log.Error().Err(err).Str("namespace", ns).Msg("could not unmarshal object")
+					continue namespace
+				}
+				versions.Objects = append(versions.Objects, obj)
+			}
+
+			if err := iter.Error(); err != nil {
+				log.Error().Err(err).Str("namespace", ns).Msg("could not iterate over object namespace")
+			}
+			iter.Release()
+		}
+
+		// Ensure that we send the request even if we have no local versions, to
+		// retrieve any versions that might be on the remote peer.
+		log.Debug().
+			Int("versions", len(versions.Objects)).
+			Int("namespaces", len(versions.Namespaces)).
+			Msg("sending version vector to remote peer")
+
+		// Perform the Gossip request
+		var updates *global.Updates
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		if updates, err = client.Gossip(ctx, versions); err != nil {
+			cancel()
+			log.Error().Err(err).Str("peer", peer.String()).Msg("could not gossip with remote peer")
+		}
+		cancel()
+
+		// Repair local database as last step
+		for _, obj := range updates.Objects {
+			if err = db.Put(obj); err != nil {
+				log.Error().Err(err).Str("namespace", obj.Namespace).Msg("could not update local store")
+			}
+		}
+
+		// Log success if any objects where synchronized
+		if len(updates.Objects) > 0 {
+			log.Info().
+				Str("peer", peer.String()).
+				Int("versions", len(versions.Objects)).
+				Int("namespaces", len(versions.Namespaces)).
+				Int("updates", len(updates.Objects)).
+				Msg("anti-entropy synchronization complete")
+		} else {
+			log.Debug().Msg("anti-entropy complete with no synchronization")
+		}
+	}
+}
+
+// Randomly select a replica that is not self to perform anti-entropy with. If a peer
+// cannot be selected, then nil is returned.
+func (r *Replica) selectPeer() (peer *peers.Peer) {
+	// Select a random peer that is not self to perform anti entropy with.
+	peers, err := r.db.ListPeers()
+	if err != nil {
+		log.Error().Err(err).Msg("could not fetch peers from database")
+		return nil
+	}
+
+	if len(peers) > 1 {
+		// 10 attempts to select a random peer that is not self.
+		for i := 0; i < 10; i++ {
+			peer = peers[rand.Intn(len(peers))]
+			if peer.Id != r.conf.PID {
+				return peer
+			}
+		}
+		log.Warn().Int("nPeers", len(peers)).Msg("could not select peer after 10 attempts")
+	}
+
 	return nil
 }
 
