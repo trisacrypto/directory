@@ -41,7 +41,7 @@ var endpoints = map[string]*url.URL{
 	batchDevicesAuditLogEP:          {Path: "/api/v1/batches/%d/devices/auditLog"},
 	batchPreviewEP:                  {Path: "/api/v1/batches/preview"},
 	createSingleCertBatchEP:         {Path: "/api/v1/batches/createSingleCertBatch"},
-	uploadEP:                        {Path: "/api/v1/upload"},
+	uploadEP:                        {Path: "/api/v1/batches/upload"},
 	uploadCSVEP:                     {Path: "/api/v2/organizations/%d/profiles/%d/batches/csv-upload"},
 	generatorsEP:                    {Path: "/api/v1/generators"},
 	downloadEP:                      {Path: "/api/v1/batches/%d/download"},
@@ -99,6 +99,7 @@ const (
 	batchPreviewEP                  = "batchPreview"
 	createSingleCertBatchEP         = "createSingleCertBatch"
 	uploadEP                        = "upload"
+	uploadCSREP                     = uploadEP
 	uploadCSVEP                     = "uploadCSV"
 	generatorsEP                    = "generators"
 	downloadEP                      = "download"
