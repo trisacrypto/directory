@@ -347,15 +347,15 @@ func ldbGet(c *cli.Context) (err error) {
 
 		prefix := strings.Split(keys, "::")[0]
 		switch prefix {
-		case store.NamespaceVASPs, store.NamespaceCertReqs, store.NamespaceReplicas:
+		case global.NamespaceVASPs, global.NamespaceCertReqs, global.NamespaceReplicas:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		case store.NamespaceIndices:
+		case global.NamespaceIndices:
 			if jsonValue, err = wire.UnmarshalIndex(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		case store.NamespaceSequence:
+		case global.NamespaceSequence:
 			if jsonValue, err = wire.UnmarshalSequence(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
@@ -692,7 +692,7 @@ func gossip(c *cli.Context) (err error) {
 			// Specify "all" namespaces manually (opt-in to what is replicated).
 			// NOTE: if there is a namespace being omitted from gossip without being
 			// specified in the command line, it's likely it needs to be added here.
-			namespaces = store.Namespaces[:]
+			namespaces = global.Namespaces[:]
 		}
 
 		for _, ns := range namespaces {
@@ -742,15 +742,15 @@ func gossip(c *cli.Context) (err error) {
 
 		switch msg := msg.(type) {
 		case *pb.VASP:
-			if obj.Namespace != store.NamespaceVASPs {
+			if obj.Namespace != global.NamespaceVASPs {
 				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
 			}
 		case *models.CertificateRequest:
-			if obj.Namespace != store.NamespaceCertReqs {
+			if obj.Namespace != global.NamespaceCertReqs {
 				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
 			}
 		case *peers.Peer:
-			if obj.Namespace != store.NamespaceReplicas {
+			if obj.Namespace != global.NamespaceReplicas {
 				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
 			}
 		default:
@@ -818,7 +818,7 @@ vaspLoop:
 
 		// Update metadata
 		meta.Key = key
-		meta.Namespace = store.NamespaceVASPs
+		meta.Namespace = global.NamespaceVASPs
 		meta.Owner = vm.Owner
 		meta.Region = vm.Region
 		meta.Version = &global.Version{
@@ -886,7 +886,7 @@ certreqLoop:
 
 		// Update metadata
 		certreq.Metadata.Key = key
-		certreq.Metadata.Namespace = store.NamespaceCertReqs
+		certreq.Metadata.Namespace = global.NamespaceCertReqs
 		certreq.Metadata.Owner = vm.Owner
 		certreq.Metadata.Region = vm.Region
 		certreq.Metadata.Version = &global.Version{
@@ -939,13 +939,12 @@ func loadMetadata(key string) (obj *global.Object, err error) {
 	}
 
 	// Detect the type of object, deserialize, and extract object metadata
+	// Do not send data (message size would be too big)
 	namespace := strings.Split(key, ":")[0]
-	if obj, err = wire.UnmarshalObject(namespace, data); err != nil {
+	if obj, err = wire.UnmarshalObject(namespace, data, false); err != nil {
 		return nil, err
 	}
 
-	// Do not send data (message size would be too big)
-	obj.Data = nil
 	return obj, err
 }
 

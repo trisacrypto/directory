@@ -4,15 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/global/v1"
+	"github.com/trisacrypto/directory/pkg/gds/jitter"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -37,14 +40,13 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 		conf: &svc.conf.Replica,
 	}
 
-	// TODO: right now replica only works with LevelDB need to adapt the Store to work
-	// for other store types such as sqlite3.
-	var ok bool
-	if r.db, ok = svc.db.(*leveldb.Store); !ok {
-		return nil, fmt.Errorf("replica currently only works with leveldb, not %T", r.db)
+	// Check if the database Store is an ObjectStore, if not then the Replica cannot Gossip.
+	if _, ok := svc.db.(global.ObjectStore); !ok {
+		return nil, fmt.Errorf("replica %T does not implement global.ObjectStore", r.db)
 	}
 
 	// Initialize the gRPC server
+	r.db = svc.db
 	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
 	global.RegisterReplicationServer(r.srv, r)
 	return r, nil
@@ -59,7 +61,7 @@ type Replica struct {
 	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
-	db   *leveldb.Store        // Database connection for managing objects (alias to s.svc.db)
+	db   store.Store           // Database connection for managing objects (alias to s.svc.db)
 }
 
 // Serve gRPC requests on the specified bind address.
@@ -93,6 +95,9 @@ func (r *Replica) Serve() (err error) {
 		}
 	}()
 
+	// Run the Gossip background routine
+	go r.AntiEntropy()
+
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
 	return nil
@@ -103,6 +108,130 @@ func (r *Replica) Shutdown() error {
 	log.Debug().Msg("gracefully shutting down replication server")
 	r.srv.GracefulStop()
 	log.Debug().Msg("successful shutdown of replica server")
+	return nil
+}
+
+// AntiEntropy is a service that periodically selects a remote peer to synchronize with
+// via bilateral anti-entropy using the Gossip service. Jitter is applied to the
+// interval between anti-entropy synchronizations to ensure that message traffic isn't
+// bursty to disrupt normal messages to the GDS service.
+// TODO: this background routine is currently untested.
+func (r *Replica) AntiEntropy() {
+	// Create the anti-entropy ticker
+	ticker := jitter.New(r.conf.GossipInterval, r.conf.GossipSigma)
+
+	// Run anti-entropy forever
+bayou:
+	for {
+		<-ticker.C // Block until the next anti-entropy synchronization
+		log.Debug().Msg("starting anti-entropy")
+
+		// Randomly select a remote peer to synchronize with, continuing if we cannot
+		// select a peer or no remote peers exist yet.
+		var peer *peers.Peer
+		if peer = r.selectPeer(); peer == nil {
+			log.Debug().Msg("no remote peer available, skipping synchronization")
+			continue bayou
+		}
+
+		// Ensure we can dial the client before we prepare the version vector
+		// TODO: better initialization of gossip client and connection management
+		cc, err := grpc.Dial(peer.Addr, grpc.WithInsecure())
+		if err != nil {
+			log.Error().Err(err).Str("addr", peer.Addr).Msg("could not dial remote peer")
+		}
+		client := global.NewReplicationClient(cc)
+		log.Debug().Str("addr", peer.Addr).Str("peer", peer.String()).Msg("dialed remote peer")
+
+		// Perepare a version vector to send to the remote peer
+		// Because this is the initiation of anti-entropy this is not a partial request.
+		versions := &global.VersionVectors{
+			Objects:    make([]*global.Object, 0),
+			Partial:    false,
+			Namespaces: global.Namespaces[:],
+		}
+
+		// Access the objects in the object-store by namespace
+		db := r.db.(global.ObjectStore)
+
+		for _, ns := range versions.Namespaces {
+			iter := db.Iter(ns)
+		namespace:
+			for iter.Next() {
+				// Load the object metadata without the data itself, otherwise anti-entropy
+				// would exchange way more data than required, putting pressure on memory.
+				obj, err := iter.Object(false)
+				if err != nil {
+					log.Error().Err(err).Str("namespace", ns).Msg("could not unmarshal object")
+					continue namespace
+				}
+				versions.Objects = append(versions.Objects, obj)
+			}
+
+			if err := iter.Error(); err != nil {
+				log.Error().Err(err).Str("namespace", ns).Msg("could not iterate over object namespace")
+			}
+			iter.Release()
+		}
+
+		// Ensure that we send the request even if we have no local versions, to
+		// retrieve any versions that might be on the remote peer.
+		log.Debug().
+			Int("versions", len(versions.Objects)).
+			Int("namespaces", len(versions.Namespaces)).
+			Msg("sending version vector to remote peer")
+
+		// Perform the Gossip request
+		var updates *global.Updates
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		if updates, err = client.Gossip(ctx, versions); err != nil {
+			cancel()
+			log.Error().Err(err).Str("peer", peer.String()).Msg("could not gossip with remote peer")
+		}
+		cancel()
+
+		// Repair local database as last step
+		for _, obj := range updates.Objects {
+			if err = db.Put(obj); err != nil {
+				log.Error().Err(err).Str("namespace", obj.Namespace).Msg("could not update local store")
+			}
+		}
+
+		// Log success if any objects where synchronized
+		if len(updates.Objects) > 0 {
+			log.Info().
+				Str("peer", peer.String()).
+				Int("versions", len(versions.Objects)).
+				Int("namespaces", len(versions.Namespaces)).
+				Int("updates", len(updates.Objects)).
+				Msg("anti-entropy synchronization complete")
+		} else {
+			log.Debug().Msg("anti-entropy complete with no synchronization")
+		}
+	}
+}
+
+// Randomly select a replica that is not self to perform anti-entropy with. If a peer
+// cannot be selected, then nil is returned.
+func (r *Replica) selectPeer() (peer *peers.Peer) {
+	// Select a random peer that is not self to perform anti entropy with.
+	peers, err := r.db.ListPeers()
+	if err != nil {
+		log.Error().Err(err).Msg("could not fetch peers from database")
+		return nil
+	}
+
+	if len(peers) > 1 {
+		// 10 attempts to select a random peer that is not self.
+		for i := 0; i < 10; i++ {
+			peer = peers[rand.Intn(len(peers))]
+			if peer.Id != r.conf.PID {
+				return peer
+			}
+		}
+		log.Warn().Int("nPeers", len(peers)).Msg("could not select peer after 10 attempts")
+	}
+
 	return nil
 }
 
@@ -121,8 +250,8 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 		Strs("namespaces", in.Namespaces).
 		Msg("incoming anti-entropy")
 
-	// TODO: don't use leveldb for v1.1; this is just for prototype purposes.
-	ldb := r.db.DB()
+	// Get the object store
+	db := r.db.(global.ObjectStore)
 
 	out = &global.Updates{
 		Objects: make([]*global.Object, 0),
@@ -137,42 +266,28 @@ func (r *Replica) Gossip(ctx context.Context, in *global.VersionVectors) (out *g
 incomingLoop:
 	for _, remoteObj := range in.Objects {
 		// Step 1b: Fetch data from database (determining if the data is not found)
-		// TODO: move object fetching logic back to Store; ensure tombstones are included.
-		var data []byte
-		if data, err = ldb.Get([]byte(remoteObj.Key), nil); err != nil {
-			if errors.Is(err, leveldb.ErrEntityNotFound) {
+		var localObj *global.Object
+		if localObj, err = db.Get(remoteObj.Namespace, remoteObj.Key, true); err != nil {
+			if errors.Is(err, wire.ErrObjectNotFound) {
 				// This exists on the remote, but not locally; so add to fetch.
 				if !in.Partial {
 					fetch[remoteObj.Key] = struct{}{}
 				}
 				continue incomingLoop
-			} else {
-				// This is an unhandled error; log it and return replica requires repair
-				log.Error().Err(err).Msg("could not get key from leveldb")
-				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
-			}
-		}
-
-		// Step 1c: Get the localObj representation based on the object namespace
-
-		var localObj *global.Object
-		if localObj, err = wire.UnmarshalObject(remoteObj.Namespace, data); err != nil {
-			if errors.Is(err, wire.ErrCannotReplicate) {
+			} else if errors.Is(err, wire.ErrCannotReplicate) {
 				log.Warn().
 					Str("namespace", remoteObj.Namespace).
 					Str("key", remoteObj.Key).
 					Msg("received known object namespace that should not be replicated")
 				continue incomingLoop
 			} else {
-				log.Error().
-					Err(err).
-					Str("namespace", remoteObj.Namespace).
-					Msg("could not unmarshal object from database")
+				// This is an unhandled error; log it and return replica requires repair
+				log.Error().Err(err).Msg("could not get key from object store")
 				return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 			}
 		}
 
-		// Step 1d: Check which version is later, local or remote.
+		// Step 1c: Check which version is later, local or remote.
 		switch {
 		case localObj.Version.IsLater(remoteObj.Version):
 			// Send the local object back to the remote in the updates
@@ -193,7 +308,7 @@ incomingLoop:
 	var nLocalObjs uint64
 	if !in.Partial {
 		// Step 2a: loop over all keys in the database, ignoring any that have already been seen
-		iter := ldb.NewIterator(nil, nil)
+		iter := db.Iter("")
 	outgoingLoop:
 		for iter.Next() {
 			nLocalObjs++
@@ -206,11 +321,8 @@ incomingLoop:
 			// Step 2b: if this key hasn't been seen then it is a new local key that
 			// needs to be pushed back to the remote replica. Load the object from
 			// the database and add to outgoing objects.
-			data := iter.Value()
-			prefix := strings.Split(key, "::")[0]
-
 			var localObj *global.Object
-			if localObj, err = wire.UnmarshalObject(prefix, data); err != nil {
+			if localObj, err = iter.Object(true); err != nil {
 				if errors.Is(err, wire.ErrCannotReplicate) {
 					// Ignore objects that cannot be replicated without warning and
 					// don't count as part of local objects
@@ -219,7 +331,7 @@ incomingLoop:
 				} else {
 					log.Error().
 						Err(err).
-						Str("namespace", prefix).
+						Str("namespace", strings.Split(iter.Key(), "::")[0]).
 						Msg("could not unmarshal object from database")
 					return nil, status.Error(codes.FailedPrecondition, "replica requires repair")
 				}
