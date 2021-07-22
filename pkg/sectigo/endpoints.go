@@ -98,7 +98,7 @@ const (
 	batchDevicesAuditLogEP          = "batchDevicesAuditLog"
 	batchPreviewEP                  = "batchPreview"
 	createSingleCertBatchEP         = "createSingleCertBatch"
-	uploadEP                        = "uploadEP"
+	uploadEP                        = "upload"
 	uploadCSREP                     = uploadEP
 	uploadCSVEP                     = "uploadCSV"
 	generatorsEP                    = "generators"
