@@ -105,14 +105,6 @@ func (s *Store) Close() error {
 	return nil
 }
 
-// DB returns the underlying leveldb connection for direct access. Use with care, you'll
-// have to manage your own thread safety and this will go around any of the indices.
-// NOTE: Only use to read from the database, not to write!
-// TODO: remove this when the Replica can interact with generic stores.
-func (s *Store) DB() *leveldb.DB {
-	return s.db
-}
-
 //===========================================================================
 // DirectoryStore Implementation
 //===========================================================================
@@ -184,7 +176,7 @@ func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 		if err == leveldb.ErrNotFound {
 			return nil, ErrEntityNotFound
 		}
-		return v, err
+		return nil, err
 	}
 
 	v = new(pb.VASP)

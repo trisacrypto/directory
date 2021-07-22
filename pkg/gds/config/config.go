@@ -41,11 +41,13 @@ type AdminConfig struct {
 }
 
 type ReplicaConfig struct {
-	Enabled  bool   `split_words:"true" default:"true"`
-	BindAddr string `split_words:"true" default:":4435"`
-	PID      uint64 `split_words:"true" required:"false"`
-	Region   string `split_words:"true" required:"false"`
-	Name     string `split_words:"true" required:"false"`
+	Enabled        bool          `split_words:"true" default:"true"`
+	BindAddr       string        `split_words:"true" default:":4435"`
+	PID            uint64        `split_words:"true" required:"false"`
+	Region         string        `split_words:"true" required:"false"`
+	Name           string        `split_words:"true" required:"false"`
+	GossipInterval time.Duration `split_words:"true" default:"1m"`
+	GossipSigma    time.Duration `split_words:"true" default:"5s"`
 }
 
 type DatabaseConfig struct {
@@ -113,6 +115,10 @@ func (c ReplicaConfig) Validate() error {
 
 		if c.Region == "" {
 			return errors.New("invalid configuration: region required for enabled replica")
+		}
+
+		if c.GossipInterval == time.Duration(0) || c.GossipSigma == time.Duration(0) {
+			return errors.New("invalid configuration: specify non-zero gossip interval and sigma")
 		}
 	}
 	return nil

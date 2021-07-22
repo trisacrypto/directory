@@ -25,6 +25,8 @@ var testEnv = map[string]string{
 	"GDS_REPLICA_PID":                "8",
 	"GDS_REPLICA_NAME":               "mitchell",
 	"GDS_REPLICA_REGION":             "us-east-1c",
+	"GDS_REPLICA_GOSSIP_INTERVAL":    "30m",
+	"GDS_REPLICA_GOSSIP_SIGMA":       "3m",
 	"GDS_DATABASE_URL":               "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":   "false",
 	"SECTIGO_USERNAME":               "foo",
@@ -74,6 +76,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
 	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
+	require.Equal(t, 30*time.Minute, conf.Replica.GossipInterval)
+	require.Equal(t, 3*time.Minute, conf.Replica.GossipSigma)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
