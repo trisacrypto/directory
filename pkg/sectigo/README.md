@@ -2,9 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/trisacrypto/directory/pkg/sectigo.svg)](https://pkg.go.dev/github.com/trisacrypto/directory/pkg/sectigo)
 
-
-**NOTE**: This README is included with the source code to facilitate forks and code sharing. However, if you're using the Sectigo integration with the TRISA TestNet Directory Service, please reference the documentation at [trisatest.net](https://trisatest.net).
-
+**NOTE**: This README is included with the source code to facilitate forks and code sharing. However, if you're using the Sectigo integration with the TRISA TestNet Directory Service, please reference the documentation at [trisa.dev](https://trisa.dev).
 
 The directory service issues certificates using Sectigo, please refer to the [API Documentation](https://support.sectigo.com/Com_KnowledgeDetailPage?Id=kA01N000000bvCJ) for more details on the endpoints and supported interactions. The `sectigo` package provides a simple client interface for interacting with the API; most of this code is handled by the server, but there is also a CLI interface that demonstrates usage.
 
@@ -127,6 +125,41 @@ $ openssl pkcs12 -in certs/example.com.p12 -out certs/example.com.pem -nodes
 ```
 
 For more on working with the PKCS12 file, see [Export Certificates and Private Key from a PKCS#12 File with OpenSSL](https://www.ssl.com/how-to/export-certificates-private-key-from-pkcs12-file-with-openssl/).
+
+## Uploading a CSR
+
+An alternative to certificate creation is to upload a certificate signing request (CSR). This mechanism is often preferable because it means that no private key material has to be transmitted accross the network and the private key can remain on secure hardware.
+
+To generate a CSR run the following command:
+
+```
+$ openssl req -nodes -newkey rsa:4096 -keyout <common_name>.key -out <common_name>.csr
+```
+
+Please carefully fill out the prompts for your certificate, this information must be correct and cannot be changed without reissuing the certificate. For more on generating CSRs, see [Manually Generate a Certificate Signing Request (CSR) Using OpenSSL](https://www.ssl.com/how-to/manually-generate-a-certificate-signing-request-csr-using-openssl/)
+
+You can then upload the CSR using the CLI program as follows:
+
+```
+$ sectigo upload -p 42 <common_name>.csr
+{
+  "batchId": 24,
+  "orderNumber": 1024,
+  "creationDate": "2020-12-10T16:35:32.805+0000",
+  "profile": "TRISA Profile",
+  "size": 1,
+  "status": "CREATED",
+  "active": false,
+  "batchName": "example.com certs",
+  "rejectReason": "",
+  "generatorParametersValues": null,
+  "userId": 10,
+  "downloadable": true,
+  "rejectable": true
+}
+```
+
+The `-p` flag specifies the profile to use the CSR batch request with and must be a valid profileId. The uploaded CSRs can be a single text file with multiple CSRs in PEM form using standard BEGIN/END separators.
 
 ## Managing Certificates
 

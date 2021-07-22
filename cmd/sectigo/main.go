@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/urfave/cli"
@@ -18,8 +20,10 @@ var (
 )
 
 func main() {
-	app := cli.NewApp()
+	// Load the dotenv file if it exists
+	godotenv.Load()
 
+	app := cli.NewApp()
 	app.Name = "sectigo"
 	app.Version = pkg.Version()
 	app.Usage = "CLI helper for Sectigo API access and debugging"
@@ -72,6 +76,18 @@ func main() {
 				cli.StringFlag{
 					Name:  "b, batch-name",
 					Usage: "description of the batch for review purposes",
+				},
+			},
+		},
+		{
+			Name:      "upload",
+			Usage:     "upload a certificate signing request",
+			ArgsUsage: "request.csr",
+			Action:    uploadCSR,
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "p, profile",
+					Usage: "profile/authority id of the cert issuer",
 				},
 			},
 		},
@@ -257,6 +273,30 @@ func createSingle(c *cli.Context) (err error) {
 
 	var rep *sectigo.BatchResponse
 	if rep, err = api.CreateSingleCertBatch(authority, batchName, params); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	printJSON(rep)
+	return nil
+}
+
+func uploadCSR(c *cli.Context) (err error) {
+	if c.NArg() != 1 {
+		return cli.NewExitError("specify the path to one CSR for upload", 1)
+	}
+
+	// Create the request parameters
+	profileId := c.Int("profile")
+	params := make(map[string]string)
+
+	// Load the CSR data from the file
+	var csrData []byte
+	if csrData, err = ioutil.ReadFile(c.Args().First()); err != nil {
+		return cli.NewExitError(fmt.Errorf("could not read %s: %s", c.Args().First(), err), 1)
+	}
+
+	var rep *sectigo.BatchResponse
+	if rep, err = api.UploadCSRBatch(profileId, params, csrData); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

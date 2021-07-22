@@ -10,7 +10,10 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
+	"net/textproto"
 	"os"
 	"path/filepath"
 )
@@ -196,6 +199,107 @@ func (s *Sectigo) CreateSingleCertBatch(authority int, name string, params map[s
 		return nil, err
 	}
 
+	if err = json.NewDecoder(rep.Body).Decode(&batch); err != nil {
+		return nil, err
+	}
+	return batch, nil
+}
+
+// UploadCSRBatch CSR or bulk ZIP file.
+// User must be authenticated with role 'USER' and must has permission to read this profile.
+// That part contains the CSRs with a Content-Dispostion of form-data and a name
+// parameter of files. The filename parameter is not used. The Content-Type of the part
+// should match the uploaded file. The uploaded CSRs can be a single text file with
+// multiple CSRs in PEM form using standard BEGIN/END separators or a zip file
+// containing multiple CSRs files. When uploading a single text file the Content-Type
+// can be text/plain, application/octet-stream or application/x-x509-ca-cert. When
+// uploading a zip file the Content-Type must be application/zip. The zip file must
+// contain each CSR in a file with the extension .csr or .pem.
+func (s *Sectigo) UploadCSRBatch(profileId int, params map[string]string, csrData []byte) (batch *BatchResponse, err error) {
+	// perform preflight check for authenticated endpoint
+	if err = s.preflight(); err != nil {
+		return nil, err
+	}
+
+	// do not continue if we're not authenticated
+	if !s.creds.Valid() {
+		return nil, ErrNotAuthenticated
+	}
+
+	// create multipart body for uploading file and form data
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	// write the profileID as the first part
+	var part io.Writer
+	if part, err = writer.CreateFormField("profileId"); err != nil {
+		return nil, fmt.Errorf("could not write profileId part: %s", err)
+	}
+	if _, err = fmt.Fprintf(part, "%d", profileId); err != nil {
+		return nil, fmt.Errorf("could not write profileId: %s", err)
+	}
+
+	// write the csr data itself into the multipart request
+	// NOTE: according to the documentation the filename is not used
+	if part, err = writer.CreateFormFile("files", "request.csr"); err != nil {
+		return nil, fmt.Errorf("could not write files part: %s", err)
+	}
+	if _, err = part.Write(csrData); err != nil {
+		return nil, fmt.Errorf("could not write csrData: %s", err)
+	}
+
+	// write the csr batch request JSON serialized into the multipart request
+	batchInfo := &UploadCSRBatchRequest{
+		AuthorityID:   profileId,
+		ProfileParams: params,
+	}
+	header := make(textproto.MIMEHeader)
+	header.Set("Content-Disposition", `form-data; name="csrBatchRequest"; filename="blob"`)
+	header.Set("Content-Type", "application/json")
+	if part, err = writer.CreatePart(header); err != nil {
+		return nil, fmt.Errorf("could not write csrBatchRequest part: %s", err)
+	}
+	if err = json.NewEncoder(part).Encode(batchInfo); err != nil {
+		return nil, fmt.Errorf("could not encode csrBatchRequest: %s", err)
+	}
+
+	// determine the endpoint with the query parameter
+	// TODO: add query parameter more effectively
+	endpoint := urlFor(uploadCSREP) + fmt.Sprintf("?profileId=%d", profileId)
+
+	// create multipart request (cannot use newRequest to ensure multipart is constructed correctly)
+	var req *http.Request
+	if req, err = http.NewRequest(http.MethodPost, endpoint, body); err != nil {
+		return nil, err
+	}
+
+	// set headers
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.creds.AccessToken))
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Accept", contentType)
+	req.Header.Set("User-Agent", userAgent)
+
+	// TODO: remove this debugging statement
+	dump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(dump))
+	}
+
+	// execute the request
+	var rep *http.Response
+	if rep, err = s.client.Do(req); err != nil {
+		return nil, err
+	}
+	defer rep.Body.Close()
+
+	// handle http errors
+	if err = s.checkStatus(rep); err != nil {
+		return nil, err
+	}
+
+	// return the response
 	if err = json.NewDecoder(rep.Body).Decode(&batch); err != nil {
 		return nil, err
 	}

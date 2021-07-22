@@ -33,6 +33,12 @@ type CreateSingleCertBatchRequest struct {
 	ProfileParams map[string]string `json:"profileParams"` // should not be empty; represents the profile-specific params passed to batch request
 }
 
+// UploadCSRBatchRequest to POST data to the uploadCSREP
+type UploadCSRBatchRequest struct {
+	AuthorityID   int               `json:"authorityId"`
+	ProfileParams map[string]string `json:"profileParams"` // should not be empty; represents the profile-specific params passed to batch request
+}
+
 // BatchResponse received from createSingleCertBatchEP and batchDetailEP
 type BatchResponse struct {
 	BatchID         int         `json:"batchId"`
