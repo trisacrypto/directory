@@ -145,12 +145,12 @@ $ sectigo upload -p 42 <common_name>.csr
 {
   "batchId": 24,
   "orderNumber": 1024,
-  "creationDate": "2020-12-10T16:35:32.805+0000",
+  "creationDate": "2021-07-22T16:30:02.990+0000",
   "profile": "TRISA Profile",
   "size": 1,
-  "status": "CREATED",
-  "active": false,
-  "batchName": "example.com certs",
+  "status": "PENDING",
+  "active": true,
+  "batchName": "<common_name>.csr",
   "rejectReason": "",
   "generatorParametersValues": null,
   "userId": 10,
@@ -160,6 +160,10 @@ $ sectigo upload -p 42 <common_name>.csr
 ```
 
 The `-p` flag specifies the profile to use the CSR batch request with and must be a valid profileId. The uploaded CSRs can be a single text file with multiple CSRs in PEM form using standard BEGIN/END separators.
+
+Possible CSR Errors:
+
+- BROKEN Error: Cert subject name error: SubjectAlternativeName dNSName value is missing
 
 ## Managing Certificates
 

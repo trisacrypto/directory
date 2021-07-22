@@ -12,7 +12,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"net/http/httputil"
 	"net/textproto"
 	"os"
 	"path/filepath"
@@ -215,7 +214,7 @@ func (s *Sectigo) CreateSingleCertBatch(authority int, name string, params map[s
 // can be text/plain, application/octet-stream or application/x-x509-ca-cert. When
 // uploading a zip file the Content-Type must be application/zip. The zip file must
 // contain each CSR in a file with the extension .csr or .pem.
-func (s *Sectigo) UploadCSRBatch(profileId int, params map[string]string, csrData []byte) (batch *BatchResponse, err error) {
+func (s *Sectigo) UploadCSRBatch(profileId int, filename string, csrData []byte, params map[string]string) (batch *BatchResponse, err error) {
 	// perform preflight check for authenticated endpoint
 	if err = s.preflight(); err != nil {
 		return nil, err
@@ -239,18 +238,10 @@ func (s *Sectigo) UploadCSRBatch(profileId int, params map[string]string, csrDat
 		return nil, fmt.Errorf("could not write profileId: %s", err)
 	}
 
-	// write the csr data itself into the multipart request
-	// NOTE: according to the documentation the filename is not used
-	if part, err = writer.CreateFormFile("files", "request.csr"); err != nil {
-		return nil, fmt.Errorf("could not write files part: %s", err)
-	}
-	if _, err = part.Write(csrData); err != nil {
-		return nil, fmt.Errorf("could not write csrData: %s", err)
-	}
-
 	// write the csr batch request JSON serialized into the multipart request
 	batchInfo := &UploadCSRBatchRequest{
-		AuthorityID:   profileId,
+		ProfileID:     profileId,
+		BatchType:     "BATCH",
 		ProfileParams: params,
 	}
 	header := make(textproto.MIMEHeader)
@@ -263,13 +254,22 @@ func (s *Sectigo) UploadCSRBatch(profileId int, params map[string]string, csrDat
 		return nil, fmt.Errorf("could not encode csrBatchRequest: %s", err)
 	}
 
-	// determine the endpoint with the query parameter
-	// TODO: add query parameter more effectively
-	endpoint := urlFor(uploadCSREP) + fmt.Sprintf("?profileId=%d", profileId)
+	// write the csr data itself into the multipart request
+	// NOTE: according to the documentation the filename is not used
+	if part, err = writer.CreateFormFile("files", filename); err != nil {
+		return nil, fmt.Errorf("could not write files part: %s", err)
+	}
+	if _, err = part.Write(csrData); err != nil {
+		return nil, fmt.Errorf("could not write csrData: %s", err)
+	}
+
+	// make sure the writer is closed before creating the request to ensure that the
+	// content length header is accurate (otherwise there will be a 500 error)
+	writer.Close()
 
 	// create multipart request (cannot use newRequest to ensure multipart is constructed correctly)
 	var req *http.Request
-	if req, err = http.NewRequest(http.MethodPost, endpoint, body); err != nil {
+	if req, err = http.NewRequest(http.MethodPost, urlFor(uploadCSREP), body); err != nil {
 		return nil, err
 	}
 
@@ -278,14 +278,6 @@ func (s *Sectigo) UploadCSRBatch(profileId int, params map[string]string, csrDat
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Accept", contentType)
 	req.Header.Set("User-Agent", userAgent)
-
-	// TODO: remove this debugging statement
-	dump, err := httputil.DumpRequest(req, true)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(string(dump))
-	}
 
 	// execute the request
 	var rep *http.Response
@@ -608,6 +600,35 @@ func (s *Sectigo) ProfileDetail(id int) (profile *ProfileDetailResponse, err err
 		return nil, err
 	}
 	return profile, nil
+}
+
+// Organization returns the organization for the current user. User must be authorized.
+func (s *Sectigo) Organization() (org *OrganizationResponse, err error) {
+	// perform preflight check for authenticated endpoint
+	if err = s.preflight(); err != nil {
+		return nil, err
+	}
+
+	// create request
+	var req *http.Request
+	if req, err = s.newRequest(http.MethodGet, urlFor(currentUserOrganizationEP), nil); err != nil {
+		return nil, err
+	}
+
+	var rep *http.Response
+	if rep, err = s.client.Do(req); err != nil {
+		return nil, err
+	}
+	defer rep.Body.Close()
+
+	if err = s.checkStatus(rep); err != nil {
+		return nil, err
+	}
+
+	if err = json.NewDecoder(rep.Body).Decode(&org); err != nil {
+		return nil, err
+	}
+	return org, nil
 }
 
 // FindCertificate searches for certificates by common name and serial number.

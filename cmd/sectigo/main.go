@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -154,6 +155,12 @@ func main() {
 			},
 		},
 		{
+			Name:   "organization",
+			Usage:  "view organization of the current user",
+			Action: organization,
+			Flags:  []cli.Flag{},
+		},
+		{
 			Name:   "find",
 			Usage:  "search for certs by common name and serial number",
 			Action: findCert,
@@ -285,18 +292,25 @@ func uploadCSR(c *cli.Context) (err error) {
 		return cli.NewExitError("specify the path to one CSR for upload", 1)
 	}
 
+	path := c.Args().First()
+	filename := filepath.Base(path)
+
 	// Create the request parameters
 	profileId := c.Int("profile")
 	params := make(map[string]string)
 
+	if profileId == 0 {
+		return cli.NewExitError("specify the profile ID to sign the cert under", 1)
+	}
+
 	// Load the CSR data from the file
 	var csrData []byte
-	if csrData, err = ioutil.ReadFile(c.Args().First()); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not read %s: %s", c.Args().First(), err), 1)
+	if csrData, err = ioutil.ReadFile(path); err != nil {
+		return cli.NewExitError(fmt.Errorf("could not read %s: %s", path, err), 1)
 	}
 
 	var rep *sectigo.BatchResponse
-	if rep, err = api.UploadCSRBatch(profileId, params, csrData); err != nil {
+	if rep, err = api.UploadCSRBatch(profileId, filename, csrData, params); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
@@ -409,6 +423,16 @@ func profiles(c *cli.Context) (err error) {
 
 	var rep []*sectigo.ProfileResponse
 	if rep, err = api.Profiles(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	printJSON(rep)
+	return nil
+}
+
+func organization(c *cli.Context) (err error) {
+	var rep *sectigo.OrganizationResponse
+	if rep, err = api.Organization(); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

@@ -35,8 +35,9 @@ type CreateSingleCertBatchRequest struct {
 
 // UploadCSRBatchRequest to POST data to the uploadCSREP
 type UploadCSRBatchRequest struct {
-	AuthorityID   int               `json:"authorityId"`
-	ProfileParams map[string]string `json:"profileParams"` // should not be empty; represents the profile-specific params passed to batch request
+	ProfileID     int               `json:"profileId"`
+	BatchType     string            `json:"batchType"`
+	ProfileParams map[string]string `json:"profileParams"`
 }
 
 // BatchResponse received from createSingleCertBatchEP and batchDetailEP
@@ -109,6 +110,22 @@ type ProfileDetailResponse struct {
 	RawProfileConfig string `json:"rawProfileConfig"`
 	Name             string `json:"name"`
 	KeyAlgorithmInfo string `json:"keyAlgorithmInfo"`
+}
+
+// OrganizationResponse received from currentUserOrganizationEP
+type OrganizationResponse struct {
+	OrganizationID      int                  `json:"organizationId"`
+	OrganizationName    string               `json:"organizationName"`
+	Address             string               `json:"address"`
+	PrimaryContactName  string               `json:"primaryContactName"`
+	PrimaryContactEmail string               `json:"primaryContactEmail"`
+	PrimaryContactPhone string               `json:"primaryContactPhone"`
+	ManufactureID       string               `json:"manufactureId"`
+	Logo                string               `json:"logo"`
+	Authorities         []*AuthorityResponse `json:"authorities"`
+	EcosystemID         int                  `json:"ecosystemId"`
+	Parameters          map[string]string    `json:"organizationParameters"`
+	Status              string               `json:"orgStatus"`
 }
 
 // FindCertificateRequest to POST to the findCertificateEP
