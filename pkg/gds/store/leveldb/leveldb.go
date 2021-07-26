@@ -17,7 +17,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	models "github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -164,6 +164,40 @@ func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
 	return v, nil
 }
 
+// RetrieveAll retreives all VASPs records.
+func (s *Store) RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error {
+	iter := s.db.NewIterator(nil, nil)
+	defer iter.Release()
+	for iter.Next() {
+		v := new(pb.VASP)
+		if err := proto.Unmarshal(iter.Value(), v); err != nil {
+			fmt.Println("err", err)
+			return err
+		}
+		fmt.Println("result", v)
+		if v == nil {
+			continue // safety measure since a nil in this channel is a signal
+		}
+		if opts == nil {
+			c <- v
+			continue
+		}
+		if opts.VerificationStatus != nil && v.VerificationStatus != *opts.VerificationStatus {
+			continue
+		}
+		if opts.TrisaEndpointExists && v.TrisaEndpoint == "" {
+			continue
+		}
+		c <- v
+	}
+	fmt.Println("bye")
+	if err := iter.Error(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Update the VASP entry by the VASP ID (required). This method simply overwrites the
 // entire VASP record and does not update individual fields.
 func (s *Store) Update(v *pb.VASP) (err error) {
@@ -215,6 +249,38 @@ func (s *Store) Update(v *pb.VASP) (err error) {
 		return err
 	}
 	return nil
+}
+
+// Update the VASP status. It pulls the current version of the VASP, updates the status and
+// last updated time and saves.
+func (s *Store) UpdateStatus(id string, status int32) (err error) {
+	if id == "" {
+		return ErrIncompleteRecord
+	}
+
+	// Retrieve the original record to ensure that the indices are updated properly
+	key := s.vaspKey(id)
+	v, err := s.Retrieve(id)
+	if err != nil {
+		return err
+	}
+
+	// Update the record metadata
+	v.Version.Version++
+	v.LastUpdated = time.Now().Format(time.RFC3339)
+	v.ServiceStatus = pb.ServiceState(status)
+
+	// Critical section (optimizing for safety rather than speed)
+	s.Lock()
+	defer s.Unlock()
+
+	var val []byte
+	if val, err = proto.Marshal(v); err != nil {
+		return err
+	}
+
+	// Insert the new record
+	return s.db.Put(key, val, nil)
 }
 
 // Destroy a record, removing it completely from the database and indices.

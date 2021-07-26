@@ -15,6 +15,14 @@ If you're on OS X - then the easiest option is to install these tools using Home
 $ brew install go-bindata protobuf
 ```
 
+If you have issues you may also need to install these:
+
+```
+$ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+$ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+$ go: downloading google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
+```
+
 On the server-side, the Go code requires code generation for the API protocol buffers and email template data. From the project root:
 
 ```

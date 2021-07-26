@@ -5,6 +5,13 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// RetrieveAllOpts contains all the options RetrieveAll can filter on. All are optional.
+// If no filters are desired, pass nil to RetreiveAll.
+type RetrieveAllOpts struct {
+	VerificationStatus  *pb.VerificationState
+	TrisaEndpointExists bool
+}
+
 // GetAdminVerificationToken from the extra data on the VASP record.
 func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 	// If the extra data is nil, return empty string with no error
@@ -20,12 +27,15 @@ func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 	return extra.GetAdminVerificationToken(), nil
 }
 
-// SetAdminVerificationToken on the extra data on the VASP record (completely replaces
-// the old record, which may not be ideal).
+// SetAdminVerificationToken on the extra data on the VASP record.
 func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
-	extra := &GDSExtraData{
-		AdminVerificationToken: token,
+	// maintains any other fields already in extra
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return err
 	}
+
+	extra.AdminVerificationToken = token
 	if vasp.Extra, err = anypb.New(extra); err != nil {
 		return err
 	}

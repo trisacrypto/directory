@@ -26,7 +26,15 @@ func (s *Store) Retrieve(id string) (v *pb.VASP, err error) {
 	return nil, nil
 }
 
+func (s *Store) RetrieveAll(opts *models.RetrieveAllOpts, c chan *pb.VASP) error {
+	return nil
+}
+
 func (s *Store) Update(v *pb.VASP) (err error) {
+	return nil
+}
+
+func (s *Store) UpdateStatus(id string, status int32) (err error) {
 	return nil
 }
 
