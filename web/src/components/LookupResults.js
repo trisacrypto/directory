@@ -25,8 +25,12 @@ const LookupResults = (props) => {
             <dt className="col-sm-3">TRISA Service Endpoint</dt>
             <dd className="col-sm-9">{results.endpoint}</dd>
 
-            <dt className="col-sm-3">Country</dt>
-            <dd className="col-sm-9">{countryCodeEmoji(results.country)} <span className="sr-only">{results.country}</span></dd>
+            {results.country &&
+              <>
+              <dt className="col-sm-3">Country</dt>
+              <dd className="col-sm-9">{countryCodeEmoji(results.country)} <span className="sr-only">{results.country}</span></dd>
+              </>
+            }
 
             {results.verifiedOn &&
               <>

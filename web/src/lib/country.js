@@ -15,6 +15,11 @@ const OFFSET = 127397;
  * @returns {string} flag emoji
  */
 export function countryCodeEmoji(cc) {
+  // Ignore empty strings, null, and undefined
+  if (!cc) {
+    return "";
+  }
+
   if (!CC_REGEX.test(cc)) {
     const type = typeof cc;
     throw new TypeError(
