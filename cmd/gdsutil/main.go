@@ -129,17 +129,17 @@ func main() {
 			},
 		},
 		{
-			Name:      "peers:add",
-			Usage:     "add peers to the network by pid",
-			ArgsUsage: "pid",
-			Category:  "replica",
-			Before:    openLevelDB,
-			Action:    addPeers,
+			Name:     "peers:add",
+			Usage:    "add peers to the network by pid",
+			Category: "replica",
+			Before:   initReplicaClient,
+			Action:   addPeers,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+					Name:   "u, replica-endpoint",
+					Usage:  "the url to connect the directory replica client",
+					Value:  "replica.vaspdirectory.net:443",
+					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
 				},
 				// TODO allow the user to add multiple peers at a time?
 				cli.Uint64Flag{
@@ -149,17 +149,17 @@ func main() {
 			},
 		},
 		{
-			Name:      "peers:delete",
-			Usage:     "tombstone a peer by pid (does not remove from ldb)",
-			ArgsUsage: "pid",
-			Category:  "replica",
-			Before:    openLevelDB,
-			Action:    delPeers,
+			Name:     "peers:delete",
+			Usage:    "remove a peer from the network by pid",
+			Category: "replica",
+			Before:   initReplicaClient,
+			Action:   delPeers,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+					Name:   "u, replica-endpoint",
+					Usage:  "the url to connect the directory replica client",
+					Value:  "replica.vaspdirectory.net:443",
+					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
 				},
 				// TODO allow the user to rm multiple peers at a time?
 				cli.Uint64Flag{
@@ -172,13 +172,14 @@ func main() {
 			Name:     "peers:list",
 			Usage:    "get a status report of all peers in the network",
 			Category: "replica",
-			Before:   openLevelDB,
+			Before:   initReplicaClient,
 			Action:   listPeers,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+					Name:   "u, replica-endpoint",
+					Usage:  "the url to connect the directory replica client",
+					Value:  "replica.vaspdirectory.net:443",
+					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
 				},
 				// TODO: have we standardized on how to reference regions?
 				cli.StringSliceFlag{
@@ -550,22 +551,14 @@ func isFile(path string) bool {
 // Peer Management Replica Actions
 //===========================================================================
 
-func addPeers(c *cli.Context) (err error) {
-	defer ldb.Close()
-	if c.NArg() != 1 {
-		return cli.NewExitError("must specify pid for peer", 1)
-	}
-	pid := c.Uint64("pid")
-	peer := &peers.Peer{
-		Id: pid,
-	}
+var replicaClient peers.PeerManagementClient
 
-	// initialize a client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
+func addPeers(c *cli.Context) (err error) {
+	// Create the Peer with the specified PID
+	// TODO: how to add the other values for a Peer?
+	peer := &peers.Peer{
+		Id: c.Uint64("pid"),
 	}
-	client := peers.NewPeerManagementClient(cc)
 
 	// create a new context and pass the parent context in
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
@@ -573,31 +566,19 @@ func addPeers(c *cli.Context) (err error) {
 
 	// call client.AddPeer with the pid
 	var out *peers.PeersStatus
-	if out, err = client.AddPeers(ctx, peer); err != nil {
+	if out, err = replicaClient.AddPeers(ctx, peer); err != nil {
 		return cli.NewExitError(err, 1)
 	}
-	// print the status
-	printJSON(out)
 
+	// print the returned result
+	printJSON(out)
 	return nil
 }
 
 func delPeers(c *cli.Context) (err error) {
-	defer ldb.Close()
-	if c.NArg() != 1 {
-		return cli.NewExitError("must specify pid for peer", 1)
-	}
-	pid := c.Uint64("pid")
 	peer := &peers.Peer{
-		Id: pid,
+		Id: c.Uint64("pid"),
 	}
-
-	// initialize a client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	client := peers.NewPeerManagementClient(cc)
 
 	// create a new context and pass the parent context in
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
@@ -605,33 +586,21 @@ func delPeers(c *cli.Context) (err error) {
 
 	// call client.RmPeer with the pid
 	var out *peers.PeersStatus
-	if out, err = client.RmPeers(ctx, peer); err != nil {
+	if out, err = replicaClient.RmPeers(ctx, peer); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
-	// print the status
+	// print the returned result
 	printJSON(out)
-
 	return nil
 }
 
 func listPeers(c *cli.Context) (err error) {
-	defer ldb.Close()
-
 	// determine if this is a region-specific or status only request
-	so := c.GlobalBool("status")
-	regions := c.StringSlice("region")
 	filter := &peers.PeersFilter{
-		Region:     regions,
-		StatusOnly: so,
+		Region:     c.StringSlice("region"),
+		StatusOnly: c.Bool("status"),
 	}
-
-	// initialize a client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	client := peers.NewPeerManagementClient(cc)
 
 	// create a new context and pass the parent context in
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
@@ -639,12 +608,22 @@ func listPeers(c *cli.Context) (err error) {
 
 	// call client.GetPeers with filter
 	var out *peers.PeersList
-	if out, err = client.GetPeers(ctx, filter); err != nil {
+	if out, err = replicaClient.GetPeers(ctx, filter); err != nil {
 		return cli.NewExitError(err, 1)
 	}
+
 	// print the peers
 	printJSON(out)
+	return nil
+}
 
+func initReplicaClient(c *cli.Context) (err error) {
+	// initialize a client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(c.String("replica-endpoint"), grpc.WithInsecure()); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	replicaClient = peers.NewPeerManagementClient(cc)
 	return nil
 }
 
