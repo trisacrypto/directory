@@ -7,14 +7,27 @@ services:
     image: trisa/gds
     ports:
       - 4433:4433
+      - 4434:4434
+      - 4435:4435
     volumes:
       - ../fixtures:/data
     environment:
+      - GDS_MAINTENANCE=false
+      - GDS_API_ENABLED=true
       - GDS_BIND_ADDR=:4433
       - GDS_DIRECTORY_ID=local.directory.dev
       - GDS_SECRET_KEY=supersecretsquirrel
-      - GDS_DATABASE_URL=leveldb:////data/db
       - GDS_LOG_LEVEL=debug
+      - GDS_CONSOLE_LOG=true
+      - GDS_DATABASE_URL=leveldb:////data/db
+      - GDS_DATABASE_REINDEX_ON_BOOT=false
+      - GDS_ADMIN_ENABLED=true
+      - GDS_ADMIN_BIND_ADDR=:4434
+      - GDS_REPLICA_ENABLED=false
+      - GDS_REPLICA_BIND_ADDR=:4435
+      - GDS_REPLICA_PID=8
+      - GDS_REPLICA_REGION="docker"
+      - GDS_REPLICA_NAME="local1.directory.dev"
       - SECTIGO_USERNAME
       - SECTIGO_PASSWORD
       - GDS_SERVICE_EMAIL

@@ -10,8 +10,8 @@ const (
 	VersionMajor         = 1
 	VersionMinor         = 1
 	VersionPatch         = 0
-	VersionReleaseLevel  = "alpha"
-	VersionReleaseNumber = 2
+	VersionReleaseLevel  = ""
+	VersionReleaseNumber = 0
 )
 
 // Version returns the semantic version for the current build.
