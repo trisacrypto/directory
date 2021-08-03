@@ -29,30 +29,43 @@ func TestWire(t *testing.T) {
 	require.NoError(t, err)
 	out, err := RemarshalJSON(NamespaceVASPs, in)
 	require.NoError(t, err)
-	vasp, err := UnmarshalProto(NamespaceVASPs, out)
+	msg, err := UnmarshalProto(NamespaceVASPs, out)
 	require.NoError(t, err)
-	_, ok := vasp.(*pb.VASP)
+	vasp, ok := msg.(*pb.VASP)
 	require.True(t, ok)
+
+	// Make sure that the VASP is valid
+	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", vasp.Id)
+	require.NoError(t, vasp.Validate(false))
 
 	// Test unmarshal certificate requests
 	in, err = ioutil.ReadFile("testdata/certreqs::87657b4d-e72c-4526-9332-c8fc56adb367.json")
 	require.NoError(t, err)
 	out, err = RemarshalJSON(NamespaceCertReqs, in)
 	require.NoError(t, err)
-	certreq, err := UnmarshalProto(NamespaceCertReqs, out)
+	msg, err = UnmarshalProto(NamespaceCertReqs, out)
 	require.NoError(t, err)
-	_, ok = certreq.(*models.CertificateRequest)
+	certreq, ok := msg.(*models.CertificateRequest)
 	require.True(t, ok)
+
+	// Make sure CertificateRequest is valid
+	require.Equal(t, "87657b4d-e72c-4526-9332-c8fc56adb367", certreq.Id)
+	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", certreq.Vasp)
+	require.Equal(t, models.CertificateRequestState_COMPLETED, certreq.Status)
 
 	// Test Unmarshal Peers
 	in, err = ioutil.ReadFile("testdata/peers::8.json")
 	require.NoError(t, err)
 	out, err = RemarshalJSON(NamespaceReplicas, in)
 	require.NoError(t, err)
-	peer, err := UnmarshalProto(NamespaceReplicas, out)
+	msg, err = UnmarshalProto(NamespaceReplicas, out)
 	require.NoError(t, err)
-	_, ok = peer.(*peers.Peer)
+	peer, ok := msg.(*peers.Peer)
 	require.True(t, ok)
+
+	// Make sure Peer is valid
+	require.Equal(t, "0008", peer.Key())
+	require.Equal(t, "localhost:4435", peer.Addr)
 
 	// Test Unmarshal category index
 	in, err = ioutil.ReadFile("testdata/index::categories.json")

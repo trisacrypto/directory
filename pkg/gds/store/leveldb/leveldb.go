@@ -53,6 +53,7 @@ var (
 	ErrCorruptedSequence = errors.New("primary key sequence is invalid")
 	ErrCorruptedIndex    = errors.New("search indices are invalid")
 	ErrIncompleteRecord  = errors.New("record is missing required fields")
+	ErrIDAlreadySet      = errors.New("record must not have an ID (use update instead)")
 	ErrEntityNotFound    = errors.New("entity not found")
 	ErrDuplicateEntity   = errors.New("entity unique constraints violated")
 )
@@ -67,14 +68,6 @@ var (
 	preVASPs         = []byte("vasps::")
 	preCertReqs      = []byte("certreqs::")
 	preReplicas      = []byte("peers::")
-)
-
-// HACK: Make sure these match what's in store.go -- they're not imported here to
-// prevent a recursive import! If namespaces becomes complex, add to own package.
-const (
-	nsVASPs    = "vasps"
-	nsCertReqs = "certreqs"
-	nsReplicas = "peers"
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -113,6 +106,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	// Create UUID for record
 	// TODO: check uniqueness of the ID
 	v.Id = uuid.New().String()
+	key := s.vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
@@ -125,6 +119,9 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
 	}
+	if v.Version == nil || v.Version.Version == 0 {
+		v.Version = &pb.Version{Version: 1}
+	}
 
 	// Critical section (optimizing for safety rather than speed)
 	s.Lock()
@@ -135,12 +132,15 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 		return "", ErrDuplicateEntity
 	}
 
+	// It is not necessary for the marshal to be inside the lock, but we don't want to
+	// do extra serialization work in memory if there is a duplicate entity, a check
+	// which must be inside the lock.
 	var data []byte
-	key := s.vaspKey(v.Id)
 	if data, err = proto.Marshal(v); err != nil {
 		return "", err
 	}
 
+	// This Put must be inside the lock to ensure the indices reflect what is in the db.
 	if err = s.db.Put(key, data, nil); err != nil {
 		return "", err
 	}
@@ -177,6 +177,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	if v.Id == "" {
 		return ErrIncompleteRecord
 	}
+	key := s.vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
@@ -184,29 +185,32 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 		return ErrIncompleteRecord
 	}
 
-	// Retrieve the original record to ensure that the indices are updated properly
-	key := s.vaspKey(v.Id)
-	o, err := s.RetrieveVASP(v.Id)
-	if err != nil {
-		return err
-	}
-
 	// Update management timestamps and record metadata
+	v.Version.Version++
 	v.LastUpdated = time.Now().Format(time.RFC3339)
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
 	}
-
-	// Critical section (optimizing for safety rather than speed)
-	s.Lock()
-	defer s.Unlock()
 
 	var val []byte
 	if val, err = proto.Marshal(v); err != nil {
 		return err
 	}
 
+	// Critical section (optimizing for safety rather than speed)
+	s.Lock()
+	defer s.Unlock()
+
+	// Retrieve the original record to ensure that the indices are updated properly
+	// This must be inside the lock so that the database indices are currently updated.
+	o, err := s.RetrieveVASP(v.Id)
+	if err != nil {
+		return err
+	}
+
 	// Insert the new record
+	// This must be inside the lock so that the indices reflect what is currently in
+	// the database and there is no race condition between the retrieve and put.
 	if err = s.db.Put(key, val, nil); err != nil {
 		return err
 	}
@@ -227,7 +231,12 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 func (s *Store) DeleteVASP(id string) (err error) {
 	key := s.vaspKey(id)
 
-	// Lookup the record in order to remove data from indices
+	// Critical section (optimizing for safety rather than speed)
+	s.Lock()
+	defer s.Unlock()
+
+	// Lookup the record in order to remove data from indices, this must be inside the
+	// lock to ensure the indices are correctly updated with what is on disk.
 	record, err := s.RetrieveVASP(id)
 	if err != nil {
 		if err == ErrEntityNotFound {
@@ -240,10 +249,6 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
-
-	// Critical section (optimizing for safety rather than speed)
-	s.Lock()
-	defer s.Unlock()
 
 	// Remove the records from the indices
 	if err = s.removeIndices(record); err != nil {
@@ -360,6 +365,10 @@ func (s *Store) ListCertReqs() (reqs []*models.CertificateRequest, err error) {
 
 // CreateCertReq and assign a new ID and return the version.
 func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
+	if r.Id != "" {
+		return "", ErrIDAlreadySet
+	}
+
 	// Create UUID for record
 	// TODO: check uniqueness of the ID
 	r.Id = uuid.New().String()
@@ -467,9 +476,18 @@ func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
 
 // CreatePeer using its PID (can't be nil) to create the LDB key and return the version.
 func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
+	if p.Key() == "" {
+		return "", ErrIncompleteRecord
+	}
+
 	// The ID on a Peer is a uint64 representing the PID
 	// convert to string for a consistent interface across Create and Retrieve methods
 	key := s.peerKey(p.Key())
+
+	p.Modified = time.Now().Format(time.RFC3339)
+	if p.Created == "" {
+		p.Created = p.Modified
+	}
 
 	// Marshall the Peer to store in the database
 	var data []byte

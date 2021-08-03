@@ -18,7 +18,7 @@ require (
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/trisa v0.2.0
+	github.com/trisacrypto/trisa v0.3.0
 	github.com/urfave/cli v1.22.5
 	google.golang.org/api v0.47.0 // indirect
 	google.golang.org/genproto v0.0.0-20210517163617-5e0236093d7a
