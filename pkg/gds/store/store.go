@@ -38,7 +38,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
@@ -93,7 +92,6 @@ type Store interface {
 	Close() error
 	DirectoryStore
 	CertificateStore
-	VersionManager
 	ReplicaStore
 }
 
@@ -134,12 +132,6 @@ type Indexer interface {
 // optionally with encryption if its required.
 type Backup interface {
 	Backup(string) error
-}
-
-// VersionManager stores implement the global.VersionManager for updating object
-// metadata in place. This is a convienience interface for testing purposes.
-type VersionManager interface {
-	WithVersionManager(*global.VersionManager) error
 }
 
 // DSN represents the parsed components of an embedded database service.

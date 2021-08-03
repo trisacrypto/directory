@@ -1,16 +1,18 @@
 package leveldb
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
 type leveldbTestSuite struct {
@@ -40,38 +42,39 @@ func TestLevelDB(t *testing.T) {
 }
 
 func (s *leveldbTestSuite) TestDirectoryStore() {
-	// Use global versioner for these tests
-	vm := &global.VersionManager{PID: 8, Owner: "8:mitchell", Region: "us-east-2c"}
-	err := s.db.WithVersionManager(vm)
-	s.NoError(err)
-
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/alice.json")
+	data, err := ioutil.ReadFile("testdata/vasp.json")
 	s.NoError(err)
 
 	alice := &pb.VASP{}
 	err = protojson.Unmarshal(data, alice)
 	s.NoError(err)
 
+	// Validate the VASP record loaded correctly and is partial
+	s.NotEmpty(alice.CommonName)
+	s.NotEmpty(alice.TrisaEndpoint)
+	s.NoError(alice.Validate(true))
+	s.Empty(alice.Id)
+
 	// Attempt to Create the VASP
 	id, err := s.db.CreateVASP(alice)
 	s.NoError(err)
+	s.NotEmpty(id)
 
 	// Attempt to Retrieve the VASP
 	alicer, err := s.db.RetrieveVASP(id)
 	s.NoError(err)
 	s.Equal(id, alicer.Id)
+	s.Equal(alicer.FirstListed, alicer.LastUpdated)
+	s.NotEmpty(alicer.LastUpdated)
+	s.NotEmpty(alicer.Version)
+	s.Equal(uint64(1), alicer.Version.Version)
 
-	// Test the version of the retrieved object
-	meta, deletedOn, err := models.GetMetadata(alicer)
-	s.NoError(err)
-	s.True(deletedOn.IsZero())
-	s.True(proto.Equal(meta.Version, &global.Version{Pid: 8, Version: 1, Region: "us-east-2c"}))
-	s.Empty(meta.Version.Parent)
-	s.Equal(vm.Owner, meta.Owner)
-	s.Equal(vm.Region, meta.Region)
+	// Ensure the modification time rolls over to the next second for comparison
+	time.Sleep(1 * time.Second)
 
 	// Update the VASP
+	alicer.Entity.Name.NameIdentifiers[0].LegalPersonName = "AliceLiteCoin, LLC"
 	alicer.VerificationStatus = pb.VerificationState_VERIFIED
 	alicer.VerifiedOn = "2021-06-30T10:40:40Z"
 	err = s.db.UpdateVASP(alicer)
@@ -80,12 +83,11 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	alicer, err = s.db.RetrieveVASP(id)
 	s.NoError(err)
 	s.Equal(id, alicer.Id)
-
-	// Test the version of the retrieved object
-	meta, deletedOn, err = models.GetMetadata(alicer)
-	s.NoError(err)
-	s.True(deletedOn.IsZero())
-	s.True(proto.Equal(meta.Version, &global.Version{Pid: 8, Version: 2, Region: "us-east-2c", Parent: &global.Version{Pid: 8, Version: 1, Region: "us-east-2c"}}))
+	s.NotEmpty(alicer.LastUpdated)
+	s.NotEqual(alicer.FirstListed, alicer.LastUpdated)
+	s.NotEmpty(alicer.Version)
+	s.Equal(uint64(2), alicer.Version.Version)
+	s.Equal(alicer.VerificationStatus, pb.VerificationState_VERIFIED)
 
 	// Delete the VASP
 	err = s.db.DeleteVASP(id)
@@ -96,11 +98,6 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 }
 
 func (s *leveldbTestSuite) TestCertificateStore() {
-	// Use global versioner for these tests
-	vm := &global.VersionManager{PID: 8, Owner: "8:mitchell", Region: "us-east-2c"}
-	err := s.db.WithVersionManager(vm)
-	s.NoError(err)
-
 	// Load the VASP record from testdata
 	data, err := ioutil.ReadFile("testdata/certreq.json")
 	s.NoError(err)
@@ -108,6 +105,14 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	certreq := &models.CertificateRequest{}
 	err = protojson.Unmarshal(data, certreq)
 	s.NoError(err)
+
+	// Verify the certificate request is loaded correctly
+	s.Empty(certreq.Id)
+	s.NotEmpty(certreq.Vasp)
+	s.NotEmpty(certreq.CommonName)
+	s.Equal(models.CertificateRequestState_INITIALIZED, certreq.Status)
+	s.Empty(certreq.Created)
+	s.Empty(certreq.Modified)
 
 	// Attempt to Create the CertReq
 	id, err := s.db.CreateCertReq(certreq)
@@ -117,14 +122,23 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	crr, err := s.db.RetrieveCertReq(id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
+	s.NotEmpty(crr.Created)
+	s.Equal(crr.Modified, crr.Created)
+	s.Equal(certreq.Vasp, crr.Vasp)
+	s.Equal(certreq.CommonName, crr.CommonName)
 
-	// Test the version of the retrieved object
-	s.NoError(err)
-	s.Empty(crr.Deleted)
-	s.True(proto.Equal(crr.Metadata.Version, &global.Version{Pid: 8, Version: 1, Region: "us-east-2c"}))
-	s.Empty(crr.Metadata.Version.Parent)
-	s.Equal(vm.Owner, crr.Metadata.Owner)
-	s.Equal(vm.Region, crr.Metadata.Region)
+	// Attempt to save a certificate request with an ID on it
+	icrr := &models.CertificateRequest{
+		Id:         uuid.New().String(),
+		Vasp:       crr.Vasp,
+		CommonName: crr.CommonName,
+		Status:     models.CertificateRequestState_INITIALIZED,
+	}
+	_, err = s.db.CreateCertReq(icrr)
+	s.ErrorIs(err, ErrIDAlreadySet)
+
+	// Sleep for a second to roll over the clock for the modified time stamp
+	time.Sleep(1 * time.Second)
 
 	// Update the CertReq
 	crr.Status = models.CertificateRequestState_COMPLETED
@@ -134,11 +148,13 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	crr, err = s.db.RetrieveCertReq(id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
+	s.Equal(models.CertificateRequestState_COMPLETED, crr.Status)
+	s.NotEmpty(crr.Modified)
+	s.NotEqual(crr.Modified, crr.Created)
 
-	// Test the version of the retrieved object
-	s.NoError(err)
-	s.Empty(crr.Deleted)
-	s.True(proto.Equal(crr.Metadata.Version, &global.Version{Pid: 8, Version: 2, Region: "us-east-2c", Parent: &global.Version{Pid: 8, Version: 1, Region: "us-east-2c"}}))
+	// Attempt to update a certificate request with no Id on it
+	certreq.Id = ""
+	s.ErrorIs(s.db.UpdateCertReq(certreq), ErrIncompleteRecord)
 
 	// Delete the CertReq
 	err = s.db.DeleteCertReq(id)
@@ -146,4 +162,87 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	crr, err = s.db.RetrieveCertReq(id)
 	s.ErrorIs(err, ErrEntityNotFound)
 	s.Empty(crr)
+
+	// Add a few more certificate requests
+	for i := 0; i < 10; i++ {
+		crr := &models.CertificateRequest{
+			Vasp:       uuid.New().String(),
+			CommonName: fmt.Sprintf("trisa%d.example.com", i+1),
+			Status:     models.CertificateRequestState_COMPLETED,
+		}
+		_, err := s.db.CreateCertReq(crr)
+		s.NoError(err)
+	}
+
+	// Test listing all of the certificates
+	reqs, err := s.db.ListCertReqs()
+	s.NoError(err)
+	s.Len(reqs, 10)
+}
+
+func (s *leveldbTestSuite) TestReplicaStore() {
+	// Load the VASP record from testdata
+	data, err := ioutil.ReadFile("testdata/peer.json")
+	s.NoError(err)
+
+	peer := &peers.Peer{}
+	err = protojson.Unmarshal(data, peer)
+	s.NoError(err)
+
+	// Verify the peer is loaded correctly
+	s.NotEmpty(peer.Id)
+	s.NotEmpty(peer.Addr)
+	s.NotEmpty(peer.Name)
+	s.Empty(peer.Created)
+	s.Empty(peer.Modified)
+
+	// Attempt to Create the Peer
+	id, err := s.db.CreatePeer(peer)
+	s.NoError(err)
+
+	// Attempt to Retrieve the Peer
+	peerr, err := s.db.RetrievePeer(id)
+	s.NoError(err)
+	s.Equal(id, peerr.Key())
+	s.NotEmpty(peerr.Created)
+	s.Equal(peerr.Modified, peerr.Created)
+	s.Equal(peer.Name, peerr.Name)
+	s.Equal(peer.Addr, peerr.Addr)
+
+	// Attempt to save a peer without an ID on it
+	ipeer := &peers.Peer{
+		Id:     0,
+		Name:   "foo",
+		Addr:   "localhost:3324",
+		Region: "local",
+	}
+	_, err = s.db.CreatePeer(ipeer)
+	s.ErrorIs(err, ErrIncompleteRecord)
+
+	// Sleep for a second to roll over the clock for the modified time stamp
+	time.Sleep(1 * time.Second)
+
+	// Delete the Peer
+	err = s.db.DeletePeer(id)
+	s.NoError(err)
+	peerr, err = s.db.RetrievePeer(id)
+	s.ErrorIs(err, ErrEntityNotFound)
+	s.Empty(peerr)
+
+	// Add a few more peers
+	for i := 0; i < 10; i++ {
+		crr := &peers.Peer{
+			Id:     uint64(i + 1),
+			Addr:   fmt.Sprintf("localhost:%d", 4434+i),
+			Name:   fmt.Sprintf("Local Replica %d", i+1),
+			Region: "local",
+		}
+		_, err := s.db.CreatePeer(crr)
+		s.NoError(err)
+	}
+
+	// Test listing all of the peers
+	reqs, err := s.db.ListPeers()
+	s.NoError(err)
+	s.Len(reqs, 10)
 }

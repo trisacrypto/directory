@@ -3,7 +3,6 @@ package sqlite
 import (
 	"errors"
 
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -76,9 +75,5 @@ func (s *Store) DeletePeer(id string) error {
 	return nil
 }
 func (s *Store) Backup(path string) (err error) {
-	return nil
-}
-
-func (s *Store) WithVersionManager(vm *global.VersionManager) error {
 	return nil
 }
