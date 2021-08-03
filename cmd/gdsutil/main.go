@@ -22,13 +22,9 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
-	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -347,15 +343,15 @@ func ldbGet(c *cli.Context) (err error) {
 
 		prefix := strings.Split(keys, "::")[0]
 		switch prefix {
-		case global.NamespaceVASPs, global.NamespaceCertReqs, global.NamespaceReplicas:
+		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		case global.NamespaceIndices:
+		case wire.NamespaceIndices:
 			if jsonValue, err = wire.UnmarshalIndex(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		case global.NamespaceSequence:
+		case wire.NamespaceSequence:
 			if jsonValue, err = wire.UnmarshalSequence(data); err != nil {
 				return cli.NewExitError(err, 1)
 			}
@@ -657,313 +653,11 @@ func listPeers(c *cli.Context) (err error) {
 //===========================================================================
 
 func gossip(c *cli.Context) (err error) {
-	defer ldb.Close()
-	if c.NArg() != 1 {
-		return cli.NewExitError("must specify the remote replica addr:port", 1)
-	}
-
-	// If objects is specified then load them from the database
-	objs := c.StringSlice("objects")
-	namespaces := c.StringSlice("namespaces")
-
-	versions := &global.VersionVectors{
-		Objects:    make([]*global.Object, 0),
-		Partial:    c.Bool("partial"),
-		Namespaces: namespaces,
-	}
-
-	// Sanity check to ensure no duplicates and no ignored objects
-	if len(objs) > 0 && len(namespaces) > 0 {
-		return cli.NewExitError("specify objects or namespaces not both", 1)
-	}
-
-	// Load objects
-	if len(objs) > 0 {
-		for _, key := range objs {
-			var obj *global.Object
-			if obj, err = loadMetadata(key); err != nil {
-				return cli.NewExitError(err, 1)
-			}
-			versions.Objects = append(versions.Objects, obj)
-		}
-	} else {
-
-		if len(versions.Namespaces) == 0 {
-			// Specify "all" namespaces manually (opt-in to what is replicated).
-			// NOTE: if there is a namespace being omitted from gossip without being
-			// specified in the command line, it's likely it needs to be added here.
-			namespaces = global.Namespaces[:]
-		}
-
-		for _, ns := range namespaces {
-			var objs []*global.Object
-			if objs, err = loadNamespaceMetadata(ns); err != nil {
-				return cli.NewExitError(err, 1)
-			}
-			versions.Objects = append(versions.Objects, objs...)
-		}
-	}
-
-	// Initialize the gossip client
-	// TODO: move to its own helper function
-	// TODO: make secure
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.Args()[0], grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	client := global.NewReplicationClient(cc)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
-
-	var rep *global.Updates
-	if rep, err = client.Gossip(ctx, versions); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	// If dryrun only print objects retrieved from remote; do not modify database.
-	if c.Bool("dryrun") {
-		fmt.Printf("sent %d versions to remote\n", len(versions.Objects))
-		fmt.Printf("received %d repairs from remote\n", len(rep.Objects))
-		for _, obj := range rep.Objects {
-			fmt.Printf("  - %s (v%d.p%d)\n", obj.Key, obj.Version.Version, obj.Version.Pid)
-		}
-		return nil
-	}
-
-	// Repair local database as last step if not dryrun
-	for _, obj := range rep.Objects {
-		// Get the struct from the any in the object
-		// This isn't totally necessary but is some sanity checking to make sure things aren't totally out of whack
-		var msg proto.Message
-		if msg, err = obj.Data.UnmarshalNew(); err != nil {
-			return cli.NewExitError(fmt.Errorf("could not unmarshal %s in %s from any: %s", obj.Key, obj.Namespace, err), 1)
-		}
-
-		switch msg := msg.(type) {
-		case *pb.VASP:
-			if obj.Namespace != global.NamespaceVASPs {
-				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
-			}
-		case *models.CertificateRequest:
-			if obj.Namespace != global.NamespaceCertReqs {
-				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
-			}
-		case *peers.Peer:
-			if obj.Namespace != global.NamespaceReplicas {
-				return cli.NewExitError(fmt.Errorf("type/namespace mismatch %s in %s from any: %T", obj.Key, obj.Namespace, msg), 1)
-			}
-		default:
-			return cli.NewExitError(fmt.Errorf("could not handle %s in %s from any type %T", obj.Key, obj.Namespace, msg), 1)
-		}
-
-		// Store the data in the database
-		if err = ldb.Put([]byte(obj.Key), obj.Data.Value, nil); err != nil {
-			return cli.NewExitError(fmt.Errorf("could not put %s in %s to database: %s", obj.Key, obj.Namespace, err), 1)
-		}
-	}
-
-	fmt.Printf("sent %d versions to remote\n", len(versions.Objects))
-	fmt.Printf("received %d repairs from remote\n", len(rep.Objects))
-	return nil
+	return errors.New("honu replication required")
 }
 
 func gossipMigrate(c *cli.Context) (err error) {
-	// Create a replica config to create a new version manager
-	conf := config.ReplicaConfig{
-		Enabled:  true,
-		BindAddr: c.String("addr"),
-		PID:      c.Uint64("pid"),
-		Region:   c.String("region"),
-		Name:     c.String("name"),
-	}
-	dryrun := c.Bool("dryrun")
-
-	if err = conf.Validate(); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	var vm *global.VersionManager
-	if vm, err = global.New(conf); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	// Migrate VASP objects
-	migrated := 0
-	iter := ldb.NewIterator(util.BytesPrefix([]byte("vasps::")), nil)
-vaspLoop:
-	for iter.Next() {
-		vasp := &pb.VASP{}
-		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
-			fmt.Printf("could not unmarshal %q: %s\n", iter.Key(), err)
-			continue vaspLoop
-		}
-
-		key := string(iter.Key())
-		meta, deletedOn, err := models.GetMetadata(vasp)
-		if err != nil {
-			fmt.Printf("could not get metadata %q: %s\n", key, err)
-			continue vaspLoop
-		}
-
-		if !deletedOn.IsZero() {
-			// Handle tombstone
-			fmt.Printf("cannot handle tombstone %q\n", key)
-			continue vaspLoop
-		}
-
-		if meta == nil {
-			meta = &global.Object{}
-		}
-
-		// Update metadata
-		meta.Key = key
-		meta.Namespace = global.NamespaceVASPs
-		meta.Owner = vm.Owner
-		meta.Region = vm.Region
-		meta.Version = &global.Version{
-			Pid:     vasp.Version.Pid,
-			Version: vasp.Version.Version,
-		}
-		if err = vm.Update(meta); err != nil {
-			fmt.Printf("could not update metadata %q: %s\n", iter.Key(), err)
-			continue vaspLoop
-		}
-
-		if err = models.SetMetadata(vasp, meta, deletedOn); err != nil {
-			fmt.Printf("could not set metadata %q: %s\n", key, err)
-			continue vaspLoop
-		}
-
-		if !dryrun {
-			var data []byte
-			if data, err = proto.Marshal(vasp); err != nil {
-				fmt.Printf("could not marshal %q: %s\n", iter.Key(), err)
-				continue vaspLoop
-			}
-
-			if err = ldb.Put([]byte(key), data, nil); err != nil {
-				fmt.Printf("could not write %q: %s\n", iter.Key(), err)
-				continue vaspLoop
-			}
-		} else {
-			fmt.Printf("%+v\n", meta)
-		}
-
-		migrated++
-	}
-
-	if err = iter.Error(); err != nil {
-		iter.Release()
-		return cli.NewExitError(fmt.Errorf("could not iterate over VASPs: %s", err), 1)
-	}
-	iter.Release()
-
-	fmt.Printf("migrated %d VASP objects\n", migrated)
-
-	// Migrate CertReq objects
-	migrated = 0
-	iter = ldb.NewIterator(util.BytesPrefix([]byte("certreqs::")), nil)
-certreqLoop:
-	for iter.Next() {
-		certreq := &models.CertificateRequest{}
-		if err = proto.Unmarshal(iter.Value(), certreq); err != nil {
-			fmt.Printf("could not unmarshal %q: %s\n", iter.Key(), err)
-			continue certreqLoop
-		}
-
-		key := string(iter.Key())
-		if certreq.Deleted != "" {
-			// Handle tombstone
-			fmt.Printf("cannot handle tombstone %q\n", key)
-			continue certreqLoop
-		}
-
-		// Create metadata if it does not exist
-		if certreq.Metadata == nil {
-			certreq.Metadata = &global.Object{}
-		}
-
-		// Update metadata
-		certreq.Metadata.Key = key
-		certreq.Metadata.Namespace = global.NamespaceCertReqs
-		certreq.Metadata.Owner = vm.Owner
-		certreq.Metadata.Region = vm.Region
-		certreq.Metadata.Version = &global.Version{
-			Pid:     0,
-			Version: 2,
-		}
-		if err = vm.Update(certreq.Metadata); err != nil {
-			fmt.Printf("could not update metadata %q: %s\n", iter.Key(), err)
-			continue certreqLoop
-		}
-
-		if !dryrun {
-			var data []byte
-			if data, err = proto.Marshal(certreq); err != nil {
-				fmt.Printf("could not marshal %q: %s\n", iter.Key(), err)
-				continue certreqLoop
-			}
-
-			if err = ldb.Put([]byte(key), data, nil); err != nil {
-				fmt.Printf("could not write %q: %s\n", iter.Key(), err)
-				continue certreqLoop
-			}
-		} else {
-			fmt.Printf("%+v\n", certreq.Metadata)
-		}
-
-		migrated++
-	}
-
-	if err = iter.Error(); err != nil {
-		iter.Release()
-		return cli.NewExitError(fmt.Errorf("could not iterate over CertificateRequests: %s", err), 1)
-	}
-	iter.Release()
-
-	fmt.Printf("migrated %d CertificateRequest objects\n", migrated)
-
-	// NOTE: currently required to migrate peers since they are already versioned
-	// If we decide to maintain unversioned databases, this will have to be added here
-
-	return nil
-}
-
-// Helper function to load object metadata from leveldb
-func loadMetadata(key string) (obj *global.Object, err error) {
-	// Load object from the data
-	var data []byte
-	if data, err = ldb.Get([]byte(key), nil); err != nil {
-		return nil, fmt.Errorf("could not get %q: %s", key, err)
-	}
-
-	// Detect the type of object, deserialize, and extract object metadata
-	// Do not send data (message size would be too big)
-	namespace := strings.Split(key, ":")[0]
-	if obj, err = wire.UnmarshalObject(namespace, data, false); err != nil {
-		return nil, err
-	}
-
-	return obj, err
-}
-
-// Helper function to load all object metadata for a namespace
-func loadNamespaceMetadata(ns string) (objs []*global.Object, err error) {
-	prefix := util.BytesPrefix([]byte(ns))
-	iter := ldb.NewIterator(prefix, nil)
-	defer iter.Release()
-
-	objs = make([]*global.Object, 0)
-	for iter.Next() {
-		var obj *global.Object
-		if obj, err = loadMetadata(string(iter.Key())); err != nil {
-			return nil, err
-		}
-		objs = append(objs, obj)
-	}
-
-	return objs, nil
+	return errors.New("honu object migration required")
 }
 
 //===========================================================================

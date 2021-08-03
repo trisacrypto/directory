@@ -1,6 +1,5 @@
 {
-    "owner": "test.dir.dev",
-    "vasp": "91FD33E1-1D18-4158-9484-85946B1880DF",
+    "vasp": "025ef6e6-750f-4c2d-a7c6-8e412f1b6ccb",
     "common_name": "trisa.example.com",
-    "status": 2
+    "status": "INITIALIZED"
 }

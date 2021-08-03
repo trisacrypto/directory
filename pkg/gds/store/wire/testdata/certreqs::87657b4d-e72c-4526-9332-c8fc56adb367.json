@@ -1,36 +1,16 @@
 {
   "id":  "87657b4d-e72c-4526-9332-c8fc56adb367",
-  "owner":  "838b1f57-1646-488d-a231-d71d88681cfa",
-  "vasp":  "api.bob.vaspbot.net",
-  "common_name":  "",
-  "status":  23,
-  "authority_id":  "1234",
-  "batch_id":  "0",
-  "batch_name":  "READY_FOR_DOWNLOAD",
-  "batch_status":  "",
-  "order_number":  "0",
-  "creation_date":  "",
-  "profile":  "TEST PROFILE",
+  "vasp":  "838b1f57-1646-488d-a231-d71d88681cfa",
+  "common_name":  "api.bob.vaspbot.net",
+  "status":  "COMPLETED",
+  "authority_id":  "23",
+  "batch_id":  "227438",
+  "batch_name":  "vaspdirectory.net certificate request for api.bob.vaspbot.net (id: 87657b4d-e72c-4526-9332-c8fc56adb367)",
+  "batch_status":  "READY_FOR_DOWNLOAD",
+  "order_number":  "227401",
+  "creation_date":  "2021-06-23T17:53:43.484+0000",
+  "profile":  "CipherTrace EE",
   "reject_reason":  "",
-  "created":  "2021-01-27T18:26:37Z",
-  "modified":  "2021-01-27T18:30:57Z",
-  "deleted":  "",
-  "metadata":  {
-    "key":  "certreqs::87657b4d-e72c-4526-9332-c8fc56adb367",
-    "namespace":  "certreqs",
-    "version":  {
-      "pid":  "8",
-      "version":  "3",
-      "region":  "localhost",
-      "parent":  {
-        "pid":  "0",
-        "version":  "2",
-        "region":  "",
-        "parent":  null
-      }
-    },
-    "region":  "localhost",
-    "owner":  "8:frontier",
-    "data":  null
-  }
+  "created":  "2021-06-23T17:12:01Z",
+  "modified":  "2021-06-23T18:03:44Z"
 }

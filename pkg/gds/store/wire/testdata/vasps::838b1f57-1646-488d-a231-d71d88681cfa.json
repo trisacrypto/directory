@@ -149,37 +149,18 @@
     "must_safeguard_pii":  true,
     "safeguards_pii":  true
   },
-  "verification_status":  "VERIFIED",
+  "verification_status":  "PENDING_REVIEW",
   "service_status":  "UNKNOWN",
   "verified_on":  "",
   "first_listed":  "2021-01-27T18:26:21Z",
   "last_updated":  "2021-01-27T18:30:57Z",
-  "signature":  "",
+  "signature":  "abc1234",
   "version":  {
     "pid":  "8",
     "version":  "8"
   },
   "extra":  {
     "@type":  "type.googleapis.com/gds.models.v1.GDSExtraData",
-    "admin_verification_token":  "",
-    "deleted_on":  "",
-    "metadata":  {
-      "key":  "vasps::838b1f57-1646-488d-a231-d71d88681cfa",
-      "namespace":  "vasps",
-      "version":  {
-        "pid":  "8",
-        "version":  "8",
-        "region":  "localhost",
-        "parent":  {
-          "pid":  "0",
-          "version":  "7",
-          "region":  "",
-          "parent":  null
-        }
-      },
-      "region":  "localhost",
-      "owner":  "8:frontier",
-      "data":  null
-    }
+    "admin_verification_token":  ""
   }
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	. "github.com/trisacrypto/directory/pkg/gds/store/wire"
@@ -28,61 +27,50 @@ func TestWire(t *testing.T) {
 	// Test unmarshal VASP records
 	in, err := ioutil.ReadFile("testdata/vasps::838b1f57-1646-488d-a231-d71d88681cfa.json")
 	require.NoError(t, err)
-	out, err := RemarshalJSON(global.NamespaceVASPs, in)
+	out, err := RemarshalJSON(NamespaceVASPs, in)
 	require.NoError(t, err)
-	vasp, err := UnmarshalProto(global.NamespaceVASPs, out)
+	msg, err := UnmarshalProto(NamespaceVASPs, out)
 	require.NoError(t, err)
-	_, ok := vasp.(*pb.VASP)
+	vasp, ok := msg.(*pb.VASP)
 	require.True(t, ok)
-	obj, err := UnmarshalObject(global.NamespaceVASPs, out, false)
-	require.NoError(t, err)
-	require.Equal(t, "vasps::838b1f57-1646-488d-a231-d71d88681cfa", obj.Key)
-	require.Equal(t, uint64(8), obj.Version.Version)
-	require.Empty(t, obj.Data)
-	obj, err = UnmarshalObject(global.NamespaceVASPs, out, true)
-	require.NoError(t, err)
-	require.NotEmpty(t, obj.Data)
+
+	// Make sure that the VASP is valid
+	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", vasp.Id)
+	require.NoError(t, vasp.Validate(false))
 
 	// Test unmarshal certificate requests
 	in, err = ioutil.ReadFile("testdata/certreqs::87657b4d-e72c-4526-9332-c8fc56adb367.json")
 	require.NoError(t, err)
-	out, err = RemarshalJSON(global.NamespaceCertReqs, in)
+	out, err = RemarshalJSON(NamespaceCertReqs, in)
 	require.NoError(t, err)
-	certreq, err := UnmarshalProto(global.NamespaceCertReqs, out)
+	msg, err = UnmarshalProto(NamespaceCertReqs, out)
 	require.NoError(t, err)
-	_, ok = certreq.(*models.CertificateRequest)
+	certreq, ok := msg.(*models.CertificateRequest)
 	require.True(t, ok)
-	obj, err = UnmarshalObject(global.NamespaceCertReqs, out, false)
-	require.NoError(t, err)
-	require.Equal(t, "certreqs::87657b4d-e72c-4526-9332-c8fc56adb367", obj.Key)
-	require.Equal(t, uint64(3), obj.Version.Version)
-	require.Empty(t, obj.Data)
-	obj, err = UnmarshalObject(global.NamespaceCertReqs, out, true)
-	require.NoError(t, err)
-	require.NotEmpty(t, obj.Data)
+
+	// Make sure CertificateRequest is valid
+	require.Equal(t, "87657b4d-e72c-4526-9332-c8fc56adb367", certreq.Id)
+	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", certreq.Vasp)
+	require.Equal(t, models.CertificateRequestState_COMPLETED, certreq.Status)
 
 	// Test Unmarshal Peers
 	in, err = ioutil.ReadFile("testdata/peers::8.json")
 	require.NoError(t, err)
-	out, err = RemarshalJSON(global.NamespaceReplicas, in)
+	out, err = RemarshalJSON(NamespaceReplicas, in)
 	require.NoError(t, err)
-	peer, err := UnmarshalProto(global.NamespaceReplicas, out)
+	msg, err = UnmarshalProto(NamespaceReplicas, out)
 	require.NoError(t, err)
-	_, ok = peer.(*peers.Peer)
+	peer, ok := msg.(*peers.Peer)
 	require.True(t, ok)
-	obj, err = UnmarshalObject(global.NamespaceReplicas, out, false)
-	require.NoError(t, err)
-	require.Equal(t, "peers::8", obj.Key)
-	require.Equal(t, uint64(1), obj.Version.Version)
-	require.Empty(t, obj.Data)
-	obj, err = UnmarshalObject(global.NamespaceReplicas, out, true)
-	require.NoError(t, err)
-	require.NotEmpty(t, obj.Data)
+
+	// Make sure Peer is valid
+	require.Equal(t, "0008", peer.Key())
+	require.Equal(t, "localhost:4435", peer.Addr)
 
 	// Test Unmarshal category index
 	in, err = ioutil.ReadFile("testdata/index::categories.json")
 	require.NoError(t, err)
-	out, err = RemarshalJSON(global.NamespaceIndices, in)
+	out, err = RemarshalJSON(NamespaceIndices, in)
 	require.NoError(t, err)
 	index, err := UnmarshalIndex(out)
 	require.NoError(t, err)
@@ -91,14 +79,14 @@ func TestWire(t *testing.T) {
 	// Test Unmarshal names index
 	in, err = ioutil.ReadFile("testdata/index::names.json")
 	require.NoError(t, err)
-	out, err = RemarshalJSON(global.NamespaceIndices, in)
+	out, err = RemarshalJSON(NamespaceIndices, in)
 	require.NoError(t, err)
 	index, err = UnmarshalIndex(out)
 	require.NoError(t, err)
 	require.Equal(t, 8, len(index))
 
 	// Test Unmarshal Sequence
-	out, err = RemarshalJSON(global.NamespaceSequence, []byte("42"))
+	out, err = RemarshalJSON(NamespaceSequence, []byte("42"))
 	require.NoError(t, err)
 	seq, err := UnmarshalSequence(out)
 	require.NoError(t, err)

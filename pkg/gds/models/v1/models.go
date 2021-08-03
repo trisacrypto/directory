@@ -2,9 +2,7 @@ package models
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -37,59 +35,6 @@ func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 
 	// Update the admin verification token
 	extra.AdminVerificationToken = token
-
-	// Serialize the extra back to the VASP.
-	if vasp.Extra, err = anypb.New(extra); err != nil {
-		return err
-	}
-	return nil
-}
-
-// GetMetadata returns the object metadata and deleted on timestamp from the VASP record.
-func GetMetadata(vasp *pb.VASP) (_ *global.Object, deletedOn time.Time, err error) {
-	if vasp.Extra == nil {
-		return nil, deletedOn, nil
-	}
-
-	// Unmarshal the extra data field on the VASP
-	extra := &GDSExtraData{}
-	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
-		return nil, deletedOn, err
-	}
-
-	// Parse the deleted on timestamp
-	if extra.DeletedOn != "" {
-		if deletedOn, err = time.Parse(time.RFC3339, extra.DeletedOn); err != nil {
-			return nil, deletedOn, fmt.Errorf("could not parse deleted on timestamp: %s", err)
-		}
-	}
-
-	// Return the metadata
-	return extra.Metadata, deletedOn, nil
-}
-
-// SetMetadata updates the VASP record with the new object metadata and deleted on
-// timestamp. If the record is nil or the timestamp is zero, then it will be set to nil
-// or zero on the extra record, overwriting any previous value.
-func SetMetadata(vasp *pb.VASP, metadata *global.Object, deletedOn time.Time) (err error) {
-	// Must unmarshal previous extra to ensure that data besides the object metadata is
-	// not overwritten (such as the admin verification token).
-	extra := &GDSExtraData{}
-	if vasp.Extra != nil {
-		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
-			return fmt.Errorf("could not deserialize previous extra: %s", err)
-		}
-	}
-
-	// Update the extra record with new data
-	extra.Metadata = metadata
-
-	// If we don't do the iszero check, then epoch time will be written to string.
-	if deletedOn.IsZero() {
-		extra.DeletedOn = ""
-	} else {
-		extra.DeletedOn = deletedOn.Format(time.RFC3339)
-	}
 
 	// Serialize the extra back to the VASP.
 	if vasp.Extra, err = anypb.New(extra); err != nil {

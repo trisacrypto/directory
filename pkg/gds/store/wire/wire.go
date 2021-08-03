@@ -15,13 +15,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -29,24 +27,36 @@ var (
 	ErrObjectNotFound  = errors.New("object not found in local store")
 )
 
+// Namespace constants for all managed objects in GDS
+const (
+	NamespaceVASPs    = "vasps"
+	NamespaceCertReqs = "certreqs"
+	NamespaceReplicas = "peers"
+	NamespaceIndices  = "index"
+	NamespaceSequence = "sequence"
+)
+
+// Namespaces defines all possible namespaces that GDS manages
+var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas}
+
 // UnmarshalProto expects protocol buffer data and unmarshals it to the correct type
 // based on the namespace. This is a utility function for dealing with the various
 // namespaces and types that GDS manages and is not a substitute for direct unmarshaling.
 func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) {
 	switch namespace {
-	case global.NamespaceVASPs:
+	case NamespaceVASPs:
 		vasp := &pb.VASP{}
 		if err = proto.Unmarshal(data, vasp); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, vasp, err)
 		}
 		return vasp, nil
-	case global.NamespaceCertReqs:
+	case NamespaceCertReqs:
 		certreq := &models.CertificateRequest{}
 		if err = proto.Unmarshal(data, certreq); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, certreq, err)
 		}
 		return certreq, nil
-	case global.NamespaceReplicas:
+	case NamespaceReplicas:
 		peer := &peers.Peer{}
 		if err = proto.Unmarshal(data, peer); err != nil {
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, peer, err)
@@ -55,75 +65,6 @@ func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) 
 	default:
 		return nil, fmt.Errorf("unknown namespaces %q", namespace)
 	}
-}
-
-// UnmarshalObject expects protocol buffer data and unmarshals it to a *global.Object,
-// including the original data as a marshaled anypb.Any on the Object data if withData.
-func UnmarshalObject(namespace string, data []byte, withData bool) (obj *global.Object, err error) {
-	switch namespace {
-	case global.NamespaceVASPs:
-		// Unmarshal the VASP
-		vasp := &pb.VASP{}
-		if err = proto.Unmarshal(data, vasp); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, vasp, err)
-		}
-
-		// Fetch the object metadata for the VASP
-		if obj, _, err = models.GetMetadata(vasp); err != nil {
-			return nil, err
-		}
-
-		if obj == nil {
-			return nil, ErrCannotReplicate
-		}
-
-		// Marshal the VASP data back onto the Any field of the object
-		if withData {
-			if obj.Data, err = anypb.New(vasp); err != nil {
-				return nil, err
-			}
-		}
-	case global.NamespaceCertReqs:
-		certreq := &models.CertificateRequest{}
-		if err = proto.Unmarshal(data, certreq); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, certreq, err)
-		}
-
-		// Fetch the object metadata and add the CertificateRequest data back onto the Any field
-		obj = certreq.Metadata
-		if obj == nil {
-			return nil, ErrCannotReplicate
-		}
-
-		if withData {
-			if obj.Data, err = anypb.New(certreq); err != nil {
-				return nil, err
-			}
-		}
-	case global.NamespaceReplicas:
-		peer := &peers.Peer{}
-		if err = proto.Unmarshal(data, peer); err != nil {
-			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, peer, err)
-		}
-
-		// Fetch the object metadata and add the Peer data back onto the Any field
-		obj = peer.Metadata
-		if obj == nil {
-			return nil, ErrCannotReplicate
-		}
-
-		if withData {
-			if obj.Data, err = anypb.New(peer); err != nil {
-				return nil, err
-			}
-		}
-	case global.NamespaceIndices:
-		return nil, ErrCannotReplicate
-	default:
-		return nil, fmt.Errorf("unknown namespaces %q", namespace)
-	}
-
-	return obj, nil
 }
 
 // UnmarshalIndex extracts a map[string]interface{} from the gzip compressed index.
@@ -164,25 +105,25 @@ func RemarshalJSON(namespace string, in []byte) (out []byte, err error) {
 	}
 
 	switch namespace {
-	case global.NamespaceVASPs:
+	case NamespaceVASPs:
 		vasp := &pb.VASP{}
 		if err = jsonpb.Unmarshal(in, vasp); err != nil {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, vasp, err)
 		}
 		return proto.Marshal(vasp)
-	case global.NamespaceCertReqs:
+	case NamespaceCertReqs:
 		certreq := &models.CertificateRequest{}
 		if err = jsonpb.Unmarshal(in, certreq); err != nil {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, certreq, err)
 		}
 		return proto.Marshal(certreq)
-	case global.NamespaceReplicas:
+	case NamespaceReplicas:
 		peer := &peers.Peer{}
 		if err = jsonpb.Unmarshal(in, peer); err != nil {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, peer, err)
 		}
 		return proto.Marshal(peer)
-	case global.NamespaceIndices:
+	case NamespaceIndices:
 		// For now, we're just compressing the JSON data, not checking if it is the correct type for the index
 		// TODO: should we handle indices better?
 		buf := &bytes.Buffer{}
@@ -192,7 +133,7 @@ func RemarshalJSON(namespace string, in []byte) (out []byte, err error) {
 		}
 		gz.Close()
 		return buf.Bytes(), nil
-	case global.NamespaceSequence:
+	case NamespaceSequence:
 		var seq uint64
 		if err = json.Unmarshal(in, &seq); err != nil {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, seq, err)
