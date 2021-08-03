@@ -17,7 +17,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/trisacrypto/directory/pkg/gds/global/v1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -83,12 +82,11 @@ const (
 type Store struct {
 	sync.RWMutex
 	db         *leveldb.DB
-	vm         *global.VersionManager // manage object versions for global replication
-	pkseq      sequence               // autoincrement sequence for ID values
-	names      uniqueIndex            // case insensitive name index
-	websites   uniqueIndex            // website/url index
-	countries  containerIndex         // lookup vasps in a specific country
-	categories containerIndex         // lookup vasps based on specified categories
+	pkseq      sequence       // autoincrement sequence for ID values
+	names      uniqueIndex    // case insensitive name index
+	websites   uniqueIndex    // website/url index
+	countries  containerIndex // lookup vasps in a specific country
+	categories containerIndex // lookup vasps based on specified categories
 }
 
 //===========================================================================
@@ -126,20 +124,6 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	v.LastUpdated = time.Now().Format(time.RFC3339)
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
-	}
-
-	// Because this is a create operation initialize the first version of the VASP.
-	meta := &global.Object{
-		Key:       string(s.vaspKey(v.Id)),
-		Namespace: nsVASPs,
-	}
-	if err = s.updateVersion(meta); err != nil {
-		return "", fmt.Errorf("could not create object version: %s", err)
-	}
-
-	// Set the version metadata on the VASP
-	if err = models.SetMetadata(v, meta, time.Time{}); err != nil {
-		return "", err
 	}
 
 	// Critical section (optimizing for safety rather than speed)
@@ -184,17 +168,6 @@ func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 		return nil, err
 	}
 
-	// Check if this is a tombstone version
-	var deletedOn time.Time
-	if _, deletedOn, err = models.GetMetadata(v); err != nil {
-		return nil, err
-	} else {
-		if !deletedOn.IsZero() {
-			// This is a tombstone record
-			return nil, ErrEntityNotFound
-		}
-	}
-
 	return v, nil
 }
 
@@ -222,17 +195,6 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	v.LastUpdated = time.Now().Format(time.RFC3339)
 	if v.FirstListed == "" {
 		v.FirstListed = v.LastUpdated
-	}
-
-	// Update object version metadata
-	var meta *global.Object
-	if meta, _, err = models.GetMetadata(v); err != nil {
-		return err
-	}
-	s.updateVersion(meta)
-
-	if err = models.SetMetadata(v, meta, time.Time{}); err != nil {
-		return err
 	}
 
 	// Critical section (optimizing for safety rather than speed)
@@ -277,35 +239,6 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
-	}
-
-	// Create a tombstone record now that the original VASP record is deleted.
-	tombstone := &pb.VASP{
-		Id:          record.Id,
-		FirstListed: record.FirstListed,
-		LastUpdated: time.Now().Format(time.RFC3339),
-	}
-
-	// Update object version metadata
-	var meta *global.Object
-	if meta, _, err = models.GetMetadata(record); err != nil {
-		return err
-	}
-	if err = s.updateVersion(meta); err != nil {
-		return fmt.Errorf("could not update tombstone version: %s", err)
-	}
-
-	if err = models.SetMetadata(tombstone, meta, time.Now()); err != nil {
-		return err
-	}
-
-	var data []byte
-	if data, err = proto.Marshal(tombstone); err != nil {
-		return fmt.Errorf("could not marshal tombstone: %s", err)
-	}
-
-	if err = s.db.Put(key, data, nil); err != nil {
-		return fmt.Errorf("could not put tombstone: %s", err)
 	}
 
 	// Critical section (optimizing for safety rather than speed)
@@ -437,15 +370,6 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 		r.Modified = r.Created
 	}
 
-	// Because this is a create operation, initialize the first version
-	r.Metadata = &global.Object{
-		Key:       string(s.careqKey(r.Id)),
-		Namespace: nsCertReqs,
-	}
-	if err = s.updateVersion(r.Metadata); err != nil {
-		return "", fmt.Errorf("could not create object version: %s", err)
-	}
-
 	var data []byte
 	key := s.careqKey(r.Id)
 	if data, err = proto.Marshal(r); err != nil {
@@ -478,11 +402,6 @@ func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err er
 		return nil, err
 	}
 
-	// Check if this is a tombstone version
-	if r.Deleted != "" {
-		return nil, ErrEntityNotFound
-	}
-
 	return r, nil
 }
 
@@ -497,19 +416,6 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 	r.Modified = time.Now().Format(time.RFC3339)
 	if r.Created == "" {
 		r.Created = r.Modified
-	}
-
-	// If metadata has not been add it, add it now
-	if r.Metadata == nil || r.Metadata.Version == nil || r.Metadata.Version.IsZero() {
-		r.Metadata = &global.Object{
-			Key:       string(s.careqKey(r.Id)),
-			Namespace: nsCertReqs,
-		}
-	}
-
-	// Update the version on the metdata
-	if err = s.updateVersion(r.Metadata); err != nil {
-		return fmt.Errorf("could not update object version: %s", err)
 	}
 
 	var data []byte
@@ -527,49 +433,18 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 
 // DeleteCertReq removes a certificate request from the store.
 func (s *Store) DeleteCertReq(id string) (err error) {
-	// Lookup the record in order to create the tombstone and check if exists.
-	record, err := s.RetrieveCertReq(id)
-	if err != nil {
-		if err == ErrEntityNotFound {
-			return nil
-		}
-		return err
-	}
-
 	// LevelDB will not return an error if the entity does not exist
 	key := s.careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
-
-	// Create a tombstone record now that the original CertificateRequest is deleted.
-	tombstone := &models.CertificateRequest{
-		Id:       record.Id,
-		Created:  record.Created,
-		Modified: record.Modified,
-		Deleted:  time.Now().Format(time.RFC3339),
-		Metadata: record.Metadata,
-	}
-
-	if err = s.updateVersion(tombstone.Metadata); err != nil {
-		return fmt.Errorf("could not update tombstone version: %s", err)
-	}
-
-	var data []byte
-	if data, err = proto.Marshal(tombstone); err != nil {
-		return fmt.Errorf("could not marshal tombstone: %s", err)
-	}
-
-	if err = s.db.Put(key, data, nil); err != nil {
-		return fmt.Errorf("could not put tombstone: %s", err)
-	}
-
 	return nil
 }
 
 //===========================================================================
 // ReplicaStore Implementation
 //===========================================================================
+
 // ListPeers returns all peers currently in the store.
 func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
 	pl = make([]*peers.Peer, 0)
@@ -596,63 +471,9 @@ func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
 	// convert to string for a consistent interface across Create and Retrieve methods
 	key := s.peerKey(p.Key())
 
-	// Check to see if the Peer was previously created and deleted
-	var val []byte
-	if val, err = s.db.Get(key, nil); err != nil {
-		// New peer, not a tombstone
-		if err == leveldb.ErrNotFound {
-			// Initialize the first version
-			p.Metadata = &global.Object{
-				Key:       string(key),
-				Namespace: nsReplicas,
-			}
-			if err = s.updateVersion(p.Metadata); err != nil {
-				return "", fmt.Errorf("could not create object version: %s", err)
-			}
-
-			var data []byte
-			if data, err = proto.Marshal(p); err != nil {
-				return "", err
-			}
-
-			if err = s.db.Put(key, data, nil); err != nil {
-				return "", err
-			}
-		} else {
-			// TODO: Or just ignore other Get errors?
-			return "", fmt.Errorf("error when creating peer %s: %s", id, err)
-		}
-	}
-
-	// Peer exists, unmarshall it
-	np := &peers.Peer{}
-	if err = proto.Unmarshal(val, np); err != nil {
-		// TODO: if old peer can't be unmarshalled, just overwrite with the new data?
-		return "", fmt.Errorf("peer %d found in database but could not be unmarshalled", p.Id)
-	}
-
-	// Check if this is a tombstone version
-	if np.Deleted == "" {
-		// Peer exists but has not be deleted, can't create
-		return "", fmt.Errorf("cannot create %d, already exists", p.Id)
-	}
-	// Reincarnate peer from tombstone
-	// Update management timestamps, record metadata, and undelete
-	np.Modified = time.Now().Format(time.RFC3339)
-	if np.Created == "" {
-		np.Created = np.Modified
-	}
-	np.Deleted = ""
-
-	// TODO: do we have to worry about the Region or Name changing?
-
-	if err = s.updateVersion(np.Metadata); err != nil {
-		return "", fmt.Errorf("could not update object version: %s", err)
-	}
-
-	// Remarshall
+	// Marshall the Peer to store in the database
 	var data []byte
-	if data, err = proto.Marshal(np); err != nil {
+	if data, err = proto.Marshal(p); err != nil {
 		return "", err
 	}
 
@@ -683,51 +504,16 @@ func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
 		return nil, err
 	}
 
-	if p.Deleted != "" {
-		return nil, ErrEntityNotFound
-	}
-
 	return p, nil
 }
 
 // DeletePeer removes a peer from the store.
 func (s *Store) DeletePeer(id string) error {
-	// Lookup the record in order to create the tombstone and check if exists.
-	record, err := s.RetrievePeer(id)
-	if err != nil {
-		if errors.Is(err, ErrEntityNotFound) {
-			return nil
-		}
-		return err
-	}
-
 	// LevelDB will not return an error if the entity does not exist
 	key := s.peerKey(id)
 	if err := s.db.Delete(key, nil); err != nil {
 		return err
 	}
-
-	tombstone := &peers.Peer{
-		Id:       record.Id,
-		Created:  record.Created,
-		Modified: record.Modified,
-		Deleted:  time.Now().Format(time.RFC3339),
-		Metadata: record.Metadata,
-	}
-
-	if err = s.updateVersion(tombstone.Metadata); err != nil {
-		return fmt.Errorf("could not update tombstone version: %s", err)
-	}
-
-	var data []byte
-	if data, err = proto.Marshal(tombstone); err != nil {
-		return fmt.Errorf("could not marshal tombstone: %s", err)
-	}
-
-	if err = s.db.Put(key, data, nil); err != nil {
-		return fmt.Errorf("could not put tombstone: %s", err)
-	}
-
 	return nil
 }
 
@@ -951,38 +737,6 @@ func (s *Store) Backup(path string) (err error) {
 	}
 
 	return nil
-}
-
-//===========================================================================
-// Version Management
-//===========================================================================
-
-// WithVersionManager adds a global replica version manager to the VASP storage process.
-func (s *Store) WithVersionManager(vm *global.VersionManager) error {
-	s.Lock()
-	s.vm = vm
-	s.Unlock()
-	return nil
-}
-
-func (s *Store) updateVersion(meta *global.Object) (err error) {
-	s.RLock()
-	if s.vm != nil {
-		err = s.vm.Update(meta)
-	} else {
-		// If there is no version manager, then only increment the version number.
-		// Don't worry about PID, Region, Owner, etc.
-		if meta.Version != nil && !meta.Version.IsZero() {
-			meta.Version.Parent = &global.Version{
-				Version: meta.Version.Version,
-			}
-		} else {
-			meta.Version = &global.Version{}
-		}
-		meta.Version.Version++
-	}
-	s.RUnlock()
-	return err
 }
 
 //===========================================================================

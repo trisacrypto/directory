@@ -3,8 +3,6 @@ syntax = "proto3";
 package gds.peers.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/peers/v1;peers";
 
-import "gds/global/v1/global.proto";
-
 // Peer contains metadata about how to connect to remote peers in the directory service
 // network. This message services as a data-transfer and exchange mechanism for dynamic
 // networks with changing membership.
@@ -17,12 +15,10 @@ message Peer {
     // Logging information timestamps
     string created = 9;
     string modified = 10;
-    string deleted = 11;
 
     // extra information that might be relevant to process-specific functions; e.g. for
     // specific clouds or data that's been parsed (optional).
     map<string, string> extra = 14;
-    gds.global.v1.Object metadata = 15;
 }
 
 // PeerManagement provides a simple interface for administrators to debug the
