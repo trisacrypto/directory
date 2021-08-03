@@ -2,6 +2,7 @@ package mockdb
 
 import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -10,60 +11,56 @@ var _ store.Store = &MockDB{}
 
 // MockDB fulfills the store interface for testing.
 type MockDB struct {
-	OnCreate      func(v *pb.VASP) (string, error)
-	CreateInvoked bool
-
-	OnRetrieve      func(id string) (*pb.VASP, error)
-	RetrieveInvoked bool
-
-	OnUpdate      func(v *pb.VASP) error
-	UpdateInvoked bool
-
-	OnDestroy      func(id string) error
-	DestroyInvoked bool
-
-	OnSearch      func(query map[string]interface{}) ([]*pb.VASP, error)
-	SearchInvoked bool
-
 	OnClose      func() error
 	CloseInvoked bool
 
-	OnListCertRequests      func() ([]*models.CertificateRequest, error)
-	ListCertRequestsInvoked bool
+	OnCreateVASP      func(v *pb.VASP) (string, error)
+	CreateVASPInvoked bool
 
-	OnGetCertRequest      func(id string) (*models.CertificateRequest, error)
-	GetCertRequestInvoked bool
+	OnRetrieveVASP      func(id string) (*pb.VASP, error)
+	RetrieveVASPInvoked bool
 
-	OnSaveCertRequest      func(r *models.CertificateRequest) error
-	SaveCertRequestInvoked bool
+	OnUpdateVASP      func(v *pb.VASP) error
+	UpdateVASPInvoked bool
 
-	OnDeleteCertRequest      func(id string) error
-	DeleteCertRequestInvoked bool
-}
+	OnDeleteVASP      func(id string) error
+	DeleteVASPInvoked bool
 
-func (m *MockDB) Create(v *pb.VASP) (string, error) {
-	m.CreateInvoked = true
-	return m.OnCreate(v)
-}
+	OnSearchVASPs      func(query map[string]interface{}) ([]*pb.VASP, error)
+	SearchVASPsInvoked bool
 
-func (m *MockDB) Retrieve(id string) (*pb.VASP, error) {
-	m.RetrieveInvoked = true
-	return m.OnRetrieve(id)
-}
+	OnListCertReqs      func() ([]*models.CertificateRequest, error)
+	ListCertReqsInvoked bool
 
-func (m *MockDB) Update(v *pb.VASP) error {
-	m.UpdateInvoked = true
-	return m.OnUpdate(v)
-}
+	OnCreateCertReq      func(r *models.CertificateRequest) (string, error)
+	CreateCertReqInvoked bool
 
-func (m *MockDB) Destroy(id string) error {
-	m.DestroyInvoked = true
-	return m.OnDestroy(id)
-}
+	OnRetrieveCertReq      func(id string) (*models.CertificateRequest, error)
+	RetrieveCertReqInvoked bool
 
-func (m *MockDB) Search(query map[string]interface{}) ([]*pb.VASP, error) {
-	m.SearchInvoked = true
-	return m.OnSearch(query)
+	OnUpdateCertReq      func(r *models.CertificateRequest) error
+	UpdateCertReqInvoked bool
+
+	OnDeleteCertReq      func(id string) error
+	DeleteCertReqInvoked bool
+
+	OnListPeers      func() ([]*peers.Peer, error)
+	ListPeersInvoked bool
+
+	OnCreatePeer      func(p *peers.Peer) (string, error)
+	CreatePeerInvoked bool
+
+	OnRetrievePeer      func(id string) (*peers.Peer, error)
+	RetrievePeerInvoked bool
+
+	OnDeletePeer      func(id string) error
+	DeletePeerInvoked bool
+
+	OnReindex      func() error
+	ReindexInvoked bool
+
+	OnBackup      func(string) error
+	BackupInvoked bool
 }
 
 func (m *MockDB) Close() error {
@@ -71,22 +68,82 @@ func (m *MockDB) Close() error {
 	return m.OnClose()
 }
 
-func (m *MockDB) ListCertRequests() ([]*models.CertificateRequest, error) {
-	m.ListCertRequestsInvoked = true
-	return m.OnListCertRequests()
+func (m *MockDB) CreateVASP(v *pb.VASP) (string, error) {
+	m.CreateVASPInvoked = true
+	return m.OnCreateVASP(v)
 }
 
-func (m *MockDB) GetCertRequest(id string) (*models.CertificateRequest, error) {
-	m.GetCertRequestInvoked = true
-	return m.OnGetCertRequest(id)
+func (m *MockDB) RetrieveVASP(id string) (*pb.VASP, error) {
+	m.RetrieveVASPInvoked = true
+	return m.OnRetrieveVASP(id)
 }
 
-func (m *MockDB) SaveCertRequest(r *models.CertificateRequest) error {
-	m.SaveCertRequestInvoked = true
-	return m.OnSaveCertRequest(r)
+func (m *MockDB) UpdateVASP(v *pb.VASP) error {
+	m.UpdateVASPInvoked = true
+	return m.OnUpdateVASP(v)
 }
 
-func (m *MockDB) DeleteCertRequest(id string) error {
-	m.DeleteCertRequestInvoked = true
-	return m.OnDeleteCertRequest(id)
+func (m *MockDB) DeleteVASP(id string) error {
+	m.DeleteVASPInvoked = true
+	return m.OnDeleteVASP(id)
+}
+
+func (m *MockDB) SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error) {
+	m.SearchVASPsInvoked = true
+	return m.OnSearchVASPs(query)
+}
+
+func (m *MockDB) ListCertReqs() ([]*models.CertificateRequest, error) {
+	m.ListCertReqsInvoked = true
+	return m.OnListCertReqs()
+}
+
+func (m *MockDB) CreateCertReq(r *models.CertificateRequest) (string, error) {
+	m.CreateCertReqInvoked = true
+	return m.OnCreateCertReq(r)
+}
+
+func (m *MockDB) RetrieveCertReq(id string) (*models.CertificateRequest, error) {
+	m.RetrieveCertReqInvoked = true
+	return m.OnRetrieveCertReq(id)
+}
+
+func (m *MockDB) UpdateCertReq(r *models.CertificateRequest) error {
+	m.UpdateCertReqInvoked = true
+	return m.OnUpdateCertReq(r)
+}
+
+func (m *MockDB) DeleteCertReq(id string) error {
+	m.DeleteCertReqInvoked = true
+	return m.OnDeleteCertReq(id)
+}
+
+func (m *MockDB) ListPeers() ([]*peers.Peer, error) {
+	m.ListPeersInvoked = true
+	return m.OnListPeers()
+}
+
+func (m *MockDB) CreatePeer(p *peers.Peer) (string, error) {
+	m.CreatePeerInvoked = true
+	return m.OnCreatePeer(p)
+}
+
+func (m *MockDB) RetrievePeer(id string) (*peers.Peer, error) {
+	m.RetrievePeerInvoked = true
+	return m.OnRetrievePeer(id)
+}
+
+func (m *MockDB) DeletePeer(id string) error {
+	m.DeletePeerInvoked = true
+	return m.OnDeletePeer(id)
+}
+
+func (m *MockDB) Reindex() error {
+	m.ReindexInvoked = true
+	return m.OnReindex()
+}
+
+func (m *MockDB) Backup(path string) error {
+	m.BackupInvoked = true
+	return m.OnBackup(path)
 }
