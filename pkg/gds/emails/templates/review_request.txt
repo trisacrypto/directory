@@ -11,16 +11,18 @@ To verify or reject the registration request, use the following metadata with th
 
 ID: {{ .VID }}
 Token: {{ .Token }}
+Registered Directory: {{ .RegisteredDirectory }}
 
 To accept the registration, use the command line tool as follows:
 
-$ gds review -i {{ .VID }} -t {{ .Token }} -a
+$ gds review -i {{ .VID }} -t "{{ .Token }}" -a
 
 To reject the registration, provide a rejection message as the last argument:
 
-$ gds review -i {{ .VID }} -t {{ .Token }} -R -m ""
+$ gds review -i {{ .VID }} -t "{{ .Token }}" -R -m ""
 
-Note that we're working to create a URL endpoint for the vaspdirectory.net site to simplify the review process. We're sorry about the inconvenience of this method at the early stage of the TRISA network.
+Please note that you'll need to specify the correct directory endpoint for the CLI
+command to work.
 
 Best Regards,
 TRISA Global Directory Service Team

@@ -15,6 +15,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // New email manager with the specified configuration.
@@ -77,8 +78,9 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 
 		var verified bool
 		ctx := VerifyContactData{
-			Name: contact.Name,
-			VID:  vasp.Id,
+			Name:    contact.Name,
+			VID:     vasp.Id,
+			BaseURL: m.conf.VerifyContactBaseURL,
 		}
 		if ctx.Token, verified, err = models.GetContactVerification(contact); err != nil {
 			// If we can't get the verification token, this is a fatal error
@@ -118,6 +120,32 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 // SendReviewRequest is a shortcut for iComply verification in which we simply send
 // an email to the TRISA admins and have them manually verify registrations.
 func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
+	// Create the template context with the admin verification token
+	ctx := ReviewRequestData{
+		VID:                 vasp.Id,
+		RegisteredDirectory: m.conf.DirectoryID,
+	}
+	if ctx.Token, err = models.GetAdminVerificationToken(vasp); err != nil {
+		return 0, err
+	}
+
+	// Remove sensitive data so it's not sent in the form.
+	clone := proto.Clone(vasp).(*pb.VASP)
+	models.SetAdminVerificationToken(clone, "[REDACTED]")
+
+	var contacts = []*pb.Contact{
+		clone.Contacts.Technical, clone.Contacts.Administrative,
+		clone.Contacts.Billing, clone.Contacts.Legal,
+	}
+
+	for _, contact := range contacts {
+		if contact != nil {
+			_, verified, _ := models.GetContactVerification(contact)
+			models.SetContactVerification(contact, "[REDACTED]", verified)
+		}
+	}
+
+	// Marshal the VASP struct for review in the email.
 	jsonpb := protojson.MarshalOptions{
 		Multiline:       false,
 		AllowPartial:    true,
@@ -127,7 +155,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	}
 
 	var data []byte
-	if data, err = jsonpb.Marshal(vasp); err != nil {
+	if data, err = jsonpb.Marshal(clone); err != nil {
 		return 0, err
 	}
 
@@ -136,14 +164,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	if yamlData, err := yaml.JSONToYAML(data); err == nil {
 		data = yamlData
 	}
-
-	ctx := ReviewRequestData{
-		VID:     vasp.Id,
-		Request: string(data),
-	}
-	if ctx.Token, err = models.GetAdminVerificationToken(vasp); err != nil {
-		return 0, err
-	}
+	ctx.Request = string(data)
 
 	msg, err := ReviewRequestEmail(
 		m.serviceEmail.Name, m.serviceEmail.Address,
@@ -225,10 +246,11 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 // email), ranking the contact emails by priority.
 func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent int, err error) {
 	ctx := DeliverCertsData{
-		VID:          vasp.Id,
-		CommonName:   vasp.CommonName,
-		SerialNumber: hex.EncodeToString(vasp.IdentityCertificate.SerialNumber),
-		Endpoint:     vasp.TrisaEndpoint,
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		SerialNumber:        hex.EncodeToString(vasp.IdentityCertificate.SerialNumber),
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: m.conf.DirectoryID,
 	}
 
 	// These contacts are ordered by priority, e.g. first try to send to the technical

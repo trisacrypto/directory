@@ -34,6 +34,7 @@ var testEnv = map[string]string{
 	"GDS_SERVICE_EMAIL":              "test@example.com",
 	"GDS_ADMIN_EMAIL":                "admin@example.com",
 	"SENDGRID_API_KEY":               "bar1234",
+	"GDS_VERIFY_CONTACT_URL":         "http://localhost:3000/verify-contact",
 	"GDS_CERTMAN_INTERVAL":           "60s",
 	"GDS_CERTMAN_STORAGE":            "fixtures/certs",
 	"GDS_BACKUP_ENABLED":             "true",
@@ -85,6 +86,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_SERVICE_EMAIL"], conf.Email.ServiceEmail)
 	require.Equal(t, testEnv["GDS_ADMIN_EMAIL"], conf.Email.AdminEmail)
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
+	require.Equal(t, testEnv["GDS_VERIFY_CONTACT_URL"], conf.Email.VerifyContactBaseURL)
+	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
 	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
 	require.Equal(t, true, conf.Backup.Enabled)

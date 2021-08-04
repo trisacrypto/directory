@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -46,7 +47,7 @@ func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 // GetContactVerification token and verified status from the extra data field on the Contact.
 func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 	// Return zero-valued defaults with no error if extra is nil.
-	if contact.Extra == nil {
+	if contact == nil || contact.Extra == nil {
 		return "", false, nil
 	}
 
@@ -61,6 +62,10 @@ func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 // SetContactVerification token and verified status on the Contact record (completely
 // replaces the old record, which may not be ideal).
 func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
+	if contact == nil {
+		return errors.New("cannot set verification on nil contact")
+	}
+
 	extra := &GDSContactExtraData{
 		Verified: verified,
 		Token:    token,

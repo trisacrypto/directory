@@ -61,9 +61,11 @@ type SectigoConfig struct {
 }
 
 type EmailConfig struct {
-	ServiceEmail   string `envconfig:"GDS_SERVICE_EMAIL" default:"TRISA Directory Service <admin@vaspdirectory.net>"`
-	AdminEmail     string `envconfig:"GDS_ADMIN_EMAIL" default:"TRISA Admins <admin@trisa.io>"`
-	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
+	ServiceEmail         string `envconfig:"GDS_SERVICE_EMAIL" default:"TRISA Directory Service <admin@vaspdirectory.net>"`
+	AdminEmail           string `envconfig:"GDS_ADMIN_EMAIL" default:"TRISA Admins <admin@trisa.io>"`
+	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
+	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
+	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
 }
 
 type CertManConfig struct {

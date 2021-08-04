@@ -32,10 +32,10 @@ const defaultDirectoryVerifyURL = "https://vaspdirectory.net/verify-contact"
 
 // VerifyContactData to complete the verify contact email templates.
 type VerifyContactData struct {
-	Name  string // Used to address the email
-	Token string // The unique token needed to verify the email
-	VID   string // The ID of the VASP/Registration
-	URL   string // The URL of the verify contact endpoint to build the VerifyContactURL
+	Name    string // Used to address the email
+	Token   string // The unique token needed to verify the email
+	VID     string // The ID of the VASP/Registration
+	BaseURL string // The URL of the verify contact endpoint to build the VerifyContactURL
 }
 
 // TODO: how to return errors instead of panic inside of template execution?
@@ -44,8 +44,8 @@ func (d VerifyContactData) VerifyContactURL() string {
 		link *url.URL
 		err  error
 	)
-	if d.URL != "" {
-		if link, err = url.Parse(d.URL); err != nil {
+	if d.BaseURL != "" {
+		if link, err = url.Parse(d.BaseURL); err != nil {
 			panic(err)
 		}
 	} else {
@@ -63,9 +63,10 @@ func (d VerifyContactData) VerifyContactURL() string {
 
 // ReviewRequestData to complete review request email templates.
 type ReviewRequestData struct {
-	VID     string // The ID of the VASP/Registration
-	Token   string // The unique token needed to review the registration
-	Request string // The review request data as a nicely formatted JSON or YAML string
+	VID                 string // The ID of the VASP/Registration
+	Token               string // The unique token needed to review the registration
+	Request             string // The review request data as a nicely formatted JSON or YAML string
+	RegisteredDirectory string // The directory name for the review request
 }
 
 // RejectRegistrationData to complete reject registration email templates.
@@ -77,11 +78,12 @@ type RejectRegistrationData struct {
 
 // DeliverCertsData to complete deliver certs email templates.
 type DeliverCertsData struct {
-	Name         string // Used to address the email
-	VID          string // The ID of the VASP/Registration
-	CommonName   string // The common name assigned to the cert
-	SerialNumber string // The serial number of the certificate
-	Endpoint     string // The expected endpoint for the TRISA service
+	Name                string // Used to address the email
+	VID                 string // The ID of the VASP/Registration
+	CommonName          string // The common name assigned to the cert
+	SerialNumber        string // The serial number of the certificate
+	Endpoint            string // The expected endpoint for the TRISA service
+	RegisteredDirectory string // The directory name for the certificates being issued
 }
 
 //===========================================================================

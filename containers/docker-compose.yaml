@@ -32,6 +32,7 @@ services:
       - SECTIGO_PASSWORD
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
       - SENDGRID_API_KEY
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs

@@ -1,0 +1,96 @@
+/* Bootstrap customizations */
+$theme-colors: (
+  "primary":    #23a8e0,
+  "secondary":  #cccccc,
+  "success":    #1bce9e,
+  "info":       #3dbfd0,
+  "warning":    #ffda6a,
+  "danger":     #ff7a59,
+  "light":      #e3ebef,
+  "dark":       #221f1f
+);
+
+/* import bootstrap to set changes */
+@import "~bootstrap/scss/bootstrap";
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 80px; /* Margin bottom by footer height */
+}
+
+.bg-gradient {
+  background: linear-gradient(to right, rgb(36, 169, 223), rgb(26, 235, 180));
+}
+
+.bg-testnet-gradient {
+  background: linear-gradient(to left, rgb(36, 169, 223), rgb(26, 235, 180));
+}
+
+.hero {
+  color: #fff;
+  padding: 48px;
+  min-height: 220px;
+  margin-bottom: 20px;
+}
+
+.hero a:link, .hero a:hover, .hero a:visited {
+    color: white;
+}
+
+.hero a:active {
+    color:rgb(36, 169, 223);
+}
+
+.hero h1 {
+  font-size: 58px;
+  font-weight: bold;
+}
+
+.hero .lead {
+  font-size: 32px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 80px; /* Set the fixed height of the footer here */
+}
+
+.container {
+  max-width: 960px;
+}
+
+.border-top { border-top: 1px solid #e5e5e5; }
+.border-bottom { border-bottom: 1px solid #e5e5e5; }
+.border-top-gray { border-top-color: #adb5bd; }
+
+.box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
+
+.lh-condensed { line-height: 1.25; }
+
+legend.sublegend {
+  font-size: 1.3rem;
+}
+
+legend.subsublegend {
+  font-size: 1.1rem;
+}
+
+.big-number {
+  font-weight: bold;
+  font-size: 5.1rem;
+}
+
+.summaryJSON {
+  max-height: 400px;
+  overflow-y: scroll;
+}
+
+.navbar-white {
+    background-color: #fff;
+}

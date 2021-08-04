@@ -13,20 +13,19 @@ request. The request YAML is:</p>
 <ul>
 	<li>ID: <strong>{{ .VID }}</strong></li>
 	<li>Token: <strong>{{ .Token }}</strong></li>
+  <li>Registered Directory: <strong>{{ .RegisteredDirectory }}</strong></li>
 </ul>
 
 <p>To accept the registration, use the command line tool as follows:</p>
 
-<p><code>$ gds review -i {{ .VID }} -t {{ .Token }} -a</code></p>
+<p><code>$ gds review -i {{ .VID }} -t "{{ .Token }}" -a</code></p>
 
 <p>To reject the registration, provide a rejection message as the last argument:</p>
 
-<p><code>$ gds review -i {{ .VID }} -t {{ .Token }} -R -m ""</code></p>
+<p><code>$ gds review -i {{ .VID }} -t "{{ .Token }}" -R -m ""</code></p>
 
-<p>Note that we're working to create a URL endpoint for the
-<a href="https://vaspdirectory.net/">vaspdirectory.net</a> site to simplify the review
-process. We're sorry about the inconvenience of this method at the early stage of the
-TRISA network.</p>
+<p>Please note that you'll need to specify the correct directory endpoint for the CLI
+command to work.</p>
 
 <p>Best Regards,<br />
 TRISA Global Directory Service Team</p>
