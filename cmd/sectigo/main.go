@@ -266,6 +266,7 @@ func createSingle(c *cli.Context) (err error) {
 
 	params := make(map[string]string)
 	params["commonName"] = domain
+	params["dNSName"] = domain
 	params["pkcs12Password"] = c.String("password")
 
 	if params["pkcs12Password"] == "" {

@@ -56,7 +56,7 @@ func (s *Service) CertManager() {
 		log.Debug().Int("requests", len(careqs)).Msg("cert-manager checking certificate request pipelines")
 
 		for _, req := range careqs {
-			logctx := log.With().Str("id", req.Id).Str("domain", req.CommonName).Logger()
+			logctx := log.With().Str("id", req.Id).Str("common_name", req.CommonName).Logger()
 
 			switch req.Status {
 			case models.CertificateRequestState_READY_TO_SUBMIT:
@@ -102,6 +102,7 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 
 	params := make(map[string]string)
 	params["commonName"] = r.CommonName
+	params["dNSName"] = r.CommonName
 	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate

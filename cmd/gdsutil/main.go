@@ -20,15 +20,19 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -125,6 +129,20 @@ func main() {
 				cli.BoolFlag{
 					Name:  "b, b64decode",
 					Usage: "specify the keys as base64 encoded values which must be decoded",
+				},
+			},
+		},
+		{
+			Name:     "ldb:list",
+			Usage:    "print a summary of the current contents of the database",
+			Category: "leveldb",
+			Action:   ldbList,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
 				},
 			},
 		},
@@ -511,6 +529,67 @@ func ldbDelete(c *cli.Context) (err error) {
 		}
 	}
 
+	return nil
+}
+
+func ldbList(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	var data = make(map[string]map[string]string)
+	var iter iterator.Iterator
+
+	// Iterate over vasps
+	iter = ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
+	for iter.Next() {
+		vasp := new(pb.VASP)
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			iter.Release()
+			return cli.NewExitError(err, 1)
+		}
+
+		record := make(map[string]string)
+		record["common_name"] = vasp.CommonName
+		record["name"], _ = vasp.Name()
+		record["key"] = string(iter.Key())
+		data[vasp.Id] = record
+	}
+
+	if err = iter.Error(); err != nil {
+		iter.Release()
+		return cli.NewExitError(err, 1)
+	}
+	iter.Release()
+
+	// Iterate over certreqs
+	iter = ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceCertReqs)), nil)
+	for iter.Next() {
+		cr := new(models.CertificateRequest)
+		if err = proto.Unmarshal(iter.Value(), cr); err != nil {
+			iter.Release()
+			return cli.NewExitError(err, 1)
+		}
+
+		record, ok := data[cr.Vasp]
+		if !ok {
+			fmt.Println("no VASP for certificate request", string(iter.Key()))
+			continue
+		}
+		record["certreq"] = cr.Id
+		record["certreq_key"] = string(iter.Key())
+	}
+
+	if err = iter.Error(); err != nil {
+		iter.Release()
+		return cli.NewExitError(err, 1)
+	}
+	iter.Release()
+
+	var out []byte
+	if out, err = yaml.Marshal(data); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Println(string(out))
 	return nil
 }
 
