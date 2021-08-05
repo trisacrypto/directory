@@ -58,10 +58,10 @@ func TestVerifyContactURL(t *testing.T) {
 	require.Equal(t, data.VID, params.Get("vaspID"))
 
 	data = emails.VerifyContactData{
-		Name:  "Darlene Ulmsted",
-		Token: "1234defg4321",
-		VID:   "42",
-		URL:   "http://localhost:8080/verify-contact",
+		Name:    "Darlene Ulmsted",
+		Token:   "1234defg4321",
+		VID:     "42",
+		BaseURL: "http://localhost:8080/verify-contact",
 	}
 	link, err = url.Parse(data.VerifyContactURL())
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestSendEmails(t *testing.T) {
 	receipient, err := mail.ParseAddress(conf.AdminEmail)
 	require.NoError(t, err)
 
-	vcdata := emails.VerifyContactData{Name: receipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", URL: "http://localhost:3000/verify-contact"}
+	vcdata := emails.VerifyContactData{Name: receipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify-contact"}
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, vcdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))

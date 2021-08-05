@@ -14,8 +14,11 @@ import Accordion from 'react-bootstrap/Accordion';
 import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
 import gds from '../api/gds';
+import { isTestNet } from '../lib/testnet';
 
+const testNet = isTestNet();
 const registrationFormVersion = "v1beta1";
+const submitButtonText = testNet ? "Submit TestNet Registration" : "Submit Production Registration"
 
 // Returns a legal person object with default values populated.
 const makeLegalPerson = () => {
@@ -271,7 +274,7 @@ class Registration extends React.Component {
 
   render() {
     const summaryFormData = JSON.stringify(this.state.formData, null, "  ");
-    let submitBtn = <Button type="submit" variant="primary">Submit Registration</Button>;
+    let submitBtn = <Button type="submit" variant="primary">{submitButtonText}</Button>;
     if (this.state.submitting) {
       submitBtn = (
         <Button variant="primary" disabled>

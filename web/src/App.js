@@ -1,8 +1,11 @@
 import React from 'react';
+import './App.scss';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
+import TopNav from './components/TopNav';
+import Footer from './components/Footer';
 import Lookup from './components/Lookup';
 import Alerts from './components/Alerts';
 import Registration from './components/Registration';
@@ -10,9 +13,17 @@ import VerifyContact from './components/VerifyContact';
 import Route from './components/nav/Route';
 import NoRoute from './components/nav/NoRoute';
 import MultiRoute from './components/nav/MultiRoute';
+import { isTestNet } from './lib/testnet';
 
+const testNet = isTestNet();
 const mainRoutes = new Set(["/", "/register"]);
 const allRoutes = new Set(["/", "/register", "/verify-contact"]);
+
+// Unchanging constants that should be configured when the react app is built.
+const headerClassName = testNet ? "bg-testnet-gradient" : "bg-gradient";
+const headerTitle = testNet ? "TRISA TestNet Directory" : "TRISA Global Directory Service";
+const headerLead = testNet ? "Get started with the TRISA TestNet to implement your Travel Rule compliance service." : "Become a TRISA certified Virtual Asset Service Provider.";
+const switchLink = testNet ? <a href="https://vaspdirectory.net">Production Directory Service</a> : <a href="https://trisatest.net">TestNet Directory Service</a>
 
 class App extends React.Component {
   state = { alerts: [], currentPath: window.location.pathname };
@@ -34,16 +45,22 @@ class App extends React.Component {
     this.setState({ currentPath: window.location.pathname });
   }
 
+
   render() {
+    console.log(testNet);
     return (
       <>
-      <main role="main" className="container">
-        <header className="pt-5 pb-3 text-center">
-          <img className="d-block mx-auto mb-4" src="logo192.png" alt="" width="72" height="72" />
-          <h2>TRISA Directory Service</h2>
-          <p className="lead">Lookup Virtual Asset Service Providers that are TRISA certified.</p>
-        </header>
-
+      <TopNav />
+      <header className={headerClassName}>
+        <div className="container">
+          <div className="text-center hero">
+            <h1>{headerTitle}</h1>
+            <p className="lead">{headerLead}</p>
+            <small>Looking for the {switchLink}?</small>
+          </div>
+        </div>
+      </header>
+      <main role="main" className="overlap container">
         <Row>
           <Col md={{span: 8, offset: 2}}>
             <Alerts alerts={this.state.alerts} onDismiss={this.onDismissAlert} />
@@ -79,11 +96,7 @@ class App extends React.Component {
         </NoRoute>
 
       </main>
-      <footer className="footer">
-        <div className="container text-center">
-          <span className="text-muted">A demonstration of the <a href="https://trisa.io/">TRISA</a> architecture for Cryptocurrency Travel Rule compliance.</span>
-        </div>
-      </footer>
+      <Footer />
       </>
     );
   }

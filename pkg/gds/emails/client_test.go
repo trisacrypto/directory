@@ -61,9 +61,13 @@ func TestClientSendEmails(t *testing.T) {
 		},
 	}
 
+	err = models.SetAdminVerificationToken(vasp, "12345token1234")
+	require.NoError(t, err)
+	err = models.SetContactVerification(vasp.Contacts.Technical, "", true)
+	require.NoError(t, err)
 	err = models.SetContactVerification(vasp.Contacts.Administrative, "", true)
 	require.NoError(t, err)
-	err = models.SetContactVerification(vasp.Contacts.Legal, "", true)
+	err = models.SetContactVerification(vasp.Contacts.Legal, "12345token1234", false)
 	require.NoError(t, err)
 
 	sent, err := email.SendVerifyContacts(vasp)
@@ -73,6 +77,31 @@ func TestClientSendEmails(t *testing.T) {
 	sent, err = email.SendReviewRequest(vasp)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
+
+	// Make sure that the VASP pointer was not modified
+	token, err := models.GetAdminVerificationToken(vasp)
+	require.NoError(t, err)
+	require.Equal(t, "12345token1234", token)
+
+	token, verified, err := models.GetContactVerification(vasp.Contacts.Technical)
+	require.NoError(t, err)
+	require.True(t, verified)
+	require.Equal(t, "", token)
+
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Administrative)
+	require.NoError(t, err)
+	require.True(t, verified)
+	require.Equal(t, "", token)
+
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Legal)
+	require.NoError(t, err)
+	require.False(t, verified)
+	require.Equal(t, "12345token1234", token)
+
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Billing)
+	require.NoError(t, err)
+	require.False(t, verified)
+	require.Equal(t, "", token)
 
 	sent, err = email.SendRejectRegistration(vasp, "this is a test rejection from the test runner")
 	require.NoError(t, err)
