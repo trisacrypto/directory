@@ -1,7 +1,7 @@
 import React from 'react';
 import Form from 'react-bootstrap/Form';
 
-const Contact = ({contact, onChange}) => {
+const Contact = ({contact, onChange, required}) => {
   const createChangeHandler = (field) => (event) => {
     let data = {...contact};
     data[[field]] = event.target.value;
@@ -16,6 +16,7 @@ const Contact = ({contact, onChange}) => {
         type="text"
         value={contact.name}
         onChange={createChangeHandler("name")}
+        required={required}
       />
       <Form.Text className="text-muted">
         Preferred name for email communication.
@@ -27,6 +28,7 @@ const Contact = ({contact, onChange}) => {
         type="email"
         value={contact.email}
         onChange={createChangeHandler("email")}
+        required={required}
       />
       <Form.Text className="text-muted">
         Please use the email address associated with your organization.
@@ -41,12 +43,13 @@ const Contact = ({contact, onChange}) => {
         type="tel"
         value={contact.phone}
         onChange={createChangeHandler("phone")}
+        required={required}
       />
       <Form.Text className="text-muted">
-        Optional - if supplied, use full phone number with country code.
+        {required ? "Required - please supply " : "Optional - if supplied, use"} full phone number with country code.
       </Form.Text>
       <Form.Control.Feedback type="invalid">
-        Please supply a valid phone number or omit entirely.
+        Please supply a valid phone number or omit entirely if not required.
       </Form.Control.Feedback>
     </Form.Group>
 

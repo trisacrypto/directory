@@ -551,6 +551,8 @@ func ldbList(c *cli.Context) (err error) {
 		record["common_name"] = vasp.CommonName
 		record["name"], _ = vasp.Name()
 		record["key"] = string(iter.Key())
+		record["registered_directory"] = vasp.RegisteredDirectory
+		record["vasp_status"] = vasp.VerificationStatus.String()
 		data[vasp.Id] = record
 	}
 

@@ -354,6 +354,7 @@ class Registration extends React.Component {
                         type="url"
                         value={this.state.formData.website}
                         onChange={this.createFlatChangeHandler("website")}
+                        required={true}
                       />
                     </Form.Group>
                     <Form.Group>
@@ -455,6 +456,7 @@ class Registration extends React.Component {
                             <Contact
                               contact={this.state.formData.contacts.technical}
                               onChange={this.createChangeHandler("technical", "contacts")}
+                              required={true}
                             />
                           </Card.Body>
                         </Accordion.Collapse>
@@ -472,6 +474,7 @@ class Registration extends React.Component {
                             <Contact
                               contact={this.state.formData.contacts.legal}
                               onChange={this.createChangeHandler("legal", "contacts")}
+                              required={false}
                             />
                           </Card.Body>
                         </Accordion.Collapse>
@@ -484,11 +487,12 @@ class Registration extends React.Component {
                           <Card.Body>
                             <p>
                               Administrative or executive contact for your organization to field
-                              high-level requests or queries. (Optional).
+                              high-level requests or queries. (Required).
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.administrative}
                               onChange={this.createChangeHandler("administrative", "contacts")}
+                              required={true}
                             />
                           </Card.Body>
                         </Accordion.Collapse>
@@ -506,6 +510,7 @@ class Registration extends React.Component {
                             <Contact
                               contact={this.state.formData.contacts.billing}
                               onChange={this.createChangeHandler("billing", "contacts")}
+                              requried={false}
                             />
                           </Card.Body>
                         </Accordion.Collapse>
