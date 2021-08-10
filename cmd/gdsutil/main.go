@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
+	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -290,6 +292,40 @@ func main() {
 					Name:   "k, key",
 					Usage:  "secret key to decrypt the cipher text",
 					EnvVar: "GDS_SECRET_KEY",
+				},
+			},
+		},
+		{
+			Name:     "register:export",
+			Usage:    "export a registration form for the GDS UI (e.g. to submit from TestNet to prod)",
+			Category: "admin",
+			Action:   registerExport,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "VASP ID to lookup registration",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "VASP Name (common name) to lookup registration",
+				},
+				cli.StringFlag{
+					Name:  "e, endpoint",
+					Usage: "endpoint to export registration for",
+				},
+				cli.StringFlag{
+					Name:  "c, common-name",
+					Usage: "common name to export registration for",
+				},
+				cli.StringFlag{
+					Name:  "o, outpath",
+					Usage: "path to write out JSON form to",
 				},
 			},
 		},
@@ -804,6 +840,107 @@ func validateHMAC(key, data, sig []byte) error {
 		return errors.New("HMAC mismatch")
 	}
 	return nil
+}
+
+//===========================================================================
+// Admin Functions
+//===========================================================================
+
+func registerExport(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	vaspID := c.String("id")
+	name := c.String("name")
+
+	// Lookup VASP in database by ID or by name
+	var vasp *pb.VASP
+	switch {
+	case vaspID != "":
+		if vasp, err = getVASPByID(vaspID); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	case name != "":
+		if vasp, err = getVASPByCommonName(name); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	default:
+		return cli.NewExitError("specify either ID or common name for lookup", 1)
+	}
+
+	// Remove sensitive data from contacts
+	for _, contact := range []*pb.Contact{vasp.Contacts.Technical, vasp.Contacts.Administrative, vasp.Contacts.Legal, vasp.Contacts.Billing} {
+		if contact != nil {
+			contact.Extra = nil
+		}
+	}
+
+	form := map[string]interface{}{
+		"version": "v1beta1",
+		"registrationForm": &api.RegisterRequest{
+			Entity:           vasp.Entity,
+			Contacts:         vasp.Contacts,
+			TrisaEndpoint:    c.String("endpoint"),
+			CommonName:       c.String("common-name"),
+			Website:          vasp.Website,
+			BusinessCategory: vasp.BusinessCategory,
+			VaspCategories:   vasp.VaspCategories,
+			EstablishedOn:    vasp.EstablishedOn,
+			Trixo:            vasp.Trixo,
+		},
+	}
+
+	var w io.Writer
+	if path := c.String("outpath"); path != "" {
+		var f *os.File
+		if f, err = os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+		defer f.Close()
+		w = f
+	} else {
+		w = os.Stdout
+	}
+
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ")
+	if err = encoder.Encode(form); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	return nil
+}
+
+func getVASPByID(id string) (vasp *pb.VASP, err error) {
+	var value []byte
+	key := []byte(fmt.Sprintf("vasps::%s", id))
+
+	if value, err = ldb.Get(key, nil); err != nil {
+		return nil, err
+	}
+
+	vasp = new(pb.VASP)
+	if err = proto.Unmarshal(value, vasp); err != nil {
+		return nil, err
+	}
+
+	return vasp, nil
+}
+
+func getVASPByCommonName(name string) (_ *pb.VASP, err error) {
+	var names []byte
+	if names, err = ldb.Get([]byte("index::names"), nil); err != nil {
+		return nil, err
+	}
+
+	var index map[string]interface{}
+	if index, err = wire.UnmarshalIndex(names); err != nil {
+		return nil, err
+	}
+
+	if id, ok := index[name]; ok {
+		return getVASPByID(id.(string))
+	}
+
+	return nil, fmt.Errorf("couldn't find VASP with common name %q", name)
 }
 
 //===========================================================================
