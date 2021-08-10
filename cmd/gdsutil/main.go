@@ -874,19 +874,42 @@ func registerExport(c *cli.Context) (err error) {
 		}
 	}
 
+	pbForm := &api.RegisterRequest{
+		Entity:           vasp.Entity,
+		Contacts:         vasp.Contacts,
+		TrisaEndpoint:    c.String("endpoint"),
+		CommonName:       c.String("common-name"),
+		Website:          vasp.Website,
+		BusinessCategory: vasp.BusinessCategory,
+		VaspCategories:   vasp.VaspCategories,
+		EstablishedOn:    vasp.EstablishedOn,
+		Trixo:            vasp.Trixo,
+	}
+
+	// Intermediate marshal then unmarshal ensures that all fields are exported even
+	// if they are empty (so the front-end UI doesn't break on upload).
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  true,
+		EmitUnpopulated: true,
+	}
+
+	data, err := jsonpb.Marshal(pbForm)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	registrationForm := make(map[string]interface{})
+	if err = json.Unmarshal(data, &registrationForm); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
 	form := map[string]interface{}{
-		"version": "v1beta1",
-		"registrationForm": &api.RegisterRequest{
-			Entity:           vasp.Entity,
-			Contacts:         vasp.Contacts,
-			TrisaEndpoint:    c.String("endpoint"),
-			CommonName:       c.String("common-name"),
-			Website:          vasp.Website,
-			BusinessCategory: vasp.BusinessCategory,
-			VaspCategories:   vasp.VaspCategories,
-			EstablishedOn:    vasp.EstablishedOn,
-			Trixo:            vasp.Trixo,
-		},
+		"version":          "v1beta1",
+		"registrationForm": registrationForm,
 	}
 
 	var w io.Writer
