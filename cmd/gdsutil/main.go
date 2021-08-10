@@ -19,11 +19,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/gds"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
@@ -326,6 +329,28 @@ func main() {
 				cli.StringFlag{
 					Name:  "o, outpath",
 					Usage: "path to write out JSON form to",
+				},
+			},
+		},
+		{
+			Name:     "register:repair",
+			Usage:    "attempt to repair a certificate request interactively",
+			Category: "admin",
+			Action:   registerRepair,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "VASP ID to lookup registration",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "VASP Name (common name) to lookup registration",
 				},
 			},
 		},
@@ -932,6 +957,84 @@ func registerExport(c *cli.Context) (err error) {
 	return nil
 }
 
+func registerRepair(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	vaspID := c.String("id")
+	name := c.String("name")
+
+	// Lookup VASP in database by ID or by name
+	var vasp *pb.VASP
+	switch {
+	case vaspID != "":
+		if vasp, err = getVASPByID(vaspID); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	case name != "":
+		if vasp, err = getVASPByCommonName(name); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	default:
+		return cli.NewExitError("specify either ID or common name for lookup", 1)
+	}
+
+	// Find the CertificateRequest for the VASP
+	var certreq *models.CertificateRequest
+	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	if certreq == nil {
+		fmt.Println("VASP has no certificate request: creating new request with new PKCS12 password")
+
+		var conf config.Config
+		if conf, err = config.New(); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		// Connect to secret manager
+		var secrets *gds.SecretManager
+		if secrets, err = gds.NewSecretManager(conf.Secrets); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		// Create PKCS12 password along with certificate request.
+		password := gds.CreateToken(16)
+		certreq = &models.CertificateRequest{
+			Id:         uuid.New().String(),
+			Vasp:       vasp.Id,
+			CommonName: vasp.CommonName,
+			Status:     models.CertificateRequestState_INITIALIZED,
+			Created:    time.Now().Format(time.RFC3339),
+		}
+
+		// Make a new secret of type "password"
+		secretType := "password"
+		if err = secrets.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+		if err = secrets.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		var data []byte
+		certreq.Modified = time.Now().Format(time.RFC3339)
+		key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
+		if data, err = proto.Marshal(certreq); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		if err = ldb.Put(key, data, nil); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		fmt.Printf("created new certificate request: %s\n", key)
+		fmt.Printf("pkcs12 password: %s\n", password)
+	}
+
+	return nil
+}
+
 func getVASPByID(id string) (vasp *pb.VASP, err error) {
 	var value []byte
 	key := []byte(fmt.Sprintf("vasps::%s", id))
@@ -964,6 +1067,28 @@ func getVASPByCommonName(name string) (_ *pb.VASP, err error) {
 	}
 
 	return nil, fmt.Errorf("couldn't find VASP with common name %q", name)
+}
+
+func findCertificateRequest(vaspID string) (cr *models.CertificateRequest, err error) {
+	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceCertReqs)), nil)
+	defer iter.Release()
+	for iter.Next() {
+		cr = new(models.CertificateRequest)
+		if err = proto.Unmarshal(iter.Value(), cr); err != nil {
+			return nil, err
+		}
+
+		if cr.Vasp == vaspID {
+			return cr, nil
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return nil, err
+	}
+
+	// Couldn't find the certificate request, but don't return an error
+	return nil, nil
 }
 
 //===========================================================================

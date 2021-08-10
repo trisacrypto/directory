@@ -362,6 +362,16 @@ func register(c *cli.Context) (err error) {
 		return cli.NewExitError(err, 1)
 	}
 
+	// Check if this is a form downloaded from the UI
+	tmp := make(map[string]interface{})
+	if err = json.Unmarshal(data, &tmp); err == nil {
+		if form, ok := tmp["registrationForm"]; ok {
+			if data, err = json.Marshal(form); err != nil {
+				return cli.NewExitError(fmt.Errorf("could not extract registration form: %s", err), 1)
+			}
+		}
+	}
+
 	var req *api.RegisterRequest
 	if err = json.Unmarshal(data, &req); err != nil {
 		return cli.NewExitError(err, 1)
