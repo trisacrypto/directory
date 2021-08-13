@@ -48,14 +48,21 @@ func (s *Service) CertManager() {
 		<-ticker.C
 
 		// Retrieve all certificate requests from the database
-		var err error
-		var careqs []*models.CertificateRequest
-		if careqs, err = s.db.ListCertReqs(); err != nil {
-			log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
-		}
-		log.Debug().Int("requests", len(careqs)).Msg("cert-manager checking certificate request pipelines")
+		var (
+			err       error
+			nrequests int
+		)
 
-		for _, req := range careqs {
+		careqs := s.db.ListCertReqs()
+		defer careqs.Release()
+		log.Debug().Msg("cert-manager checking certificate request pipelines")
+
+		for careqs.Next() {
+			req := careqs.CertReq()
+			if req == nil {
+				continue
+			}
+
 			logctx := log.With().Str("id", req.Id).Str("common_name", req.CommonName).Logger()
 
 			switch req.Status {
@@ -72,7 +79,15 @@ func (s *Service) CertManager() {
 					logctx.Debug().Msg("processing certificate request check complete")
 				}
 			}
+
+			nrequests++
 		}
+
+		if err = careqs.Error(); err != nil {
+			log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
+			return
+		}
+		log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
 	}
 }
 

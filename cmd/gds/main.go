@@ -260,6 +260,23 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "admin:status",
+			Usage:    "collect aggregate information about current registration status",
+			Category: "admin",
+			Action:   adminStatus,
+			Before:   initClient,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "r, no-registrations",
+					Usage: "do not return registrations status",
+				},
+				cli.BoolFlag{
+					Name:  "c, no-certificate-requests",
+					Usage: "do not return certificate requests status",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -554,6 +571,23 @@ func resend(c *cli.Context) (err error) {
 
 	var rep *admin.ResendReply
 	if rep, err = adminClient.Resend(ctx, req); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminStatus(c *cli.Context) (err error) {
+	req := &admin.StatusRequest{
+		NoRegistrations:       c.Bool("no-registrations"),
+		NoCertificateRequests: c.Bool("no-certificate-requests"),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.StatusReply
+	if rep, err = adminClient.Status(ctx, req); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

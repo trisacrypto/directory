@@ -19,6 +19,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
+	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -257,6 +258,15 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	return nil
 }
 
+// ListVASPs returns all of the VASPs in the database
+func (s *Store) ListVASPs() iterator.DirectoryIterator {
+	return &vaspIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preVASPs), nil),
+		},
+	}
+}
+
 // SearchVASPs uses the names and countries index to find VASPS that match the specified
 // query. This is a very simple search and is not intended for robust usage. To find a
 // VASP by name, a case insensitive search is performed if the query exists in
@@ -344,23 +354,12 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 //===========================================================================
 
 // ListCertReqs returns all certificate requests that are currently in the store.
-func (s *Store) ListCertReqs() (reqs []*models.CertificateRequest, err error) {
-	reqs = make([]*models.CertificateRequest, 0)
-	iter := s.db.NewIterator(util.BytesPrefix(preCertReqs), nil)
-	defer iter.Release()
-	for iter.Next() {
-		r := new(models.CertificateRequest)
-		if err = proto.Unmarshal(iter.Value(), r); err != nil {
-			return nil, err
-		}
-		reqs = append(reqs, r)
+func (s *Store) ListCertReqs() iterator.CertificateIterator {
+	return &certReqIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preCertReqs), nil),
+		},
 	}
-
-	if err = iter.Error(); err != nil {
-		return nil, err
-	}
-
-	return reqs, nil
 }
 
 // CreateCertReq and assign a new ID and return the version.
@@ -455,23 +454,12 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 //===========================================================================
 
 // ListPeers returns all peers currently in the store.
-func (s *Store) ListPeers() (pl []*peers.Peer, err error) {
-	pl = make([]*peers.Peer, 0)
-	iter := s.db.NewIterator(util.BytesPrefix(preReplicas), nil)
-	defer iter.Release()
-	for iter.Next() {
-		peer := new(peers.Peer)
-		if err = proto.Unmarshal(iter.Value(), peer); err != nil {
-			return nil, err
-		}
-		pl = append(pl, peer)
+func (s *Store) ListPeers() iterator.ReplicaIterator {
+	return &peerIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preReplicas), nil),
+		},
 	}
-
-	if err = iter.Error(); err != nil {
-		return nil, err
-	}
-
-	return pl, nil
 }
 
 // CreatePeer using its PID (can't be nil) to create the LDB key and return the version.

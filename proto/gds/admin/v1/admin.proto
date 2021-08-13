@@ -13,6 +13,7 @@ import "trisa/gds/models/v1beta1/models.proto";
 service DirectoryAdministration {
     rpc Review(ReviewRequest) returns (ReviewReply) {}
     rpc Resend(ResendRequest) returns (ResendReply) {}
+    rpc Status(StatusRequest) returns (StatusReply) {}
 }
 
 // Registration review requests are sent via email to the TRISA admin email address with
@@ -62,4 +63,14 @@ message ResendRequest {
 message ResendReply {
     int64 sent = 1;                  // The number of emails sent
     string message = 2;              // Any message from the server about status
+}
+
+message StatusRequest {
+    bool no_registrations = 1;         // Ignore counting the registration statuses
+    bool no_certificate_requests = 2;  // Ignore counting certificate request statuses
+}
+
+message StatusReply {
+    map<string, int64> registrations = 1;
+    map<string, int64> certificate_requests = 2;
 }
