@@ -241,6 +241,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string) (msg string, er
 	return fmt.Sprintf("registration request for %s has been rejected and its contacts notified", name), nil
 }
 
+// Resend emails in case they went to spam or the initial email send failed.
 func (s *Admin) Resend(ctx context.Context, in *admin.ResendRequest) (out *admin.ResendReply, err error) {
 	if in.Id == "" {
 		log.Warn().Msg("invalid resend request: missing ID")
@@ -309,5 +310,40 @@ func (s *Admin) Resend(ctx context.Context, in *admin.ResendRequest) (out *admin
 
 	out.Sent = int64(sent)
 	log.Info().Str("id", vasp.Id).Int64("sent", out.Sent).Str("resend_type", in.Type.String()).Msg("resend request complete")
+	return out, nil
+}
+
+// Get current counts of registration statuses and certificate requests.
+func (s *Admin) Status(ctx context.Context, in *admin.StatusRequest) (out *admin.StatusReply, err error) {
+	var nvasps, ncertreqs int64
+
+	out = &admin.StatusReply{}
+	if !in.NoRegistrations {
+		out.Registrations = make(map[string]int64)
+		var vasps []*pb.VASP
+		if vasps, err = s.db.ListVASPs(); err != nil {
+			log.Error().Err(err).Msg("could not list vasps from database")
+			return nil, status.Error(codes.Internal, "a database error occurred")
+		}
+		for _, vasp := range vasps {
+			nvasps++
+			out.Registrations[vasp.VerificationStatus.String()]++
+		}
+	}
+
+	if !in.NoCertificateRequests {
+		out.CertificateRequests = make(map[string]int64)
+		var certreqs []*models.CertificateRequest
+		if certreqs, err = s.db.ListCertReqs(); err != nil {
+			log.Error().Err(err).Msg("could not list certificate requests from database")
+			return nil, status.Error(codes.Internal, "a database error occurred")
+		}
+		for _, certreq := range certreqs {
+			ncertreqs++
+			out.CertificateRequests[certreq.Status.String()]++
+		}
+	}
+
+	log.Info().Int64("nvasps", nvasps).Int64("ncertreqs", ncertreqs).Msg("status counts complete")
 	return out, nil
 }

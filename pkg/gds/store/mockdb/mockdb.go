@@ -26,6 +26,9 @@ type MockDB struct {
 	OnDeleteVASP      func(id string) error
 	DeleteVASPInvoked bool
 
+	OnListVASPs      func() ([]*pb.VASP, error)
+	ListVASPsInvoked bool
+
 	OnSearchVASPs      func(query map[string]interface{}) ([]*pb.VASP, error)
 	SearchVASPsInvoked bool
 
@@ -86,6 +89,11 @@ func (m *MockDB) UpdateVASP(v *pb.VASP) error {
 func (m *MockDB) DeleteVASP(id string) error {
 	m.DeleteVASPInvoked = true
 	return m.OnDeleteVASP(id)
+}
+
+func (m *MockDB) ListVASPs() ([]*pb.VASP, error) {
+	m.ListVASPsInvoked = true
+	return m.OnListVASPs()
 }
 
 func (m *MockDB) SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error) {

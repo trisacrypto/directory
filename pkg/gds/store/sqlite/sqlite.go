@@ -35,6 +35,10 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	return nil
 }
 
+func (s *Store) ListVASPs() (vasps []*pb.VASP, err error) {
+	return nil, nil
+}
+
 func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	return nil, nil
 }

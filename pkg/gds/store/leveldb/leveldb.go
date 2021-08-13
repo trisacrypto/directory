@@ -257,6 +257,26 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	return nil
 }
 
+// ListVASPs returns all of the VASPs in the database
+func (s *Store) ListVASPs() (vasps []*pb.VASP, err error) {
+	vasps = make([]*pb.VASP, 0)
+	iter := s.db.NewIterator(util.BytesPrefix(preVASPs), nil)
+	defer iter.Release()
+
+	for iter.Next() {
+		vasp := new(pb.VASP)
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			return nil, err
+		}
+		vasps = append(vasps, vasp)
+	}
+
+	if err = iter.Error(); err != nil {
+		return nil, err
+	}
+	return vasps, nil
+}
+
 // SearchVASPs uses the names and countries index to find VASPS that match the specified
 // query. This is a very simple search and is not intended for robust usage. To find a
 // VASP by name, a case insensitive search is performed if the query exists in

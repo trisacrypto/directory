@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 type DirectoryAdministrationClient interface {
 	Review(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*ReviewReply, error)
 	Resend(ctx context.Context, in *ResendRequest, opts ...grpc.CallOption) (*ResendReply, error)
+	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusReply, error)
 }
 
 type directoryAdministrationClient struct {
@@ -47,12 +48,22 @@ func (c *directoryAdministrationClient) Resend(ctx context.Context, in *ResendRe
 	return out, nil
 }
 
+func (c *directoryAdministrationClient) Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusReply, error) {
+	out := new(StatusReply)
+	err := c.cc.Invoke(ctx, "/gds.admin.v1.DirectoryAdministration/Status", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DirectoryAdministrationServer is the server API for DirectoryAdministration service.
 // All implementations must embed UnimplementedDirectoryAdministrationServer
 // for forward compatibility
 type DirectoryAdministrationServer interface {
 	Review(context.Context, *ReviewRequest) (*ReviewReply, error)
 	Resend(context.Context, *ResendRequest) (*ResendReply, error)
+	Status(context.Context, *StatusRequest) (*StatusReply, error)
 	mustEmbedUnimplementedDirectoryAdministrationServer()
 }
 
@@ -65,6 +76,9 @@ func (UnimplementedDirectoryAdministrationServer) Review(context.Context, *Revie
 }
 func (UnimplementedDirectoryAdministrationServer) Resend(context.Context, *ResendRequest) (*ResendReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Resend not implemented")
+}
+func (UnimplementedDirectoryAdministrationServer) Status(context.Context, *StatusRequest) (*StatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
 }
 func (UnimplementedDirectoryAdministrationServer) mustEmbedUnimplementedDirectoryAdministrationServer() {
 }
@@ -116,6 +130,24 @@ func _DirectoryAdministration_Resend_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DirectoryAdministration_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DirectoryAdministrationServer).Status(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gds.admin.v1.DirectoryAdministration/Status",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DirectoryAdministrationServer).Status(ctx, req.(*StatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DirectoryAdministration_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "gds.admin.v1.DirectoryAdministration",
 	HandlerType: (*DirectoryAdministrationServer)(nil),
@@ -127,6 +159,10 @@ var _DirectoryAdministration_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Resend",
 			Handler:    _DirectoryAdministration_Resend_Handler,
+		},
+		{
+			MethodName: "Status",
+			Handler:    _DirectoryAdministration_Status_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

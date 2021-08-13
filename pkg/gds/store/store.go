@@ -97,6 +97,7 @@ type Store interface {
 
 // DirectoryStore describes how the service interacts with VASP identity records.
 type DirectoryStore interface {
+	ListVASPs() ([]*pb.VASP, error)
 	SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error)
 	CreateVASP(v *pb.VASP) (string, error)
 	RetrieveVASP(id string) (*pb.VASP, error)
