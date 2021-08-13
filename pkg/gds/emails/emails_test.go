@@ -104,7 +104,7 @@ func TestSendEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
 
-	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42"}
+	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", Attachment: []byte(`{"hello": "world"}`)}
 	msg, err = emails.ReviewRequestEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, rrdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
