@@ -37,6 +37,7 @@ const protoTypeMap = {
   phonetic_name_identifiers: ivms101.LocalLegalPersonNameId,
   geographic_addresses: ivms101.Address,
   national_identification: ivms101.NationalIdentification,
+  other_jurisdictions: models.Jurisdiction
 };
 
 // This is kind of a nightmare ...
