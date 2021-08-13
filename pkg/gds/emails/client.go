@@ -166,6 +166,9 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	}
 	ctx.Request = string(data)
 
+	// Attach the JSON data as an attachment
+	ctx.Attachment = data
+
 	msg, err := ReviewRequestEmail(
 		m.serviceEmail.Name, m.serviceEmail.Address,
 		m.adminsEmail.Name, m.adminsEmail.Address,

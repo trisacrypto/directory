@@ -156,5 +156,165 @@ proto.gds.admin.v1.DirectoryAdministrationPromiseClient.prototype.review =
 };
 
 
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.gds.admin.v1.ResendRequest,
+ *   !proto.gds.admin.v1.ResendReply>}
+ */
+const methodDescriptor_DirectoryAdministration_Resend = new grpc.web.MethodDescriptor(
+  '/gds.admin.v1.DirectoryAdministration/Resend',
+  grpc.web.MethodType.UNARY,
+  proto.gds.admin.v1.ResendRequest,
+  proto.gds.admin.v1.ResendReply,
+  /**
+   * @param {!proto.gds.admin.v1.ResendRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.gds.admin.v1.ResendReply.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.gds.admin.v1.ResendRequest,
+ *   !proto.gds.admin.v1.ResendReply>}
+ */
+const methodInfo_DirectoryAdministration_Resend = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.gds.admin.v1.ResendReply,
+  /**
+   * @param {!proto.gds.admin.v1.ResendRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.gds.admin.v1.ResendReply.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.gds.admin.v1.ResendRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.gds.admin.v1.ResendReply)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.gds.admin.v1.ResendReply>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.gds.admin.v1.DirectoryAdministrationClient.prototype.resend =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/gds.admin.v1.DirectoryAdministration/Resend',
+      request,
+      metadata || {},
+      methodDescriptor_DirectoryAdministration_Resend,
+      callback);
+};
+
+
+/**
+ * @param {!proto.gds.admin.v1.ResendRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.gds.admin.v1.ResendReply>}
+ *     Promise that resolves to the response
+ */
+proto.gds.admin.v1.DirectoryAdministrationPromiseClient.prototype.resend =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/gds.admin.v1.DirectoryAdministration/Resend',
+      request,
+      metadata || {},
+      methodDescriptor_DirectoryAdministration_Resend);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.gds.admin.v1.StatusRequest,
+ *   !proto.gds.admin.v1.StatusReply>}
+ */
+const methodDescriptor_DirectoryAdministration_Status = new grpc.web.MethodDescriptor(
+  '/gds.admin.v1.DirectoryAdministration/Status',
+  grpc.web.MethodType.UNARY,
+  proto.gds.admin.v1.StatusRequest,
+  proto.gds.admin.v1.StatusReply,
+  /**
+   * @param {!proto.gds.admin.v1.StatusRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.gds.admin.v1.StatusReply.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.gds.admin.v1.StatusRequest,
+ *   !proto.gds.admin.v1.StatusReply>}
+ */
+const methodInfo_DirectoryAdministration_Status = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.gds.admin.v1.StatusReply,
+  /**
+   * @param {!proto.gds.admin.v1.StatusRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.gds.admin.v1.StatusReply.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.gds.admin.v1.StatusRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.gds.admin.v1.StatusReply)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.gds.admin.v1.StatusReply>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.gds.admin.v1.DirectoryAdministrationClient.prototype.status =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/gds.admin.v1.DirectoryAdministration/Status',
+      request,
+      metadata || {},
+      methodDescriptor_DirectoryAdministration_Status,
+      callback);
+};
+
+
+/**
+ * @param {!proto.gds.admin.v1.StatusRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.gds.admin.v1.StatusReply>}
+ *     Promise that resolves to the response
+ */
+proto.gds.admin.v1.DirectoryAdministrationPromiseClient.prototype.status =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/gds.admin.v1.DirectoryAdministration/Status',
+      request,
+      metadata || {},
+      methodDescriptor_DirectoryAdministration_Status);
+};
+
+
 module.exports = proto.gds.admin.v1;
 

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
@@ -67,6 +68,7 @@ type ReviewRequestData struct {
 	Token               string // The unique token needed to review the registration
 	Request             string // The review request data as a nicely formatted JSON or YAML string
 	RegisteredDirectory string // The directory name for the review request
+	Attachment          []byte // Data to attach to the email
 }
 
 // RejectRegistrationData to complete reject registration email templates.
@@ -115,13 +117,19 @@ func ReviewRequestEmail(sender, senderEmail, recipient, recipientEmail string, d
 		return nil, err
 	}
 
-	return mail.NewSingleEmail(
+	message = mail.NewSingleEmail(
 		mail.NewEmail(sender, senderEmail),
 		ReviewRequestRE,
 		mail.NewEmail(recipient, recipientEmail),
 		text,
 		html,
-	), nil
+	)
+
+	if err = AttachJSON(message, data.Attachment, fmt.Sprintf("%s.json", data.VID)); err != nil {
+		// Log the error but do not stop sending the message
+		log.Error().Err(err).Msg("could not attach JSON data to review request email")
+	}
+	return message, nil
 }
 
 // RejectRegistrationEmail creates a new reject registration email, ready for sending by
@@ -220,4 +228,21 @@ func LoadAttachment(message *mail.SGMailV3, attachmentPath string) (err error) {
 	attach.SetDisposition("attachment")
 	message.AddAttachment(attach)
 	return nil
+}
+
+// AttachJSON by marshaling the specified data into human-readable data and encode and
+// attach it to the email as a file.
+func AttachJSON(message *mail.SGMailV3, data []byte, filename string) (err error) {
+	// Encode the data to attach to the email
+	encoded := base64.StdEncoding.EncodeToString(data)
+
+	// Create the attachment
+	attach := mail.NewAttachment()
+	attach.SetContent(encoded)
+	attach.SetType("application/json")
+	attach.SetFilename(filename)
+	attach.SetDisposition("attachment")
+	message.AddAttachment(attach)
+	return nil
+
 }

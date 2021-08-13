@@ -1815,7 +1815,8 @@ proto.trisa.gds.api.v1beta1.RegisterRequest.toObject = function(includeInstance,
     businessCategory: jspb.Message.getFieldWithDefault(msg, 6, 0),
     vaspCategoriesList: (f = jspb.Message.getRepeatedField(msg, 7)) == null ? undefined : f,
     establishedOn: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    trixo: (f = msg.getTrixo()) && trisa_gds_models_v1beta1_models_pb.TRIXOQuestionnaire.toObject(includeInstance, f)
+    trixo: (f = msg.getTrixo()) && trisa_gds_models_v1beta1_models_pb.TRIXOQuestionnaire.toObject(includeInstance, f),
+    csr: jspb.Message.getFieldWithDefault(msg, 10, "")
   };
 
   if (includeInstance) {
@@ -1890,6 +1891,10 @@ proto.trisa.gds.api.v1beta1.RegisterRequest.deserializeBinaryFromReader = functi
       var value = new trisa_gds_models_v1beta1_models_pb.TRIXOQuestionnaire;
       reader.readMessage(value,trisa_gds_models_v1beta1_models_pb.TRIXOQuestionnaire.deserializeBinaryFromReader);
       msg.setTrixo(value);
+      break;
+    case 10:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCsr(value);
       break;
     default:
       reader.skipField();
@@ -1984,6 +1989,13 @@ proto.trisa.gds.api.v1beta1.RegisterRequest.serializeBinaryToWriter = function(m
       9,
       f,
       trisa_gds_models_v1beta1_models_pb.TRIXOQuestionnaire.serializeBinaryToWriter
+    );
+  }
+  f = message.getCsr();
+  if (f.length > 0) {
+    writer.writeString(
+      10,
+      f
     );
   }
 };
@@ -2224,6 +2236,24 @@ proto.trisa.gds.api.v1beta1.RegisterRequest.prototype.clearTrixo = function() {
  */
 proto.trisa.gds.api.v1beta1.RegisterRequest.prototype.hasTrixo = function() {
   return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional string csr = 10;
+ * @return {string}
+ */
+proto.trisa.gds.api.v1beta1.RegisterRequest.prototype.getCsr = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 10, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.trisa.gds.api.v1beta1.RegisterRequest} returns this
+ */
+proto.trisa.gds.api.v1beta1.RegisterRequest.prototype.setCsr = function(value) {
+  return jspb.Message.setProto3StringField(this, 10, value);
 };
 
 
