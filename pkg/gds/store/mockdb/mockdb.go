@@ -4,6 +4,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -26,13 +27,13 @@ type MockDB struct {
 	OnDeleteVASP      func(id string) error
 	DeleteVASPInvoked bool
 
-	OnListVASPs      func() ([]*pb.VASP, error)
+	OnListVASPs      func() iterator.DirectoryIterator
 	ListVASPsInvoked bool
 
 	OnSearchVASPs      func(query map[string]interface{}) ([]*pb.VASP, error)
 	SearchVASPsInvoked bool
 
-	OnListCertReqs      func() ([]*models.CertificateRequest, error)
+	OnListCertReqs      func() iterator.CertificateIterator
 	ListCertReqsInvoked bool
 
 	OnCreateCertReq      func(r *models.CertificateRequest) (string, error)
@@ -47,7 +48,7 @@ type MockDB struct {
 	OnDeleteCertReq      func(id string) error
 	DeleteCertReqInvoked bool
 
-	OnListPeers      func() ([]*peers.Peer, error)
+	OnListPeers      func() iterator.ReplicaIterator
 	ListPeersInvoked bool
 
 	OnCreatePeer      func(p *peers.Peer) (string, error)
@@ -91,7 +92,7 @@ func (m *MockDB) DeleteVASP(id string) error {
 	return m.OnDeleteVASP(id)
 }
 
-func (m *MockDB) ListVASPs() ([]*pb.VASP, error) {
+func (m *MockDB) ListVASPs() iterator.DirectoryIterator {
 	m.ListVASPsInvoked = true
 	return m.OnListVASPs()
 }
@@ -101,7 +102,7 @@ func (m *MockDB) SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error) {
 	return m.OnSearchVASPs(query)
 }
 
-func (m *MockDB) ListCertReqs() ([]*models.CertificateRequest, error) {
+func (m *MockDB) ListCertReqs() iterator.CertificateIterator {
 	m.ListCertReqsInvoked = true
 	return m.OnListCertReqs()
 }
@@ -126,7 +127,7 @@ func (m *MockDB) DeleteCertReq(id string) error {
 	return m.OnDeleteCertReq(id)
 }
 
-func (m *MockDB) ListPeers() ([]*peers.Peer, error) {
+func (m *MockDB) ListPeers() iterator.ReplicaIterator {
 	m.ListPeersInvoked = true
 	return m.OnListPeers()
 }

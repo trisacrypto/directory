@@ -40,6 +40,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
+	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -97,7 +98,7 @@ type Store interface {
 
 // DirectoryStore describes how the service interacts with VASP identity records.
 type DirectoryStore interface {
-	ListVASPs() ([]*pb.VASP, error)
+	ListVASPs() iterator.DirectoryIterator
 	SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error)
 	CreateVASP(v *pb.VASP) (string, error)
 	RetrieveVASP(id string) (*pb.VASP, error)
@@ -107,7 +108,7 @@ type DirectoryStore interface {
 
 // CertificateStore describes how the service interacts with Certificate requests.
 type CertificateStore interface {
-	ListCertReqs() ([]*models.CertificateRequest, error)
+	ListCertReqs() iterator.CertificateIterator
 	CreateCertReq(r *models.CertificateRequest) (string, error)
 	RetrieveCertReq(id string) (*models.CertificateRequest, error)
 	UpdateCertReq(r *models.CertificateRequest) error
@@ -116,7 +117,7 @@ type CertificateStore interface {
 
 // ReplicaStore describes how the service interacts with and manages Peers.
 type ReplicaStore interface {
-	ListPeers() ([]*peers.Peer, error)
+	ListPeers() iterator.ReplicaIterator
 	CreatePeer(p *peers.Peer) (string, error)
 	RetrievePeer(id string) (*peers.Peer, error)
 	DeletePeer(id string) error

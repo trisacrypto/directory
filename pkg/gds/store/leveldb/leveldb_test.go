@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -95,6 +96,41 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	alicer, err = s.db.RetrieveVASP(id)
 	s.ErrorIs(err, ErrEntityNotFound)
 	s.Empty(alicer)
+
+	// Add a few more VASPs
+	for i := 0; i < 10; i++ {
+		vasp := &pb.VASP{
+			Entity: &ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               fmt.Sprintf("Test %d", i+1),
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+			},
+			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
+		}
+		_, err := s.db.CreateVASP(vasp)
+		s.NoError(err)
+	}
+
+	// Test listing all of the VASPs
+	reqs, err := s.db.ListVASPs().All()
+	s.NoError(err)
+	s.Len(reqs, 10)
+
+	// Test iterating over all the VASPs
+	var niters int
+	iter := s.db.ListVASPs()
+	for iter.Next() {
+		s.NotEmpty(iter.VASP())
+		niters++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+	s.Equal(10, niters)
 }
 
 func (s *leveldbTestSuite) TestCertificateStore() {
@@ -175,9 +211,20 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	}
 
 	// Test listing all of the certificates
-	reqs, err := s.db.ListCertReqs()
+	reqs, err := s.db.ListCertReqs().All()
 	s.NoError(err)
 	s.Len(reqs, 10)
+
+	// Test iterating over all the certificates
+	var niters int
+	iter := s.db.ListCertReqs()
+	for iter.Next() {
+		s.NotEmpty(iter.CertReq())
+		niters++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+	s.Equal(10, niters)
 }
 
 func (s *leveldbTestSuite) TestReplicaStore() {
@@ -242,7 +289,18 @@ func (s *leveldbTestSuite) TestReplicaStore() {
 	}
 
 	// Test listing all of the peers
-	reqs, err := s.db.ListPeers()
+	reqs, err := s.db.ListPeers().All()
 	s.NoError(err)
 	s.Len(reqs, 10)
+
+	// Test iterating over all the peers
+	var niters int
+	iter := s.db.ListPeers()
+	for iter.Next() {
+		s.NotEmpty(iter.Peer())
+		niters++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+	s.Equal(10, niters)
 }

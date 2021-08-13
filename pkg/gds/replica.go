@@ -117,7 +117,7 @@ func (r *Replica) AntiEntropy() {
 // cannot be selected, then nil is returned.
 func (r *Replica) SelectPeer() (peer *peers.Peer) {
 	// Select a random peer that is not self to perform anti entropy with.
-	peers, err := r.db.ListPeers()
+	peers, err := r.db.ListPeers().All()
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch peers from database")
 		return nil
@@ -199,26 +199,24 @@ func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.Peers
 
 // Helper to get the peer network status
 func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
-
-	// Initialize var for candidate peers
-	var ps []*peers.Peer
-
-	// Get all the peers (necessary for both list and status-only)
-	if ps, err = r.db.ListPeers(); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve peers from the database")
-		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
-	}
-
-	// Get an overall replica count - we need this regardless
-	// TODO: delete self from the list?
+	// Create the response
 	out = &peers.PeersList{
-		Peers:  make([]*peers.Peer, 0, len(ps)),
+		Peers:  make([]*peers.Peer, 0),
 		Status: &peers.PeersStatus{},
 	}
 
-	out.Status.NetworkSize = int64(len(ps))
+	// Iterate over all the peers (necessary for both list and status-only)
+	// TODO: filter self from the list?
+	ps := r.db.ListPeers()
+	defer ps.Release()
 
-	for _, peer := range ps {
+	for ps.Next() {
+		peer := ps.Peer()
+		if peer == nil {
+			continue
+		}
+
+		out.Status.NetworkSize++
 		out.Status.Regions[peer.Region]++
 
 		// If it's not a status only, get the details for each Peer
@@ -235,6 +233,11 @@ func (r *Replica) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *p
 				out.Peers = append(out.Peers, peer)
 			}
 		}
+	}
+
+	if err = ps.Error(); err != nil {
+		log.Error().Err(err).Msg("unable to retrieve peers from the database")
+		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
 	}
 	return out, nil
 }
