@@ -120,6 +120,15 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	params["dNSName"] = r.CommonName
 	params["pkcs12Password"] = string(pkcs12Password)
 
+	profile := s.certs.Profile()
+	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
+		// Default to TRISA Production locality since none has been provided.
+		// TODO: make this part of the certificate request.
+		params["localityName"] = "Menlo Park"
+		params["stateOrProvinceName"] = "California"
+		params["countryName"] = "US"
+	}
+
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
 

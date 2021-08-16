@@ -30,8 +30,9 @@ import (
 // request, and if not either refreshes the token or reauthenticates using its
 // credentials.
 type Sectigo struct {
-	client http.Client
-	creds  *Credentials
+	client  http.Client
+	creds   *Credentials
+	profile string
 }
 
 // New creates a Sectigo client ready to make HTTP requests, but unauthenticated. The
@@ -39,12 +40,13 @@ type Sectigo struct {
 // $SECTIGO_USERNAME and $SECTIGO_PASSWORD respectively; alternatively if not given and
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
-func New(username, password string) (client *Sectigo, err error) {
+func New(username, password, profile string) (client *Sectigo, err error) {
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
+		profile: profile,
 	}
 
 	if err = client.creds.Load(username, password); err != nil {

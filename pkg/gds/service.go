@@ -65,7 +65,7 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Create the Sectigo API client
-	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password); err != nil {
+	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password, conf.Sectigo.Profile); err != nil {
 		return nil, err
 	}
 
