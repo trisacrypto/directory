@@ -15,6 +15,7 @@ import (
 const (
 	UsernameEnv = "SECTIGO_USERNAME"
 	PasswordEnv = "SECTIGO_PASSWORD"
+	ProfileEnv  = "SECTIGO_PROFILE"
 )
 
 // Cache directory configuration
