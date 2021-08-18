@@ -1,6 +1,7 @@
 import React from 'react';
 import Card from 'react-bootstrap/Card';
-import countryCodeEmoji from '../lib/country';
+import { countryCodeEmoji, getCountryName } from '../lib/country';
+
 
 const LookupResults = (props) => {
   if (props.results && Object.keys(props.results).length === 0 && props.results.constructor === Object) {
@@ -28,7 +29,7 @@ const LookupResults = (props) => {
             {results.country &&
               <>
               <dt className="col-sm-3">Country</dt>
-              <dd className="col-sm-9">{countryCodeEmoji(results.country)} <span className="sr-only">{results.country}</span></dd>
+              <dd className="col-sm-9"><span className="mr-1">{getCountryName(results.country)}</span> {countryCodeEmoji(results.country)}</dd>
               </>
             }
 
