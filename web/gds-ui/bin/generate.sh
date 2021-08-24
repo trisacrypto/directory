@@ -2,7 +2,7 @@
 
 # Locate the directory of the script in order to compute relative paths correctly
 BINDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-PROJECT="$BINDIR/../.."
+PROJECT="$BINDIR/../../.."
 
 # Check to ensure the trisacrypto/trisa repository has been cloned
 if [ ! -d "$PROJECT/../trisa/proto" ]; then
@@ -11,8 +11,8 @@ if [ ! -d "$PROJECT/../trisa/proto" ]; then
 fi
 
 protoc -I "$PROJECT/../trisa/proto" -I $PROJECT/proto \
-    --js_out=import_style=commonjs:"$PROJECT/web/src/api" \
-    --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$PROJECT/web/src/api" \
+    --js_out=import_style=commonjs:"$PROJECT/web/gds-ui/src/api" \
+    --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$PROJECT/web/gds-ui/src/api" \
     gds/admin/v1/admin.proto \
     trisa/gds/api/v1beta1/api.proto \
     trisa/gds/models/v1beta1/models.proto \
