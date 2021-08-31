@@ -43,6 +43,7 @@ const dashboardRoutes = {
             component: Dashboard,
             route: PrivateRoute,
         },
+<<<<<<< HEAD
         {
             path: '/vasps',
             name: 'List',
@@ -50,6 +51,8 @@ const dashboardRoutes = {
             route: PrivateRoute,
             exact: true
         }
+=======
+>>>>>>> feat: add dashboard page
     ],
 };
 
