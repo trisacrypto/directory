@@ -1,0 +1,21 @@
+export const FetchCertificatesActionTypes = {
+    API_RESPONSE_SUCCESS: '@@certificates/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@certificates/API_RESPONSE_ERROR',
+
+    FETCH_CERTIFICATES: '@@certificates/FETCH_CERTIFICATES',
+};
+
+export const FetchVaspsActionTypes = {
+    API_RESPONSE_SUCCESS: '@@vasps/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@vasps/API_RESPONSE_ERROR',
+
+    FETCH_VASPS: '@@vasps/FETCH_VASPS',
+};
+
+export const FetchSummaryActionTypes = {
+    API_RESPONSE_SUCCESS: '@@summary/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@summary/API_RESPONSE_ERROR',
+
+    FETCH_SUMMARY: '@@summary/FETCH_VASPS',
+};
+

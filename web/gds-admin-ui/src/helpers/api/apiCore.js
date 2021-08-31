@@ -6,13 +6,11 @@ import config from '../../config';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.baseURL = config.API_URL;
 
-// intercepting to capture errors
 axios.interceptors.response.use(
     (response) => {
         return response;
     },
     (error) => {
-        // Any status codes that falls outside the range of 2xx cause this function to trigger
         let message;
 
         if (error && error.response && error.response.status === 404) {
@@ -60,7 +58,6 @@ class APICore {
      * Fetches data from given url
      */
     get = (url, params) => {
-        console.log(url)
         let response;
         if (params) {
             var queryString = params
@@ -70,8 +67,7 @@ class APICore {
                 : '';
             response = axios.get(`${url}?${queryString}`, params);
         } else {
-            response = axios.get(`${url}`, params).then(res => {
-            });
+            response = axios.get(`${url}`, params)
         }
         return response;
     };
