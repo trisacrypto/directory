@@ -1,0 +1,23 @@
+[ignore]
+.*/build/.*
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+module.file_ext=.js
+module.file_ext=.json
+module.file_ext=.jsx
+module.file_ext=.css
+module.file_ext=.scss
+module.name_mapper='^\([^\.].*\)$' -> '<PROJECT_ROOT>/src/\1'
+module.system.node.allow_root_relative=true
+module.system.node.root_relative_dirname=./app
+
+[strict]
+
+[untyped]
+.*/node_modules/**/.*
