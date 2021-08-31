@@ -30,12 +30,15 @@ const dashboardRoutes = {
             component: Dashboard,
             route: Route,
         },
+<<<<<<< HEAD
         {
             path: '/vasps-summary/vasps',
             name: 'List',
             component: VaspsList,
             route: Route,
         }
+=======
+>>>>>>> feat: add dashboard page
     ],
 };
 
