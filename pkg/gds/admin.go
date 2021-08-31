@@ -96,12 +96,12 @@ func (s *Admin) Shutdown() (err error) {
 func (s *Admin) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin.ReviewReply, err error) {
 	// Validate review request
 	if in.Id == "" || in.AdminVerificationToken == "" {
-		log.Error().Err(out.Error).Msg("no ID or verification token")
+		log.Warn().Err(out.Error).Msg("no ID or verification token")
 		return nil, status.Error(codes.InvalidArgument, "provide both the VASP ID and the admin verification token")
 	}
 
 	if !in.Accept && in.RejectReason == "" {
-		log.Error().Err(out.Error).Msg("missing reject reason")
+		log.Warn().Err(out.Error).Msg("missing reject reason")
 		return nil, status.Error(codes.InvalidArgument, "if rejecting the request, a reason must be supplied")
 	}
 
@@ -119,7 +119,7 @@ func (s *Admin) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin
 		return nil, status.Error(codes.Internal, "could not retrieve admin token from data")
 	}
 	if in.AdminVerificationToken != adminVerificationToken {
-		log.Warn().Err(err).Str("vaps", in.Id).Msg("incorrect admin verification token")
+		log.Warn().Err(err).Str("vasp", in.Id).Msg("incorrect admin verification token")
 		return nil, status.Error(codes.Unauthenticated, "admin verification token not accepted")
 	}
 

@@ -180,6 +180,7 @@ func (r *Replica) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.Peer
 }
 
 func (r *Replica) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
+	// TODO: check what kind of errors delete peer returns.
 	if err := r.db.DeletePeer(in.Key()); err != nil {
 		log.Error().Err(err).Msg("unable to remove peer")
 		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be removed")

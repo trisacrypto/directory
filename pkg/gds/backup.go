@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 )
@@ -52,7 +53,9 @@ backups:
 		if err := s.db.(store.Backup).Backup(backupDir); err != nil {
 			// Do not continue if there was a backup error; all code in the rest of the
 			// loop should expect that the backup was successful.
-			log.Error().Err(err).Msg("could not backup database")
+			// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+			// this ensures that we issue a CRITICAL severity without stopping the server.
+			log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not backup database")
 			continue backups
 		} else {
 			log.Info().Dur("duration", time.Since(start)).Msg("backup complete")
