@@ -4,6 +4,7 @@ import { Route } from 'react-router-dom';
 
 
 const Dashboard = React.lazy(() => import('../pages/app/dashboard'));
+const VaspsList = React.lazy(() => import('../pages/app/lists'));
 
 
 const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
@@ -29,6 +30,12 @@ const dashboardRoutes = {
             component: Dashboard,
             route: Route,
         },
+        {
+            path: '/vasps-summary/vasps',
+            name: 'List',
+            component: VaspsList,
+            route: Route,
+        }
     ],
 };
 
