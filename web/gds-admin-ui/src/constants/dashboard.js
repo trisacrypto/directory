@@ -1,0 +1,6 @@
+
+export const Status = {
+    PENDING_REVIEW: "PENDING REVIEW",
+    VERIFIED: "VERIFIED",
+    SUBMITTED: "SUBMITTED"
+}
