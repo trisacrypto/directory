@@ -35,6 +35,6 @@ type SeverityHook struct{}
 // Run implements the zerolog.Hook interface.
 func (h SeverityHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	if level != zerolog.NoLevel {
-		e.Str("severity", string(zerologToGCPLevel[level]))
+		e.Str(GCPFieldKeySeverity, string(zerologToGCPLevel[level]))
 	}
 }

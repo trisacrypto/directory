@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
@@ -174,12 +175,13 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	// Send contacts with updated tokens
 	var sent int
 	if sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
+		// If there is an error sending contact verification emails, alert admins who
+		// can resend emails later, do not abort processing the registration.
 		log.Error().Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")
-		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
+	} else {
+		// Log successful contact verification emails sent
+		log.Info().Int("sent", sent).Msg("contact email verifications sent")
 	}
-
-	// Log successful contact verification emails sent
-	log.Info().Int("sent", sent).Msg("contact email verifications sent")
 
 	// Create PKCS12 password along with certificate request.
 	password := CreateToken(16)
@@ -366,7 +368,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
 	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
-		log.Error().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
+		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
 		return nil, status.Error(codes.NotFound, "could not find associated VASP record by ID")
 	}
 
@@ -411,7 +413,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 	// Check if we haven't managed to verify the contact
 	if !found {
-		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not find contact with token")
+		log.Warn().Bool("found", found).Str("vasp", vasp.Id).Msg("could not find contact with token")
 		return nil, status.Error(codes.NotFound, "could not find contact with the specified token")
 	}
 
@@ -449,8 +451,15 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 	// Step 2: send review request email to the TRISA admins.
 	if _, err = s.svc.email.SendReviewRequest(vasp); err != nil {
-		log.Error().Err(err).Msg("could not send verification review email")
-		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
+		// TODO: When the Admin UI is up, downgrade FATAL to ERROR because the admins
+		// can just check the UI for any pending reviews at that point (it is FATAL now
+		// because without the email, the admins won't know there is a review).
+		// Don't stop processing if review request email could not be sent.
+		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+		// this ensures that we issue a CRITICAL severity without stopping the server.
+		log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not send verification review email")
+	} else {
+		log.Info().Msg("verification review email sent to admins")
 	}
 
 	// Step 3: if the review email has been successfully sent, mark as pending review.

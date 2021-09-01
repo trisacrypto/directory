@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -68,7 +69,11 @@ func (s *Service) CertManager() {
 			switch req.Status {
 			case models.CertificateRequestState_READY_TO_SUBMIT:
 				if err = s.submitCertificateRequest(req); err != nil {
-					logctx.Error().Err(err).Msg("cert-manager could not submit certificate request")
+					// If certificate submission requests fail we want immediate notification
+					// so this is a CRITICAL severity that should alert us immediately.
+					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+					// this ensures that we issue a CRITICAL severity without stopping the server.
+					log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
 				} else {
 					logctx.Info().Msg("certificate request submitted")
 				}
@@ -233,7 +238,9 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	if proc.Success == 0 || info.Status != sectigo.BatchStatusReadyForDownload {
 		// We should not be in this state, it should have been handled in Step 4
 		// so this is a developer error on our part, or a change in the Sectigo API
-		log.Error().Str("status", info.Status).Msg("unhandled sectigo state")
+		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+		// this ensures that we issue a CRITICAL severity without stopping the server.
+		log.WithLevel(zerolog.FatalLevel).Str("status", info.Status).Msg("unhandled sectigo state")
 		r.Status = models.CertificateRequestState_PROCESSING
 		if err = s.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
