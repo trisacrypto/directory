@@ -3,6 +3,9 @@ import { Redirect } from 'react-router-dom';
 import { Route } from 'react-router-dom';
 
 
+const Dashboard = React.lazy(() => import('../pages/app/dashboard'));
+
+
 const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
 const ServerError = React.lazy(() => import('../pages/error/ServerError'));
 
@@ -13,6 +16,22 @@ const rootRoute = {
     component: () => <Redirect to="/dashboard" />,
     route: Route,
 };
+
+const dashboardRoutes = {
+    path: '/dashboard',
+    name: 'Dashboards',
+    icon: 'uil-home-alt',
+    header: 'Navigation',
+    children: [
+        {
+            path: '/dashboard',
+            name: 'Project',
+            component: Dashboard,
+            route: Route,
+        },
+    ],
+};
+
 
 const otherPublicRoutes = [
     {
@@ -46,7 +65,7 @@ const flattenRoutes = (routes) => {
 
 
 // All routes
-const authProtectedRoutes = [rootRoute];
+const authProtectedRoutes = [rootRoute, dashboardRoutes];
 const publicRoutes = [...otherPublicRoutes];
 
 const authProtectedFlattenRoutes = flattenRoutes([...authProtectedRoutes]);

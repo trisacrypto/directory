@@ -1,8 +1,27 @@
 // @flow
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import SimpleBar from 'simplebar-react';
+import AppMenu from './Menu';
+import { getMenuItems } from '../helpers/menu';
 
 import logo from '../assets/images/logo.jpeg';
+
+const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
+    return (
+        <>
+            {!hideUserProfile && (
+                <div className="leftbar-user">
+                    <Link to="/">
+                        <span className="leftbar-user-name">Dominic Keller</span>
+                    </Link>
+                </div>
+            )}
+
+            <AppMenu menuItems={getMenuItems()} />
+        </>
+    );
+};
 
 
 type LeftSidebarProps = {
@@ -15,12 +34,8 @@ type LeftSidebarProps = {
 const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSidebarProps): React$Element<any> => {
     const menuNodeRef: any = useRef(null);
 
-    /**
-     * Handle the click anywhere in doc
-     */
     const handleOtherClick = (e: any) => {
         if (menuNodeRef && menuNodeRef.current && menuNodeRef.current.contains(e.target)) return;
-        // else hide the menubar
         if (document.body) {
             document.body.classList.remove('sidebar-enable');
         }
@@ -46,6 +61,17 @@ const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSi
                         </Link>
                     </React.Fragment>
                 )}
+
+                {!isCondensed && (
+                    <SimpleBar style={{ maxHeight: '100%' }} timeout={500} scrollbarMaxSize={320}>
+                        <SideBarContent
+                            menuClickHandler={() => { }}
+                            isLight={isLight}
+                            hideUserProfile={hideUserProfile}
+                        />
+                    </SimpleBar>
+                )}
+                {isCondensed && <SideBarContent isLight={isLight} hideUserProfile={hideUserProfile} />}
             </div>
         </React.Fragment>
     );
