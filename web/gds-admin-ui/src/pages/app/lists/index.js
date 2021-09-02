@@ -38,9 +38,11 @@ const StatusColumn = ({ row }) => {
 };
 
 const ActionColumn = ({ row }) => {
+    const id = row?.original?.id || "";
+
     return (
         <React.Fragment>
-            <Link to="/" className="action-icon text-center">
+            <Link to={`/vasps-summary/${id}/details`} className="action-icon text-center">
                 <i className="mdi mdi-eye"></i>
             </Link>
         </React.Fragment>

@@ -5,6 +5,7 @@ import { Route } from 'react-router-dom';
 
 const Dashboard = React.lazy(() => import('../pages/app/dashboard'));
 const VaspsList = React.lazy(() => import('../pages/app/lists'));
+const VaspsDetails = React.lazy(() => import('../pages/app/details'))
 
 
 const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
@@ -39,6 +40,22 @@ const dashboardRoutes = {
     ],
 };
 
+const vaspsRoutes = {
+    path: '/vasps-summary',
+    name: 'Vasps Summary',
+    children: [
+        {
+            path: '/vasps-summary/:id/details',
+            name: 'Detail',
+            component: VaspsDetails,
+            route: Route,
+        }
+    ],
+}
+
+const appRoutes = [
+    vaspsRoutes,
+];
 
 const otherPublicRoutes = [
     {
@@ -72,7 +89,7 @@ const flattenRoutes = (routes) => {
 
 
 // All routes
-const authProtectedRoutes = [rootRoute, dashboardRoutes];
+const authProtectedRoutes = [rootRoute, dashboardRoutes, ...appRoutes];
 const publicRoutes = [...otherPublicRoutes];
 
 const authProtectedFlattenRoutes = flattenRoutes([...authProtectedRoutes]);
