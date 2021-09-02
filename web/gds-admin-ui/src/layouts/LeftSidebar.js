@@ -5,7 +5,7 @@ import SimpleBar from 'simplebar-react';
 import AppMenu from './Menu';
 import { getMenuItems } from '../helpers/menu';
 
-import logo from '../assets/images/logo.jpeg';
+import logo from '../assets/images/gds-trisatest-logo.png';
 
 const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
     return (

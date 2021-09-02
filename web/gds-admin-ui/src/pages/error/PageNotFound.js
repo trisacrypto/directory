@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card } from 'react-bootstrap';
 
-import Logo from '../../assets/images/logo.jpeg';
+import Logo from '../../assets/images/gds-trisatest-logo.png';
 
 const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
     return (
