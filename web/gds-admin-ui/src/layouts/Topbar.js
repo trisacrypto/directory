@@ -10,7 +10,7 @@ import SearchDropdown from '../components/SearchDropdown';
 import TopbarSearch from '../components/TopbarSearch';
 
 import profilePic from '../assets/images/avatar-1.jpg';
-import logo from '../assets/images/logo.jpeg';
+import logo from '../assets/images/gds-trisatest-logo.png';
 
 //constants
 import * as layoutConstants from '../constants/layout';
