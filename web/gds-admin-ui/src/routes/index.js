@@ -2,6 +2,7 @@ import React from 'react';
 import { Redirect } from 'react-router-dom';
 import { Route } from 'react-router-dom';
 
+const Login = React.lazy(() => import('../pages/account/Login'));
 
 const Dashboard = React.lazy(() => import('../pages/app/dashboard'));
 const VaspsList = React.lazy(() => import('../pages/app/lists'));
@@ -18,6 +19,15 @@ const rootRoute = {
     component: () => <Redirect to="/dashboard" />,
     route: Route,
 };
+
+const authRoutes = [
+    {
+        path: '/login',
+        name: 'Login',
+        component: Login,
+        route: Route,
+    }
+]
 
 const dashboardRoutes = {
     path: '/dashboard',
@@ -90,7 +100,7 @@ const flattenRoutes = (routes) => {
 
 // All routes
 const authProtectedRoutes = [rootRoute, dashboardRoutes, ...appRoutes];
-const publicRoutes = [...otherPublicRoutes];
+const publicRoutes = [...otherPublicRoutes, ...authRoutes];
 
 const authProtectedFlattenRoutes = flattenRoutes([...authProtectedRoutes]);
 const publicProtectedFlattenRoutes = flattenRoutes([...publicRoutes]);
