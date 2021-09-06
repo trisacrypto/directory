@@ -10,7 +10,7 @@ const Footer = (): React$Element<any> => {
                 <div className="container-fluid">
                     <Row>
                         <Col md={12}>{currentYear} ©
-                            Created and maintained by <a href="https://www.rotatinal.io">Rotational</a> Labs in partnership with <a href="https://www.cyphertrace.com">CipherTrace</a> on behalf of <a href="https://www.trisa.io">TRISA</a>.
+                            Created and maintained by <a href="https://rotational.io">Rotational</a> Labs in partnership with <a href="https://ciphertrace.com">CipherTrace</a> on behalf of <a href="https://trisa.io">TRISA</a>.
                         </Col>
                     </Row>
                 </div>
