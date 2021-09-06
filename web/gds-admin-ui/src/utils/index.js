@@ -10,7 +10,7 @@ function formatDisplayedData(target) {
         return target ? target.trim() : "N/A"
     }
 
-    return target
+    return target ? target : "N/A"
 }
 
 export { formatDisplayedData }
