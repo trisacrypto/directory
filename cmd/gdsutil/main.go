@@ -8,6 +8,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,7 +38,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -148,6 +148,11 @@ func main() {
 					Name:   "d, db",
 					Usage:  "dsn to connect to trisa directory storage",
 					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.StringFlag{
+					Name:  "o, out",
+					Usage: "path to write CSV data out to",
+					Value: "directory.csv",
 				},
 			},
 		},
@@ -614,6 +619,7 @@ func ldbList(c *cli.Context) (err error) {
 		record["key"] = string(iter.Key())
 		record["registered_directory"] = vasp.RegisteredDirectory
 		record["vasp_status"] = vasp.VerificationStatus.String()
+		record["verified_on"] = vasp.VerifiedOn
 		data[vasp.Id] = record
 	}
 
@@ -639,6 +645,7 @@ func ldbList(c *cli.Context) (err error) {
 		}
 		record["certreq"] = cr.Id
 		record["certreq_key"] = string(iter.Key())
+		record["certreq_status"] = cr.Status.String()
 	}
 
 	if err = iter.Error(); err != nil {
@@ -647,12 +654,24 @@ func ldbList(c *cli.Context) (err error) {
 	}
 	iter.Release()
 
-	var out []byte
-	if out, err = yaml.Marshal(data); err != nil {
+	// Write out a CSV file of the VASP list
+	var f *os.File
+	if f, err = os.OpenFile(c.String("out"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	w := csv.NewWriter(f)
+	w.Write([]string{"id", "name", "common_name", "registered_directory", "verified_on", "verification_status", "certreq_status"})
+	for id, record := range data {
+		row := []string{id, record["name"], record["common_name"], record["registered_directory"], record["verified_on"], record["vasp_status"], record["certreq_status"]}
+		w.Write(row)
+	}
+
+	w.Flush()
+	if err := w.Error(); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
-	fmt.Println(string(out))
+	fmt.Printf("%d records written to %s\n", len(data), c.String("out"))
 	return nil
 }
 
