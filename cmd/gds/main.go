@@ -48,7 +48,7 @@ func main() {
 		cli.StringFlag{
 			Name:   "a, admin-endpoint",
 			Usage:  "the url to connect the directory administration client",
-			Value:  "api.admin.vaspdirectory.net:443",
+			Value:  "https://api.admin.vaspdirectory.net",
 			EnvVar: "TRISA_DIRECTORY_ADMIN_URL",
 		},
 		cli.BoolFlag{

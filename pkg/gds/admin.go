@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
+	"net/http"
+	"sync"
 	"time"
 
+	ginzerolog "github.com/dn365/gin-zerolog"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // NewAdmin creates a new GDS admin server derived from a parent Service.
@@ -27,9 +29,24 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 		db:   svc.db,
 	}
 
-	// Initialize the gRPC server
-	a.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
-	admin.RegisterDirectoryAdministrationServer(a.srv, a)
+	// Create the router
+	gin.SetMode(a.conf.Mode)
+	a.router = gin.New()
+	if err = a.setupRoutes(); err != nil {
+		return nil, err
+	}
+
+	// Create the http server
+	a.srv = &http.Server{
+		Addr:         a.conf.BindAddr,
+		Handler:      a.router,
+		ErrorLog:     nil,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+
+	log.Debug().Msg("created admin api http server with gin router")
 	return a, nil
 }
 
@@ -37,54 +54,89 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 // protocol buffers. This service is the primary interaction point with authorized TRISA
 // users that are performing secure commands with authentication.
 type Admin struct {
-	admin.UnimplementedDirectoryAdministrationServer
-	svc  *Service            // The parent Service the admin server uses to interact with other components
-	srv  *grpc.Server        // The gRPC server that listens on its own independent port
-	conf *config.AdminConfig // The admin server specific configuration (alias to s.svc.conf.Admin)
-	db   store.Store         // Database connection for loading objects (alias to s.svc.db)
+	sync.RWMutex
+	svc     *Service            // The parent Service the admin server uses to interact with other components
+	srv     *http.Server        // The HTTP server that listens on its own independent port
+	conf    *config.AdminConfig // The admin server specific configuration (alias to s.svc.conf.Admin)
+	db      store.Store         // Database connection for loading objects (alias to s.svc.db)
+	router  *gin.Engine         // The HTTP handler and associated middleware
+	healthy bool                // application state of the server
 }
 
 // Serve GRPC requests on the specified address.
 func (s *Admin) Serve() (err error) {
-	// This service should not start in maintenance mode.
-	if s.svc.conf.Maintenance {
-		return errors.New("could not start directory administration service in maintenance mode")
-	}
-
+	// If not enabled, ignore the call to Serve and exit without error.
 	if !s.conf.Enabled {
 		log.Warn().Msg("directory administration service is not enabled")
 		return nil
 	}
 
-	// Listen for TCP requests on the specified address and port
-	var sock net.Listener
-	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
-		return fmt.Errorf("could not listen on %q", s.conf.BindAddr)
+	// This service should start in maintenance mode and return unavailable.
+	s.SetHealth(!s.svc.conf.Maintenance)
+	if s.svc.conf.Maintenance {
+		log.Warn().Msg("directory administration service starting in maintenance mode")
 	}
 
-	// Run the server
-	go func() {
-		defer sock.Close()
-		log.Info().
-			Str("listen", s.conf.BindAddr).
-			Str("version", pkg.Version()).
-			Msg("directory administration server started")
+	// Listen for TCP requests on the specified address and port
+	log.Info().
+		Str("listen", s.conf.BindAddr).
+		Str("version", pkg.Version()).
+		Msg("directory administration server started")
 
-		if err := s.srv.Serve(sock); err != nil {
-			s.svc.echan <- err
-		}
-	}()
+	if err = s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return err
+	}
 
-	// Now that the go routine is started return nil, meaning the service has started
-	// successfully with no problems.
 	return nil
 }
 
 // Shutdown the Directory Administration Service gracefully
 func (s *Admin) Shutdown() (err error) {
-	log.Debug().Msg("gracefully shutting down admin server")
-	s.srv.GracefulStop()
-	log.Debug().Msg("successful shutdown of admin server")
+	log.Debug().Msg("gracefully shutting down directory administration server")
+
+	// Gracefully shutdown admin API server
+	s.SetHealth(false)
+	s.srv.SetKeepAlivesEnabled(false)
+
+	// Require shutdown in 30 seconds without blocking
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err = s.srv.Shutdown(ctx); err != nil {
+		return err
+	}
+
+	log.Debug().Msg("successful shutdown of admin api server")
+	return nil
+}
+
+// Routes returns the Admin API router for testing purposes.
+func (s *Admin) Routes() http.Handler {
+	return s.router
+}
+
+func (s *Admin) setupRoutes() (err error) {
+	// Application Middleware
+	s.router.Use(ginzerolog.Logger("gin"))
+	s.router.Use(gin.Recovery())
+
+	// Add CORS configuration
+	// TODO: configure origins from the environment rather than hard-coding
+	s.router.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+	s.router.Use(s.Available())
+
+	// Add the v1 API routes
+	v1 := s.router.Group("/v1")
+	v1.GET("/status", s.Status)
+	v1.POST("/vasps/:vaspID/review", s.Review)
+	v1.POST("/vasps/:vaspID/resend", s.Resend)
+
 	return nil
 }
 
@@ -93,34 +145,62 @@ func (s *Admin) Shutdown() (err error) {
 // the certificate manager process watches it until the certificate has been issued. On
 // reject, the VASP and certificate request records are deleted and the reject reason is
 // sent to the technical contact.
-func (s *Admin) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin.ReviewReply, err error) {
+func (s *Admin) Review(c *gin.Context) {
+	var (
+		err    error
+		in     *admin.ReviewRequest
+		out    *admin.ReviewReply
+		vasp   *pb.VASP
+		vaspID string
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("token")
+
+	// Parse incoming JSON data from the client request
+	if err := c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
 	// Validate review request
-	if in.Id == "" || in.AdminVerificationToken == "" {
-		log.Warn().Err(out.Error).Msg("no ID or verification token")
-		return nil, status.Error(codes.InvalidArgument, "provide both the VASP ID and the admin verification token")
+	if in.ID != "" && in.ID != vaspID {
+		log.Warn().Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
+		return
+	}
+
+	if in.AdminVerificationToken == "" {
+		log.Warn().Msg("no verification token specified")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the admin verification token is required"))
+		return
 	}
 
 	if !in.Accept && in.RejectReason == "" {
-		log.Warn().Err(out.Error).Msg("missing reject reason")
-		return nil, status.Error(codes.InvalidArgument, "if rejecting the request, a reason must be supplied")
+		log.Warn().Msg("missing reject reason")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("if rejecting the request, a reason must be supplied"))
+		return
 	}
 
 	// Lookup the VASP record associated with the request
-	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
-		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
 	}
 
 	// Check that the administration verification token is correct
 	var adminVerificationToken string
 	if adminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
 		log.Error().Err(err).Msg("could not retrieve admin token from extra data field on VASP")
-		return nil, status.Error(codes.Internal, "could not retrieve admin token from data")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin token from data"))
+		return
 	}
 	if in.AdminVerificationToken != adminVerificationToken {
-		log.Warn().Err(err).Str("vasp", in.Id).Msg("incorrect admin verification token")
-		return nil, status.Error(codes.Unauthenticated, "admin verification token not accepted")
+		log.Warn().Err(err).Str("vasp", vaspID).Msg("incorrect admin verification token")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("admin verification token not accepted"))
+		return
 	}
 
 	// Accept or reject the request
@@ -128,19 +208,21 @@ func (s *Admin) Review(ctx context.Context, in *admin.ReviewRequest) (out *admin
 	if in.Accept {
 		if out.Message, err = s.acceptRegistration(vasp); err != nil {
 			log.Error().Err(err).Msg("could not accept VASP registration")
-			return nil, status.Error(codes.FailedPrecondition, "unable to accept VASP registration request")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to accept VASP registration request"))
+			return
 		}
 	} else {
 		if out.Message, err = s.rejectRegistration(vasp, in.RejectReason); err != nil {
 			log.Error().Err(err).Msg("could not reject VASP registration")
-			return nil, status.Error(codes.FailedPrecondition, "unable to reject VASP registration request")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to reject VASP registration request"))
+			return
 		}
 	}
 
 	name, _ := vasp.Name()
-	out.Status = vasp.VerificationStatus
+	out.Status = vasp.VerificationStatus.String()
 	log.Info().Str("vasp", vasp.Id).Str("name", name).Bool("accepted", in.Accept).Msg("registration reviewed")
-	return out, nil
+	c.JSON(http.StatusOK, out)
 }
 
 // Accept the VASP registration and begin the certificate issuance process.
@@ -250,120 +332,139 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string) (msg string, er
 }
 
 // Resend emails in case they went to spam or the initial email send failed.
-func (s *Admin) Resend(ctx context.Context, in *admin.ResendRequest) (out *admin.ResendReply, err error) {
-	if in.Id == "" {
-		log.Warn().Msg("invalid resend request: missing ID")
-		return nil, status.Error(codes.InvalidArgument, "VASP record ID is required")
+func (s *Admin) Resend(c *gin.Context) {
+	var (
+		err    error
+		in     *admin.ResendRequest
+		out    *admin.ResendReply
+		vasp   *pb.VASP
+		vaspID string
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("token")
+
+	// Parse incoming JSON data from the client request
+	if err := c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Validate resend request
+	if in.ID != "" && in.ID != vaspID {
+		log.Warn().Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
+		return
 	}
 
 	// Lookup the VASP record associated with the resend request
-	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
-		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
-		return nil, status.Error(codes.NotFound, "could not retrieve VASP record by ID")
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
 	}
 
-	var sent int
-	out = &admin.ResendReply{}
-
 	// Handle different resend request types
-	switch in.Type {
-	case admin.ResendRequest_UNKNOWN:
-		log.Warn().Msg("invalid resend request: unknown type")
-		return nil, status.Error(codes.InvalidArgument, "specify a resend emails type")
-
-	case admin.ResendRequest_VERIFY_CONTACT:
-		if sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
-			log.Warn().Err(err).Int("sent", sent).Msg("could not resend verify contacts emails")
-			return nil, status.Errorf(codes.FailedPrecondition, "could not resend contact verification emails: %s", err)
+	out = &admin.ResendReply{}
+	switch in.Action {
+	case admin.ResendVerifyContact:
+		if out.Sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
+			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
+			return
 		}
 		out.Message = "contact verification emails resent to all unverified contacts"
 
-	case admin.ResendRequest_REVIEW:
-		if sent, err = s.svc.email.SendReviewRequest(vasp); err != nil {
-			log.Warn().Err(err).Int("sent", sent).Msg("could not resend review request")
-			return nil, status.Errorf(codes.FailedPrecondition, "could not resend review request: %s", err)
+	case admin.ResendReview:
+		if out.Sent, err = s.svc.email.SendReviewRequest(vasp); err != nil {
+			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend review request")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend review request: %s", err)))
+			return
 		}
 		out.Message = "review request resent to TRISA admins"
 
-	case admin.ResendRequest_DELIVER_CERTS:
+	case admin.ResendDeliverCerts:
 		// TODO: check verification state and cert request state
 		// TODO: in order to implement this, we'd have to fetch the certs from Google Secrets
 		// TODO: if implemented, log which contact was sent the certs (e.g. technical, admin, etc.)
 		// TODO: when above implemented, also log which contact was sent certs in acceptRegistration
-		return nil, status.Error(codes.Unimplemented, "resend cert delivery not yet implemented")
+		log.Warn().Msg("resend cert delivery not yet implemented")
+		c.JSON(http.StatusNotImplemented, admin.ErrorResponse("resend cert delivery not yet implemented"))
+		return
 
-	case admin.ResendRequest_REJECTION:
+	case admin.ResendRejection:
 		// Only send a rejection email if we're in the rejected state
 		if vasp.VerificationStatus != pb.VerificationState_REJECTED {
 			log.Warn().Err(err).Str("status", vasp.VerificationStatus.String()).Msg("cannot resend rejection emails in current state")
-			return nil, status.Error(codes.FailedPrecondition, "VASP record verification status cannot send rejection email")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("VASP record verification status cannot send rejection email"))
+			return
 		}
 
 		// A reason must be specified to send a rejection email (it's not stored)
 		if in.Reason == "" {
-			log.Warn().Str("resend_type", in.Type.String()).Msg("invalid resend request: missing reason argument")
-			return nil, status.Error(codes.InvalidArgument, "must specify reason for rejection to resend email")
+			log.Warn().Str("resend_type", string(in.Action)).Msg("invalid resend request: missing reason argument")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("must specify reason for rejection to resend email"))
+			return
 		}
-		if sent, err = s.svc.email.SendRejectRegistration(vasp, in.Reason); err != nil {
-			log.Warn().Err(err).Int("sent", sent).Msg("could not resend rejection emails")
-			return nil, status.Errorf(codes.FailedPrecondition, "could not resend rejection emails: %s", err)
+		if out.Sent, err = s.svc.email.SendRejectRegistration(vasp, in.Reason); err != nil {
+			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend rejection emails")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend rejection emails: %s", err)))
+			return
 		}
 		out.Message = "rejection emails resent to all verified contacts"
 
 	default:
-		log.Warn().Str("resend_type", in.Type.String()).Msg("invalid resend request: unhandled resend request type")
-		return nil, status.Errorf(codes.FailedPrecondition, "unknown resend request type %q", in.Type)
+		log.Warn().Str("resend_type", string(in.Action)).Msg("invalid resend request: unhandled resend request type")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown resend request type %q", in.Action)))
+		return
 	}
 
-	out.Sent = int64(sent)
-	log.Info().Str("id", vasp.Id).Int64("sent", out.Sent).Str("resend_type", in.Type.String()).Msg("resend request complete")
-	return out, nil
+	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
+	c.JSON(http.StatusOK, out)
 }
 
+const (
+	serverStatusOK          = "ok"
+	serverStatusMaintenance = "maintenance"
+)
+
 // Get current counts of registration statuses and certificate requests.
-func (s *Admin) Status(ctx context.Context, in *admin.StatusRequest) (out *admin.StatusReply, err error) {
-	var nvasps, ncertreqs int64
+func (s *Admin) Status(c *gin.Context) {
+	c.JSON(http.StatusOK, admin.StatusReply{
+		Status:    serverStatusOK,
+		Timestamp: time.Now(),
+		Version:   pkg.Version(),
+	})
+}
 
-	out = &admin.StatusReply{}
-	if !in.NoRegistrations {
-		out.Registrations = make(map[string]int64)
-		vasps := s.db.ListVASPs()
+// SetHealth sets the health status on the API server, putting it into unavailable mode
+// if health is false, and removing maintenance mode if health is true.
+func (s *Admin) SetHealth(health bool) {
+	s.Lock()
+	s.healthy = health
+	s.Unlock()
+	log.Debug().Bool("health", health).Msg("admin api server health set")
+}
 
-		for vasps.Next() {
-			nvasps++
-			if vasp := vasps.VASP(); vasp != nil {
-				out.Registrations[vasp.VerificationStatus.String()]++
-			}
+// Available is middleware that uses the healthy boolean to return a service unavailable
+// http status code if the server is shutting down. It does this before all routes to
+// ensure that complex handling doesn't bog down the server.
+func (s *Admin) Available() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Check health status (if unhealthy, assume maintenance mode)
+		s.RLock()
+		if !s.healthy {
+			c.JSON(http.StatusServiceUnavailable, admin.StatusReply{
+				Status:    serverStatusMaintenance,
+				Timestamp: time.Now(),
+				Version:   pkg.Version(),
+			})
+			c.Abort()
+			s.RUnlock()
+			return
 		}
-
-		if err = vasps.Error(); err != nil {
-			vasps.Release()
-			log.Error().Err(err).Msg("could not list vasps from database")
-			return nil, status.Error(codes.Internal, "a database error occurred")
-		}
-		vasps.Release()
+		s.RUnlock()
+		c.Next()
 	}
-
-	if !in.NoCertificateRequests {
-		out.CertificateRequests = make(map[string]int64)
-		certreqs := s.db.ListCertReqs()
-
-		for certreqs.Next() {
-			ncertreqs++
-			if certreq := certreqs.CertReq(); certreq != nil {
-				out.CertificateRequests[certreq.Status.String()]++
-			}
-		}
-
-		if err = certreqs.Error(); err != nil {
-			certreqs.Release()
-			log.Error().Err(err).Msg("could not list certificate requests from database")
-			return nil, status.Error(codes.Internal, "a database error occurred")
-		}
-		certreqs.Release()
-	}
-
-	log.Info().Int64("nvasps", nvasps).Int64("ncertreqs", ncertreqs).Msg("status counts complete")
-	return out, nil
 }

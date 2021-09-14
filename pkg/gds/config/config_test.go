@@ -20,6 +20,7 @@ var testEnv = map[string]string{
 	"GDS_BIND_ADDR":                  ":443",
 	"GDS_ADMIN_ENABLED":              "true",
 	"GDS_ADMIN_BIND_ADDR":            ":444",
+	"GDS_ADMIN_MODE":                 "debug",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_REPLICA_PID":                "8",
@@ -73,6 +74,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BIND_ADDR"], conf.GDS.BindAddr)
 	require.Equal(t, true, conf.Admin.Enabled)
 	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
+	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
 	require.Equal(t, true, conf.Replica.Enabled)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
