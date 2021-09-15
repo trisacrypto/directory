@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 
 // components
-import LanguageDropdown from '../components/LanguageDropdown';
 import ProfileDropdown from '../components/ProfileDropdown';
 import SearchDropdown from '../components/SearchDropdown';
 import TopbarSearch from '../components/TopbarSearch';
@@ -103,9 +102,6 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: T
                     <ul className="list-unstyled topbar-menu float-end mb-0">
                         <li className="notification-list topbar-dropdown d-xl-none">
                             <SearchDropdown />
-                        </li>
-                        <li className="dropdown notification-list topbar-dropdown d-none d-lg-block">
-                            <LanguageDropdown />
                         </li>
                         <li className="dropdown notification-list">
                             <ProfileDropdown
