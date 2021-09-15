@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds"
-	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"

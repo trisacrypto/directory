@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/trisacrypto/directory/pkg"
-	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
@@ -50,9 +50,9 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 	return a, nil
 }
 
-// Admin implements the DirectoryAdministrationServer as defined by the v1 or later GDS
-// protocol buffers. This service is the primary interaction point with authorized TRISA
-// users that are performing secure commands with authentication.
+// Admin implements the DirectoryAdministrationServer as defined by the v2 JSON API.
+// This service is the primary interaction point with authorized TRISA users that are
+// performing secure commands with authentication.
 type Admin struct {
 	sync.RWMutex
 	svc     *Service            // The parent Service the admin server uses to interact with other components
@@ -131,11 +131,11 @@ func (s *Admin) setupRoutes() (err error) {
 	}))
 	s.router.Use(s.Available())
 
-	// Add the v1 API routes
-	v1 := s.router.Group("/v1")
-	v1.GET("/status", s.Status)
-	v1.POST("/vasps/:vaspID/review", s.Review)
-	v1.POST("/vasps/:vaspID/resend", s.Resend)
+	// Add the v2 API routes
+	v2 := s.router.Group("/v2")
+	v2.GET("/status", s.Status)
+	v2.POST("/vasps/:vaspID/review", s.Review)
+	v2.POST("/vasps/:vaspID/resend", s.Resend)
 
 	return nil
 }

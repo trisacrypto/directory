@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	. "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	. "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 )
 
 func TestNotFound(t *testing.T) {

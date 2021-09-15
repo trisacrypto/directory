@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 )
 
 func TestClient(t *testing.T) {
@@ -36,36 +36,36 @@ func TestClient(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure that the latest version of the client is returned
-	apiv1, ok := client.(*admin.APIv1)
+	apiv2, ok := client.(*admin.APIv2)
 	require.True(t, ok)
 
 	// Create a new GET request to a basic path
-	req, err := apiv1.NewRequest(context.TODO(), http.MethodGet, "/foo", nil)
+	req, err := apiv2.NewRequest(context.TODO(), http.MethodGet, "/foo", nil)
 	require.NoError(t, err)
 
 	require.Equal(t, "/foo", req.URL.Path)
 	require.Equal(t, http.MethodGet, req.Method)
-	require.Equal(t, "GDS Admin API Client/v1", req.Header.Get("User-Agent"))
+	require.Equal(t, "GDS Admin API Client/v2", req.Header.Get("User-Agent"))
 	require.Equal(t, "application/json", req.Header.Get("Accept"))
 	require.Equal(t, "application/json; charset=utf-8", req.Header.Get("Content-Type"))
 
 	data := make(map[string]string)
-	rep, err := apiv1.Do(req, &data, true)
+	rep, err := apiv2.Do(req, &data, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rep.StatusCode)
 	require.Contains(t, data, "hello")
 	require.Equal(t, "world", data["hello"])
 
 	// Create a new POST request and check error handling
-	req, err = apiv1.NewRequest(context.TODO(), http.MethodPost, "/bar", data)
+	req, err = apiv2.NewRequest(context.TODO(), http.MethodPost, "/bar", data)
 	require.NoError(t, err)
-	rep, err = apiv1.Do(req, nil, false)
+	rep, err = apiv2.Do(req, nil, false)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, rep.StatusCode)
 
-	req, err = apiv1.NewRequest(context.TODO(), http.MethodPost, "/bar", data)
+	req, err = apiv2.NewRequest(context.TODO(), http.MethodPost, "/bar", data)
 	require.NoError(t, err)
-	_, err = apiv1.Do(req, nil, true)
+	_, err = apiv2.Do(req, nil, true)
 	require.EqualError(t, err, "[400] bad request")
 }
 
@@ -79,7 +79,7 @@ func TestStatus(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v1/status", r.URL.Path)
+		require.Equal(t, "/v2/status", r.URL.Path)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -113,7 +113,7 @@ func TestReview(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPost, r.Method)
-		require.Equal(t, "/v1/vasps/1234/review", r.URL.Path)
+		require.Equal(t, "/v2/vasps/1234/review", r.URL.Path)
 
 		// Must be able to deserialize the request
 		in := new(admin.ReviewRequest)
@@ -155,7 +155,7 @@ func TestResend(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPost, r.Method)
-		require.Equal(t, "/v1/vasps/1234/resend", r.URL.Path)
+		require.Equal(t, "/v2/vasps/1234/resend", r.URL.Path)
 
 		// Must be able to deserialize the request
 		in := new(admin.ResendRequest)

@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-// New creates a new admin.v1 API client that implements the Service interface.
+// New creates a new admin.v2 API client that implements the Service interface.
 func New(endpoint string) (_ DirectoryAdministrationClient, err error) {
-	c := &APIv1{
+	c := &APIv2{
 		client: &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
@@ -28,19 +28,19 @@ func New(endpoint string) (_ DirectoryAdministrationClient, err error) {
 	return c, nil
 }
 
-// APIv1 implements the Service interface.
-type APIv1 struct {
+// APIv2 implements the Service interface.
+type APIv2 struct {
 	endpoint *url.URL
 	client   *http.Client
 }
 
 // Ensure the API implments the Service interface.
-var _ DirectoryAdministrationClient = &APIv1{}
+var _ DirectoryAdministrationClient = &APIv2{}
 
-func (s APIv1) Status(ctx context.Context) (out *StatusReply, err error) {
+func (s APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 	//  Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/status", nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/status", nil); err != nil {
 		return nil, err
 	}
 
@@ -65,14 +65,14 @@ func (s APIv1) Status(ctx context.Context) (out *StatusReply, err error) {
 	return out, nil
 }
 
-func (s APIv1) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error) {
+func (s APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error) {
 	// The ID is required for the review request to determine the endpoint
 	if in.ID == "" {
 		return nil, ErrIDRequred
 	}
 
 	// Determine the path from the request
-	path := fmt.Sprintf("/v1/vasps/%s/review", in.ID)
+	path := fmt.Sprintf("/v2/vasps/%s/review", in.ID)
 
 	//  Make the HTTP request
 	var req *http.Request
@@ -89,14 +89,14 @@ func (s APIv1) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply,
 	return out, nil
 }
 
-func (s APIv1) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error) {
+func (s APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error) {
 	// The ID is required for the review request to determine the endpoint
 	if in.ID == "" {
 		return nil, ErrIDRequred
 	}
 
 	// Determine the path from the request
-	path := fmt.Sprintf("/v1/vasps/%s/resend", in.ID)
+	path := fmt.Sprintf("/v2/vasps/%s/resend", in.ID)
 
 	//  Make the HTTP request
 	var req *http.Request
@@ -114,7 +114,7 @@ func (s APIv1) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply,
 }
 
 const (
-	userAgent    = "GDS Admin API Client/v1"
+	userAgent    = "GDS Admin API Client/v2"
 	accept       = "application/json"
 	acceptLang   = "en-US,en"
 	acceptEncode = "gzip, deflate, br"
@@ -122,9 +122,9 @@ const (
 )
 
 // NewRequest creates an http.Request with the specified context and method, resolving
-// the path to the root endpoint of the API (e.g. /v1) and serializes the data to JSON.
-// This method also sets the default headers of all GDS Admin API v1 client requests.
-func (s APIv1) NewRequest(ctx context.Context, method, path string, data interface{}) (req *http.Request, err error) {
+// the path to the root endpoint of the API (e.g. /v2) and serializes the data to JSON.
+// This method also sets the default headers of all GDS Admin API v2 client requests.
+func (s APIv2) NewRequest(ctx context.Context, method, path string, data interface{}) (req *http.Request, err error) {
 	// Resolve the URL reference from the path
 	endpoint := s.endpoint.ResolveReference(&url.URL{Path: path})
 
@@ -155,7 +155,7 @@ func (s APIv1) NewRequest(ctx context.Context, method, path string, data interfa
 
 // Do executes an http request against the server, performs error checking, and
 // deserializes the response data into the specified struct if requested.
-func (s APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *http.Response, err error) {
+func (s APIv2) Do(req *http.Request, data interface{}, checkStatus bool) (rep *http.Response, err error) {
 	if rep, err = s.client.Do(req); err != nil {
 		return rep, fmt.Errorf("could not execute request: %s", err)
 	}

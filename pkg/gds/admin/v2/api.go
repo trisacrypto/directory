@@ -34,7 +34,7 @@ type StatusReply struct {
 }
 
 //===========================================================================
-// Admin v1 API Requests and Responses
+// Admin v2 API Requests and Responses
 //===========================================================================
 
 // Registration review requests are sent via email to the TRISA admin email address with
