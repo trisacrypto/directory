@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -163,7 +164,15 @@ func (s APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *h
 	// Detect errors if they've occurred
 	if checkStatus {
 		if rep.StatusCode < 200 || rep.StatusCode >= 300 {
-			return rep, fmt.Errorf("[%d] %s", rep.StatusCode, rep.Status)
+			// Attempt to read the error response from the JSON, ignore body
+			// deserialization or read errors and simply return the status error.
+			var reply Reply
+			if err = json.NewDecoder(rep.Body).Decode(&reply); err == nil {
+				if reply.Error != "" {
+					return rep, fmt.Errorf("[%d] %s", rep.StatusCode, reply.Error)
+				}
+			}
+			return rep, errors.New(rep.Status)
 		}
 	}
 

@@ -155,7 +155,7 @@ func (s *Admin) Review(c *gin.Context) {
 	)
 
 	// Get vaspID from the URL
-	vaspID = c.Param("token")
+	vaspID = c.Param("vaspID")
 
 	// Parse incoming JSON data from the client request
 	if err := c.ShouldBind(&in); err != nil {
@@ -342,7 +342,7 @@ func (s *Admin) Resend(c *gin.Context) {
 	)
 
 	// Get vaspID from the URL
-	vaspID = c.Param("token")
+	vaspID = c.Param("vaspID")
 
 	// Parse incoming JSON data from the client request
 	if err := c.ShouldBind(&in); err != nil {
@@ -353,7 +353,7 @@ func (s *Admin) Resend(c *gin.Context) {
 
 	// Validate resend request
 	if in.ID != "" && in.ID != vaspID {
-		log.Warn().Msg("mismatched request ID and URL")
+		log.Warn().Str("id", in.ID).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
 		return
 	}
