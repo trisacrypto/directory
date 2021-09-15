@@ -41,6 +41,12 @@ type AdminConfig struct {
 	Enabled  bool   `split_words:"true" default:"true"`
 	BindAddr string `split_words:"true" default:":4434"`
 	Mode     string `split_words:"true" default:"release"`
+
+	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
+	// environment variable should be a comma separated list of keyid:path/to/key.pem
+	// Multiple keys are used in order to rotate keys regularly; keyids therefore must
+	// be sortable; in general we prefer to use ksuid for key ids.
+	TokenKeys map[string]string `split_words:"true" required:"true"`
 }
 
 type ReplicaConfig struct {
