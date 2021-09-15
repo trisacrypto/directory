@@ -4,11 +4,11 @@ go 1.16
 
 require (
 	cloud.google.com/go v0.82.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
+	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.2.0
