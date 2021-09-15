@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -39,6 +40,7 @@ type GDSConfig struct {
 type AdminConfig struct {
 	Enabled  bool   `split_words:"true" default:"true"`
 	BindAddr string `split_words:"true" default:":4434"`
+	Mode     string `split_words:"true" default:"release"`
 }
 
 type ReplicaConfig struct {
@@ -95,6 +97,10 @@ func New() (_ Config, err error) {
 	}
 
 	// Validate config-specific constraints
+	if err = conf.Admin.Validate(); err != nil {
+		return Config{}, err
+	}
+
 	if err = conf.Replica.Validate(); err != nil {
 		return Config{}, err
 	}
@@ -113,6 +119,13 @@ func (c Config) GetLogLevel() zerolog.Level {
 
 func (c Config) IsZero() bool {
 	return !c.processed
+}
+
+func (c AdminConfig) Validate() error {
+	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
+		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
+	}
+	return nil
 }
 
 func (c ReplicaConfig) Validate() error {

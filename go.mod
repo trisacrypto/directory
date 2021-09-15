@@ -4,9 +4,11 @@ go 1.16
 
 require (
 	cloud.google.com/go v0.82.0
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
 	github.com/ghodss/yaml v1.0.0
+	github.com/gin-contrib/cors v1.3.1
+	github.com/gin-gonic/gin v1.7.4
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.2.0
 	github.com/joho/godotenv v1.3.0

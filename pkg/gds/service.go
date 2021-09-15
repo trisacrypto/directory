@@ -56,6 +56,13 @@ func New(conf config.Config) (s *Service, err error) {
 		if s.gds, err = NewGDS(s); err != nil {
 			return nil, err
 		}
+
+		// Ensure that the Admin API is created even in maintenace mode, so that
+		// maintenance status replies are sent.
+		if s.admin, err = NewAdmin(s); err != nil {
+			return nil, err
+		}
+
 		return s, nil
 	}
 
@@ -117,7 +124,7 @@ type Service struct {
 	echan   chan error
 }
 
-// Serve GRPC requests on the specified address.
+// Serve GRPC requests on the specified addresses and all internal servers.
 func (s *Service) Serve() (err error) {
 	// Catch OS signals for graceful shutdowns
 	quit := make(chan os.Signal, 1)
@@ -131,16 +138,12 @@ func (s *Service) Serve() (err error) {
 	if s.conf.Maintenance {
 		log.Warn().Msg("starting server in maintenance mode")
 	} else {
+		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
 		go s.CertManager()
 
 		// Start the backup manager go routine process
 		go s.BackupManager()
-
-		// Start the admin service
-		if err = s.admin.Serve(); err != nil {
-			return err
-		}
 
 		// Start the replica service
 		if err = s.replica.Serve(); err != nil {
@@ -148,9 +151,13 @@ func (s *Service) Serve() (err error) {
 		}
 	}
 
-	// The only service that runs in maintenance mode is the TRISADirectoryService,
-	// which responds to Status RPC requests that the server is in maintenance mode.
+	// The TRISADirectoryService service can run in maintenance mode
 	if err = s.gds.Serve(); err != nil {
+		return err
+	}
+
+	// The DirectoryAdministrationService can run in maintenance mode
+	if err = s.admin.Serve(); err != nil {
 		return err
 	}
 
@@ -170,12 +177,12 @@ func (s *Service) Shutdown() (err error) {
 		log.Error().Err(err).Msg("could not shutdown TRISADirectory service")
 	}
 
-	if !s.conf.Maintenance {
-		// Shutdown the DirectoryAdministration service gracefully
-		if err = s.admin.Shutdown(); err != nil {
-			log.Error().Err(err).Msg("could not shutdown DirectoryAdministration service")
-		}
+	// Shutdown the DirectoryAdministration service gracefully
+	if err = s.admin.Shutdown(); err != nil {
+		log.Error().Err(err).Msg("could not shutdown DirectoryAdministration service")
+	}
 
+	if !s.conf.Maintenance {
 		// Shutdown the ReplicationServer gracefully
 		if err = s.replica.Shutdown(); err != nil {
 			log.Error().Err(err).Msg("could not shutdown Replication service")

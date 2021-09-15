@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds"
-	admin "github.com/trisacrypto/directory/pkg/gds/admin/v1"
+	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -48,7 +48,7 @@ func main() {
 		cli.StringFlag{
 			Name:   "a, admin-endpoint",
 			Usage:  "the url to connect the directory administration client",
-			Value:  "api.admin.vaspdirectory.net:443",
+			Value:  "https://api.admin.vaspdirectory.net",
 			EnvVar: "TRISA_DIRECTORY_ADMIN_URL",
 		},
 		cli.BoolFlag{
@@ -342,13 +342,13 @@ func review(c *cli.Context) (err error) {
 	}
 
 	req := &admin.ReviewRequest{
-		Id:                     c.String("id"),
+		ID:                     c.String("id"),
 		AdminVerificationToken: c.String("token"),
 		Accept:                 c.Bool("accept") && !c.Bool("reject"),
 		RejectReason:           c.String("reason"),
 	}
 
-	if req.Id == "" || req.AdminVerificationToken == "" {
+	if req.ID == "" || req.AdminVerificationToken == "" {
 		return cli.NewExitError("specify both id and token", 1)
 	}
 
@@ -544,24 +544,24 @@ func status(c *cli.Context) (err error) {
 
 func resend(c *cli.Context) (err error) {
 	req := &admin.ResendRequest{
-		Id:     c.String("id"),
+		ID:     c.String("id"),
 		Reason: c.String("reason"),
 	}
 
-	if req.Id == "" {
+	if req.ID == "" {
 		return cli.NewExitError("missing VASP record ID, specify with --id", 1)
 	}
 
 	// NOTE: if multiple type flags are specified, only one will be used
 	switch {
 	case c.Bool("verify-contact"):
-		req.Type = admin.ResendRequest_VERIFY_CONTACT
+		req.Action = admin.ResendVerifyContact
 	case c.Bool("review"):
-		req.Type = admin.ResendRequest_REVIEW
+		req.Action = admin.ResendReview
 	case c.Bool("deliver-certs"):
-		req.Type = admin.ResendRequest_DELIVER_CERTS
+		req.Action = admin.ResendDeliverCerts
 	case c.Bool("reject"):
-		req.Type = admin.ResendRequest_REJECTION
+		req.Action = admin.ResendRejection
 	default:
 		return cli.NewExitError("must specify request type (--verify-contact, --review, --deliver-certs, --reject)", 1)
 	}
@@ -578,16 +578,11 @@ func resend(c *cli.Context) (err error) {
 }
 
 func adminStatus(c *cli.Context) (err error) {
-	req := &admin.StatusRequest{
-		NoRegistrations:       c.Bool("no-registrations"),
-		NoCertificateRequests: c.Bool("no-certificate-requests"),
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	var rep *admin.StatusReply
-	if rep, err = adminClient.Status(ctx, req); err != nil {
+	if rep, err = adminClient.Status(ctx); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
@@ -616,28 +611,34 @@ func initClient(c *cli.Context) (err error) {
 	client = api.NewTRISADirectoryClient(cc)
 
 	// Connect the admin client
-	var acc *grpc.ClientConn
-	if acc, err = grpc.Dial(c.GlobalString("admin-endpoint"), opts...); err != nil {
+	if adminClient, err = admin.New(c.GlobalString("admin-endpoint")); err != nil {
 		return cli.NewExitError(err, 1)
 	}
-	adminClient = admin.NewDirectoryAdministrationClient(acc)
 	return nil
 }
 
 // helper function to print JSON response and exit
-func printJSON(m proto.Message) error {
-	opts := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
+func printJSON(msg interface{}) (err error) {
 
-	data, err := opts.Marshal(m)
-	if err != nil {
-		return cli.NewExitError(err, 1)
+	var data []byte
+	switch m := msg.(type) {
+	case proto.Message:
+		opts := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+
+		if data, err = opts.Marshal(m); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	default:
+		if data, err = json.MarshalIndent(msg, "", "  "); err != nil {
+			return cli.NewExitError(err, 1)
+		}
 	}
 
 	fmt.Println(string(data))
