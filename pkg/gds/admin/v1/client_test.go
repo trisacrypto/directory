@@ -66,7 +66,7 @@ func TestClient(t *testing.T) {
 	req, err = apiv1.NewRequest(context.TODO(), http.MethodPost, "/bar", data)
 	require.NoError(t, err)
 	_, err = apiv1.Do(req, nil, true)
-	require.EqualError(t, err, "[400] 400 Bad Request")
+	require.EqualError(t, err, "[400] bad request")
 }
 
 func TestStatus(t *testing.T) {
