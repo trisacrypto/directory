@@ -277,6 +277,23 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "admin:list",
+			Usage:    "list all VASPs summary detail",
+			Category: "admin",
+			Action:   adminListVASPs,
+			Before:   initClient,
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "p, page",
+					Usage: "query for the specific page of vasps",
+				},
+				cli.IntFlag{
+					Name:  "s, page-size",
+					Usage: "specify the number of items per page",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -583,6 +600,23 @@ func adminStatus(c *cli.Context) (err error) {
 
 	var rep *admin.StatusReply
 	if rep, err = adminClient.Status(ctx); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminListVASPs(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	params := &admin.ListVASPsParams{
+		Page:     c.Int("page"),
+		PageSize: c.Int("page-size"),
+	}
+
+	var rep *admin.ListVASPsReply
+	if rep, err = adminClient.ListVASPs(ctx, params); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

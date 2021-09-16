@@ -41,8 +41,8 @@ type StatusReply struct {
 // ListVASPsParams is a request-like struct that passes query params to the ListVASPs
 // GET request. All query params are optional and modify how and what data is retrieved.
 type ListVASPsParams struct {
-	Page     int `url:"page,omitempty"`      // defaults to page 1 if not included
-	PageSize int `url:"page_size,omitempty"` // defaults to 100 if not included
+	Page     int `url:"page,omitempty" form:"page" default:"1"`             // defaults to page 1 if not included
+	PageSize int `url:"page_size,omitempty" form:"page_size" default:"100"` // defaults to 100 if not included
 }
 
 // ListVASPsReply contains a summary data structure of all VASPs managed by the directory.
@@ -58,13 +58,13 @@ type ListVASPsReply struct {
 }
 
 type VASPSnippet struct {
-	ID               string   `json:"id"`
-	Name             string   `json:"name"`
-	CommonName       string   `json:"common_name"`
-	Status           string   `json:"status,omitempty"`
-	LastUpdated      string   `json:"last_updated,omitempty"`
-	Traveler         bool     `json:"traveler"`
-	VerifiedContacts []string `json:"verified_contacts"`
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	CommonName         string   `json:"common_name"`
+	VerificationStatus string   `json:"verification_status,omitempty"`
+	LastUpdated        string   `json:"last_updated,omitempty"`
+	Traveler           bool     `json:"traveler"`
+	VerifiedContacts   []string `json:"verified_contacts"`
 }
 
 //===========================================================================
