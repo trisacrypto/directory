@@ -51,14 +51,16 @@ const LanguageDropdown = (): React$Element<any> => {
                 id="dropdown-languages"
                 as={Link}
                 to="#"
-                onClick={toggleDropdown}
+                // onClick={toggleDropdown}
                 className="nav-link dropdown-toggle arrow-none">
                 <img src={enLang.flag} alt={enLang.name} className="me-0 me-sm-1" height="12" />{' '}
                 <span className="align-middle d-none d-sm-inline-block">{enLang.name}</span>
                 <i className="mdi mdi-chevron-down d-none d-sm-inline-block align-middle"></i>
             </Dropdown.Toggle>
-            <Dropdown.Menu className="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu">
-                <div onClick={toggleDropdown}>
+            {/* <Dropdown.Menu className="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu">
+                <div 
+                onClick={toggleDropdown}
+                >
                     {Languages.map((lang, i) => {
                         return (
                             <Link to="/" className="dropdown-item notify-item" key={i + '-lang'}>
@@ -68,7 +70,7 @@ const LanguageDropdown = (): React$Element<any> => {
                         );
                     })}
                 </div>
-            </Dropdown.Menu>
+            </Dropdown.Menu> */}
         </Dropdown>
     );
 };
