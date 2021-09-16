@@ -2,15 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
-
-type ProfileMenuItem = {
-    label: string,
-    icon: string,
-    redirectTo: string,
-};
-
 type ProfileDropdownProps = {
-    menuItems: Array<ProfileMenuItem>,
     profilePic?: any,
     username: string,
     userTitle?: string,
@@ -51,16 +43,20 @@ const ProfileDropdown = (props: ProfileDropdownProps, state: ProfileDropdownStat
             <Dropdown.Menu className="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown">
                 <div onClick={toggleDropdown}>
                     <div className="dropdown-header noti-title">
-                        <h6 className="text-overflow m-0">Welcome !</h6>
+                        <h6 className="text-overflow m-0">Welcome!</h6>
                     </div>
-                    {props.menuItems.map((item, i) => {
-                        return (
-                            <Link to={item.redirectTo} className="dropdown-item notify-item" key={i + '-profile-menu'}>
-                                <i className={`${item.icon} me-1`}></i>
-                                <span>{item.label}</span>
-                            </Link>
-                        );
-                    })}
+                    <a target="_top" href="mailto:info@rotational.io" className="dropdown-item notify-item">
+                        <i className={`mdi mdi-help me-1`}></i>
+                        <span>Support</span>
+                    </a>
+                    <a target="_blank" rel="noreferrer" href="https://trisa-workspace.slack.com" className="dropdown-item notify-item">
+                        <i className={`mdi mdi-launch me-1`}></i>
+                        <span>Slack</span>
+                    </a>
+                    <Link to="/account/logout" className="dropdown-item notify-item">
+                        <i className={`mdi mdi-logout me-1`}></i>
+                        <span>Logout</span>
+                    </Link>
                 </div>
             </Dropdown.Menu>
         </Dropdown>

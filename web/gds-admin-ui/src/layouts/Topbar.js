@@ -1,48 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 
 // components
-import LanguageDropdown from '../components/LanguageDropdown';
 import ProfileDropdown from '../components/ProfileDropdown';
 import SearchDropdown from '../components/SearchDropdown';
 import TopbarSearch from '../components/TopbarSearch';
 
 import profilePic from '../assets/images/avatar-1.jpg';
 import logo from '../assets/images/gds-trisatest-logo.png';
+import { APICore } from "../helpers/api/apiCore"
 
 //constants
 import * as layoutConstants from '../constants/layout';
-
-// get the profilemenu
-const ProfileMenus = [
-    {
-        label: 'My Account',
-        icon: 'mdi mdi-account-circle',
-        redirectTo: '/',
-    },
-    {
-        label: 'Settings',
-        icon: 'mdi mdi-account-edit',
-        redirectTo: '/',
-    },
-    {
-        label: 'Support',
-        icon: 'mdi mdi-lifebuoy',
-        redirectTo: '/',
-    },
-    {
-        label: 'Lock Screen',
-        icon: 'mdi mdi-lock-outline',
-        redirectTo: '/account/lock-screen',
-    },
-    {
-        label: 'Logout',
-        icon: 'mdi mdi-logout',
-        redirectTo: '/account/logout',
-    },
-];
+import LanguageDropdown from '../components/LanguageDropdown';
 
 // dummy search results
 const SearchResults = [
@@ -75,6 +47,12 @@ type TopbarProps = {
 
 const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: TopbarProps): React$Element<any> => {
     const [isopen, setIsopen] = useState(false);
+    const [user, setUser] = useState({})
+
+    useEffect(() => {
+        const loggedInUser = new APICore().getLoggedInUser()
+        setUser(loggedInUser)
+    }, [])
 
     const navbarCssClasses = navCssClasses || '';
     const containerCssClasses = !hideLogo ? 'container-fluid' : '';
@@ -109,10 +87,9 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: T
                         </li>
                         <li className="dropdown notification-list">
                             <ProfileDropdown
-                                profilePic={profilePic}
-                                menuItems={ProfileMenus}
-                                username={'Admin'}
-                                userTitle={'Admin'}
+                                profilePic={user?.picture || profilePic}
+                                username={user?.name}
+                                userTitle={user?.email}
                             />
                         </li>
                     </ul>
