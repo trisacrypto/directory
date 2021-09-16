@@ -82,6 +82,9 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: T
                         <li className="notification-list topbar-dropdown d-xl-none">
                             <SearchDropdown />
                         </li>
+                        <li className="dropdown notification-list topbar-dropdown d-none d-lg-block">
+                            <LanguageDropdown />
+                        </li>
                         <li className="dropdown notification-list">
                             <ProfileDropdown
                                 profilePic={user?.picture || profilePic}
