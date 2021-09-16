@@ -157,6 +157,7 @@ func (s *TokenTestSuite) TestValidTokens() {
 }
 
 // Test that a token signed with an old cert can still be verified.
+// This also tests that the correct signing key is required.
 func (s *TokenTestSuite) TestKeyRotation() {
 	require := s.Require()
 
@@ -185,6 +186,13 @@ func (s *TokenTestSuite) TestKeyRotation() {
 	// Validate token with "new token manager"
 	_, err = newTM.Verify(tks)
 	require.NoError(err)
+
+	// A token created by the "new token mangaer" should not be verified by the old one.
+	tks, err = newTM.Sign(token)
+	require.NoError(err)
+
+	_, err = oldTM.Verify(tks)
+	require.Error(err)
 }
 
 // Execute suite as a go test.
