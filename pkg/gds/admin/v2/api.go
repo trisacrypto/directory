@@ -53,8 +53,6 @@ type ListVASPsReply struct {
 	Count    int           `json:"count"`
 	Page     int           `json:"page"`
 	PageSize int           `json:"page_size"`
-	Next     string        `json:"next,omitempty"`
-	Previous string        `json:"previous,omitempty"`
 }
 
 type VASPSnippet struct {
