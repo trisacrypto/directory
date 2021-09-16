@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -158,6 +159,19 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		return
 	}
 
+	// Determine status filter
+	var status pb.VerificationState
+	if in.Status != "" {
+		in.Status = strings.ToUpper(strings.ReplaceAll(in.Status, " ", "_"))
+		sn, ok := pb.VerificationState_value[in.Status]
+		if !ok {
+			log.Warn().Str("status", in.Status).Msg("unknown verification status")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown verification status %q", in.Status)))
+			return
+		}
+		status = pb.VerificationState(sn)
+	}
+
 	// Set pagination defaults if not specified in query
 	if in.Page <= 0 {
 		in.Page = 1
@@ -185,6 +199,11 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// In the page range so add to the list reply
 			vasp := iter.VASP()
+
+			// Check the status before continuing
+			if status != pb.VerificationState_NO_VERIFICATION && vasp.VerificationStatus != status {
+				continue
+			}
 
 			// Build the snippet
 			snippet := admin.VASPSnippet{
