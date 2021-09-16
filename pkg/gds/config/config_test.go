@@ -21,6 +21,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_ENABLED":              "true",
 	"GDS_ADMIN_BIND_ADDR":            ":444",
 	"GDS_ADMIN_MODE":                 "debug",
+	"GDS_ADMIN_TOKEN_KEYS":           "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_REPLICA_PID":                "8",
@@ -76,6 +77,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
 	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
 	require.Equal(t, true, conf.Replica.Enabled)
+	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
@@ -103,15 +105,17 @@ func TestConfig(t *testing.T) {
 }
 
 func TestRequiredConfig(t *testing.T) {
-	// Set required environment variables and cleanup after
-	prevEnv := curEnv(
+	required := []string{
 		"GDS_DATABASE_URL",
 		"GDS_SECRET_KEY",
-		"GDS_REPLICA_ENABLED",
 		"GDS_REPLICA_PID",
 		"GDS_REPLICA_REGION",
-	)
-	t.Cleanup(func() {
+		"GDS_ADMIN_TOKEN_KEYS",
+	}
+
+	// Collect required environment variables and cleanup after
+	prevEnv := curEnv(required...)
+	cleanup := func() {
 		for key, val := range prevEnv {
 			if val != "" {
 				os.Setenv(key, val)
@@ -119,20 +123,28 @@ func TestRequiredConfig(t *testing.T) {
 				os.Unsetenv(key)
 			}
 		}
-	})
+	}
+	t.Cleanup(cleanup)
 
-	_, err := config.New()
-	require.Error(t, err)
-	setEnv(
-		"GDS_DATABASE_URL",
-		"GDS_SECRET_KEY",
-		"GDS_REPLICA_ENABLED",
-		"GDS_REPLICA_PID",
-		"GDS_REPLICA_REGION",
-	)
-
+	// Ensure that we've captured the complete set of required environment variables
+	setEnv(required...)
 	conf, err := config.New()
 	require.NoError(t, err)
+
+	// Ensure that each environment variable is required
+	for _, envvar := range required {
+		// Add all environment variables but the current one
+		for _, key := range required {
+			if key == envvar {
+				os.Unsetenv(key)
+			} else {
+				setEnv(key)
+			}
+		}
+
+		_, err := config.New()
+		require.Errorf(t, err, "expected %q to be required but no error occurred", envvar)
+	}
 
 	// Test required configuration
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
@@ -140,6 +152,7 @@ func TestRequiredConfig(t *testing.T) {
 	require.True(t, conf.Replica.Enabled)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
+	require.Len(t, conf.Admin.TokenKeys, 2)
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified

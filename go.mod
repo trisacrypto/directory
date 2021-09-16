@@ -16,6 +16,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rotationalio/honu v0.2.0
 	github.com/rs/zerolog v1.21.0
+	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.4+incompatible
 	github.com/sendgrid/sendgrid-go v3.10.0+incompatible
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
