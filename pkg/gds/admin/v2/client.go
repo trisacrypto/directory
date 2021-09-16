@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 // New creates a new admin.v2 API client that implements the Service interface.
@@ -40,7 +42,7 @@ var _ DirectoryAdministrationClient = &APIv2{}
 func (s APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 	//  Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/status", nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/status", nil, nil); err != nil {
 		return nil, err
 	}
 
@@ -65,6 +67,28 @@ func (s APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 	return out, nil
 }
 
+func (s APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVASPsReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/vasps", nil, &params); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ListVASPsReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error) {
 	// The ID is required for the review request to determine the endpoint
 	if in.ID == "" {
@@ -76,7 +100,7 @@ func (s APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply,
 
 	//  Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, path, in); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +124,7 @@ func (s APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply,
 
 	//  Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, path, in); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
 		return nil, err
 	}
 
@@ -124,9 +148,12 @@ const (
 // NewRequest creates an http.Request with the specified context and method, resolving
 // the path to the root endpoint of the API (e.g. /v2) and serializes the data to JSON.
 // This method also sets the default headers of all GDS Admin API v2 client requests.
-func (s APIv2) NewRequest(ctx context.Context, method, path string, data interface{}) (req *http.Request, err error) {
+func (s APIv2) NewRequest(ctx context.Context, method, path string, data interface{}, params *url.Values) (req *http.Request, err error) {
 	// Resolve the URL reference from the path
 	endpoint := s.endpoint.ResolveReference(&url.URL{Path: path})
+	if params != nil && len(*params) > 0 {
+		endpoint.RawQuery = params.Encode()
+	}
 
 	var body io.ReadWriter
 	if data != nil {
