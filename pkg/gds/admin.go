@@ -211,7 +211,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Warn().Err(err).Msg("could iterate over vasps in store")
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
