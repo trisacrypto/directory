@@ -292,6 +292,10 @@ func main() {
 					Name:  "s, page-size",
 					Usage: "specify the number of items per page",
 				},
+				cli.StringFlag{
+					Name:  "S, status",
+					Usage: "filter by verification status",
+				},
 			},
 		},
 	}
@@ -613,6 +617,7 @@ func adminListVASPs(c *cli.Context) (err error) {
 	params := &admin.ListVASPsParams{
 		Page:     c.Int("page"),
 		PageSize: c.Int("page-size"),
+		Status:   c.String("status"),
 	}
 
 	var rep *admin.ListVASPsReply
