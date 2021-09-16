@@ -134,10 +134,90 @@ func (s *Admin) setupRoutes() (err error) {
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
 	v2.GET("/status", s.Status)
+	v2.GET("/vasps", s.ListVASPs)
 	v2.POST("/vasps/:vaspID/review", s.Review)
 	v2.POST("/vasps/:vaspID/resend", s.Resend)
 
 	return nil
+}
+
+// ListVASPs returns a paginated, summary data structure of all VASPs managed by the
+// directory service. This is an authenticated endpoint that is used to support the
+// Admin UI and facilitate the review and registration process.
+func (s *Admin) ListVASPs(c *gin.Context) {
+	var (
+		err error
+		in  *admin.ListVASPsParams
+		out *admin.ListVASPsReply
+	)
+
+	in = new(admin.ListVASPsParams)
+	if err = c.ShouldBindQuery(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Set pagination defaults if not specified in query
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	if in.PageSize <= 0 {
+		in.PageSize = 100
+	}
+
+	// Determine pagination index range (indexed by 1)
+	minIndex := (in.Page - 1) * in.PageSize
+	maxIndex := minIndex + in.PageSize
+	log.Debug().Int("page", in.Page).Int("page_size", in.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating vasps")
+
+	out = &admin.ListVASPsReply{
+		VASPs:    make([]admin.VASPSnippet, 0),
+		Page:     in.Page,
+		PageSize: in.PageSize,
+	}
+
+	// Query the list of VASPs from the data store
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+	for iter.Next() {
+		out.Count++
+		if out.Count >= minIndex && out.Count < maxIndex {
+			// In the page range so add to the list reply
+			vasp := iter.VASP()
+
+			// Build the snippet
+			snippet := admin.VASPSnippet{
+				ID:                 vasp.Id,
+				CommonName:         vasp.CommonName,
+				VerificationStatus: vasp.VerificationStatus.String(),
+				LastUpdated:        vasp.LastUpdated,
+				Traveler:           models.IsTraveler(vasp),
+			}
+
+			// Name is a computed value, ignore errors in finding the name.
+			snippet.Name, _ = vasp.Name()
+
+			// Add verified contacts to snippet
+			contacts := models.VerifiedContacts(vasp)
+			snippet.VerifiedContacts = make([]string, 0, len(contacts))
+			for key := range contacts {
+				snippet.VerifiedContacts = append(snippet.VerifiedContacts, key)
+			}
+
+			// Append to list in reply
+			out.VASPs = append(out.VASPs, snippet)
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+
+	// Successful request, return the VASP list JSON data
+	c.JSON(http.StatusOK, out)
 }
 
 // Review a registration request and either accept or reject it. On accept, the
@@ -158,6 +238,7 @@ func (s *Admin) Review(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 
 	// Parse incoming JSON data from the client request
+	in = new(admin.ReviewRequest)
 	if err := c.ShouldBind(&in); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
@@ -345,6 +426,7 @@ func (s *Admin) Resend(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 
 	// Parse incoming JSON data from the client request
+	in = new(admin.ResendRequest)
 	if err := c.ShouldBind(&in); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))

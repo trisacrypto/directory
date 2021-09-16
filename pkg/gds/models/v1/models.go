@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -74,4 +75,33 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 		return err
 	}
 	return nil
+}
+
+// VerifiedContacts returns a map of contact type to email address for all verified
+// contacts, omitting any contacts that are not verified.
+func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
+	contacts = make(map[string]string)
+
+	if _, verified, _ := GetContactVerification(vasp.Contacts.Technical); verified {
+		contacts["technical"] = vasp.Contacts.Technical.Email
+	}
+
+	if _, verified, _ := GetContactVerification(vasp.Contacts.Legal); verified {
+		contacts["legal"] = vasp.Contacts.Legal.Email
+	}
+
+	if _, verified, _ := GetContactVerification(vasp.Contacts.Administrative); verified {
+		contacts["administrative"] = vasp.Contacts.Administrative.Email
+	}
+
+	if _, verified, _ := GetContactVerification(vasp.Contacts.Billing); verified {
+		contacts["billing"] = vasp.Contacts.Billing.Email
+	}
+
+	return contacts
+}
+
+// IsTraveler returns true if the VASP common name ends in traveler.ciphertrace.com
+func IsTraveler(vasp *pb.VASP) bool {
+	return strings.HasSuffix(vasp.CommonName, "traveler.ciphertrace.com")
 }

@@ -12,6 +12,7 @@ import (
 // DirectoryAdministrationClient defines client-side interactions with the API.
 type DirectoryAdministrationClient interface {
 	Status(ctx context.Context) (out *StatusReply, err error)
+	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
 }
@@ -35,6 +36,37 @@ type StatusReply struct {
 
 //===========================================================================
 // Admin v2 API Requests and Responses
+//===========================================================================
+
+// ListVASPsParams is a request-like struct that passes query params to the ListVASPs
+// GET request. All query params are optional and modify how and what data is retrieved.
+type ListVASPsParams struct {
+	Page     int `url:"page,omitempty" form:"page" default:"1"`             // defaults to page 1 if not included
+	PageSize int `url:"page_size,omitempty" form:"page_size" default:"100"` // defaults to 100 if not included
+}
+
+// ListVASPsReply contains a summary data structure of all VASPs managed by the directory.
+// The list reply contains standard pagination information, including the count of all
+// VASPs and the links to previous and next.
+type ListVASPsReply struct {
+	VASPs    []VASPSnippet `json:"vasps"`
+	Count    int           `json:"count"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+}
+
+type VASPSnippet struct {
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	CommonName         string   `json:"common_name"`
+	VerificationStatus string   `json:"verification_status,omitempty"`
+	LastUpdated        string   `json:"last_updated,omitempty"`
+	Traveler           bool     `json:"traveler"`
+	VerifiedContacts   []string `json:"verified_contacts"`
+}
+
+//===========================================================================
+// VASP Action RPCs
 //===========================================================================
 
 // Registration review requests are sent via email to the TRISA admin email address with
