@@ -23,6 +23,7 @@ services:
       - GDS_DATABASE_REINDEX_ON_BOOT=false
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
+      - GDS_ADMIN_TOKEN_KEYS="1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem"
       - GDS_REPLICA_ENABLED=false
       - GDS_REPLICA_BIND_ADDR=:4435
       - GDS_REPLICA_PID=8
@@ -42,6 +43,11 @@ services:
       - GDS_BACKUP_KEEP=1
       - GOOGLE_APPLICATION_CREDENTIALS=/data/creds/service-account.json
       - GOOGLE_PROJECT_NAME
+    profiles:
+      - gds
+      - api
+      - all
+
   envoy:
     build:
       context: ../
@@ -49,4 +55,36 @@ services:
     image: trisa/grpc-proxy
     ports:
       - 8080:8080
+    profiles:
+      - api
+      - all
 
+  gds-ui:
+    build:
+      context: ../
+      dockerfile: ./containers/gds-ui/Dockerfile
+      args:
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080/
+        REACT_APP_GDS_IS_TESTNET: true
+    image: trisa/gds-ui
+    ports:
+      - 3000:80
+    profiles:
+      - user
+      - ui
+      - all
+
+  gds-admin-ui:
+    build:
+      context: ../
+      dockerfile: ./containers/gds-admin-ui/Dockerfile
+      args:
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/
+        REACT_APP_GDS_IS_TESTNET: true
+    image: trisa/gds-admin-ui
+    ports:
+      - 3001:80
+    profiles:
+      - admin
+      - ui
+      - all
