@@ -136,6 +136,7 @@ func (s *Admin) setupRoutes() (err error) {
 	v2 := s.router.Group("/v2")
 	v2.GET("/status", s.Status)
 	v2.GET("/vasps", s.ListVASPs)
+	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
 	v2.POST("/vasps/:vaspID/review", s.Review)
 	v2.POST("/vasps/:vaspID/resend", s.Resend)
 
@@ -236,6 +237,22 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	// Successful request, return the VASP list JSON data
+	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) RetrieveVASP(c *gin.Context) {
+	var (
+		err    error
+		vaspID string
+		out    *admin.RetrieveVASPReply
+	)
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	out = new(admin.RetrieveVASPReply)
+	log.Debug().Err(err).Str("id", vaspID).Msg("endpoint stub")
+
+	// Successful request, return the VASP detail JSON data
 	c.JSON(http.StatusOK, out)
 }
 

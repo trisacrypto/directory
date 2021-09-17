@@ -13,6 +13,7 @@ import (
 type DirectoryAdministrationClient interface {
 	Status(ctx context.Context) (out *StatusReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
+	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
 }
@@ -65,6 +66,11 @@ type VASPSnippet struct {
 	Traveler           bool     `json:"traveler"`
 	VerifiedContacts   []string `json:"verified_contacts"`
 }
+
+// RetrieveVASPReply converts a pb.VASP record into a meaningful record for the Admin API
+// including extra information such as verified contacts, whether or not the VASP is a
+// Traveler node, and other pre-computed data to facilitate administrative actions.
+type RetrieveVASPReply struct{}
 
 //===========================================================================
 // VASP Action RPCs

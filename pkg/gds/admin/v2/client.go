@@ -89,6 +89,28 @@ func (s APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVAS
 	return out, nil
 }
 
+func (s APIv2) RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error) {
+	// Compute the path based on the id
+	if id == "" {
+		return nil, errors.New("id is required to compute the URL for the VASP")
+	}
+	path := fmt.Sprintf("/v2/vasps/%s", id)
+
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &RetrieveVASPReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error) {
 	// The ID is required for the review request to determine the endpoint
 	if in.ID == "" {
