@@ -57,6 +57,7 @@ type ListVASPsReply struct {
 	PageSize int           `json:"page_size"`
 }
 
+// VASPSnippet provides summary information about a VASP.
 type VASPSnippet struct {
 	ID                 string   `json:"id"`
 	Name               string   `json:"name"`
@@ -67,10 +68,19 @@ type VASPSnippet struct {
 	VerifiedContacts   []string `json:"verified_contacts"`
 }
 
-// RetrieveVASPReply converts a pb.VASP record into a meaningful record for the Admin API
-// including extra information such as verified contacts, whether or not the VASP is a
-// Traveler node, and other pre-computed data to facilitate administrative actions.
-type RetrieveVASPReply struct{}
+// RetrieveVASPReply returns a pb.VASP record that has been marshaled by protojson and
+// includes extra information such as verified contacts, whether or not the VASP is a
+// Traveler node, and other pre-computed data to facilitate administrative actions. The
+// serialized pb.VASP record is returned to make sure that the Admin API keeps up with
+// changes in the TRISA library. Admin API developers should reference the
+// trisacrypto/trisa library to ensure they have all of the requried data that is
+// returned. Go developers should unmarshal the data into a *pb.VASP struct.
+type RetrieveVASPReply struct {
+	Name             string                 `json:"name"`
+	VASP             map[string]interface{} `json:"vasp"`
+	VerifiedContacts map[string]string      `json:"verified_contacts"`
+	Traveler         bool                   `json:"traveler"`
+}
 
 //===========================================================================
 // VASP Action RPCs
