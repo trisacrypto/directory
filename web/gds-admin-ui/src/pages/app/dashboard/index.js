@@ -26,7 +26,9 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
     return (
         <React.Fragment>
             <PageTitle
-                breadCrumbItems={[]}
+                breadCrumbItems={[
+                    { label: 'Summary', path: '/dashboard', active: true }
+                ]}
                 title={'Dashboard'}
             />
 

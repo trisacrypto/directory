@@ -13,7 +13,7 @@ import TrixoForm from './TrixoForm';
 import Ivms from './Ivms';
 
 const VaspDetails = (): React$Element<React$FragmentType> => {
-    const [vasp, setVasp] = React.useState({ });
+    const [vasp, setVasp] = React.useState({});
     const params = useParams();
 
     React.useEffect(() => {
@@ -30,7 +30,10 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
     return (
         <React.Fragment>
             <PageTitle
-                breadCrumbItems={[]}
+                breadCrumbItems={[
+                    { label: 'List', path: `/vasps-summary/vasps` },
+                    { label: 'Details', path: `/vasps-summary/${params?.id}/vasps`, active: true }
+                ]}
                 title={'VASP Details'}
             />
             <Row>
