@@ -2,7 +2,7 @@
 import { combineReducers } from 'redux';
 
 import Layout from './layout/reducers';
-import { vaspsReducers as Vasps, certificatesReducers as Certificates, summaryReducers as Summary } from "./dashboard/reducers"
+import { vaspsReducers as Vasps, certificatesReducers as Certificates, summaryReducers as Summary, registrationsReviewsReducers as Reviews } from "./dashboard/reducers"
 import Auth from './auth/reducers'
 
 export default (combineReducers({
@@ -10,5 +10,6 @@ export default (combineReducers({
     Vasps,
     Certificates,
     Summary,
-    Auth
+    Auth,
+    Reviews
 }): any);

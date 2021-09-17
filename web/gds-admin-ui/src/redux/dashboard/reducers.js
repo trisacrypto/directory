@@ -1,4 +1,4 @@
-import { FetchCertificatesActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants";
+import { FetchCertificatesActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants";
 
 
 type Action = { type: string, payload: { data?: any, error?: string } };
@@ -10,7 +10,7 @@ const INITIAL_STATE = {
 }
 
 const SUMMARY_INITIAL_STATE = {
-    data: { },
+    data: {},
     loading: false
 }
 
@@ -88,4 +88,29 @@ const summaryReducers = (state: State = SUMMARY_INITIAL_STATE, action: Action) =
 }
 
 
-export { certificatesReducers, vaspsReducers, summaryReducers };
+
+const registrationsReviewsReducers = (state: State = INITIAL_STATE, action: Action) => {
+
+    switch (action.type) {
+        case FetchRegistrationsReviewsActionTypes.FETCH_REGISTRATIONS_REVIEWS:
+            return {
+                ...state,
+                loading: true
+            }
+        case FetchRegistrationsReviewsActionTypes.API_RESPONSE_SUCCESS:
+            return {
+                ...state,
+                data: action.payload.data,
+                loading: false
+            }
+        case FetchRegistrationsReviewsActionTypes.API_RESPONSE_ERROR:
+            return {
+                ...state,
+                error: action.payload.error
+            }
+        default:
+            return state;
+    }
+}
+
+export { certificatesReducers, vaspsReducers, summaryReducers, registrationsReviewsReducers };

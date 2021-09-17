@@ -19,3 +19,10 @@ export const FetchSummaryActionTypes = {
     FETCH_SUMMARY: '@@summary/FETCH_VASPS',
 };
 
+export const FetchRegistrationsReviewsActionTypes = {
+    API_RESPONSE_SUCCESS: '@@reviews/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@reviews/API_RESPONSE_ERROR',
+
+    FETCH_REGISTRATIONS_REVIEWS: '@@reviews/FETCH_REGISTRATIONS_REVIEWS',
+};
+

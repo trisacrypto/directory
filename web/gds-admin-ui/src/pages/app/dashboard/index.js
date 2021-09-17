@@ -5,11 +5,12 @@ import { useDispatch } from 'react-redux';
 
 // components
 import PageTitle from '../../../components/PageTitle';
-import { fetchCertificates, fetchSummary, fetchVasps } from '../../../redux/dashboard/actions';
+import { fecthRegistrationsReviews, fetchCertificates, fetchSummary, fetchVasps } from '../../../redux/dashboard/actions';
 
 import Statistics from './Statistics';
 import Status from './Status';
 import Tasks from './Tasks';
+import TasksChart from './TasksChart';
 
 
 const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
@@ -19,6 +20,7 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
         dispatch(fetchCertificates());
         dispatch(fetchVasps());
         dispatch(fetchSummary())
+        dispatch(fecthRegistrationsReviews())
     }, [dispatch])
 
     return (
@@ -36,6 +38,11 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
                 </Col>
                 <Col lg={8} style={{ overflowY: "scroll", height: "100%" }}>
                     <Tasks />
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <TasksChart />
                 </Col>
             </Row>
         </React.Fragment>

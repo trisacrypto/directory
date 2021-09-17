@@ -13,4 +13,5 @@ function formatDisplayedData(target) {
     return target ? target : "N/A"
 }
 
+
 export { formatDisplayedData }

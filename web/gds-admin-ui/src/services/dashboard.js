@@ -6,5 +6,9 @@ function getSummary(params) {
     return api.get("/summary", params)
 }
 
+function getRegistrationsReviews(params) {
+    return api.get("/reviews", params)
+}
 
-export { getSummary }
+
+export { getSummary, getRegistrationsReviews }

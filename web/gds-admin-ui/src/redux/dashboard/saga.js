@@ -2,9 +2,9 @@
 import axios from "axios"
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
 import { APICore } from "../../helpers/api/apiCore"
-import { getSummary } from "../../services/dashboard"
-import { fetchCertificateApiResponseError, fetchCertificateApiResponseSuccess, fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError } from "./actions"
-import { FetchCertificatesActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
+import { getRegistrationsReviews, getSummary } from "../../services/dashboard"
+import { fetchCertificateApiResponseError, fetchCertificateApiResponseSuccess, fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError, fetchRegistrationsReviewsSuccess, fetchRegistrationsReviewsError } from "./actions"
+import { FetchCertificatesActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
 
 const api = new APICore()
 
@@ -39,6 +39,17 @@ function* fetchVasps() {
     }
 }
 
+function* fecthRegistrationsReviews() {
+    try {
+        const response = yield call(getRegistrationsReviews)
+        const data = response.data
+
+        yield put(fetchRegistrationsReviewsSuccess(FetchRegistrationsReviewsActionTypes.API_RESPONSE_SUCCESS, data))
+    } catch (error) {
+        yield put(fetchRegistrationsReviewsError(FetchRegistrationsReviewsActionTypes.API_RESPONSE_ERROR, error.message))
+    }
+}
+
 export function* summarySaga() {
     yield takeEvery(FetchSummaryActionTypes.FETCH_SUMMARY, fetchSummary)
 }
@@ -51,11 +62,16 @@ export function* certificatesSaga() {
     yield takeEvery([FetchCertificatesActionTypes.FETCH_CERTIFICATES], fetchCertificates);
 }
 
+export function* reviewsSaga() {
+    yield takeEvery([FetchRegistrationsReviewsActionTypes.FETCH_REGISTRATIONS_REVIEWS], fecthRegistrationsReviews)
+}
+
 function* dashboardSaga() {
     yield all([
         fork(summarySaga),
         fork(vaspsSaga),
-        fork(certificatesSaga)
+        fork(certificatesSaga),
+        fork(reviewsSaga)
     ])
 }
 
