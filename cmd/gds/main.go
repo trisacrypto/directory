@@ -298,6 +298,19 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "admin:detail",
+			Usage:    "retrieve a VASP detail recrod by id",
+			Category: "admin",
+			Action:   adminRetrieveVASPs,
+			Before:   initClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the uuid of the VASP to retrieve",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -622,6 +635,18 @@ func adminListVASPs(c *cli.Context) (err error) {
 
 	var rep *admin.ListVASPsReply
 	if rep, err = adminClient.ListVASPs(ctx, params); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminRetrieveVASPs(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.RetrieveVASPReply
+	if rep, err = adminClient.RetrieveVASP(ctx, c.String("id")); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

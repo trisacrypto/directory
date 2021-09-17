@@ -165,6 +165,51 @@ func TestListVASPs(t *testing.T) {
 	require.Equal(t, fixture.Count, out.Count)
 }
 
+func TestRetrieveVASP(t *testing.T) {
+	// For a more complete VASP record see: https://tinyurl.com/4xm7774w
+	fixture := &admin.RetrieveVASPReply{
+		Name: "Alice VASP",
+		VASP: map[string]interface{}{
+			"id":          "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+			"common_name": "trisa.alice.us",
+			"endpoint":    "trisa.alice.us:443",
+		},
+		VerifiedContacts: map[string]string{
+			"legal":     "legal@alice.us",
+			"technical": "technical@alice.us",
+		},
+		Traveler: false,
+	}
+	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	// Ensure an ID is required to retrieve the VASP
+	_, err = client.RetrieveVASP(context.TODO(), "")
+	require.Error(t, err)
+
+	out, err := client.RetrieveVASP(context.TODO(), id)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture.Name, out.Name)
+	require.Equal(t, fixture.VASP, out.VASP)
+	require.Equal(t, fixture.VerifiedContacts, out.VerifiedContacts)
+	require.Equal(t, fixture.Traveler, out.Traveler)
+}
+
 func TestReview(t *testing.T) {
 	fixture := &admin.ReviewReply{
 		Status:  "reviewed",

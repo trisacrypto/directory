@@ -2,6 +2,7 @@ package gds
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
@@ -136,6 +138,7 @@ func (s *Admin) setupRoutes() (err error) {
 	v2 := s.router.Group("/v2")
 	v2.GET("/status", s.Status)
 	v2.GET("/vasps", s.ListVASPs)
+	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
 	v2.POST("/vasps/:vaspID/review", s.Review)
 	v2.POST("/vasps/:vaspID/resend", s.Resend)
 
@@ -236,6 +239,70 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	// Successful request, return the VASP list JSON data
+	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) RetrieveVASP(c *gin.Context) {
+	var (
+		err    error
+		vaspID string
+		vasp   *pb.VASP
+		out    *admin.RetrieveVASPReply
+	)
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Attempt to fetch the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Create the response to send back
+	out = &admin.RetrieveVASPReply{
+		VerifiedContacts: models.VerifiedContacts(vasp),
+		Traveler:         models.IsTraveler(vasp),
+	}
+	if out.Name, err = vasp.Name(); err != nil {
+		// This is a serious data validation error that needs to be addressed ASAP by
+		// the operations team but should not block this API return.
+		log.Error().Err(err).Msg("could not get VASP name")
+	}
+
+	// Remove extra data from the VASP
+	// Must be done after verified contacts is computed
+	// This is safe because nothing is saved back to the database
+	vasp.Extra = nil
+	vasp.Contacts.Administrative.Extra = nil
+	vasp.Contacts.Legal.Extra = nil
+	vasp.Contacts.Technical.Extra = nil
+	vasp.Contacts.Billing.Extra = nil
+
+	// Serialize the VASP from protojson
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       false,
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	var data []byte
+	if data, err = jsonpb.Marshal(vasp); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could marshal vasp json")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP json detail"))
+		return
+	}
+
+	// Remarshal the JSON (unnecessary work, but done to make things easier)
+	if err = json.Unmarshal(data, &out.VASP); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could unmarshal vasp json")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP json detail"))
+		return
+	}
+
+	// Successful request, return the VASP detail JSON data
 	c.JSON(http.StatusOK, out)
 }
 
