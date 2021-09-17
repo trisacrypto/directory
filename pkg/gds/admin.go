@@ -265,7 +265,9 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 		Traveler:         models.IsTraveler(vasp),
 	}
 	if out.Name, err = vasp.Name(); err != nil {
-		log.Warn().Err(err).Msg("could not get VASP name")
+		// This is a serious data validation error that needs to be addressed ASAP by
+		// the operations team but should not block this API return.
+		log.Error().Err(err).Msg("could not get VASP name")
 	}
 
 	// Remove extra data from the VASP

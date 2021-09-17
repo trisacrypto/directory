@@ -166,7 +166,20 @@ func TestListVASPs(t *testing.T) {
 }
 
 func TestRetrieveVASP(t *testing.T) {
-	fixture := &admin.RetrieveVASPReply{}
+	// For a more complete VASP record see: https://tinyurl.com/4xm7774w
+	fixture := &admin.RetrieveVASPReply{
+		Name: "Alice VASP",
+		VASP: map[string]interface{}{
+			"id":          "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+			"common_name": "trisa.alice.us",
+			"endpoint":    "trisa.alice.us:443",
+		},
+		VerifiedContacts: map[string]string{
+			"legal":     "legal@alice.us",
+			"technical": "technical@alice.us",
+		},
+		Traveler: false,
+	}
 	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
 
 	// Create a Test Server
@@ -191,6 +204,10 @@ func TestRetrieveVASP(t *testing.T) {
 	out, err := client.RetrieveVASP(context.TODO(), id)
 	require.NoError(t, err)
 	require.NotZero(t, out)
+	require.Equal(t, fixture.Name, out.Name)
+	require.Equal(t, fixture.VASP, out.VASP)
+	require.Equal(t, fixture.VerifiedContacts, out.VerifiedContacts)
+	require.Equal(t, fixture.Traveler, out.Traveler)
 }
 
 func TestReview(t *testing.T) {
