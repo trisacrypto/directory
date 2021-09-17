@@ -173,8 +173,8 @@ const TasksChart = (): React$Element<any> => {
                 <small>
                     ⋆ click on the elements of the legend to filter accordingly
                 </small>
-            </Card.Body>
-        </Card>
+            </Card.Body >
+        </Card >
     );
 };
 
