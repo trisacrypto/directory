@@ -5,6 +5,7 @@ export const Status = {
     REVIEWED: "REVIEWED",
     ISSUING_CERTIFICATE: "ISSUING_CERTIFICATE",
     VERIFIED: "VERIFIED",
+<<<<<<< HEAD
     REJECTED: "REJECTED",
     APPEALED: "APPEALED",
     ERRORED: "ERRORED"
@@ -20,4 +21,19 @@ export const StatusLabel = {
     REJECTED: "Rejected",
     APPEALED: "Appealed",
     ERRORED: "Errored"
+=======
+    SUBMITTED: "SUBMITTED"
+}
+
+export const STACKED_BAR_LABEL = {
+    SUBMITTED: "SUBMITTED",
+    EMAIL_VERIFIED: "EMAIL_VERIFIED",
+    PENDING_REVIEW: "PENDING_REVIEW",
+    REVIEWED: "REVIEWED",
+    ISSUING_CERTIFICATE: "ISSUING_CERTIFICATE",
+    VERIFIED: "VERIFIED",
+    REJECTED: "REJECTED",
+    APPEALED: "APPEALED",
+    ERRORED: "ERRORED"
+>>>>>>> feat: add reviews timeline graph
 }
