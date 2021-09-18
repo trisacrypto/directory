@@ -277,6 +277,14 @@ func main() {
 			Flags:    []cli.Flag{},
 		},
 		{
+			Name:     "admin:autocomplete",
+			Usage:    "get autocomplete names for the admin searchbar",
+			Category: "admin",
+			Action:   adminAutocomplete,
+			Before:   initClient,
+			Flags:    []cli.Flag{},
+		},
+		{
 			Name:     "admin:list",
 			Usage:    "list all VASPs summary detail",
 			Category: "admin",
@@ -628,6 +636,18 @@ func adminSummary(c *cli.Context) (err error) {
 
 	var rep *admin.SummaryReply
 	if rep, err = adminClient.Summary(ctx); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminAutocomplete(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.AutocompleteReply
+	if rep, err = adminClient.Autocomplete(ctx); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

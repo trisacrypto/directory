@@ -154,6 +154,38 @@ func TestSummary(t *testing.T) {
 	require.Equal(t, fixture.CertReqs, out.CertReqs)
 }
 
+func TestAutocomplete(t *testing.T) {
+	fixture := &admin.AutocompleteReply{
+		Names: map[string]string{
+			"Bob VASP":              "5b180719-62c4-4674-ab2a-279ddb0e487a",
+			"api.bob.vaspbot.net":   "5b180719-62c4-4674-ab2a-279ddb0e487a",
+			"https://bobvasp.co.uk": "5b180719-62c4-4674-ab2a-279ddb0e487a",
+			"Alice VASP":            "24e8efd3-c97a-4973-a76d-290f3bb4be95",
+			"api.alice.vaspbot.net": "24e8efd3-c97a-4973-a76d-290f3bb4be95",
+			"https://alicevasp.us":  "24e8efd3-c97a-4973-a76d-290f3bb4be95",
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/autocomplete", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Autocomplete(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture.Names, out.Names)
+}
+
 func TestListVASPs(t *testing.T) {
 	fixture := &admin.ListVASPsReply{
 		VASPs: []admin.VASPSnippet{

@@ -13,6 +13,7 @@ import (
 type DirectoryAdministrationClient interface {
 	Status(ctx context.Context) (out *StatusReply, err error)
 	Summary(ctx context.Context) (out *SummaryReply, err error)
+	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
@@ -40,7 +41,7 @@ type StatusReply struct {
 // Admin v2 API Requests and Responses
 //===========================================================================
 
-// Summary provides aggregate statistics that describe the state of the GDS.
+// SummaryReply provides aggregate statistics that describe the state of the GDS.
 type SummaryReply struct {
 	VASPsCount           int            `json:"vasps_count"`           // the total number of VASPs in any state in GDS
 	PendingRegistrations int            `json:"pending_registrations"` // the number of registrations pending (in any pre-review status)
@@ -49,6 +50,11 @@ type SummaryReply struct {
 	CertificatesIssued   int            `json:"certificates_issued"`   // the number of certificates issued by the GDS
 	Statuses             map[string]int `json:"statuses"`              // the counts of all statuses in the system
 	CertReqs             map[string]int `json:"certreqs"`              // The counts of all certificate request statuses
+}
+
+// AutocompleteReply contains a mapping of name to VASP UUID for the search bar.
+type AutocompleteReply struct {
+	Names map[string]string `json:"names"`
 }
 
 // ListVASPsParams is a request-like struct that passes query params to the ListVASPs
