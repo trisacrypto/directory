@@ -137,12 +137,83 @@ func (s *Admin) setupRoutes() (err error) {
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
 	v2.GET("/status", s.Status)
+	v2.GET("/summary", s.Summary)
 	v2.GET("/vasps", s.ListVASPs)
 	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
 	v2.POST("/vasps/:vaspID/review", s.Review)
 	v2.POST("/vasps/:vaspID/resend", s.Resend)
 
 	return nil
+}
+
+// Summary provides aggregate statistics that describe the state of the GDS.
+func (s *Admin) Summary(c *gin.Context) {
+	// Prepare the output response
+	out := &admin.SummaryReply{
+		Statuses: make(map[string]int),
+		CertReqs: make(map[string]int),
+	}
+
+	// Query the list of VASPs from the data store to perform aggregation counts.
+	iter := s.db.ListVASPs()
+	for iter.Next() {
+		// Fetch VASP from the database
+		vasp := iter.VASP()
+
+		// Count VASPs
+		out.VASPsCount++
+
+		// Count contacts
+		contacts := []*pb.Contact{
+			vasp.Contacts.Administrative, vasp.Contacts.Legal,
+			vasp.Contacts.Technical, vasp.Contacts.Billing,
+		}
+
+		for _, contact := range contacts {
+			if contact != nil && contact.Email != "" {
+				out.ContactsCount++
+				if _, verified, _ := models.GetContactVerification(contact); verified {
+					out.VerifiedContacts++
+				}
+			}
+		}
+
+		// Count Statuses
+		out.Statuses[vasp.VerificationStatus.String()]++
+		if int32(vasp.VerificationStatus) < int32(pb.VerificationState_VERIFIED) {
+			out.PendingRegistrations++
+		}
+
+	}
+
+	if err := iter.Error(); err != nil {
+		iter.Release()
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+	iter.Release()
+
+	// Loop over certificate requests next
+	iter2 := s.db.ListCertReqs()
+	for iter2.Next() {
+		certreq := iter2.CertReq()
+		out.CertReqs[certreq.Status.String()]++
+		if certreq.Status == models.CertificateRequestState_COMPLETED {
+			out.CertificatesIssued++
+		}
+	}
+
+	if err := iter.Error(); err != nil {
+		iter2.Release()
+		log.Warn().Err(err).Msg("could not iterate over certreqs in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+	iter2.Release()
+
+	// Successful request, return the VASP list JSON data
+	c.JSON(http.StatusOK, out)
 }
 
 // ListVASPs returns a paginated, summary data structure of all VASPs managed by the
