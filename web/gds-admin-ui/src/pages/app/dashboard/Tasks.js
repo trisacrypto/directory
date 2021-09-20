@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
+import ResendEmail from '../../../components/ResendEmail';
 import { Status } from '../../../constants';
 
 
@@ -11,6 +12,17 @@ const Tasks = (): React$Element<any> => {
         vasps: state.Vasps.data,
         certificates: state.Certificates.data
     }));
+    const [modal, setModal] = React.useState(false);
+    const [vaspName, setVaspName] = React.useState("");
+
+    const toggle = () => {
+        setModal(!modal);
+    };
+
+    const handleResendEmailClick = (name) => {
+        setVaspName(name)
+        toggle()
+    }
 
 
     return (
@@ -46,7 +58,7 @@ const Tasks = (): React$Element<any> => {
                                                 <i className="mdi mdi-dots-horizontal"></i>
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                <Dropdown.Item>Resend email</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleResendEmailClick(vasp?.common_name)}>Resend email</Dropdown.Item>
                                                 <Dropdown.Item>Pending</Dropdown.Item>
                                                 <Dropdown.Item>Review</Dropdown.Item>
                                             </Dropdown.Menu>
@@ -57,6 +69,7 @@ const Tasks = (): React$Element<any> => {
                         }
                     </tbody>
                 </Table>
+                <ResendEmail toggle={toggle} modal={modal} vaspName={vaspName} />
             </Card.Body>
         </Card>
     );
