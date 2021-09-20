@@ -104,7 +104,9 @@ const VaspsList = (): React$Element<React$FragmentType> => {
     return (
         <React.Fragment>
             <PageTitle
-                breadCrumbItems={[]}
+                breadCrumbItems={[
+                    { label: 'List', path: '/vasps-summary/vasps', active: true }
+                ]}
                 title={'VASPs list'}
             />
 

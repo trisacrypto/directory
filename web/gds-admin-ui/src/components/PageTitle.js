@@ -23,6 +23,7 @@ const PageTitle = (props: PageTitleProps): React$Element<any> => {
                 <div className="page-title-box">
                     <div className="page-title-right">
                         <Breadcrumb className="m-0">
+                            <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
                             {props.breadCrumbItems.map((item, index) => {
                                 return item.active ? (
                                     <Breadcrumb.Item active key={index}>
