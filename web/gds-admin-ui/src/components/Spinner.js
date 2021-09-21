@@ -1,20 +1,7 @@
-// @flow
-import React from 'react';
+import React from "react"
 import classNames from 'classnames';
 
-type SpinnerProps = {
-    tag?: string,
-    className?: string,
-    size?: 'lg' | 'md' | 'sm',
-    type?: 'bordered' | 'grow',
-    color?: string,
-    children?: any,
-};
-
-/**
- * Spinner
- */
-const Spinner = (props: SpinnerProps): React$Element<any> => {
+const Spinner = (props) => {
     const children = props.children || null;
     const Tag = props.tag || 'div';
     const color = props.color || 'secondary';
