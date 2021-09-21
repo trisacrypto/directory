@@ -682,9 +682,9 @@ func ldbList(c *cli.Context) (err error) {
 		return cli.NewExitError(err, 1)
 	}
 	w := csv.NewWriter(f)
-	w.Write([]string{"id", "name", "common_name", "registered_directory", "verified_on", "verification_status", "certreq_status"})
+	w.Write([]string{"id", "name", "common_name", "registered_directory", "verified_on", "verification_status", "certreq", "certreq_status"})
 	for id, record := range data {
-		row := []string{id, record["name"], record["common_name"], record["registered_directory"], record["verified_on"], record["vasp_status"], record["certreq_status"]}
+		row := []string{id, record["name"], record["common_name"], record["registered_directory"], record["verified_on"], record["vasp_status"], record["certreq"], record["certreq_status"]}
 		w.Write(row)
 	}
 

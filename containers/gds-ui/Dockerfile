@@ -7,8 +7,8 @@ COPY web/gds-ui/package*.json ./
 RUN npm install
 
 # Set production environment variable for build context
-ENV REACT_APP_GDS_API_ENDPOINT="https://proxy.vaspdirectory.net"
-ENV REACT_APP_GDS_IS_TESTNET=false
+ARG REACT_APP_GDS_API_ENDPOINT="https://proxy.vaspdirectory.net"
+ARG REACT_APP_GDS_IS_TESTNET=false
 
 # Build app with browserify
 COPY web/gds-ui/ ./
