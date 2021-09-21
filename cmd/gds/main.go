@@ -262,20 +262,19 @@ func main() {
 		},
 		{
 			Name:     "admin:status",
-			Usage:    "collect aggregate information about current registration status",
+			Usage:    "perform a health check against the admin API",
 			Category: "admin",
 			Action:   adminStatus,
 			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "r, no-registrations",
-					Usage: "do not return registrations status",
-				},
-				cli.BoolFlag{
-					Name:  "c, no-certificate-requests",
-					Usage: "do not return certificate requests status",
-				},
-			},
+			Flags:    []cli.Flag{},
+		},
+		{
+			Name:     "admin:summary",
+			Usage:    "collect aggregate information about current GDS status",
+			Category: "admin",
+			Action:   adminSummary,
+			Before:   initClient,
+			Flags:    []cli.Flag{},
 		},
 		{
 			Name:     "admin:list",
@@ -617,6 +616,18 @@ func adminStatus(c *cli.Context) (err error) {
 
 	var rep *admin.StatusReply
 	if rep, err = adminClient.Status(ctx); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminSummary(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.SummaryReply
+	if rep, err = adminClient.Summary(ctx); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

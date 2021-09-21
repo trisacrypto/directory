@@ -12,6 +12,7 @@ import (
 // DirectoryAdministrationClient defines client-side interactions with the API.
 type DirectoryAdministrationClient interface {
 	Status(ctx context.Context) (out *StatusReply, err error)
+	Summary(ctx context.Context) (out *SummaryReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
@@ -38,6 +39,17 @@ type StatusReply struct {
 //===========================================================================
 // Admin v2 API Requests and Responses
 //===========================================================================
+
+// Summary provides aggregate statistics that describe the state of the GDS.
+type SummaryReply struct {
+	VASPsCount           int            `json:"vasps_count"`           // the total number of VASPs in any state in GDS
+	PendingRegistrations int            `json:"pending_registrations"` // the number of registrations pending (in any pre-review status)
+	ContactsCount        int            `json:"contacts_count"`        // the number of contacts in the system
+	VerifiedContacts     int            `json:"verified_contacts"`     // the number of verified contacts in the system
+	CertificatesIssued   int            `json:"certificates_issued"`   // the number of certificates issued by the GDS
+	Statuses             map[string]int `json:"statuses"`              // the counts of all statuses in the system
+	CertReqs             map[string]int `json:"certreqs"`              // The counts of all certificate request statuses
+}
 
 // ListVASPsParams is a request-like struct that passes query params to the ListVASPs
 // GET request. All query params are optional and modify how and what data is retrieved.

@@ -108,6 +108,52 @@ func TestStatus(t *testing.T) {
 	require.Equal(t, fixture.Version, out.Version)
 }
 
+func TestSummary(t *testing.T) {
+	fixture := &admin.SummaryReply{
+		VASPsCount:           29,
+		PendingRegistrations: 4,
+		ContactsCount:        73,
+		VerifiedContacts:     56,
+		CertificatesIssued:   15,
+		Statuses: map[string]int{
+			"SUBMITTED":      1,
+			"PENDING_REVIEW": 3,
+			"VERIFIED":       23,
+			"REJECTED":       2,
+		},
+		CertReqs: map[string]int{
+			"INITIALIZED": 6,
+			"DOWNLOADED":  1,
+			"COMPLETED":   22,
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/summary", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Summary(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture.VASPsCount, out.VASPsCount)
+	require.Equal(t, fixture.PendingRegistrations, out.PendingRegistrations)
+	require.Equal(t, fixture.ContactsCount, out.ContactsCount)
+	require.Equal(t, fixture.VerifiedContacts, out.VerifiedContacts)
+	require.Equal(t, fixture.CertificatesIssued, out.CertificatesIssued)
+	require.Equal(t, fixture.Statuses, out.Statuses)
+	require.Equal(t, fixture.CertReqs, out.CertReqs)
+}
+
 func TestListVASPs(t *testing.T) {
 	fixture := &admin.ListVASPsReply{
 		VASPs: []admin.VASPSnippet{
