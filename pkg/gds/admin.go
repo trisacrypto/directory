@@ -159,7 +159,11 @@ func (s *Admin) Summary(c *gin.Context) {
 	iter := s.db.ListVASPs()
 	for iter.Next() {
 		// Fetch VASP from the database
-		vasp := iter.VASP()
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
 
 		// Count VASPs
 		out.VASPsCount++
@@ -198,7 +202,13 @@ func (s *Admin) Summary(c *gin.Context) {
 	// Loop over certificate requests next
 	iter2 := s.db.ListCertReqs()
 	for iter2.Next() {
-		certreq := iter2.CertReq()
+		// Fetch CertificateRequest from the database
+		var certreq *models.CertificateRequest
+		if certreq = iter2.CertReq(); certreq == nil {
+			// CertificateRequest could not be parsed; error logged in CertReq() method continue iteration
+			continue
+		}
+
 		out.CertReqs[certreq.Status.String()]++
 		if certreq.Status == models.CertificateRequestState_COMPLETED {
 			out.CertificatesIssued++
@@ -233,7 +243,11 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	defer iter.Release()
 	for iter.Next() {
 		// Fetch VASP from the database
-		vasp := iter.VASP()
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
 
 		// Add top level names to the autocomplete
 		out.Names[vasp.CommonName] = vasp.Id
@@ -320,7 +334,12 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		out.Count++
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// In the page range so add to the list reply
-			vasp := iter.VASP()
+			// Fetch VASP from the database
+			var vasp *pb.VASP
+			if vasp = iter.VASP(); vasp == nil {
+				// VASP could not be parsed; error logged in VASP() method continue iteration
+				continue
+			}
 
 			// Check the status before continuing
 			if status != pb.VerificationState_NO_VERIFICATION && vasp.VerificationStatus != status {
