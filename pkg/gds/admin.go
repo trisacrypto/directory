@@ -178,9 +178,9 @@ func (s *Admin) Summary(c *gin.Context) {
 			}
 		}
 
-		// Count Statuses
+		// Count Statuses and any status that is "pending" -- awaiting action by a reviewer.
 		out.Statuses[vasp.VerificationStatus.String()]++
-		if int32(vasp.VerificationStatus) < int32(pb.VerificationState_VERIFIED) {
+		if int32(vasp.VerificationStatus) < int32(pb.VerificationState_VERIFIED) || vasp.VerificationStatus == pb.VerificationState_APPEALED {
 			out.PendingRegistrations++
 		}
 
@@ -204,7 +204,7 @@ func (s *Admin) Summary(c *gin.Context) {
 		}
 	}
 
-	if err := iter.Error(); err != nil {
+	if err := iter2.Error(); err != nil {
 		iter2.Release()
 		log.Warn().Err(err).Msg("could not iterate over certreqs in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
