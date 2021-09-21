@@ -65,7 +65,7 @@ services:
       dockerfile: ./containers/gds-ui/Dockerfile
       args:
         REACT_APP_GDS_API_ENDPOINT: http://localhost:8080/
-        REACT_APP_GDS_IS_TESTNET: true
+        REACT_APP_GDS_IS_TESTNET: "true"
     image: trisa/gds-ui
     ports:
       - 3000:80
@@ -80,7 +80,7 @@ services:
       dockerfile: ./containers/gds-admin-ui/Dockerfile
       args:
         REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/
-        REACT_APP_GDS_IS_TESTNET: true
+        REACT_APP_GDS_IS_TESTNET: "true"
     image: trisa/gds-admin-ui
     ports:
       - 3001:80
