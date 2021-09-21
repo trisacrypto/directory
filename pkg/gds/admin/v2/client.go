@@ -82,6 +82,21 @@ func (s APIv2) Summary(ctx context.Context) (out *SummaryReply, err error) {
 	return out, nil
 }
 
+func (s APIv2) Autocomplete(ctx context.Context) (out *AutocompleteReply, err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/autocomplete", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &AutocompleteReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVASPsReply, err error) {
 	// Create the query params from the input
 	var params url.Values

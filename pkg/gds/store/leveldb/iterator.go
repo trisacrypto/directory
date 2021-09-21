@@ -41,7 +41,7 @@ func (i *iterWrapper) Release() {
 func (i *vaspIterator) VASP() *pb.VASP {
 	vasp := new(pb.VASP)
 	if err := proto.Unmarshal(i.iter.Value(), vasp); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Msg("corrupted data encountered")
+		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
 		return nil
 	}
 	return vasp
@@ -68,7 +68,7 @@ func (i *vaspIterator) All() (vasps []*pb.VASP, err error) {
 func (i *certReqIterator) CertReq() *models.CertificateRequest {
 	r := new(models.CertificateRequest)
 	if err := proto.Unmarshal(i.iter.Value(), r); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceCertReqs).Msg("corrupted data encountered")
+		log.Error().Err(err).Str("type", wire.NamespaceCertReqs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
 		return nil
 	}
 	return r
@@ -95,7 +95,7 @@ func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {
 func (i *peerIterator) Peer() *peers.Peer {
 	peer := new(peers.Peer)
 	if err := proto.Unmarshal(i.iter.Value(), peer); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceReplicas).Msg("corrupted data encountered")
+		log.Error().Err(err).Str("type", wire.NamespaceReplicas).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
 		return nil
 	}
 	return peer

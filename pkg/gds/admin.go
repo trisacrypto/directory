@@ -138,6 +138,7 @@ func (s *Admin) setupRoutes() (err error) {
 	v2 := s.router.Group("/v2")
 	v2.GET("/status", s.Status)
 	v2.GET("/summary", s.Summary)
+	v2.GET("/autocomplete", s.Autocomplete)
 	v2.GET("/vasps", s.ListVASPs)
 	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
 	v2.POST("/vasps/:vaspID/review", s.Review)
@@ -158,7 +159,11 @@ func (s *Admin) Summary(c *gin.Context) {
 	iter := s.db.ListVASPs()
 	for iter.Next() {
 		// Fetch VASP from the database
-		vasp := iter.VASP()
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
 
 		// Count VASPs
 		out.VASPsCount++
@@ -197,7 +202,13 @@ func (s *Admin) Summary(c *gin.Context) {
 	// Loop over certificate requests next
 	iter2 := s.db.ListCertReqs()
 	for iter2.Next() {
-		certreq := iter2.CertReq()
+		// Fetch CertificateRequest from the database
+		var certreq *models.CertificateRequest
+		if certreq = iter2.CertReq(); certreq == nil {
+			// CertificateRequest could not be parsed; error logged in CertReq() method continue iteration
+			continue
+		}
+
 		out.CertReqs[certreq.Status.String()]++
 		if certreq.Status == models.CertificateRequestState_COMPLETED {
 			out.CertificatesIssued++
@@ -211,6 +222,57 @@ func (s *Admin) Summary(c *gin.Context) {
 		return
 	}
 	iter2.Release()
+
+	// Successful request, return the VASP list JSON data
+	c.JSON(http.StatusOK, out)
+}
+
+// Autocomplete returns a mapping of name to VASP UUID for the search bar.
+func (s *Admin) Autocomplete(c *gin.Context) {
+	// Prepare the output response
+	out := &admin.AutocompleteReply{
+		Names: make(map[string]string),
+	}
+
+	// Query the list of VASPs from the data store to perform aggregation counts.
+	// NOTE: we could have just queried the names index, which would be a lot faster
+	// than iterating over the VASPs; if the UI requires more complex information
+	// storage then the VASP iteration is better (or a better index). If it doesn't,
+	// then this should be refactored to simply fetch the index and return it.
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+	for iter.Next() {
+		// Fetch VASP from the database
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
+
+		// Add top level names to the autocomplete
+		out.Names[vasp.CommonName] = vasp.Id
+		out.Names[vasp.Website] = vasp.Website
+
+		// Add all legal person names
+		if vasp.Entity != nil {
+			for _, name := range vasp.Entity.Names() {
+				if _, ok := out.Names[name]; !ok {
+					out.Names[name] = vasp.Id
+				} else {
+					log.Warn().Str("name", name).Msg("duplicate name detected")
+				}
+			}
+		}
+	}
+
+	if err := iter.Error(); err != nil {
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+
+	// In case any of the names were empty string, delete it (no guard required)
+	delete(out.Names, "")
 
 	// Successful request, return the VASP list JSON data
 	c.JSON(http.StatusOK, out)
@@ -272,7 +334,12 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		out.Count++
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// In the page range so add to the list reply
-			vasp := iter.VASP()
+			// Fetch VASP from the database
+			var vasp *pb.VASP
+			if vasp = iter.VASP(); vasp == nil {
+				// VASP could not be parsed; error logged in VASP() method continue iteration
+				continue
+			}
 
 			// Check the status before continuing
 			if status != pb.VerificationState_NO_VERIFICATION && vasp.VerificationStatus != status {
