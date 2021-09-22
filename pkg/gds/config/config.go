@@ -93,6 +93,7 @@ type BackupConfig struct {
 type SecretsConfig struct {
 	Credentials string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"false"`
 	Project     string `envconfig:"GOOGLE_PROJECT_NAME" required:"false"`
+	Testing     bool   `split_words:"true" default:"false"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.

@@ -1,4 +1,4 @@
-package gds_test
+package secrets_test
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
@@ -31,13 +31,14 @@ import (
 //     TODO: Temp file write & delete can be removed once trust serializer can unzip raw bytes, see:
 //     https://github.com/trisacrypto/trisa/issues/51
 // Note: tests execute against live secret manager API, so use caution!
-func TestSecrets(t *testing.T) {
+func TestLiveSecrets(t *testing.T) {
 	if os.Getenv("GDS_TEST_GOOGLE_SECRETS") == "" {
 		t.Skip("skip Google SecretManager API connection test")
 	}
 	testConf := config.SecretsConfig{
 		Credentials: os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"),
 		Project:     os.Getenv("GOOGLE_PROJECT_NAME"),
+		Testing:     false,
 	}
 
 	// Prep test fixtures
@@ -50,7 +51,7 @@ func TestSecrets(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create secret manager
-	sm, err := gds.NewSecretManager(testConf)
+	sm, err := secrets.New(testConf)
 	require.NoError(t, err)
 
 	// Create a secret for the testSecretType

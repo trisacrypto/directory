@@ -13,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -160,7 +161,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	for idx, contact := range contacts {
 		if contact != nil && contact.Email != "" {
-			if err = models.SetContactVerification(contact, CreateToken(48), false); err != nil {
+			if err = models.SetContactVerification(contact, secrets.CreateToken(48), false); err != nil {
 				log.Error().Err(err).Int("index", idx).Str("vasp", vasp.Id).Msg("could not set contact verification token")
 				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 			}
@@ -184,7 +185,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Create PKCS12 password along with certificate request.
-	password := CreateToken(16)
+	password := secrets.CreateToken(16)
 	certRequest := &models.CertificateRequest{
 		Id:         uuid.New().String(),
 		Vasp:       vasp.Id,
@@ -440,7 +441,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 	// Create verification token for admin and update database
 	// TODO: replace with actual authentication
-	if err = models.SetAdminVerificationToken(vasp, CreateToken(48)); err != nil {
+	if err = models.SetAdminVerificationToken(vasp, secrets.CreateToken(48)); err != nil {
 		log.Error().Err(err).Msg("could not create admin verification token")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}

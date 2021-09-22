@@ -46,6 +46,7 @@ var testEnv = map[string]string{
 	"GDS_BACKUP_KEEP":                "7",
 	"GOOGLE_APPLICATION_CREDENTIALS": "test.json",
 	"GOOGLE_PROJECT_NAME":            "test",
+	"GDS_SECRETS_TESTING":            "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -102,6 +103,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 7, conf.Backup.Keep)
 	require.Equal(t, testEnv["GOOGLE_APPLICATION_CREDENTIALS"], conf.Secrets.Credentials)
 	require.Equal(t, testEnv["GOOGLE_PROJECT_NAME"], conf.Secrets.Project)
+	require.True(t, conf.Secrets.Testing)
 }
 
 func TestRequiredConfig(t *testing.T) {

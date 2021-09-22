@@ -31,9 +31,9 @@ services:
       - GDS_REPLICA_NAME="local1.directory.dev"
       - SECTIGO_USERNAME
       - SECTIGO_PASSWORD
+      - SECTIGO_PROFILE
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
-      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
       - SENDGRID_API_KEY
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
@@ -41,8 +41,9 @@ services:
       - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
       - GDS_BACKUP_KEEP=1
-      - GOOGLE_APPLICATION_CREDENTIALS=/data/creds/service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
+      - GDS_SECRETS_TESTING
     profiles:
       - gds
       - api

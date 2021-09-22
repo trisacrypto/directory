@@ -33,21 +33,32 @@ $ npm run protos
 The simplest way to develop the GDS UI is to run the GDS service and Envoy gRPC-Proxy using `docker compose`. The containers directory has the configuration and Dockerfiles to build the images:
 
 ```
-$ docker compose -f ./containers/docker-compose.yaml build
+$ docker compose -f ./containers/docker-compose.yaml --profile=all build
 ```
 
-Once the containers are built, you will need to supply a configuration `.env` file in the `./containers` directory (e.g. adjacent to the `docker-compose.yaml` file) with at least the following environment variables:
+Note the `--profile` flag, this allows you to build or run only some of the images or services to help facilitate development. For example, if you're working on the front-end, you probably only need to run `--profile=api`. The profiles are as follows:
 
-- `$SECTIGO_USERNAME`
-- `$SECTIGO_PASSWORD`
-- `$SENDGRID_API_KEY`
-- `$GOOGLE_APPLICATION_CREDENTIALS`
-- `$GOOGLE_PROJECT_NAME`
+- `all`: All services defined by docker-compose.yaml
+- `gds`: Just the GDS server(s)
+- `api`: The GDS server(s) and the Envoy Proxy for grpc-web
+- `ui`: Both the gds-ui and the gds-admin-ui
+- `user`: Just the gds-ui React app
+- `admin`: Just the gds-admin-ui React app
 
-And then to run the services:
+Once the containers are built, you will need to supply a configuration `.env` file in the `./containers` directory (e.g. adjacent to the `docker-compose.yaml` file). Copy the template .env file as follows:
 
 ```
-$ docker compose -f ./containers/docker-compose.yaml up
+$ cp ./containers/.env.template ./containers/.env
 ```
 
-This will not run the UI container, just the backend containers.
+You shouldn't have to change anything to run the GDS server, but if you'd like your local environment to test against an external service, please obtain developer credentials from one of the maintainers.
+
+The fixtures directory has been configured with example/test keys in `fixtures/cred` and has some other required directories revisioned with `.gitkeep` such as `fixtures/backups` and `fixtures/certs` -- these folders are git ignored, but you'll see data appear in them when you're running the GDS service.
+
+By default, GDS will create an empty `fixtures/db` directory for the local database. If you would like to start with some test data, request the data from the maintainers and then unzip it to `fixtures/db`. Note, we're working on creating synthetic test data for testing purposes and this will be committed to the repo soon.
+
+Finally, to run the services:
+
+```
+$ docker compose -f ./containers/docker-compose.yaml --profile=all up
+```
