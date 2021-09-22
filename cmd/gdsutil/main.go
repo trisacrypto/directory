@@ -31,10 +31,10 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
-	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -1034,13 +1034,13 @@ func registerRepair(c *cli.Context) (err error) {
 		}
 
 		// Connect to secret manager
-		var secrets *gds.SecretManager
-		if secrets, err = gds.NewSecretManager(conf.Secrets); err != nil {
+		var sm *secrets.SecretManager
+		if sm, err = secrets.New(conf.Secrets); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
 		// Create PKCS12 password along with certificate request.
-		password := gds.CreateToken(16)
+		password := secrets.CreateToken(16)
 		certreq = &models.CertificateRequest{
 			Id:         uuid.New().String(),
 			Vasp:       vasp.Id,
@@ -1051,10 +1051,10 @@ func registerRepair(c *cli.Context) (err error) {
 
 		// Make a new secret of type "password"
 		secretType := "password"
-		if err = secrets.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
+		if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
 			return cli.NewExitError(err, 1)
 		}
-		if err = secrets.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
+		if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 

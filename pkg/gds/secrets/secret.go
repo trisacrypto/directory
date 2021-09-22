@@ -1,47 +1,46 @@
-package gds
+package secrets
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
-	"strings"
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-var (
-	chars                = []rune("ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz1234567890")
-	specialChars         = []rune("#$%&()*+-<=>?@[]^_{|}~")
-	ErrSecretNotFound    = errors.New("could not add secret version - not found")
-	ErrFileSizeLimit     = errors.New("could not add secret version - file size exceeds limit")
-	ErrPermissionsDenied = errors.New("could not add secret version - permissions denied at project level")
-)
-
-// CreateToken creates a variable length random token that can be used for passwords or API keys.
-func CreateToken(length int) string {
-	random := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var b strings.Builder
-	for i := 0; i < length; i++ {
-		if rand.Float64() <= 0.85 {
-			b.WriteRune(chars[random.Intn(len(chars))])
-		} else {
-			b.WriteRune(specialChars[random.Intn(len(specialChars))])
-		}
+// New creates and returns a client to access the Google Secret Manager.
+// This function requires the $GOOGLE_APPLICATION_CREDENTIALS environment variable to
+// be set, which specifies the JSON path to the service account credentials.
+func New(conf config.SecretsConfig) (sm *SecretManager, err error) {
+	if conf.Testing {
+		// If we're in testing mode, use a mock rather than the actual secret manager
+		log.Warn().Bool("secrets_testing", conf.Testing).Msg("using mock secret manager")
+		return NewMock(conf)
 	}
-	return b.String()
+
+	sm = &SecretManager{parent: fmt.Sprintf("projects/%s", conf.Project)}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if sm.client, err = secretmanager.NewClient(ctx); err != nil {
+		return nil, fmt.Errorf("could not connect to secret manager: %s", err)
+	}
+
+	return sm, nil
 }
 
 // SecretManager holds a client to the Google secret manager, and the path to the `parent` project for the secret manager.
 type SecretManager struct {
 	parent string
-	client *secretmanager.Client
+	client secretManagerClient
 }
 
 // SecretManagerContext maintains a single long-running secret manager that can be used for the duration of the certificate request process

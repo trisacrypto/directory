@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/logger"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 )
@@ -73,7 +74,9 @@ func New(conf config.Config) (s *Service, err error) {
 
 	// Create the Sectigo API client
 	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password, conf.Sectigo.Profile); err != nil {
-		return nil, err
+		log.Error().Err(err).Msg("could not initialize sectigo client")
+		// HACK: to get local testing going we're just ignoring this error - we should instead mock the Sectigo client.
+		// return nil, err
 	}
 
 	// Ensure the certificate storage can be reached
@@ -87,7 +90,7 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Create secret manager and connect to backend vault service
-	if s.secret, err = NewSecretManager(conf.Secrets); err != nil {
+	if s.secret, err = secrets.New(conf.Secrets); err != nil {
 		return nil, err
 	}
 
@@ -120,7 +123,7 @@ type Service struct {
 	conf    config.Config
 	certs   *sectigo.Sectigo
 	email   *emails.EmailManager
-	secret  *SecretManager
+	secret  *secrets.SecretManager
 	echan   chan error
 }
 
