@@ -79,7 +79,7 @@ const columns = [
 
 const VaspsList = (): React$Element<React$FragmentType> => {
     const dispatch = useDispatch()
-    const vasps = useSelector((state) => state.Vasps.data)
+    const data = useSelector((state) => state.Vasps.data)
 
     const sizePerPageList = [
         {
@@ -93,6 +93,10 @@ const VaspsList = (): React$Element<React$FragmentType> => {
         {
             text: '20',
             value: 20,
+        },
+        {
+            text: '100',
+            value: 100
         }
     ];
 
@@ -128,11 +132,11 @@ const VaspsList = (): React$Element<React$FragmentType> => {
                                 </Col>
                             </Row>
                             {
-                                vasps && vasps.length &&
+                                data && data.vasps && data.vasps.length &&
                                 <Table
                                     columns={columns}
-                                    data={vasps}
-                                    pageSize={5}
+                                    data={data?.vasps}
+                                    pageSize={data.page_size || 100}
                                     sizePerPageList={sizePerPageList}
                                     isSortable={true}
                                     pagination={true}
