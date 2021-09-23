@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-import config from '../../config';
+import { defaultEndpointPrefix } from '../../utils';
 
 // content type
 axios.defaults.headers.post['Content-Type'] = 'application/json';
-axios.defaults.baseURL = config.API_URL;
+axios.defaults.baseURL = defaultEndpointPrefix();
 
 axios.interceptors.response.use(
     (response) => {
