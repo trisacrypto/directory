@@ -34,32 +34,26 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                     { label: 'List', path: `/vasps-summary/vasps` },
                     { label: 'Details', path: `/vasps-summary/${params?.id}/vasps`, active: true }
                 ]}
-                title={'VASP Details'}
+                title={'Registration Details'}
             />
             <Row>
                 <Col>
                     <BasicDetails data={vasp} />
                 </Col>
-            </Row>
-            <Row>
                 <Col>
-                    <TrixoForm data={vasp.trixo} />
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <Ivms data={vasp.entity} />
-                </Col>
-            </Row>
-            <Row>
-                <Col sm={12}>
                     <ContactInfos data={vasp.contacts} />
                 </Col>
             </Row>
             <Row>
-                <Col>
+                <Col md={6}>
+                    <Ivms data={vasp.entity} />
+                    <TrixoForm data={vasp.trixo} />
+                </Col>
+                <Col md={6}>
                     <CertificateDetails data={vasp.identity_certificate} />
                 </Col>
+            </Row>
+            <Row>
             </Row>
         </React.Fragment>
     );
