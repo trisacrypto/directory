@@ -78,26 +78,47 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 }
 
 // VerifiedContacts returns a map of contact type to email address for all verified
-// contacts, omitting any contacts that are not verified.
+// contacts, omitting any contacts that are not verified or do not exist.
 func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
 	contacts = make(map[string]string)
+	for key, verified := range ContactVerifications(vasp) {
+		if verified {
+			switch key {
+			case "technical":
+				contacts[key] = vasp.Contacts.Technical.Email
+			case "administrative":
+				contacts[key] = vasp.Contacts.Administrative.Email
+			case "billing":
+				contacts[key] = vasp.Contacts.Billing.Email
+			case "legal":
+				contacts[key] = vasp.Contacts.Legal.Email
+			default:
+				panic(fmt.Errorf("unknown contact type %q", key))
+			}
+		}
+	}
+	return contacts
+}
 
-	if _, verified, _ := GetContactVerification(vasp.Contacts.Technical); verified {
-		contacts["technical"] = vasp.Contacts.Technical.Email
+// ContactVerifications returns a map of contact type to verified status, omitting any
+// contacts that do not exist.
+func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool) {
+	contacts = make(map[string]bool)
+	pairs := []struct {
+		key     string
+		contact *pb.Contact
+	}{
+		{"technical", vasp.Contacts.Technical},
+		{"administrative", vasp.Contacts.Administrative},
+		{"billing", vasp.Contacts.Billing},
+		{"legal", vasp.Contacts.Legal},
 	}
 
-	if _, verified, _ := GetContactVerification(vasp.Contacts.Legal); verified {
-		contacts["legal"] = vasp.Contacts.Legal.Email
+	for _, pair := range pairs {
+		if pair.contact != nil {
+			_, contacts[pair.key], _ = GetContactVerification(pair.contact)
+		}
 	}
-
-	if _, verified, _ := GetContactVerification(vasp.Contacts.Administrative); verified {
-		contacts["administrative"] = vasp.Contacts.Administrative.Email
-	}
-
-	if _, verified, _ := GetContactVerification(vasp.Contacts.Billing); verified {
-		contacts["billing"] = vasp.Contacts.Billing.Email
-	}
-
 	return contacts
 }
 

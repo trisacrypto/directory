@@ -196,7 +196,7 @@ func TestListVASPs(t *testing.T) {
 				VerificationStatus: "verified",
 				LastUpdated:        "2021-08-15T12:32:41Z",
 				Traveler:           false,
-				VerifiedContacts:   []string{"administrative", "technical"},
+				VerifiedContacts:   map[string]bool{"administrative": true, "technical": false},
 			},
 			{
 				ID:                 "5a26150d-ac6b-4bc8-973f-9065b815286c",
@@ -205,7 +205,7 @@ func TestListVASPs(t *testing.T) {
 				VerificationStatus: "pending review",
 				LastUpdated:        "2021-09-11T22:02:39Z",
 				Traveler:           false,
-				VerifiedContacts:   []string{"billing", "technical"},
+				VerifiedContacts:   map[string]bool{"billing": false, "technical": true},
 			},
 		},
 		Page:     2,
