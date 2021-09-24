@@ -3,48 +3,58 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card, Button } from 'react-bootstrap';
 import classNames from 'classnames';
+import dayjs from 'dayjs';
+
+import relativeTime from 'dayjs/plugin/relativeTime'
+
 
 import PageTitle from '../../../components/PageTitle';
 import Table from '../../../components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchCertificates, fetchVasps } from '../../../redux/dashboard/actions';
-import { Status } from '../../../constants';
+import { Status, StatusLabel } from '../../../constants';
+dayjs.extend(relativeTime)
+
 
 const NameColumn = ({ row }) => {
+    const id = row?.original?.id || "";
+
     return (
         <React.Fragment>
             <p className="m-0 d-inline-block align-middle font-16">
-                <Link to="/" className="text-body">
-                    {row.original.common_name}
+                <Link to={`/vasps/${id}/details`} className="text-body">
+                    {row.original.name}
+                    <span className="text-muted font-italic d-block">
+                        {row.original.common_name}
+                    </span>
                 </Link>
             </p>
         </React.Fragment>
     );
 };
 
+const LastUpdatedColumn = ({ row }) => {
+
+    return <React.Fragment>
+        <p className="m-0 d-inline-block align-middle font-16">
+            <span>
+                {dayjs(row?.original?.last_updated).fromNow()}
+            </span>
+        </p>
+    </React.Fragment>
+}
+
 const StatusColumn = ({ row }) => {
     return (
         <React.Fragment>
             <span
                 className={classNames('badge', {
-                    'bg-success': row.original.verification_status === "VERIFIED",
-                    'bg-warning': row.original.verification_status === "SUBMITTED" || row.original.verification_status === "PENDING_REVIEW",
+                    'bg-success': row.original.verification_status === Status.VERIFIED,
+                    'bg-warning': row.original.verification_status === Status.SUBMITTED || row.original.verification_status === Status.PENDING_REVIEW,
                 })}>
-                {Status[row.original.verification_status]}
+                {StatusLabel[row.original.verification_status]}
             </span>
-        </React.Fragment>
-    );
-};
-
-const ActionColumn = ({ row }) => {
-    const id = row?.original?.id || "";
-
-    return (
-        <React.Fragment>
-            <Link to={`/vasps-summary/${id}/details`} className="action-icon text-center">
-                <i className="mdi mdi-eye"></i>
-            </Link>
         </React.Fragment>
     );
 };
@@ -63,17 +73,11 @@ const columns = [
         Cell: StatusColumn
     },
     {
-        Header: 'Established On',
-        accessor: 'established_on',
+        Header: 'Last updated',
+        accessor: 'last_updated',
+        Cell: LastUpdatedColumn,
         sort: true,
-    },
-    {
-        Header: 'Action',
-        accessor: 'action',
-        sort: false,
-        classes: 'table-action',
-        Cell: ActionColumn,
-    },
+    }
 ];
 
 
@@ -109,9 +113,9 @@ const VaspsList = (): React$Element<React$FragmentType> => {
         <React.Fragment>
             <PageTitle
                 breadCrumbItems={[
-                    { label: 'List', path: '/vasps-summary/vasps', active: true }
+                    { label: 'List', path: '/vasps', active: true }
                 ]}
-                title={'VASPs list'}
+                title={'All Registered VASPs'}
             />
 
             <Row>
@@ -121,12 +125,6 @@ const VaspsList = (): React$Element<React$FragmentType> => {
                             <Row>
                                 <Col sm={12}>
                                     <div className="text-sm-end">
-                                        <Button className="btn btn-success mb-2 me-1">
-                                            <i className="mdi mdi-cog-outline"></i>
-                                        </Button>
-
-                                        <Button className="btn btn-light mb-2 me-1">Import</Button>
-
                                         <Button className="btn btn-light mb-2">Export</Button>
                                     </div>
                                 </Col>
@@ -140,7 +138,6 @@ const VaspsList = (): React$Element<React$FragmentType> => {
                                     sizePerPageList={sizePerPageList}
                                     isSortable={true}
                                     pagination={true}
-                                    isSelectable={true}
                                     isSearchable={true}
                                     theadClass="table-light"
                                     searchBoxClass="mt-2 mb-3"

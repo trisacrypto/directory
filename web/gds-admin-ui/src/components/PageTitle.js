@@ -1,6 +1,7 @@
 // @flow
 import React from 'react';
 import { Row, Col, Breadcrumb } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 type BreadcrumbItems = {
     label: string,
@@ -23,14 +24,14 @@ const PageTitle = (props: PageTitleProps): React$Element<any> => {
                 <div className="page-title-box">
                     <div className="page-title-right">
                         <Breadcrumb className="m-0">
-                            <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+                            <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Home</Breadcrumb.Item>
                             {props.breadCrumbItems.map((item, index) => {
                                 return item.active ? (
                                     <Breadcrumb.Item active key={index}>
                                         {item.label}
                                     </Breadcrumb.Item>
                                 ) : (
-                                    <Breadcrumb.Item key={index} href={item.path}>
+                                    <Breadcrumb.Item key={index} linkAs={Link} linkProps={{ to: item.path }}>
                                         {item.label}
                                     </Breadcrumb.Item>
                                 );

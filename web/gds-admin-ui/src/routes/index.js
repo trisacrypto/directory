@@ -34,6 +34,7 @@ const dashboardRoutes = {
     name: 'Dashboards',
     icon: 'uil-home-alt',
     header: 'Navigation',
+    exact: true,
     children: [
         {
             path: '/dashboard',
@@ -42,20 +43,21 @@ const dashboardRoutes = {
             route: Route,
         },
         {
-            path: '/vasps-summary/vasps',
+            path: '/vasps',
             name: 'List',
             component: VaspsList,
             route: Route,
+            exact: true
         }
     ],
 };
 
 const vaspsRoutes = {
-    path: '/vasps-summary',
+    path: '/vasps',
     name: 'Vasps Summary',
     children: [
         {
-            path: '/vasps-summary/:id/details',
+            path: '/vasps/:id/details',
             name: 'Detail',
             component: VaspsDetails,
             route: Route,
