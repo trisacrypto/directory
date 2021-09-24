@@ -12,6 +12,7 @@ import (
 var (
 	ErrInvalidResendAction = errors.New("invalid resend action")
 	ErrIDRequred           = errors.New("request requires a valid ID to determine endpoint")
+	ErrCSRFVerification    = errors.New("csrf verification failed for request")
 )
 
 var (
