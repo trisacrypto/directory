@@ -359,11 +359,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			contacts := models.VerifiedContacts(vasp)
-			snippet.VerifiedContacts = make([]string, 0, len(contacts))
-			for key := range contacts {
-				snippet.VerifiedContacts = append(snippet.VerifiedContacts, key)
-			}
+			snippet.VerifiedContacts = models.ContactVerifications(vasp)
 
 			// Append to list in reply
 			out.VASPs = append(out.VASPs, snippet)
