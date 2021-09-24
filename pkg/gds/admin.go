@@ -408,10 +408,18 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	// Must be done after verified contacts is computed
 	// This is safe because nothing is saved back to the database
 	vasp.Extra = nil
-	vasp.Contacts.Administrative.Extra = nil
-	vasp.Contacts.Legal.Extra = nil
-	vasp.Contacts.Technical.Extra = nil
-	vasp.Contacts.Billing.Extra = nil
+	if vasp.Contacts.Administrative != nil {
+		vasp.Contacts.Administrative.Extra = nil
+	}
+	if vasp.Contacts.Legal != nil {
+		vasp.Contacts.Legal.Extra = nil
+	}
+	if vasp.Contacts.Technical != nil {
+		vasp.Contacts.Technical.Extra = nil
+	}
+	if vasp.Contacts.Billing != nil {
+		vasp.Contacts.Billing.Extra = nil
+	}
 
 	// Serialize the VASP from protojson
 	jsonpb := protojson.MarshalOptions{
