@@ -31,8 +31,8 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
         <React.Fragment>
             <PageTitle
                 breadCrumbItems={[
-                    { label: 'List', path: `/vasps-summary/vasps` },
-                    { label: 'Details', path: `/vasps-summary/${params?.id}/vasps`, active: true }
+                    { label: 'List', path: '/vasps' },
+                    { label: 'Details', path: `/vasps/${params?.id}/details`, active: true }
                 ]}
                 title={'Registration Details'}
             />

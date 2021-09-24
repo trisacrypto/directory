@@ -80,7 +80,7 @@ const Tasks = () => {
                                                 <i className="mdi mdi-dots-horizontal"></i>
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                <Dropdown.Item onClick={() => history.push(`/vasps-summary/${vasp?.id}/details`)}> <span className="mdi mdi-eye-outline"></span> View</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => history.push(`/vasps/${vasp?.id}/details`)}> <span className="mdi mdi-eye-outline"></span> View</Dropdown.Item>
                                                 <Dropdown.Item onClick={() => handleResendEmailClick(vasp?.name)}> <span className="mdi mdi-email-edit-outline"></span> Resend email</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
