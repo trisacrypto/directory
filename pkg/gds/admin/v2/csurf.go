@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,13 @@ func DoubleCookie() gin.HandlerFunc {
 		}
 
 		header := c.GetHeader(CSRFHeader)
+		if header, err = url.QueryUnescape(header); err != nil {
+			log.Warn().Err(err).Msg("could not unescape csrf token")
+			c.JSON(http.StatusBadRequest, ErrorResponse(err))
+			c.Abort()
+			return
+		}
+
 		if cookie != header {
 			log.Warn().Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("csrf token cookie/header mismatch")
 			c.JSON(http.StatusForbidden, ErrorResponse(ErrCSRFVerification))

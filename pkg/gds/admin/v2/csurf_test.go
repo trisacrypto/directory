@@ -62,13 +62,14 @@ func TestDoubleCookies(t *testing.T) {
 	req, err = http.NewRequest(http.MethodGet, server.URL+"/login", nil)
 	require.NoError(t, err)
 
-	// Ensure the request is Forbidden
+	// Ensure the request is Ok
 	rep, err = client.Do(req)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rep.StatusCode)
 
+	// Check that we're getting two cookies back in the response
 	cookies := rep.Cookies()
-	require.Len(t, cookies, 1)
+	require.Len(t, cookies, 2)
 
 	// Check the data in the response
 	data, err = readJSON(rep)
@@ -77,10 +78,73 @@ func TestDoubleCookies(t *testing.T) {
 	require.Contains(t, data, "success")
 	require.True(t, data["success"].(bool))
 
-	// Check that we have access to the cookie now
+	// TESTING HACK: add the secure cookies to the client cookie jar even though this
+	// is not TLS. We're interested in the DoubleCookie middleware, not whether or not
+	// the http client does the right thing with cookies.
 	ep, _ := url.Parse(server.URL)
-	cookies = client.Jar.Cookies(ep)
-	require.Len(t, cookies, 1)
+	for _, cookie := range cookies {
+		cookie.Secure = false
+	}
+	client.Jar.SetCookies(ep, cookies)
+
+	// Attempt to send a request with the cookies but no X-CSRF-TOKEN header
+	req, err = http.NewRequest(http.MethodPost, server.URL+"/action", nil)
+	require.NoError(t, err)
+
+	// Ensure the request is Forbidden
+	rep, err = client.Do(req)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusForbidden, rep.StatusCode)
+
+	// Check the data in the response
+	data, err = readJSON(rep)
+	require.NoError(t, err)
+	require.Contains(t, data, "error")
+	require.Contains(t, data, "success")
+	require.Equal(t, admin.ErrCSRFVerification.Error(), data["error"].(string))
+	require.False(t, data["success"].(bool))
+
+	// Send a request with the cookies but an incorrect X-CSRF-TOKEN header
+	req, err = http.NewRequest(http.MethodPost, server.URL+"/action", nil)
+	req.Header.Set(admin.CSRFHeader, "foo")
+	require.NoError(t, err)
+
+	// Ensure the request is Forbidden
+	rep, err = client.Do(req)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusForbidden, rep.StatusCode)
+
+	// Check the data in the response
+	data, err = readJSON(rep)
+	require.NoError(t, err)
+	require.Contains(t, data, "error")
+	require.Contains(t, data, "success")
+	require.Equal(t, admin.ErrCSRFVerification.Error(), data["error"].(string))
+	require.False(t, data["success"].(bool))
+
+	var cookieToken string
+	for _, cookie := range cookies {
+		if cookie.Name == admin.CSRFCookie {
+			cookieToken = cookie.Value
+		}
+	}
+
+	// Finally, send a request with the cookies but a valid X-CSRF-TOKEN header
+	req, err = http.NewRequest(http.MethodPost, server.URL+"/action", nil)
+	req.Header.Set(admin.CSRFHeader, cookieToken)
+	require.NoError(t, err)
+
+	// Ensure the request is Ok
+	rep, err = client.Do(req)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusCreated, rep.StatusCode)
+
+	// Check the data in the response
+	data, err = readJSON(rep)
+	require.NoError(t, err)
+	require.NotContains(t, data, "error")
+	require.Contains(t, data, "success")
+	require.True(t, data["success"].(bool))
 
 }
 

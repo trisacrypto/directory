@@ -136,15 +136,35 @@ func (s *Admin) setupRoutes() (err error) {
 
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
+	v2.POST("/authenticate", s.Authenticate)
+	v2.POST("/reauthenticate", admin.DoubleCookie(), s.Reauthenticate)
 	v2.GET("/status", s.Status)
 	v2.GET("/summary", s.Summary)
 	v2.GET("/autocomplete", s.Autocomplete)
 	v2.GET("/vasps", s.ListVASPs)
 	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
-	v2.POST("/vasps/:vaspID/review", s.Review)
-	v2.POST("/vasps/:vaspID/resend", s.Resend)
+	v2.POST("/vasps/:vaspID/review", admin.DoubleCookie(), s.Review)
+	v2.POST("/vasps/:vaspID/resend", admin.DoubleCookie(), s.Resend)
 
 	return nil
+}
+
+func (s *Admin) Authenticate(c *gin.Context) {
+	if err := admin.SetDoubleCookieTokens(c, time.Now().Add(time.Minute*10).Unix()); err != nil {
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
+		return
+	}
+
+	c.JSON(http.StatusNotImplemented, admin.ErrorResponse("not implemented yet"))
+}
+
+func (s *Admin) Reauthenticate(c *gin.Context) {
+	if err := admin.SetDoubleCookieTokens(c, time.Now().Add(time.Minute*10).Unix()); err != nil {
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
+		return
+	}
+
+	c.JSON(http.StatusNotImplemented, admin.ErrorResponse("not implemented yet"))
 }
 
 // Summary provides aggregate statistics that describe the state of the GDS.
