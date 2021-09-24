@@ -40,5 +40,15 @@ function formatDisplayedData(target) {
     return target ? target : "N/A"
 }
 
+const convertCountsToPercentages = (data) => {
+    const total = Object.values(data).reduce((acc, x) => acc + x);
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v / total]));
+}
 
-export { formatDisplayedData, defaultEndpointPrefix, apiHost }
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+
+
+export { formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter }

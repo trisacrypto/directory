@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // components
 import PageTitle from '../../../components/PageTitle';
@@ -15,6 +15,9 @@ import TasksChart from './TasksChart';
 
 const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
     const dispatch = useDispatch();
+    const { summary } = useSelector(state => ({
+        summary: state.Summary.data,
+    }))
 
     React.useEffect(() => {
         dispatch(fetchCertificates());
@@ -32,11 +35,11 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
                 title={'Dashboard'}
             />
 
-            <Statistics />
+            <Statistics data={summary} />
 
             <Row style={{ height: "500px" }}>
                 <Col lg={4}>
-                    <Status />
+                    <Status statuses={summary.statuses} />
                 </Col>
                 <Col lg={8} style={{ overflowY: "scroll", height: "100%" }}>
                     <Tasks />

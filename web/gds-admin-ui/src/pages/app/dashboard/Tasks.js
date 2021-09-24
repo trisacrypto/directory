@@ -47,7 +47,7 @@ const Tasks = () => {
                                     <td className="d-flex gap-2 align-items-center">
                                         <div>
                                             {
-                                                vasp?.is_traveler ? <img src={CiphertraceFavicon} className="img-fluid" alt="Cyphertrace" /> : <img src={TrisaFavicon} className="img-fluid" alt="Trisa" />
+                                                vasp?.traveler ? <img src={CiphertraceFavicon} width="30" alt="Cyphertrace" /> : <img src={TrisaFavicon} width="30" className="img-fluid" alt="Trisa" />
                                             }
                                         </div>
                                         <div>
@@ -80,7 +80,7 @@ const Tasks = () => {
                                                 <i className="mdi mdi-dots-horizontal"></i>
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                <Dropdown.Item onClick={() => history.push(`/vasps/${vasp?.id}/details`)}> <span className="mdi mdi-eye-outline"></span> View</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => history.push(`/vasps/${vasp?.id}`)}> <span className="mdi mdi-eye-outline"></span> View</Dropdown.Item>
                                                 <Dropdown.Item onClick={() => handleResendEmailClick(vasp?.name)}> <span className="mdi mdi-email-edit-outline"></span> Resend email</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>

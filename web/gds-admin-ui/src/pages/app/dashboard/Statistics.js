@@ -1,13 +1,9 @@
-// @flow
 import React from 'react';
 import { Card, Row, Col } from 'react-bootstrap';
-import { useSelector } from "react-redux"
 
 
-const Statistics = (): React$Element<React$FragmentType> => {
-    const { summary } = useSelector(state => ({
-        summary: state.Summary.data,
-    }))
+const Statistics = ({ data }) => {
+
 
     return (
         <>
@@ -21,7 +17,7 @@ const Statistics = (): React$Element<React$FragmentType> => {
                                         <Card.Body className="text-center">
                                             <i className="dripicons-briefcase text-muted font-24"></i>
                                             <h3>
-                                                {summary && summary.all_vasps}
+                                                {data?.vasps_count}
                                             </h3>
                                             <p className="text-muted font-15 mb-0">All VASPs</p>
                                         </Card.Body>
@@ -34,7 +30,7 @@ const Statistics = (): React$Element<React$FragmentType> => {
                                             <i className="dripicons-checklist text-muted font-24"></i>
                                             <h3>
                                                 <span>
-                                                    {summary && summary.pending_registrations}
+                                                    {data?.pending_registrations}
                                                 </span>
                                             </h3>
                                             <p className="text-muted font-15 mb-0">Pending Registrations</p>
@@ -48,7 +44,7 @@ const Statistics = (): React$Element<React$FragmentType> => {
                                             <i className="dripicons-user-group text-muted font-24"></i>
                                             <h3>
                                                 <span>
-                                                    {summary && summary.verified_contacts}
+                                                    {data?.verified_contacts}
                                                 </span>
                                             </h3>
                                             <p className="text-muted font-15 mb-0">Verified Contacts</p>
@@ -61,7 +57,7 @@ const Statistics = (): React$Element<React$FragmentType> => {
                                         <Card.Body className="text-center">
                                             <i className="dripicons-copy text-muted font-24"></i>
                                             <h3>
-                                                {summary && summary.certificates_issued}
+                                                {data?.certificates_issued}
                                             </h3>
                                             <p className="text-muted font-15 mb-0">Certificates Issued</p>
                                         </Card.Body>

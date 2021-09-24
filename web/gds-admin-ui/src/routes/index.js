@@ -57,7 +57,7 @@ const vaspsRoutes = {
     name: 'Vasps Summary',
     children: [
         {
-            path: '/vasps/:id/details',
+            path: '/vasps/:id',
             name: 'Detail',
             component: VaspsDetails,
             route: Route,

@@ -23,7 +23,7 @@ const NameColumn = ({ row }) => {
     return (
         <React.Fragment>
             <p className="m-0 d-inline-block align-middle font-16">
-                <Link to={`/vasps/${id}/details`} className="text-body">
+                <Link to={`/vasps/${id}`} className="text-body">
                     {row.original.name}
                     <span className="text-muted font-italic d-block">
                         {row.original.common_name}
