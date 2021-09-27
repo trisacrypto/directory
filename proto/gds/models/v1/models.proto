@@ -3,6 +3,8 @@ syntax="proto3";
 package gds.models.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/models/v1;models";
 
+import "trisa/gds/models/v1beta1/models.proto";
+
 // Certificate requests are maintained separately from the VASP record since they should
 // not be replicated. E.g. every directory process is responsible for certificate
 // issuance and only public keys and certificate metadata should be exchanged between
@@ -50,6 +52,28 @@ message GDSExtraData {
     // Temporary: verification token for light weight authentication for verification
     // TODO: replace with admin API that uses authentication
     string admin_verification_token = 1;
+
+    // Audit log which records events relevant to a VASP
+    repeated AuditLogEntry audit_log = 2;
+}
+
+// AuditLogEntry contains information about an event relevant to a VASP
+// (e.g., verification state changes).
+message AuditLogEntry {
+    // RFC3339 timestamp
+    string timestamp = 1;
+
+    // Previous verification state (handled internally) and current verification state
+    trisa.gds.models.v1beta1.VerificationState previous_state = 2;
+    trisa.gds.models.v1beta1.VerificationState current_state = 3;
+
+    // Description which can be supplied by the Admin when making a state change
+    // (e.g., "resent emails")
+    string description = 4;
+    
+    // Email address of the Admin who made the state change, "automated" if the state
+    // change happened automatically
+    string source = 5;
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.

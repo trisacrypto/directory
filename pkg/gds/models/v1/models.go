@@ -45,6 +45,58 @@ func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 	return nil
 }
 
+// GetAuditLog from the extra data on the VASP record.
+func GetAuditLog(vasp *pb.VASP) (_ []*AuditLogEntry, err error) {
+	// If the extra data is nil, return nil (no audit log).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetAuditLog(), nil
+}
+
+// Append an AuditLogEntry to the extra data on the VASP record.
+func AppendAuditLog(vasp *pb.VASP, entry *AuditLogEntry) (err error) {
+	// Entry must be non-nil.
+	if entry == nil {
+		return errors.New("cannot append nil entry to AuditLog")
+	}
+
+	// Validate current state.
+	if entry.CurrentState < 0 || entry.CurrentState > pb.VerificationState_ERRORED {
+		return fmt.Errorf("cannot set verification state to unsupported value %d", entry.CurrentState)
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.AuditLog = make([]*AuditLogEntry, 0, 1)
+	}
+
+	// Set the previous state for the new entry.
+	if entry.PreviousState == 0 && len(extra.AuditLog) > 0 {
+		entry.PreviousState = extra.AuditLog[len(extra.AuditLog)-1].CurrentState
+	}
+
+	// Append entry to the previous log.
+	extra.AuditLog = append(extra.AuditLog, entry)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetContactVerification token and verified status from the extra data field on the Contact.
 func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 	// Return zero-valued defaults with no error if extra is nil.
