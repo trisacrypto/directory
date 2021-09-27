@@ -113,16 +113,28 @@ function Ivms({ data }) {
                                     </Col>
                                 )
                             }
+
                         </Row>
                     </Col>
-                    <Col className="mt-3">
-                        <p className="fw-bold mb-2">National Identification</p>
-                        <hr />
-                        <p className="fw-bold mb-2">Country of Issue: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.country_of_issue)}</span></p>
-                        <p className="fw-bold mb-2">National Identifier: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.national_identifier)}</span></p>
-                        <p className="fw-bold mb-2">National Identification Type: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.national_identifier_type)}</span></p>
-                        <p className="fw-bold mb-2">Registration Authority: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.registration_authority)}</span></p>
-                    </Col>
+                    <>
+                        {
+                            data && data.national_identification ? (
+                                <Col xl={12} className="mt-2">
+                                    <p className="fw-bold mb-2">National Identification</p>
+                                    <hr />
+                                    <p className="fw-bold mb-2">Country of Issue: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.country_of_issue)}</span></p>
+                                    <p className="fw-bold mb-2">National Identifier: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.national_identifier)}</span></p>
+                                    <p className="fw-bold mb-2">National Identification Type: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.national_identifier_type)}</span></p>
+                                    <p className="fw-bold mb-2">Registration Authority: <span className="fw-normal">{formatDisplayedData(data?.national_identification?.registration_authority)}</span></p>
+                                </Col>
+
+                            ) : (
+                                <Col>
+                                    <p className="fw-bold mb-2">National Identification: <span className="fw-normal">{formatDisplayedData(data?.national_identification)}</span></p>
+                                </Col>
+                            )
+                        }
+                    </>
                 </Row>
 
             </Card.Body>

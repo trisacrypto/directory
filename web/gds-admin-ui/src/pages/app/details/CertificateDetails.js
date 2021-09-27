@@ -41,7 +41,7 @@ function CertificateDetails({ data }) {
                         <p className="fw-bold mb-2">Organisation Unit: <span className="fw-normal">{formatDisplayedData(data?.subject?.organizational_unit)}</span></p>
                         <p className="fw-bold mb-2">Postal Code: <span className="fw-normal">{formatDisplayedData(data?.subject?.postal_code)}</span></p>
                         <p className="fw-bold mb-2">Province: <span className="fw-normal">{formatDisplayedData(data?.subject?.province)}</span></p>
-                        <p className="fw-bold mb-2">Serial Number: <span className="fw-normal">{formatDisplayedData(data?.subject?.serial_number)}</span></p>
+                        <p className="fw-bold mb-2">Serial Number: <span className="fw-normal">{formatDisplayedData(data?.serial_number)}</span></p>
                         <p className="fw-bold mb-2">Street Adress: <span className="fw-normal">{formatDisplayedData(data?.subject?.street_address)}</span></p>
                     </Col>
 

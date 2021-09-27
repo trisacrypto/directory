@@ -1,9 +1,9 @@
-// @flow
 import React from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
 import { formatDisplayedData } from "../../../utils"
 
 const ContactInfos = ({ data }) => {
+    console.log(data)
 
     return (
         <Card>
@@ -29,12 +29,12 @@ const ContactInfos = ({ data }) => {
                         <hr />
                         <Row>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.email)}</span></p>
-                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.technical?.name)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.legal?.email)}</span></p>
+                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.legal?.name)}</span></p>
                             </Col>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.technical?.person)}</span></p>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.phone)}</span></p>
+                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.legal?.person)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.legal?.phone)}</span></p>
                             </Col>
                         </Row>
                     </Col>
@@ -43,12 +43,12 @@ const ContactInfos = ({ data }) => {
                         <hr />
                         <Row>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.email)}</span></p>
-                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.technical?.name)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.administrative?.email)}</span></p>
+                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.administrative?.name)}</span></p>
                             </Col>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.technical?.person)}</span></p>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.phone)}</span></p>
+                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.administrative?.person)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.administrative?.phone)}</span></p>
                             </Col>
                         </Row>
                     </Col>
@@ -57,12 +57,12 @@ const ContactInfos = ({ data }) => {
                         <hr />
                         <Row>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.email)}</span></p>
-                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.technical?.name)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.billing?.email)}</span></p>
+                                <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.billing?.name)}</span></p>
                             </Col>
                             <Col xl={6}>
-                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.technical?.person)}</span></p>
-                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.technical?.phone)}</span></p>
+                                <p className="fw-bold mb-2">Person: <span className="fw-normal">{formatDisplayedData(data?.billing?.person)}</span></p>
+                                <p className="fw-bold mb-2">Email: <span className="fw-normal">{formatDisplayedData(data?.billing?.phone)}</span></p>
                             </Col>
                         </Row>
                     </Col>

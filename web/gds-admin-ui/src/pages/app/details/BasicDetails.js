@@ -6,17 +6,6 @@ import { formatDisplayedData } from '../../../utils';
 
 function BasicDetails({ data }) {
 
-    const getName = () => {
-        if (data) {
-            return data.entity?.name?.name_identifiers.map(name => {
-                if (name.legal_person_name_identifier_type === "LEGAL_PERSON_NAME_TYPE_CODE_LEGL") {
-                    return name.legal_person_name
-                }
-                return null
-            })
-        }
-    }
-
     return (
         <Card className="d-block">
             <Card.Body>
@@ -40,29 +29,29 @@ function BasicDetails({ data }) {
                 <h4 className="mt-0 mb-3">Basic Details</h4>
                 <Row>
                     <Col xl={6}>
-                        <p className="fw-bold mb-2">ID: <span className="fw-normal">{formatDisplayedData(data?.id)}</span></p>
-                        <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(getName())}</span></p>
-                        <p className="fw-bold mb-2">Common Name: <span className="fw-normal">{formatDisplayedData(data?.common_name)}</span></p>
-                        <p className="fw-bold mb-2">Verification Status: <span className="fw-normal">{formatDisplayedData(data?.verification_status)}</span></p>
+                        <p className="fw-bold mb-2">ID: <span className="fw-normal">{formatDisplayedData(data?.vasp?.id)}</span></p>
+                        <p className="fw-bold mb-2">Name: <span className="fw-normal">{formatDisplayedData(data?.name)}</span></p>
+                        <p className="fw-bold mb-2">Common Name: <span className="fw-normal">{formatDisplayedData(data?.vasp?.common_name)}</span></p>
+                        <p className="fw-bold mb-2">Verification Status: <span className="fw-normal">{formatDisplayedData(data?.vasp?.verification_status)}</span></p>
                     </Col>
                     <Col xl={6}>
-                        <p className="fw-bold mb-2">TRISA Endpoint: <span className="fw-normal">{formatDisplayedData(data?.trisa_endpoint)}</span></p>
-                        <p className="fw-bold mb-2">Website: <span className="fw-normal">{formatDisplayedData(data?.website)}</span></p>
-                        <p className="fw-bold mb-2">Established On: <span className="fw-normal">{formatDisplayedData(data?.established_on)}</span></p>
-                        <p className="fw-bold mb-2">Verified On: <span className="fw-normal">{formatDisplayedData(data?.verified_on)}</span></p>
+                        <p className="fw-bold mb-2">TRISA Endpoint: <span className="fw-normal">{formatDisplayedData(data?.vasp?.trisa_endpoint)}</span></p>
+                        <p className="fw-bold mb-2">Website: <span className="fw-normal">{formatDisplayedData(data?.vasp?.website)}</span></p>
+                        <p className="fw-bold mb-2">Established On: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>
+                        <p className="fw-bold mb-2">Verified On: <span className="fw-normal">{formatDisplayedData(data?.vasp?.verified_on)}</span></p>
                     </Col>
                     <Col xl={6}>
-                        <p className="fw-bold mb-2">Business categories: <span className="fw-normal">{formatDisplayedData(data?.business_category)}</span></p>
-                        <p className="fw-bold mb-2">First Listed: <span className="fw-normal">{formatDisplayedData(data?.first_listed)}</span></p>
-                        <p className="fw-bold mb-2">Last Update: <span className="fw-normal">{formatDisplayedData(data?.last_updated)}</span></p>
-                        <p className="fw-bold mb-2">Registered Directory: <span className="fw-normal">{formatDisplayedData(data?.registered_directory)}</span></p>
-                        <p className="fw-bold mb-2">VASP Category: <span className="fw-normal">{formatDisplayedData(data?.vasp_categories)}</span></p>
+                        <p className="fw-bold mb-2">Business categories: <span className="fw-normal">{formatDisplayedData(data?.vasp?.business_category)}</span></p>
+                        <p className="fw-bold mb-2">First Listed: <span className="fw-normal">{formatDisplayedData(data?.vasp?.first_listed)}</span></p>
+                        <p className="fw-bold mb-2">Last Update: <span className="fw-normal">{formatDisplayedData(data?.vasp?.last_updated)}</span></p>
+                        <p className="fw-bold mb-2">Registered Directory: <span className="fw-normal">{formatDisplayedData(data?.vasp?.registered_directory)}</span></p>
+                        <p className="fw-bold mb-2">VASP Category: <span className="fw-normal">{formatDisplayedData(data?.vasp?.vasp_categories)}</span></p>
                     </Col>
                     <Col xl={6}>
                         <p className="fw-bold mb-2 mt-3">Version</p>
                         <hr />
-                        <p className="fw-bold mb-2">PID: <span className="fw-normal">{formatDisplayedData(data?.version?.pid)}</span></p>
-                        <p className="fw-bold mb-2">Version: <span className="fw-normal">{formatDisplayedData(data?.version?.version)}</span></p>
+                        <p className="fw-bold mb-2">PID: <span className="fw-normal">{formatDisplayedData(data?.vasp?.version?.pid)}</span></p>
+                        <p className="fw-bold mb-2">Version: <span className="fw-normal">{formatDisplayedData(data?.vasp?.version?.version)}</span></p>
                     </Col>
                 </Row>
 
