@@ -32,7 +32,7 @@ function formatDisplayedData(target) {
     if (typeof target === "boolean") {
         return target.toString()
     } else if (Array.isArray(target)) {
-        return target.length ? target.toString() : "N/A"
+        return target.length ? target.join(', ') : "N/A"
     } else if (typeof target === "string") {
         return target ? target.trim() : "N/A"
     }

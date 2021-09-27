@@ -36,25 +36,27 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                 ]}
                 title={'Registration Details'}
             />
-            <Row>
-                <Col>
-                    <BasicDetails data={vasp} />
-                </Col>
-                <Col>
-                    <ContactInfos data={vasp.contacts} />
-                </Col>
-            </Row>
-            <Row>
-                <Col md={6}>
-                    <Ivms data={vasp.entity} />
-                    <TrixoForm data={vasp.trixo} />
-                </Col>
-                <Col md={6}>
-                    <CertificateDetails data={vasp.identity_certificate} />
-                </Col>
-            </Row>
-            <Row>
-            </Row>
+            {vasp && (
+                <>
+                    <Row>
+                        <Col>
+                            <BasicDetails data={vasp} />
+                        </Col>
+                        <Col>
+                            <ContactInfos data={vasp?.vasp?.contacts} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col md={6}>
+                            <Ivms data={vasp.vasp?.entity} />
+                            <TrixoForm data={vasp.trixo} />
+                        </Col>
+                        <Col md={6}>
+                            <CertificateDetails data={vasp?.vasp?.identity_certificate} />
+                        </Col>
+                    </Row>
+                </>
+            )}
         </React.Fragment>
     );
 };
