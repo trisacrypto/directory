@@ -22,6 +22,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_BIND_ADDR":            ":444",
 	"GDS_ADMIN_MODE":                 "debug",
 	"GDS_ADMIN_TOKEN_KEYS":           "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
+	"GDS_ADMIN_AUDIENCE":             "abc-1234.example.fakegoogleusercontent.com",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_REPLICA_PID":                "8",
@@ -79,6 +80,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
 	require.Equal(t, true, conf.Replica.Enabled)
 	require.Len(t, conf.Admin.TokenKeys, 2)
+	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
@@ -110,6 +112,7 @@ func TestRequiredConfig(t *testing.T) {
 	required := []string{
 		"GDS_DATABASE_URL",
 		"GDS_SECRET_KEY",
+		"GDS_ADMIN_AUDIENCE",
 		"GDS_REPLICA_PID",
 		"GDS_REPLICA_REGION",
 		"GDS_ADMIN_TOKEN_KEYS",

@@ -47,6 +47,10 @@ type AdminConfig struct {
 	// Multiple keys are used in order to rotate keys regularly; keyids therefore must
 	// be sortable; in general we prefer to use ksuid for key ids.
 	TokenKeys map[string]string `split_words:"true" required:"true"`
+
+	// Audience is the client ID from the credentials created in the Google Console to
+	// use the Sign-In with Google button. It is verified along with the token.
+	Audience string `split_words:"true" required:"true"`
 }
 
 type ReplicaConfig struct {

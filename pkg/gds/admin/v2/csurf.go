@@ -56,15 +56,15 @@ func DoubleCookie() gin.HandlerFunc {
 }
 
 // SetDoubleCookieTokens is a helper function to set cookies on a gin-request.
-func SetDoubleCookieTokens(c *gin.Context, nbf int64) error {
+func SetDoubleCookieTokens(c *gin.Context, exp int64) error {
 	// Generate the CSRF token
 	token, err := GenerateCSRFToken()
 	if err != nil {
 		return err
 	}
 
-	// Compute max age from the not before unix timestamp of the access token.
-	maxAge := int((time.Until(time.Unix(nbf, 0))).Seconds())
+	// Compute max age from the expires unix timestamp of the access token.
+	maxAge := int((time.Until(time.Unix(exp, 0))).Seconds())
 
 	// Set the reference cookie
 	c.SetCookie(CSRFReferenceCookie, token, maxAge, "/", "", true, true)

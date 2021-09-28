@@ -13,7 +13,9 @@ import (
 	ginzerolog "github.com/dn365/gin-zerolog"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/api/idtoken"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/trisacrypto/directory/pkg"
@@ -21,15 +23,22 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // NewAdmin creates a new GDS admin server derived from a parent Service.
 func NewAdmin(svc *Service) (a *Admin, err error) {
+	// Define the base admin server
 	a = &Admin{
 		svc:  svc,
 		conf: &svc.conf.Admin,
 		db:   svc.db,
+	}
+
+	// Create the token manager
+	if a.tokens, err = tokens.New(a.conf.TokenKeys); err != nil {
+		return nil, err
 	}
 
 	// Create the router
@@ -58,12 +67,13 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 // performing secure commands with authentication.
 type Admin struct {
 	sync.RWMutex
-	svc     *Service            // The parent Service the admin server uses to interact with other components
-	srv     *http.Server        // The HTTP server that listens on its own independent port
-	conf    *config.AdminConfig // The admin server specific configuration (alias to s.svc.conf.Admin)
-	db      store.Store         // Database connection for loading objects (alias to s.svc.db)
-	router  *gin.Engine         // The HTTP handler and associated middleware
-	healthy bool                // application state of the server
+	svc     *Service             // The parent Service the admin server uses to interact with other components
+	srv     *http.Server         // The HTTP server that listens on its own independent port
+	conf    *config.AdminConfig  // The admin server specific configuration (alias to s.svc.conf.Admin)
+	tokens  *tokens.TokenManager // A token manager that signs JWT tokens with RSA keys
+	db      store.Store          // Database connection for loading objects (alias to s.svc.db)
+	router  *gin.Engine          // The HTTP handler and associated middleware
+	healthy bool                 // application state of the server
 }
 
 // Serve GRPC requests on the specified address.
@@ -136,7 +146,8 @@ func (s *Admin) setupRoutes() (err error) {
 
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
-	v2.POST("/authenticate", s.Authenticate)
+	v2.GET("/authenticate", s.ProtectAuthenticate)
+	v2.POST("/authenticate", admin.DoubleCookie(), s.Authenticate)
 	v2.POST("/reauthenticate", admin.DoubleCookie(), s.Reauthenticate)
 	v2.GET("/status", s.Status)
 	v2.GET("/summary", s.Summary)
@@ -149,22 +160,193 @@ func (s *Admin) setupRoutes() (err error) {
 	return nil
 }
 
-func (s *Admin) Authenticate(c *gin.Context) {
-	if err := admin.SetDoubleCookieTokens(c, time.Now().Add(time.Minute*10).Unix()); err != nil {
+// Set the maximum age of authentication protection cookies.
+const protectAuthenticateMaxAge = time.Minute * 10
+
+// ProtectAuthenticate prepares the front-end for submitting a login token by setting
+// the double cookie tokens for CSRF protection. The front-end should call this before
+// posting credentials from Google.
+func (s *Admin) ProtectAuthenticate(c *gin.Context) {
+	expiresAt := time.Now().Add(protectAuthenticateMaxAge).Unix()
+	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
-
-	c.JSON(http.StatusNotImplemented, admin.ErrorResponse("not implemented yet"))
+	c.JSON(http.StatusOK, &admin.Reply{Success: true})
 }
 
-func (s *Admin) Reauthenticate(c *gin.Context) {
-	if err := admin.SetDoubleCookieTokens(c, time.Now().Add(time.Minute*10).Unix()); err != nil {
+// Authenticate expects a Google OAuth JWT token that is verified by the server. Once
+// verified, the JWT claims are authenticated against the server. Provided valid claims,
+// the server will issue access and referesh tokens that the client should submit in the
+// Authorization header for all future requests. This method also resets the CSRF double
+// cookies to ensure that max-age matches the duration of the refresh tokens.
+func (s *Admin) Authenticate(c *gin.Context) {
+	var (
+		err          error
+		in           *admin.AuthRequest
+		out          *admin.AuthReply
+		claims       *idtoken.Payload
+		accessToken  *jwt.Token
+		refreshToken *jwt.Token
+	)
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.AuthRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Check that a credential was posted
+	if in.Credential == "" {
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
+	// Validate the credential with Google
+	if claims, err = idtoken.Validate(c.Request.Context(), in.Credential, s.conf.Audience); err != nil {
+		log.Warn().Err(err).Msg("invalid credentials used for authentication")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
+	// Create the access and refresh tokens from the claims
+	if accessToken, err = s.tokens.CreateAccessToken(claims); err != nil {
+		log.Error().Err(err).Msg("could not create access token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not create refresh token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	// Sign the tokens and return the response
+	out = new(admin.AuthReply)
+	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not sign access token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
+		log.Error().Err(err).Msg("could not sign refresh token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
+	expiresAt := refreshToken.Claims.(tokens.Claims).ExpiresAt
+	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
 
-	c.JSON(http.StatusNotImplemented, admin.ErrorResponse("not implemented yet"))
+	// Return successful authentication!
+	c.JSON(http.StatusOK, out)
+}
+
+// Reauthenticate allows the submission of a refresh token to reauthenticate an expired
+// or expiring access token and issues a new token pair. The access token must still be
+// provided in the Authorization header as a Bearer token, even if it is expired since
+// the access token contains the claims that need to be reissued. The refresh token is
+// posted in the request body as the credential. This method also resets the CSRF double
+// cookies to ensure that the max-age matches the duration of the refresh tokens.
+func (s *Admin) Reauthenticate(c *gin.Context) {
+	var (
+		err           error
+		tks           string
+		in            *admin.AuthRequest
+		out           *admin.AuthReply
+		accessClaims  *tokens.Claims
+		refreshClaims *tokens.Claims
+		accessToken   *jwt.Token
+		refreshToken  *jwt.Token
+	)
+
+	// Get the Bearer token from the Authorization header (contains access token)
+	if tks, err = admin.GetAccessToken(c); err != nil {
+		log.Warn().Err(err).Msg("reauthenticate called without access token")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("request is not authorized"))
+		return
+	}
+
+	// Parse the access token from the Authorization header without validating the
+	// claims, e.g. it doesn't matter if the access token is expired, but it should be
+	// signed correctly by the token server.
+	if accessClaims, err = s.tokens.Parse(tks); err != nil {
+		log.Warn().Err(err).Msg("reauthenticate called with invalid access token")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("request is not authorized"))
+		return
+	}
+
+	// Parse incoming JSON data from the client request (contains refresh token)
+	in = new(admin.AuthRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Check that a credential was posted
+	if in.Credential == "" {
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
+	// Validate the refresh token
+	if refreshClaims, err = s.tokens.Verify(in.Credential); err != nil {
+		log.Warn().Err(err).Msg("could not verify refresh token")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
+	// Ensure the refresh token and admin token match
+	// TODO: verify the in.Credential is a refresh token using the subject or audience
+	if accessClaims.Id != refreshClaims.Id {
+		log.Warn().Msg("mismatched access and refresh token pair")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
+	// At this point we've validated the reauthentication and are ready to reissue tokens
+	// Create the access and refresh tokens from the claims
+	if accessToken, err = s.tokens.CreateAccessToken(accessClaims); err != nil {
+		log.Error().Err(err).Msg("could not create access token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not create refresh token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	// Sign the tokens and return the response
+	out = new(admin.AuthReply)
+	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not sign access token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
+		log.Error().Err(err).Msg("could not sign refresh token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+		return
+	}
+
+	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
+	expiresAt := refreshToken.Claims.(tokens.Claims).ExpiresAt
+	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
+		return
+	}
+
+	// Return successful reauthentication!
+	c.JSON(http.StatusOK, out)
 }
 
 // Summary provides aggregate statistics that describe the state of the GDS.

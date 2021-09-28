@@ -12,6 +12,8 @@ import (
 // DirectoryAdministrationClient defines client-side interactions with the API.
 type DirectoryAdministrationClient interface {
 	Status(ctx context.Context) (out *StatusReply, err error)
+	Authenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error)
+	Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error)
 	Summary(ctx context.Context) (out *SummaryReply, err error)
 	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
@@ -40,6 +42,23 @@ type StatusReply struct {
 //===========================================================================
 // Admin v2 API Requests and Responses
 //===========================================================================
+
+// AuthRequest is used by both the Authenticate and Reauthenticate API calls. In
+// Authenticate, the credential should be the OAuth2 JWT token supplied by the Identity
+// Service Provider. In Reauthenticate the credential should be the refresh token
+// returned by the Authenticate request.
+type AuthRequest struct {
+	Credential string `json:"credential"`
+}
+
+// AuthReply returns access and refresh tokens. The access token should be used as a
+// a Bearer token in the Authorization header for all authenticated requests including
+// Reauthentication. The refresh token is used in the Reauthenticate method to retrieve
+// new access tokens without requiring a new login.
+type AuthReply struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 // SummaryReply provides aggregate statistics that describe the state of the GDS.
 type SummaryReply struct {

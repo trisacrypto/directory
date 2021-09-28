@@ -106,6 +106,19 @@ func (tm *TokenManager) Verify(tks string) (claims *Claims, err error) {
 	return nil, fmt.Errorf("could not parse or verify GDS claims from %T", token.Claims)
 }
 
+// Parse an access or refresh token verifying its signature but without verifying its
+// claims. This ensures that valid JWT tokens are still accepted but claims can be
+// handled on a case-by-case basis; for example by validating an expired access token
+// during reauthentication.
+func (tm *TokenManager) Parse(tks string) (claims *Claims, err error) {
+	parser := &jwt.Parser{SkipClaimsValidation: true}
+	claims = &Claims{}
+	if _, err = parser.ParseWithClaims(tks, claims, tm.keyFunc); err != nil {
+		return nil, err
+	}
+	return claims, nil
+}
+
 // Sign an access or refresh token and return the token string.
 func (tm *TokenManager) Sign(token *jwt.Token) (tks string, err error) {
 	// Sanity check to prevent nil panics.
