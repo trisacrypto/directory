@@ -23,6 +23,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_MODE":                 "debug",
 	"GDS_ADMIN_TOKEN_KEYS":           "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
 	"GDS_ADMIN_AUDIENCE":             "abc-1234.example.fakegoogleusercontent.com",
+	"GDS_ADMIN_AUTHORIZED_DOMAINS":   "trisa.io,vaspdirectory.net,trisatest.net",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_REPLICA_PID":                "8",
@@ -81,6 +82,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Replica.Enabled)
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
+	require.Len(t, conf.Admin.AuthorizedDomains, 3)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
@@ -113,9 +115,10 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_DATABASE_URL",
 		"GDS_SECRET_KEY",
 		"GDS_ADMIN_AUDIENCE",
+		"GDS_ADMIN_TOKEN_KEYS",
+		"GDS_ADMIN_AUTHORIZED_DOMAINS",
 		"GDS_REPLICA_PID",
 		"GDS_REPLICA_REGION",
-		"GDS_ADMIN_TOKEN_KEYS",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -130,6 +133,9 @@ func TestRequiredConfig(t *testing.T) {
 		}
 	}
 	t.Cleanup(cleanup)
+
+	// Admin verification is predicated on it being enabled
+	setEnv("GDS_ADMIN_ENABLED", "true")
 
 	// Ensure that we've captured the complete set of required environment variables
 	setEnv(required...)
@@ -157,7 +163,10 @@ func TestRequiredConfig(t *testing.T) {
 	require.True(t, conf.Replica.Enabled)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
+	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
 	require.Len(t, conf.Admin.TokenKeys, 2)
+	require.Len(t, conf.Admin.AuthorizedDomains, 3)
+
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified

@@ -211,6 +211,13 @@ func (s *Admin) Authenticate(c *gin.Context) {
 		return
 	}
 
+	// Verify that the domain is one of our authorized domains
+	if err = s.checkAuthorizedDomain(claims); err != nil {
+		log.Warn().Err(err).Msg("access request from unauthorized domain")
+		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
+		return
+	}
+
 	// Create the access and refresh tokens from the claims
 	if accessToken, err = s.tokens.CreateAccessToken(claims); err != nil {
 		log.Error().Err(err).Msg("could not create access token")
@@ -246,6 +253,30 @@ func (s *Admin) Authenticate(c *gin.Context) {
 
 	// Return successful authentication!
 	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
+	// Fetch the claim from the idtoken payload
+	domain, ok := claims.Claims["hd"]
+	if !ok {
+		return errors.New("no hd claim to verify authorized domain with")
+	}
+
+	// Convert the domain into a string for verification
+	domains, ok := domain.(string)
+	if !ok {
+		return fmt.Errorf("claim type %T unparseable", domain)
+	}
+
+	// Search the authorized domains, if found return nil
+	for _, authorized := range s.conf.AuthorizedDomains {
+		if domains == authorized {
+			// Found an authorized domain!
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%s is not in the configured authorized domains", domains)
 }
 
 // Reauthenticate allows the submission of a refresh token to reauthenticate an expired

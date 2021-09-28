@@ -8,6 +8,10 @@ import SignWithGoogle from '../../components/Auth/SignWithGoogle';
 import { loginUser } from '../../redux/auth/actions';
 import config from "../../config";
 
+// HACK: temporary code, do not commit!
+import { APICore } from "../../helpers/api/apiCore";
+const api = new APICore();
+
 
 const Login = (): React$Element<any> => {
     const dispatch = useDispatch();
@@ -18,7 +22,11 @@ const Login = (): React$Element<any> => {
 
     const handleCredentialResponse = (response) => {
         if (response.credential) {
-            dispatch(loginUser(response.credential))
+            // HACK: temporary code, do not commit!
+            console.log(response.credential);
+            const rep = api.create("/login", {credential: response.credential});
+            console.log(rep);
+            dispatch(loginUser(response.credential));
         }
     }
 
