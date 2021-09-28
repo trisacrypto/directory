@@ -2,10 +2,12 @@ package models_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestVASPExtra(t *testing.T) {
@@ -26,6 +28,117 @@ func TestVASPExtra(t *testing.T) {
 	token, err = GetAdminVerificationToken(vasp)
 	require.NoError(t, err)
 	require.Equal(t, "pontoonboatz", token)
+
+	// Attempt to append to audit log
+	entry := &AuditLogEntry{
+		Timestamp:    time.Now().Format(time.RFC3339),
+		CurrentState: pb.VerificationState_VERIFIED,
+		Description:  "description",
+		Source:       "pontoon@boatz.com",
+	}
+	err = AppendAuditLog(vasp, entry)
+	require.NoError(t, err)
+
+	// Should be able to fetch the new audit log
+	auditLog, err := GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 1)
+	require.True(t, proto.Equal(entry, auditLog[0]))
+
+	// Verification token should be unchanged
+	token, err = GetAdminVerificationToken(vasp)
+	require.NoError(t, err)
+	require.Equal(t, "pontoonboatz", token)
+
+	// Attempt to set a new verification token
+	err = SetAdminVerificationToken(vasp, "jetskis")
+	require.NoError(t, err)
+
+	// Verify that the new token was set
+	token, err = GetAdminVerificationToken(vasp)
+	require.NoError(t, err)
+	require.Equal(t, "jetskis", token)
+
+	// Audit log should be unchanged
+	auditLog, err = GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 1)
+	require.True(t, proto.Equal(entry, auditLog[0]))
+}
+
+func TestAuditLog(t *testing.T) {
+	// Test that the audit log functions are working as expected
+	vasp := &pb.VASP{}
+
+	// Audit log should initially be empty
+	auditLog, err := GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 0)
+
+	// Should not be able to append a nil entry to the audit log
+	err = AppendAuditLog(vasp, nil)
+	require.Error(t, err)
+
+	// Should not be able to append an invalid state to the audit log
+	entry := &AuditLogEntry{
+		Timestamp:    time.Now().Format(time.RFC3339),
+		CurrentState: -1,
+		Description:  "invalid state",
+		Source:       "pontoon@boatz.com",
+	}
+	err = AppendAuditLog(vasp, entry)
+	require.Error(t, err)
+	entry.CurrentState = pb.VerificationState_ERRORED + 1
+	err = AppendAuditLog(vasp, entry)
+	require.Error(t, err)
+
+	// Append an entry to an empty log
+	entry = &AuditLogEntry{
+		Timestamp:    time.Now().Format(time.RFC3339),
+		CurrentState: pb.VerificationState_SUBMITTED,
+		Description:  "description",
+		Source:       "automated",
+	}
+	err = AppendAuditLog(vasp, entry)
+	require.NoError(t, err)
+	auditLog, err = GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 1)
+	require.True(t, proto.Equal(entry, auditLog[0]))
+
+	// Append an entry without specifying PreviousState
+	entry2 := &AuditLogEntry{
+		Timestamp:    time.Now().Format(time.RFC3339),
+		CurrentState: pb.VerificationState_EMAIL_VERIFIED,
+		Description:  "sent verification emails",
+		Source:       "pontoon@boatz.com",
+	}
+	expected2 := entry2
+	expected2.PreviousState = entry.CurrentState
+	err = AppendAuditLog(vasp, entry2)
+	require.NoError(t, err)
+	auditLog, err = GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 2)
+	require.True(t, proto.Equal(entry, auditLog[0]))
+	require.True(t, proto.Equal(expected2, auditLog[1]))
+
+	// Append an entry, specifying the PreviousState
+	entry3 := &AuditLogEntry{
+		Timestamp:     time.Now().Format(time.RFC3339),
+		PreviousState: pb.VerificationState_APPEALED,
+		CurrentState:  pb.VerificationState_REJECTED,
+		Description:   "appeal rejected",
+		Source:        "admin@example.com",
+	}
+	err = AppendAuditLog(vasp, entry3)
+	require.NoError(t, err)
+	auditLog, err = GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 3)
+	require.True(t, proto.Equal(entry, auditLog[0]))
+	require.True(t, proto.Equal(expected2, auditLog[1]))
+	require.True(t, proto.Equal(entry3, auditLog[2]))
 }
 
 func TestContactExtra(t *testing.T) {
