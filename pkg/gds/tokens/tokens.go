@@ -153,7 +153,7 @@ func (tm *TokenManager) CreateAccessToken(creds interface{}) (_ *jwt.Token, err 
 
 	// Populate the claims from the credentials based on type.
 	switch t := creds.(type) {
-	case idtoken.Payload:
+	case *idtoken.Payload:
 		if err = claims.extractClaims(t.Claims); err != nil {
 			return nil, err
 		}

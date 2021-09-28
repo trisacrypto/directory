@@ -136,9 +136,9 @@ func (s *Admin) setupRoutes() (err error) {
 	// Add CORS configuration
 	// TODO: configure origins from the environment rather than hard-coding
 	s.router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
+		AllowOrigins:     []string{"http://localhost", "http://localhost:3000", "http://localhost:3001"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
@@ -245,7 +245,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt := refreshToken.Claims.(tokens.Claims).ExpiresAt
+	expiresAt := refreshToken.Claims.(*tokens.Claims).ExpiresAt
 	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
@@ -370,7 +370,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt := refreshToken.Claims.(tokens.Claims).ExpiresAt
+	expiresAt := refreshToken.Claims.(*tokens.Claims).ExpiresAt
 	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
