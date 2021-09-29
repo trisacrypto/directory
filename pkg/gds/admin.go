@@ -782,7 +782,10 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 		return "", err
 	}
 	vasp.VerifiedOn = time.Now().Format(time.RFC3339)
-	vasp.VerificationStatus = pb.VerificationState_REVIEWED
+	// TODO: Replace "email" in source parameter with user email address.
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REVIEWED, "registration request received", "email"); err != nil {
+		return "", err
+	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
 		return "", err
 	}
@@ -833,7 +836,10 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string) (msg string, er
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
 	}
-	vasp.VerificationStatus = pb.VerificationState_REJECTED
+	// TODO: Replace "email" in source parameter with user email address.
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REJECTED, "registration rejected", "email"); err != nil {
+		return "", err
+	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
 		return "", err
 	}

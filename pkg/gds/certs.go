@@ -102,7 +102,9 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	if vasp, err = s.db.RetrieveVASP(r.Vasp); err != nil {
 		return fmt.Errorf("could not fetch VASP to mark as issuing certificate: %s", err)
 	}
-	vasp.VerificationStatus = pb.VerificationState_ISSUING_CERTIFICATE
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_ISSUING_CERTIFICATE, "issuing certificate", "automated"); err != nil {
+		return err
+	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
 		return fmt.Errorf("could not update VASP status: %s", err)
 	}
@@ -351,7 +353,10 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Update the VASP status as verified/certificate issued
-	vasp.VerificationStatus = pb.VerificationState_VERIFIED
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_VERIFIED, "certificate issued", "automated"); err != nil {
+		log.Error().Err(err).Msg("could not update VASP verification status")
+		return
+	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP status as verified")
 		return
