@@ -39,6 +39,41 @@ type APIv2 struct {
 // Ensure the API implments the Service interface.
 var _ DirectoryAdministrationClient = &APIv2{}
 
+// Authenticate the the client to the Server using the supplied credentials.
+// TODO: this method should prepare the APIv2 client to send and recv authenticated requests
+// TODO: does the client need to call the ProtectAuthenticate endpoint before auth?
+func (s APIv2) Authenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v2/authenticate", in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &AuthReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Reauthenticate the the client to the Server using the supplied credentials.
+// TODO: this method should prepare the APIv2 client to send and recv authenticated requests
+func (s APIv2) Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v2/reauthenticate", in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &AuthReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 	//  Make the HTTP request
 	var req *http.Request

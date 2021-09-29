@@ -79,6 +79,82 @@ func TestClient(t *testing.T) {
 	require.EqualError(t, err, "[400] bad request")
 }
 
+func TestAuthenticate(t *testing.T) {
+	fixture := &admin.AuthReply{
+		AccessToken:  "",
+		RefreshToken: "",
+	}
+
+	req := &admin.AuthRequest{
+		Credential: "",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v2/authenticate", r.URL.Path)
+
+		// Must be able to deserialize the request
+		in := new(admin.AuthRequest)
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err)
+
+		require.Equal(t, req.Credential, in.Credential)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Authenticate(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture.AccessToken, out.AccessToken)
+	require.Equal(t, fixture.RefreshToken, out.RefreshToken)
+}
+
+func TestReuthenticate(t *testing.T) {
+	fixture := &admin.AuthReply{
+		AccessToken:  "",
+		RefreshToken: "",
+	}
+
+	req := &admin.AuthRequest{
+		Credential: "",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v2/reauthenticate", r.URL.Path)
+
+		// Must be able to deserialize the request
+		in := new(admin.AuthRequest)
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err)
+
+		require.Equal(t, req.Credential, in.Credential)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Reauthenticate(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture.AccessToken, out.AccessToken)
+	require.Equal(t, fixture.RefreshToken, out.RefreshToken)
+}
+
 func TestStatus(t *testing.T) {
 	fixture := &admin.StatusReply{
 		Status:    "ok",

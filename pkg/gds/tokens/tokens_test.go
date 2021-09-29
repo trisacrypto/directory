@@ -195,6 +195,61 @@ func (s *TokenTestSuite) TestKeyRotation() {
 	require.Error(err)
 }
 
+// Test that a token can be parsed even if it is expired. This is necessary to parse
+// access tokens in order to use a refresh token to extract the claims.
+func (s *TokenTestSuite) TestParseExpiredToken() {
+	require := s.Require()
+	tm, err := tokens.New(s.testdata)
+	require.NoError(err, "could not initialize token manager")
+
+	// Default creds
+	creds := map[string]interface{}{
+		"hd":      "rotational.io",
+		"email":   "kate@rotational.io",
+		"name":    "Kate Holland",
+		"picture": "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
+	}
+
+	accessToken, err := tm.CreateAccessToken(creds)
+	require.NoError(err, "could not create access token from claims")
+	require.IsType(&tokens.Claims{}, accessToken.Claims)
+
+	// Modify claims to be expired
+	claims := accessToken.Claims.(*tokens.Claims)
+	claims.IssuedAt = time.Unix(claims.IssuedAt, 0).Add(-24 * time.Hour).Unix()
+	claims.ExpiresAt = time.Unix(claims.ExpiresAt, 0).Add(-24 * time.Hour).Unix()
+	claims.NotBefore = time.Unix(claims.NotBefore, 0).Add(-24 * time.Hour).Unix()
+	accessToken.Claims = claims
+
+	// Create signed token
+	tks, err := tm.Sign(accessToken)
+	require.NoError(err, "could not create expired access token from claims")
+
+	// Ensure that verification fails; claims are invalid.
+	pclaims, err := tm.Verify(tks)
+	require.Error(err, "expired token was somehow validated?")
+	require.Empty(pclaims, "verify returned claims even after error")
+
+	// Parse token without verifying claims but verifying the signature
+	pclaims, err = tm.Parse(tks)
+	require.NoError(err, "claims were validated in parse")
+	require.NotEmpty(pclaims, "parsing returned empty claims without error")
+
+	// Check claims
+	require.Equal(claims.Id, pclaims.Id)
+	require.Equal(claims.ExpiresAt, pclaims.ExpiresAt)
+	require.Equal(creds["hd"], claims.Domain)
+	require.Equal(creds["email"], claims.Email)
+	require.Equal(creds["name"], claims.Name)
+	require.Equal(creds["picture"], claims.Picture)
+
+	// Ensure signature is still validated on parse
+	tks += "abcdefg"
+	claims, err = tm.Parse(tks)
+	require.Error(err, "claims were parsed with bad signature")
+	require.Empty(claims, "bad signature token returned non-empty claims")
+}
+
 // Execute suite as a go test.
 func TestTokenTestSuite(t *testing.T) {
 	suite.Run(t, new(TokenTestSuite))

@@ -38,15 +38,17 @@ type GDSConfig struct {
 }
 
 type AdminConfig struct {
-	Enabled  bool   `split_words:"true" default:"true"`
-	BindAddr string `split_words:"true" default:":4434"`
-	Mode     string `split_words:"true" default:"release"`
+	Enabled           bool     `split_words:"true" default:"true"`
+	BindAddr          string   `split_words:"true" default:":4434"`
+	Mode              string   `split_words:"true" default:"release"`
+	Audience          string   `split_words:"true"`
+	AuthorizedDomains []string `split_words:"true"`
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem
 	// Multiple keys are used in order to rotate keys regularly; keyids therefore must
 	// be sortable; in general we prefer to use ksuid for key ids.
-	TokenKeys map[string]string `split_words:"true" required:"true"`
+	TokenKeys map[string]string `split_words:"true"`
 }
 
 type ReplicaConfig struct {
@@ -132,6 +134,22 @@ func (c AdminConfig) Validate() error {
 	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
 	}
+
+	if c.Enabled {
+		// Check configurations that are only required if the admin API is enabled
+		if c.Audience == "" {
+			return errors.New("invalid configuration: audience required for enabled admin")
+		}
+
+		if len(c.AuthorizedDomains) == 0 {
+			return errors.New("invalid configuration: authorized domains required for enabled admin")
+		}
+
+		if len(c.TokenKeys) == 0 {
+			return errors.New("invalid configuration: token keys required for enabled admin")
+		}
+	}
+
 	return nil
 }
 
