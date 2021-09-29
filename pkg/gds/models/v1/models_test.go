@@ -229,8 +229,14 @@ func TestUpdateCertificateRequestStatus(t *testing.T) {
 	err := UpdateCertificateRequestStatus(nil, CertificateRequestState_READY_TO_SUBMIT, "ready to submit", "automated")
 	require.Error(t, err)
 
-	// Update a brand new request with no previous state
+	// Attempt to set request status to an invalid state
 	request := &CertificateRequest{}
+	err = UpdateCertificateRequestStatus(request, -1, "invalid", "automated")
+	require.Error(t, err)
+	err = UpdateCertificateRequestStatus(request, CertificateRequestState_CR_ERRORED+1, "invalid", "automated")
+	require.Error(t, err)
+
+	// Update a brand new request with no previous state
 	expectedTime := time.Now()
 	err = UpdateCertificateRequestStatus(request, CertificateRequestState_READY_TO_SUBMIT, "ready to submit", "automated")
 	require.NoError(t, err)
