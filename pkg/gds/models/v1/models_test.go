@@ -224,6 +224,57 @@ func TestVeriedContacts(t *testing.T) {
 	require.Len(t, contacts, 2)
 }
 
+func TestUpdateCertificateRequestStatus(t *testing.T) {
+	// Attempt to set request status on a nil object
+	err := UpdateCertificateRequestStatus(nil, CertificateRequestState_READY_TO_SUBMIT, "ready to submit", "automated")
+	require.Error(t, err)
+
+	// Update a brand new request with no previous state
+	request := &CertificateRequest{}
+	expectedTime := time.Now()
+	err = UpdateCertificateRequestStatus(request, CertificateRequestState_READY_TO_SUBMIT, "ready to submit", "automated")
+	require.NoError(t, err)
+
+	// Check request status and audit log
+	require.Equal(t, request.Status, CertificateRequestState_READY_TO_SUBMIT)
+	require.Len(t, request.AuditLog, 1)
+
+	// Timestamps should be close
+	actualTime, err := time.Parse(time.RFC3339, request.AuditLog[0].Timestamp)
+	require.NoError(t, err)
+	require.LessOrEqual(t, expectedTime.Sub(actualTime), time.Duration(time.Minute))
+
+	// Verify audit log entry
+	require.Equal(t, CertificateRequestState_INITIALIZED, request.AuditLog[0].PreviousState)
+	require.Equal(t, CertificateRequestState_READY_TO_SUBMIT, request.AuditLog[0].CurrentState)
+	require.Equal(t, "ready to submit", request.AuditLog[0].Description)
+	require.Equal(t, "automated", request.AuditLog[0].Source)
+
+	// Change the status of the request again
+	expectedTime = time.Now()
+	err = UpdateCertificateRequestStatus(request, CertificateRequestState_PROCESSING, "processing", "automated")
+	require.NoError(t, err)
+
+	// Check request status and audit log
+	require.Equal(t, request.Status, CertificateRequestState_PROCESSING)
+	require.Len(t, request.AuditLog, 2)
+
+	// Timestamps should be close
+	actualTime, err = time.Parse(time.RFC3339, request.AuditLog[1].Timestamp)
+	require.NoError(t, err)
+	require.LessOrEqual(t, expectedTime.Sub(actualTime), time.Duration(time.Minute))
+
+	// Verify audit log entries
+	require.Equal(t, CertificateRequestState_INITIALIZED, request.AuditLog[0].PreviousState)
+	require.Equal(t, CertificateRequestState_READY_TO_SUBMIT, request.AuditLog[0].CurrentState)
+	require.Equal(t, "ready to submit", request.AuditLog[0].Description)
+	require.Equal(t, "automated", request.AuditLog[0].Source)
+	require.Equal(t, CertificateRequestState_READY_TO_SUBMIT, request.AuditLog[1].PreviousState)
+	require.Equal(t, CertificateRequestState_PROCESSING, request.AuditLog[1].CurrentState)
+	require.Equal(t, "processing", request.AuditLog[1].Description)
+	require.Equal(t, "automated", request.AuditLog[1].Source)
+}
+
 func TestIsTraveler(t *testing.T) {
 	vasp := &pb.VASP{CommonName: "trisa.example.com"}
 	require.False(t, IsTraveler(vasp))
