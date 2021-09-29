@@ -1,8 +1,7 @@
 
-import axios from "axios"
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
 import { getSummary, getVasps } from "../../services/dashboard"
-import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError, fetchRegistrationsReviewsSuccess, fetchRegistrationsReviewsError } from "./actions"
+import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError } from "./actions"
 import { FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
 
 
