@@ -132,6 +132,7 @@ func (s *Admin) setupRoutes() (err error) {
 	// Application Middleware
 	s.router.Use(ginzerolog.Logger("gin"))
 	s.router.Use(gin.Recovery())
+	s.router.Use(s.Available())
 
 	// Add CORS configuration
 	// TODO: configure origins from the environment rather than hard-coding
@@ -142,21 +143,39 @@ func (s *Admin) setupRoutes() (err error) {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	s.router.Use(s.Available())
+
+	// Route-specific middleware
+	authorize := admin.Authorization(s.tokens)
+	csrf := admin.DoubleCookie()
 
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
-	v2.GET("/authenticate", s.ProtectAuthenticate)
-	v2.POST("/authenticate", admin.DoubleCookie(), s.Authenticate)
-	v2.POST("/reauthenticate", admin.DoubleCookie(), s.Reauthenticate)
-	v2.GET("/status", s.Status)
-	v2.GET("/summary", s.Summary)
-	v2.GET("/autocomplete", s.Autocomplete)
-	v2.GET("/vasps", s.ListVASPs)
-	v2.GET("/vasps/:vaspID", s.RetrieveVASP)
-	v2.POST("/vasps/:vaspID/review", admin.DoubleCookie(), s.Review)
-	v2.POST("/vasps/:vaspID/resend", admin.DoubleCookie(), s.Resend)
+	{
+		// Heartbeat route (no authentication required)
+		v2.GET("/status", s.Status)
 
+		// Authentication and user management routes (some CSRF protection required)
+		v2.GET("/authenticate", s.ProtectAuthenticate)
+		v2.POST("/authenticate", csrf, s.Authenticate)
+		v2.POST("/reauthenticate", csrf, s.Reauthenticate)
+
+		// Information routes (must be authenticated)
+		v2.GET("/summary", authorize, s.Summary)
+		v2.GET("/autocomplete", authorize, s.Autocomplete)
+
+		// VASP routes all must be authenticated (some CSRF protection required)
+		vasps := v2.Group("/vasps", authorize)
+		{
+			vasps.GET("", s.ListVASPs)
+			vasps.GET("/:vaspID", s.RetrieveVASP)
+			vasps.POST("/:vaspID/review", csrf, s.Review)
+			vasps.POST("/:vaspID/resend", csrf, s.Resend)
+		}
+	}
+
+	// NotFound and NotAllowed requests
+	s.router.NoRoute(admin.NotFound)
+	s.router.NoMethod(admin.NotAllowed)
 	return nil
 }
 
