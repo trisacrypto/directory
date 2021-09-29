@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -94,6 +95,35 @@ func AppendAuditLog(vasp *pb.VASP, entry *AuditLogEntry) (err error) {
 	if vasp.Extra, err = anypb.New(extra); err != nil {
 		return err
 	}
+	return nil
+}
+
+// UpdateCertificateRequestStatus changes the status of a CertificateRequest and appends
+// an entry to the audit log.
+func UpdateCertificateRequestStatus(request *CertificateRequest, state CertificateRequestState, description string, source string) (err error) {
+	// CertificateRequest must be non-nil
+	if request == nil {
+		return fmt.Errorf("cannot set certificate request status on a nil CertificateRequest")
+	}
+
+	// Validate the new state.
+	if state < 0 || state > CertificateRequestState_CR_ERRORED {
+		return fmt.Errorf("cannot set certificate request status to unsupported value %d", state)
+	}
+
+	// Append a new entry to the audit log.
+	entry := &CertificateRequestLogEntry{
+		Timestamp:     time.Now().Format(time.RFC3339),
+		PreviousState: request.Status,
+		CurrentState:  state,
+		Description:   description,
+		Source:        source,
+	}
+	request.AuditLog = append(request.AuditLog, entry)
+
+	// Set the new state on the CertificateRequest.
+	request.Status = state
+
 	return nil
 }
 

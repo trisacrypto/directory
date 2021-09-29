@@ -34,6 +34,9 @@ message CertificateRequest {
     // Logging information timestamps
     string created = 15;
     string modified = 16;
+
+    // Log of historical request states
+    repeated CertificateRequestLogEntry audit_log = 17;
 }
 
 enum CertificateRequestState {
@@ -45,6 +48,23 @@ enum CertificateRequestState {
     COMPLETED = 5;
     CR_REJECTED = 6;
     CR_ERRORED = 7;
+}
+
+// CertificateRequestLogEntry contains information about the state of a certificate request.
+message CertificateRequestLogEntry {
+    // RFC3339 timestamp
+    string timestamp = 1;
+
+    // Previous request state (handled internally) and current request state
+    CertificateRequestState previous_state = 2;
+    CertificateRequestState current_state = 3;
+
+    // Description of the current state of the certificate request
+    string description = 4;
+
+    // Email address of the Admin who made the state change, "automated" if the state
+    // change happened automatically
+    string source = 5;
 }
 
 // GDSExtraData contains all GDS-specific extra data for a VASP record.

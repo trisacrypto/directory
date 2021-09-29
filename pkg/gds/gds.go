@@ -190,7 +190,10 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		Id:         uuid.New().String(),
 		Vasp:       vasp.Id,
 		CommonName: vasp.CommonName,
-		Status:     models.CertificateRequestState_INITIALIZED,
+	}
+	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", "automated"); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
+		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
 	}
 
 	// Make a new secret of type "password"
