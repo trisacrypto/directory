@@ -223,7 +223,7 @@ func (s *TokenTestSuite) TestParseExpiredToken() {
 
 	// Create signed token
 	tks, err := tm.Sign(accessToken)
-	require.NoError(err, "could not create expired access token from cliams")
+	require.NoError(err, "could not create expired access token from claims")
 
 	// Ensure that verification fails; claims are invalid.
 	pclaims, err := tm.Verify(tks)

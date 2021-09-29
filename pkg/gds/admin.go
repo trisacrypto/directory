@@ -182,12 +182,11 @@ func (s *Admin) ProtectAuthenticate(c *gin.Context) {
 // cookies to ensure that max-age matches the duration of the refresh tokens.
 func (s *Admin) Authenticate(c *gin.Context) {
 	var (
-		err          error
-		in           *admin.AuthRequest
-		out          *admin.AuthReply
-		claims       *idtoken.Payload
-		accessToken  *jwt.Token
-		refreshToken *jwt.Token
+		err       error
+		in        *admin.AuthRequest
+		out       *admin.AuthReply
+		claims    *idtoken.Payload
+		expiresAt int64
 	)
 
 	// Parse incoming JSON data from the client request
@@ -218,35 +217,17 @@ func (s *Admin) Authenticate(c *gin.Context) {
 		return
 	}
 
-	// Create the access and refresh tokens from the claims
-	if accessToken, err = s.tokens.CreateAccessToken(claims); err != nil {
-		log.Error().Err(err).Msg("could not create access token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-
-	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not create refresh token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-
-	// Sign the tokens and return the response
-	out = new(admin.AuthReply)
-	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not sign access token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
-		log.Error().Err(err).Msg("could not sign refresh token")
+	// At this point request has been authenticated and authorized, create credentials.
+	if out, expiresAt, err = s.createAuthReply(claims); err != nil {
+		// NOTE: additional error logging happens in createAuthReply
+		log.Error().Err(err).Msg("could not authenticate user")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
 		return
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt := refreshToken.Claims.(*tokens.Claims).ExpiresAt
 	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+		log.Error().Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -279,6 +260,36 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 	return fmt.Errorf("%s is not in the configured authorized domains", domains)
 }
 
+func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expiresAt int64, err error) {
+	var accessToken, refreshToken *jwt.Token
+
+	// Create the access and refresh tokens from the claims
+	if accessToken, err = s.tokens.CreateAccessToken(creds); err != nil {
+		log.Error().Err(err).Msg("could not create access token")
+		return nil, 0, err
+	}
+
+	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not create refresh token")
+		return nil, 0, err
+	}
+
+	// Sign the tokens and return the response
+	out = new(admin.AuthReply)
+	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
+		log.Error().Err(err).Msg("could not sign access token")
+		return nil, 0, err
+	}
+	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
+		log.Error().Err(err).Msg("could not sign refresh token")
+		return nil, 0, err
+	}
+
+	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
+	expiresAt = refreshToken.Claims.(*tokens.Claims).ExpiresAt
+	return out, expiresAt, nil
+}
+
 // Reauthenticate allows the submission of a refresh token to reauthenticate an expired
 // or expiring access token and issues a new token pair. The access token must still be
 // provided in the Authorization header as a Bearer token, even if it is expired since
@@ -291,10 +302,9 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 		tks           string
 		in            *admin.AuthRequest
 		out           *admin.AuthReply
+		expiresAt     int64
 		accessClaims  *tokens.Claims
 		refreshClaims *tokens.Claims
-		accessToken   *jwt.Token
-		refreshToken  *jwt.Token
 	)
 
 	// Get the Bearer token from the Authorization header (contains access token)
@@ -343,35 +353,15 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	}
 
 	// At this point we've validated the reauthentication and are ready to reissue tokens
-	// Create the access and refresh tokens from the claims
-	if accessToken, err = s.tokens.CreateAccessToken(accessClaims); err != nil {
-		log.Error().Err(err).Msg("could not create access token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
+	if out, expiresAt, err = s.createAuthReply(accessClaims); err != nil {
+		// NOTE: additional error logging happens in createAuthReply
+		log.Error().Err(err).Msg("could not reauthenticate user")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not reauthenticate with credentials"))
 		return
 	}
 
-	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not create refresh token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-
-	// Sign the tokens and return the response
-	out = new(admin.AuthReply)
-	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not sign access token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
-		log.Error().Err(err).Msg("could not sign refresh token")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
-		return
-	}
-
-	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt := refreshToken.Claims.(*tokens.Claims).ExpiresAt
 	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+		log.Error().Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
