@@ -5,12 +5,12 @@ import { Row, Col, } from 'react-bootstrap';
 import PageTitle from '../../../components/PageTitle';
 import { useParams } from "react-router-dom"
 
-import ContactInfos from './ContactInfos';
+import Contact from './contact';
 import BasicDetails from './BasicDetails';
 import CertificateDetails from './CertificateDetails';
 import { getVasp } from "../../../services/vasps"
 import TrixoForm from './TrixoForm';
-import Ivms from './Ivms';
+import Ivms from './ivms';
 
 const VaspDetails = (): React$Element<React$FragmentType> => {
     const [vasp, setVasp] = React.useState({});
@@ -43,7 +43,7 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                             <BasicDetails data={vasp} />
                         </Col>
                         <Col>
-                            <ContactInfos data={vasp?.vasp?.contacts} />
+                            <Contact data={vasp?.vasp?.contacts} />
                         </Col>
                     </Row>
                     <Row>
