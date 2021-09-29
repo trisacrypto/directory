@@ -40,6 +40,7 @@ func TestDoubleCookies(t *testing.T) {
 
 	// Create the test server with the CSRF protected router
 	server := httptest.NewServer(router)
+	defer server.Close()
 
 	// Attempt to make a request to the server that is not CSRF protected
 	req, err := http.NewRequest(http.MethodPost, server.URL+"/action", nil)
