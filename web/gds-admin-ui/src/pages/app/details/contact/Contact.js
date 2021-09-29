@@ -6,7 +6,7 @@ import { formatDisplayedData } from '../../../../utils';
 function Contact({ data, type }) {
     return (
         <>
-            <p className="fw-bold">{type} contact :</p>
+            <p className="fw-bold">{type} contact:</p>
             <hr />
             <Row>
                 <Col xl={6}>

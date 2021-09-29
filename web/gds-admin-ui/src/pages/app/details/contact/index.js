@@ -7,7 +7,7 @@ export default function ContactList({ data }) {
     return (
         <Card>
             <Card.Body>
-                <h4 className="mt-0 mb-3">Contact Informations</h4>
+                <h4 className="mt-0 mb-3">Contact Information</h4>
                 <Row>
                     <Col xl={6}>
                         <Contact data={data?.legal} type="Legal" />

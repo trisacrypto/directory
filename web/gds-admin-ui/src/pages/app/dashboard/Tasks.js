@@ -41,7 +41,7 @@ const Tasks = () => {
                 <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                     <tbody>
                         {
-                            Array.isArray(vasps?.vasps) && vasps?.vasps.map((vasp) => vasp?.verification_status === "PENDING_REVIEW" && (
+                            Array.isArray(vasps?.vasps) && vasps?.vasps.map((vasp) => (
 
                                 <tr key={vasp.id}>
                                     <td className="d-flex gap-2 align-items-center">
