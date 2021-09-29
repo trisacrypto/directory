@@ -231,3 +231,51 @@ func TestIsTraveler(t *testing.T) {
 	vasp.CommonName = "trisa-1234.traveler.ciphertrace.com"
 	require.True(t, IsTraveler(vasp))
 }
+
+func TestUpdateVerificationStatus(t *testing.T) {
+	vasp := &pb.VASP{}
+
+	// Update a brand new VASP with no previous state
+	expectedTime := time.Now()
+	err := UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "submitted", "automated")
+	require.NoError(t, err)
+
+	// Check verification status and audit log
+	require.Equal(t, vasp.VerificationStatus, pb.VerificationState_SUBMITTED)
+	auditLog, err := GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 1)
+
+	// Timestamps should be close
+	actualTime, err := time.Parse(time.RFC3339, auditLog[0].Timestamp)
+	require.NoError(t, err)
+	require.LessOrEqual(t, expectedTime.Sub(actualTime), time.Duration(time.Minute))
+
+	// Verify audit log entry
+	require.Equal(t, pb.VerificationState_NO_VERIFICATION, auditLog[0].PreviousState)
+	require.Equal(t, pb.VerificationState_SUBMITTED, auditLog[0].CurrentState)
+	require.Equal(t, "submitted", auditLog[0].Description)
+	require.Equal(t, "automated", auditLog[0].Source)
+
+	// Change the state of the VASP again
+	expectedTime = time.Now()
+	err = UpdateVerificationStatus(vasp, pb.VerificationState_REVIEWED, "review completed", "pontoon@boatz.com")
+	require.NoError(t, err)
+
+	// Check verification status and audit log
+	require.Equal(t, vasp.VerificationStatus, pb.VerificationState_REVIEWED)
+	auditLog, err = GetAuditLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, auditLog, 2)
+
+	// Timestamps should be close
+	actualTime, err = time.Parse(time.RFC3339, auditLog[1].Timestamp)
+	require.NoError(t, err)
+	require.LessOrEqual(t, expectedTime.Sub(actualTime), time.Duration(time.Minute))
+
+	// Verify audit log entry
+	require.Equal(t, pb.VerificationState_SUBMITTED, auditLog[1].PreviousState)
+	require.Equal(t, pb.VerificationState_REVIEWED, auditLog[1].CurrentState)
+	require.Equal(t, "review completed", auditLog[1].Description)
+	require.Equal(t, "pontoon@boatz.com", auditLog[1].Source)
+}
