@@ -24,6 +24,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_TOKEN_KEYS":           "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
 	"GDS_ADMIN_AUDIENCE":             "abc-1234.example.fakegoogleusercontent.com",
 	"GDS_ADMIN_AUTHORIZED_DOMAINS":   "trisa.io,vaspdirectory.net,trisatest.net",
+	"GDS_ADMIN_ALLOW_ORIGINS":        "https://admin.trisatest.net",
 	"GDS_REPLICA_ENABLED":            "true",
 	"GDS_REPLICA_BIND_ADDR":          ":445",
 	"GDS_REPLICA_PID":                "8",
@@ -83,6 +84,7 @@ func TestConfig(t *testing.T) {
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
 	require.Len(t, conf.Admin.AuthorizedDomains, 3)
+	require.Len(t, conf.Admin.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
