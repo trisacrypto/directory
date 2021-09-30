@@ -155,7 +155,9 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	r.RejectReason = rep.RejectReason
 
 	// Mark the certificate request as processing so downstream status checks occur
-	r.Status = models.CertificateRequestState_PROCESSING
+	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "certificate submitted", "automated"); err != nil {
+		return fmt.Errorf("could not update certificate request status: %s", err)
+	}
 	if err = s.db.UpdateCertReq(r); err != nil {
 		return fmt.Errorf("could not update certificate with batch details: %s", err)
 	}
@@ -195,7 +197,9 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 
 	// Step 3: check active - if there is still an active batch then delay
 	if proc.Active > 0 {
-		r.Status = models.CertificateRequestState_PROCESSING
+		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "awaiting batch processing", "automated"); err != nil {
+			return fmt.Errorf("could not update certificate request status: %s", err)
+		}
 		if err = s.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
@@ -221,11 +225,15 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 			// and do not continue processing the certificate request
 			if r.RejectReason != "" || r.BatchStatus == sectigo.BatchStatusRejected {
 				// Assume the certificate was rejected
-				r.Status = models.CertificateRequestState_CR_REJECTED
+				if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "certificate request rejected", "automated"); err != nil {
+					return fmt.Errorf("could not update certificate request status: %s", err)
+				}
 				logctx.Warn().Msg("certificate request rejected")
 			} else {
 				// Assume the certificate errored and wasn't rejected
-				r.Status = models.CertificateRequestState_CR_ERRORED
+				if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_ERRORED, "certificate request errored", "automated"); err != nil {
+					return fmt.Errorf("could not update certificate request status: %s", err)
+				}
 				logctx.Warn().Msg("certificate request errored")
 			}
 
@@ -243,7 +251,9 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 		// this ensures that we issue a CRITICAL severity without stopping the server.
 		log.WithLevel(zerolog.FatalLevel).Str("status", info.Status).Msg("unhandled sectigo state")
-		r.Status = models.CertificateRequestState_PROCESSING
+		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "unhandled sectigo state", "automated"); err != nil {
+			return fmt.Errorf("could not update certificate request status: %s", err)
+		}
 		if err = s.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
@@ -251,7 +261,9 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	}
 
 	// Step 6: Mark the status as ready for download!
-	r.Status = models.CertificateRequestState_DOWNLOADING
+	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADING, "certificate ready for download", "automated"); err != nil {
+		return fmt.Errorf("could not update certificate request status: %s", err)
+	}
 	if err = s.db.UpdateCertReq(r); err != nil {
 		return fmt.Errorf("could not save updated cert request: %s", err)
 	}
@@ -321,7 +333,10 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Mark as downloaded.
-	r.Status = models.CertificateRequestState_DOWNLOADED
+	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADED, "certificate downloaded", "automated"); err != nil {
+		log.Error().Err(err).Msg("could not update certificate request status")
+		return
+	}
 	if err = s.db.UpdateCertReq(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
@@ -370,6 +385,10 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 	}
 
 	// Mark certificate request as complete.
+	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_COMPLETED, "certificate request complete", "automated"); err != nil {
+		log.Error().Err(err).Msg("could not update certificate request status")
+		return
+	}
 	r.Status = models.CertificateRequestState_COMPLETED
 	if err = s.db.UpdateCertReq(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
