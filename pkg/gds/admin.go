@@ -90,6 +90,9 @@ func (s *Admin) Serve() (err error) {
 		log.Warn().Msg("directory administration service starting in maintenance mode")
 	}
 
+	// Note authorization context
+	log.Debug().Strs("authorized_domains", s.conf.AuthorizedDomains).Strs("allowed_origins", s.conf.AllowOrigins).Msg("authorization context")
+
 	// Listen for TCP requests on the specified address and port
 	log.Info().
 		Str("listen", s.conf.BindAddr).
