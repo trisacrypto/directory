@@ -148,6 +148,9 @@ func (s *Admin) setupRoutes() (err error) {
 	authorize := admin.Authorization(s.tokens)
 	csrf := admin.DoubleCookie()
 
+	// Google Oauth2 Redirect Termination
+	s.router.GET("/oauth2/complete", s.Oauth2Code)
+
 	// Add the v2 API routes
 	v2 := s.router.Group("/v2")
 	{
@@ -987,6 +990,30 @@ func (s *Admin) Status(c *gin.Context) {
 		Status:    serverStatusOK,
 		Timestamp: time.Now(),
 		Version:   pkg.Version(),
+	})
+}
+
+// Oauth2Code is a non-API handler that the server uses to display a code at the end of
+// a 3-legged OAuth2 session. The redirect is required for Google authentication on the
+// command line. An HTML page with a code is rendered and the user must type this code
+// into the command line in order to get a token to begin the Authenticate process.
+func (s *Admin) Oauth2Code(c *gin.Context) {
+	in := new(admin.Oauth2Code)
+	if err := c.BindQuery(in); err != nil {
+		log.Error().Err(err).Msg("could not get oauth2 termination parameters")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("could not understand oauth2 request params"))
+		return
+	}
+
+	if in.Code == "" {
+		log.Debug().Msg("no oauth2 code in query params")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("could not understand oauth2 request params"))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    in.Code,
+		"message": "copy and paste the code and submit to prompt in CLI",
 	})
 }
 

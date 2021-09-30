@@ -25,6 +25,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/trisacrypto/trisa v0.3.0
 	github.com/urfave/cli v1.22.5
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	google.golang.org/api v0.47.0
 	google.golang.org/genproto v0.0.0-20210517163617-5e0236093d7a
 	google.golang.org/grpc v1.39.0

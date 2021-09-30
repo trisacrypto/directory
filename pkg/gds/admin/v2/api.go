@@ -177,3 +177,14 @@ type ResendReply struct {
 	Sent    int    `json:"sent"`
 	Message string `json:"message"`
 }
+
+//===========================================================================
+// Oauth2 Endpoint
+//===========================================================================
+
+type Oauth2Code struct {
+	State  string `form:"state"`
+	Code   string `form:"code"`
+	Scope  string `form:"scope"`
+	Prompt string `form:"prompt"`
+}

@@ -40,6 +40,9 @@ import (
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/people/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -380,6 +383,13 @@ func main() {
 					Value: 4096,
 				},
 			},
+		},
+		{
+			Name:     "admin:credentials",
+			Usage:    "authenticate with Google to get credentials to login to the Admin API",
+			Category: "admin",
+			Action:   signInWithGoogle,
+			Flags:    []cli.Flag{},
 		},
 	}
 
@@ -1164,6 +1174,42 @@ func generateTokenKey(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
+	return nil
+}
+
+func signInWithGoogle(c *cli.Context) (err error) {
+	ctx := context.Background()
+	creds, err := ioutil.ReadFile("fixtures/credentials.json")
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	config, err := google.ConfigFromJSON(creds, people.UserinfoProfileScope, "openid")
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
+
+	var authCode string
+	if _, err := fmt.Scan(&authCode); err != nil {
+		return cli.NewExitError(fmt.Errorf("unable to read authorization code: %v", err), 1)
+	}
+
+	tks, err := config.Exchange(ctx, authCode)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Printf("%+v\n", tks)
+
+	data, err := json.MarshalIndent(tks, "", "  ")
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Println(string(data))
 	return nil
 }
 
