@@ -365,6 +365,36 @@ func main() {
 			},
 		},
 		{
+			Name:     "register:reissue",
+			Usage:    "create a new certificate request for the VASP",
+			Category: "admin",
+			Action:   registerReissue,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "d, db",
+					Usage:  "dsn to connect to trisa directory storage",
+					EnvVar: "GDS_DATABASE_URL",
+				},
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "VASP ID to lookup registration",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "VASP Name (common name) to lookup registration",
+				},
+				cli.StringFlag{
+					Name:  "r, reason",
+					Usage: "reason for reissuing the certificates",
+				},
+				cli.StringFlag{
+					Name:  "e, email",
+					Usage: "email of user reissuing certs for audit log",
+				},
+			},
+		},
+		{
 			Name:     "admin:tokenkey",
 			Usage:    "generate an RSA token key pair and ksuid for JWT token signing",
 			Category: "admin",
@@ -1073,6 +1103,112 @@ func registerRepair(c *cli.Context) (err error) {
 		fmt.Printf("pkcs12 password: %s\n", password)
 	}
 
+	return nil
+}
+
+func registerReissue(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	vaspID := c.String("id")
+	name := c.String("name")
+	reason := c.String("reason")
+	email := c.String("email")
+
+	// Make sure there is a reason
+	if reason == "" || email == "" {
+		return cli.NewExitError("supply a reason and email of user to reissue the certs", 1)
+	}
+
+	// Lookup VASP in database by ID or by name
+	var vasp *pb.VASP
+	switch {
+	case vaspID != "":
+		if vasp, err = getVASPByID(vaspID); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	case name != "":
+		if vasp, err = getVASPByCommonName(name); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	default:
+		return cli.NewExitError("specify either ID or common name for lookup", 1)
+	}
+
+	// Find the current CertificateRequest for the VASP
+	var certreq *models.CertificateRequest
+	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Update the current CertificateRequest if it exists
+	if certreq != nil {
+		// Check the current certreq status; if it hasn't already been downloaded, then cancel it.
+		if certreq.Status < models.CertificateRequestState_COMPLETED {
+			fmt.Printf("canceling certificate request %s and setting state %s from %s\n", certreq.Id, models.CertificateRequestState_CR_ERRORED, certreq.Status)
+			if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_CR_ERRORED, reason, email); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			certreq.RejectReason = reason
+			certreq.Modified = time.Now().Format(time.RFC3339)
+
+			var data []byte
+			key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
+			if data, err = proto.Marshal(certreq); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+
+			if err = ldb.Put(key, data, nil); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+		} else {
+			fmt.Printf("certificate request %s is in state %s - making no changes\n", certreq.Id, certreq.Status)
+		}
+	}
+
+	// Connect to the SecretManager to create a new PKCS12 Password
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Connect to secret manager
+	var sm *secrets.SecretManager
+	if sm, err = secrets.New(conf.Secrets); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Create a new certificate request for the VASP along with new PKCS12 password
+	password := secrets.CreateToken(16)
+	certreq = &models.CertificateRequest{
+		Id:         uuid.New().String(),
+		Vasp:       vasp.Id,
+		CommonName: vasp.CommonName,
+		Status:     models.CertificateRequestState_INITIALIZED,
+		Created:    time.Now().Format(time.RFC3339),
+	}
+
+	// Make a new secret of type "password"
+	secretType := "password"
+	if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	var data []byte
+	certreq.Modified = time.Now().Format(time.RFC3339)
+	key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
+	if data, err = proto.Marshal(certreq); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	if err = ldb.Put(key, data, nil); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Printf("created new certificate request: %s\n", key)
+	fmt.Printf("pkcs12 password: %s\n", password)
 	return nil
 }
 

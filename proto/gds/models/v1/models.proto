@@ -90,7 +90,7 @@ message AuditLogEntry {
     // Description which can be supplied by the Admin when making a state change
     // (e.g., "resent emails")
     string description = 4;
-    
+
     // Email address of the Admin who made the state change, "automated" if the state
     // change happened automatically
     string source = 5;

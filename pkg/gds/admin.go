@@ -90,6 +90,9 @@ func (s *Admin) Serve() (err error) {
 		log.Warn().Msg("directory administration service starting in maintenance mode")
 	}
 
+	// Note authorization context
+	log.Debug().Strs("authorized_domains", s.conf.AuthorizedDomains).Strs("allowed_origins", s.conf.AllowOrigins).Msg("authorization context")
+
 	// Listen for TCP requests on the specified address and port
 	log.Info().
 		Str("listen", s.conf.BindAddr).
@@ -267,8 +270,11 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 		return fmt.Errorf("claim type %T unparseable", domain)
 	}
 
+	domains = strings.ToLower(strings.TrimSpace(domains))
+
 	// Search the authorized domains, if found return nil
 	for _, authorized := range s.conf.AuthorizedDomains {
+		authorized = strings.ToLower(strings.Trim(strings.TrimSpace(authorized), "\"'"))
 		if domains == authorized {
 			// Found an authorized domain!
 			return nil
