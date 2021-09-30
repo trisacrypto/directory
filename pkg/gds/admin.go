@@ -753,16 +753,34 @@ func (s *Admin) Review(c *gin.Context) {
 		return
 	}
 
+	// Retrieve user claims for access to provided user info
+	var claims *tokens.Claims
+	value, exists := c.Get(admin.UserClaims)
+	if exists && value != nil {
+		var ok bool
+		claims, ok = value.(*tokens.Claims)
+		if !ok {
+			err = fmt.Errorf("claims is an incorrect type, expecting *tokens.Claims found %T", value)
+			log.Error().Err(err).Msg("could not retrieve user claims")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
+			return
+		}
+	} else {
+		log.Error().Err(fmt.Errorf("no user claims in context")).Msg("could not retrieve user claims")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
+		return
+	}
+
 	// Accept or reject the request
 	out = &admin.ReviewReply{}
 	if in.Accept {
-		if out.Message, err = s.acceptRegistration(vasp); err != nil {
+		if out.Message, err = s.acceptRegistration(vasp, claims); err != nil {
 			log.Error().Err(err).Msg("could not accept VASP registration")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to accept VASP registration request"))
 			return
 		}
 	} else {
-		if out.Message, err = s.rejectRegistration(vasp, in.RejectReason); err != nil {
+		if out.Message, err = s.rejectRegistration(vasp, in.RejectReason, claims); err != nil {
 			log.Error().Err(err).Msg("could not reject VASP registration")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to reject VASP registration request"))
 			return
@@ -776,14 +794,13 @@ func (s *Admin) Review(c *gin.Context) {
 }
 
 // Accept the VASP registration and begin the certificate issuance process.
-func (s *Admin) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
+func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg string, err error) {
 	// Change the VASP verification status
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
 	}
 	vasp.VerifiedOn = time.Now().Format(time.RFC3339)
-	// TODO: Replace "email" in source parameter with user email address.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REVIEWED, "registration request received", "email"); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REVIEWED, "registration request received", claims.Email); err != nil {
 		return "", err
 	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
@@ -831,13 +848,12 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP) (msg string, err error) {
 }
 
 // Reject the VASP registration and notify the contacts of the result.
-func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string) (msg string, err error) {
+func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.Claims) (msg string, err error) {
 	// Change the VASP verification status
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
 	}
-	// TODO: Replace "email" in source parameter with user email address.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REJECTED, "registration rejected", "email"); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REJECTED, "registration rejected", claims.Email); err != nil {
 		return "", err
 	}
 	if err = s.db.UpdateVASP(vasp); err != nil {
