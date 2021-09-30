@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -42,6 +43,27 @@ func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 	if vasp.Extra, err = anypb.New(extra); err != nil {
 		return err
 	}
+	return nil
+}
+
+// UpdateVerificationStatus changes the verification state of a VASP and appends a new
+// entry to the audit log on the extra.
+func UpdateVerificationStatus(vasp *pb.VASP, state pb.VerificationState, description string, source string) (err error) {
+	// Append a new entry to the audit log.
+	entry := &AuditLogEntry{
+		Timestamp:     time.Now().Format(time.RFC3339),
+		PreviousState: vasp.VerificationStatus,
+		CurrentState:  state,
+		Description:   description,
+		Source:        source,
+	}
+	if err := AppendAuditLog(vasp, entry); err != nil {
+		return err
+	}
+
+	// Set the new state on the VASP.
+	vasp.VerificationStatus = state
+
 	return nil
 }
 

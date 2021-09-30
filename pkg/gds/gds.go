@@ -113,8 +113,12 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		VaspCategories:      in.VaspCategories,
 		EstablishedOn:       in.EstablishedOn,
 		Trixo:               in.Trixo,
-		VerificationStatus:  pb.VerificationState_SUBMITTED,
+		VerificationStatus:  pb.VerificationState_NO_VERIFICATION,
 		Version:             &pb.Version{Version: 1},
+	}
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request recevied", "automated"); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
 
 	// Compute the common name from the TRISA endpoint if not specified
@@ -437,7 +441,10 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	// Since we have one successful email verification at this point, begin the
 	// registration review process by sending an email to the TRISA admins.
 	// Step 1: mark the VASP as email verified and create an admin token.
-	vasp.VerificationStatus = pb.VerificationState_EMAIL_VERIFIED
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", "automated"); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	}
 
 	// Create verification token for admin and update database
 	// TODO: replace with actual authentication
@@ -464,7 +471,10 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	}
 
 	// Step 3: if the review email has been successfully sent, mark as pending review.
-	vasp.VerificationStatus = pb.VerificationState_PENDING_REVIEW
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_PENDING_REVIEW, "review email sent", "automated"); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	}
 
 	// Save the VASP and newly created certificate request
 	if err = s.db.UpdateVASP(vasp); err != nil {
