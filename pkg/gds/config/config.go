@@ -43,6 +43,7 @@ type AdminConfig struct {
 	Mode              string   `split_words:"true" default:"release"`
 	Audience          string   `split_words:"true"`
 	AuthorizedDomains []string `split_words:"true"`
+	AllowOrigins      []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem

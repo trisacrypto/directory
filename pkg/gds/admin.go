@@ -135,9 +135,8 @@ func (s *Admin) setupRoutes() (err error) {
 	s.router.Use(s.Available())
 
 	// Add CORS configuration
-	// TODO: configure origins from the environment rather than hard-coding
 	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     s.conf.AllowOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN"},
 		AllowCredentials: true,
