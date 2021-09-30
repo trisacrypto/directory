@@ -261,6 +261,14 @@ func main() {
 			},
 		},
 		{
+			Name:     "admin:timeline",
+			Usage:    "request a timeline of VASP state changes",
+			Category: "admin",
+			Action:   adminTimeline,
+			Before:   initClient,
+			Flags:    []cli.Flag{},
+		},
+		{
 			Name:     "admin:status",
 			Usage:    "perform a health check against the admin API",
 			Category: "admin",
@@ -612,6 +620,18 @@ func resend(c *cli.Context) (err error) {
 
 	var rep *admin.ResendReply
 	if rep, err = adminClient.Resend(ctx, req); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminTimeline(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var rep *admin.TimelineReply
+	if rep, err = adminClient.Timeline(ctx); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

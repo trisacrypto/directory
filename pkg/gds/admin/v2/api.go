@@ -20,6 +20,7 @@ type DirectoryAdministrationClient interface {
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
+	Timeline(ctx context.Context) (out *TimelineReply, err error)
 }
 
 //===========================================================================
@@ -176,4 +177,16 @@ type ResendRequest struct {
 type ResendReply struct {
 	Sent    int    `json:"sent"`
 	Message string `json:"message"`
+}
+
+// TimelineRecord contains counts of VASP registration states over a single week.
+type TimelineRecord struct {
+	Week          string         `json:"week"`
+	VASPsCount    int            `json:"vasps_count"`
+	Registrations map[string]int `json:"registrations"`
+}
+
+// TimelineReply returns a list of time series records containing registration counts.
+type TimelineReply struct {
+	Weeks []TimelineRecord `json:"weeks"`
 }

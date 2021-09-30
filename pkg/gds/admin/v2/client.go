@@ -224,6 +224,21 @@ func (s APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply,
 	return out, nil
 }
 
+func (s APIv2) Timeline(ctx context.Context) (out *TimelineReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/timeline", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &TimelineReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 const (
 	userAgent    = "GDS Admin API Client/v2"
 	accept       = "application/json"
