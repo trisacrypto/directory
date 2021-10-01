@@ -25,6 +25,7 @@ const Auth = (state = INIT_STATE, action) => {
                 loading: true
             }
         case AuthActionTypes.LOGIN_USER_SUCCESS:
+            console.log('SUCCESS', action)
             return {
                 user: action.payload,
                 userIsloggedIn: true,
