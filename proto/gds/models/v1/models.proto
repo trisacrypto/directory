@@ -76,7 +76,7 @@ message GDSExtraData {
     // Audit log which records events relevant to a VASP
     repeated AuditLogEntry audit_log = 2;
 
-    //
+    // Record of all the review notes associated with this VASP
     map<string, ReviewNote> review_notes = 3;
 }
 
