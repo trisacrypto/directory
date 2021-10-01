@@ -45,6 +45,20 @@ func TestVASPExtra(t *testing.T) {
 	require.Len(t, auditLog, 1)
 	require.True(t, proto.Equal(entry, auditLog[0]))
 
+	// Attempt to create a review note
+	err = CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	require.NoError(t, err)
+
+	// Should be able to fetch the note
+	notes, err := GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 1)
+	require.Equal(t, "boats", notes["boats"].Id)
+	require.Equal(t, "", notes["boats"].Modified)
+	require.Equal(t, "pontoon@boatz.com", notes["boats"].Author)
+	require.Equal(t, "", notes["boats"].Editor)
+	require.Equal(t, "boats are cool", notes["boats"].Text)
+
 	// Verification token should be unchanged
 	token, err = GetAdminVerificationToken(vasp)
 	require.NoError(t, err)
@@ -64,6 +78,16 @@ func TestVASPExtra(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, auditLog, 1)
 	require.True(t, proto.Equal(entry, auditLog[0]))
+
+	// Review notes should be unchanged
+	notes, err = GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 1)
+	require.Equal(t, "boats", notes["boats"].Id)
+	require.Equal(t, "", notes["boats"].Modified)
+	require.Equal(t, "pontoon@boatz.com", notes["boats"].Author)
+	require.Equal(t, "", notes["boats"].Editor)
+	require.Equal(t, "boats are cool", notes["boats"].Text)
 }
 
 func TestAuditLog(t *testing.T) {
@@ -139,6 +163,80 @@ func TestAuditLog(t *testing.T) {
 	require.True(t, proto.Equal(entry, auditLog[0]))
 	require.True(t, proto.Equal(expected2, auditLog[1]))
 	require.True(t, proto.Equal(entry3, auditLog[2]))
+}
+
+func TestReviewNotes(t *testing.T) {
+	// Test review note operations (retrieve, create, update, delete)
+	vasp := &pb.VASP{}
+
+	// Should initially be no review notes
+	notes, err := GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 0)
+
+	// Attempt to update a note from an empty map
+	err = UpdateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	require.Error(t, err)
+
+	// Attempt to update a note from an empty map
+	err = DeleteReviewNote(vasp, "boats")
+	require.Error(t, err)
+
+	// Create a new note
+	err = CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	require.NoError(t, err)
+
+	notes, err = GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 1)
+	require.Equal(t, "boats", notes["boats"].Id)
+	require.Equal(t, "", notes["boats"].Modified)
+	require.Equal(t, "pontoon@boatz.com", notes["boats"].Author)
+	require.Equal(t, "", notes["boats"].Editor)
+	require.Equal(t, "boats are cool", notes["boats"].Text)
+
+	// Attempt to update a note that doesn't exist
+	err = UpdateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
+	require.Error(t, err)
+
+	// Attempt to delete a note that doesn't exist
+	err = DeleteReviewNote(vasp, "jetskis")
+	require.Error(t, err)
+
+	// Create a new note
+	err = CreateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
+	require.NoError(t, err)
+
+	notes, err = GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 2)
+	require.Equal(t, "boats are cool", notes["boats"].Text)
+	require.Equal(t, "jetskis are fun", notes["jetskis"].Text)
+
+	// Update an existing note
+	expectedTime := time.Now()
+	err = UpdateReviewNote(vasp, "jetskis", "pontoon@boatz.com", "jetskis are loud")
+	require.NoError(t, err)
+
+	// Editor and modified should be updated
+	notes, err = GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 2)
+	require.Equal(t, "boats are cool", notes["boats"].Text)
+	require.Equal(t, "jetskis are loud", notes["jetskis"].Text)
+	require.Equal(t, "pontoon@boatz.com", notes["jetskis"].Editor)
+	modifiedTime, err := time.Parse(time.RFC3339, notes["jetskis"].Created)
+	require.NoError(t, err)
+	require.LessOrEqual(t, modifiedTime.Sub(expectedTime), time.Minute)
+
+	// Delete an existing note
+	err = DeleteReviewNote(vasp, "boats")
+	require.NoError(t, err)
+
+	notes, err = GetReviewNotes(vasp)
+	require.NoError(t, err)
+	require.Len(t, notes, 1)
+	require.Equal(t, "jetskis are loud", notes["jetskis"].Text)
 }
 
 func TestContactExtra(t *testing.T) {

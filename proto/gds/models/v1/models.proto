@@ -75,6 +75,9 @@ message GDSExtraData {
 
     // Audit log which records events relevant to a VASP
     repeated AuditLogEntry audit_log = 2;
+
+    // Record of all the review notes associated with this VASP
+    map<string, ReviewNote> review_notes = 3;
 }
 
 // AuditLogEntry contains information about an event relevant to a VASP
@@ -94,6 +97,22 @@ message AuditLogEntry {
     // Email address of the Admin who made the state change, "automated" if the state
     // change happened automatically
     string source = 5;
+}
+
+message ReviewNote {
+    // Unique identifier of the note
+    string id = 1;
+
+    // RFC3339 timestamps representing when the note was created, modified
+    string created = 2;
+    string modified = 3;
+
+    // Email address of the author and the last editor
+    string author = 4;
+    string editor = 5;
+
+    // Actual text in the note
+    string text = 6;
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.
