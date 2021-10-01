@@ -1020,14 +1020,17 @@ func (s *Admin) Timeline(c *gin.Context) {
 		}
 
 		// Get VASP audit log
-		if auditLog, err := models.GetAuditLog(vasp); err != nil {
+		var auditLog []*models.AuditLogEntry
+		var err error
+		if auditLog, err = models.GetAuditLog(vasp); err != nil {
 			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
 			continue
 		}
 
 		// Iterate over VASP audit log and count registrations
 		for _, entry := range auditLog {
-			if timestamp, err := time.Parse(time.RFC3339, entry.Timestamp); err != nil {
+			var timestamp time.Time
+			if timestamp, err = time.Parse(time.RFC3339, entry.Timestamp); err != nil {
 				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
 				continue
 			}
