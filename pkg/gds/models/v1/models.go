@@ -176,7 +176,9 @@ func CreateReviewNote(vasp *pb.VASP, id string, author string, text string) (err
 		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
 			return fmt.Errorf("could not deserialize previous extra: %s", err)
 		}
-	} else {
+	}
+
+	if extra.ReviewNotes == nil {
 		extra.ReviewNotes = make(map[string]*ReviewNote)
 	}
 
@@ -208,7 +210,7 @@ func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (err
 	}
 
 	// Update is invalid if the extra data doesn't exist.
-	if vasp.Extra != nil {
+	if vasp.Extra == nil {
 		return errors.New("extra does not exist")
 	}
 
@@ -246,7 +248,7 @@ func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
 	}
 
 	// Delete is invalid if the extra data doesn't exist.
-	if vasp.Extra != nil {
+	if vasp.Extra == nil {
 		return errors.New("extra does not exist")
 	}
 
