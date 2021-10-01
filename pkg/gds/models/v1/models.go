@@ -148,6 +148,129 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 	return nil
 }
 
+// GetReviewNotes returns all of the review notes for a VASP as a map.
+func GetReviewNotes(vasp *pb.VASP) (_ map[string]*ReviewNote, err error) {
+	// If the extra data is nil, return nil (no review notes).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.ReviewNotes, nil
+}
+
+// CreateReviewNote creates a note on the VASP given the specified note id.
+func CreateReviewNote(vasp *pb.VASP, id string, author string, text string) (err error) {
+	// Validate note id.
+	if id == "" {
+		return errors.New("must specify a valid note id")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.ReviewNotes = make(map[string]*ReviewNote)
+	}
+
+	if _, exists := extra.ReviewNotes[id]; exists {
+		return fmt.Errorf("a note already exists with id: %s", id)
+	}
+
+	// Create the new note.
+	extra.ReviewNotes[id] = &ReviewNote{
+		Id:      id,
+		Created: time.Now().Format(time.RFC3339),
+		Author:  author,
+		Text:    text,
+	}
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateReviewNote updates a specified note on the VASP.
+func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (err error) {
+	// Validate note id.
+	if id == "" {
+		return errors.New("must specify a valid note id")
+	}
+
+	// Update is invalid if the extra data doesn't exist.
+	if vasp.Extra != nil {
+		return errors.New("extra does not exist")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return fmt.Errorf("could not deserialize previous extra: %s", err)
+	}
+
+	// Get the specified note.
+	var note *ReviewNote
+	var exists bool
+	if note, exists = extra.ReviewNotes[id]; !exists {
+		return fmt.Errorf("could not find note with id: %s", id)
+	}
+
+	// Update the note.
+	note.Modified = time.Now().Format(time.RFC3339)
+	note.Editor = editor
+	note.Text = text
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteReviewNote deletes a specified note on the VASP.
+func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
+	// Validate note id.
+	if id == "" {
+		return errors.New("must specify a valid note id")
+	}
+
+	// Delete is invalid if the extra data doesn't exist.
+	if vasp.Extra != nil {
+		return errors.New("extra does not exist")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return fmt.Errorf("could not deserialize previous extra: %s", err)
+	}
+
+	if _, exists := extra.ReviewNotes[id]; !exists {
+		return fmt.Errorf("could not find note with id: %s", id)
+	}
+
+	// Delete the note
+	delete(extra.ReviewNotes, id)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetContactVerification token and verified status from the extra data field on the Contact.
 func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 	// Return zero-valued defaults with no error if extra is nil.
