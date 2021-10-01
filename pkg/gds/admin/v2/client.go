@@ -224,15 +224,20 @@ func (s APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply,
 	return out, nil
 }
 
-func (s APIv2) Timeline(ctx context.Context) (out *TimelineReply, err error) {
+func (s APIv2) ReviewTimeline(ctx context.Context, in *ReviewTimelineParams) (out *ReviewTimelineReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/timeline", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/reviews", nil, &params); err != nil {
 		return nil, err
 	}
 
 	// Execute the request and get a response
-	out = &TimelineReply{}
+	out = &ReviewTimelineReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

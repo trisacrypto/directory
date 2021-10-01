@@ -30,6 +30,8 @@ var (
 	adminClient admin.DirectoryAdministrationClient
 )
 
+const weekFormat = "YYYY-MM-DD"
+
 func main() {
 	// Load the dotenv file if it exists
 	godotenv.Load()
@@ -261,12 +263,23 @@ func main() {
 			},
 		},
 		{
-			Name:     "admin:timeline",
+			Name:     "admin:reviews",
 			Usage:    "request a timeline of VASP state changes",
 			Category: "admin",
-			Action:   adminTimeline,
+			Action:   adminReviewTimeline,
 			Before:   initClient,
-			Flags:    []cli.Flag{},
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "s, start",
+					Usage: "start date (YYYY-MM-DD) for the review timeline",
+					Value: time.Now().Add(time.Duration(-52) * time.Hour * 24 * 7).Format(weekFormat),
+				},
+				cli.StringFlag{
+					Name:  "e, end",
+					Usage: "end date (YYYY-MM-DD) for the review timeline",
+					Value: time.Now().Format(weekFormat),
+				},
+			},
 		},
 		{
 			Name:     "admin:status",
@@ -626,12 +639,25 @@ func resend(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
-func adminTimeline(c *cli.Context) (err error) {
+func adminReviewTimeline(c *cli.Context) (err error) {
+	params := &admin.ReviewTimelineParams{
+		Start: c.String("start"),
+		End:   c.String("end"),
+	}
+
+	// Validate start and end dates
+	if _, err = time.Parse(weekFormat, params.Start); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	if _, err = time.Parse(weekFormat, params.End); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	var rep *admin.TimelineReply
-	if rep, err = adminClient.Timeline(ctx); err != nil {
+	var rep *admin.ReviewTimelineReply
+	if rep, err = adminClient.ReviewTimeline(ctx, params); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

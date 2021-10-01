@@ -448,9 +448,13 @@ func TestResend(t *testing.T) {
 	require.Equal(t, fixture.Message, out.Message)
 }
 
-func TestTimeline(t *testing.T) {
-	fixture := &admin.TimelineReply{
-		Weeks: []admin.TimelineRecord{
+func TestReviewTimeline(t *testing.T) {
+	fixture_params := &admin.ReviewTimelineParams{
+		Start: "2020-12-28",
+		End:   "2021-01-04",
+	}
+	fixture_reply := &admin.ReviewTimelineReply{
+		Weeks: []admin.ReviewTimelineRecord{
 			{
 				Week:       "2020-12-28",
 				VASPsCount: 20,
@@ -487,11 +491,11 @@ func TestTimeline(t *testing.T) {
 	// Create test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v2/timeline", r.URL.Path)
+		require.Equal(t, "/v2/reviews", r.URL.Path)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(fixture)
+		json.NewEncoder(w).Encode(fixture_reply)
 	}))
 	defer ts.Close()
 
@@ -499,7 +503,7 @@ func TestTimeline(t *testing.T) {
 	client, err := admin.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.Timeline(context.TODO())
+	out, err := client.ReviewTimeline(context.TODO(), fixture_params)
 	require.NoError(t, err)
-	require.Equal(t, fixture.Weeks, out.Weeks)
+	require.Equal(t, fixture_reply.Weeks, out.Weeks)
 }

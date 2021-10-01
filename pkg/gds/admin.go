@@ -162,7 +162,7 @@ func (s *Admin) setupRoutes() (err error) {
 		// Information routes (must be authenticated)
 		v2.GET("/summary", authorize, s.Summary)
 		v2.GET("/autocomplete", authorize, s.Autocomplete)
-		v2.GET("/timeline", authorize, s.Timeline)
+		v2.GET("/reviews", authorize, s.ReviewTimeline)
 
 		// VASP routes all must be authenticated (some CSRF protection required)
 		vasps := v2.Group("/vasps", authorize)
@@ -977,27 +977,70 @@ func (s *Admin) Resend(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// Timeline returns a list of time series records containing registration state counts by week.
-func (s *Admin) Timeline(c *gin.Context) {
+// ReviewTimeline returns a list of time series records containing registration state counts by week.
+func (s *Admin) ReviewTimeline(c *gin.Context) {
 	const timeFormat = "YYYY-MM-DD"
-	// TODO: Make start date configurable in the request
-	startTime := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.Local)
-	endTime := time.Now()
+	var (
+		err          error
+		in           *admin.ReviewTimelineParams
+		out          *admin.ReviewTimelineReply
+		startTime    time.Time
+		endTime      time.Time
+		earliestTime time.Time
+		weekTime     time.Time
+		numWeeks     int
+		vaspCounts   []map[string]bool
+	)
+
+	// Get request parameters
+	in = new(admin.ReviewTimelineParams)
+	if err = c.ShouldBindQuery(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Default value for start date
+	earliestTime = time.Date(2020, time.January, 1, 0, 0, 0, 0, time.Local)
+	if in.Start != "" {
+		// Parse start date
+		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
+			log.Warn().Err(err).Msg("could not parse start date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
+		}
+		// Hard limit on the earliest date to avoid making the server do unnecessary work
+		if startTime.Before(earliestTime) {
+			startTime = earliestTime
+		}
+	} else {
+		startTime = earliestTime
+	}
+
+	// Default value for end date
+	if in.End != "" {
+		// Parse end date
+		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
+			log.Warn().Err(err).Msg("could not parse end date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
+		}
+	} else {
+		endTime = time.Now()
+	}
 	if startTime.After(endTime) {
 		log.Warn().Err(fmt.Errorf("start date after end date")).Msg("invalid timeline request: start date can't be after current date")
-		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", startTime.Format(time.RFC3339))))
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
 	}
 
 	// Initialize required counting structs
-	numWeeks := int(endTime.Sub(startTime).Hours()/24/7) + 1
-	vaspCounts := make([]map[string]bool, 0, numWeeks)
-	out := &admin.TimelineReply{
-		Weeks: make([]admin.TimelineRecord, 0, numWeeks),
+	numWeeks = int(endTime.Sub(startTime).Hours()/24/7) + 1
+	vaspCounts = make([]map[string]bool, 0, numWeeks)
+	out = &admin.ReviewTimelineReply{
+		Weeks: make([]admin.ReviewTimelineRecord, 0, numWeeks),
 	}
-	weekTime := startTime
+	weekTime = startTime
 	for i := 0; i < numWeeks; i++ {
 		weekDate := weekTime.Format(timeFormat)
-		record := admin.TimelineRecord{
+		record := admin.ReviewTimelineRecord{
 			Week:          weekDate,
 			VASPsCount:    0,
 			Registrations: make(map[string]int),
@@ -1024,7 +1067,6 @@ func (s *Admin) Timeline(c *gin.Context) {
 
 		// Get VASP audit log
 		var auditLog []*models.AuditLogEntry
-		var err error
 		if auditLog, err = models.GetAuditLog(vasp); err != nil {
 			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
 			continue
