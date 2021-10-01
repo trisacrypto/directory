@@ -1,9 +1,13 @@
 import axios from 'axios';
 import { defaultEndpointPrefix } from '../../utils';
+import jwtDecode from 'jwt-decode'
 
-// content type
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.baseURL = defaultEndpointPrefix();
+
+// withCredentials ensures that axios fetch includes `HttpOnly` cookies in the request for CSRF protectioin
+axios.defaults.withCredentials = true
+
 
 axios.interceptors.response.use(
     (response) => {
@@ -37,16 +41,23 @@ axios.interceptors.response.use(
     }
 );
 
-const AUTH_SESSION_KEY = 'hyper_user';
-
 /**
  * Sets the default authorization
  * @param {*} token
  */
 const setAuthorization = (token) => {
-    if (token) axios.defaults.headers.common['Authorization'] = 'JWT ' + token;
+    if (token) axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     else delete axios.defaults.headers.common['Authorization'];
 };
+
+const setCookie = (cookie) => {
+    if (cookie) {
+        axios.defaults.headers['X-CSRF-Token'] = cookie
+    }
+}
+
+const AUTH_SESSION_KEY = '__SESSION_TOKEN__';
+
 
 const getUserFromSession = () => {
     const user = sessionStorage.getItem(AUTH_SESSION_KEY);
@@ -167,6 +178,23 @@ class APICore {
         return axios.patch(url, formData, config);
     };
 
+    isUserAuthenticated = () => {
+        const user = this.getLoggedInUser();
+        if (!user) {
+            return false;
+        }
+
+        const decodedAccessToken = jwtDecode(user.access_token);
+        console.log(jwtDecode(user.refresh_token))
+        const currentTime = Date.now() / 1000;
+        if (decodedAccessToken.exp < currentTime) {
+            console.warn('access token expired');
+            return false;
+        } else {
+            return true;
+        }
+    };
+
     setLoggedInUser = (session) => {
         if (session) sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
         else {
@@ -194,11 +222,10 @@ class APICore {
 Check if token available in session
 */
 let user = getUserFromSession();
-if (user) {
-    const { token } = user;
-    if (token) {
-        setAuthorization(token);
+if (user.access_token) {
+    if (user.access_token) {
+        setAuthorization(user.access_token);
     }
 }
 
-export { APICore, setAuthorization };
+export { APICore, setAuthorization, setCookie };
