@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -989,23 +988,27 @@ func (s *Admin) Timeline(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", startTime.Format(time.RFC3339))))
 	}
 
-	// Initialize the record structs
-	type weekRecord struct {
-		VASPs         map[string]bool
-		Registrations map[string]int
-	}
+	// Initialize required counting structs
 	numWeeks := int(endTime.Sub(startTime).Hours()/24/7) + 1
-	weeks := make([]*weekRecord, 0, numWeeks)
+	vaspCounts := make([]map[string]bool, 0, numWeeks)
+	out := &admin.TimelineReply{
+		Weeks: make([]admin.TimelineRecord, 0, numWeeks),
+	}
+	weekTime := startTime
 	for i := 0; i < numWeeks; i++ {
-		record := &weekRecord{
-			VASPs:         make(map[string]bool),
+		weekDate := weekTime.Format(timeFormat)
+		record := admin.TimelineRecord{
+			Week:          weekDate,
+			VASPsCount:    0,
 			Registrations: make(map[string]int),
 		}
 		var s int32
 		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
 			record.Registrations[pb.VerificationState_name[s]] = 0
 		}
-		weeks[i] = record
+		out.Weeks[i] = record
+		vaspCounts[i] = make(map[string]bool)
+		weekTime = weekTime.Add(time.Hour * 24 * 7)
 	}
 
 	// Iterate over the VASPs and count registrations
@@ -1036,11 +1039,16 @@ func (s *Admin) Timeline(c *gin.Context) {
 			}
 			weekNum := int(timestamp.Sub(startTime).Hours() / 24 / 7)
 
-			// Mark VASP if we haven't seen it before
-			if _, exists := weeks[weekNum].VASPs[vasp.Id]; !exists {
-				weeks[weekNum].VASPs[vasp.Id] = true
+			// Count VASP if we haven't seen it before
+			if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
+				vaspCounts[weekNum][vasp.Id] = true
+				out.Weeks[weekNum].VASPsCount++
 			}
-			weeks[weekNum].Registrations[vasp.VerificationStatus.String()]++
+
+			// Count registration state if it changed
+			if entry.PreviousState != entry.CurrentState {
+				out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
+			}
 		}
 	}
 
@@ -1050,27 +1058,6 @@ func (s *Admin) Timeline(c *gin.Context) {
 		return
 	}
 
-	// Construct timeline reply
-	out := &admin.TimelineReply{
-		Weeks: make([]admin.TimelineRecord, 0, numWeeks),
-	}
-	weekTime := startTime
-	for i := 0; i < numWeeks; i++ {
-		weekDate := weekTime.Format(timeFormat)
-		out.Weeks = append(out.Weeks, admin.TimelineRecord{
-			Week:          weekDate,
-			VASPsCount:    len(weeks[i].VASPs),
-			Registrations: weeks[i].Registrations,
-		})
-		weekTime = weekTime.Add(time.Hour * 24 * 7)
-	}
-
-	// Sort output by week
-	sort.Slice(out.Weeks, func(i, j int) bool {
-		first, _ := time.Parse(timeFormat, out.Weeks[i].Week)
-		second, _ := time.Parse(timeFormat, out.Weeks[j].Week)
-		return first.Before(second)
-	})
 	c.JSON(http.StatusOK, out)
 }
 
