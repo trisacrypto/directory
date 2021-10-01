@@ -227,11 +227,9 @@ class APICore {
 /*
 Check if token available in session
 */
-let user = getUserFromSession();
-if (user) {
-    if (user.access_token) {
-        setAuthorization(user.access_token);
-    }
+const user = getUserFromSession();
+if (user && user.access_token) {
+    setAuthorization(user.access_token);
 }
 
 export { APICore, setAuthorization, setCookie };
