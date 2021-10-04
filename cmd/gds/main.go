@@ -30,7 +30,8 @@ var (
 	adminClient admin.DirectoryAdministrationClient
 )
 
-const weekFormat = "YYYY-MM-DD"
+// Format for YYYY-MM-DD time representation
+const weekFormat = "2006-01-02"
 
 func main() {
 	// Load the dotenv file if it exists

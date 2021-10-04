@@ -1009,7 +1009,8 @@ func (s *Admin) Resend(c *gin.Context) {
 
 // ReviewTimeline returns a list of time series records containing registration state counts by week.
 func (s *Admin) ReviewTimeline(c *gin.Context) {
-	const timeFormat = "YYYY-MM-DD"
+	// Go needs this constant to determine the time format
+	const timeFormat = "2006-01-02"
 	var (
 		err          error
 		in           *admin.ReviewTimelineParams
