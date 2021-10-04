@@ -197,3 +197,21 @@ type ResendReply struct {
 	Sent    int    `json:"sent"`
 	Message string `json:"message"`
 }
+
+// ReviewTimelineParams contains the start and end date for the requested timeline.
+type ReviewTimelineParams struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+// ReviewTimelineRecord contains counts of VASP registration states over a single week.
+type ReviewTimelineRecord struct {
+	Week          string         `json:"week"`
+	VASPsCount    int            `json:"vasps_count"`
+	Registrations map[string]int `json:"registrations"`
+}
+
+// ReviewTimelineReply returns a list of time series records containing registration counts.
+type ReviewTimelineReply struct {
+	Weeks []ReviewTimelineRecord `json:"weeks"`
+}
