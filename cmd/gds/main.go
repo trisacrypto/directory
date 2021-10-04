@@ -89,7 +89,7 @@ func main() {
 			Usage:    "submit a VASP registration review response",
 			Category: "admin",
 			Action:   review,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -232,7 +232,7 @@ func main() {
 			Usage:    "request emails be resent in case of delivery errors",
 			Category: "admin",
 			Action:   resend,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -265,7 +265,7 @@ func main() {
 			Usage:    "perform a health check against the admin API",
 			Category: "admin",
 			Action:   adminStatus,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags:    []cli.Flag{},
 		},
 		{
@@ -273,7 +273,7 @@ func main() {
 			Usage:    "collect aggregate information about current GDS status",
 			Category: "admin",
 			Action:   adminSummary,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags:    []cli.Flag{},
 		},
 		{
@@ -281,7 +281,7 @@ func main() {
 			Usage:    "get autocomplete names for the admin searchbar",
 			Category: "admin",
 			Action:   adminAutocomplete,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags:    []cli.Flag{},
 		},
 		{
@@ -289,7 +289,7 @@ func main() {
 			Usage:    "list all VASPs summary detail",
 			Category: "admin",
 			Action:   adminListVASPs,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.IntFlag{
 					Name:  "p, page",
@@ -307,10 +307,10 @@ func main() {
 		},
 		{
 			Name:     "admin:detail",
-			Usage:    "retrieve a VASP detail recrod by id",
+			Usage:    "retrieve a VASP detail record by id",
 			Category: "admin",
 			Action:   adminRetrieveVASPs,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -704,9 +704,17 @@ func initClient(c *cli.Context) (err error) {
 		return cli.NewExitError(err, 1)
 	}
 	client = api.NewTRISADirectoryClient(cc)
+	return nil
+}
 
+func initAdminClient(c *cli.Context) (err error) {
 	// Connect the admin client
 	if adminClient, err = admin.New(c.GlobalString("admin-endpoint")); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Attempt to login the admin client
+	if err = adminClient.Login(context.Background()); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 	return nil

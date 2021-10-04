@@ -83,7 +83,7 @@ services:
       context: ../
       dockerfile: ./containers/gds-admin-ui/Dockerfile
       args:
-        REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/v2
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GDS_CLIENT_ID: ${REACT_APP_GDS_CLIENT_ID}
     image: trisa/gds-admin-ui

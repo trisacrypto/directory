@@ -270,11 +270,11 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 		return fmt.Errorf("claim type %T unparseable", domain)
 	}
 
+	// Process the HD domain for string comparison purposes
 	domains = strings.ToLower(strings.TrimSpace(domains))
 
 	// Search the authorized domains, if found return nil
 	for _, authorized := range s.conf.AuthorizedDomains {
-		authorized = strings.ToLower(strings.Trim(strings.TrimSpace(authorized), "\"'"))
 		if domains == authorized {
 			// Found an authorized domain!
 			return nil

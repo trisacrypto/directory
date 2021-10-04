@@ -119,6 +119,11 @@ func New() (_ Config, err error) {
 		return Config{}, err
 	}
 
+	// Preprocess authorized domains
+	for i, domain := range conf.Admin.AuthorizedDomains {
+		conf.Admin.AuthorizedDomains[i] = strings.ToLower(strings.Trim(strings.TrimSpace(domain), "\"'"))
+	}
+
 	conf.processed = true
 	return conf, nil
 }

@@ -161,15 +161,11 @@ func (tm *TokenManager) CreateAccessToken(creds interface{}) (_ *jwt.Token, err 
 		if err = claims.extractClaims(t.(map[string]interface{})); err != nil {
 			return nil, err
 		}
-	case jwt.Token:
-		cc, ok := t.Claims.(*Claims)
-		if !ok {
-			return nil, errors.New("token does not have associated GDS claims")
-		}
-		claims.Domain = cc.Domain
-		claims.Email = cc.Email
-		claims.Name = cc.Name
-		claims.Picture = cc.Picture
+	case *Claims:
+		claims.Domain = t.Domain
+		claims.Email = t.Email
+		claims.Name = t.Name
+		claims.Picture = t.Picture
 	default:
 		return nil, fmt.Errorf("cannot create access token from %T", t)
 	}

@@ -112,6 +112,33 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.Secrets.Testing)
 }
 
+func TestAuthorizedDomainsPreprocessing(t *testing.T) {
+	// Set required environment variables and cleanup after
+	prevEnv := curEnv()
+	t.Cleanup(func() {
+		for key, val := range prevEnv {
+			if val != "" {
+				os.Setenv(key, val)
+			} else {
+				os.Unsetenv(key)
+			}
+		}
+	})
+	setEnv()
+
+	// Set authorized domains to require processing
+	os.Setenv("GDS_ADMIN_AUTHORIZED_DOMAINS", "EXAMPLE.com, spacedout.io ,'quotes.org', 'Abadcombo.TECH")
+
+	conf, err := config.New()
+	require.NoError(t, err)
+
+	require.Len(t, conf.Admin.AuthorizedDomains, 4)
+	require.Equal(t, "example.com", conf.Admin.AuthorizedDomains[0])
+	require.Equal(t, "spacedout.io", conf.Admin.AuthorizedDomains[1])
+	require.Equal(t, "quotes.org", conf.Admin.AuthorizedDomains[2])
+	require.Equal(t, "abadcombo.tech", conf.Admin.AuthorizedDomains[3])
+}
+
 func TestRequiredConfig(t *testing.T) {
 	required := []string{
 		"GDS_DATABASE_URL",
@@ -137,7 +164,7 @@ func TestRequiredConfig(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Admin verification is predicated on it being enabled
-	setEnv("GDS_ADMIN_ENABLED", "true")
+	os.Setenv("GDS_ADMIN_ENABLED", "true")
 
 	// Ensure that we've captured the complete set of required environment variables
 	setEnv(required...)
