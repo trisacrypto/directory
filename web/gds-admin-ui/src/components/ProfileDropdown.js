@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
+import { APICore } from '../helpers/api/apiCore';
 type ProfileDropdownProps = {
     profilePic?: any,
     username: string,
@@ -12,16 +13,19 @@ type ProfileDropdownState = {
     dropdownOpen?: boolean,
 };
 
+const api = new APICore()
+
 const ProfileDropdown = (props: ProfileDropdownProps, state: ProfileDropdownState): React$Element<any> => {
     const profilePic = props.profilePic || null;
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    /*
-     * toggle profile-dropdown
-     */
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
+
+    const handleLogoutClick = () => {
+        api.deleteUserSession()
+    }
 
     return (
         <Dropdown show={dropdownOpen} onToggle={toggleDropdown}>
@@ -53,10 +57,10 @@ const ProfileDropdown = (props: ProfileDropdownProps, state: ProfileDropdownStat
                         <i className={`mdi mdi-launch me-1`}></i>
                         <span>Slack</span>
                     </a>
-                    <Link to="/account/logout" className="dropdown-item notify-item">
+                    <div onClick={handleLogoutClick} className="dropdown-item notify-item" style={{ cursor: 'pointer' }}>
                         <i className={`mdi mdi-logout me-1`}></i>
                         <span>Logout</span>
-                    </Link>
+                    </div>
                 </div>
             </Dropdown.Menu>
         </Dropdown>
