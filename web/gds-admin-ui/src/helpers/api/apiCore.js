@@ -20,14 +20,12 @@ axios.interceptors.response.use(
         if (error && error.response && error.response.status === 404) {
             // window.location.href = '/not-found';
         } else if (error && error.response && error.response.status === 403) {
-            console.log("errr-----", error)
-            setAuthorization(null)
-            window.location.href = '/login'
+            sessionStorage.removeItem(AUTH_SESSION_KEY)
+            window.location.href = '/login';
         } else {
             switch (error.response.status) {
                 case 401:
                     message = 'Invalid credentials';
-                    setAuthorization(null)
                     window.location.href = '/login'
                     break;
                 case 403:
@@ -202,6 +200,7 @@ class APICore {
         }).then(res => {
             this.setLoggedInUser(res.data)
             setAuthorization(res.data.access_token)
+<<<<<<< HEAD
             return true
         }).catch((err) => {
             this.setLoggedInUser(null)
@@ -211,6 +210,14 @@ class APICore {
     }
 
     isUserAuthenticated = async () => {
+=======
+        }).catch((err) => {
+            console.log('[/reauthenticate] error----', err)
+        })
+    }
+
+    isUserAuthenticated = () => {
+>>>>>>> feat: add refresh token
         const user = this.getLoggedInUser();
         if (!user) {
             return false;
@@ -227,17 +234,27 @@ class APICore {
             // The access token is valid -- we could just return true here
             // Alternatively, we could check if we're in that small window of time where we can reauthenticate when the access token is valid:
             if (isValidRefreshToken(user.refresh_token)) {
+<<<<<<< HEAD
                 await this.reauthenticate(payload)
+=======
+                this.reauthenticate(payload)
+>>>>>>> feat: add refresh token
             }
             return true;
         } else {
             // access token is invalid, check if we can reauthenticate
             if (isValidRefreshToken(user.refresh_token)) {
+<<<<<<< HEAD
                 await this.reauthenticate(payload)
             }
             // neither the access nor the refresh token is valid any longer
             this.setLoggedInUser(null)
             setAuthorization(null)
+=======
+                this.reauthenticate(payload)
+            }
+            // neither the access nor the refresh token is valid any longer
+>>>>>>> feat: add refresh token
             return false;
         }
     };
