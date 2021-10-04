@@ -1063,9 +1063,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 
 	// Initialize required counting structs
 	numWeeks = int(endTime.Sub(startTime).Hours()/24/7) + 1
-	vaspCounts = make([]map[string]bool, numWeeks, numWeeks)
+	vaspCounts = make([]map[string]bool, numWeeks)
 	out = &admin.ReviewTimelineReply{
-		Weeks: make([]admin.ReviewTimelineRecord, numWeeks, numWeeks),
+		Weeks: make([]admin.ReviewTimelineRecord, numWeeks),
 	}
 	weekTime = startTime
 	for i := 0; i < numWeeks; i++ {
