@@ -216,13 +216,19 @@ class APICore {
             this.setLoggedInUser({ token, ...user, ...modifiedUser });
         }
     };
+
+    deleteUserSession = () => {
+        sessionStorage.removeItem(AUTH_SESSION_KEY)
+        setAuthorization(null)
+        window.location.href = '/login'
+    }
 }
 
 /*
 Check if token available in session
 */
 let user = getUserFromSession();
-if (user.access_token) {
+if (user) {
     if (user.access_token) {
         setAuthorization(user.access_token);
     }
