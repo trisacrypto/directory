@@ -1,4 +1,4 @@
-import { FetchCertificatesActionTypes, FetchVaspsActionTypes, FetchSummaryActionTypes, FetchRegistrationsReviewsActionTypes } from "./constants";
+import { FetchCertificatesActionTypes, FetchVaspsActionTypes, FetchSummaryActionTypes, FetchRegistrationsReviewsActionTypes, FetchPendingVaspsActionTypes } from "./constants";
 
 type Action = { type: string, payload: {} | string };
 
@@ -68,6 +68,11 @@ const fetchRegistrationsReviewsError = (actionType: string, error: any): Action 
     }
 })
 
+const fetchPendingVasps = (payload = {}): Action => ({
+    type: FetchPendingVaspsActionTypes.FETCH_PENDING_VASPS,
+    payload,
+});
+
 export {
-    fetchVasps, fetchVaspsApiResponseError, fetchVaspsApiResponseSuccess, fetchCertificates, fetchCertificateApiResponseError, fetchCertificateApiResponseSuccess, fetchSummaryApiResponseError, fetchSummaryApiResponseSuccess, fetchSummary, fetchRegistrationsReviewsError, fetchRegistrationsReviewsSuccess, fecthRegistrationsReviews
+    fetchVasps, fetchVaspsApiResponseError, fetchPendingVasps, fetchVaspsApiResponseSuccess, fetchCertificates, fetchCertificateApiResponseError, fetchCertificateApiResponseSuccess, fetchSummaryApiResponseError, fetchSummaryApiResponseSuccess, fetchSummary, fetchRegistrationsReviewsError, fetchRegistrationsReviewsSuccess, fecthRegistrationsReviews
 }
