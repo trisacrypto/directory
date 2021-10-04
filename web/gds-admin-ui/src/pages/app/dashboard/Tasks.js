@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
-import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom'
 import dayjs from 'dayjs';
 import ResendEmail from '../../../components/ResendEmail';
@@ -14,11 +13,7 @@ dayjs.extend(relativeTime)
 
 
 
-const Tasks = () => {
-    const { vasps } = useSelector((state) => ({
-        vasps: state.Vasps.data,
-        certificates: state.Certificates.data
-    }));
+const Tasks = ({ data }) => {
     const [modal, setModal] = React.useState(false);
     const [vaspName, setVaspName] = React.useState("");
     const history = useHistory()
@@ -32,7 +27,6 @@ const Tasks = () => {
         toggle()
     }
 
-
     return (
         <Card>
             <Card.Body>
@@ -41,7 +35,7 @@ const Tasks = () => {
                 <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                     <tbody>
                         {
-                            Array.isArray(vasps?.vasps) && vasps?.vasps.map((vasp) => (
+                            Array.isArray(data?.vasps) && data.vasps.map((vasp) => (
 
                                 <tr key={vasp.id}>
                                     <td className="d-flex gap-2 align-items-center">
