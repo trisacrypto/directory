@@ -1016,7 +1016,6 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		startTime = earliestTime
 	}
 
-	// Default value for end date
 	if in.End != "" {
 		// Parse end date
 		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
@@ -1024,6 +1023,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
 		}
 	} else {
+		// Default value for end date
 		endTime = time.Now()
 	}
 	if startTime.After(endTime) {
@@ -1033,9 +1033,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 
 	// Initialize required counting structs
 	numWeeks = int(endTime.Sub(startTime).Hours()/24/7) + 1
-	vaspCounts = make([]map[string]bool, 0, numWeeks)
+	vaspCounts = make([]map[string]bool, numWeeks, numWeeks)
 	out = &admin.ReviewTimelineReply{
-		Weeks: make([]admin.ReviewTimelineRecord, 0, numWeeks),
+		Weeks: make([]admin.ReviewTimelineRecord, numWeeks, numWeeks),
 	}
 	weekTime = startTime
 	for i := 0; i < numWeeks; i++ {
