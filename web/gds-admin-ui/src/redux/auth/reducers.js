@@ -1,17 +1,9 @@
 // @flow
 import { AuthActionTypes } from './constants';
 
-import { APICore } from '../../helpers/api/apiCore';
-import jwtDecode from 'jwt-decode';
-
-const api = new APICore();
-
-const user = api.getLoggedInUser()
-const decodedUser = user ? jwtDecode(user.access_token) : ''
-
 
 const INIT_STATE = {
-    user: decodedUser,
+    user: null,
     loading: false,
 };
 
@@ -25,7 +17,6 @@ const Auth = (state = INIT_STATE, action) => {
                 loading: true
             }
         case AuthActionTypes.LOGIN_USER_SUCCESS:
-            console.log('SUCCESS', action)
             return {
                 user: action.payload,
                 userIsloggedIn: true,
