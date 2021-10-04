@@ -267,6 +267,102 @@ func (s *APIv2) RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPR
 	return out, nil
 }
 
+func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *CreateReviewNoteReply, err error) {
+	// vaspID is required for the endpoint
+	if in.VASP == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/notes", in.VASP)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &CreateReviewNoteReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error) {
+	// vaspID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/notes", id)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ListReviewNotesReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error) {
+	// vaspID and noteID are required for the endpoint
+	if in.VASP == "" || in.Note == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", in.VASP, in.Note)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPut, path, in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error) {
+	// vaspID and noteID are required for the endpoint
+	if vaspID == "" || noteID == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", vaspID, noteID)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s *APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error) {
 	// The ID is required for the review request to determine the endpoint
 	if in.ID == "" {

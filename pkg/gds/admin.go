@@ -14,6 +14,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -172,6 +173,14 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
+
+			notes := v2.Group("/:vaspID/notes")
+			{
+				notes.GET("", s.ListReviewNotes)
+				notes.POST("", csrf, s.CreateReviewNote)
+				notes.PUT("/:noteID", csrf, s.UpdateReviewNote)
+				notes.DELETE("/:noteID", csrf, s.DeleteReviewNote)
+			}
 		}
 	}
 
@@ -179,6 +188,20 @@ func (s *Admin) setupRoutes() (err error) {
 	s.router.NoRoute(admin.NotFound)
 	s.router.NoMethod(admin.NotAllowed)
 	return nil
+}
+
+// Retrieve user claims from the Context for access to provided user info.
+func (s *Admin) getClaims(c *gin.Context) (claims *tokens.Claims, err error) {
+	value, exists := c.Get(admin.UserClaims)
+	if exists && value != nil {
+		var ok bool
+		if claims, ok = value.(*tokens.Claims); !ok {
+			return nil, fmt.Errorf("claims is an incorrect type, expecting *tokens.Claims found %T", value)
+		}
+	} else {
+		return nil, errors.New("no user claims in context")
+	}
+	return claims, nil
 }
 
 // Set the maximum age of authentication protection cookies.
@@ -695,6 +718,213 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// CreateReviewNote creates a new review note given the vaspID param and a CreateReviewNoteRequest.
+func (s *Admin) CreateReviewNote(c *gin.Context) {
+	var (
+		err    error
+		in     *admin.ModifyReviewNoteRequest
+		vasp   *pb.VASP
+		claims *tokens.Claims
+		vaspID string
+		noteID string
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.ModifyReviewNoteRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Validate VASP ID
+	if in.VASP != "" && in.VASP != vaspID {
+		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
+		return
+	}
+
+	// Retrieve author email
+	if claims, err = s.getClaims(c); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve user claims")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
+		return
+	}
+
+	// Create note ID if not provided.
+	if in.Note == "" {
+		noteID = uuid.New().String()
+	} else {
+		noteID = in.Note
+	}
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Create the note
+	if err = models.CreateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
+		log.Warn().Err(err).Msg("error creating review note")
+		if err == models.ErrorAlreadyExists {
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("note already exists"))
+		} else {
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create review note"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, &admin.CreateReviewNoteReply{ID: noteID})
+}
+
+// ListReviewNotes returns a list of review notes given a vaspID param.
+func (s *Admin) ListReviewNotes(c *gin.Context) {
+	var (
+		err    error
+		out    *admin.ListReviewNotesReply
+		vasp   *pb.VASP
+		vaspID string
+		notes  map[string]*models.ReviewNote
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Retrieve the slice of notes
+	if notes, err = models.GetReviewNotes(vasp); err != nil {
+		log.Warn().Err(err).Msg("error retrieving review notes")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve review notes"))
+		return
+	}
+
+	// Compose the JSON response
+	out.Notes = make([]admin.ReviewNote, len(notes))
+	for _, n := range notes {
+		out.Notes = append(out.Notes, admin.ReviewNote{
+			ID:       n.Id,
+			Created:  n.Created,
+			Modified: n.Modified,
+			Author:   n.Author,
+			Editor:   n.Editor,
+			Text:     n.Text,
+		})
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// UpdateReivewNote updates the text of a review note given vaspIP and noteID params
+// and an UpdateReviewNoteRequest.
+func (s *Admin) UpdateReviewNote(c *gin.Context) {
+	var (
+		err    error
+		in     *admin.ModifyReviewNoteRequest
+		vasp   *pb.VASP
+		claims *tokens.Claims
+		vaspID string
+		noteID string
+	)
+
+	// Get vaspID and noteID from the URL
+	vaspID = c.Param("vaspID")
+	noteID = c.Param("noteID")
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.ModifyReviewNoteRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Validate VASP ID
+	if in.VASP != "" && in.VASP != vaspID {
+		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request VASP ID does not match the URL endpoint"))
+		return
+	}
+
+	// Validate note ID
+	if in.Note != "" && in.Note != noteID {
+		log.Warn().Str("id", in.Note).Str("note_id", noteID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request Note ID does not match the URL endpoint"))
+		return
+	}
+
+	// Retrieve author email
+	if claims, err = s.getClaims(c); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve user claims")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
+		return
+	}
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Update the note
+	if err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
+		log.Warn().Err(err).Msg("error updating review note")
+		if err == models.ErrorNotFound {
+			c.JSON(http.StatusNotFound, admin.ErrorResponse("review note not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update review note"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, &admin.Reply{Success: true})
+}
+
+// DeleteReviewNote deletes a review note given vaspID and noteID params.
+func (s *Admin) DeleteReviewNote(c *gin.Context) {
+	var (
+		err    error
+		vasp   *pb.VASP
+		vaspID string
+		noteID string
+	)
+
+	// Get vaspID and noteID from the URL
+	vaspID = c.Param("vaspID")
+	noteID = c.Param("noteID")
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Delete the note
+	if err = models.DeleteReviewNote(vasp, noteID); err != nil {
+		log.Warn().Err(err).Msg("error deleting review note")
+		if err == models.ErrorNotFound {
+			c.JSON(http.StatusNotFound, admin.ErrorResponse("review note not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete review note"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, &admin.Reply{Success: true})
+}
+
 // Review a registration request and either accept or reject it. On accept, the
 // certificate request that was created on verify is used to send a Sectigo request and
 // the certificate manager process watches it until the certificate has been issued. On
@@ -761,20 +991,9 @@ func (s *Admin) Review(c *gin.Context) {
 
 	// Retrieve user claims for access to provided user info
 	var claims *tokens.Claims
-	value, exists := c.Get(admin.UserClaims)
-	if exists && value != nil {
-		var ok bool
-		claims, ok = value.(*tokens.Claims)
-		if !ok {
-			err = fmt.Errorf("claims is an incorrect type, expecting *tokens.Claims found %T", value)
-			log.Error().Err(err).Msg("could not retrieve user claims")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
-			return
-		}
-	} else {
-		log.Error().Err(fmt.Errorf("no user claims in context")).Msg("could not retrieve user claims")
+	if claims, err = s.getClaims(c); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve user claims")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
-		return
 	}
 
 	// Accept or reject the request

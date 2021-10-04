@@ -19,6 +19,10 @@ type DirectoryAdministrationClient interface {
 	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
+	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *CreateReviewNoteReply, err error)
+	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
+	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error)
+	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
 }
@@ -118,6 +122,45 @@ type RetrieveVASPReply struct {
 	VASP             map[string]interface{} `json:"vasp"`
 	VerifiedContacts map[string]string      `json:"verified_contacts"`
 	Traveler         bool                   `json:"traveler"`
+}
+
+// ModifyReviewNoteRequest is a request-like struct for creating or updateing notes.
+type ModifyReviewNoteRequest struct {
+	// The ID of the VASP (optional - is part of the URL).
+	VASP string `json:"vasp,omitempty"`
+
+	// The ID of the note to create (optional - can be automatically generated).
+	Note string `json:"note,omitempty"`
+
+	// Actual text of the new note.
+	Text string `json:"text"`
+}
+
+// CreateReviewNoteReply contains information about the newly created note.
+type CreateReviewNoteReply struct {
+	// The ID of the new note.
+	ID string `json:"id"`
+}
+
+// ListReviewNotesReply contains information about a group of notes.
+type ListReviewNotesReply struct {
+	Notes []ReviewNote `json:"notes"`
+}
+
+type ReviewNote struct {
+	// The ID of the note.
+	ID string `json:"id"`
+
+	// Created, modified timestamps.
+	Created  string `json:"created"`
+	Modified string `json:"modified"`
+
+	// Author, last editor of the note.
+	Author string `json:"author"`
+	Editor string `json:"editor"`
+
+	// Actual text of the note.
+	Text string `json:"text"`
 }
 
 //===========================================================================
