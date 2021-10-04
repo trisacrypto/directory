@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   gds:
     build:
@@ -26,7 +26,7 @@ services:
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
       - GDS_ADMIN_AUDIENCE
       - GDS_ADMIN_AUTHORIZED_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
       - GDS_REPLICA_ENABLED=false
       - GDS_REPLICA_BIND_ADDR=:4435
       - GDS_REPLICA_PID=8

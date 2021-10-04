@@ -1,9 +1,10 @@
-import { all, fork, put, takeEvery } from 'redux-saga/effects';
+import { all, fork, put, takeEvery, call } from 'redux-saga/effects';
 
-import { APICore } from '../../helpers/api/apiCore';
+import { APICore, setAuthorization } from '../../helpers/api/apiCore';
 import { loginUserError, loginUserSuccess } from './actions';
 import { AuthActionTypes } from './constants';
 import jwtDecode from 'jwt-decode'
+import { postCredentials } from '../../helpers/api/auth';
 
 const api = new APICore();
 
@@ -13,12 +14,20 @@ const api = new APICore();
  */
 function* login({ payload }) {
     try {
-        const user = jwtDecode(payload);
-        api.setLoggedInUser(user);
-        yield put(loginUserSuccess(AuthActionTypes.LOGIN_USER_SUCCESS, user));
+        const response = yield call(postCredentials, payload)
+
+        const data = response.data
+        api.setLoggedInUser(data)
+        setAuthorization(data.access_token)
+
+        const decodedToken = jwtDecode(data.access_token)
+
+        yield put(loginUserSuccess(AuthActionTypes.LOGIN_USER_SUCCESS, decodedToken));
     } catch (error) {
+        console.log(error)
         yield put(loginUserError(AuthActionTypes.LOGIN_USER_ERROR, error));
         api.setLoggedInUser(null);
+        setAuthorization(null);
     }
 }
 

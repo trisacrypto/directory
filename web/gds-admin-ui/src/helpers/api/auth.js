@@ -29,4 +29,8 @@ function forgotPasswordConfirm(params: any): any {
     return api.create(`${baseUrl}`, params);
 }
 
-export { login, logout, signup, forgotPassword, forgotPasswordConfirm };
+function postCredentials(credentials, params) {
+    return api.create('/authenticate', credentials, params)
+}
+
+export { login, logout, signup, forgotPassword, forgotPasswordConfirm, postCredentials };
