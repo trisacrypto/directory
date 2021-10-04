@@ -185,7 +185,7 @@ class APICore {
         }
 
         const decodedAccessToken = jwtDecode(user.access_token);
-        console.log(jwtDecode(user.refresh_token))
+
         const currentTime = Date.now() / 1000;
         if (decodedAccessToken.exp < currentTime) {
             console.warn('access token expired');
@@ -227,11 +227,9 @@ class APICore {
 /*
 Check if token available in session
 */
-let user = getUserFromSession();
-if (user) {
-    if (user.access_token) {
-        setAuthorization(user.access_token);
-    }
+const user = getUserFromSession();
+if (user && user.access_token) {
+    setAuthorization(user.access_token);
 }
 
 export { APICore, setAuthorization, setCookie };

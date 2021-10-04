@@ -29,12 +29,10 @@ const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
                                         </h1>
                                         <h4 className="text-uppercase text-danger mt-3">Page Not Found</h4>
                                         <p className="text-muted mt-3">
-                                            It's looking like you may have taken a wrong turn. Don't worry... it happens
-                                            to the best of us. Here's a little tip that might help you get back on
-                                            track.
+                                            It's looking like you may have taken a wrong turn.
                                         </p>
 
-                                        <Link className="btn btn-info mt-3" to="/">
+                                        <Link className="btn btn-info mt-3" to="/dashboard">
                                             <i className="mdi mdi-reply"></i> Return Home
                                         </Link>
                                     </div>
@@ -45,7 +43,7 @@ const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
                 </div>
             </div>
 
-            <footer className="footer footer-alt">2018 - 2021 © Hyper - Coderthemes.com</footer>
+            <footer className="footer footer-alt">Created and maintained by <a href="https://rotational.io">Rotational</a> Labs in partnership with <a href="https://ciphertrace.com">CipherTrace</a> on behalf of <a href="https://trisa.io">TRISA</a>.</footer>
         </React.Fragment>
     );
 };
