@@ -441,7 +441,7 @@ func (s *APIv2) Credentials() (creds *AuthReply, err error) {
 	return nil, errors.New("no credentials are available")
 }
 
-// DeleteCredentials removed cached access and refresh tokens
+// DeleteCredentials removes cached access and refresh tokens
 func (s *APIv2) DeleteCredentials() (err error) {
 	folder := cfgd.QueryFolderContainsFile(credentials)
 	if folder != nil && folder.Exists(credentials) {
@@ -456,7 +456,7 @@ type ClientConfig struct {
 	TokenKeys map[string]string `envconfig:"GDS_ADMIN_TOKEN_KEYS"`
 }
 
-// GenerateCredentials creates a token manager generate and save credentials
+// GenerateCredentials creates a token manager to generate and save credentials
 func (s *APIv2) GenerateCredentials() (err error) {
 	var conf ClientConfig
 	if err = envconfig.Process("gds", &conf); err != nil {

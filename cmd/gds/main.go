@@ -307,7 +307,7 @@ func main() {
 		},
 		{
 			Name:     "admin:detail",
-			Usage:    "retrieve a VASP detail recrod by id",
+			Usage:    "retrieve a VASP detail record by id",
 			Category: "admin",
 			Action:   adminRetrieveVASPs,
 			Before:   initAdminClient,

@@ -1183,8 +1183,11 @@ func registerReissue(c *cli.Context) (err error) {
 		Id:         uuid.New().String(),
 		Vasp:       vasp.Id,
 		CommonName: vasp.CommonName,
-		Status:     models.CertificateRequestState_READY_TO_SUBMIT,
 		Created:    time.Now().Format(time.RFC3339),
+	}
+
+	if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_READY_TO_SUBMIT, "reissue certificates", email); err != nil {
+		return cli.NewExitError(err, 1)
 	}
 
 	// Make a new secret of type "password"

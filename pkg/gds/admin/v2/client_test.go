@@ -91,6 +91,15 @@ func TestAuthenticate(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Double cookie protect GET request w/o middleware
+		// The client must a call to GET /v2/authenticate before authentication
+		// TODO: enhance this test to ensure client makes this call before POST
+		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v2/authenticate", r.URL.Path)
 
@@ -129,6 +138,14 @@ func TestReuthenticate(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Double cookie protect GET request w/o middleware
+		// The client must a call to GET /v2/authenticate before authentication
+		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v2/reauthenticate", r.URL.Path)
 
@@ -378,6 +395,14 @@ func TestReview(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Double cookie protect GET request w/o middleware
+		// The client must a call to GET /v2/authenticate before authentication
+		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v2/vasps/1234/review", r.URL.Path)
 
@@ -420,6 +445,14 @@ func TestResend(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Double cookie protect GET request w/o middleware
+		// The client must a call to GET /v2/authenticate before authentication
+		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v2/vasps/1234/resend", r.URL.Path)
 
