@@ -124,15 +124,17 @@ type RetrieveVASPReply struct {
 	Traveler         bool                   `json:"traveler"`
 }
 
-// ModifyReviewNoteRequest is a request-like struct for creating or updateing notes.
+// ModifyReviewNoteRequest is a request-like struct for creating or updating notes.
 type ModifyReviewNoteRequest struct {
 	// The ID of the VASP (optional - is part of the URL).
 	VASP string `json:"vasp,omitempty"`
 
-	// The ID of the note to create (optional - can be automatically generated).
+	// The ID of the note
+	// For CreateReviewNote, this is optional since it can be generated.
+	// For UpdateReviewNote, this is optional since it is part of the URL.
 	Note string `json:"note,omitempty"`
 
-	// Actual text of the new note.
+	// Actual text of the note.
 	Text string `json:"text"`
 }
 
