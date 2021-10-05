@@ -822,8 +822,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 	for careqs.Next() {
 		req := careqs.CertReq()
 		if req != nil && req.Vasp == vasp.Id && req.Status == models.CertificateRequestState_INITIALIZED {
-			// TODO: Replace "email" in the source parameter with user email address.
-			if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", "email"); err != nil {
+			if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", claims.Email); err != nil {
 				return "", err
 			}
 			if err = s.db.UpdateCertReq(req); err != nil {

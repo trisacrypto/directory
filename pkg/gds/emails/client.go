@@ -11,6 +11,7 @@ import (
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -107,6 +108,12 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 			}
 
 			sent++
+
+			if err = models.AppendEmailLog(contact, string(admin.ResendVerifyContact), msg.Subject); err != nil {
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log verify contact email")
+				nErrors++
+				continue
+			}
 		}
 	}
 
@@ -233,6 +240,12 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 			}
 
 			sent++
+
+			if err = models.AppendEmailLog(contact, string(admin.ResendRejection), msg.Subject); err != nil {
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log reject registration email")
+				nErrors++
+				continue
+			}
 		}
 	}
 
@@ -298,9 +311,16 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 				continue
 			}
 
+			sent++
+
+			if err = models.AppendEmailLog(contact, string(admin.ResendDeliverCerts), msg.Subject); err != nil {
+				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log deliver certs email")
+				nErrors++
+				continue
+			}
+
 			// If we've successfully sent one cert delivery message, then stop sending
 			// the message so that we only send it a single time.
-			sent++
 			break
 		}
 	}

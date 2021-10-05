@@ -271,6 +271,25 @@ func TestContactExtra(t *testing.T) {
 	require.False(t, verified)
 	require.Equal(t, "12345", token)
 
+	// Append to email log
+	err = AppendEmailLog(contact, "verify_contact", "verification")
+	require.NoError(t, err)
+	require.False(t, verified)
+	require.Equal(t, "12345", token)
+
+	// Fetch email log
+	emailLog, err := GetEmailLog(contact)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, "verify_contact", emailLog[0].Reason)
+	require.Equal(t, "verification", emailLog[0].Subject)
+
+	// Should not overwrite contact verification
+	token, verified, err = GetContactVerification(contact)
+	require.NoError(t, err)
+	require.False(t, verified)
+	require.Equal(t, "12345", token)
+
 	// Set extra on contact
 	err = SetContactVerification(contact, "", true)
 	require.NoError(t, err)
@@ -280,6 +299,47 @@ func TestContactExtra(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, verified)
 	require.Equal(t, "", token)
+
+	// Should not overwrite email log
+	emailLog, err = GetEmailLog(contact)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, "verify_contact", emailLog[0].Reason)
+	require.Equal(t, "verification", emailLog[0].Subject)
+}
+
+func TestEmailLog(t *testing.T) {
+	// Test that the email log functions are working as expected
+	contact := &pb.Contact{}
+
+	// Audit log should initially be empty
+	emailLog, err := GetEmailLog(contact)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 0)
+
+	// Should not be able to append on a nil contact
+	err = AppendEmailLog(nil, "verify_contact", "verification")
+	require.Error(t, err)
+
+	// Append an entry to an empty log
+	err = AppendEmailLog(contact, "verify_contact", "verification")
+	require.NoError(t, err)
+	emailLog, err = GetEmailLog(contact)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, "verify_contact", emailLog[0].Reason)
+	require.Equal(t, "verification", emailLog[0].Subject)
+
+	// Append another entry to the email log
+	err = AppendEmailLog(contact, "review", "review resend")
+	require.NoError(t, err)
+	emailLog, err = GetEmailLog(contact)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 2)
+	require.Equal(t, "verify_contact", emailLog[0].Reason)
+	require.Equal(t, "verification", emailLog[0].Subject)
+	require.Equal(t, "review", emailLog[1].Reason)
+	require.Equal(t, "review resend", emailLog[1].Subject)
 }
 
 func TestVeriedContacts(t *testing.T) {
