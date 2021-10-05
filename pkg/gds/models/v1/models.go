@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrorAlreadyExists = errors.New("Already exists")
-	ErrorNotFound      = errors.New("Not found")
+	ErrorAlreadyExists = errors.New("already exists")
+	ErrorNotFound      = errors.New("not found")
 )
 
 // GetAdminVerificationToken from the extra data on the VASP record.
