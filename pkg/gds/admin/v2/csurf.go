@@ -58,7 +58,7 @@ func DoubleCookie() gin.HandlerFunc {
 // SetDoubleCookieTokens is a helper function to set cookies on a gin-request.
 // The exp parameter is the Unix timestamp the cookie should be expired, which in most
 // cases is extracted from the exp field of the refresh token claims.
-func SetDoubleCookieTokens(c *gin.Context, exp int64) error {
+func SetDoubleCookieTokens(c *gin.Context, domain string, exp int64) error {
 	// Generate the CSRF token
 	token, err := GenerateCSRFToken()
 	if err != nil {
@@ -69,10 +69,10 @@ func SetDoubleCookieTokens(c *gin.Context, exp int64) error {
 	maxAge := int((time.Until(time.Unix(exp, 0))).Seconds()) + 1
 
 	// Set the reference cookie
-	c.SetCookie(CSRFReferenceCookie, token, maxAge, "/", "", true, true)
+	c.SetCookie(CSRFReferenceCookie, token, maxAge, "/", domain, true, true)
 
 	// Set the csrf token cookie
-	c.SetCookie(CSRFCookie, token, maxAge, "/", "", true, false)
+	c.SetCookie(CSRFCookie, token, maxAge, "/", domain, true, false)
 	return nil
 }
 
