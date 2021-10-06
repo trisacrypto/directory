@@ -273,7 +273,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "s, start",
 					Usage: "start date (YYYY-MM-DD) for the review timeline",
-					Value: time.Now().Add(time.Duration(-52) * time.Hour * 24 * 7).Format(weekFormat),
+					Value: time.Now().AddDate(-1, 0, 0).Format(weekFormat),
 				},
 				cli.StringFlag{
 					Name:  "e, end",

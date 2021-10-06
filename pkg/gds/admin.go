@@ -1012,15 +1012,19 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	// Go needs this constant to determine the time format
 	const timeFormat = "2006-01-02"
 	var (
-		err          error
-		in           *admin.ReviewTimelineParams
-		out          *admin.ReviewTimelineReply
-		startTime    time.Time
-		endTime      time.Time
-		earliestTime time.Time
-		weekTime     time.Time
-		numWeeks     int
-		vaspCounts   []map[string]bool
+		err        error
+		in         *admin.ReviewTimelineParams
+		out        *admin.ReviewTimelineReply
+		startTime  time.Time
+		endTime    time.Time
+		date       time.Time
+		year       int
+		week       int
+		startYear  int
+		startWeek  int
+		endYear    int
+		endWeek    int
+		vaspCounts []map[string]bool
 	)
 
 	// Get request parameters
@@ -1031,20 +1035,23 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		return
 	}
 
-	// Default value for start date
-	earliestTime = time.Date(2020, time.January, 1, 0, 0, 0, 0, time.Local)
 	if in.Start != "" {
 		// Parse start date
 		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
 			log.Warn().Err(err).Msg("could not parse start date")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
+			return
 		}
-		// Hard limit on the earliest date to avoid making the server do unnecessary work
-		if startTime.Before(earliestTime) {
-			startTime = earliestTime
+		// If the request is before the epoch then it's probably an error
+		epoch := time.Unix(0, 0)
+		if startTime.Before(epoch) {
+			log.Warn().Err(err).Msg("start date is before epoch")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date can't be before %s", epoch.Format(timeFormat))))
+			return
 		}
 	} else {
-		startTime = earliestTime
+		// Default to 1 year ago
+		startTime = time.Now().AddDate(-1, 0, 0)
 	}
 
 	if in.End != "" {
@@ -1052,6 +1059,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
 			log.Warn().Err(err).Msg("could not parse end date")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
+			return
 		}
 	} else {
 		// Default value for end date
@@ -1060,29 +1068,57 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	if startTime.After(endTime) {
 		log.Warn().Err(fmt.Errorf("start date after end date")).Msg("invalid timeline request: start date can't be after current date")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
+		return
 	}
 
 	// Initialize required counting structs
-	numWeeks = int(endTime.Sub(startTime).Hours()/24/7) + 1
-	vaspCounts = make([]map[string]bool, numWeeks)
+	vaspCounts = make([]map[string]bool, 0, 1)
 	out = &admin.ReviewTimelineReply{
-		Weeks: make([]admin.ReviewTimelineRecord, numWeeks),
+		Weeks: make([]admin.ReviewTimelineRecord, 0, 1),
 	}
-	weekTime = startTime
-	for i := 0; i < numWeeks; i++ {
-		weekDate := weekTime.Format(timeFormat)
+
+	// Align start and end dates to the ISOWeek
+	startYear, startWeek = startTime.ISOWeek()
+	endYear, endWeek = endTime.ISOWeek()
+
+	// Iterate backwards to the beginning of the start week
+	date = time.Date(startYear, 0, 0, 0, 0, 0, 0, time.UTC)
+	for date.Weekday() != time.Monday {
+		date = date.AddDate(0, 0, -1)
+	}
+
+	// If the year doesn't start on a Monday then we need to iterate forward
+	year, week = date.ISOWeek()
+	for year < startYear {
+		date = date.AddDate(0, 0, 7)
+		year, week = date.ISOWeek()
+	}
+
+	// Iterate forwards to the first day of the start week
+	for week < startWeek {
+		date = date.AddDate(0, 0, 7)
+		year, week = date.ISOWeek()
+	}
+
+	// Iterate through the weeks and record the week start dates for the JSON output
+	for year < endYear || week <= endWeek {
 		record := admin.ReviewTimelineRecord{
-			Week:          weekDate,
-			VASPsCount:    0,
+			Week:          date.Format(timeFormat),
+			VASPsUpdated:  0,
 			Registrations: make(map[string]int),
 		}
+
+		// Need to intialize the map entries so that all verification states show up in
+		// the JSON output, even if the count is 0
 		var s int32
 		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
 			record.Registrations[pb.VerificationState_name[s]] = 0
 		}
-		out.Weeks[i] = record
-		vaspCounts[i] = make(map[string]bool)
-		weekTime = weekTime.Add(time.Hour * 24 * 7)
+		out.Weeks = append(out.Weeks, record)
+		vaspCounts = append(vaspCounts, make(map[string]bool))
+
+		date = date.AddDate(0, 0, 7)
+		year, week = date.ISOWeek()
 	}
 
 	// Iterate over the VASPs and count registrations
@@ -1110,17 +1146,21 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
 				continue
 			}
-			weekNum := int(timestamp.Sub(startTime).Hours() / 24 / 7)
 
-			// Count VASP if we haven't seen it before
-			if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
-				vaspCounts[weekNum][vasp.Id] = true
-				out.Weeks[weekNum].VASPsCount++
-			}
+			year, week = timestamp.ISOWeek()
+			if year >= startYear && week >= startWeek && year <= endYear && week <= endWeek {
+				weekNum := ((year - startYear) * 52) + week - startWeek
 
-			// Count registration state if it changed
-			if entry.PreviousState != entry.CurrentState {
-				out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
+				// Count VASP if we haven't seen it before
+				if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
+					vaspCounts[weekNum][vasp.Id] = true
+					out.Weeks[weekNum].VASPsUpdated++
+				}
+
+				// Count registration state if it changed
+				if entry.PreviousState != entry.CurrentState {
+					out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
+				}
 			}
 		}
 	}

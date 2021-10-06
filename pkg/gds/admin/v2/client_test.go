@@ -489,8 +489,8 @@ func TestReviewTimeline(t *testing.T) {
 	fixture_reply := &admin.ReviewTimelineReply{
 		Weeks: []admin.ReviewTimelineRecord{
 			{
-				Week:       "2020-12-28",
-				VASPsCount: 20,
+				Week:         "2020-12-28",
+				VASPsUpdated: 20,
 				Registrations: map[string]int{
 					"SUBMITTED":           0,
 					"EMAIL_VERIFIED":      7,
@@ -504,8 +504,8 @@ func TestReviewTimeline(t *testing.T) {
 				},
 			},
 			{
-				Week:       "2021-01-04",
-				VASPsCount: 25,
+				Week:         "2021-01-04",
+				VASPsUpdated: 25,
 				Registrations: map[string]int{
 					"SUBMITTED":           7,
 					"EMAIL_VERIFIED":      25,

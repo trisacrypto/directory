@@ -130,7 +130,7 @@ type ReviewTimelineParams struct {
 // ReviewTimelineRecord contains counts of VASP registration states over a single week.
 type ReviewTimelineRecord struct {
 	Week          string         `json:"week"`
-	VASPsCount    int            `json:"vasps_count"`
+	VASPsUpdated  int            `json:"vasps_updated"`
 	Registrations map[string]int `json:"registrations"`
 }
 
