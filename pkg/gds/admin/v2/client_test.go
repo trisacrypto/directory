@@ -475,9 +475,9 @@ func UpdateReviewNote(t *testing.T) {
 	fixture := &admin.Reply{Success: true}
 
 	req := &admin.ModifyReviewNoteRequest{
-		VASP: "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
-		Note: "af367d27-b0e7-48b5-8987-e48a0712a826",
-		Text: "updated note text",
+		VASP:   "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+		NoteID: "af367d27-b0e7-48b5-8987-e48a0712a826",
+		Text:   "updated note text",
 	}
 
 	// Create a Test Server
@@ -502,7 +502,7 @@ func UpdateReviewNote(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure a VASP ID is required to update a note
-	_, err = client.UpdateReviewNote(context.TODO(), &admin.ModifyReviewNoteRequest{Note: req.Note, Text: "no VASP"})
+	_, err = client.UpdateReviewNote(context.TODO(), &admin.ModifyReviewNoteRequest{NoteID: req.NoteID, Text: "no VASP"})
 	require.Error(t, err)
 
 	// Ensure a Note ID is required to update a note

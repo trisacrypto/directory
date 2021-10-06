@@ -129,10 +129,10 @@ type ModifyReviewNoteRequest struct {
 	// The ID of the VASP (optional - is part of the URL).
 	VASP string `json:"vasp,omitempty"`
 
-	// The ID of the note
+	// The ID of the note.
 	// For CreateReviewNote, this is optional since it can be generated.
 	// For UpdateReviewNote, this is optional since it is part of the URL.
-	Note string `json:"note,omitempty"`
+	NoteID string `json:"note_id,omitempty"`
 
 	// Actual text of the note.
 	Text string `json:"text"`

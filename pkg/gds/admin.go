@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -754,11 +755,24 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		return
 	}
 
-	// Create note ID if not provided.
-	if in.Note == "" {
+	if in.NoteID == "" {
+		// Create note ID if not provided
 		noteID = uuid.New().String()
 	} else {
-		noteID = in.Note
+		// Only allow reasonably-lengthed note IDs (generated IDs are also 36 characters)
+		if len(in.NoteID) > 36 {
+			log.Warn().Err(err).Msg("invalid note ID")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("note ID cannot be longer than 36 characters"))
+			return
+		}
+
+		// Only allow note IDs that can be used in request URLs
+		if escaped := url.QueryEscape(noteID); noteID != escaped {
+			log.Warn().Err(err).Msg("invalid note ID")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("note ID contains unescaped characters: %s", noteID)))
+			return
+		}
+		noteID = in.NoteID
 	}
 
 	// Lookup the VASP record associated with the request
@@ -779,7 +793,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &admin.CreateReviewNoteReply{ID: noteID})
+	c.JSON(http.StatusCreated, &admin.CreateReviewNoteReply{ID: noteID})
 }
 
 // ListReviewNotes returns a list of review notes given a vaspID param.
@@ -857,8 +871,8 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	}
 
 	// Validate note ID
-	if in.Note != "" && in.Note != noteID {
-		log.Warn().Str("id", in.Note).Str("note_id", noteID).Msg("mismatched request ID and URL")
+	if in.NoteID != "" && in.NoteID != noteID {
+		log.Warn().Str("id", in.NoteID).Str("note_id", noteID).Msg("mismatched request ID and URL")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request Note ID does not match the URL endpoint"))
 		return
 	}

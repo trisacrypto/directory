@@ -317,12 +317,12 @@ func (s *APIv2) ListReviewNotes(ctx context.Context, id string) (out *ListReview
 
 func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error) {
 	// vaspID and noteID are required for the endpoint
-	if in.VASP == "" || in.Note == "" {
+	if in.VASP == "" || in.NoteID == "" {
 		return nil, ErrIDRequred
 	}
 
 	// Determine the path from the request
-	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", in.VASP, in.Note)
+	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", in.VASP, in.NoteID)
 
 	// Make the HTTP request
 	var req *http.Request

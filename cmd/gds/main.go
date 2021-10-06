@@ -792,8 +792,8 @@ func adminCreateNote(c *cli.Context) (err error) {
 	defer cancel()
 
 	params = &admin.ModifyReviewNoteRequest{
-		VASP: c.String("id"),
-		Note: c.String("name"),
+		VASP:   c.String("id"),
+		NoteID: c.String("name"),
 	}
 
 	if params.VASP == "" {
@@ -836,15 +836,15 @@ func adminUpdateNote(c *cli.Context) (err error) {
 	defer cancel()
 
 	params = &admin.ModifyReviewNoteRequest{
-		VASP: c.String("id"),
-		Note: c.String("name"),
+		VASP:   c.String("id"),
+		NoteID: c.String("name"),
 	}
 
 	if params.VASP == "" {
 		cli.NewExitError("must specify VASP ID (--id)", 1)
 	}
 
-	if params.Note == "" {
+	if params.NoteID == "" {
 		return cli.NewExitError("must specify note name (--name)", 1)
 	}
 
