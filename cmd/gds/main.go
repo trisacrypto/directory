@@ -323,7 +323,7 @@ func main() {
 			Usage:    "list notes associated with a VASP",
 			Category: "admin",
 			Action:   adminListNotes,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -336,7 +336,7 @@ func main() {
 			Usage:    "create a new note associated with a VASP",
 			Category: "admin",
 			Action:   adminCreateNote,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -361,7 +361,7 @@ func main() {
 			Usage:    "update an existing VASP note",
 			Category: "admin",
 			Action:   adminUpdateNote,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
@@ -386,7 +386,7 @@ func main() {
 			Usage:    "delete an existing VASP note",
 			Category: "admin",
 			Action:   adminDeleteNote,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "i, id",
