@@ -7,7 +7,10 @@ import AccountLayout from './AccountLayout';
 import SignWithGoogle from '../../components/Auth/SignWithGoogle';
 import { loginUser } from '../../redux/auth/actions';
 import config from "../../config";
+import { APICore, setCookie } from '../../helpers/api/apiCore';
+import { getCookie } from '../../utils';
 
+const api = new APICore()
 
 const Login = (): React$Element<any> => {
     const dispatch = useDispatch();
@@ -15,11 +18,39 @@ const Login = (): React$Element<any> => {
         userIsLoggedIn: state.Auth.userIsLoggedIn,
         user: state.Auth.user
     }))
+    const [csrfProtected, setCsrfProtected] = React.useState(false)
+    const isMounted = React.useRef(true)
+
+
+    React.useEffect(() => {
+        if (isMounted) {
+            window.onload = () => {
+
+                api.get('/authenticate').then(response => {
+                    const csrfToken = getCookie('csrf_token')
+
+                    setCookie(csrfToken);
+                    setCsrfProtected(true)
+
+                }).catch(error => {
+                    console.log('[Login] error:', error.message)
+                })
+            }
+        }
+
+        return () => { isMounted.current = false }
+
+    }, [])
 
     const handleCredentialResponse = (response) => {
         if (response.credential) {
-            dispatch(loginUser(response.credential))
+            const data = {
+                credential
+                    : response.credential
+            }
+            dispatch(loginUser(data))
         }
+
     }
 
     return (
@@ -32,7 +63,7 @@ const Login = (): React$Element<any> => {
                         Please use your @trisa.io Google account to access the GDS Admin.
                     </p>
                 </div>
-                <SignWithGoogle clientId={config.GOOGLE_CLIENT_ID} text="sign_in_with" loginResponse={handleCredentialResponse} />
+                {csrfProtected ? <SignWithGoogle clientId={config.GOOGLE_CLIENT_ID} text="sign_in_with" loginResponse={handleCredentialResponse} /> : <p className="text-center">loading...</p>}
             </AccountLayout>
         </>
     );

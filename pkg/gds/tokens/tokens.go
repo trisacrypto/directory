@@ -193,7 +193,7 @@ func (tm *TokenManager) CreateRefreshToken(accessToken *jwt.Token) (refreshToken
 			Subject:   accessClaims.Subject,
 			IssuedAt:  accessClaims.IssuedAt,
 			NotBefore: time.Unix(accessClaims.ExpiresAt, 0).Add(accessRefreshOverlap).Unix(),
-			ExpiresAt: time.Unix(accessClaims.IssuedAt, 0).Add(accessTokenDuration).Unix(),
+			ExpiresAt: time.Unix(accessClaims.IssuedAt, 0).Add(refreshTokenDuration).Unix(),
 		},
 	}
 

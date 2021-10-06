@@ -6,7 +6,7 @@ import config from '../../../config'
 
 // components
 import PageTitle from '../../../components/PageTitle';
-import { fecthRegistrationsReviews, fetchCertificates, fetchSummary, fetchVasps } from '../../../redux/dashboard/actions';
+import { fecthRegistrationsReviews, fetchCertificates, fetchPendingVasps, fetchSummary } from '../../../redux/dashboard/actions';
 
 import Statistics from './Statistics';
 import Status from './Status';
@@ -17,13 +17,15 @@ import { ENVIRONMENT } from '../../../constants';
 
 const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
     const dispatch = useDispatch();
-    const { summary } = useSelector(state => ({
+    const { summary, vasps, isVaspsLoading } = useSelector(state => ({
         summary: state.Summary.data,
+        vasps: state.Vasps.data,
+        isVaspsLoading: state.Vasps.loading
     }))
 
     React.useEffect(() => {
         dispatch(fetchCertificates());
-        dispatch(fetchVasps());
+        dispatch(fetchPendingVasps());
         dispatch(fetchSummary())
         dispatch(fecthRegistrationsReviews())
     }, [dispatch])
@@ -44,7 +46,7 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
                     <Status statuses={summary.statuses} />
                 </Col>
                 <Col lg={8} style={{ overflowY: "scroll", height: "100%" }}>
-                    <Tasks />
+                    {!isVaspsLoading ? <Tasks data={vasps} /> : null}
                 </Col>
             </Row>
             {

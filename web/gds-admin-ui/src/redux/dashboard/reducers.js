@@ -1,4 +1,4 @@
-import { FetchCertificatesActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants";
+import { FetchCertificatesActionTypes, FetchPendingVaspsActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants";
 
 
 type Action = { type: string, payload: { data?: any, error?: string } };
@@ -56,6 +56,11 @@ const vaspsReducers = (state: State = INITIAL_STATE, action: Action) => {
             return {
                 ...state,
                 error: action.payload.error
+            }
+        case FetchPendingVaspsActionTypes.FETCH_PENDING_VASPS:
+            return {
+                ...state,
+                loading: true
             }
         default:
             return state;

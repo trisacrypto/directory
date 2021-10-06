@@ -21,7 +21,7 @@ func TestDoubleCookies(t *testing.T) {
 
 	// Add login route that sets the cookies
 	router.GET("/login", func(c *gin.Context) {
-		err := admin.SetDoubleCookieTokens(c, time.Now().Add(time.Minute*10).Unix())
+		err := admin.SetDoubleCookieTokens(c, "", time.Now().Add(time.Minute*10).Unix())
 		require.NoError(t, err)
 		c.JSON(http.StatusOK, gin.H{"success": true})
 	})

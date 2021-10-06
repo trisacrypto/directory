@@ -12,7 +12,7 @@ import PageTitle from '../../../components/PageTitle';
 import Table from '../../../components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchCertificates, fetchVasps } from '../../../redux/dashboard/actions';
+import { fetchVasps } from '../../../redux/dashboard/actions';
 import { Status, StatusLabel } from '../../../constants';
 dayjs.extend(relativeTime)
 
@@ -106,7 +106,6 @@ const VaspsList = (): React$Element<React$FragmentType> => {
 
     React.useEffect(() => {
         dispatch(fetchVasps())
-        dispatch(fetchCertificates())
     }, [dispatch])
 
     return (

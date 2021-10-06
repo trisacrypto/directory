@@ -2,7 +2,7 @@
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
 import { getSummary, getVasps } from "../../services/dashboard"
 import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError } from "./actions"
-import { FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
+import { FetchPendingVaspsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
 
 
 
@@ -17,9 +17,19 @@ function* fetchSummary() {
 }
 
 
-function* fetchVasps() {
+function* fetchPendingVasps() {
     try {
         const response = yield call(getVasps, { status: 'pending+review' })
+        const data = response.data
+        yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
+    } catch (error) {
+        yield put(fetchVaspsApiResponseError(FetchVaspsActionTypes.API_RESPONSE_ERROR, error.message))
+    }
+}
+
+function* fetchVasps() {
+    try {
+        const response = yield call(getVasps)
         const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
@@ -36,11 +46,15 @@ export function* vaspsSaga() {
     yield takeEvery([FetchVaspsActionTypes.FETCH_VASPS], fetchVasps);
 }
 
+export function* pendingVaspsSaga() {
+    yield takeEvery(FetchPendingVaspsActionTypes.FETCH_PENDING_VASPS, fetchPendingVasps)
+}
+
 
 function* dashboardSaga() {
     yield all([
         fork(summarySaga),
-        fork(vaspsSaga),
+        fork(pendingVaspsSaga),
     ])
 }
 

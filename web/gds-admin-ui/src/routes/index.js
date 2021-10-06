@@ -1,6 +1,7 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import { Route } from 'react-router-dom';
+import PrivateRoute from './PrivateRoute';
 
 const Login = React.lazy(() => import('../pages/account/Login'));
 
@@ -17,7 +18,7 @@ const rootRoute = {
     path: '/',
     exact: true,
     component: () => <Redirect to="/dashboard" />,
-    route: Route,
+    route: PrivateRoute,
 };
 
 const authRoutes = [
@@ -40,13 +41,13 @@ const dashboardRoutes = {
             path: '/dashboard',
             name: 'Project',
             component: Dashboard,
-            route: Route,
+            route: PrivateRoute,
         },
         {
             path: '/vasps',
             name: 'List',
             component: VaspsList,
-            route: Route,
+            route: PrivateRoute,
             exact: true
         }
     ],
@@ -60,7 +61,7 @@ const vaspsRoutes = {
             path: '/vasps/:id',
             name: 'Detail',
             component: VaspsDetails,
-            route: Route,
+            route: PrivateRoute,
         }
     ],
 }

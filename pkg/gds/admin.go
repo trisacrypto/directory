@@ -190,7 +190,7 @@ const protectAuthenticateMaxAge = time.Minute * 10
 // posting credentials from Google.
 func (s *Admin) ProtectAuthenticate(c *gin.Context) {
 	expiresAt := time.Now().Add(protectAuthenticateMaxAge).Unix()
-	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -248,7 +248,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
 		log.Error().Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
@@ -385,7 +385,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 		return
 	}
 
-	if err := admin.SetDoubleCookieTokens(c, expiresAt); err != nil {
+	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
 		log.Error().Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
