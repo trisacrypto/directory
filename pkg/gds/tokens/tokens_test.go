@@ -78,6 +78,12 @@ func (s *TokenTestSuite) TestTokenManager() {
 	require.Empty(rc.Name)
 	require.Empty(rc.Picture)
 
+	// Verify relative nbf and exp claims of access and refresh tokens
+	require.True(time.Unix(ac.IssuedAt, 0).Equal(time.Unix(rc.IssuedAt, 0)), "access and refresh tokens do not have same iss timestamp")
+	require.Equal(45*time.Minute, time.Unix(rc.NotBefore, 0).Sub(time.Unix(ac.IssuedAt, 0)), "refresh token nbf is not 45 minutes after access token iss")
+	require.Equal(15*time.Minute, time.Unix(ac.ExpiresAt, 0).Sub(time.Unix(rc.NotBefore, 0)), "refresh token active does not overlap active token active by 15 minutes")
+	require.Equal(60*time.Minute, time.Unix(rc.ExpiresAt, 0).Sub(time.Unix(ac.ExpiresAt, 0)), "refresh token does not expire 1 hour after access token")
+
 	// Sign the access token
 	atks, err := tm.Sign(accessToken)
 	require.NoError(err, "could not sign access token")
