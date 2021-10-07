@@ -97,13 +97,16 @@ type ListVASPsReply struct {
 
 // VASPSnippet provides summary information about a VASP.
 type VASPSnippet struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	CommonName         string          `json:"common_name"`
-	VerificationStatus string          `json:"verification_status,omitempty"`
-	LastUpdated        string          `json:"last_updated,omitempty"`
-	Traveler           bool            `json:"traveler"`
-	VerifiedContacts   map[string]bool `json:"verified_contacts"`
+	ID                  string          `json:"id"`
+	Name                string          `json:"name"`
+	CommonName          string          `json:"common_name"`
+	RegisteredDirectory string          `json:"registered_directory,omitempty"`
+	VerificationStatus  string          `json:"verification_status,omitempty"`
+	LastUpdated         string          `json:"last_updated,omitempty"`
+	VerifiedOn          string          `json:"verified_on,omitempty"`
+	Traveler            bool            `json:"traveler"`
+	CertificateSerial   string          `json:"certificate_serial_number,omitempty"`
+	VerifiedContacts    map[string]bool `json:"verified_contacts"`
 }
 
 // RetrieveVASPReply returns a pb.VASP record that has been marshaled by protojson and
