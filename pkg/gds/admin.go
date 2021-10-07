@@ -24,6 +24,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -1015,15 +1016,10 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		err        error
 		in         *admin.ReviewTimelineParams
 		out        *admin.ReviewTimelineReply
+		week       *utils.Week
+		weekIter   *utils.WeekIterator
 		startTime  time.Time
 		endTime    time.Time
-		date       time.Time
-		year       int
-		week       int
-		startYear  int
-		startWeek  int
-		endYear    int
-		endWeek    int
 		vaspCounts []map[string]bool
 	)
 
@@ -1065,8 +1061,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		// Default value for end date
 		endTime = time.Now()
 	}
-	if startTime.After(endTime) {
-		log.Warn().Err(fmt.Errorf("start date after end date")).Msg("invalid timeline request: start date can't be after current date")
+
+	if weekIter, err = utils.GetWeekIterator(startTime, endTime); err != nil {
+		log.Warn().Err(err).Msg("invalid timeline request: start date can't be after current date")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
 		return
 	}
@@ -1077,33 +1074,15 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		Weeks: make([]admin.ReviewTimelineRecord, 0, 1),
 	}
 
-	// Align start and end dates to the ISOWeek
-	startYear, startWeek = startTime.ISOWeek()
-	endYear, endWeek = endTime.ISOWeek()
+	// Iterate over the weeks and record the week start dates
+	for {
+		var ok bool
+		if week, ok = weekIter.Next(); !ok {
+			break
+		}
 
-	// Iterate backwards to the beginning of the start week
-	date = time.Date(startYear, 0, 0, 0, 0, 0, 0, time.UTC)
-	for date.Weekday() != time.Monday {
-		date = date.AddDate(0, 0, -1)
-	}
-
-	// If the year doesn't start on a Monday then we need to iterate forward
-	year, week = date.ISOWeek()
-	for year < startYear {
-		date = date.AddDate(0, 0, 7)
-		year, week = date.ISOWeek()
-	}
-
-	// Iterate forwards to the first day of the start week
-	for week < startWeek {
-		date = date.AddDate(0, 0, 7)
-		year, week = date.ISOWeek()
-	}
-
-	// Iterate through the weeks and record the week start dates for the JSON output
-	for year < endYear || week <= endWeek {
 		record := admin.ReviewTimelineRecord{
-			Week:          date.Format(timeFormat),
+			Week:          week.Date.Format(timeFormat),
 			VASPsUpdated:  0,
 			Registrations: make(map[string]int),
 		}
@@ -1116,9 +1095,6 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		}
 		out.Weeks = append(out.Weeks, record)
 		vaspCounts = append(vaspCounts, make(map[string]bool))
-
-		date = date.AddDate(0, 0, 7)
-		year, week = date.ISOWeek()
 	}
 
 	// Iterate over the VASPs and count registrations
@@ -1147,10 +1123,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 				continue
 			}
 
-			year, week = timestamp.ISOWeek()
-			if year >= startYear && week >= startWeek && year <= endYear && week <= endWeek {
-				weekNum := ((year - startYear) * 52) + week - startWeek
-
+			// Determine which week number the recorded date falls under
+			weekNum := utils.NewWeek(timestamp).Sub(weekIter.Start)
+			if weekNum >= 0 && weekNum < len(out.Weeks) {
 				// Count VASP if we haven't seen it before
 				if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
 					vaspCounts[weekNum][vasp.Id] = true
