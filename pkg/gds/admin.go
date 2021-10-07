@@ -595,11 +595,18 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 
 			// Build the snippet
 			snippet := admin.VASPSnippet{
-				ID:                 vasp.Id,
-				CommonName:         vasp.CommonName,
-				VerificationStatus: vasp.VerificationStatus.String(),
-				LastUpdated:        vasp.LastUpdated,
-				Traveler:           models.IsTraveler(vasp),
+				ID:                  vasp.Id,
+				CommonName:          vasp.CommonName,
+				RegisteredDirectory: vasp.RegisteredDirectory,
+				VerificationStatus:  vasp.VerificationStatus.String(),
+				LastUpdated:         vasp.LastUpdated,
+				VerifiedOn:          vasp.VerifiedOn,
+				Traveler:            models.IsTraveler(vasp),
+			}
+
+			// Add certificate serial number if it exists
+			if vasp.IdentityCertificate != nil {
+				snippet.CertificateSerial = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
 			}
 
 			// Name is a computed value, ignore errors in finding the name.
