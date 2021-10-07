@@ -80,6 +80,7 @@ func TestWeekIter(t *testing.T) {
 	end = time.Date(2021, time.January, 4, 0, 0, 0, 0, time.UTC)
 	iter, err = utils.GetWeekIterator(start, end)
 	require.Error(t, err)
+	require.Nil(t, iter)
 
 	// Time range of one week
 	start = time.Date(2021, time.January, 4, 0, 0, 0, 0, time.UTC)

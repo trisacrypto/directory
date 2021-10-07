@@ -36,7 +36,7 @@ func DateFromISOWeek(isoYear int, isoWeek int) (date time.Time) {
 	// Iterate forwards to the correct start week
 	for week < isoWeek {
 		date = date.AddDate(0, 0, 7)
-		year, week = date.ISOWeek()
+		_, week = date.ISOWeek()
 	}
 
 	return date
