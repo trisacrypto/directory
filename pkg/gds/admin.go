@@ -1001,6 +1001,12 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Str("id", vasp.Id).Msg("error updating email logs on VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not update VASP record: %s", err)))
+		return
+	}
+
 	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
 	c.JSON(http.StatusOK, out)
 }

@@ -384,6 +384,11 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Error().Err(err).Msg("could not update VASP email logs")
+		return
+	}
+
 	// Mark certificate request as complete.
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_COMPLETED, "certificate request complete", "automated"); err != nil {
 		log.Error().Err(err).Msg("could not update certificate request status")

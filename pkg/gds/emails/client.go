@@ -61,7 +61,8 @@ func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
 
 // SendVerifyContacts creates a verification token for each contact in the VASP contact
 // list and sends them the verification email with instructions on how to verify their
-// email address.
+// email address. Caller must update the VASP record on the data store after calling
+// this function.
 func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 	var contacts = []*pb.Contact{
 		vasp.Contacts.Technical, vasp.Contacts.Administrative,
@@ -194,6 +195,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 
 // SendRejectRegistration sends a notification to all VASP contacts that their
 // registration status is rejected without certificate issuance and explains why.
+// Caller must update the VASP record on the data store after calling this function.
 func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sent int, err error) {
 	ctx := RejectRegistrationData{
 		VID:    vasp.Id,
@@ -259,7 +261,8 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 // SendDeliverCertificates sends the PKCS12 encrypted certificate files to the VASP
 // contacts as an attachment, completing the certificate issuance process. This method
 // only sends the certificate attachment to one email (to limit the delivery of a secure
-// email), ranking the contact emails by priority.
+// email), ranking the contact emails by priority. Caller must update the VASP record on
+// the data store after calling this function.
 func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent int, err error) {
 	ctx := DeliverCertsData{
 		VID:                 vasp.Id,

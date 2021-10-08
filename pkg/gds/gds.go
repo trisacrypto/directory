@@ -186,6 +186,11 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	} else {
 		// Log successful contact verification emails sent
 		log.Info().Int("sent", sent).Msg("contact email verifications sent")
+
+		if err = s.db.UpdateVASP(vasp); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update email logs on vasp")
+			return nil, status.Error(codes.Aborted, "could not update vasp record")
+		}
 	}
 
 	// Create PKCS12 password along with certificate request.
