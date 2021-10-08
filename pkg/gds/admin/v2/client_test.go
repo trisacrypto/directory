@@ -381,6 +381,177 @@ func TestRetrieveVASP(t *testing.T) {
 	require.Equal(t, fixture.Traveler, out.Traveler)
 }
 
+func TestCreateReviewNote(t *testing.T) {
+	fixture := &admin.CreateReviewNoteReply{
+		ID: "af367d27-b0e7-48b5-8987-e48a0712a826",
+	}
+
+	req := &admin.ModifyReviewNoteRequest{
+		VASP: "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+		Text: "note text",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5/notes", r.URL.Path)
+
+		// Must be able to deserialize the request
+		in := new(admin.ModifyReviewNoteRequest)
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err)
+		require.Equal(t, req, in)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to create a note
+	_, err = client.CreateReviewNote(context.TODO(), &admin.ModifyReviewNoteRequest{Text: "no vasp"})
+	require.Error(t, err)
+
+	// Correctly formatted request
+	out, err := client.CreateReviewNote(context.TODO(), req)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
+}
+
+func TestListReviewNotes(t *testing.T) {
+	fixture := &admin.ListReviewNotesReply{
+		Notes: []admin.ReviewNote{
+			{
+				ID:      "af367d27-b0e7-48b5-8987-e48a0712a826",
+				Created: time.Now().Format(time.RFC3339),
+				Author:  "alice@example.com",
+				Text:    "first note",
+			},
+			{
+				ID:       "k9sh7d27-b0e7-48b5-2345-lop10712a826",
+				Created:  time.Now().Format(time.RFC3339),
+				Modified: time.Now().Add(time.Hour).Format(time.RFC3339),
+				Author:   "alice@example.com",
+				Editor:   "bob@example.com",
+				Text:     "edited note",
+			},
+		},
+	}
+
+	vaspID := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5/notes", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to create a note
+	_, err = client.ListReviewNotes(context.TODO(), "")
+	require.Error(t, err)
+
+	// Correctly formatted request
+	out, err := client.ListReviewNotes(context.TODO(), vaspID)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
+}
+
+func UpdateReviewNote(t *testing.T) {
+	fixture := &admin.Reply{Success: true}
+
+	req := &admin.ModifyReviewNoteRequest{
+		VASP:   "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+		NoteID: "af367d27-b0e7-48b5-8987-e48a0712a826",
+		Text:   "updated note text",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPut, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5/notes/af367d27-b0e7-48b5-8987-e48a0712a826", r.URL.Path)
+
+		// Must be able to deserialize the request
+		in := new(admin.ModifyReviewNoteRequest)
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err)
+		require.Equal(t, req, in)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to update a note
+	_, err = client.UpdateReviewNote(context.TODO(), &admin.ModifyReviewNoteRequest{NoteID: req.NoteID, Text: "no VASP"})
+	require.Error(t, err)
+
+	// Ensure a Note ID is required to update a note
+	_, err = client.UpdateReviewNote(context.TODO(), &admin.ModifyReviewNoteRequest{VASP: req.VASP, Text: "no Note"})
+	require.Error(t, err)
+
+	// Correctly formatted request
+	out, err := client.UpdateReviewNote(context.TODO(), req)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
+}
+
+func TestDeleteReviewNote(t *testing.T) {
+	fixture := &admin.Reply{Success: true}
+
+	vaspID := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
+	noteID := "af367d27-b0e7-48b5-8987-e48a0712a826"
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5/notes/af367d27-b0e7-48b5-8987-e48a0712a826", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to delete a note
+	_, err = client.DeleteReviewNote(context.TODO(), "", noteID)
+	require.Error(t, err)
+
+	// Ensure a Note ID is required to delete a note
+	_, err = client.DeleteReviewNote(context.TODO(), vaspID, "")
+	require.Error(t, err)
+
+	// Correctly formatted request
+	out, err := client.DeleteReviewNote(context.TODO(), vaspID, noteID)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
+}
+
 func TestReview(t *testing.T) {
 	fixture := &admin.ReviewReply{
 		Status:  "reviewed",

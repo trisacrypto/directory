@@ -268,7 +268,7 @@ func main() {
 			Usage:    "request a timeline of VASP state changes",
 			Category: "admin",
 			Action:   adminReviewTimeline,
-			Before:   initClient,
+			Before:   initAdminClient,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "s, start",
@@ -337,6 +337,86 @@ func main() {
 				cli.StringFlag{
 					Name:  "i, id",
 					Usage: "the uuid of the VASP to retrieve",
+				},
+			},
+		},
+		{
+			Name:     "admin:notes",
+			Usage:    "list notes associated with a VASP",
+			Category: "admin",
+			Action:   adminListNotes,
+			Before:   initAdminClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the uuid of the VASP",
+				},
+			},
+		},
+		{
+			Name:     "admin:notes-create",
+			Usage:    "create a new note associated with a VASP",
+			Category: "admin",
+			Action:   adminCreateNote,
+			Before:   initAdminClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the uuid of the VASP to associate the note with",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "the name of the new note or existing note",
+				},
+				cli.StringFlag{
+					Name:  "t, text",
+					Usage: "the text to include in the note",
+				},
+				cli.StringFlag{
+					Name:  "f, file",
+					Usage: "read note text from file",
+				},
+			},
+		},
+		{
+			Name:     "admin:notes-update",
+			Usage:    "update an existing VASP note",
+			Category: "admin",
+			Action:   adminUpdateNote,
+			Before:   initAdminClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the uuid of the VASP the note is associated with",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "the name of the note to update",
+				},
+				cli.StringFlag{
+					Name:  "t, text",
+					Usage: "the text to include in the note",
+				},
+				cli.StringFlag{
+					Name:  "f, file",
+					Usage: "read note text from file",
+				},
+			},
+		},
+		{
+			Name:     "admin:notes-delete",
+			Usage:    "delete an existing VASP note",
+			Category: "admin",
+			Action:   adminDeleteNote,
+			Before:   initAdminClient,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "i, id",
+					Usage: "the uuid of the VASP the note is associated with",
+				},
+				cli.StringFlag{
+					Name:  "n, name",
+					Usage: "the name of the note to delete",
 				},
 			},
 		},
@@ -725,6 +805,137 @@ func adminRetrieveVASPs(c *cli.Context) (err error) {
 
 	var rep *admin.RetrieveVASPReply
 	if rep, err = adminClient.RetrieveVASP(ctx, c.String("id")); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminListNotes(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		cli.NewExitError("must specify VASP ID (--id)", 1)
+	}
+
+	var rep *admin.ListReviewNotesReply
+	if rep, err = adminClient.ListReviewNotes(ctx, vaspID); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminCreateNote(c *cli.Context) (err error) {
+	var (
+		params *admin.ModifyReviewNoteRequest
+		text   string
+		file   string
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	params = &admin.ModifyReviewNoteRequest{
+		VASP:   c.String("id"),
+		NoteID: c.String("name"),
+	}
+
+	if params.VASP == "" {
+		cli.NewExitError("must specify VASP ID (--id)", 1)
+	}
+
+	// Get the note text
+	text = c.String("text")
+	file = c.String("file")
+	if text == "" && file == "" {
+		return cli.NewExitError("must specify either --text or --file", 1)
+	} else if text != "" && file != "" {
+		return cli.NewExitError("cannot specify both --text and --file", 1)
+	} else if text != "" {
+		params.Text = text
+	} else {
+		var data []byte
+		if data, err = os.ReadFile(file); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+		params.Text = string(data)
+	}
+
+	var rep *admin.CreateReviewNoteReply
+	if rep, err = adminClient.CreateReviewNote(ctx, params); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminUpdateNote(c *cli.Context) (err error) {
+	var (
+		params *admin.ModifyReviewNoteRequest
+		text   string
+		file   string
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	params = &admin.ModifyReviewNoteRequest{
+		VASP:   c.String("id"),
+		NoteID: c.String("name"),
+	}
+
+	if params.VASP == "" {
+		cli.NewExitError("must specify VASP ID (--id)", 1)
+	}
+
+	if params.NoteID == "" {
+		return cli.NewExitError("must specify note name (--name)", 1)
+	}
+
+	// Get the note text
+	text = c.String("text")
+	file = c.String("file")
+	if text == "" && file == "" {
+		return cli.NewExitError("must specify either --text or --file", 1)
+	} else if text != "" && file != "" {
+		return cli.NewExitError("cannot specify both --text and --file", 1)
+	} else if text != "" {
+		params.Text = text
+	} else {
+		var data []byte
+		if data, err = os.ReadFile(file); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+		params.Text = string(data)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.UpdateReviewNote(ctx, params); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminDeleteNote(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		return cli.NewExitError("must specify VASP ID (--id)", 1)
+	}
+
+	noteID := c.String("name")
+	if noteID == "" {
+		return cli.NewExitError("must specify note name (--name)", 1)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.DeleteReviewNote(ctx, vaspID, noteID); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

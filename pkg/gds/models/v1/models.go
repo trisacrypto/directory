@@ -10,6 +10,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+var (
+	ErrorAlreadyExists = errors.New("already exists")
+	ErrorNotFound      = errors.New("not found")
+)
+
 // GetAdminVerificationToken from the extra data on the VASP record.
 func GetAdminVerificationToken(vasp *pb.VASP) (_ string, err error) {
 	// If the extra data is nil, return empty string with no error
@@ -183,7 +188,7 @@ func CreateReviewNote(vasp *pb.VASP, id string, author string, text string) (err
 	}
 
 	if _, exists := extra.ReviewNotes[id]; exists {
-		return fmt.Errorf("a note already exists with id: %s", id)
+		return ErrorAlreadyExists
 	}
 
 	// Create the new note.
@@ -224,7 +229,7 @@ func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (err
 	var note *ReviewNote
 	var exists bool
 	if note, exists = extra.ReviewNotes[id]; !exists {
-		return fmt.Errorf("could not find note with id: %s", id)
+		return ErrorNotFound
 	}
 
 	// Update the note.
@@ -259,7 +264,7 @@ func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
 	}
 
 	if _, exists := extra.ReviewNotes[id]; !exists {
-		return fmt.Errorf("could not find note with id: %s", id)
+		return ErrorNotFound
 	}
 
 	// Delete the note
