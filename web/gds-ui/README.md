@@ -68,3 +68,44 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `yarn build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## i8n steps
+
+### Install
+- Install `lingui/cli`, `@lingui/macro`, and `@lingui/react1
+```
+npm install --save-dev @lingui/cli @babel/core
+npm install --save-dev @lingui/macro babel-plugin-macros
+npm install --save @lingui/react
+```
+
+- Create `.linguirc` with LinguiJS configuration, and place it next to `package.json`. Modify `locales` to contain all of your locales. Replace `src` with the target folder for internationalization.
+```
+{
+   "locales": ["en", "cs"],
+   "catalogs": [{
+      "path": "src/locales/{locale}/messages",
+      "include": ["src"]
+   }],
+   "format": "po"
+}
+```
+
+- Add the following to `package.json`
+```
+{
+   "scripts": {
+      "extract": "lingui extract",
+      "compile": "lingui compile",
+   }
+}
+```
+
+- Wrap all text messages that need to be translated with `<Trans> Message to be translated</Trans>`. Also add `import { Trans } from "@lingui/macro"` to each files containing wrapped messages.  
+
+- Run `npm run extract` to extract all messages. Or run `npm run extract-c` to extract all messages while also removing the translations that are no longer in the source file. 
+
+- Send `.po` files to translators. The files can be found the the `"path": "src/locales/{locale}/messages"` path specified above.
+
+- Update the `.po` files with translations received from the translators and run `npm run compile` to incorporate the translations. 
+
