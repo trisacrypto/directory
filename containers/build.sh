@@ -48,6 +48,18 @@ if ! ask "Continue with tag $TAG?" N; then
     exit 1
 fi
 
+if [ -z "$REACT_APP_VASPDIRECTORY_CLIENT_ID" ]; then
+    echo "REACT_APP_VASPDIRECTORY_CLIENT_ID environment variable required"
+    exit 1
+fi
+
+if [ -z "$REACT_APP_TRISATEST_CLIENT_ID" ]; then
+    echo "REACT_APP_TRISATEST_CLIENT_ID environment variable required"
+    exit 1
+fi
+
+
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 REPO=$(realpath "$DIR/..")
 
@@ -72,14 +84,16 @@ docker build \
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
 docker build \
     -t trisa/gds-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
-    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
+    --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_VASPDIRECTORY_CLIENT_ID} \
     $REPO
 
 docker build \
     -t trisa/gds-testnet-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
-    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
+    --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_TRISATEST_CLIENT_ID} \
     $REPO
 
 # Retag the images to push to gcr.io

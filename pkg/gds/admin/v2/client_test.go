@@ -651,3 +651,63 @@ func TestResend(t *testing.T) {
 	require.Equal(t, fixture.Sent, out.Sent)
 	require.Equal(t, fixture.Message, out.Message)
 }
+
+func TestReviewTimeline(t *testing.T) {
+	fixture_params := &admin.ReviewTimelineParams{
+		Start: "2020-12-28",
+		End:   "2021-01-04",
+	}
+	fixture_reply := &admin.ReviewTimelineReply{
+		Weeks: []admin.ReviewTimelineRecord{
+			{
+				Week:         "2020-12-28",
+				VASPsUpdated: 20,
+				Registrations: map[string]int{
+					"SUBMITTED":           0,
+					"EMAIL_VERIFIED":      7,
+					"PENDING_REVIEW":      11,
+					"REVIEWED":            24,
+					"ISSUING_CERTIFICATE": 13,
+					"VERIFIED":            2,
+					"REJECTED":            15,
+					"APPEALED":            19,
+					"ERRORED":             14,
+				},
+			},
+			{
+				Week:         "2021-01-04",
+				VASPsUpdated: 25,
+				Registrations: map[string]int{
+					"SUBMITTED":           7,
+					"EMAIL_VERIFIED":      25,
+					"PENDING_REVIEW":      10,
+					"REVIEWED":            22,
+					"ISSUING_CERTIFICATE": 0,
+					"VERIFIED":            12,
+					"REJECTED":            21,
+					"APPEALED":            12,
+					"ERRORED":             5,
+				},
+			},
+		},
+	}
+
+	// Create test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/reviews", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture_reply)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.ReviewTimeline(context.TODO(), fixture_params)
+	require.NoError(t, err)
+	require.Equal(t, fixture_reply.Weeks, out.Weeks)
+}

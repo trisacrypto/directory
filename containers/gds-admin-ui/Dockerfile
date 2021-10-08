@@ -7,6 +7,7 @@ COPY web/gds-admin-ui/package*.json ./
 RUN npm install
 
 # Set production environment variable for build context
+ARG REACT_APP_GOOGLE_CLIENT_ID
 ARG REACT_APP_GDS_API_ENDPOINT="https://api.admin.vaspdirectory.net"
 ARG REACT_APP_GDS_IS_TESTNET=false
 

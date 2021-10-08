@@ -25,6 +25,7 @@ type DirectoryAdministrationClient interface {
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
+	ReviewTimeline(ctx context.Context, params *ReviewTimelineParams) (out *ReviewTimelineReply, err error)
 }
 
 //===========================================================================
@@ -101,13 +102,16 @@ type ListVASPsReply struct {
 
 // VASPSnippet provides summary information about a VASP.
 type VASPSnippet struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	CommonName         string          `json:"common_name"`
-	VerificationStatus string          `json:"verification_status,omitempty"`
-	LastUpdated        string          `json:"last_updated,omitempty"`
-	Traveler           bool            `json:"traveler"`
-	VerifiedContacts   map[string]bool `json:"verified_contacts"`
+	ID                  string          `json:"id"`
+	Name                string          `json:"name"`
+	CommonName          string          `json:"common_name"`
+	RegisteredDirectory string          `json:"registered_directory,omitempty"`
+	VerificationStatus  string          `json:"verification_status,omitempty"`
+	LastUpdated         string          `json:"last_updated,omitempty"`
+	VerifiedOn          string          `json:"verified_on,omitempty"`
+	Traveler            bool            `json:"traveler"`
+	CertificateSerial   string          `json:"certificate_serial_number,omitempty"`
+	VerifiedContacts    map[string]bool `json:"verified_contacts"`
 }
 
 // RetrieveVASPReply returns a pb.VASP record that has been marshaled by protojson and
@@ -163,6 +167,24 @@ type ReviewNote struct {
 
 	// Actual text of the note.
 	Text string `json:"text"`
+}
+
+// ReviewTimelineParams contains the start and end date for the requested timeline.
+type ReviewTimelineParams struct {
+	Start string `url:"start,omitempty" form:"start"`
+	End   string `url:"end,omitempty" form:"end"`
+}
+
+// ReviewTimelineRecord contains counts of VASP registration states over a single week.
+type ReviewTimelineRecord struct {
+	Week          string         `json:"week"`
+	VASPsUpdated  int            `json:"vasps_updated"`
+	Registrations map[string]int `json:"registrations"`
+}
+
+// ReviewTimelineReply returns a list of time series records containing registration counts.
+type ReviewTimelineReply struct {
+	Weeks []ReviewTimelineRecord `json:"weeks"`
 }
 
 //===========================================================================
