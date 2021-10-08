@@ -5,6 +5,8 @@ import NationalIdentification from './NationalIdentification';
 import AddressList from './AddressList';
 import Form from 'react-bootstrap/Form';
 import update from 'immutability-helper';
+import { Trans } from "@lingui/macro"
+
 
 const LegalPerson = ({person, onChange}) => {
   const createChangeHandler = (field) => (event) => {
@@ -33,19 +35,19 @@ const LegalPerson = ({person, onChange}) => {
     />
 
     <Form.Group controlId="legalPersonCustomerNumber">
-      <Form.Label>Customer Number</Form.Label>
+      <Form.Label><Trans>Customer Number</Trans></Form.Label>
       <Form.Control
         type="text"
         value={person.customer_number}
         onChange={createChangeHandler("customer_number")}
       />
       <Form.Text className="text-muted">
-        TRISA specific identity number (UUID), only supplied if you're updating an existing registration request.
+        <Trans>TRISA specific identity number (UUID), only supplied if you're updating an existing registration request.</Trans>
       </Form.Text>
     </Form.Group>
 
     <Form.Group controlId="legalPersonCountryOfRegistration">
-        <Form.Label>Country of Registration</Form.Label>
+        <Form.Label><Trans>Country of Registration</Trans></Form.Label>
         <Form.Control
           as="select" custom
           value={person.country_of_registration}

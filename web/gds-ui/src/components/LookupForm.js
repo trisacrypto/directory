@@ -2,6 +2,8 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import { Trans } from "@lingui/macro"
+
 
 class Lookup extends React.Component {
   state = { query: '', inputType: ''};
@@ -32,7 +34,7 @@ class Lookup extends React.Component {
         <Form.Row className="align-items-top">
           <Col>
             <Form.Label htmlFor="lookupInput" srOnly>
-              Common Name or VASP ID
+              <Trans>Common Name or VASP ID</Trans>
             </Form.Label>
             <Form.Control
               id="lookupInput"
@@ -44,7 +46,7 @@ class Lookup extends React.Component {
             </Form.Text>
           </Col>
           <Col xs="auto">
-            <Button type="submit">Submit</Button>
+            <Button type="submit"><Trans>Submit</Trans></Button>
           </Col>
         </Form.Row>
       </Form>

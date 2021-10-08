@@ -1,18 +1,20 @@
 import React from 'react';
+import { Trans } from "@lingui/macro"
+
 
 const NationalIdentifierTypeCode = () => {
   return (
     <>
-    <option value={1}>Alien Registration Number</option>
-    <option value={2}>Passport Number</option>
-    <option value={3}>Registration Authority Identifier</option>
-    <option value={4}>Driver's License Number</option>
-    <option value={5}>Foreign Investment Identity Number</option>
-    <option value={6}>Tax Identification Number</option>
-    <option value={7}>Social Security Number</option>
-    <option value={8}>Identity Card Number</option>
-    <option value={9}>Legal Entity Identifier (LEI)</option>
-    <option value={0}>Unspecified</option>
+    <option value={1}><Trans>Alien Registration Number</Trans></option>
+    <option value={2}><Trans>Passport Number</Trans></option>
+    <option value={3}><Trans>Registration Authority Identifier</Trans></option>
+    <option value={4}><Trans>Driver's License Number</Trans></option>
+    <option value={5}><Trans>Foreign Investment Identity Number</Trans></option>
+    <option value={6}><Trans>Tax Identification Number</Trans></option>
+    <option value={7}><Trans>Social Security Number</Trans></option>
+    <option value={8}><Trans>Identity Card Number</Trans></option>
+    <option value={9}><Trans>Legal Entity Identifier (LEI)</Trans></option>
+    <option value={0}><Trans>Unspecified</Trans></option>
     </>
   )
 }

@@ -1,13 +1,15 @@
 import React from 'react';
+import { Trans } from "@lingui/macro"
+
 
 const NaturalPersonNameTypeCode = () => {
   return (
     <>
-    <option value={1}>Alias Name</option>
-    <option value={2}>Name at Birth</option>
-    <option value={3}>Maiden Name</option>
-    <option value={4}>Legal Name</option>
-    <option value={0}>Unspecified</option>
+    <option value={1}><Trans>Alias Name</Trans></option>
+    <option value={2}><Trans>Name at Birth</Trans></option>
+    <option value={3}><Trans>Maiden Name</Trans></option>
+    <option value={4}><Trans>Legal Name</Trans></option>
+    <option value={0}><Trans>Unspecified</Trans></option>
     </>
   )
 }

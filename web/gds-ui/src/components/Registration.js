@@ -15,6 +15,8 @@ import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
 import gds from '../api/gds';
 import { isTestNet } from '../lib/testnet';
+import { Trans } from "@lingui/macro"
+
 
 const testNet = isTestNet();
 const registrationFormVersion = "v1beta1";
@@ -285,7 +287,7 @@ class Registration extends React.Component {
             role="status"
             aria-hidden="true"
           />
-          <span className="pl-2">Submitting Registration &hellip;</span>
+          <span className="pl-2"><Trans>Submitting Registration &hellip;</Trans></span>
         </Button>
       );
     }
@@ -298,13 +300,13 @@ class Registration extends React.Component {
             <Col sm={3}>
               <Nav variant="pills" className="flex-column">
                 <Nav.Item>
-                  <Nav.Link eventKey="introduction">Introduction</Nav.Link>
-                  <Nav.Link eventKey="basic-details">Basic Details</Nav.Link>
-                  <Nav.Link eventKey="legal-person">Legal Person</Nav.Link>
-                  <Nav.Link eventKey="contacts">Contacts</Nav.Link>
-                  <Nav.Link eventKey="trisa-implementation">TRISA Implementation</Nav.Link>
-                  <Nav.Link eventKey="trixo">TRIXO Questionnaire</Nav.Link>
-                  <Nav.Link eventKey="summary">Summary</Nav.Link>
+                  <Nav.Link eventKey="introduction"><Trans>Introduction</Trans></Nav.Link>
+                  <Nav.Link eventKey="basic-details"><Trans>Basic Details</Trans></Nav.Link>
+                  <Nav.Link eventKey="legal-person"><Trans>Legal Person</Trans></Nav.Link>
+                  <Nav.Link eventKey="contacts"><Trans>Contacts</Trans></Nav.Link>
+                  <Nav.Link eventKey="trisa-implementation"><Trans>TRISA Implementation</Trans></Nav.Link>
+                  <Nav.Link eventKey="trixo"><Trans>TRIXO Questionnaire</Trans></Nav.Link>
+                  <Nav.Link eventKey="summary"><Trans>Summary</Trans></Nav.Link>
                 </Nav.Item>
               </Nav>
             </Col>
@@ -312,27 +314,27 @@ class Registration extends React.Component {
               <Tab.Content>
                 <Tab.Pane eventKey="introduction">
                   <fieldset>
-                    <legend>Introduction</legend>
+                    <legend><Trans>Introduction</Trans></legend>
                     <p>
-                      Thank you for your interest in the TRISA network for Travel Rule Compliance.
+                      <Trans>Thank you for your interest in the TRISA network for Travel Rule Compliance.
                       This multi-part form is the first step in the registration and certificate
                       issuance process. The information you provide will be used to verify the
                       legal entity that you represent and, where appropriate, will be available to
-                      verified TRISA members to facilitate compliance decisions.
+                      verified TRISA members to facilitate compliance decisions.</Trans>
                     </p>
                     <p>
-                      To assist in completing the registration form, which is somewhat lengthy, the
+                      <Trans>To assist in completing the registration form, which is somewhat lengthy, the
                       form is broken into multiple sections, with information stored in your <em>local
                       browser storage</em> so that you can come back and complete the process. <strong>No
-                      information is sent until you submit the form in the summary section</strong>.
+                      information is sent until you submit the form in the summary section</strong>.</Trans>
                     </p>
                     <p>
-                      This registration form is currently in its beta implementation. On the summary page
-                      you are able to download the form to save offline. You may also load a saved form below.
+                      <Trans>This registration form is currently in its beta implementation. On the summary page
+                      you are able to download the form to save offline. You may also load a saved form below.</Trans>
                     </p>
                     <Form.Group>
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"basic-details"})}>Next</Button>{' '}
-                      <Button type="button" onClick={this.upload} variant="info">Load</Button>
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"basic-details"})}><Trans>Next</Trans></Button>{' '}
+                      <Button type="button" onClick={this.upload} variant="info"><Trans>Load</Trans></Button>
                       <input type="file" className="d-none"
                         multiple={false}
                         accept=".json,application/json"
@@ -344,12 +346,12 @@ class Registration extends React.Component {
                 </Tab.Pane>
                 <Tab.Pane eventKey="basic-details">
                   <fieldset>
-                    <legend>Basic Details</legend>
+                    <legend><Trans>Basic Details</Trans></legend>
                     <p>
-                      To get started, please tell us a bit about your organization.
+                      <Trans>To get started, please tell us a bit about your organization.</Trans>
                     </p>
                     <Form.Group>
-                      <Form.Label>Website</Form.Label>
+                      <Form.Label><Trans>Website</Trans></Form.Label>
                       <Form.Control
                         type="url"
                         value={this.state.formData.website}
@@ -358,7 +360,7 @@ class Registration extends React.Component {
                       />
                     </Form.Group>
                     <Form.Group>
-                      <Form.Label>Date of Incorporation/Establishment</Form.Label>
+                      <Form.Label><Trans>Date of Incorporation/Establishment</Trans></Form.Label>
                       <Form.Control
                         type="date"
                         value={this.state.formData.established_on}
@@ -366,45 +368,45 @@ class Registration extends React.Component {
                       />
                     </Form.Group>
                     <Form.Group>
-                      <Form.Label>Business Category</Form.Label>
+                      <Form.Label><Trans>Business Category</Trans></Form.Label>
                       <Form.Control
                         as="select" custom
                         value={this.state.formData.business_category}
                         onChange={this.createIntChangeHandler("business_category")}
                       >
                         <option value={0}></option>
-                        <option value={1}>Private Organization</option>
-                        <option value={2}>Government Entity</option>
-                        <option value={3}>Business Entity</option>
-                        <option value={4}>Non-Commercial Entity</option>
+                        <option value={1}><Trans>Private Organization</Trans></option>
+                        <option value={2}><Trans>Government Entity</Trans></option>
+                        <option value={3}><Trans>Business Entity</Trans></option>
+                        <option value={4}><Trans>Non-Commercial Entity</Trans></option>
                       </Form.Control>
                       <Form.Text className="text-muted">
-                        Please select the entity category that most closely matches your organization.
+                        <Trans>Please select the entity category that most closely matches your organization.</Trans>
                       </Form.Text>
                     </Form.Group>
                     <Form.Group>
-                      <Form.Label>VASP Category</Form.Label>
+                      <Form.Label><Trans>VASP Category</Trans></Form.Label>
                       <Form.Control
                         as="select" custom multiple
                         value={this.state.formData.vasp_categories}
                         onChange={this.createMultiselectChangeHandler("vasp_categories")}
                       >
-                        <option value="Exchange">Centralized Exchange</option>
-                        <option value="DEX">Decentralized Exchange</option>
-                        <option value="P2P">Person-to-Person Exchange</option>
-                        <option value="Kiosk">Kiosk / Crypto ATM Operator</option>
-                        <option value="Custodian">Custody Provider</option>
-                        <option value="OTC">Over-The-Counter Trading Desk</option>
-                        <option value="Fund">Investment Fund - hedge funds, ETFs, and family offices</option>
-                        <option value="Project">Token Project</option>
-                        <option value="Gambling">Gambling or Gaming Site</option>
-                        <option value="Miner">Mining Pool</option>
-                        <option value="Mixer">Mixing Service</option>
-                        <option value="Individual">Legal person</option>
-                        <option value="Other">Other</option>
+                        <option value="Exchange"><Trans>Centralized Exchange</Trans></option>
+                        <option value="DEX"><Trans>Decentralized Exchange</Trans></option>
+                        <option value="P2P"><Trans>Person-to-Person Exchange</Trans></option>
+                        <option value="Kiosk"><Trans>Kiosk / Crypto ATM Operator</Trans></option>
+                        <option value="Custodian"><Trans>Custody Provider</Trans></option>
+                        <option value="OTC"><Trans>Over-The-Counter Trading Desk</Trans></option>
+                        <option value="Fund"><Trans>Investment Fund - hedge funds, ETFs, and family offices</Trans></option>
+                        <option value="Project"><Trans>Token Project</Trans></option>
+                        <option value="Gambling"><Trans>Gambling or Gaming Site</Trans></option>
+                        <option value="Miner"><Trans>Mining Pool</Trans></option>
+                        <option value="Mixer"><Trans>Mixing Service</Trans></option>
+                        <option value="Individual"><Trans>Legal person</Trans></option>
+                        <option value="Other"><Trans>Other</Trans></option>
                       </Form.Control>
                       <Form.Text className="text-muted">
-                        Please select as many categories needed to represent the types of virtual asset services your organization provides.
+                        <Trans>Please select as many categories needed to represent the types of virtual asset services your organization provides.</Trans>
                       </Form.Text>
                     </Form.Group>
                   </fieldset>
@@ -417,10 +419,10 @@ class Registration extends React.Component {
                   <fieldset>
                     <legend className="legend">Legal Person</legend>
                     <p>
-                      Please enter the information that identify your organization as a
+                      <Trans>Please enter the information that identify your organization as a
                       Legal Person. This form represents the IVMS 101 data structure for
                       legal persons and is strongly suggested for use as KYC information
-                      exchanged in TRISA transfers.
+                      exchanged in TRISA transfers.</Trans>
                     </p>
                     <LegalPerson
                       person={this.state.formData.entity}
@@ -428,30 +430,30 @@ class Registration extends React.Component {
                     />
                   </fieldset>
                   <Form.Group>
-                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"basic-details"})}>Back</Button>{' '}
-                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"contacts"})}>Next</Button>
+                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"basic-details"})}><Trans>Back</Trans></Button>{' '}
+                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"contacts"})}><Trans>Next</Trans></Button>
                   </Form.Group>
                 </Tab.Pane>
                 <Tab.Pane eventKey="contacts">
                   <fieldset>
-                    <legend>Contacts</legend>
+                    <legend><Trans>Contacts</Trans></legend>
                     <p>
-                      Please supply contact information for representatives of your organization.
+                      <Trans>Please supply contact information for representatives of your organization.
                       All contacts will receive an email verification token and the contact email
-                      must be verified before the registration can proceed.
+                      must be verified before the registration can proceed.</Trans>
                     </p>
 
                     <Accordion defaultActiveKey="technical" className="pb-3">
                       <Card>
                         <Accordion.Toggle as={Card.Header} eventKey="technical">
-                          Technical Contact
+                          <Trans>Technical Contact</Trans>
                         </Accordion.Toggle>
                         <Accordion.Collapse eventKey="technical">
                           <Card.Body>
                             <p>
-                              Primary contact for handling technical queries about the operation
+                              <Trans>Primary contact for handling technical queries about the operation
                               and status of your service participating in the TRISA network.
-                              Can be a group or admin email. (Required).
+                              Can be a group or admin email. (Required).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.technical}
@@ -463,13 +465,13 @@ class Registration extends React.Component {
                       </Card>
                       <Card>
                         <Accordion.Toggle as={Card.Header} eventKey="legal">
-                          Legal/Compliance Contact
+                          <Trans>Legal/Compliance Contact</Trans>
                         </Accordion.Toggle>
                         <Accordion.Collapse eventKey="legal">
                           <Card.Body>
                             <p>
-                              Compliance officer or legal contact for requests about the compliance
-                              requirements and legal status of your organization. (Strongly recommended).
+                              <Trans>Compliance officer or legal contact for requests about the compliance
+                              requirements and legal status of your organization. (Strongly recommended).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.legal}
@@ -481,13 +483,13 @@ class Registration extends React.Component {
                       </Card>
                       <Card>
                         <Accordion.Toggle as={Card.Header} eventKey="administrative">
-                          Administrative Contact
+                          <Trans>Administrative Contact</Trans>
                         </Accordion.Toggle>
                         <Accordion.Collapse eventKey="administrative">
                           <Card.Body>
                             <p>
-                              Administrative or executive contact for your organization to field
-                              high-level requests or queries. (Required).
+                              <Trans>Administrative or executive contact for your organization to field
+                              high-level requests or queries. (Required).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.administrative}
@@ -499,13 +501,13 @@ class Registration extends React.Component {
                       </Card>
                       <Card>
                         <Accordion.Toggle as={Card.Header} eventKey="billing">
-                          Billing Contact
+                          <Trans>Billing Contact</Trans>
                         </Accordion.Toggle>
                         <Accordion.Collapse eventKey="billing">
                           <Card.Body>
                             <p>
-                              Billing contact for your organization to handle account and invoice
-                              requests or queries relating to the operation of the TRISA network. (Optional).
+                              <Trans>Billing contact for your organization to handle account and invoice
+                              requests or queries relating to the operation of the TRISA network. (Optional).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.billing}
@@ -525,14 +527,14 @@ class Registration extends React.Component {
                 </Tab.Pane>
                 <Tab.Pane eventKey="trisa-implementation">
                   <fieldset>
-                    <legend>TRISA Implementation</legend>
+                    <legend><Trans>TRISA Implementation</Trans></legend>
                     <p>
-                      Each VASP is required to establish a TRISA endpoint for inter-VASP
+                      <Trans>Each VASP is required to establish a TRISA endpoint for inter-VASP
                       communication. Please specify the details of your endpoint for
-                      certificate issuance.
+                      certificate issuance.</Trans>
                     </p>
                     <Form.Group>
-                      <Form.Label>TRISA Endpoint</Form.Label>
+                      <Form.Label><Trans>TRISA Endpoint</Trans></Form.Label>
                       <Form.Control
                         type="url"
                         value={this.state.formData.trisa_endpoint}
@@ -540,11 +542,11 @@ class Registration extends React.Component {
                         placeholder="trisa.example.com:443"
                       />
                       <Form.Text className="text-muted">
-                        The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+                        <Trans>The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.</Trans>
                       </Form.Text>
                     </Form.Group>
                     <Form.Group>
-                      <Form.Label>Certificate Common Name</Form.Label>
+                      <Form.Label><Trans>Certificate Common Name</Trans></Form.Label>
                       <Form.Control
                         type="text"
                         value={this.state.formData.common_name}
@@ -552,23 +554,23 @@ class Registration extends React.Component {
                         placeholder="trisa.example.com"
                       />
                       <Form.Text className="text-muted">
-                        The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+                        <Trans>The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.</Trans>
                       </Form.Text>
                     </Form.Group>
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"contacts"})}>Back</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trixo"})}>Next</Button>
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"contacts"})}><Trans>Back</Trans></Button>{' '}
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trixo"})}><Trans>Next</Trans></Button>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
                 <Tab.Pane eventKey="trixo">
                   <fieldset>
-                    <legend>TRIXO Questionnaire</legend>
+                    <legend><Trans>TRIXO Questionnaire</Trans></legend>
                     <p>
-                      This questionnaire is designed to help the TRISA working group and TRISA members
+                      <Trans>This questionnaire is designed to help the TRISA working group and TRISA members
                       understand the regulatory regime of your organization. The information you provide
                       will help ensure that required compliance information exchanges are conducted
-                      correctly and safely. All verified TRISA members will have access to this information.
+                      correctly and safely. All verified TRISA members will have access to this information.</Trans>
                     </p>
                     <TRIXO
                       data={this.state.formData.trixo}
@@ -582,7 +584,7 @@ class Registration extends React.Component {
                 </Tab.Pane>
                 <Tab.Pane eventKey="summary">
                   <fieldset>
-                    <legend>Summary</legend>
+                    <legend><Trans>Summary</Trans></legend>
                     <div className="mt-2 mb-5"><pre className="summaryJSON">{summaryFormData}</pre></div>
                     <Form.Group className="mt-2">
                       <Row>
@@ -590,14 +592,14 @@ class Registration extends React.Component {
                           {submitBtn}
                         </Col>
                         <Col xs={6} className="text-right">
-                          <Button type="button" variant="info" onClick={this.handleDownload}>Download</Button>{' '}
-                          <Button type="reset" variant="secondary" onClick={this.handleReset}>Reset</Button>
+                          <Button type="button" variant="info" onClick={this.handleDownload}><Trans>Download</Trans></Button>{' '}
+                          <Button type="reset" variant="secondary" onClick={this.handleReset}><Trans>Reset</Trans></Button>
                           <a className="d-none"
                             download="trisa_registration.json"
                             href={this.state.fileDownloadURL}
                             ref={e=>this.dofileDownload = e}
                           >
-                          download data
+                          <Trans>download data</Trans>
                           </a>
                         </Col>
                       </Row>
@@ -618,40 +620,40 @@ class Registration extends React.Component {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>TRISA Registration Request Submitted!</Modal.Title>
+          <Modal.Title><Trans>TRISA Registration Request Submitted!</Trans></Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Your registration request has been successfully received by the Directory Service.
+            <Trans>Your registration request has been successfully received by the Directory Service.
             Verification emails have been sent to all contacts listed. Once your contact
             information has been verified, the registration form will be sent to the
-            TRISA review board to verify your membership in the TRISA network.
+            TRISA review board to verify your membership in the TRISA network.</Trans>
           </p>
           <p>
-            When you are verified you will be issued PKCS12 encrypted identity certificates
+            <Trans>When you are verified you will be issued PKCS12 encrypted identity certificates
             for use in mTLS authentication between TRISA members. The password to decrypt
-            those certificates is shown below:
+            those certificates is shown below:</Trans>
           </p>
           <p className="text-center mark"><strong>
             {this.state.submissionResponse.pkcs12password}
           </strong></p>
           <p className="text-center text-danger">
-            This is the only time the PKCS12 password is shown during the registration process.
+            <Trans>This is the only time the PKCS12 password is shown during the registration process.
             <br />
-            Please copy and paste this password and store somewhere safe!
+            Please copy and paste this password and store somewhere safe!</Trans>
           </p>
           <p className="text-muted text-center">
-            ID: {this.state.submissionResponse.id}
+            <Trans>ID: {this.state.submissionResponse.id}
             <br />
-            Verification Status: "{this.state.submissionResponse.status}"
+            Verification Status: "{this.state.submissionResponse.status}"</Trans>
           </p>
           <p className="text-muted small">
-            Message from server: "{this.state.submissionResponse.message}"
+            <Trans>Message from server: "{this.state.submissionResponse.message}"</Trans>
           </p>
         </Modal.Body>
         <Modal.Footer className="text-center">
           <Button variant="danger" onClick={this.handleModalClose}>
-            Understood
+            <Trans>Understood</Trans>
           </Button>
         </Modal.Footer>
       </Modal>
