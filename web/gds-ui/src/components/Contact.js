@@ -1,5 +1,6 @@
 import React from 'react';
 import Form from 'react-bootstrap/Form';
+import { Trans } from "@lingui/macro"
 
 const Contact = ({contact, onChange, required}) => {
   const createChangeHandler = (field) => (event) => {
@@ -11,7 +12,7 @@ const Contact = ({contact, onChange, required}) => {
   return (
     <>
     <Form.Group controlId="contactName">
-      <Form.Label>Full Name</Form.Label>
+      <Form.Label><Trans>Full Name</Trans></Form.Label>
       <Form.Control
         type="text"
         value={contact.name}
@@ -19,11 +20,11 @@ const Contact = ({contact, onChange, required}) => {
         required={required}
       />
       <Form.Text className="text-muted">
-        Preferred name for email communication.
+        <Trans>Preferred name for email communication.</Trans>
       </Form.Text>
     </Form.Group>
     <Form.Group controlId="contactEmail">
-      <Form.Label>Email address</Form.Label>
+      <Form.Label><Trans>Email address</Trans></Form.Label>
       <Form.Control
         type="email"
         value={contact.email}
@@ -31,14 +32,14 @@ const Contact = ({contact, onChange, required}) => {
         required={required}
       />
       <Form.Text className="text-muted">
-        Please use the email address associated with your organization.
+        <Trans>Please use the email address associated with your organization.</Trans>
       </Form.Text>
       <Form.Control.Feedback type="invalid">
-        Please supply a valid email address.
+        <Trans>Please supply a valid email address.</Trans>
       </Form.Control.Feedback>
     </Form.Group>
     <Form.Group controlId="contactPhone">
-      <Form.Label>Phone Number</Form.Label>
+      <Form.Label><Trans>Phone Number</Trans></Form.Label>
       <Form.Control
         type="tel"
         value={contact.phone}
@@ -49,7 +50,7 @@ const Contact = ({contact, onChange, required}) => {
         {required ? "Required - please supply " : "Optional - if supplied, use"} full phone number with country code.
       </Form.Text>
       <Form.Control.Feedback type="invalid">
-        Please supply a valid phone number or omit entirely if not required.
+        <Trans>Please supply a valid phone number or omit entirely if not required.</Trans>
       </Form.Control.Feedback>
     </Form.Group>
 

@@ -1,0 +1,726 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2021-10-07 15:52+0800\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: zh\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/components/Footer.js:10
+msgid "A component of the <0>TRISA</0> architecture for Cryptocurrency Travel Rule compliance."
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:154
+msgid "A phonetic representation of the name by which the legal person is known."
+msgstr "添加翻译"
+
+#: src/components/TopNav.js:24
+msgid "About TRISA"
+msgstr "添加翻译"
+
+#: src/components/ivms101/AddressList.js:48
+msgid "Add Address"
+msgstr "添加地址"
+
+#: src/components/ivms101/LegalPersonName.js:173
+msgid "Add Legal Name"
+msgstr "添加身份证姓名"
+
+#: src/components/ivms101/LegalPersonName.js:174
+msgid "Add Local Name"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:175
+msgid "Add Phonetic Names"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:214
+msgid "Add Regulation"
+msgstr "添加翻译"
+
+#: src/components/ivms101/Address.js:71
+msgid "Address Type"
+msgstr "添加翻译"
+
+#: src/components/ivms101/Address.js:47
+msgid "Address {0}"
+msgstr "添加翻译"
+
+#: src/components/ivms101/AddressList.js:42
+msgid "Addresses"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:486
+msgid "Administrative Contact"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:491
+msgid "Administrative or executive contact for your organization to field high-level requests or queries. (Required)."
+msgstr "添加翻译"
+
+#: src/components/select/NaturalPersonNameTypeCode.js:8
+msgid "Alias Name"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:8
+msgid "Alien Registration Number"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:31
+msgid "An identifier issued by an appropriate issuing authority."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:208
+msgid "Applicable Regulations"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:8
+msgid "Arabic (Arabic language)"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:9
+msgid "Arabic (Persian language)"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:10
+msgid "Armenian"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:174
+msgid "At what threshold and currency does your organization conduct KYC?"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:433
+#: src/components/Registration.js:561
+msgid "Back"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:304
+#: src/components/Registration.js:349
+msgid "Basic Details"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:504
+msgid "Billing Contact"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:509
+msgid "Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network. (Optional)."
+msgstr "添加翻译"
+
+#: src/components/select/AddressTypeCode.js:9
+msgid "Business"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:371
+msgid "Business Category"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:380
+msgid "Business Entity"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:149
+msgid "CDD & Travel Rule Policies"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:394
+msgid "Centralized Exchange"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:549
+msgid "Certificate Common Name"
+msgstr "添加翻译"
+
+#: src/components/LookupForm.js:37
+msgid "Common Name or VASP ID"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:473
+msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. (Strongly recommended)."
+msgstr "添加翻译"
+
+#: src/components/VerifyContact.js:26
+msgid "Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:306
+#: src/components/Registration.js:439
+msgid "Contacts"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:32
+#: src/components/ivms101/Address.js:59
+msgid "Country"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:45
+msgid "Country of Issue"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPerson.js:50
+msgid "Country of Registration"
+msgstr "添加翻译"
+
+#: src/components/Footer.js:13
+msgid "Created and maintained by <0>Rotational Labs</0> in partnership with <1>CipherTrace</1> on behalf of <2>TRISA</2>."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:398
+msgid "Custody Provider"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPerson.js:38
+msgid "Customer Number"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:11
+msgid "Cyrillic"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:243
+msgid "Data Protection Policies"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:363
+msgid "Date of Incorporation/Establishment"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:395
+msgid "Decentralized Exchange"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:12
+msgid "Devanagari & related Indic"
+msgstr "添加翻译"
+
+#: src/components/TopNav.js:25
+msgid "Documentation"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:164
+msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:151
+msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:255
+msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:595
+msgid "Download"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:11
+msgid "Driver's License Number"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:532
+msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
+msgstr "添加翻译"
+
+#: src/components/Contact.js:27
+msgid "Email address"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:12
+msgid "Foreign Investment Identity Number"
+msgstr "添加翻译"
+
+#: src/components/Contact.js:15
+msgid "Full Name"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:402
+msgid "Gambling or Gaming Site"
+msgstr "添加翻译"
+
+#: src/components/select/AddressTypeCode.js:10
+msgid "Geographic"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:13
+msgid "Georgian"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:17
+msgid "Global TRISA Directory Record"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:379
+msgid "Government Entity"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:14
+msgid "Greek"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:15
+msgid "Han (Hanzi, Kanji, Hanja)"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:16
+msgid "Hebrew"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:646
+msgid "ID: {0}<0/>Verification Status: \"{1}\""
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:24
+msgid "Identification Number"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:35
+msgid "Identification Type"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:15
+msgid "Identity Card Number"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:62
+msgid "If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:303
+#: src/components/Registration.js:317
+msgid "Introduction"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:400
+msgid "Investment Fund - hedge funds, ETFs, and family offices"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:136
+msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:245
+msgid "Is your organization required by law to safeguard PII?"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:198
+msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:17
+msgid "Kana"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:397
+msgid "Kiosk / Crypto ATM Operator"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:18
+msgid "Korean"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:16
+msgid "Legal Entity Identifier (LEI)"
+msgstr "添加翻译"
+
+#: src/components/select/LegalPersonNameTypeCode.js:9
+#: src/components/select/NaturalPersonNameTypeCode.js:11
+msgid "Legal Name"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:305
+msgid "Legal Person"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:405
+msgid "Legal person"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:468
+msgid "Legal/Compliance Contact"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:337
+msgid "Load"
+msgstr "添加翻译"
+
+#: src/components/VerifyContact.js:60
+msgid "Loading ..."
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:139
+msgid "Local Name Identifiers"
+msgstr "添加翻译"
+
+#: src/components/select/NaturalPersonNameTypeCode.js:10
+msgid "Maiden Name"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:651
+msgid "Message from server: \"{0}\""
+msgstr "添加翻译"
+
+#: src/components/Registration.js:403
+msgid "Mining Pool"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:404
+msgid "Mixing Service"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:126
+msgid "Name Identifiers"
+msgstr "添加翻译"
+
+#: src/components/select/NaturalPersonNameTypeCode.js:9
+msgid "Name at Birth"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:117
+msgid "Name of Primary Regulator"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:18
+msgid "National Identification"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:52
+msgid "National Jurisdiction"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NaturalPerson.js:7
+msgid "Natural Person"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:336
+#: src/components/Registration.js:434
+#: src/components/Registration.js:562
+msgid "Next"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:145
+#: src/components/TRIXO.js:160
+msgid "No"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:381
+msgid "Non-Commercial Entity"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:406
+msgid "Other"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:128
+msgid "Other Jursidictions"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:399
+msgid "Over-The-Counter Trading Desk"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:144
+msgid "Partially"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:159
+msgid "Partially Implemented"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:9
+msgid "Passport Number"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:396
+msgid "Person-to-Person Exchange"
+msgstr "添加翻译"
+
+#: src/components/Contact.js:42
+msgid "Phone Number"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:152
+msgid "Phonetic Name Identifiers"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:129
+msgid "Please add any other regulatory jurisdictions your organization complies with."
+msgstr "添加翻译"
+
+#: src/components/ivms101/AddressList.js:44
+msgid "Please enter at least one geographic address."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:422
+msgid "Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:409
+msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:384
+msgid "Please select the entity category that most closely matches your organization."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:210
+msgid "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g. \"FATF Recommendation 16\""
+msgstr "添加翻译"
+
+#: src/components/Contact.js:38
+msgid "Please supply a valid email address."
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:20
+msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
+msgstr "添加翻译"
+
+#: src/components/Contact.js:53
+msgid "Please supply a valid phone number or omit entirely if not required."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:441
+msgid "Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed."
+msgstr "添加翻译"
+
+#: src/components/Contact.js:35
+msgid "Please use the email address associated with your organization."
+msgstr "添加翻译"
+
+#: src/components/Contact.js:23
+msgid "Preferred name for email communication."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:107
+msgid "Primary National Jurisdiction"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:454
+msgid "Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email. (Required)."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:378
+msgid "Private Organization"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:21
+msgid "Registered Directory"
+msgstr "添加翻译"
+
+#: src/components/ivms101/NationalIdentification.js:55
+msgid "Registration Authority"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:10
+msgid "Registration Authority Identifier"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:62
+msgid "Regulator Name"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:596
+msgid "Reset"
+msgstr "添加翻译"
+
+#: src/components/select/AddressTypeCode.js:8
+msgid "Residential"
+msgstr "添加翻译"
+
+#: src/components/VerifyContact.js:80
+msgid "Return to Directory"
+msgstr "添加翻译"
+
+#: src/components/select/LegalPersonNameTypeCode.js:10
+msgid "Short Name"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:14
+msgid "Social Security Number"
+msgstr "添加翻译"
+
+#: src/components/LookupForm.js:49
+msgid "Submit"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:290
+msgid "Submitting Registration …"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:309
+#: src/components/Registration.js:587
+msgid "Summary"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:537
+msgid "TRISA Endpoint"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:46
+msgid "TRISA Identity Signature"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:307
+#: src/components/Registration.js:530
+msgid "TRISA Implementation"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:24
+msgid "TRISA Member ID"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:623
+msgid "TRISA Registration Request Submitted!"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:27
+msgid "TRISA Service Endpoint"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:39
+msgid "TRISA Verification"
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPerson.js:45
+msgid "TRISA specific identity number (UUID), only supplied if you're updating an existing registration request."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:308
+#: src/components/Registration.js:568
+msgid "TRIXO Questionnaire"
+msgstr "添加翻译"
+
+#: src/components/select/NationalIdentifierTypeCode.js:13
+msgid "Tax Identification Number"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:449
+msgid "Technical Contact"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:19
+msgid "Thai"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:319
+msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:545
+msgid "The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:557
+msgid "The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:238
+msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:128
+msgid "The name and type of name by which the legal person is known."
+msgstr "添加翻译"
+
+#: src/components/ivms101/LegalPersonName.js:141
+msgid "The name by which the legal person is known using local characters."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:124
+msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:641
+msgid "This is the only time the PKCS12 password is shown during the registration process.<0/>Please copy and paste this password and store somewhere safe!"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:570
+msgid "This questionnaire is designed to help the TRISA working group and TRISA members understand the regulatory regime of your organization. The information you provide will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:332
+msgid "This registration form is currently in its beta implementation. On the summary page you are able to download the form to save offline. You may also load a saved form below."
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:194
+msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:326
+msgid "To assist in completing the registration form, which is somewhat lengthy, the form is broken into multiple sections, with information stored in your <0>local browser storage</0> so that you can come back and complete the process. <1>No information is sent until you submit the form in the summary section</1>."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:351
+msgid "To get started, please tell us a bit about your organization."
+msgstr "添加翻译"
+
+#: src/components/Registration.js:401
+msgid "Token Project"
+msgstr "添加翻译"
+
+#: src/components/select/LegalPersonNameTypeCode.js:11
+msgid "Trading Name"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:656
+msgid "Understood"
+msgstr "添加翻译"
+
+#: src/components/select/AddressTypeCode.js:11
+#: src/components/select/LegalPersonNameTypeCode.js:8
+#: src/components/select/NationalIdentifierTypeCode.js:17
+#: src/components/select/NaturalPersonNameTypeCode.js:12
+msgid "Unspecified"
+msgstr "添加翻译"
+
+#: src/components/select/TransliterationMethodCode.js:20
+msgid "Unspecified Standard"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:388
+msgid "VASP Category"
+msgstr "添加翻译"
+
+#: src/components/LookupResults.js:40
+msgid "VERIFIED on {0}"
+msgstr "添加翻译"
+
+#: src/components/VerifyContact.js:70
+msgid "Verification Status: {0}"
+msgstr "添加翻译"
+
+#: src/components/VerifyContact.js:64
+msgid "Verifying Contact Information …"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:354
+msgid "Website"
+msgstr "网页"
+
+#: src/components/TRIXO.js:218
+msgid "What is the minimum threshold for Travel Rule compliance?"
+msgstr "添加翻译"
+
+#: src/components/Registration.js:633
+msgid "When you are verified you will be issued PKCS12 encrypted identity certificates for use in mTLS authentication between TRISA members. The password to decrypt those certificates is shown below:"
+msgstr "添加翻译"
+
+#: src/components/TRIXO.js:143
+#: src/components/TRIXO.js:158
+msgid "Yes"
+msgstr "是的"
+
+#: src/components/Registration.js:627
+msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
+msgstr "Directory Service 已经成果收到了您的注册申请。确认邮件已经发送到所有在列联系人。一经确认，TRISA 审核组织将收到注册表格并审核您的TRISA网络成员资格。"
+
+#: src/components/Registration.js:602
+msgid "download data"
+msgstr "下载数据"

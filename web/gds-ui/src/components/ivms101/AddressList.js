@@ -3,6 +3,8 @@ import Address from './Address';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
+import { Trans } from "@lingui/macro"
+
 
 const AddressList = ({addresses, onChange}) => {
   const createArrayChangeHandler = (idx) => (event, value) => {
@@ -37,13 +39,13 @@ const AddressList = ({addresses, onChange}) => {
 
   return (
     <fieldset>
-      <legend className="subsublegend">Addresses</legend>
+      <legend className="subsublegend"><Trans>Addresses</Trans></legend>
       <p>
-        Please enter at least one geographic address.
+        <Trans>Please enter at least one geographic address.</Trans>
       </p>
       {renderedAddresses}
       <Form.Group>
-        <Button size="sm" variant="primary" onClick={addAddressHandler}>Add Address</Button>
+        <Button size="sm" variant="primary" onClick={addAddressHandler}><Trans>Add Address</Trans></Button>
       </Form.Group>
     </fieldset>
   );

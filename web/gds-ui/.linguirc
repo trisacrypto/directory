@@ -1,0 +1,8 @@
+{
+  "locales": ["de", "en", "fr", "ja", "zh"],
+  "sourceLocale": "en",
+  "catalogs": [{
+    "path": "src/locales/{locale}/messages",
+    "include": ["src"]
+  }]
+}

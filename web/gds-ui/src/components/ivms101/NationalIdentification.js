@@ -3,6 +3,7 @@ import update from 'immutability-helper';
 import Form from 'react-bootstrap/Form';
 import Countries from '../select/Countries';
 import NationalIdentifierTypeCode from '../select/NationalIdentifierTypeCode';
+import { Trans } from "@lingui/macro"
 
 
 const NationalIdentification = ({data, onChange}) => {
@@ -14,24 +15,24 @@ const NationalIdentification = ({data, onChange}) => {
 
   return (
     <fieldset>
-      <legend className="subsublegend">National Identification</legend>
+      <legend className="subsublegend"><Trans>National Identification</Trans></legend>
       <p>
-        Please supply a valid national identification number. TRISA recommends the use of
-        LEI numbers. For more information, please visit <a href="https://www.gleif.org/" rel="noreferrer" target="_blank">GLEIF.org</a>.
+        <Trans>Please supply a valid national identification number. TRISA recommends the use of
+        LEI numbers. For more information, please visit <a href="https://www.gleif.org/" rel="noreferrer" target="_blank">GLEIF.org</a>.</Trans>
       </p>
       <Form.Group>
-        <Form.Label>Identification Number</Form.Label>
+        <Form.Label><Trans>Identification Number</Trans></Form.Label>
         <Form.Control
           type="text"
           value={data.national_identifier}
           onChange={createChangeHandler('national_identifier')}
         />
         <Form.Text className="text-muted">
-          An identifier issued by an appropriate issuing authority.
+          <Trans>An identifier issued by an appropriate issuing authority.</Trans>
         </Form.Text>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Identification Type</Form.Label>
+        <Form.Label><Trans>Identification Type</Trans></Form.Label>
         <Form.Control
           as="select" custom
           value={data.national_identifier_type}
@@ -41,7 +42,7 @@ const NationalIdentification = ({data, onChange}) => {
         </Form.Control>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Country of Issue</Form.Label>
+        <Form.Label><Trans>Country of Issue</Trans></Form.Label>
         <Form.Control
           as="select" custom
           value={data.country_of_issue}
@@ -51,14 +52,14 @@ const NationalIdentification = ({data, onChange}) => {
         </Form.Control>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Registration Authority</Form.Label>
+        <Form.Label><Trans>Registration Authority</Trans></Form.Label>
         <Form.Control
           type="text"
           value={data.registration_authority}
           onChange={createChangeHandler('registration_authority')}
         />
         <Form.Text className="text-muted">
-          If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.
+          <Trans>If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.</Trans>
         </Form.Text>
       </Form.Group>
     </fieldset>

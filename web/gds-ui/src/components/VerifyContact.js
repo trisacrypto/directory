@@ -4,6 +4,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Alert from 'react-bootstrap/Alert';
 import Spinner from 'react-bootstrap/Spinner';
+import { Trans } from "@lingui/macro"
 
 class VerifyContact extends React.Component {
   constructor(props) {
@@ -22,7 +23,7 @@ class VerifyContact extends React.Component {
 
   componentDidMount() {
     if (!this.state.token || !this.state.vaspID) {
-      const message = "Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser.";
+      const message = <Trans>Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser.</Trans>;
       this.setState({variant: "danger", message: message});
       return
     }
@@ -56,17 +57,17 @@ class VerifyContact extends React.Component {
         <div className="d-flex flex-column align-items-center justify-content-center">
           <div className="row">
             <Spinner animation="border" role="status">
-              <span className="sr-only">Loading ...</span>
+              <span className="sr-only"><Trans>Loading ...</Trans></span>
             </Spinner>
           </div>
           <div className="row pt-1">
-            <em>Verifying Contact Information &hellip;</em>
+            <em><Trans>Verifying Contact Information &hellip;</Trans></em>
           </div>
         </div>
       );
     }
 
-    const vs = this.state.verificationStatus ? <p>Verification Status: {this.state.verificationStatus}</p> : null;
+    const vs = this.state.verificationStatus ? <p><Trans>Verification Status: {this.state.verificationStatus}</Trans></p> : null;
 
     return (
       <Row>
@@ -76,7 +77,7 @@ class VerifyContact extends React.Component {
             <p>{this.state.message}</p>
             {vs}
             <hr />
-            <a href="/" className="btn btn-dark">Return to Directory</a>
+            <a href="/" className="btn btn-dark"><Trans>Return to Directory</Trans></a>
           </Alert>
         </Col>
       </Row>

@@ -5,6 +5,8 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
+import { Trans } from "@lingui/macro"
+
 
 const addressLineExamples = [
   "building name/number, street name",
@@ -42,7 +44,7 @@ const Address = ({index, address, onChange, onDelete}) => {
 
   return (
     <>
-    <Form.Label>Address {index+1}</Form.Label>
+    <Form.Label><Trans>Address {index+1}</Trans></Form.Label>
     {addressLines}
     <Form.Row>
       <Form.Group as={Col}>
@@ -54,7 +56,7 @@ const Address = ({index, address, onChange, onDelete}) => {
           <Countries />
         </Form.Control>
         <Form.Text className="text-muted">
-          Country
+          <Trans>Country</Trans>
         </Form.Text>
       </Form.Group>
       <Form.Group as={Col}>
@@ -66,7 +68,7 @@ const Address = ({index, address, onChange, onDelete}) => {
           <AddressTypeCode />
         </Form.Control>
         <Form.Text className="text-muted">
-          Address Type
+          <Trans>Address Type</Trans>
         </Form.Text>
       </Form.Group>
       <Form.Group as={Col} xs={1}>

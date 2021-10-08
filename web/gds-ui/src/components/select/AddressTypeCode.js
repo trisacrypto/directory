@@ -1,12 +1,14 @@
 import React from 'react';
+import { Trans } from "@lingui/macro"
+
 
 const AddressTypeCode = () => {
   return (
     <>
-    <option value={1}>Residential</option>
-    <option value={2}>Business</option>
-    <option value={3}>Geographic</option>
-    <option value={0}>Unspecified</option>
+    <option value={1}><Trans>Residential</Trans></option>
+    <option value={2}><Trans>Business</Trans></option>
+    <option value={3}><Trans>Geographic</Trans></option>
+    <option value={0}><Trans>Unspecified</Trans></option>
     </>
   )
 }

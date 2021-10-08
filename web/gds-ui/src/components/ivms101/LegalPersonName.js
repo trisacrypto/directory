@@ -4,6 +4,8 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import LegalPersonNameTypeCode from '../select/LegalPersonNameTypeCode';
+import { Trans } from "@lingui/macro"
+
 
 const LegalPersonName = ({name, onChange}) => {
   const createArrayChangeHandler = (field, idx, key) => (event) => {
@@ -121,9 +123,9 @@ const LegalPersonName = ({name, onChange}) => {
     if (nameIdentifiers.length > 0) {
       return (
         <>
-        <Form.Label className="mb-0 pb-0">Name Identifiers</Form.Label>
+        <Form.Label className="mb-0 pb-0"><Trans>Name Identifiers</Trans></Form.Label>
         <p className="text-muted mt-0 pt-0">
-          <small>The name and type of name by which the legal person is known.</small>
+          <small><Trans>The name and type of name by which the legal person is known.</Trans></small>
         </p>
         </>
       );
@@ -134,9 +136,9 @@ const LegalPersonName = ({name, onChange}) => {
     if (localNameIdentifiers.length > 0) {
       return (
         <>
-        <Form.Label className="mb-0 pb-0">Local Name Identifiers</Form.Label>
+        <Form.Label className="mb-0 pb-0"><Trans>Local Name Identifiers</Trans></Form.Label>
         <p className="text-muted mt-0 pt-0">
-          <small>The name by which the legal person is known using local characters.</small>
+          <small><Trans>The name by which the legal person is known using local characters.</Trans></small>
         </p>
         </>
       );
@@ -147,9 +149,9 @@ const LegalPersonName = ({name, onChange}) => {
     if (phoneticNameIdentifiers.length > 0) {
       return (
         <>
-        <Form.Label className="mb-0 pb-0">Phonetic Name Identifiers</Form.Label>
+        <Form.Label className="mb-0 pb-0"><Trans>Phonetic Name Identifiers</Trans></Form.Label>
         <p className="text-muted mt-0 pt-0">
-          <small>A phonetic representation of the name by which the legal person is known.</small>
+          <small><Trans>A phonetic representation of the name by which the legal person is known.</Trans></small>
         </p>
         </>
       );
@@ -168,9 +170,9 @@ const LegalPersonName = ({name, onChange}) => {
     {phoneticNameIdentifiers}
 
     <Form.Group>
-      <Button size="sm" onClick={createArrayPushHandler("name_identifiers")}>Add Legal Name</Button>{' '}
-      <Button size="sm" onClick={createArrayPushHandler("local_name_identifiers")}>Add Local Name</Button>{' '}
-      <Button size="sm" onClick={createArrayPushHandler("phonetic_name_identifiers")}>Add Phonetic Name</Button>
+      <Button size="sm" onClick={createArrayPushHandler("name_identifiers")}><Trans>Add Legal Name</Trans></Button>{' '}
+      <Button size="sm" onClick={createArrayPushHandler("local_name_identifiers")}><Trans>Add Local Name</Trans></Button>{' '}
+      <Button size="sm" onClick={createArrayPushHandler("phonetic_name_identifiers")}><Trans>Add Phonetic Names</Trans></Button>
     </Form.Group>
     </>
   );

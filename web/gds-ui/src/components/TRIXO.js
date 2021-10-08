@@ -5,6 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
+import { Trans } from "@lingui/macro"
 
 
 const TRIXO = ({data, onChange}) => {
@@ -48,7 +49,7 @@ const TRIXO = ({data, onChange}) => {
     return (
       <Form.Row key={idx}>
         <Form.Group as={Col}>
-          <Form.Label>National Jurisdiction</Form.Label>
+          <Form.Label><Trans>National Jurisdiction</Trans></Form.Label>
           <Form.Control
             as="select" custom
             value={item.country}
@@ -58,7 +59,7 @@ const TRIXO = ({data, onChange}) => {
           </Form.Control>
         </Form.Group>
         <Form.Group as={Col}>
-          <Form.Label>Regulator Name</Form.Label>
+          <Form.Label><Trans>Regulator Name</Trans></Form.Label>
           <Form.Control
             value={item.regulator_name}
             onChange={createArrayChangeObjectHandler("other_jurisdictions", idx, "regulator_name")}
@@ -103,7 +104,7 @@ const TRIXO = ({data, onChange}) => {
   return (
     <>
       <Form.Group controlId="trixoPrimaryNationalJurisdiction">
-        <Form.Label>Primary National Jurisdiction</Form.Label>
+        <Form.Label><Trans>Primary National Jurisdiction</Trans></Form.Label>
         <Form.Control
           as="select" custom
           value={data.primary_national_jurisdiction}
@@ -113,54 +114,54 @@ const TRIXO = ({data, onChange}) => {
         </Form.Control>
       </Form.Group>
       <Form.Group controlId="trixoPrimaryNationalJurisdiction">
-        <Form.Label>Name of Primary Regulator</Form.Label>
+        <Form.Label><Trans>Name of Primary Regulator</Trans></Form.Label>
         <Form.Control
           type="text"
           value={data.primary_regulator}
           onChange={createChangeHandler("primary_regulator")}
         />
         <Form.Text className="text-muted">
-          The name of primary regulator or supervisory authority for your national jurisdiction
+          <Trans>The name of primary regulator or supervisory authority for your national jurisdiction</Trans>
         </Form.Text>
       </Form.Group>
       <fieldset>
-        <legend className="sublegend">Other Jursidictions</legend>
-        <p>Please add any other regulatory jurisdictions your organization complies with.</p>
+        <legend className="sublegend"><Trans>Other Jursidictions</Trans></legend>
+        <p><Trans>Please add any other regulatory jurisdictions your organization complies with.</Trans></p>
         {otherJursidictions}
         <Form.Group>
           <Button size="sm" onClick={createArrayPushHandler('other_jurisdictions', {'country': '', 'regulator_name': ''})}>Add Jurisdiction</Button>
         </Form.Group>
       </fieldset>
       <Form.Group>
-        <Form.Label>Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?</Form.Label>
+        <Form.Label><Trans>Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?</Trans></Form.Label>
         <Form.Control
           as="select" custom
           value={data.financial_transfers_permitted}
           onChange={createChangeHandler("financial_transfers_permitted")}
         >
           <option value=""></option>
-          <option value="yes">Yes</option>
-          <option value="partial">Partially</option>
-          <option value="no">No</option>
+          <option value="yes"><Trans>Yes</Trans></option>
+          <option value="partial"><Trans>Partially</Trans></option>
+          <option value="no"><Trans>No</Trans></option>
         </Form.Control>
       </Form.Group>
       <fieldset>
-        <legend className="sublegend">CDD & Travel Rule Policies</legend>
+        <legend className="sublegend"><Trans>CDD & Travel Rule Policies</Trans></legend>
         <Form.Group>
-          <Form.Label>Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?</Form.Label>
+          <Form.Label><Trans>Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?</Trans></Form.Label>
           <Form.Control
             as="select" custom
             value={data.has_required_regulatory_program}
             onChange={createChangeHandler("has_required_regulatory_program")}
           >
             <option value=""></option>
-            <option value="yes">Yes</option>
-            <option value="partial">Partially Implemented</option>
-            <option value="no">No</option>
+            <option value="yes"><Trans>Yes</Trans></option>
+            <option value="partial"><Trans>Partially Implemented</Trans></option>
+            <option value="no"><Trans>No</Trans></option>
           </Form.Control>
         </Form.Group>
         <Form.Group>
-          <Form.Label>Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?</Form.Label>
+          <Form.Label><Trans>Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?</Trans></Form.Label>
           <Form.Check
             type="switch"
             id="conductsCustomerKYC"
@@ -170,7 +171,7 @@ const TRIXO = ({data, onChange}) => {
           />
         </Form.Group>
         <Form.Group>
-          <Form.Label>At what threshold and currency does your organization conduct KYC?</Form.Label>
+          <Form.Label><Trans>At what threshold and currency does your organization conduct KYC?</Trans></Form.Label>
           <Form.Row>
             <Col>
               <Form.Control
@@ -190,11 +191,11 @@ const TRIXO = ({data, onChange}) => {
             </Col>
           </Form.Row>
           <Form.Text className="text-muted">
-            Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers
+            <Trans>Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers</Trans>
           </Form.Text>
         </Form.Group>
         <Form.Group>
-          <Form.Label>Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?</Form.Label>
+          <Form.Label><Trans>Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?</Trans></Form.Label>
           <Form.Check
             type="switch"
             id="mustComplyTravelRule"
@@ -204,17 +205,17 @@ const TRIXO = ({data, onChange}) => {
           />
         </Form.Group>
         <fieldset>
-          <Form.Label className="mb-0">Applicable Regulations</Form.Label>
+          <Form.Label className="mb-0"><Trans>Applicable Regulations</Trans></Form.Label>
           <p className="text-muted mt-0">
-            <small>Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g. "FATF Recommendation 16"</small>
+            <small><Trans>Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g. "FATF Recommendation 16"</Trans></small>
           </p>
           {applicableRegulations}
           <Form.Group>
-            <Button size="sm" onClick={createArrayPushHandler("applicable_regulations", "")}>Add Regulation</Button>
+            <Button size="sm" onClick={createArrayPushHandler("applicable_regulations", "")}><Trans>Add Regulation</Trans></Button>
           </Form.Group>
         </fieldset>
         <Form.Group>
-          <Form.Label>What is the minimum threshold for Travel Rule compliance?</Form.Label>
+          <Form.Label><Trans>What is the minimum threshold for Travel Rule compliance?</Trans></Form.Label>
           <Form.Row>
             <Col>
               <Form.Control
@@ -234,14 +235,14 @@ const TRIXO = ({data, onChange}) => {
             </Col>
           </Form.Row>
           <Form.Text className="text-muted">
-            The minimum threshold above which your organization is required to collect/send Travel Rule information.
+            <Trans>The minimum threshold above which your organization is required to collect/send Travel Rule information.</Trans>
           </Form.Text>
         </Form.Group>
       </fieldset>
       <fieldset>
-        <legend className="sublegend">Data Protection Policies</legend>
+        <legend className="sublegend"><Trans>Data Protection Policies</Trans></legend>
         <Form.Group>
-          <Form.Label>Is your organization required by law to safeguard PII?</Form.Label>
+          <Form.Label><Trans>Is your organization required by law to safeguard PII?</Trans></Form.Label>
           <Form.Check
             type="switch"
             id="mustSafeguardPII"
@@ -251,7 +252,7 @@ const TRIXO = ({data, onChange}) => {
           />
         </Form.Group>
         <Form.Group>
-          <Form.Label>Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?</Form.Label>
+          <Form.Label><Trans>Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?</Trans></Form.Label>
           <Form.Check
             type="switch"
             id="safeguardsPII"
