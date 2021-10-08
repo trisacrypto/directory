@@ -24,6 +24,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -164,6 +165,7 @@ func (s *Admin) setupRoutes() (err error) {
 		// Information routes (must be authenticated)
 		v2.GET("/summary", authorize, s.Summary)
 		v2.GET("/autocomplete", authorize, s.Autocomplete)
+		v2.GET("/reviews", authorize, s.ReviewTimeline)
 
 		// VASP routes all must be authenticated (some CSRF protection required)
 		vasps := v2.Group("/vasps", authorize)
@@ -1010,6 +1012,147 @@ func (s *Admin) Resend(c *gin.Context) {
 	}
 
 	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
+	c.JSON(http.StatusOK, out)
+}
+
+// ReviewTimeline returns a list of time series records containing registration state counts by week.
+func (s *Admin) ReviewTimeline(c *gin.Context) {
+	// Go needs this constant to determine the time format
+	const timeFormat = "2006-01-02"
+	var (
+		err        error
+		in         *admin.ReviewTimelineParams
+		out        *admin.ReviewTimelineReply
+		week       *utils.Week
+		weekIter   *utils.WeekIterator
+		startTime  time.Time
+		endTime    time.Time
+		vaspCounts []map[string]bool
+	)
+
+	// Get request parameters
+	in = new(admin.ReviewTimelineParams)
+	if err = c.ShouldBindQuery(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	if in.Start != "" {
+		// Parse start date
+		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
+			log.Warn().Err(err).Msg("could not parse start date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
+			return
+		}
+		// If the request is before the epoch then it's probably an error
+		epoch := time.Unix(0, 0)
+		if startTime.Before(epoch) {
+			log.Warn().Err(err).Msg("start date is before epoch")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date can't be before %s", epoch.Format(timeFormat))))
+			return
+		}
+	} else {
+		// Default to 1 year ago
+		startTime = time.Now().AddDate(-1, 0, 0)
+	}
+
+	if in.End != "" {
+		// Parse end date
+		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
+			log.Warn().Err(err).Msg("could not parse end date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
+			return
+		}
+	} else {
+		// Default value for end date
+		endTime = time.Now()
+	}
+
+	if weekIter, err = utils.GetWeekIterator(startTime, endTime); err != nil {
+		log.Warn().Err(err).Msg("invalid timeline request: start date can't be after current date")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
+		return
+	}
+
+	// Initialize required counting structs
+	vaspCounts = make([]map[string]bool, 0, 1)
+	out = &admin.ReviewTimelineReply{
+		Weeks: make([]admin.ReviewTimelineRecord, 0, 1),
+	}
+
+	// Iterate over the weeks and record the week start dates
+	for {
+		var ok bool
+		if week, ok = weekIter.Next(); !ok {
+			break
+		}
+
+		record := admin.ReviewTimelineRecord{
+			Week:          week.Date.Format(timeFormat),
+			VASPsUpdated:  0,
+			Registrations: make(map[string]int),
+		}
+
+		// Need to intialize the map entries so that all verification states show up in
+		// the JSON output, even if the count is 0
+		var s int32
+		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
+			record.Registrations[pb.VerificationState_name[s]] = 0
+		}
+		out.Weeks = append(out.Weeks, record)
+		vaspCounts = append(vaspCounts, make(map[string]bool))
+	}
+
+	// Iterate over the VASPs and count registrations
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+	for iter.Next() {
+		// Fetch VASP from the database
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
+
+		// Get VASP audit log
+		var auditLog []*models.AuditLogEntry
+		if auditLog, err = models.GetAuditLog(vasp); err != nil {
+			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
+			continue
+		}
+
+		// Iterate over VASP audit log and count registrations
+		for _, entry := range auditLog {
+			var timestamp time.Time
+			if timestamp, err = time.Parse(time.RFC3339, entry.Timestamp); err != nil {
+				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
+				continue
+			}
+
+			// Determine which week number the recorded date falls under
+			weekNum := utils.NewWeek(timestamp).Sub(weekIter.Start)
+			if weekNum >= 0 && weekNum < len(out.Weeks) {
+				// Count VASP if we haven't seen it before
+				if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
+					vaspCounts[weekNum][vasp.Id] = true
+					out.Weeks[weekNum].VASPsUpdated++
+				}
+
+				// Count registration state if it changed
+				if entry.PreviousState != entry.CurrentState {
+					out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
+				}
+			}
+		}
+	}
+
+	if err := iter.Error(); err != nil {
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+
 	c.JSON(http.StatusOK, out)
 }
 

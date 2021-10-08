@@ -21,6 +21,7 @@ type DirectoryAdministrationClient interface {
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
+	ReviewTimeline(ctx context.Context, params *ReviewTimelineParams) (out *ReviewTimelineReply, err error)
 }
 
 //===========================================================================
@@ -121,6 +122,24 @@ type RetrieveVASPReply struct {
 	VASP             map[string]interface{} `json:"vasp"`
 	VerifiedContacts map[string]string      `json:"verified_contacts"`
 	Traveler         bool                   `json:"traveler"`
+}
+
+// ReviewTimelineParams contains the start and end date for the requested timeline.
+type ReviewTimelineParams struct {
+	Start string `url:"start,omitempty" form:"start"`
+	End   string `url:"end,omitempty" form:"end"`
+}
+
+// ReviewTimelineRecord contains counts of VASP registration states over a single week.
+type ReviewTimelineRecord struct {
+	Week          string         `json:"week"`
+	VASPsUpdated  int            `json:"vasps_updated"`
+	Registrations map[string]int `json:"registrations"`
+}
+
+// ReviewTimelineReply returns a list of time series records containing registration counts.
+type ReviewTimelineReply struct {
+	Weeks []ReviewTimelineRecord `json:"weeks"`
 }
 
 //===========================================================================
