@@ -1,8 +1,8 @@
 
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
-import { getSummary, getVasps } from "../../services/dashboard"
-import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError } from "./actions"
-import { FetchPendingVaspsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
+import { getRegistrationReviews, getSummary, getVasps } from "../../services/dashboard"
+import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError, fetchRegistrationsReviewsSuccess, fetchRegistrationsReviewsError } from "./actions"
+import { FetchPendingVaspsActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
 
 
 
@@ -37,6 +37,17 @@ function* fetchVasps() {
     }
 }
 
+function* fecthRegistrationsReviews() {
+    try {
+        const response = yield call(getRegistrationReviews)
+        const data = response.data
+
+        yield put(fetchRegistrationsReviewsSuccess(FetchRegistrationsReviewsActionTypes.API_RESPONSE_SUCCESS, data))
+    } catch (error) {
+        yield put(fetchRegistrationsReviewsError(FetchRegistrationsReviewsActionTypes.API_RESPONSE_ERROR, error.message))
+    }
+}
+
 
 export function* summarySaga() {
     yield takeEvery(FetchSummaryActionTypes.FETCH_SUMMARY, fetchSummary)
@@ -50,11 +61,16 @@ export function* pendingVaspsSaga() {
     yield takeEvery(FetchPendingVaspsActionTypes.FETCH_PENDING_VASPS, fetchPendingVasps)
 }
 
+export function* registrationReviews() {
+    yield takeEvery(FetchRegistrationsReviewsActionTypes.FETCH_REGISTRATIONS_REVIEWS, fecthRegistrationsReviews)
+}
+
 
 function* dashboardSaga() {
     yield all([
         fork(summarySaga),
         fork(pendingVaspsSaga),
+        fork(registrationReviews)
     ])
 }
 
