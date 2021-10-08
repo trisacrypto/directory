@@ -15,7 +15,7 @@ dayjs.extend(relativeTime)
 
 const Tasks = ({ data }) => {
     const [modal, setModal] = React.useState(false);
-    const [vaspName, setVaspName] = React.useState("");
+    const [vasp, setVasp] = React.useState({ name: '', id: '' });
     const history = useHistory()
 
     const toggle = () => {
@@ -23,7 +23,7 @@ const Tasks = ({ data }) => {
     };
 
     const handleResendEmailClick = (name) => {
-        setVaspName(name)
+        setVasp(name)
         toggle()
     }
 
@@ -75,7 +75,7 @@ const Tasks = ({ data }) => {
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
                                                 <Dropdown.Item onClick={() => history.push(`/vasps/${vasp?.id}`)}> <span className="mdi mdi-eye-outline"></span> View</Dropdown.Item>
-                                                <Dropdown.Item onClick={() => handleResendEmailClick(vasp?.name)}> <span className="mdi mdi-email-edit-outline"></span> Resend email</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleResendEmailClick(vasp)}> <span className="mdi mdi-email-edit-outline"></span> Resend email</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
                                     </td>
@@ -84,7 +84,7 @@ const Tasks = ({ data }) => {
                         }
                     </tbody>
                 </Table>
-                <ResendEmail toggle={toggle} modal={modal} vaspName={vaspName} />
+                <ResendEmail toggle={toggle} modal={modal} vasp={vasp} />
             </Card.Body>
         </Card>
     );

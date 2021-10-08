@@ -4,6 +4,8 @@ import { Modal, Button, Form, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { useForm, useWatch } from "react-hook-form";
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { getCookie } from '../utils';
+import axios from 'axios';
 
 const deliverCertsLabel = (
     <>
@@ -69,10 +71,8 @@ const schemaResolver = yupResolver(
     })
 );
 
-
-
-function ResendEmail({ toggle, modal, vaspName }) {
-
+function ResendEmail({ toggle, modal, vasp }) {
+    const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { register, handleSubmit, formState: { errors }, control } = useForm({
         shouldUnregister: true, resolver: schemaResolver,
         defaultValues: {
@@ -85,7 +85,23 @@ function ResendEmail({ toggle, modal, vaspName }) {
     })
 
     const onSubmit = (data) => {
-        console.log("onSubmit:", data)
+        const cookie = getCookie('csrf_token')
+        const payload = {
+            action: data.email_type,
+            reason: ""
+        }
+        setIsSubmitting(true)
+        axios.post(`/vasps/${vasp?.id}/resend`, payload, {
+            headers: {
+                'X-CSRF-TOKEN': cookie
+            }
+        }).then(res => {
+            setIsSubmitting(false)
+            console.log("[onSubmit] sucess", res.data)
+        }).catch(err => {
+            setIsSubmitting(false)
+            console.log("[onSubmit] error", err)
+        })
     };
 
 
@@ -97,7 +113,7 @@ function ResendEmail({ toggle, modal, vaspName }) {
                         <h4 className="modal-title">Resend Email</h4>
                     </Modal.Header>
                     <Modal.Body>
-                        <h5 className="mb-3">{vaspName}</h5>
+                        <h5 className="mb-3">{vasp?.name}</h5>
                         <p>Select admin email(s) to resend:</p>
                         <div className="">
                             <div>
@@ -140,8 +156,8 @@ function ResendEmail({ toggle, modal, vaspName }) {
                         <Button variant="light" onClick={toggle}>
                             Cancel
                         </Button>{' '}
-                        <Button type="submit" variant="primary">
-                            Submit
+                        <Button type="submit" variant="primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Modal.Footer>
                 </Form>
