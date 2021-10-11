@@ -208,7 +208,7 @@ class APICore {
         })
     }
 
-    isUserAuthenticated = () => {
+    isUserAuthenticated = async () => {
         const user = this.getLoggedInUser();
         if (!user) {
             return false;
