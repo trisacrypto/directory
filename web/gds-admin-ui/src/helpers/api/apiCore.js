@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { defaultEndpointPrefix } from '../../utils';
+import { defaultEndpointPrefix, getCookie } from '../../utils';
 import jwtDecode from 'jwt-decode'
 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
@@ -8,22 +8,25 @@ axios.defaults.baseURL = defaultEndpointPrefix();
 // withCredentials ensures that axios fetch includes `HttpOnly` cookies in the request for CSRF protectioin
 axios.defaults.withCredentials = true
 
+const AUTH_SESSION_KEY = '__SESSION_TOKEN__';
 
 axios.interceptors.response.use(
     (response) => {
         return response;
     },
-    (error) => {
+    async (error) => {
         let message;
 
         if (error && error.response && error.response.status === 404) {
             // window.location.href = '/not-found';
         } else if (error && error.response && error.response.status === 403) {
-            window.location.href = '/access-denied';
+            sessionStorage.removeItem(AUTH_SESSION_KEY)
+            window.location.href = '/login';
         } else {
             switch (error.response.status) {
                 case 401:
                     message = 'Invalid credentials';
+                    window.location.href = '/login'
                     break;
                 case 403:
                     message = 'Access Forbidden';
@@ -56,7 +59,16 @@ const setCookie = (cookie) => {
     }
 }
 
-const AUTH_SESSION_KEY = '__SESSION_TOKEN__';
+const isValidRefreshToken = (token) => {
+    if (token) {
+        const decoded = jwtDecode(token)
+        const currentTime = Date.now() / 1000
+        return currentTime > decoded.nbf && currentTime < decoded.exp
+
+    }
+
+    return false;
+}
 
 
 const getUserFromSession = () => {
@@ -178,7 +190,25 @@ class APICore {
         return axios.patch(url, formData, config);
     };
 
-    isUserAuthenticated = () => {
+    reauthenticate = (payload) => {
+        const cookie = getCookie('csrf_token')
+
+        axios.post('/reauthenticate', payload, {
+            headers: {
+                'X-CSRF-TOKEN': cookie
+            }
+        }).then(res => {
+            this.setLoggedInUser(res.data)
+            setAuthorization(res.data.access_token)
+            return true
+        }).catch((err) => {
+            this.setLoggedInUser(null)
+            setAuthorization(null)
+            return false
+        })
+    }
+
+    isUserAuthenticated = async () => {
         const user = this.getLoggedInUser();
         if (!user) {
             return false;
@@ -186,11 +216,27 @@ class APICore {
 
         const decodedAccessToken = jwtDecode(user.access_token);
         const currentTime = Date.now() / 1000;
-        if (decodedAccessToken.exp < currentTime) {
-            console.warn('access token expired');
-            return false;
-        } else {
+
+        const payload = {
+            credential: user.refresh_token
+        }
+
+        if (currentTime < decodedAccessToken.exp && currentTime > decodedAccessToken.nbf) {
+            // The access token is valid -- we could just return true here
+            // Alternatively, we could check if we're in that small window of time where we can reauthenticate when the access token is valid:
+            if (isValidRefreshToken(user.refresh_token)) {
+                await this.reauthenticate(payload)
+            }
             return true;
+        } else {
+            // access token is invalid, check if we can reauthenticate
+            if (isValidRefreshToken(user.refresh_token)) {
+                await this.reauthenticate(payload)
+            }
+            // neither the access nor the refresh token is valid any longer
+            this.setLoggedInUser(null)
+            setAuthorization(null)
+            return false;
         }
     };
 

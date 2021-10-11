@@ -1,17 +1,9 @@
 // @flow
 import { AuthActionTypes } from './constants';
 
-import { APICore } from '../../helpers/api/apiCore';
-import jwtDecode from 'jwt-decode';
-
-const api = new APICore();
-
-const user = api.getLoggedInUser()
-const decodedUser = user ? jwtDecode(user.access_token) : ''
-
 
 const INIT_STATE = {
-    user: decodedUser,
+    user: null,
     loading: false,
 };
 
