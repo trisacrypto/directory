@@ -293,17 +293,70 @@ func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 	return extra.GetToken(), extra.GetVerified(), nil
 }
 
-// SetContactVerification token and verified status on the Contact record (completely
-// replaces the old record, which may not be ideal).
+// SetContactVerification token and verified status on the Contact record.
 func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
 	if contact == nil {
 		return errors.New("cannot set verification on nil contact")
 	}
 
-	extra := &GDSContactExtraData{
-		Verified: verified,
-		Token:    token,
+	// Unmarshal previous extra data.
+	extra := &GDSContactExtraData{}
+	if contact.Extra != nil {
+		if err = contact.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
 	}
+
+	// Set contact verification.
+	extra.Verified = verified
+	extra.Token = token
+	if contact.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetEmailLog from the extra data on the Contact record.
+func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
+	// If the extra data is nil, return nil (no email log).
+	if contact == nil || contact.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSContactExtraData{}
+	if err = contact.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetEmailLog(), nil
+}
+
+// Create and add a new entry to the EmailLog on the extra data on the Contact record.
+func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err error) {
+	// Contact must be non-nil.
+	if contact == nil {
+		return errors.New("cannot append entry to nil contact")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSContactExtraData{}
+	if contact.Extra != nil {
+		if err = contact.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.EmailLog = make([]*EmailLogEntry, 0, 1)
+	}
+
+	// Append entry to the previous log.
+	entry := &EmailLogEntry{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Reason:    reason,
+		Subject:   subject,
+	}
+	extra.EmailLog = append(extra.EmailLog, entry)
+
+	// Serialize the extra data back to the VASP.
 	if contact.Extra, err = anypb.New(extra); err != nil {
 		return err
 	}

@@ -120,4 +120,19 @@ message GDSContactExtraData {
     // Token for email verification
     bool verified = 1;
     string token = 2;
+
+    // Email audit log
+    repeated EmailLogEntry email_log = 3;
+}
+
+// EmailLogEntry contains information about a single email message that was sent.
+message EmailLogEntry {
+    // RFC3339 timestamp
+    string timestamp = 1;
+
+    // Reason why the email was sent
+    string reason = 2;
+
+    // Subject line of the email
+    string subject = 3;
 }

@@ -1064,8 +1064,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 	for careqs.Next() {
 		req := careqs.CertReq()
 		if req != nil && req.Vasp == vasp.Id && req.Status == models.CertificateRequestState_INITIALIZED {
-			// TODO: Replace "email" in the source parameter with user email address.
-			if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", "email"); err != nil {
+			if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", claims.Email); err != nil {
 				return "", err
 			}
 			if err = s.db.UpdateCertReq(req); err != nil {
@@ -1241,6 +1240,12 @@ func (s *Admin) Resend(c *gin.Context) {
 	default:
 		log.Warn().Str("resend_type", string(in.Action)).Msg("invalid resend request: unhandled resend request type")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown resend request type %q", in.Action)))
+		return
+	}
+
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Str("id", vasp.Id).Msg("error updating email logs on VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not update VASP record: %s", err)))
 		return
 	}
 

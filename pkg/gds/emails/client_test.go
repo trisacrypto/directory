@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/require"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -110,4 +111,32 @@ func TestClientSendEmails(t *testing.T) {
 	sent, err = email.SendDeliverCertificates(vasp, "testdata/foo.zip")
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
+
+	// Technical is verified and first so should get Rejection and DeliverCerts emails
+	emailLog, err := models.GetEmailLog(vasp.Contacts.Technical)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 2)
+	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
+	require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
+	require.Equal(t, string(admin.ResendDeliverCerts), emailLog[1].Reason)
+	require.Equal(t, emails.DeliverCertsRE, emailLog[1].Subject)
+
+	// Administrative is verified so should get Rejection email
+	emailLog, err = models.GetEmailLog(vasp.Contacts.Administrative)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
+	require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
+
+	// Legal is not verified so should get VerifyContact email
+	emailLog, err = models.GetEmailLog(vasp.Contacts.Legal)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
+	require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
+
+	// Billing doesn't have an associated email so shouldn't get anything
+	emailLog, err = models.GetEmailLog(vasp.Contacts.Billing)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 0)
 }
