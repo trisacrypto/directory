@@ -37,4 +37,23 @@ const downloadFile = (data, filename, mime, bom) => {
     }
 };
 
-export { downloadFile };
+function generateCSV(row = []) {
+    let finalVal = '';
+
+    for (let i = 0; i < row.length; i++) {
+        let innerValue = row[i] === null ? '' : row[i].toString();
+        if (row[i] instanceof Date) {
+            innerValue = row[i].toLocaleString();
+        };
+        let result = innerValue.replace(/"/g, '""');
+        if (result.search(/("|,|\n)/g) >= 0)
+            result = '"' + result + '"';
+        if (i > 0)
+            finalVal += ',';
+        finalVal += result;
+    }
+    return finalVal + '\n';
+}
+
+
+export { downloadFile, generateCSV };

@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchVasps } from '../../../redux/dashboard/actions';
 import { Status, StatusLabel } from '../../../constants';
+import { downloadFile, generateCSV } from '../../../helpers/api/utils';
 dayjs.extend(relativeTime)
 
 
@@ -108,6 +109,26 @@ const VaspsList = (): React$Element<React$FragmentType> => {
         dispatch(fetchVasps())
     }, [dispatch])
 
+
+    function exportToCsv(rows) {
+        const { verified_contacts, ...rest } = rows[0]
+
+        let rowHeader = Object.keys(rest)
+
+        const _rows = rows.map(row => {
+            const { verified_contacts, ...rest } = row
+            return Object.values(rest)
+        })
+        _rows.unshift(rowHeader)
+
+        let csvFile = '';
+        for (let i = 0; i < _rows.length; i++) {
+            csvFile += generateCSV(_rows[i]);
+        }
+        const filename = `${dayjs().format("YYYY-MM-DD")}-directory.csv`
+        downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
+    }
+
     return (
         <React.Fragment>
             <PageTitle
@@ -124,7 +145,7 @@ const VaspsList = (): React$Element<React$FragmentType> => {
                             <Row>
                                 <Col sm={12}>
                                     <div className="text-sm-end">
-                                        <Button className="btn btn-light mb-2">Export</Button>
+                                        <Button onClick={() => exportToCsv(data.vasps)} className="btn btn-light mb-2">Export</Button>
                                     </div>
                                 </Col>
                             </Row>
