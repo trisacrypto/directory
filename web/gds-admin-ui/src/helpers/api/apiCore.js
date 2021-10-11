@@ -225,13 +225,13 @@ class APICore {
             // The access token is valid -- we could just return true here
             // Alternatively, we could check if we're in that small window of time where we can reauthenticate when the access token is valid:
             if (isValidRefreshToken(user.refresh_token)) {
-                this.reauthenticate(payload)
+                await this.reauthenticate(payload)
             }
             return true;
         } else {
             // access token is invalid, check if we can reauthenticate
             if (isValidRefreshToken(user.refresh_token)) {
-                this.reauthenticate(payload)
+                await this.reauthenticate(payload)
             }
             // neither the access nor the refresh token is valid any longer
             this.setLoggedInUser(null)
