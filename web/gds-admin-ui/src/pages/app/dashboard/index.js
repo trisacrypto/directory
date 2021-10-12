@@ -2,7 +2,6 @@
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import config from '../../../config'
 
 // components
 import PageTitle from '../../../components/PageTitle';
@@ -12,7 +11,6 @@ import Statistics from './Statistics';
 import Status from './Status';
 import Tasks from './Tasks';
 import TasksChart from './TasksChart';
-import { ENVIRONMENT } from '../../../constants';
 
 
 const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
@@ -50,12 +48,11 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
                 </Col>
             </Row>
             {
-                config.ENVIRONMENT === ENVIRONMENT.PROD ? null : (
-                    <Row>
-                        <Col>
-                            <TasksChart />
-                        </Col>
-                    </Row>)
+                <Row>
+                    <Col>
+                        <TasksChart />
+                    </Col>
+                </Row>
             }
         </React.Fragment>
     );

@@ -20,14 +20,12 @@ axios.interceptors.response.use(
         if (error && error.response && error.response.status === 404) {
             // window.location.href = '/not-found';
         } else if (error && error.response && error.response.status === 403) {
-            console.log("errr-----", error)
-            setAuthorization(null)
-            window.location.href = '/login'
+            sessionStorage.removeItem(AUTH_SESSION_KEY)
+            window.location.href = '/login';
         } else {
             switch (error.response.status) {
                 case 401:
                     message = 'Invalid credentials';
-                    setAuthorization(null)
                     window.location.href = '/login'
                     break;
                 case 403:
