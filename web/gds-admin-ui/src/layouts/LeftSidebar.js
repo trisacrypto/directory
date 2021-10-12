@@ -5,7 +5,13 @@ import SimpleBar from 'simplebar-react';
 import AppMenu from './Menu';
 import { getMenuItems } from '../helpers/menu';
 
-import logo from '../assets/images/gds-trisatest-logo.png';
+import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
+import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
+import { getDirectoryName, getDirectoryURL, isTestNet } from '../utils';
+
+const getDirectoryLogo = () => {
+    return isTestNet() ? TrisatestLogo : VaspDirectoryLogo
+}
 
 const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
     return (
@@ -56,7 +62,7 @@ const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSi
                     <React.Fragment>
                         <Link to="/" className="logo text-center logo-light">
                             <span className="logo-lg">
-                                <img src={logo} alt="logo" height="36" />
+                                <img src={getDirectoryLogo()} alt="logo" height="36" />
                             </span>
                         </Link>
                     </React.Fragment>
@@ -72,6 +78,14 @@ const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSi
                     </SimpleBar>
                 )}
                 {isCondensed && <SideBarContent isLight={isLight} hideUserProfile={hideUserProfile} />}
+                <ul className="side-nav position-absolute bottom-0">
+                    <li className="side-nav-item">
+                        <a className="side-nav-link-ref side-sub-nav-link side-nav-link" href={getDirectoryURL()}>
+                            <i className="uil-exit"></i>
+                            <span>Go to {getDirectoryName()}</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </React.Fragment>
     );

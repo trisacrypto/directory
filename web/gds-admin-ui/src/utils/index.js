@@ -1,5 +1,6 @@
 import config from '../config';
 import { ENVIRONMENT, Status } from '../constants';
+import { DIRECTORY } from '../constants';
 
 export * from './array';
 
@@ -84,7 +85,16 @@ function getStatusClassName(status = '') {
     }
 }
 
+function isTestNet() {
+    return config.IS_TESNET
+}
 
+function getDirectoryName() {
+    return isTestNet() ? DIRECTORY.VASP_DIRECTORY : DIRECTORY.TRISATEST
+}
 
+function getDirectoryURL() {
+    return isTestNet() ? "https://admin.vaspdirectory.net" : "https://admin.trisatest.net"
+}
 
-export { getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
+export { isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
