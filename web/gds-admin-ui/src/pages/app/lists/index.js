@@ -13,8 +13,9 @@ import Table from '../../../components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchVasps } from '../../../redux/dashboard/actions';
-import { Status, StatusLabel } from '../../../constants';
+import { StatusLabel } from '../../../constants';
 import { downloadFile, generateCSV } from '../../../helpers/api/utils';
+import { getStatusClassName } from '../../../utils';
 dayjs.extend(relativeTime)
 
 
@@ -50,10 +51,7 @@ const StatusColumn = ({ row }) => {
     return (
         <React.Fragment>
             <span
-                className={classNames('badge', {
-                    'bg-success': row.original.verification_status === Status.VERIFIED,
-                    'bg-warning': row.original.verification_status === Status.SUBMITTED || row.original.verification_status === Status.PENDING_REVIEW,
-                })}>
+                className={classNames('badge', getStatusClassName(row.original.verification_status))}>
                 {StatusLabel[row.original.verification_status]}
             </span>
         </React.Fragment>
