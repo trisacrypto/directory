@@ -1,5 +1,5 @@
 import config from '../config';
-import { ENVIRONMENT } from '../constants';
+import { ENVIRONMENT, Status } from '../constants';
 
 export * from './array';
 
@@ -62,7 +62,29 @@ function getCookie(name = '') {
     return '';
 }
 
+function getStatusClassName(status = '') {
+    switch (status) {
+        case Status.VERIFIED:
+            return 'bg-success'
+        case Status.SUBMITTED:
+            return 'bg-secondary'
+        case Status.PENDING_REVIEW:
+        case Status.EMAIL_VERIFIED:
+            return 'bg-warning'
+        case Status.ERRORED:
+        case Status.REJECTED:
+            return 'bg-danger'
+        case Status.APPEALED:
+            return 'bg-primary'
+        case Status.REVIEWED:
+        case Status.ISSUING_CERTIFICATE:
+            return 'bg-info'
+        default:
+            return undefined
+    }
+}
 
 
 
-export { formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
+
+export { getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
