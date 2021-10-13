@@ -39,7 +39,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -53,7 +53,7 @@ func main() {
 	app.Name = "gdsutil"
 	app.Version = pkg.Version()
 	app.Usage = "utilities for operating the GDS service and database"
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:     "ldb:keys",
 			Usage:    "list the keys currently in the leveldb store",
@@ -61,18 +61,21 @@ func main() {
 			Action:   ldbKeys,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64encode",
-					Usage: "base64 encode keys (otherwise they will be utf-8 decoded)",
+				&cli.BoolFlag{
+					Name:    "b",
+					Aliases: []string{"b64encode"},
+					Usage:   "base64 encode keys (otherwise they will be utf-8 decoded)",
 				},
-				cli.StringFlag{
-					Name:  "p, prefix",
-					Usage: "specify a prefix to filter keys on",
+				&cli.StringFlag{
+					Name:    "p",
+					Aliases: []string{"prefix"},
+					Usage:   "specify a prefix to filter keys on",
 				},
 			},
 		},
@@ -84,18 +87,21 @@ func main() {
 			Action:    ldbGet,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the keys as base64 encoded values which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b",
+					Aliases: []string{"b64decode"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "write the fetched key to directory if specified, otherwise printed",
+				&cli.StringFlag{
+					Name:    "o",
+					Aliases: []string{"out"},
+					Usage:   "write the fetched key to directory if specified, otherwise printed",
 				},
 			},
 		},
@@ -107,19 +113,22 @@ func main() {
 			Action:    ldbPut,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the key and value as base64 encoded strings which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b",
+					Aliases: []string{"b64decode"},
+					Usage:   "specify the key and value as base64 encoded strings which must be decoded",
 				},
-				cli.StringFlag{
-					Name:  "f, format",
-					Usage: "format of the data (raw, json, pb)",
-					Value: "json",
+				&cli.StringFlag{
+					Name:    "f",
+					Aliases: []string{"format"},
+					Usage:   "format of the data (raw, json, pb)",
+					Value:   "json",
 				},
 			},
 		},
@@ -131,14 +140,16 @@ func main() {
 			Action:    ldbDelete,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the keys as base64 encoded values which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b",
+					Aliases: []string{"b64decode"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
 			},
 		},
@@ -149,15 +160,17 @@ func main() {
 			Action:   ldbList,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "path to write CSV data out to",
-					Value: "directory.csv",
+				&cli.StringFlag{
+					Name:    "o",
+					Aliases: []string{"out"},
+					Usage:   "path to write CSV data out to",
+					Value:   "directory.csv",
 				},
 			},
 		},
@@ -168,16 +181,18 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   addPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "u",
+					Aliases: []string{"replica-endpoint"},
+					Usage:   "the url to connect the directory replica client",
+					Value:   "replica.vaspdirectory.net:443",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to add multiple peers at a time?
-				cli.Uint64Flag{
-					Name:  "p, pid",
-					Usage: "specify the pid for the peer to add",
+				&cli.Uint64Flag{
+					Name:    "p",
+					Aliases: []string{"pid"},
+					Usage:   "specify the pid for the peer to add",
 				},
 			},
 		},
@@ -188,16 +203,18 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   delPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "u",
+					Aliases: []string{"replica-endpoint"},
+					Usage:   "the url to connect the directory replica client",
+					Value:   "replica.vaspdirectory.net:443",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to rm multiple peers at a time?
-				cli.Uint64Flag{
-					Name:  "p, pid",
-					Usage: "specify the pid for the peer to tombstone",
+				&cli.Uint64Flag{
+					Name:    "p",
+					Aliases: []string{"pid"},
+					Usage:   "specify the pid for the peer to tombstone",
 				},
 			},
 		},
@@ -208,20 +225,23 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   listPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "u",
+					Aliases: []string{"replica-endpoint"},
+					Usage:   "the url to connect the directory replica client",
+					Value:   "replica.vaspdirectory.net:443",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO: have we standardized on how to reference regions?
-				cli.StringSliceFlag{
-					Name:  "r, region",
-					Usage: "specify a region for peers to be returned",
+				&cli.StringSliceFlag{
+					Name:    "r",
+					Aliases: []string{"region"},
+					Usage:   "specify a region for peers to be returned",
 				},
-				cli.BoolFlag{
-					Name:  "s, status",
-					Usage: "specify for status-only, will not return peer details",
+				&cli.BoolFlag{
+					Name:    "s",
+					Aliases: []string{"status"},
+					Usage:   "specify for status-only, will not return peer details",
 				},
 			},
 		},
@@ -233,26 +253,31 @@ func main() {
 			Before:    openLevelDB,
 			Action:    gossip,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "p, partial",
-					Usage: "ignore any objects not specified in request",
+				&cli.BoolFlag{
+					Name:    "p",
+					Aliases: []string{"partial"},
+					Usage:   "ignore any objects not specified in request",
 				},
-				cli.StringSliceFlag{
-					Name:  "n, namespaces",
-					Usage: "specify the namespaces to replicate (if empty, all are replicated)",
+				&cli.StringSliceFlag{
+					Name:    "n",
+					Aliases: []string{"namespaces"},
+					Usage:   "specify the namespaces to replicate (if empty, all are replicated)",
 				},
-				cli.StringSliceFlag{
-					Name:  "o, objects",
-					Usage: "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
+				&cli.StringSliceFlag{
+					Name:    "o",
+					Aliases: []string{"objects"},
+					Usage:   "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
 				},
-				cli.BoolFlag{
-					Name:  "D, dryrun",
-					Usage: "show changes that would occur, does not modify database",
+				&cli.BoolFlag{
+					Name:    "D",
+					Aliases: []string{"dryrun"},
+					Usage:   "show changes that would occur, does not modify database",
 				},
 			},
 		},
@@ -263,34 +288,40 @@ func main() {
 			Before:   openLevelDB,
 			Action:   gossipMigrate,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:   "a, addr",
-					Usage:  "bind addr of the local replica (for name processing)",
-					EnvVar: "GDS_REPLICA_BIND_ADDR",
+				&cli.StringFlag{
+					Name:    "a",
+					Aliases: []string{"addr"},
+					Usage:   "bind addr of the local replica (for name processing)",
+					EnvVars: []string{"GDS_REPLICA_BIND_ADDR"},
 				},
-				cli.Uint64Flag{
-					Name:   "p, pid",
-					Usage:  "process id of the local replica",
-					EnvVar: "GDS_REPLICA_PID",
+				&cli.Uint64Flag{
+					Name:    "p",
+					Aliases: []string{"pid"},
+					Usage:   "process id of the local replica",
+					EnvVars: []string{"GDS_REPLICA_PID"},
 				},
-				cli.StringFlag{
-					Name:   "r, region",
-					Usage:  "geographic region of the local replica",
-					EnvVar: "GDS_REPLICA_REGION",
+				&cli.StringFlag{
+					Name:    "r",
+					Aliases: []string{"region"},
+					Usage:   "geographic region of the local replica",
+					EnvVars: []string{"GDS_REPLICA_REGION"},
 				},
-				cli.StringFlag{
-					Name:   "n, name",
-					Usage:  "human readable name of the local replica",
-					EnvVar: "GDS_REPLICA_NAME",
+				&cli.StringFlag{
+					Name:    "n",
+					Aliases: []string{"name"},
+					Usage:   "human readable name of the local replica",
+					EnvVars: []string{"GDS_REPLICA_NAME"},
 				},
-				cli.BoolFlag{
-					Name:  "D, dryrun",
-					Usage: "show changes that would occur, does not modify database",
+				&cli.BoolFlag{
+					Name:    "D",
+					Aliases: []string{"dryrun"},
+					Usage:   "show changes that would occur, does not modify database",
 				},
 			},
 		},
@@ -301,10 +332,11 @@ func main() {
 			Category:  "cipher",
 			Action:    cipherDecrypt,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "k, key",
-					Usage:  "secret key to decrypt the cipher text",
-					EnvVar: "GDS_SECRET_KEY",
+				&cli.StringFlag{
+					Name:    "k",
+					Aliases: []string{"key"},
+					Usage:   "secret key to decrypt the cipher text",
+					EnvVars: []string{"GDS_SECRET_KEY"},
 				},
 			},
 		},
@@ -315,30 +347,36 @@ func main() {
 			Action:   registerExport,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "i",
+					Aliases: []string{"id"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "n",
+					Aliases: []string{"name"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "e, endpoint",
-					Usage: "endpoint to export registration for",
+				&cli.StringFlag{
+					Name:    "e",
+					Aliases: []string{"endpoint"},
+					Usage:   "endpoint to export registration for",
 				},
-				cli.StringFlag{
-					Name:  "c, common-name",
-					Usage: "common name to export registration for",
+				&cli.StringFlag{
+					Name:    "c",
+					Aliases: []string{"common-name"},
+					Usage:   "common name to export registration for",
 				},
-				cli.StringFlag{
-					Name:  "o, outpath",
-					Usage: "path to write out JSON form to",
+				&cli.StringFlag{
+					Name:    "o",
+					Aliases: []string{"outpath"},
+					Usage:   "path to write out JSON form to",
 				},
 			},
 		},
@@ -349,18 +387,21 @@ func main() {
 			Action:   registerRepair,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "i",
+					Aliases: []string{"id"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "n",
+					Aliases: []string{"name"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
 			},
 		},
@@ -371,26 +412,31 @@ func main() {
 			Action:   registerReissue,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "d",
+					Aliases: []string{"db"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "i",
+					Aliases: []string{"id"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "n",
+					Aliases: []string{"name"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "r, reason",
-					Usage: "reason for reissuing the certificates",
+				&cli.StringFlag{
+					Name:    "r",
+					Aliases: []string{"reason"},
+					Usage:   "reason for reissuing the certificates",
 				},
-				cli.StringFlag{
-					Name:  "e, email",
-					Usage: "email of user reissuing certs for audit log",
+				&cli.StringFlag{
+					Name:    "e",
+					Aliases: []string{"email"},
+					Usage:   "email of user reissuing certs for audit log",
 				},
 			},
 		},
@@ -400,14 +446,16 @@ func main() {
 			Category: "admin",
 			Action:   generateTokenKey,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "path to write keys out to (optional, will be saved as ksuid.pem by default)",
+				&cli.StringFlag{
+					Name:    "o",
+					Aliases: []string{"out"},
+					Usage:   "path to write keys out to (optional, will be saved as ksuid.pem by default)",
 				},
-				cli.IntFlag{
-					Name:  "s, size",
-					Usage: "number of bits for the generated keys",
-					Value: 4096,
+				&cli.IntFlag{
+					Name:    "s",
+					Aliases: []string{"size"},
+					Usage:   "number of bits for the generated keys",
+					Value:   4096,
 				},
 			},
 		},
@@ -461,7 +509,7 @@ func ldbGet(c *cli.Context) (err error) {
 	}
 
 	b64decode := c.Bool("b64decode")
-	for _, keys := range c.Args() {
+	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
 			return cli.NewExitError(fmt.Errorf("could not decode key: %s", err), 1)
@@ -636,7 +684,7 @@ func ldbDelete(c *cli.Context) (err error) {
 	}
 
 	b64decode := c.Bool("b64decode")
-	for _, keys := range c.Args() {
+	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
 			return cli.NewExitError(err, 1)
@@ -869,10 +917,10 @@ func cipherDecrypt(c *cli.Context) (err error) {
 	}
 
 	var ciphertext, signature []byte
-	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args()[0]); err != nil {
+	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args().Slice()[0]); err != nil {
 		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
 	}
-	if signature, err = base64.RawStdEncoding.DecodeString(c.Args()[1]); err != nil {
+	if signature, err = base64.RawStdEncoding.DecodeString(c.Args().Slice()[1]); err != nil {
 		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
 	}
 
