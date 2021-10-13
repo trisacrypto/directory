@@ -144,7 +144,7 @@ func (tm *TokenManager) Sign(token *jwt.Token) (tks string, err error) {
 // token if the access token is being reauthorized from previous credentials. Note that
 // the returned token only contains the claims and is unsigned.
 func (tm *TokenManager) CreateAccessToken(creds interface{}) (_ *jwt.Token, err error) {
-	// Create the claims for the access token, using constant access defaults.
+	// Create the claims for the access token, using access token defaults.
 	now := time.Now()
 	claims := &Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -159,14 +159,20 @@ func (tm *TokenManager) CreateAccessToken(creds interface{}) (_ *jwt.Token, err 
 	// Populate the claims from the credentials based on type.
 	switch t := creds.(type) {
 	case *idtoken.Payload:
+		// This case is extracting the claims from a verified idtoken payload from Google,
+		// e.g. this is extracting the claims from from the Google OAuth credential.
 		if err = claims.extractClaims(t.Claims); err != nil {
 			return nil, err
 		}
 	case jwt.MapClaims, map[string]interface{}:
+		// This is a generic case that exercises the extractClaims function, it is currently
+		// only used for testing, but might also be used if we have different credential sources.
 		if err = claims.extractClaims(t.(map[string]interface{})); err != nil {
 			return nil, err
 		}
 	case *Claims:
+		// This case extracts the claims from a previously issued access token and is used
+		// on reauthenticate to issue a new access token from a soon-to-expire access token.
 		claims.Domain = t.Domain
 		claims.Email = t.Email
 		claims.Name = t.Name
