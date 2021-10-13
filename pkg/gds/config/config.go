@@ -43,6 +43,7 @@ type AdminConfig struct {
 	Mode         string   `split_words:"true" default:"release"`
 	AllowOrigins []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
 	CookieDomain string   `split_words:"true"`
+	Audience     string   `split_words:"true"`
 	Oauth        OauthConfig
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The

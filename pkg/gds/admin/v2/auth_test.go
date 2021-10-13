@@ -46,6 +46,7 @@ func TestAuthorization(t *testing.T) {
 
 	// Create an access token to authorize the request
 	creds := map[string]interface{}{
+		"sub":     "102374163855881761273",
 		"hd":      "rotational.io",
 		"email":   "kate@rotational.io",
 		"name":    "Kate Holland",

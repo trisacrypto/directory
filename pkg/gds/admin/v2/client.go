@@ -569,6 +569,7 @@ func (s *APIv2) DeleteCredentials() (err error) {
 
 // TODO: do better than this when we have client profiles
 type ClientConfig struct {
+	Audience  string            `envconfig:"GDS_ADMIN_AUDIENCE"`
 	TokenKeys map[string]string `envconfig:"GDS_ADMIN_TOKEN_KEYS"`
 }
 
@@ -584,7 +585,7 @@ func (s *APIv2) GenerateCredentials() (err error) {
 	}
 
 	var tm *tokens.TokenManager
-	if tm, err = tokens.New(conf.TokenKeys); err != nil {
+	if tm, err = tokens.New(conf.TokenKeys, conf.Audience); err != nil {
 		return err
 	}
 

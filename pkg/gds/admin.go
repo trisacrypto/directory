@@ -40,7 +40,7 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 	}
 
 	// Create the token manager
-	if a.tokens, err = tokens.New(a.conf.TokenKeys); err != nil {
+	if a.tokens, err = tokens.New(a.conf.TokenKeys, a.conf.Audience); err != nil {
 		return nil, err
 	}
 
