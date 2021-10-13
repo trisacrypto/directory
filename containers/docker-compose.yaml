@@ -5,6 +5,7 @@ services:
       context: ../
       dockerfile: ./containers/gds/Dockerfile
     image: trisa/gds
+    init: true
     ports:
       - 4433:4433
       - 4434:4434
@@ -24,8 +25,8 @@ services:
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
-      - GDS_ADMIN_AUDIENCE
-      - GDS_ADMIN_AUTHORIZED_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
+      - GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE
+      - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
       - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
       - GDS_REPLICA_ENABLED=false
       - GDS_REPLICA_BIND_ADDR=:4435
@@ -57,6 +58,7 @@ services:
       context: ../
       dockerfile: ./containers/grpc-proxy/Dockerfile
     image: trisa/grpc-proxy
+    init: true
     ports:
       - 8080:8080
     profiles:
@@ -71,6 +73,7 @@ services:
         REACT_APP_GDS_API_ENDPOINT: http://localhost:8080/
         REACT_APP_GDS_IS_TESTNET: "true"
     image: trisa/gds-ui
+    init: true
     ports:
       - 3000:80
     profiles:
@@ -87,6 +90,7 @@ services:
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
     image: trisa/gds-admin-ui
+    init: true
     ports:
       - 3001:80
     profiles:
