@@ -11,46 +11,47 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_MAINTENANCE":                "false",
-	"GDS_DIRECTORY_ID":               "testdirectory.org",
-	"GDS_SECRET_KEY":                 "theeaglefliesatmidnight",
-	"GDS_LOG_LEVEL":                  "debug",
-	"GDS_CONSOLE_LOG":                "true",
-	"GDS_API_ENABLED":                "true",
-	"GDS_BIND_ADDR":                  ":443",
-	"GDS_ADMIN_ENABLED":              "true",
-	"GDS_ADMIN_BIND_ADDR":            ":444",
-	"GDS_ADMIN_MODE":                 "debug",
-	"GDS_ADMIN_TOKEN_KEYS":           "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
-	"GDS_ADMIN_AUDIENCE":             "abc-1234.example.fakegoogleusercontent.com",
-	"GDS_ADMIN_AUTHORIZED_DOMAINS":   "trisa.io,vaspdirectory.net,trisatest.net",
-	"GDS_ADMIN_ALLOW_ORIGINS":        "https://admin.trisatest.net",
-	"GDS_ADMIN_COOKIE_DOMAIN":        "admin.trisatest.net",
-	"GDS_REPLICA_ENABLED":            "true",
-	"GDS_REPLICA_BIND_ADDR":          ":445",
-	"GDS_REPLICA_PID":                "8",
-	"GDS_REPLICA_NAME":               "mitchell",
-	"GDS_REPLICA_REGION":             "us-east-1c",
-	"GDS_REPLICA_GOSSIP_INTERVAL":    "30m",
-	"GDS_REPLICA_GOSSIP_SIGMA":       "3m",
-	"GDS_DATABASE_URL":               "fixtures/db",
-	"GDS_DATABASE_REINDEX_ON_BOOT":   "false",
-	"SECTIGO_USERNAME":               "foo",
-	"SECTIGO_PASSWORD":               "supersecret",
-	"SECTIGO_PROFILE":                "17",
-	"GDS_SERVICE_EMAIL":              "test@example.com",
-	"GDS_ADMIN_EMAIL":                "admin@example.com",
-	"SENDGRID_API_KEY":               "bar1234",
-	"GDS_VERIFY_CONTACT_URL":         "http://localhost:3000/verify-contact",
-	"GDS_CERTMAN_INTERVAL":           "60s",
-	"GDS_CERTMAN_STORAGE":            "fixtures/certs",
-	"GDS_BACKUP_ENABLED":             "true",
-	"GDS_BACKUP_INTERVAL":            "36h",
-	"GDS_BACKUP_STORAGE":             "fixtures/backups",
-	"GDS_BACKUP_KEEP":                "7",
-	"GOOGLE_APPLICATION_CREDENTIALS": "test.json",
-	"GOOGLE_PROJECT_NAME":            "test",
-	"GDS_SECRETS_TESTING":            "true",
+	"GDS_MAINTENANCE":                          "false",
+	"GDS_DIRECTORY_ID":                         "testdirectory.org",
+	"GDS_SECRET_KEY":                           "theeaglefliesatmidnight",
+	"GDS_LOG_LEVEL":                            "debug",
+	"GDS_CONSOLE_LOG":                          "true",
+	"GDS_API_ENABLED":                          "true",
+	"GDS_BIND_ADDR":                            ":443",
+	"GDS_ADMIN_ENABLED":                        "true",
+	"GDS_ADMIN_BIND_ADDR":                      ":444",
+	"GDS_ADMIN_MODE":                           "debug",
+	"GDS_ADMIN_TOKEN_KEYS":                     "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
+	"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE":          "abc-1234.example.fakegoogleusercontent.com",
+	"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS": "trisa.io,vaspdirectory.net,trisatest.net",
+	"GDS_ADMIN_ALLOW_ORIGINS":                  "https://admin.trisatest.net",
+	"GDS_ADMIN_COOKIE_DOMAIN":                  "admin.trisatest.net",
+	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.trisatest.net",
+	"GDS_REPLICA_ENABLED":                      "true",
+	"GDS_REPLICA_BIND_ADDR":                    ":445",
+	"GDS_REPLICA_PID":                          "8",
+	"GDS_REPLICA_NAME":                         "mitchell",
+	"GDS_REPLICA_REGION":                       "us-east-1c",
+	"GDS_REPLICA_GOSSIP_INTERVAL":              "30m",
+	"GDS_REPLICA_GOSSIP_SIGMA":                 "3m",
+	"GDS_DATABASE_URL":                         "fixtures/db",
+	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
+	"SECTIGO_USERNAME":                         "foo",
+	"SECTIGO_PASSWORD":                         "supersecret",
+	"SECTIGO_PROFILE":                          "17",
+	"GDS_SERVICE_EMAIL":                        "test@example.com",
+	"GDS_ADMIN_EMAIL":                          "admin@example.com",
+	"SENDGRID_API_KEY":                         "bar1234",
+	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify-contact",
+	"GDS_CERTMAN_INTERVAL":                     "60s",
+	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
+	"GDS_BACKUP_ENABLED":                       "true",
+	"GDS_BACKUP_INTERVAL":                      "36h",
+	"GDS_BACKUP_STORAGE":                       "fixtures/backups",
+	"GDS_BACKUP_KEEP":                          "7",
+	"GOOGLE_APPLICATION_CREDENTIALS":           "test.json",
+	"GOOGLE_PROJECT_NAME":                      "test",
+	"GDS_SECRETS_TESTING":                      "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -83,10 +84,11 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
 	require.Equal(t, true, conf.Replica.Enabled)
 	require.Len(t, conf.Admin.TokenKeys, 2)
-	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
-	require.Len(t, conf.Admin.AuthorizedDomains, 3)
+	require.Equal(t, testEnv["GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE"], conf.Admin.Oauth.GoogleAudience)
+	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
 	require.Len(t, conf.Admin.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_ADMIN_COOKIE_DOMAIN"], conf.Admin.CookieDomain)
+	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
 	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
@@ -129,25 +131,25 @@ func TestAuthorizedDomainsPreprocessing(t *testing.T) {
 	setEnv()
 
 	// Set authorized domains to require processing
-	os.Setenv("GDS_ADMIN_AUTHORIZED_DOMAINS", "EXAMPLE.com, spacedout.io ,'quotes.org', 'Abadcombo.TECH")
+	os.Setenv("GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS", "EXAMPLE.com, spacedout.io ,'quotes.org', 'Abadcombo.TECH")
 
 	conf, err := config.New()
 	require.NoError(t, err)
 
-	require.Len(t, conf.Admin.AuthorizedDomains, 4)
-	require.Equal(t, "example.com", conf.Admin.AuthorizedDomains[0])
-	require.Equal(t, "spacedout.io", conf.Admin.AuthorizedDomains[1])
-	require.Equal(t, "quotes.org", conf.Admin.AuthorizedDomains[2])
-	require.Equal(t, "abadcombo.tech", conf.Admin.AuthorizedDomains[3])
+	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 4)
+	require.Equal(t, "example.com", conf.Admin.Oauth.AuthorizedEmailDomains[0])
+	require.Equal(t, "spacedout.io", conf.Admin.Oauth.AuthorizedEmailDomains[1])
+	require.Equal(t, "quotes.org", conf.Admin.Oauth.AuthorizedEmailDomains[2])
+	require.Equal(t, "abadcombo.tech", conf.Admin.Oauth.AuthorizedEmailDomains[3])
 }
 
 func TestRequiredConfig(t *testing.T) {
 	required := []string{
 		"GDS_DATABASE_URL",
 		"GDS_SECRET_KEY",
-		"GDS_ADMIN_AUDIENCE",
+		"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE",
 		"GDS_ADMIN_TOKEN_KEYS",
-		"GDS_ADMIN_AUTHORIZED_DOMAINS",
+		"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS",
 		"GDS_REPLICA_PID",
 		"GDS_REPLICA_REGION",
 	}
@@ -194,9 +196,9 @@ func TestRequiredConfig(t *testing.T) {
 	require.True(t, conf.Replica.Enabled)
 	require.Equal(t, uint64(8), conf.Replica.PID)
 	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
-	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
+	require.Equal(t, testEnv["GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE"], conf.Admin.Oauth.GoogleAudience)
 	require.Len(t, conf.Admin.TokenKeys, 2)
-	require.Len(t, conf.Admin.AuthorizedDomains, 3)
+	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
 
 }
 

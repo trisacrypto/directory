@@ -1,9 +1,14 @@
 package tokens_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"strings"
 	"testing"
 	"time"
 
+	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 )
@@ -22,7 +27,7 @@ func (s *TokenTestSuite) SetupSuite() {
 
 func (s *TokenTestSuite) TestTokenManager() {
 	require := s.Require()
-	tm, err := tokens.New(s.testdata)
+	tm, err := tokens.New(s.testdata, "http://localhost:3000")
 	require.NoError(err, "could not initialize token manager")
 
 	keys := tm.Keys()
@@ -31,6 +36,7 @@ func (s *TokenTestSuite) TestTokenManager() {
 
 	// Create an access token from simple claims
 	creds := map[string]interface{}{
+		"sub":     "102374163855881761273",
 		"hd":      "rotational.io",
 		"email":   "kate@rotational.io",
 		"name":    "Kate Holland",
@@ -47,9 +53,9 @@ func (s *TokenTestSuite) TestTokenManager() {
 	// Check access token claims
 	ac := accessToken.Claims.(*tokens.Claims)
 	require.NotZero(ac.Id)
-	require.Equal("", ac.Audience)
-	require.Equal("", ac.Issuer)
-	require.Equal("", ac.Subject)
+	require.Equal("http://localhost:3000", ac.Audience)
+	require.Empty(ac.Issuer, "issuer is a duplicate of audience")
+	require.Equal("102374163855881761273", ac.Subject)
 	require.True(time.Unix(ac.IssuedAt, 0).Before(now))
 	require.True(time.Unix(ac.NotBefore, 0).Before(now))
 	require.True(time.Unix(ac.ExpiresAt, 0).After(now))
@@ -102,16 +108,14 @@ func (s *TokenTestSuite) TestTokenManager() {
 	require.Error(err, "refresh token is valid?")
 }
 
-// TODO: test validation of audience, issuer, and subject.
-// TODO: test time based validation (not before, issued at, expires)
-// TODO: test signed with wrong key
 func (s *TokenTestSuite) TestValidTokens() {
 	require := s.Require()
-	tm, err := tokens.New(s.testdata)
+	tm, err := tokens.New(s.testdata, "http://localhost:3000")
 	require.NoError(err, "could not initialize token manager")
 
 	// Default creds
 	creds := map[string]interface{}{
+		"sub":     "102374163855881761273",
 		"hd":      "rotational.io",
 		"email":   "kate@rotational.io",
 		"name":    "Kate Holland",
@@ -133,7 +137,7 @@ func (s *TokenTestSuite) TestValidTokens() {
 	}
 
 	// Test optional creds
-	for _, key := range []string{"name", "picture"} {
+	for _, key := range []string{"name", "picture", "sub"} {
 		// remove key
 		orig := creds[key]
 		delete(creds, key)
@@ -162,6 +166,82 @@ func (s *TokenTestSuite) TestValidTokens() {
 	require.Error(err)
 }
 
+func (s *TokenTestSuite) TestInvalidTokens() {
+	// Create the token manager
+	require := s.Require()
+	tm, err := tokens.New(s.testdata, "http://localhost:3000")
+	require.NoError(err, "could not initialize token manager")
+
+	// Manually create a token to validate with the token manager
+	now := time.Now()
+	claims := &tokens.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Id:        uuid.NewString(),                  // id not validated
+			Audience:  "http://foo.example.com",          // wrong audience
+			Subject:   "102374163855881761273",           // sub not validated
+			IssuedAt:  now.Add(-1 * time.Hour).Unix(),    // iat not validated
+			NotBefore: now.Add(15 * time.Minute).Unix(),  // nbf is validated and is after now
+			ExpiresAt: now.Add(-30 * time.Minute).Unix(), // exp is validated and is before now
+		},
+		Domain:  "rotational.io",
+		Email:   "kate@rotational.io",
+		Name:    "Kate Holland",
+		Picture: "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
+	}
+
+	// Test validation signed with wrong kid
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["kid"] = "1zSQqRhO7lU1qXoOZvvF2kJdRt5"
+	badkey, err := rsa.GenerateKey(rand.Reader, 1024)
+	require.NoError(err, "could not generate bad rsa keys")
+	tks, err := token.SignedString(badkey)
+	require.NoError(err, "could not sign token with bad kid")
+
+	_, err = tm.Verify(tks)
+	require.EqualError(err, "unknown signing key")
+
+	// Test validation signed with good kid but wrong key
+	token.Header["kid"] = "1yAwhf28bXi3IWP6FYcGa0dcrfq"
+	tks, err = token.SignedString(badkey)
+	require.NoError(err, "could not sign token with bad keys and good kid")
+
+	_, err = tm.Verify(tks)
+	require.EqualError(err, "crypto/rsa: verification error")
+
+	// Test time-based validation: nbf
+	tks, err = tm.Sign(token)
+	require.NoError(err, "could not sign token with good keys")
+
+	_, err = tm.Verify(tks)
+	require.EqualError(err, "token is not valid yet")
+
+	// Test time-based validation: exp
+	claims.NotBefore = now.Add(-1 * time.Hour).Unix()
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
+	require.NoError(err, "could not sign token with good keys")
+
+	// NOTE: actual error message is "token is expired by 30m0s" however, if the clock
+	// minute happens to tick over the message could be "token is expired by 30m1s" so
+	// to prevent test failure, we're only testing the prefix.
+	_, err = tm.Verify(tks)
+	require.True(strings.HasPrefix(err.Error(), "token is expired"))
+
+	// Test audience verification
+	claims.ExpiresAt = now.Add(1 * time.Hour).Unix()
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
+	require.NoError(err, "could not sign token with good keys")
+
+	_, err = tm.Verify(tks)
+	require.EqualError(err, "invalid audience \"http://foo.example.com\"")
+
+	// Token is finally valid
+	claims.Audience = "http://localhost:3000"
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
+	require.NoError(err, "could not sign token with good keys")
+	_, err = tm.Verify(tks)
+	require.NoError(err, "claims are still not valid")
+}
+
 // Test that a token signed with an old cert can still be verified.
 // This also tests that the correct signing key is required.
 func (s *TokenTestSuite) TestKeyRotation() {
@@ -170,15 +250,16 @@ func (s *TokenTestSuite) TestKeyRotation() {
 	// Create the "old token manager"
 	testdata := make(map[string]string)
 	testdata["1yAwhf28bXi3IWP6FYcGa0dcrfq"] = "testdata/1yAwhf28bXi3IWP6FYcGa0dcrfq.pem"
-	oldTM, err := tokens.New(testdata)
+	oldTM, err := tokens.New(testdata, "http://localhost:3000")
 	require.NoError(err, "could not initialize old token manager")
 
 	// Create the "new" token manager with the new key
-	newTM, err := tokens.New(s.testdata)
+	newTM, err := tokens.New(s.testdata, "http://localhost:3000")
 	require.NoError(err, "could not initialize new token manager")
 
 	// Create a valid token with the "old token manager"
 	token, err := oldTM.CreateAccessToken(map[string]interface{}{
+		"sub":     "102374163855881761273",
 		"hd":      "rotational.io",
 		"email":   "kate@rotational.io",
 		"name":    "Kate Holland",
@@ -205,11 +286,12 @@ func (s *TokenTestSuite) TestKeyRotation() {
 // access tokens in order to use a refresh token to extract the claims.
 func (s *TokenTestSuite) TestParseExpiredToken() {
 	require := s.Require()
-	tm, err := tokens.New(s.testdata)
+	tm, err := tokens.New(s.testdata, "http://localhost:3000")
 	require.NoError(err, "could not initialize token manager")
 
 	// Default creds
 	creds := map[string]interface{}{
+		"sub":     "102374163855881761273",
 		"hd":      "rotational.io",
 		"email":   "kate@rotational.io",
 		"name":    "Kate Holland",
@@ -244,6 +326,7 @@ func (s *TokenTestSuite) TestParseExpiredToken() {
 	// Check claims
 	require.Equal(claims.Id, pclaims.Id)
 	require.Equal(claims.ExpiresAt, pclaims.ExpiresAt)
+	require.Equal(creds["sub"], claims.Subject)
 	require.Equal(creds["hd"], claims.Domain)
 	require.Equal(creds["email"], claims.Email)
 	require.Equal(creds["name"], claims.Name)

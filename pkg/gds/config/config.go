@@ -38,19 +38,24 @@ type GDSConfig struct {
 }
 
 type AdminConfig struct {
-	Enabled           bool     `split_words:"true" default:"true"`
-	BindAddr          string   `split_words:"true" default:":4434"`
-	Mode              string   `split_words:"true" default:"release"`
-	Audience          string   `split_words:"true"`
-	AuthorizedDomains []string `split_words:"true"`
-	AllowOrigins      []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
-	CookieDomain      string   `split_words:"true"`
+	Enabled      bool     `split_words:"true" default:"true"`
+	BindAddr     string   `split_words:"true" default:":4434"`
+	Mode         string   `split_words:"true" default:"release"`
+	AllowOrigins []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
+	CookieDomain string   `split_words:"true"`
+	Audience     string   `split_words:"true"`
+	Oauth        OauthConfig
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem
 	// Multiple keys are used in order to rotate keys regularly; keyids therefore must
 	// be sortable; in general we prefer to use ksuid for key ids.
 	TokenKeys map[string]string `split_words:"true"`
+}
+
+type OauthConfig struct {
+	GoogleAudience         string   `split_words:"true"`
+	AuthorizedEmailDomains []string `split_words:"true"`
 }
 
 type ReplicaConfig struct {
@@ -121,8 +126,8 @@ func New() (_ Config, err error) {
 	}
 
 	// Preprocess authorized domains
-	for i, domain := range conf.Admin.AuthorizedDomains {
-		conf.Admin.AuthorizedDomains[i] = strings.ToLower(strings.Trim(strings.TrimSpace(domain), "\"'"))
+	for i, domain := range conf.Admin.Oauth.AuthorizedEmailDomains {
+		conf.Admin.Oauth.AuthorizedEmailDomains[i] = strings.ToLower(strings.Trim(strings.TrimSpace(domain), "\"'"))
 	}
 
 	conf.processed = true
@@ -143,18 +148,26 @@ func (c AdminConfig) Validate() error {
 	}
 
 	if c.Enabled {
-		// Check configurations that are only required if the admin API is enabled
-		if c.Audience == "" {
-			return errors.New("invalid configuration: audience required for enabled admin")
-		}
-
-		if len(c.AuthorizedDomains) == 0 {
-			return errors.New("invalid configuration: authorized domains required for enabled admin")
+		if err := c.Oauth.Validate(); err != nil {
+			return err
 		}
 
 		if len(c.TokenKeys) == 0 {
 			return errors.New("invalid configuration: token keys required for enabled admin")
 		}
+	}
+
+	return nil
+}
+
+func (c OauthConfig) Validate() error {
+	// Check configurations that are only required if the admin API is enabled
+	if c.GoogleAudience == "" {
+		return errors.New("invalid configuration: oauth audience required for enabled admin")
+	}
+
+	if len(c.AuthorizedEmailDomains) == 0 {
+		return errors.New("invalid configuration: authorized email domains required for enabled admin")
 	}
 
 	return nil

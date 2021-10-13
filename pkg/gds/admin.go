@@ -40,7 +40,7 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 	}
 
 	// Create the token manager
-	if a.tokens, err = tokens.New(a.conf.TokenKeys); err != nil {
+	if a.tokens, err = tokens.New(a.conf.TokenKeys, a.conf.Audience); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +94,10 @@ func (s *Admin) Serve() (err error) {
 	}
 
 	// Note authorization context
-	log.Debug().Strs("authorized_domains", s.conf.AuthorizedDomains).Strs("allowed_origins", s.conf.AllowOrigins).Msg("authorization context")
+	log.Debug().
+		Strs("authorized_domains", s.conf.Oauth.AuthorizedEmailDomains).
+		Strs("allowed_origins", s.conf.AllowOrigins).
+		Msg("authorization context")
 
 	// Listen for TCP requests on the specified address and port
 	log.Info().
@@ -251,7 +254,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	}
 
 	// Validate the credential with Google
-	if claims, err = idtoken.Validate(c.Request.Context(), in.Credential, s.conf.Audience); err != nil {
+	if claims, err = idtoken.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
 		log.Warn().Err(err).Msg("invalid credentials used for authentication")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
@@ -300,7 +303,7 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 	domains = strings.ToLower(strings.TrimSpace(domains))
 
 	// Search the authorized domains, if found return nil
-	for _, authorized := range s.conf.AuthorizedDomains {
+	for _, authorized := range s.conf.Oauth.AuthorizedEmailDomains {
 		if domains == authorized {
 			// Found an authorized domain!
 			return nil
