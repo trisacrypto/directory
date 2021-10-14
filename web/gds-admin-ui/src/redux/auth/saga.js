@@ -5,6 +5,7 @@ import { loginUserError, loginUserSuccess } from './actions';
 import { AuthActionTypes } from './constants';
 import jwtDecode from 'jwt-decode'
 import { postCredentials } from '../../helpers/api/auth';
+import toast from 'react-hot-toast';
 
 const api = new APICore();
 
@@ -25,6 +26,7 @@ function* login({ payload }) {
         yield put(loginUserSuccess(AuthActionTypes.LOGIN_USER_SUCCESS, decodedToken));
     } catch (error) {
         console.log(error)
+        toast.error(error)
         yield put(loginUserError(AuthActionTypes.LOGIN_USER_ERROR, error));
         api.setLoggedInUser(null);
         setAuthorization(null);
