@@ -12,3 +12,8 @@ export const AddressTypeHeaders = {
     ADDRESS_TYPE_CODE_BIZZ: "Business",
     ADDRESS_TYPE_CODE_GEOG: "Geographic"
 }
+
+export const DIRECTORY = {
+    TRISATEST: "TestNet Admin",
+    VASP_DIRECTORY: "Production Admin"
+}
