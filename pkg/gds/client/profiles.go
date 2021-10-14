@@ -23,33 +23,6 @@ import (
 // the "first" profile marked as active is used (with no guaranteed ordering).
 type Profiles map[string]*Profile
 
-// Profile contains the client-side configuration to connect to a specifc GDS instance.
-// Profiles are loaded first from the YAML configuration file and then can be overrided
-// by the CLI context if the user specifies a value via an environment variable or flag.
-type Profile struct {
-	Directory   *DirectoryProfile `yaml:"directory"`              // directory configuration
-	Admin       *AdminProfile     `yaml:"admin"`                  // admin api configuration
-	Replica     *ReplicaProfile   `yaml:"replica"`                // replica configuration
-	DatabaseURL string            `yaml:"database_url,omitempty"` // localhost only: the dsn to the leveldb database, usually $GDS_DATABASE_URL
-	Active      bool              `yaml:"active,omitempty"`       // if this is the active profile, it is treated as the default profile
-}
-
-type DirectoryProfile struct {
-	Endpoint string `yaml:"endpoint"`           // the GDS endpoint to connect to the gRPC directory service, also $TRISA_DIRECTORY_URL
-	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the directory endpoint with TLS
-}
-
-type AdminProfile struct {
-	Endpoint  string            `yaml:"endpoint"`             // the Admin URL to connect to the Admin API, also $TRISA_DIRECTORY_ADMIN_URL
-	Audience  string            `yaml:"audience,omitempty"`   // the Audience for local token generation auth, usually $GDS_ADMIN_AUDIENCE
-	TokenKeys map[string]string `yaml:"token_keys,omitempty"` // the token keys identifier and paths for local token generation auth, usually $GDS_ADMIN_TOKEN_KEYS
-}
-
-type ReplicaProfile struct {
-	Endpoint string `yaml:"endpoint"`           // the replica endpoint to connect to the anti-entropy service
-	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the replica endpoint with TLS
-}
-
 var cfgd = configdir.New("rotational", "gds")
 
 const (
@@ -67,7 +40,7 @@ func ProfilesPath() (string, error) {
 }
 
 // Load the profiles from disk if they're available.
-func Load(c cli.Context) (p Profiles, err error) {
+func Load() (p Profiles, err error) {
 	folder := cfgd.QueryFolderContainsFile(profileYAML)
 	if folder != nil {
 		var data []byte
@@ -85,13 +58,22 @@ func Load(c cli.Context) (p Profiles, err error) {
 	return nil, errors.New("no profiles are available")
 }
 
-// LoadActive is a shorthand for Load() then Active()
-func LoadActive(c cli.Context) (p *Profile, err error) {
+// LoadActive is a shorthand for Load() then Active() and finally Update()
+func LoadActive(c *cli.Context) (p *Profile, err error) {
 	var profiles Profiles
-	if profiles, err = Load(c); err != nil {
+	if profiles, err = Load(); err != nil {
 		return nil, err
 	}
-	return profiles.Active(c.String("profile"))
+
+	if p, err = profiles.Active(c.String("profile")); err != nil {
+		return nil, err
+	}
+
+	if err = p.Update(c); err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 
 // Active returns the profile with the specified name or the active profile if no name
