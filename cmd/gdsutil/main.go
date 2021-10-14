@@ -545,7 +545,7 @@ func ldbKeys(c *cli.Context) (err error) {
 	}
 
 	if err = iter.Error(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return nil
@@ -559,10 +559,10 @@ func ldbGet(c *cli.Context) (err error) {
 		// Check that out is a directory
 		var info fs.FileInfo
 		if info, err = os.Stat(out); err != nil {
-			return cli.NewExitError("specify an existing, writeable directory to output files to", 1)
+			return cli.Exit("specify an existing, writeable directory to output files to", 1)
 		}
 		if !info.IsDir() {
-			return cli.NewExitError("specify a directory to write files out to", 1)
+			return cli.Exit("specify a directory to write files out to", 1)
 		}
 	}
 
@@ -570,12 +570,12 @@ func ldbGet(c *cli.Context) (err error) {
 	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
-			return cli.NewExitError(fmt.Errorf("could not decode key: %s", err), 1)
+			return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
 		}
 
 		var data []byte
 		if data, err = ldb.Get(key, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Unmarshal the thing
@@ -588,15 +588,15 @@ func ldbGet(c *cli.Context) (err error) {
 		switch prefix {
 		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case wire.NamespaceIndices:
 			if jsonValue, err = wire.UnmarshalIndex(data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case wire.NamespaceSequence:
 			if jsonValue, err = wire.UnmarshalSequence(data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "warning: cannot unmarshal unknown namespace %q, printing raw data\n", prefix)
@@ -607,7 +607,7 @@ func ldbGet(c *cli.Context) (err error) {
 		switch {
 		case jsonValue != nil:
 			if outdata, err = json.MarshalIndent(jsonValue, "", "  "); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case pbValue != nil:
 			jsonpb := protojson.MarshalOptions{
@@ -619,7 +619,7 @@ func ldbGet(c *cli.Context) (err error) {
 				EmitUnpopulated: true,
 			}
 			if outdata, err = jsonpb.Marshal(pbValue); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		default:
 			outdata = data
@@ -628,7 +628,7 @@ func ldbGet(c *cli.Context) (err error) {
 		if out != "" {
 			path := filepath.Join(out, string(key)+".json")
 			if err = ioutil.WriteFile(path, outdata, 0644); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			fmt.Println(string(outdata) + "\n")
@@ -642,7 +642,7 @@ func ldbPut(c *cli.Context) (err error) {
 	defer ldb.Close()
 
 	if c.NArg() == 0 || c.NArg() > 2 {
-		return cli.NewExitError("specify path, key and path, or key and value as arguments", 1)
+		return cli.Exit("specify path, key and path, or key and value as arguments", 1)
 	}
 
 	// Determine the key and value as follows:
@@ -656,12 +656,12 @@ func ldbPut(c *cli.Context) (err error) {
 		name := filepath.Base(path)
 		ext := filepath.Ext(name)
 		if strings.TrimLeft(ext, ".") != format {
-			return cli.NewExitError(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
+			return cli.Exit(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
 		}
 
 		key = []byte(strings.TrimSuffix(name, ext))
 		if data, err = ioutil.ReadFile(path); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	} else {
 		key = []byte(args.Get(0))
@@ -671,10 +671,10 @@ func ldbPut(c *cli.Context) (err error) {
 		if isFile(varg) {
 			ext := filepath.Ext(varg)
 			if strings.TrimLeft(ext, ".") != format {
-				return cli.NewExitError(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
+				return cli.Exit(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
 			}
 			if data, err = ioutil.ReadFile(varg); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			data = []byte(varg)
@@ -686,16 +686,16 @@ func ldbPut(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
 	if b64decode {
 		if key, err = base64.RawStdEncoding.DecodeString(string(key)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		if data, err = base64.RawStdEncoding.DecodeString(string(data)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 
 	// Quick spot check
 	if len(data) == 0 || len(key) == 0 {
-		return cli.NewExitError("no key or value found", 1)
+		return cli.Exit("no key or value found", 1)
 	}
 
 	// Unmarshal the thing from data then
@@ -706,16 +706,16 @@ func ldbPut(c *cli.Context) (err error) {
 		switch format {
 		case "json":
 			if value, err = wire.RemarshalJSON(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case "pb", "proto", "protobuf":
 			// Check if the protocol buffers can be unmarshaled; if so, the data is good to go
 			if _, err = wire.UnmarshalProto(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 			value = data
 		default:
-			return cli.NewExitError("unknown format: specify raw, bytes, json, or proto", 1)
+			return cli.Exit("unknown format: specify raw, bytes, json, or proto", 1)
 		}
 
 	} else {
@@ -725,12 +725,12 @@ func ldbPut(c *cli.Context) (err error) {
 
 	// Final spot check
 	if len(value) == 0 {
-		return cli.NewExitError("no value marshaled", 1)
+		return cli.Exit("no value marshaled", 1)
 	}
 
 	// Put the key/value to the database
 	if err = ldb.Put(key, value, nil); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -738,18 +738,18 @@ func ldbPut(c *cli.Context) (err error) {
 func ldbDelete(c *cli.Context) (err error) {
 	defer ldb.Close()
 	if c.NArg() == 0 {
-		return cli.NewExitError("specify at least one key to delete", 1)
+		return cli.Exit("specify at least one key to delete", 1)
 	}
 
 	b64decode := c.Bool("b64decode")
 	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		if err = ldb.Delete(key, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 
@@ -768,7 +768,7 @@ func ldbList(c *cli.Context) (err error) {
 		vasp := new(pb.VASP)
 		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
 			iter.Release()
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		record := make(map[string]string)
@@ -783,7 +783,7 @@ func ldbList(c *cli.Context) (err error) {
 
 	if err = iter.Error(); err != nil {
 		iter.Release()
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	iter.Release()
 
@@ -793,7 +793,7 @@ func ldbList(c *cli.Context) (err error) {
 		cr := new(models.CertificateRequest)
 		if err = proto.Unmarshal(iter.Value(), cr); err != nil {
 			iter.Release()
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		record, ok := data[cr.Vasp]
@@ -808,14 +808,14 @@ func ldbList(c *cli.Context) (err error) {
 
 	if err = iter.Error(); err != nil {
 		iter.Release()
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	iter.Release()
 
 	// Write out a CSV file of the VASP list
 	var f *os.File
 	if f, err = os.OpenFile(c.String("out"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	w := csv.NewWriter(f)
 	w.Write([]string{"id", "name", "common_name", "registered_directory", "verified_on", "verification_status", "certreq", "certreq_status"})
@@ -826,7 +826,7 @@ func ldbList(c *cli.Context) (err error) {
 
 	w.Flush()
 	if err := w.Error(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("%d records written to %s\n", len(data), c.String("out"))
@@ -840,20 +840,20 @@ func ldbList(c *cli.Context) (err error) {
 func openLevelDB(c *cli.Context) (err error) {
 	var uri string
 	if uri = c.String("db"); uri == "" {
-		return cli.NewExitError("specify path to leveldb database", 1)
+		return cli.Exit("specify path to leveldb database", 1)
 	}
 
 	var dsn *store.DSN
 	if dsn, err = store.ParseDSN(uri); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if dsn.Scheme != "leveldb" && dsn.Scheme != "ldb" {
-		return cli.NewExitError("this action requires a leveldb DSN", 1)
+		return cli.Exit("this action requires a leveldb DSN", 1)
 	}
 
 	if ldb, err = leveldb.OpenFile(dsn.Path, nil); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -919,28 +919,28 @@ func openProfileConfig(c *cli.Context) (err error) {
 			if len(folders) == 0 {
 				folders = configDirs.QueryFolders(configdir.System)
 				if len(folders) == 0 {
-					return cli.NewExitError("no suitable directory for config file", 1)
+					return cli.Exit("no suitable directory for config file", 1)
 				}
 			}
 		}
 
 		// Create the new config
 		if err = initConfig(folders[0]); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		profileFolder = configDirs.QueryFolderContainsFile(configFile)
 		if profileFolder == nil {
-			return cli.NewExitError("unable to locate config file", 1)
+			return cli.Exit("unable to locate config file", 1)
 		}
 	}
 
 	// Read the current config file
 	var data []byte
 	if data, err = profileFolder.ReadFile(configFile); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	if err = yaml.Unmarshal(data, &profileConfig); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -974,7 +974,7 @@ func getProfile(c *cli.Context) (err error) {
 func setProfile(c *cli.Context) (err error) {
 	var name string
 	if c.Args().Len() < 1 {
-		return cli.NewExitError("must specify profile name", 1)
+		return cli.Exit("must specify profile name", 1)
 	}
 
 	// Switch to the new profile
@@ -988,7 +988,7 @@ func setProfile(c *cli.Context) (err error) {
 
 	// Write the new config to disk
 	if err = writeProfileConfig(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	fmt.Printf("switched to profile %s\n", profileConfig.Current)
 	return nil
@@ -997,13 +997,13 @@ func setProfile(c *cli.Context) (err error) {
 func deleteProfile(c *cli.Context) (err error) {
 	var name string
 	if c.Args().Len() < 1 {
-		return cli.NewExitError("must specify profile name", 1)
+		return cli.Exit("must specify profile name", 1)
 	}
 
 	// Delete the indicated profile
 	name = c.Args().Get(0)
 	if _, ok := profileConfig.Profiles[name]; !ok {
-		return cli.NewExitError("profile does not exist", 1)
+		return cli.Exit("profile does not exist", 1)
 	}
 	delete(profileConfig.Profiles, name)
 	if profileConfig.Current == name {
@@ -1025,7 +1025,7 @@ func listVariables(c *cli.Context) (err error) {
 
 	name = profileConfig.Current
 	if profile, ok = profileConfig.Profiles[name]; !ok {
-		return cli.NewExitError("profile does not exist", 1)
+		return cli.Exit("profile does not exist", 1)
 	}
 
 	for k, v := range profile.Variables {
@@ -1043,14 +1043,14 @@ func getProfileVariable(c *cli.Context) (err error) {
 		val     string
 	)
 	if c.Args().Len() < 1 {
-		return cli.NewExitError("must specify variable name", 1)
+		return cli.Exit("must specify variable name", 1)
 	}
 
 	// Get the indicated variable from the config
 	key = c.Args().Get(0)
 	profile = profileConfig.Profiles[profileConfig.Current]
 	if val, ok = profile.Variables[key]; !ok {
-		return cli.NewExitError("variable does not exist in current profile", 1)
+		return cli.Exit("variable does not exist in current profile", 1)
 	}
 
 	fmt.Printf("%s=%s\n", key, val)
@@ -1063,7 +1063,7 @@ func setProfileVariable(c *cli.Context) (err error) {
 		val string
 	)
 	if c.Args().Len() < 2 {
-		return cli.NewExitError("must specify variable name and value", 1)
+		return cli.Exit("must specify variable name and value", 1)
 	}
 
 	// Set the variable in the config
@@ -1072,24 +1072,24 @@ func setProfileVariable(c *cli.Context) (err error) {
 	profileConfig.Profiles[profileConfig.Current].Variables[key] = val
 
 	if err = writeProfileConfig(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
 
 func deleteProfileVariable(c *cli.Context) (err error) {
 	if c.Args().Len() < 1 {
-		return cli.NewExitError("must specify variable name", 1)
+		return cli.Exit("must specify variable name", 1)
 	}
 
 	// Delete the indicated profile variable
 	key := c.Args().Get(0)
 	if _, ok := profileConfig.Profiles[profileConfig.Current].Variables[key]; !ok {
-		return cli.NewExitError("variable does not exist", 1)
+		return cli.Exit("variable does not exist", 1)
 	}
 	delete(profileConfig.Profiles[profileConfig.Current].Variables, key)
 	if err = writeProfileConfig(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -1114,7 +1114,7 @@ func addPeers(c *cli.Context) (err error) {
 	// call client.AddPeer with the pid
 	var out *peers.PeersStatus
 	if out, err = replicaClient.AddPeers(ctx, peer); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the returned result
@@ -1134,7 +1134,7 @@ func delPeers(c *cli.Context) (err error) {
 	// call client.RmPeer with the pid
 	var out *peers.PeersStatus
 	if out, err = replicaClient.RmPeers(ctx, peer); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the returned result
@@ -1156,7 +1156,7 @@ func listPeers(c *cli.Context) (err error) {
 	// call client.GetPeers with filter
 	var out *peers.PeersList
 	if out, err = replicaClient.GetPeers(ctx, filter); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the peers
@@ -1168,7 +1168,7 @@ func initReplicaClient(c *cli.Context) (err error) {
 	// initialize a client
 	var cc *grpc.ClientConn
 	if cc, err = grpc.Dial(c.String("replica-endpoint"), grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	replicaClient = peers.NewPeerManagementClient(cc)
 	return nil
@@ -1194,24 +1194,24 @@ const nonceSize = 12
 
 func cipherDecrypt(c *cli.Context) (err error) {
 	if c.NArg() != 2 {
-		return cli.NewExitError("must specify ciphertext and hmac arguments", 1)
+		return cli.Exit("must specify ciphertext and hmac arguments", 1)
 	}
 
 	var secret string
 	if secret = c.String("key"); secret == "" {
-		return cli.NewExitError("cipher key required", 1)
+		return cli.Exit("cipher key required", 1)
 	}
 
 	var ciphertext, signature []byte
 	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args().Get(0)); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
+		return cli.Exit(fmt.Errorf("could not decode ciphertext: %s", err), 1)
 	}
 	if signature, err = base64.RawStdEncoding.DecodeString(c.Args().Get(1)); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
+		return cli.Exit(fmt.Errorf("could not decode signature: %s", err), 1)
 	}
 
 	if len(ciphertext) == 0 {
-		return cli.NewExitError("empty cipher text", 1)
+		return cli.Exit("empty cipher text", 1)
 	}
 
 	// Create a 32 byte signature of the key
@@ -1225,22 +1225,22 @@ func cipherDecrypt(c *cli.Context) (err error) {
 
 	// Validate HMAC signature
 	if err = validateHMAC(key, data, signature); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Println(string(plainbytes))
@@ -1287,14 +1287,14 @@ func registerExport(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Remove sensitive data from contacts
@@ -1329,12 +1329,12 @@ func registerExport(c *cli.Context) (err error) {
 
 	data, err := jsonpb.Marshal(pbForm)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	registrationForm := make(map[string]interface{})
 	if err = json.Unmarshal(data, &registrationForm); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	form := map[string]interface{}{
@@ -1346,7 +1346,7 @@ func registerExport(c *cli.Context) (err error) {
 	if path := c.String("outpath"); path != "" {
 		var f *os.File
 		if f, err = os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		defer f.Close()
 		w = f
@@ -1357,7 +1357,7 @@ func registerExport(c *cli.Context) (err error) {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	if err = encoder.Encode(form); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -1373,20 +1373,20 @@ func registerRepair(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Find the CertificateRequest for the VASP
 	var certreq *models.CertificateRequest
 	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if certreq == nil {
@@ -1394,13 +1394,13 @@ func registerRepair(c *cli.Context) (err error) {
 
 		var conf config.Config
 		if conf, err = config.New(); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Connect to secret manager
 		var sm *secrets.SecretManager
 		if sm, err = secrets.New(conf.Secrets); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Create PKCS12 password along with certificate request.
@@ -1416,21 +1416,21 @@ func registerRepair(c *cli.Context) (err error) {
 		// Make a new secret of type "password"
 		secretType := "password"
 		if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		var data []byte
 		certreq.Modified = time.Now().Format(time.RFC3339)
 		key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 		if data, err = proto.Marshal(certreq); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		if err = ldb.Put(key, data, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		fmt.Printf("created new certificate request: %s\n", key)
@@ -1450,7 +1450,7 @@ func registerReissue(c *cli.Context) (err error) {
 
 	// Make sure there is a reason
 	if reason == "" || email == "" {
-		return cli.NewExitError("supply a reason and email of user to reissue the certs", 1)
+		return cli.Exit("supply a reason and email of user to reissue the certs", 1)
 	}
 
 	// Lookup VASP in database by ID or by name
@@ -1458,20 +1458,20 @@ func registerReissue(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Find the current CertificateRequest for the VASP
 	var certreq *models.CertificateRequest
 	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Update the current CertificateRequest if it exists
@@ -1480,7 +1480,7 @@ func registerReissue(c *cli.Context) (err error) {
 		if certreq.Status < models.CertificateRequestState_COMPLETED {
 			fmt.Printf("canceling certificate request %s and setting state %s from %s\n", certreq.Id, models.CertificateRequestState_CR_ERRORED, certreq.Status)
 			if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_CR_ERRORED, reason, email); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 			certreq.RejectReason = reason
 			certreq.Modified = time.Now().Format(time.RFC3339)
@@ -1488,11 +1488,11 @@ func registerReissue(c *cli.Context) (err error) {
 			var data []byte
 			key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 			if data, err = proto.Marshal(certreq); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 
 			if err = ldb.Put(key, data, nil); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			fmt.Printf("certificate request %s is in state %s - making no changes\n", certreq.Id, certreq.Status)
@@ -1502,13 +1502,13 @@ func registerReissue(c *cli.Context) (err error) {
 	// Connect to the SecretManager to create a new PKCS12 Password
 	var conf config.Config
 	if conf, err = config.New(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Connect to secret manager
 	var sm *secrets.SecretManager
 	if sm, err = secrets.New(conf.Secrets); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Create a new certificate request for the VASP along with new PKCS12 password
@@ -1521,27 +1521,27 @@ func registerReissue(c *cli.Context) (err error) {
 	}
 
 	if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_READY_TO_SUBMIT, "reissue certificates", email); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Make a new secret of type "password"
 	secretType := "password"
 	if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	var data []byte
 	certreq.Modified = time.Now().Format(time.RFC3339)
 	key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 	if data, err = proto.Marshal(certreq); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if err = ldb.Put(key, data, nil); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("created new certificate request: %s\n", key)
@@ -1609,7 +1609,7 @@ func generateTokenKey(c *cli.Context) (err error) {
 	// Create ksuid and determine outpath
 	var keyid ksuid.KSUID
 	if keyid, err = ksuid.NewRandom(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	var out string
@@ -1620,20 +1620,20 @@ func generateTokenKey(c *cli.Context) (err error) {
 	// Generate RSA keys using crypto random
 	var key *rsa.PrivateKey
 	if key, err = rsa.GenerateKey(rand.Reader, c.Int("size")); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Open file to PEM encode keys to
 	var f *os.File
 	if f, err = os.OpenFile(out, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if err = pem.Encode(f, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
@@ -1657,7 +1657,7 @@ func printJSON(m proto.Message) error {
 
 	data, err := opts.Marshal(m)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Println(string(data))
