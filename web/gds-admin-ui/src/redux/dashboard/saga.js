@@ -1,4 +1,5 @@
 
+import toast from "react-hot-toast"
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
 import { getRegistrationReviews, getSummary, getVasps } from "../../services/dashboard"
 import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError, fetchRegistrationsReviewsSuccess, fetchRegistrationsReviewsError } from "./actions"
@@ -12,6 +13,7 @@ function* fetchSummary() {
         const data = response.data
         yield put(fetchSummaryApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
+        toast.error(error)
         yield put(fetchSummaryApiResponseError(FetchVaspsActionTypes.API_RESPONSE_ERROR, error.message))
     }
 }
@@ -23,6 +25,7 @@ function* fetchPendingVasps() {
         const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
+        toast.error(error)
         yield put(fetchVaspsApiResponseError(FetchVaspsActionTypes.API_RESPONSE_ERROR, error.message))
     }
 }
@@ -33,6 +36,7 @@ function* fetchVasps() {
         const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
+        toast.error(error)
         yield put(fetchVaspsApiResponseError(FetchVaspsActionTypes.API_RESPONSE_ERROR, error.message))
     }
 }
@@ -44,6 +48,7 @@ function* fecthRegistrationsReviews() {
 
         yield put(fetchRegistrationsReviewsSuccess(FetchRegistrationsReviewsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
+        toast.error(error)
         yield put(fetchRegistrationsReviewsError(FetchRegistrationsReviewsActionTypes.API_RESPONSE_ERROR, error.message))
     }
 }

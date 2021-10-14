@@ -1,26 +1,28 @@
-// @flow
 import React from 'react';
-import { Redirect } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-
+import { Redirect, useLocation } from 'react-router-dom';
 import AccountLayout from './AccountLayout';
 import SignWithGoogle from '../../components/Auth/SignWithGoogle';
-import { loginUser } from '../../redux/auth/actions';
 import config from "../../config";
 import { APICore, setCookie } from '../../helpers/api/apiCore';
 import { getCookie } from '../../utils';
+import toast from 'react-hot-toast';
+import useAuth from '../../contexts/auth/use-auth';
+import { postCredentials } from '../../helpers/api/auth';
+import { Alert } from 'react-bootstrap';
+
 
 const api = new APICore()
 
-const Login = (): React$Element<any> => {
-    const dispatch = useDispatch();
-    const { userIsLoggedIn, user } = useSelector((state) => ({
-        userIsLoggedIn: state.Auth.userIsLoggedIn,
-        user: state.Auth.user
-    }))
-    const [csrfProtected, setCsrfProtected] = React.useState(false)
-    const isMounted = React.useRef(true)
+const Login = () => {
 
+    const [csrfProtected, setCsrfProtected] = React.useState(false)
+    const { setAuthInfo } = useAuth()
+    const [redirectOnLogin, setRedirectOnLogin] = React.useState(
+        false
+    );
+    const [loginError, setLogginError] = React.useState('');
+    const isMounted = React.useRef(true)
+    const { state } = useLocation()
 
     React.useEffect(() => {
         if (isMounted) {
@@ -33,6 +35,7 @@ const Login = (): React$Element<any> => {
                     setCsrfProtected(true)
 
                 }).catch(error => {
+                    toast.error(error)
                     console.log('[Login] error:', error.message)
                 })
             }
@@ -48,15 +51,26 @@ const Login = (): React$Element<any> => {
                 credential
                     : response.credential
             }
-            dispatch(loginUser(data))
+            postCredentials(data).then(res => {
+                setAuthInfo(res.data)
+                setRedirectOnLogin(true)
+            }).catch(error => {
+                setLogginError(error)
+                console.log('[Login] handleCredentialResponse', error)
+            })
         }
 
     }
 
     return (
         <>
-            {userIsLoggedIn || user ? <Redirect to="/" /> : null}
+            {redirectOnLogin ? <Redirect to={state ? state.from : '/'}></Redirect> : null}
             <AccountLayout >
+                {loginError && (
+                    <Alert variant="danger" className="my-2">
+                        {loginError}
+                    </Alert>
+                )}
                 <div className="text-center w-75 m-auto">
                     <h4 className="text-dark-50 text-center mt-0 fw-bold">Sign In</h4>
                     <p className="text-muted mb-4">
