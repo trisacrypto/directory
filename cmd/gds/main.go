@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"time"
@@ -14,18 +14,19 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"github.com/urfave/cli"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v2"
 )
 
 var (
+	profile     *profiles.Profile
 	client      api.TRISADirectoryClient
 	adminClient admin.DirectoryAdministrationClient
 )
@@ -37,392 +38,479 @@ func main() {
 	// Load the dotenv file if it exists
 	godotenv.Load()
 
-	app := cli.NewApp()
-	app.Name = "gds"
-	app.Version = pkg.Version()
-	app.Usage = "the global directory service for TRISA"
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "e, endpoint",
-			Usage:  "the url to connect the directory service client",
-			Value:  "api.vaspdirectory.net:443",
-			EnvVar: "TRISA_DIRECTORY_URL",
-		},
-		cli.StringFlag{
-			Name:   "a, admin-endpoint",
-			Usage:  "the url to connect the directory administration client",
-			Value:  "https://api.admin.vaspdirectory.net",
-			EnvVar: "TRISA_DIRECTORY_ADMIN_URL",
-		},
-		cli.BoolFlag{
-			Name:  "S, no-secure",
-			Usage: "do not connect via TLS (e.g. for development)",
-		},
-	}
-	app.Commands = []cli.Command{
-		{
-			Name:     "serve",
-			Usage:    "run the trisa directory service",
-			Category: "server",
-			Action:   serve,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "a, addr",
-					Usage:  "the address and port to bind the server on",
-					EnvVar: "GDS_BIND_ADDR",
-				},
+	// Create the CLI application
+	app := &cli.App{
+		Name:    "gds",
+		Version: pkg.Version(),
+		Usage:   "the TRISA global directory service",
+		Before:  loadProfile,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "profile",
+				Aliases: []string{"P"},
+				Usage:   "specify the client profile to use (default: active profile)",
+				EnvVars: []string{"TRISA_DIRECTORY_PROFILE", "GDS_PROFILE"},
+			},
+			&cli.StringFlag{
+				Name:    "endpoint",
+				Aliases: []string{"e"},
+				Usage:   "the url to connect the directory service client",
+				EnvVars: []string{"TRISA_DIRECTORY_URL", "GDS_DIRECTORY_URL"},
+			},
+			&cli.StringFlag{
+				Name:    "admin-endpoint",
+				Aliases: []string{"a"},
+				Usage:   "the url to connect the directory administration client",
+				EnvVars: []string{"TRISA_DIRECTORY_ADMIN_URL", "GDS_ADMIN_URL"},
+			},
+			&cli.BoolFlag{
+				Name:    "no-secure",
+				Aliases: []string{"S"},
+				Usage:   "do not connect via TLS (e.g. for development)",
 			},
 		},
-		{
-			Name:      "load",
-			Usage:     "load the directory from a csv file",
-			Category:  "server",
-			Action:    load,
-			ArgsUsage: "csv [csv ...]",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+		Commands: []*cli.Command{
+			{
+				Name:     "serve",
+				Usage:    "run the trisa directory service",
+				Category: "server",
+				Action:   serve,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "addr",
+						Aliases: []string{"a"},
+						Usage:   "the address and port to bind the server on",
+						EnvVars: []string{"GDS_BIND_ADDR"},
+					},
 				},
 			},
-		},
-		{
-			Name:     "review",
-			Usage:    "submit a VASP registration review response",
-			Category: "admin",
-			Action:   review,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the ID of the VASP to submit the review for",
-				},
-				cli.StringFlag{
-					Name:  "t, token",
-					Usage: "the administrative token sent in the review request email",
-				},
-				cli.BoolFlag{
-					Name:  "R, reject",
-					Usage: "reject the registration request",
-				},
-				cli.BoolFlag{
-					Name:  "a, accept",
-					Usage: "accept the registration request",
-				},
-				cli.StringFlag{
-					Name:  "m, reason",
-					Usage: "provide a reason to reject the request",
+			{
+				// TODO: move this to gdsutil as it is deprecated
+				Name:      "load",
+				Usage:     "load the directory from a csv file",
+				Category:  "server",
+				Action:    load,
+				ArgsUsage: "csv [csv ...]",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "db",
+						Aliases: []string{"d"},
+						Usage:   "dsn to connect to gds directory storage",
+						EnvVars: []string{"GDS_DATABASE_URL"},
+					},
 				},
 			},
-		},
-		{
-			Name:     "register",
-			Usage:    "register a VASP using json data",
-			Category: "client",
-			Action:   register,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "d, data",
-					Usage: "the json file containing the VASP data record",
+			{
+				Name:     "gds:register",
+				Usage:    "register a VASP using json data",
+				Category: "gds",
+				Action:   register,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "data",
+						Aliases: []string{"d"},
+						Usage:   "the JSON file containing the VASP data record",
+					},
 				},
 			},
-		},
-		{
-			Name:     "lookup",
-			Usage:    "lookup VASPs using name or ID",
-			Category: "client",
-			Action:   lookup,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "id of the VASP to lookup",
-				},
-				cli.StringFlag{
-					Name:  "d, directory",
-					Usage: "directory that registered the VASP (assumes target directory by default)",
-				},
-				cli.StringFlag{
-					Name:  "n, common-name",
-					Usage: "domain name of the VASP to lookup (case-insensitive, exact match)",
-				},
-			},
-		},
-		{
-			Name:     "search",
-			Usage:    "search for VASPs using name or country",
-			Category: "client",
-			Action:   search,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.StringSliceFlag{
-					Name:  "n, name",
-					Usage: "one or more names of VASPs to search for",
-				},
-				cli.StringSliceFlag{
-					Name:  "w, web",
-					Usage: "one or more websites of VASPs to search for",
-				},
-				cli.StringSliceFlag{
-					Name:  "c, country",
-					Usage: "one or more countries to filter on",
-				},
-				cli.StringSliceFlag{
-					Name:  "C, category",
-					Usage: "one or more categories to filter on",
+			{
+				Name:     "gds:lookup",
+				Usage:    "lookup VASPs using name or ID",
+				Category: "gds",
+				Action:   lookup,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "id of the VASP to lookup",
+					},
+					&cli.StringFlag{
+						Name:    "directory",
+						Aliases: []string{"d"},
+						Usage:   "directory that registered the VASP (assumes target directory by default)",
+					},
+					&cli.StringFlag{
+						Name:    "common-name",
+						Aliases: []string{"n"},
+						Usage:   "domain name of the VASP to lookup (case-insensitive, exact match)",
+					},
 				},
 			},
-		},
-		{
-			Name:     "verification",
-			Usage:    "check on the verification and service status of a VASP",
-			Category: "client",
-			Action:   verification,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "id of the VASP to lookup",
-				},
-				cli.StringFlag{
-					Name:  "d, directory",
-					Usage: "directory that registered the VASP (assumes target directory by default)",
-				},
-				cli.StringFlag{
-					Name:  "n, common-name",
-					Usage: "domain name of the VASP to lookup (case-insensitive, exact match)",
-				},
-			},
-		},
-		{
-			Name:     "verify-contact",
-			Usage:    "verify your email address with the token",
-			Category: "client",
-			Action:   verifyContact,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "id of the VASP your contact information is attached to",
-				},
-				cli.StringFlag{
-					Name:  "t, token",
-					Usage: "token that was emailed to you for verification",
+			{
+				Name:     "gds:search",
+				Usage:    "search for VASPs using name or country",
+				Category: "gds",
+				Action:   search,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "one or more names of VASPs to search for",
+					},
+					&cli.StringSliceFlag{
+						Name:    "web",
+						Aliases: []string{"w"},
+						Usage:   "one or more websites of VASPs to search for",
+					},
+					&cli.StringSliceFlag{
+						Name:    "country",
+						Aliases: []string{"c"},
+						Usage:   "one or more countries to filter on",
+					},
+					&cli.StringSliceFlag{
+						Name:    "category",
+						Aliases: []string{"C", "categories", "cats"},
+						Usage:   "one or more categories to filter on",
+					},
 				},
 			},
-		},
-		{
-			Name:     "status",
-			Usage:    "send a health check request to the directory service",
-			Category: "client",
-			Action:   status,
-			Before:   initClient,
-			Flags: []cli.Flag{
-				&cli.UintFlag{
-					Name:  "a, attempts",
-					Usage: "set the number of previous attempts",
-				},
-				&cli.DurationFlag{
-					Name:  "l, last-checked",
-					Usage: "set the last checked field as this long ago",
-				},
-			},
-		},
-		{
-			Name:     "resend",
-			Usage:    "request emails be resent in case of delivery errors",
-			Category: "admin",
-			Action:   resend,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the ID of the VASP to submit the review for",
-				},
-				cli.BoolFlag{
-					Name:  "v, verify-contact",
-					Usage: "resend verify contact emails",
-				},
-				cli.BoolFlag{
-					Name:  "r, review",
-					Usage: "resend review request emails",
-				},
-				cli.BoolFlag{
-					Name:  "d, deliver-certs",
-					Usage: "resend certificate delivery email",
-				},
-				cli.BoolFlag{
-					Name:  "R, reject",
-					Usage: "resend rejection email",
-				},
-				cli.StringFlag{
-					Name:  "m, reason",
-					Usage: "provide a reason to reject the request",
+			{
+				Name:     "gds:verification",
+				Usage:    "check on the verification and service status of a VASP",
+				Category: "gds",
+				Action:   verification,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "id of the VASP to lookup",
+					},
+					&cli.StringFlag{
+						Name:    "directory",
+						Aliases: []string{"d"},
+						Usage:   "directory that registered the VASP (assumes target directory by default)",
+					},
+					&cli.StringFlag{
+						Name:    "common-name",
+						Aliases: []string{"n"},
+						Usage:   "domain name of the VASP to lookup (case-insensitive, exact match)",
+					},
 				},
 			},
-		},
-		{
-			Name:     "admin:reviews",
-			Usage:    "request a timeline of VASP state changes",
-			Category: "admin",
-			Action:   adminReviewTimeline,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "s, start",
-					Usage: "start date (YYYY-MM-DD) for the review timeline",
-					Value: time.Now().AddDate(-1, 0, 0).Format(weekFormat),
-				},
-				cli.StringFlag{
-					Name:  "e, end",
-					Usage: "end date (YYYY-MM-DD) for the review timeline",
-					Value: time.Now().Format(weekFormat),
-				},
-			},
-		},
-		{
-			Name:     "admin:status",
-			Usage:    "perform a health check against the admin API",
-			Category: "admin",
-			Action:   adminStatus,
-			Before:   initAdminClient,
-			Flags:    []cli.Flag{},
-		},
-		{
-			Name:     "admin:summary",
-			Usage:    "collect aggregate information about current GDS status",
-			Category: "admin",
-			Action:   adminSummary,
-			Before:   initAdminClient,
-			Flags:    []cli.Flag{},
-		},
-		{
-			Name:     "admin:autocomplete",
-			Usage:    "get autocomplete names for the admin searchbar",
-			Category: "admin",
-			Action:   adminAutocomplete,
-			Before:   initAdminClient,
-			Flags:    []cli.Flag{},
-		},
-		{
-			Name:     "admin:list",
-			Usage:    "list all VASPs summary detail",
-			Category: "admin",
-			Action:   adminListVASPs,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.IntFlag{
-					Name:  "p, page",
-					Usage: "query for the specific page of vasps",
-				},
-				cli.IntFlag{
-					Name:  "s, page-size",
-					Usage: "specify the number of items per page",
-				},
-				cli.StringFlag{
-					Name:  "S, status",
-					Usage: "filter by verification status",
+			{
+				Name:     "gds:verify-contact",
+				Usage:    "verify your email address with the token",
+				Category: "gds",
+				Action:   verifyContact,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "id of the VASP your contact information is attached to",
+					},
+					&cli.StringFlag{
+						Name:    "token",
+						Aliases: []string{"t"},
+						Usage:   "token that was emailed to you for verification",
+					},
 				},
 			},
-		},
-		{
-			Name:     "admin:detail",
-			Usage:    "retrieve a VASP detail record by id",
-			Category: "admin",
-			Action:   adminRetrieveVASPs,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the uuid of the VASP to retrieve",
+			{
+				Name:     "gds:status",
+				Usage:    "send a health check request to the directory service",
+				Category: "gds",
+				Action:   status,
+				Before:   initClient,
+				Flags: []cli.Flag{
+					&cli.UintFlag{
+						Name:    "attempts",
+						Aliases: []string{"a"},
+						Usage:   "set the number of previous attempts",
+					},
+					&cli.DurationFlag{
+						Name:    "last-checked",
+						Aliases: []string{"l"},
+						Usage:   "set the last checked field as this long ago",
+					},
 				},
 			},
-		},
-		{
-			Name:     "admin:notes",
-			Usage:    "list notes associated with a VASP",
-			Category: "admin",
-			Action:   adminListNotes,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the uuid of the VASP",
+			{
+				Name:     "admin:review",
+				Usage:    "submit a VASP registration review response",
+				Category: "admin",
+				Action:   review,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the ID of the VASP to submit the review for",
+					},
+					&cli.StringFlag{
+						Name:    "token",
+						Aliases: []string{"t"},
+						Usage:   "the administrative token sent in the review request email",
+					},
+					&cli.BoolFlag{
+						Name:    "reject",
+						Aliases: []string{"R"},
+						Usage:   "reject the registration request",
+					},
+					&cli.BoolFlag{
+						Name:    "accept",
+						Aliases: []string{"a"},
+						Usage:   "accept the registration request",
+					},
+					&cli.StringFlag{
+						Name:    "reason",
+						Aliases: []string{"m"},
+						Usage:   "provide a reason to reject the request",
+					},
 				},
 			},
-		},
-		{
-			Name:     "admin:notes-create",
-			Usage:    "create a new note associated with a VASP",
-			Category: "admin",
-			Action:   adminCreateNote,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the uuid of the VASP to associate the note with",
-				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "the name of the new note or existing note",
-				},
-				cli.StringFlag{
-					Name:  "t, text",
-					Usage: "the text to include in the note",
-				},
-				cli.StringFlag{
-					Name:  "f, file",
-					Usage: "read note text from file",
-				},
-			},
-		},
-		{
-			Name:     "admin:notes-update",
-			Usage:    "update an existing VASP note",
-			Category: "admin",
-			Action:   adminUpdateNote,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the uuid of the VASP the note is associated with",
-				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "the name of the note to update",
-				},
-				cli.StringFlag{
-					Name:  "t, text",
-					Usage: "the text to include in the note",
-				},
-				cli.StringFlag{
-					Name:  "f, file",
-					Usage: "read note text from file",
+			{
+				Name:     "admin:resend",
+				Usage:    "request emails be resent in case of delivery errors",
+				Category: "admin",
+				Action:   resend,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the ID of the VASP to submit the review for",
+					},
+					&cli.BoolFlag{
+						Name:    "verify-contact",
+						Aliases: []string{"v"},
+						Usage:   "resend verify contact emails",
+					},
+					&cli.BoolFlag{
+						Name:    "review",
+						Aliases: []string{"r"},
+						Usage:   "resend review request emails",
+					},
+					&cli.BoolFlag{
+						Name:    "deliver-certs",
+						Aliases: []string{"d"},
+						Usage:   "resend certificate delivery email",
+					},
+					&cli.BoolFlag{
+						Name:    "reject",
+						Aliases: []string{"R"},
+						Usage:   "resend rejection email",
+					},
+					&cli.StringFlag{
+						Name:    "reason",
+						Aliases: []string{"m"},
+						Usage:   "provide a reason to reject the request",
+					},
 				},
 			},
-		},
-		{
-			Name:     "admin:notes-delete",
-			Usage:    "delete an existing VASP note",
-			Category: "admin",
-			Action:   adminDeleteNote,
-			Before:   initAdminClient,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "the uuid of the VASP the note is associated with",
+			{
+				Name:     "admin:reviews",
+				Usage:    "request a timeline of VASP state changes",
+				Category: "admin",
+				Action:   adminReviewTimeline,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "start",
+						Aliases: []string{"s"},
+						Usage:   "start date (YYYY-MM-DD) for the review timeline",
+						Value:   time.Now().AddDate(-1, 0, 0).Format(weekFormat),
+					},
+					&cli.StringFlag{
+						Name:    "end",
+						Aliases: []string{"e"},
+						Usage:   "end date (YYYY-MM-DD) for the review timeline",
+						Value:   time.Now().Format(weekFormat),
+					},
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "the name of the note to delete",
+			},
+			{
+				Name:     "admin:status",
+				Usage:    "perform a health check against the admin API",
+				Category: "admin",
+				Action:   adminStatus,
+				Before:   initAdminClient,
+				Flags:    []cli.Flag{},
+			},
+			{
+				Name:     "admin:summary",
+				Usage:    "collect aggregate information about current GDS status",
+				Category: "admin",
+				Action:   adminSummary,
+				Before:   initAdminClient,
+				Flags:    []cli.Flag{},
+			},
+			{
+				Name:     "admin:autocomplete",
+				Usage:    "get autocomplete names for the admin searchbar",
+				Category: "admin",
+				Action:   adminAutocomplete,
+				Before:   initAdminClient,
+				Flags:    []cli.Flag{},
+			},
+			{
+				Name:     "admin:list",
+				Usage:    "list all VASPs summary detail",
+				Category: "admin",
+				Action:   adminListVASPs,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "query for the specific page of vasps",
+					},
+					&cli.IntFlag{
+						Name:    "page-size",
+						Aliases: []string{"s"},
+						Usage:   "specify the number of items per page",
+					},
+					&cli.StringFlag{
+						Name:    "S, status",
+						Aliases: []string{"S"},
+						Usage:   "filter by verification status",
+					},
+				},
+			},
+			{
+				Name:     "admin:detail",
+				Usage:    "retrieve a VASP detail record by id",
+				Category: "admin",
+				Action:   adminRetrieveVASPs,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+				},
+			},
+			{
+				Name:     "admin:notes",
+				Usage:    "list notes associated with a VASP",
+				Category: "admin",
+				Action:   adminListNotes,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to add a note for",
+					},
+				},
+			},
+			{
+				Name:     "admin:notes-create",
+				Usage:    "create a new note associated with a VASP",
+				Category: "admin",
+				Action:   adminCreateNote,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to associate the note with",
+					},
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "the name of the new note or existing note",
+					},
+					&cli.StringFlag{
+						Name:    "text",
+						Aliases: []string{"t"},
+						Usage:   "the text to include in the note",
+					},
+					&cli.StringFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "read note text from file",
+					},
+				},
+			},
+			{
+				Name:     "admin:notes-update",
+				Usage:    "update an existing VASP note",
+				Category: "admin",
+				Action:   adminUpdateNote,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP the note is associated with",
+					},
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "the name of the note to update",
+					},
+					&cli.StringFlag{
+						Name:    "text",
+						Aliases: []string{"t"},
+						Usage:   "the text to include in the note",
+					},
+					&cli.StringFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "read note text from file",
+					},
+				},
+			},
+			{
+				Name:     "admin:notes-delete",
+				Usage:    "delete an existing VASP note",
+				Category: "admin",
+				Action:   adminDeleteNote,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP the note is associated with",
+					},
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "the name of the note to delete",
+					},
+				},
+			},
+			{
+				Name:      "profile",
+				Aliases:   []string{"config"},
+				Usage:     "view and manage profiles to configure client with",
+				UsageText: "gds profile [name]\n   gds profile --activate [name]\n   gds profile --list\n   gds profile --path\n   gds profile --install",
+				Action:    manageProfiles,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "list",
+						Aliases: []string{"l"},
+						Usage:   "list the available profiles and exit",
+					},
+					&cli.BoolFlag{
+						Name:    "path",
+						Aliases: []string{"p"},
+						Usage:   "show the path to the configuration and exit",
+					},
+					&cli.BoolFlag{
+						Name:    "install",
+						Aliases: []string{"i"},
+						Usage:   "install the default profiles and exit",
+					},
+					&cli.StringFlag{
+						Name:    "activate",
+						Aliases: []string{"a"},
+						Usage:   "activate the profile with the specified name",
+					},
 				},
 			},
 		},
 	}
 
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
 }
 
 //===========================================================================
@@ -433,7 +521,7 @@ func main() {
 func serve(c *cli.Context) (err error) {
 	var conf config.Config
 	if conf, err = config.New(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if addr := c.String("addr"); addr != "" {
@@ -442,11 +530,11 @@ func serve(c *cli.Context) (err error) {
 
 	var srv *gds.Service
 	if srv, err = gds.New(conf); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if err = srv.Serve(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -455,23 +543,23 @@ func serve(c *cli.Context) (err error) {
 // TODO: remove or make more robust
 func load(c *cli.Context) (err error) {
 	if c.NArg() == 0 {
-		return cli.NewExitError("specify path to csv data to load", 1)
+		return cli.Exit("specify path to csv data to load", 1)
 	}
 
 	var dsn string
 	if dsn = c.String("db"); dsn == "" {
-		return cli.NewExitError("please specify a dsn to connect to the directory store", 1)
+		return cli.Exit("please specify a dsn to connect to the directory store", 1)
 	}
 
 	var db store.Store
 	if db, err = store.Open(config.DatabaseConfig{URL: dsn}); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	defer db.Close()
 
-	for _, path := range c.Args() {
+	for _, path := range c.Args().Slice() {
 		if err = store.Load(db, path); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 
@@ -481,7 +569,7 @@ func load(c *cli.Context) (err error) {
 // Submit a review for a registration request
 func review(c *cli.Context) (err error) {
 	if (!c.Bool("accept") && !c.Bool("reject")) || (c.Bool("accept") && c.Bool("reject")) {
-		return cli.NewExitError("specify either accept or reject", 1)
+		return cli.Exit("specify either accept or reject", 1)
 	}
 
 	req := &admin.ReviewRequest{
@@ -492,11 +580,11 @@ func review(c *cli.Context) (err error) {
 	}
 
 	if req.ID == "" || req.AdminVerificationToken == "" {
-		return cli.NewExitError("specify both id and token", 1)
+		return cli.Exit("specify both id and token", 1)
 	}
 
 	if !req.Accept && req.RejectReason == "" {
-		return cli.NewExitError("must specify a reject reason if rejecting", 1)
+		return cli.Exit("must specify a reject reason if rejecting", 1)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -504,7 +592,7 @@ func review(c *cli.Context) (err error) {
 
 	rep, err := adminClient.Review(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -514,12 +602,12 @@ func review(c *cli.Context) (err error) {
 func register(c *cli.Context) (err error) {
 	var path string
 	if path = c.String("data"); path == "" {
-		return cli.NewExitError("specify a json file to load the entity data from", 1)
+		return cli.Exit("specify a json file to load the entity data from", 1)
 	}
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Check if this is a form downloaded from the UI
@@ -527,14 +615,14 @@ func register(c *cli.Context) (err error) {
 	if err = json.Unmarshal(data, &tmp); err == nil {
 		if form, ok := tmp["registrationForm"]; ok {
 			if data, err = json.Marshal(form); err != nil {
-				return cli.NewExitError(fmt.Errorf("could not extract registration form: %s", err), 1)
+				return cli.Exit(fmt.Errorf("could not extract registration form: %s", err), 1)
 			}
 		}
 	}
 
 	var req *api.RegisterRequest
 	if err = json.Unmarshal(data, &req); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -542,7 +630,7 @@ func register(c *cli.Context) (err error) {
 
 	rep, err := client.Register(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -555,11 +643,11 @@ func lookup(c *cli.Context) (err error) {
 	commonName := c.String("common-name")
 
 	if commonName == "" && id == "" {
-		return cli.NewExitError("specify either name or id for lookup", 1)
+		return cli.Exit("specify either name or id for lookup", 1)
 	}
 
 	if commonName != "" && id != "" {
-		return cli.NewExitError("specify either name or id for lookup, not both", 1)
+		return cli.Exit("specify either name or id for lookup, not both", 1)
 	}
 
 	req := &api.LookupRequest{
@@ -573,7 +661,7 @@ func lookup(c *cli.Context) (err error) {
 
 	rep, err := client.Lookup(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -598,14 +686,14 @@ func search(c *cli.Context) (err error) {
 	}
 
 	if len(req.Name) == 0 && len(req.Website) == 0 {
-		return cli.NewExitError("specify search query", 1)
+		return cli.Exit("specify search query", 1)
 	}
 
 	for _, web := range req.Website {
 		if u, err := url.Parse(web); err != nil {
-			return cli.NewExitError(fmt.Errorf("%q not a valid URL: %s", web, err), 1)
+			return cli.Exit(fmt.Errorf("%q not a valid URL: %s", web, err), 1)
 		} else if u.Hostname() == "" {
-			return cli.NewExitError(fmt.Errorf("%q not a valid URL: requires scheme e.g. http://", web), 1)
+			return cli.Exit(fmt.Errorf("%q not a valid URL: requires scheme e.g. http://", web), 1)
 		}
 	}
 
@@ -614,7 +702,7 @@ func search(c *cli.Context) (err error) {
 
 	rep, err := client.Search(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -629,7 +717,7 @@ func verification(c *cli.Context) (err error) {
 	}
 
 	if req.Id == "" && req.CommonName == "" {
-		return cli.NewExitError("specify either id or common-name", 1)
+		return cli.Exit("specify either id or common-name", 1)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -637,7 +725,7 @@ func verification(c *cli.Context) (err error) {
 
 	rep, err := client.Verification(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -651,7 +739,7 @@ func verifyContact(c *cli.Context) (err error) {
 	}
 
 	if req.Id == "" || req.Token == "" {
-		return cli.NewExitError("specify both id and token", 1)
+		return cli.Exit("specify both id and token", 1)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -659,7 +747,7 @@ func verifyContact(c *cli.Context) (err error) {
 
 	rep, err := client.VerifyContact(ctx, req)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -674,12 +762,12 @@ func status(c *cli.Context) (err error) {
 		req.LastCheckedAt = time.Now().Add(-1 * lastCheckedAgo).Format(time.RFC3339)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *api.ServiceState
 	if rep, err = client.Status(ctx, req); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -692,7 +780,7 @@ func resend(c *cli.Context) (err error) {
 	}
 
 	if req.ID == "" {
-		return cli.NewExitError("missing VASP record ID, specify with --id", 1)
+		return cli.Exit("missing VASP record ID, specify with --id", 1)
 	}
 
 	// NOTE: if multiple type flags are specified, only one will be used
@@ -706,15 +794,15 @@ func resend(c *cli.Context) (err error) {
 	case c.Bool("reject"):
 		req.Action = admin.ResendRejection
 	default:
-		return cli.NewExitError("must specify request type (--verify-contact, --review, --deliver-certs, --reject)", 1)
+		return cli.Exit("must specify request type (--verify-contact, --review, --deliver-certs, --reject)", 1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.ResendReply
 	if rep, err = adminClient.Resend(ctx, req); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -728,61 +816,61 @@ func adminReviewTimeline(c *cli.Context) (err error) {
 
 	// Validate start and end dates
 	if _, err = time.Parse(weekFormat, params.Start); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	if _, err = time.Parse(weekFormat, params.End); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.ReviewTimelineReply
 	if rep, err = adminClient.ReviewTimeline(ctx, params); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminStatus(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.StatusReply
 	if rep, err = adminClient.Status(ctx); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminSummary(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.SummaryReply
 	if rep, err = adminClient.Summary(ctx); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminAutocomplete(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.AutocompleteReply
 	if rep, err = adminClient.Autocomplete(ctx); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminListVASPs(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	params := &admin.ListVASPsParams{
@@ -793,36 +881,36 @@ func adminListVASPs(c *cli.Context) (err error) {
 
 	var rep *admin.ListVASPsReply
 	if rep, err = adminClient.ListVASPs(ctx, params); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminRetrieveVASPs(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.RetrieveVASPReply
 	if rep, err = adminClient.RetrieveVASP(ctx, c.String("id")); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminListNotes(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	vaspID := c.String("id")
 	if vaspID == "" {
-		cli.NewExitError("must specify VASP ID (--id)", 1)
+		cli.Exit("must specify VASP ID (--id)", 1)
 	}
 
 	var rep *admin.ListReviewNotesReply
 	if rep, err = adminClient.ListReviewNotes(ctx, vaspID); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -835,7 +923,7 @@ func adminCreateNote(c *cli.Context) (err error) {
 		file   string
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	params = &admin.ModifyReviewNoteRequest{
@@ -844,29 +932,29 @@ func adminCreateNote(c *cli.Context) (err error) {
 	}
 
 	if params.VASP == "" {
-		cli.NewExitError("must specify VASP ID (--id)", 1)
+		cli.Exit("must specify VASP ID (--id)", 1)
 	}
 
 	// Get the note text
 	text = c.String("text")
 	file = c.String("file")
 	if text == "" && file == "" {
-		return cli.NewExitError("must specify either --text or --file", 1)
+		return cli.Exit("must specify either --text or --file", 1)
 	} else if text != "" && file != "" {
-		return cli.NewExitError("cannot specify both --text and --file", 1)
+		return cli.Exit("cannot specify both --text and --file", 1)
 	} else if text != "" {
 		params.Text = text
 	} else {
 		var data []byte
 		if data, err = os.ReadFile(file); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		params.Text = string(data)
 	}
 
 	var rep *admin.CreateReviewNoteReply
 	if rep, err = adminClient.CreateReviewNote(ctx, params); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
@@ -879,7 +967,7 @@ func adminUpdateNote(c *cli.Context) (err error) {
 		file   string
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	params = &admin.ModifyReviewNoteRequest{
@@ -888,92 +976,171 @@ func adminUpdateNote(c *cli.Context) (err error) {
 	}
 
 	if params.VASP == "" {
-		cli.NewExitError("must specify VASP ID (--id)", 1)
+		cli.Exit("must specify VASP ID (--id)", 1)
 	}
 
 	if params.NoteID == "" {
-		return cli.NewExitError("must specify note name (--name)", 1)
+		return cli.Exit("must specify note name (--name)", 1)
 	}
 
 	// Get the note text
 	text = c.String("text")
 	file = c.String("file")
 	if text == "" && file == "" {
-		return cli.NewExitError("must specify either --text or --file", 1)
+		return cli.Exit("must specify either --text or --file", 1)
 	} else if text != "" && file != "" {
-		return cli.NewExitError("cannot specify both --text and --file", 1)
+		return cli.Exit("cannot specify both --text and --file", 1)
 	} else if text != "" {
 		params.Text = text
 	} else {
 		var data []byte
 		if data, err = os.ReadFile(file); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		params.Text = string(data)
 	}
 
 	var rep *admin.Reply
 	if rep, err = adminClient.UpdateReviewNote(ctx, params); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
 }
 
 func adminDeleteNote(c *cli.Context) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	vaspID := c.String("id")
 	if vaspID == "" {
-		return cli.NewExitError("must specify VASP ID (--id)", 1)
+		return cli.Exit("must specify VASP ID (--id)", 1)
 	}
 
 	noteID := c.String("name")
 	if noteID == "" {
-		return cli.NewExitError("must specify note name (--name)", 1)
+		return cli.Exit("must specify note name (--name)", 1)
 	}
 
 	var rep *admin.Reply
 	if rep, err = adminClient.DeleteReviewNote(ctx, vaspID, noteID); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return printJSON(rep)
+}
+
+func manageProfiles(c *cli.Context) (err error) {
+	// Handle list and then exit
+	if c.Bool("list") {
+		var p profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if len(p) == 0 {
+			fmt.Println("no available profiles")
+			return nil
+		}
+
+		fmt.Println("available profiles\n------------------")
+		for name, prof := range p {
+			if prof.Active {
+				fmt.Printf("- *%s\n", name)
+			} else {
+				fmt.Printf("-  %s\n", name)
+			}
+
+		}
+
+		return nil
+	}
+
+	// Handle path and then exit
+	if c.Bool("path") {
+		var path string
+		if path, err = profiles.ProfilesPath(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(path)
+		return nil
+	}
+
+	// Handle install and then exit
+	if c.Bool("install") {
+		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle activate and then exit
+	if name := c.String("activate"); name != "" {
+		var p profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = p.SetActive(name); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Printf("profile %q is now active\n", name)
+		return nil
+	}
+
+	// Handle show named or active profile
+	if c.Args().Len() > 1 {
+		return cli.Exit("specify only a single profile to print", 1)
+	}
+	var p profiles.Profiles
+	if p, err = profiles.Load(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if profile, err = p.Active(c.Args().Get(0)); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var data []byte
+	if data, err = yaml.Marshal(profile); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Println(string(data))
+	return nil
 }
 
 //===========================================================================
 // Helper Methods
 //===========================================================================
 
+// loadProfile runs before every command so it cannot return an error; if it cannot
+// load the profile, it will attempt to create a default profile unless a named profile
+// was given.
+func loadProfile(c *cli.Context) (err error) {
+	if profile, err = profiles.LoadActive(c); err != nil {
+		if name := c.String("profile"); name != "" {
+			return cli.Exit(err, 1)
+		}
+		profile = profiles.New()
+		if err = profile.Update(c); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	return nil
+}
+
 // helper function to create the GRPC client with default options
 func initClient(c *cli.Context) (err error) {
-	var opts []grpc.DialOption
-	if c.GlobalBool("no-secure") {
-		opts = append(opts, grpc.WithInsecure())
-	} else {
-		config := &tls.Config{}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+	if client, err = profile.Directory.Connect(); err != nil {
+		return cli.Exit(err, 1)
 	}
-
-	// Connect the directory client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.GlobalString("endpoint"), opts...); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	client = api.NewTRISADirectoryClient(cc)
 	return nil
 }
 
 func initAdminClient(c *cli.Context) (err error) {
-	// Connect the admin client
-	if adminClient, err = admin.New(c.GlobalString("admin-endpoint")); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	// Attempt to login the admin client
-	if err = adminClient.Login(context.Background()); err != nil {
-		return cli.NewExitError(err, 1)
+	if adminClient, err = profile.Admin.Connect(); err != nil {
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -994,11 +1161,11 @@ func printJSON(msg interface{}) (err error) {
 		}
 
 		if data, err = opts.Marshal(m); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
 		if data, err = json.MarshalIndent(msg, "", "  "); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 

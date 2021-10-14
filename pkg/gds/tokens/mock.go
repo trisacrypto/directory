@@ -12,8 +12,6 @@ import (
 func MockTokenManager() (tm *TokenManager, err error) {
 	tm = &TokenManager{
 		audience: "http://localhost",
-		subject:  "testing",
-		issuer:   "http://localhost",
 		keys:     make(map[ksuid.KSUID]*rsa.PublicKey),
 	}
 

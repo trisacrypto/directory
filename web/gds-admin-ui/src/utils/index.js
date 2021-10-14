@@ -1,5 +1,6 @@
 import config from '../config';
-import { ENVIRONMENT } from '../constants';
+import { ENVIRONMENT, Status } from '../constants';
+import { DIRECTORY } from '../constants';
 
 export * from './array';
 
@@ -62,7 +63,38 @@ function getCookie(name = '') {
     return '';
 }
 
+function getStatusClassName(status = '') {
+    switch (status) {
+        case Status.VERIFIED:
+            return 'bg-success'
+        case Status.SUBMITTED:
+            return 'bg-secondary'
+        case Status.PENDING_REVIEW:
+        case Status.EMAIL_VERIFIED:
+            return 'bg-warning'
+        case Status.ERRORED:
+        case Status.REJECTED:
+            return 'bg-danger'
+        case Status.APPEALED:
+            return 'bg-primary'
+        case Status.REVIEWED:
+        case Status.ISSUING_CERTIFICATE:
+            return 'bg-info'
+        default:
+            return undefined
+    }
+}
 
+function isTestNet() {
+    return config.IS_TESNET
+}
 
+function getDirectoryName() {
+    return isTestNet() ? DIRECTORY.VASP_DIRECTORY : DIRECTORY.TRISATEST
+}
 
-export { formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
+function getDirectoryURL() {
+    return isTestNet() ? "https://admin.vaspdirectory.net" : "https://admin.trisatest.net"
+}
+
+export { isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
