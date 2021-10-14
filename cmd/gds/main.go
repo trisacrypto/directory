@@ -52,8 +52,8 @@ func main() {
 				EnvVars: []string{"TRISA_DIRECTORY_PROFILE", "GDS_PROFILE"},
 			},
 			&cli.StringFlag{
-				Name:    "endpoint",
-				Aliases: []string{"e"},
+				Name:    "directory-endpoint",
+				Aliases: []string{"d"},
 				Usage:   "the url to connect the directory service client",
 				EnvVars: []string{"TRISA_DIRECTORY_URL", "GDS_DIRECTORY_URL"},
 			},
@@ -1033,19 +1033,19 @@ func adminDeleteNote(c *cli.Context) (err error) {
 func manageProfiles(c *cli.Context) (err error) {
 	// Handle list and then exit
 	if c.Bool("list") {
-		var p profiles.Profiles
+		var p *profiles.Profiles
 		if p, err = profiles.Load(); err != nil {
 			return cli.Exit(err, 1)
 		}
 
-		if len(p) == 0 {
+		if len(p.Profiles) == 0 {
 			fmt.Println("no available profiles")
 			return nil
 		}
 
 		fmt.Println("available profiles\n------------------")
-		for name, prof := range p {
-			if prof.Active {
+		for name := range p.Profiles {
+			if name == p.Active {
 				fmt.Printf("- *%s\n", name)
 			} else {
 				fmt.Printf("-  %s\n", name)
@@ -1076,7 +1076,7 @@ func manageProfiles(c *cli.Context) (err error) {
 
 	// Handle activate and then exit
 	if name := c.String("activate"); name != "" {
-		var p profiles.Profiles
+		var p *profiles.Profiles
 		if p, err = profiles.Load(); err != nil {
 			return cli.Exit(err, 1)
 		}
@@ -1092,17 +1092,17 @@ func manageProfiles(c *cli.Context) (err error) {
 	if c.Args().Len() > 1 {
 		return cli.Exit("specify only a single profile to print", 1)
 	}
-	var p profiles.Profiles
+	var p *profiles.Profiles
 	if p, err = profiles.Load(); err != nil {
 		return cli.Exit(err, 1)
 	}
 
-	if profile, err = p.Active(c.Args().Get(0)); err != nil {
+	if profile, err = p.GetActive(c.Args().Get(0)); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	var data []byte
-	if data, err = yaml.Marshal(profile); err != nil {
+	if data, err = yaml.Marshal(p.Profiles[p.Active]); err != nil {
 		return cli.Exit(err, 1)
 	}
 

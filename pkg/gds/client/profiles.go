@@ -11,60 +11,139 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Profiles are stored in a system-specific configuration location e.g.
-// ~/Library/Application Support/rotational/gds on OS X or ~/.config/rotational/gds on
-// Linux. The profiles make it easy to switch between client configurations to connect
+// Profiles are stored in one of three locations, and are searched for in the following
+// order:
+// 1. Current directory (".")
+// 2. User level directory (~/Library/Application Support/rotational/gds on OS X
+// or ~/.config/rotational/gds on Linux)
+// 3. System level directory (/Library/Application Suport/rotational/gds on OS X
+// or /etc/xdg on Linux)
+// If no profile config is found, one will be created in the first available directory
+// based on the same search order above.
+//
+// The profiles make it easy to switch between client configurations to connect
 // to trisatest.net or vaspdirectory.net. The profiles have a user-supplied name for
 // easy configuration and the profiles are populated with reasonable defaults.
 //
-// At most one profile can be marked as "active", this profile is treated as the default
-// profile if a specific profile is not used. If multiple profiles are marked as active
-// the "first" profile marked as active is used (with no guaranteed ordering).
-type Profiles map[string]*Profile
+// At most one profile is considered "active", this profile is treated as the default
+// profile if a specific profile is not used.
+type Profiles struct {
+	Version  string              `yaml:"version"`
+	Active   string              `yaml:"active"`
+	Profiles map[string]*Profile `yaml:"profiles"`
+}
 
 var cfgd = configdir.New("rotational", "gds")
 
 const (
-	profileYAML = "profiles.yaml"
+	profileYAML    = "profiles.yaml"
+	profileVersion = "v1"
 )
+
+func DefaultProfiles() *Profiles {
+	return &Profiles{
+		Version: profileVersion,
+		Active:  "testnet",
+		Profiles: map[string]*Profile{
+			"production": {
+				Directory: &DirectoryProfile{
+					Endpoint: "api.vaspdirectory.net:443",
+				},
+				Admin: &AdminProfile{
+					Endpoint: "https://api.admin.vaspdirectory.net",
+				},
+			},
+			"testnet": {
+				Directory: &DirectoryProfile{
+					Endpoint: "api.trisatest.net:443",
+				},
+				Admin: &AdminProfile{
+					Endpoint: "https://api.admin.trisatest.net",
+				},
+			},
+			"localhost": {
+				Directory: &DirectoryProfile{
+					Endpoint: "localhost:4433",
+					Insecure: true,
+				},
+				Admin: &AdminProfile{
+					Endpoint: "http://localhost:4434",
+				},
+				DatabaseURL: os.Getenv("GDS_DATABASE_URL"),
+			},
+		},
+	}
+}
+
+// GetProfilesFolder returns a pointer to the folder where the profiles are stored. If
+// no such folder is configured, it creates an empty config file in a suitable folder.
+func GetProfilesFolder() (folder *configdir.Config, err error) {
+	cfgd.LocalPath, _ = filepath.Abs(".")
+	folder = cfgd.QueryFolderContainsFile(profileYAML)
+	if folder == nil {
+		// Search for an available folder to create the config file
+		var folders []*configdir.Config
+		folders = cfgd.QueryFolders(configdir.Local)
+		if len(folders) == 0 {
+			folders = cfgd.QueryFolders(configdir.Global)
+			if len(folders) == 0 {
+				folders = cfgd.QueryFolders(configdir.System)
+				if len(folders) == 0 {
+					return nil, errors.New("no suitable directory for config file")
+				}
+			}
+		}
+
+		// Create a new default config file under the directory we just located
+		folder = folders[0]
+		p := DefaultProfiles()
+		if err = p.Save(folder); err != nil {
+			return nil, fmt.Errorf("could not create new config file at %s: %s", filepath.Join(folder.Path, profileYAML), err)
+		}
+	}
+	return folder, nil
+}
 
 // ProfilesPath returns the location on disk where the profiles are stored. If no
 // profiles are located then an error is returned.
 func ProfilesPath() (string, error) {
-	folder := cfgd.QueryFolderContainsFile(profileYAML)
-	if folder != nil {
-		return filepath.Join(folder.Path, profileYAML), nil
+	folder, err := GetProfilesFolder()
+	if err != nil {
+		return "", fmt.Errorf("no profiles are available: %s", err)
 	}
-	return "", errors.New("no profiles are available")
+	return filepath.Join(folder.Path, profileYAML), nil
 }
 
 // Load the profiles from disk if they're available.
-func Load() (p Profiles, err error) {
-	folder := cfgd.QueryFolderContainsFile(profileYAML)
-	if folder != nil {
+func Load() (p *Profiles, err error) {
+	var folder *configdir.Config
+	if folder, err = GetProfilesFolder(); err == nil {
 		var data []byte
 		if data, err = folder.ReadFile(profileYAML); err != nil {
-			return nil, fmt.Errorf("could not read %s: %s", profileYAML, err)
+			return nil, fmt.Errorf("could not read %s: %s", filepath.Join(folder.Path, profileYAML), err)
 		}
 
-		p = make(Profiles)
 		if err = yaml.Unmarshal(data, &p); err != nil {
 			return nil, fmt.Errorf("could not unmarshal profiles: %s", err)
 		}
 
+		if p.Version != profileVersion {
+			return nil, fmt.Errorf("invalid profile version %s, expected %s", p.Version, profileVersion)
+		}
+
 		return p, nil
 	}
-	return nil, errors.New("no profiles are available")
+	return nil, fmt.Errorf("no profiles are available: %s", err)
 }
 
 // LoadActive is a shorthand for Load() then Active() and finally Update()
 func LoadActive(c *cli.Context) (p *Profile, err error) {
-	var profiles Profiles
+	var profiles *Profiles
 	if profiles, err = Load(); err != nil {
 		return nil, err
 	}
 
-	if p, err = profiles.Active(c.String("profile")); err != nil {
+	if p, err = profiles.GetActive(c.String("profile")); err != nil {
 		return nil, err
 	}
 
@@ -75,60 +154,42 @@ func LoadActive(c *cli.Context) (p *Profile, err error) {
 	return p, nil
 }
 
-// Active returns the profile with the specified name or the active profile if no name
-// is specified. If multiple profiles are marked active it returns the first active
-// profile with no ordering guarantees. If no profiles are marked active and there is
-// one profile, that profile is returned, otherwise an error is returned.
-func (p Profiles) Active(name string) (_ *Profile, err error) {
+// GetActive returns the profile with the specified name or the active profile if no name
+// is specified.
+func (p Profiles) GetActive(name string) (_ *Profile, err error) {
 	if name != "" {
-		profile, ok := p[name]
+		profile, ok := p.Profiles[name]
 		if !ok {
 			return nil, fmt.Errorf("no profile found named %q", name)
 		}
 		return profile, nil
 	}
 
-	for _, profile := range p {
-		if profile.Active {
-			return profile, nil
-		}
-	}
-
-	if len(p) == 1 {
-		for _, profile := range p {
-			return profile, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no active profile found in %d profiles", len(p))
+	return p.Profiles[p.Active], nil
 }
 
 // SetActive marks the profile with the specified name as active.
 func (p Profiles) SetActive(name string) (err error) {
-	if _, ok := p[name]; !ok {
+	if _, ok := p.Profiles[name]; !ok {
 		return fmt.Errorf("no profile named %q found", name)
 	}
 
-	// Mark all profiles inactive to ensure only one profile is active at a time
-	for _, profile := range p {
-		profile.Active = false
-	}
-
-	// Mark the specified profile as active
-	p[name].Active = true
+	p.Active = name
 
 	// Save the profiles back to disk to ensure the activation takes effect
-	if err = p.Save(); err != nil {
+	if err = p.Save(nil); err != nil {
 		return fmt.Errorf("could not save active profile: %s", err)
 	}
 	return nil
 }
 
-// Save the profiles to disk in the configuration directory.
-func (p Profiles) Save() (err error) {
-	folders := cfgd.QueryFolders(configdir.Global)
-	if len(folders) == 0 {
-		return errors.New("could not find user configuration directory")
+// Save the profiles to disk in the specified configuration folder. If the configuration
+// folder is nil, the configuration folder is located and created if it doesn't exist.
+func (p Profiles) Save(folder *configdir.Config) (err error) {
+	if folder == nil {
+		if folder, err = GetProfilesFolder(); err != nil {
+			return fmt.Errorf("could not find profiles folder: %s", err)
+		}
 	}
 
 	var data []byte
@@ -136,8 +197,8 @@ func (p Profiles) Save() (err error) {
 		return fmt.Errorf("could not marshal profiles: %s", err)
 	}
 
-	// Save the configuration to the first folder
-	if err = folders[0].WriteFile(profileYAML, data); err != nil {
+	// Save the configuration to the folder
+	if err = folder.WriteFile(profileYAML, data); err != nil {
 		return fmt.Errorf("could not write profiles to disk: %s", err)
 	}
 
@@ -146,34 +207,5 @@ func (p Profiles) Save() (err error) {
 
 // Install creates default profiles and saves them to disk, overwriting the previous contents.
 func Install() (err error) {
-	profiles := make(Profiles)
-	profiles["production"] = &Profile{
-		Directory: &DirectoryProfile{
-			Endpoint: "api.vaspdirectory.net:443",
-		},
-		Admin: &AdminProfile{
-			Endpoint: "https://api.admin.vaspdirectory.net",
-		},
-	}
-	profiles["testnet"] = &Profile{
-		Directory: &DirectoryProfile{
-			Endpoint: "api.trisatest.net:443",
-		},
-		Admin: &AdminProfile{
-			Endpoint: "https://api.admin.trisatest.net",
-		},
-		Active: true,
-	}
-	profiles["localhost"] = &Profile{
-		Directory: &DirectoryProfile{
-			Endpoint: "localhost:4433",
-			Insecure: true,
-		},
-		Admin: &AdminProfile{
-			Endpoint: "http://localhost:4434",
-		},
-		DatabaseURL: os.Getenv("GDS_DATABASE_URL"),
-	}
-
-	return profiles.Save()
+	return DefaultProfiles().Save(nil)
 }

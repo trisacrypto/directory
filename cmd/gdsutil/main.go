@@ -27,25 +27,25 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/segmentio/ksuid"
-	"github.com/shibukawa/configdir"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
 )
+
+var profile *profiles.Profile
 
 func main() {
 	// Load the dotenv file if it exists
@@ -55,6 +55,7 @@ func main() {
 	app.Name = "gdsutil"
 	app.Version = pkg.Version()
 	app.Usage = "utilities for operating the GDS service and database"
+	app.Before = loadProfile
 	app.Commands = []*cli.Command{
 		{
 			Name:     "ldb:keys",
@@ -177,60 +178,33 @@ func main() {
 			},
 		},
 		{
-			Name:     "profile:list",
-			Usage:    "list all known GDS profiles",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   listProfiles,
-		},
-		{
-			Name:     "profile:get",
-			Usage:    "get the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   getProfile,
-		},
-		{
-			Name:     "profile:set",
-			Usage:    "set the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   setProfile,
-		},
-		{
-			Name:     "profile:delete",
-			Usage:    "delete a GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   deleteProfile,
-		},
-		{
-			Name:     "var:list",
-			Usage:    "list the variables in the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   listVariables,
-		},
-		{
-			Name:     "var:get",
-			Usage:    "print a variable in the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   getProfileVariable,
-		},
-		{
-			Name:     "var:set",
-			Usage:    "set a variable in the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   setProfileVariable,
-		},
-		{
-			Name:     "var:delete",
-			Usage:    "delete a variable from the current GDS profile",
-			Category: "profile",
-			Before:   openProfileConfig,
-			Action:   deleteProfileVariable,
+			Name:      "profile",
+			Aliases:   []string{"config"},
+			Usage:     "view and manage profiles to configure gdsutil with",
+			UsageText: "gdsutil profile [name]\n   gdsutil profile --activate [name]\n   gdsutil profile --list\n   gdsutil profile --path\n   gdsutil profile --install",
+			Action:    manageProfiles,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "list the available profiles and exit",
+				},
+				&cli.BoolFlag{
+					Name:    "path",
+					Aliases: []string{"p"},
+					Usage:   "show the path to the configuration and exit",
+				},
+				&cli.BoolFlag{
+					Name:    "install",
+					Aliases: []string{"i"},
+					Usage:   "install the default profiles and exit",
+				},
+				&cli.StringFlag{
+					Name:    "activate",
+					Aliases: []string{"a"},
+					Usage:   "activate the profile with the specified name",
+				},
+			},
 		},
 		{
 			Name:     "peers:add",
@@ -251,6 +225,11 @@ func main() {
 					Name:    "p",
 					Aliases: []string{"pid"},
 					Usage:   "specify the pid for the peer to add",
+				},
+				&cli.BoolFlag{
+					Name:    "no-secure",
+					Aliases: []string{"S"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -273,6 +252,11 @@ func main() {
 					Name:    "p",
 					Aliases: []string{"pid"},
 					Usage:   "specify the pid for the peer to tombstone",
+				},
+				&cli.BoolFlag{
+					Name:    "no-secure",
+					Aliases: []string{"S"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -300,6 +284,11 @@ func main() {
 					Name:    "s",
 					Aliases: []string{"status"},
 					Usage:   "specify for status-only, will not return peer details",
+				},
+				&cli.BoolFlag{
+					Name:    "no-secure",
+					Aliases: []string{"S"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -423,7 +412,7 @@ func main() {
 				},
 				&cli.StringFlag{
 					Name:    "e",
-					Aliases: []string{"endpoint"},
+					Aliases: []string{"admin-endpoint"},
 					Usage:   "endpoint to export registration for",
 				},
 				&cli.StringFlag{
@@ -838,21 +827,7 @@ func ldbList(c *cli.Context) (err error) {
 //===========================================================================
 
 func openLevelDB(c *cli.Context) (err error) {
-	var uri string
-	if uri = c.String("db"); uri == "" {
-		return cli.Exit("specify path to leveldb database", 1)
-	}
-
-	var dsn *store.DSN
-	if dsn, err = store.ParseDSN(uri); err != nil {
-		return cli.Exit(err, 1)
-	}
-
-	if dsn.Scheme != "leveldb" && dsn.Scheme != "ldb" {
-		return cli.Exit("this action requires a leveldb DSN", 1)
-	}
-
-	if ldb, err = leveldb.OpenFile(dsn.Path, nil); err != nil {
+	if ldb, err = profile.OpenLevelDB(); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -870,227 +845,83 @@ func isFile(path string) bool {
 // Profile Actions
 //===========================================================================
 
-const configFile = "profiles.yaml"
-
-var profileFolder *configdir.Config
-var profileConfig GDSConfig
-
-type GDSConfig struct {
-	Current  string                `yaml:"current"`
-	Profiles map[string]GDSProfile `yaml:"profiles"`
-}
-
-type GDSProfile struct {
-	Name      string            `json:"name"`
-	Variables map[string]string `yaml:"variables"`
-}
-
-func initConfig(folder *configdir.Config) (err error) {
-	// Initialize the config file with a default profile
-	profileConfig = GDSConfig{
-		Current: "default",
-		Profiles: map[string]GDSProfile{
-			"default": {
-				Name:      "default",
-				Variables: map[string]string{},
-			},
-		},
-	}
-	data, err := yaml.Marshal(profileConfig)
-	if err != nil {
-		return err
-	}
-	if err = folder.WriteFile(configFile, data); err != nil {
-		return err
-	}
-	return nil
-}
-
-func openProfileConfig(c *cli.Context) (err error) {
-	configDirs := configdir.New("gds", "gdsutil")
-	configDirs.LocalPath, _ = filepath.Abs(".")
-	profileFolder = configDirs.QueryFolderContainsFile(configFile)
-	if profileFolder == nil {
-		// Search for an available folder to create the config file
-		var folders []*configdir.Config
-		folders = configDirs.QueryFolders(configdir.Local)
-		if len(folders) == 0 {
-			folders = configDirs.QueryFolders(configdir.Global)
-			if len(folders) == 0 {
-				folders = configDirs.QueryFolders(configdir.System)
-				if len(folders) == 0 {
-					return cli.Exit("no suitable directory for config file", 1)
-				}
-			}
-		}
-
-		// Create the new config
-		if err = initConfig(folders[0]); err != nil {
+func manageProfiles(c *cli.Context) (err error) {
+	// Handle list and then exit
+	if c.Bool("list") {
+		var p *profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
 			return cli.Exit(err, 1)
 		}
-		profileFolder = configDirs.QueryFolderContainsFile(configFile)
-		if profileFolder == nil {
-			return cli.Exit("unable to locate config file", 1)
+
+		if len(p.Profiles) == 0 {
+			fmt.Println("no available profiles")
+			return nil
 		}
-	}
 
-	// Read the current config file
-	var data []byte
-	if data, err = profileFolder.ReadFile(configFile); err != nil {
-		return cli.Exit(err, 1)
-	}
-	if err = yaml.Unmarshal(data, &profileConfig); err != nil {
-		return cli.Exit(err, 1)
-	}
-	return nil
-}
+		fmt.Println("available profiles\n------------------")
+		for name := range p.Profiles {
+			if name == p.Active {
+				fmt.Printf("- *%s\n", name)
+			} else {
+				fmt.Printf("-  %s\n", name)
+			}
 
-func writeProfileConfig() (err error) {
-	var data []byte
-	if data, err = yaml.Marshal(profileConfig); err != nil {
-		return err
-	}
-	if err = profileFolder.WriteFile(configFile, data); err != nil {
-		return err
-	}
-	return nil
-}
-
-func listProfiles(c *cli.Context) (err error) {
-	var sb strings.Builder
-	for k := range profileConfig.Profiles {
-		sb.WriteString(k)
-		sb.WriteString("\n")
-	}
-	fmt.Println(sb.String())
-	return nil
-}
-
-func getProfile(c *cli.Context) (err error) {
-	fmt.Println(profileConfig.Current)
-	return nil
-}
-
-func setProfile(c *cli.Context) (err error) {
-	var name string
-	if c.Args().Len() < 1 {
-		return cli.Exit("must specify profile name", 1)
-	}
-
-	// Switch to the new profile
-	name = c.Args().Get(0)
-	if _, ok := profileConfig.Profiles[name]; !ok {
-		profileConfig.Profiles[name] = GDSProfile{
-			Name: name,
 		}
-	}
-	profileConfig.Current = name
 
-	// Write the new config to disk
-	if err = writeProfileConfig(); err != nil {
+		return nil
+	}
+
+	// Handle path and then exit
+	if c.Bool("path") {
+		var path string
+		if path, err = profiles.ProfilesPath(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(path)
+		return nil
+	}
+
+	// Handle install and then exit
+	if c.Bool("install") {
+		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle activate and then exit
+	if name := c.String("activate"); name != "" {
+		var p *profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = p.SetActive(name); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Printf("profile %q is now active\n", name)
+		return nil
+	}
+
+	// Handle show named or active profile
+	if c.Args().Len() > 1 {
+		return cli.Exit("specify only a single profile to print", 1)
+	}
+	var p *profiles.Profiles
+	if p, err = profiles.Load(); err != nil {
 		return cli.Exit(err, 1)
 	}
-	fmt.Printf("switched to profile %s\n", profileConfig.Current)
-	return nil
-}
 
-func deleteProfile(c *cli.Context) (err error) {
-	var name string
-	if c.Args().Len() < 1 {
-		return cli.Exit("must specify profile name", 1)
-	}
-
-	// Delete the indicated profile
-	name = c.Args().Get(0)
-	if _, ok := profileConfig.Profiles[name]; !ok {
-		return cli.Exit("profile does not exist", 1)
-	}
-	delete(profileConfig.Profiles, name)
-	if profileConfig.Current == name {
-		profileConfig.Current = "default"
-	}
-
-	fmt.Printf("deleted profile %s\n", name)
-	fmt.Printf("current profile is %s\n", profileConfig.Current)
-	return nil
-}
-
-func listVariables(c *cli.Context) (err error) {
-	var (
-		ok      bool
-		name    string
-		sb      strings.Builder
-		profile GDSProfile
-	)
-
-	name = profileConfig.Current
-	if profile, ok = profileConfig.Profiles[name]; !ok {
-		return cli.Exit("profile does not exist", 1)
-	}
-
-	for k, v := range profile.Variables {
-		sb.WriteString(fmt.Sprintf("%s=%s\n", k, v))
-	}
-	fmt.Println(sb.String())
-	return nil
-}
-
-func getProfileVariable(c *cli.Context) (err error) {
-	var (
-		ok      bool
-		profile GDSProfile
-		key     string
-		val     string
-	)
-	if c.Args().Len() < 1 {
-		return cli.Exit("must specify variable name", 1)
-	}
-
-	// Get the indicated variable from the config
-	key = c.Args().Get(0)
-	profile = profileConfig.Profiles[profileConfig.Current]
-	if val, ok = profile.Variables[key]; !ok {
-		return cli.Exit("variable does not exist in current profile", 1)
-	}
-
-	fmt.Printf("%s=%s\n", key, val)
-	return nil
-}
-
-func setProfileVariable(c *cli.Context) (err error) {
-	var (
-		key string
-		val string
-	)
-	if c.Args().Len() < 2 {
-		return cli.Exit("must specify variable name and value", 1)
-	}
-
-	// Set the variable in the config
-	key = c.Args().Get(0)
-	val = c.Args().Get(1)
-	profileConfig.Profiles[profileConfig.Current].Variables[key] = val
-
-	if err = writeProfileConfig(); err != nil {
+	if profile, err = p.GetActive(c.Args().Get(0)); err != nil {
 		return cli.Exit(err, 1)
 	}
-	return nil
-}
 
-func deleteProfileVariable(c *cli.Context) (err error) {
-	if c.Args().Len() < 1 {
-		return cli.Exit("must specify variable name", 1)
-	}
-
-	// Delete the indicated profile variable
-	key := c.Args().Get(0)
-	if _, ok := profileConfig.Profiles[profileConfig.Current].Variables[key]; !ok {
-		return cli.Exit("variable does not exist", 1)
-	}
-	delete(profileConfig.Profiles[profileConfig.Current].Variables, key)
-	if err = writeProfileConfig(); err != nil {
+	var data []byte
+	if data, err = yaml.Marshal(p.Profiles[p.Active]); err != nil {
 		return cli.Exit(err, 1)
 	}
+
+	fmt.Println(string(data))
 	return nil
 }
 
@@ -1108,7 +939,7 @@ func addPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.AddPeer with the pid
@@ -1128,7 +959,7 @@ func delPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.RmPeer with the pid
@@ -1150,7 +981,7 @@ func listPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.GetPeers with filter
@@ -1165,12 +996,9 @@ func listPeers(c *cli.Context) (err error) {
 }
 
 func initReplicaClient(c *cli.Context) (err error) {
-	// initialize a client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.String("replica-endpoint"), grpc.WithInsecure()); err != nil {
+	if replicaClient, err = profile.Replica.Connect(); err != nil {
 		return cli.Exit(err, 1)
 	}
-	replicaClient = peers.NewPeerManagementClient(cc)
 	return nil
 }
 
@@ -1307,7 +1135,7 @@ func registerExport(c *cli.Context) (err error) {
 	pbForm := &api.RegisterRequest{
 		Entity:           vasp.Entity,
 		Contacts:         vasp.Contacts,
-		TrisaEndpoint:    c.String("endpoint"),
+		TrisaEndpoint:    c.String("admin-endpoint"),
 		CommonName:       c.String("common-name"),
 		Website:          vasp.Website,
 		BusinessCategory: vasp.BusinessCategory,
@@ -1643,6 +1471,22 @@ func generateTokenKey(c *cli.Context) (err error) {
 //===========================================================================
 // Helper Functions
 //===========================================================================
+
+// loadProfile runs before every command so it cannot return an error; if it cannot
+// load the profile, it will attempt to create a default profile unless a named profile
+// was given.
+func loadProfile(c *cli.Context) (err error) {
+	if profile, err = profiles.LoadActive(c); err != nil {
+		if name := c.String("profile"); name != "" {
+			return cli.Exit(err, 1)
+		}
+		profile = profiles.New()
+		if err = profile.Update(c); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	return nil
+}
 
 // helper function to print JSON response and exit
 func printJSON(m proto.Message) error {
