@@ -44,6 +44,15 @@ type ReplicaProfile struct {
 	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the replica endpoint with TLS
 }
 
+func New() *Profile {
+	return &Profile{
+		Directory: &DirectoryProfile{},
+		Admin:     &AdminProfile{},
+		Replica:   &ReplicaProfile{},
+		Timeout:   30 * time.Second,
+	}
+}
+
 // Update the specified profile with the CLI context.
 func (p *Profile) Update(c *cli.Context) error {
 	if endpoint := c.String("endpoint"); endpoint != "" {

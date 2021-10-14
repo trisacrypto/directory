@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -49,7 +48,7 @@ func Load() (p Profiles, err error) {
 		}
 
 		p = make(Profiles)
-		if err = json.Unmarshal(data, &p); err != nil {
+		if err = yaml.Unmarshal(data, &p); err != nil {
 			return nil, fmt.Errorf("could not unmarshal profiles: %s", err)
 		}
 
