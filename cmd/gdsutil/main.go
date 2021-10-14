@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/segmentio/ksuid"
+	"github.com/shibukawa/configdir"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -43,6 +44,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -173,6 +175,62 @@ func main() {
 					Value:   "directory.csv",
 				},
 			},
+		},
+		{
+			Name:     "profile:list",
+			Usage:    "list all known GDS profiles",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   listProfiles,
+		},
+		{
+			Name:     "profile:get",
+			Usage:    "get the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   getProfile,
+		},
+		{
+			Name:     "profile:set",
+			Usage:    "set the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   setProfile,
+		},
+		{
+			Name:     "profile:delete",
+			Usage:    "delete a GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   deleteProfile,
+		},
+		{
+			Name:     "var:list",
+			Usage:    "list the variables in the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   listVariables,
+		},
+		{
+			Name:     "var:get",
+			Usage:    "print a variable in the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   getProfileVariable,
+		},
+		{
+			Name:     "var:set",
+			Usage:    "set a variable in the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   setProfileVariable,
+		},
+		{
+			Name:     "var:delete",
+			Usage:    "delete a variable from the current GDS profile",
+			Category: "profile",
+			Before:   openProfileConfig,
+			Action:   deleteProfileVariable,
 		},
 		{
 			Name:     "peers:add",
@@ -809,6 +867,234 @@ func isFile(path string) bool {
 }
 
 //===========================================================================
+// Profile Actions
+//===========================================================================
+
+const configFile = "profiles.yaml"
+
+var profileFolder *configdir.Config
+var profileConfig GDSConfig
+
+type GDSConfig struct {
+	Current  string                `yaml:"current"`
+	Profiles map[string]GDSProfile `yaml:"profiles"`
+}
+
+type GDSProfile struct {
+	Name      string            `json:"name"`
+	Variables map[string]string `yaml:"variables"`
+}
+
+func initConfig(folder *configdir.Config) (err error) {
+	// Initialize the config file with a default profile
+	profileConfig = GDSConfig{
+		Current: "default",
+		Profiles: map[string]GDSProfile{
+			"default": {
+				Name:      "default",
+				Variables: map[string]string{},
+			},
+		},
+	}
+	data, err := yaml.Marshal(profileConfig)
+	if err != nil {
+		return err
+	}
+	if err = folder.WriteFile(configFile, data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func openProfileConfig(c *cli.Context) (err error) {
+	configDirs := configdir.New("gds", "gdsutil")
+	configDirs.LocalPath, _ = filepath.Abs(".")
+	profileFolder = configDirs.QueryFolderContainsFile(configFile)
+	if profileFolder == nil {
+		// Search for an available folder to create the config file
+		var folders []*configdir.Config
+		folders = configDirs.QueryFolders(configdir.Local)
+		if len(folders) == 0 {
+			folders = configDirs.QueryFolders(configdir.Global)
+			if len(folders) == 0 {
+				folders = configDirs.QueryFolders(configdir.System)
+				if len(folders) == 0 {
+					return cli.NewExitError("no suitable directory for config file", 1)
+				}
+			}
+		}
+
+		// Create the new config
+		if err = initConfig(folders[0]); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+		profileFolder = configDirs.QueryFolderContainsFile(configFile)
+		if profileFolder == nil {
+			return cli.NewExitError("unable to locate config file", 1)
+		}
+	}
+
+	// Read the current config file
+	var data []byte
+	if data, err = profileFolder.ReadFile(configFile); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	if err = yaml.Unmarshal(data, &profileConfig); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	return nil
+}
+
+func writeProfileConfig() (err error) {
+	var data []byte
+	if data, err = yaml.Marshal(profileConfig); err != nil {
+		return err
+	}
+	if err = profileFolder.WriteFile(configFile, data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func listProfiles(c *cli.Context) (err error) {
+	var sb strings.Builder
+	for k := range profileConfig.Profiles {
+		sb.WriteString(k)
+		sb.WriteString("\n")
+	}
+	fmt.Println(sb.String())
+	return nil
+}
+
+func getProfile(c *cli.Context) (err error) {
+	fmt.Println(profileConfig.Current)
+	return nil
+}
+
+func setProfile(c *cli.Context) (err error) {
+	var name string
+	if c.Args().Len() < 1 {
+		return cli.NewExitError("must specify profile name", 1)
+	}
+
+	// Switch to the new profile
+	name = c.Args().Get(0)
+	if _, ok := profileConfig.Profiles[name]; !ok {
+		profileConfig.Profiles[name] = GDSProfile{
+			Name: name,
+		}
+	}
+	profileConfig.Current = name
+
+	// Write the new config to disk
+	if err = writeProfileConfig(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	fmt.Printf("switched to profile %s\n", profileConfig.Current)
+	return nil
+}
+
+func deleteProfile(c *cli.Context) (err error) {
+	var name string
+	if c.Args().Len() < 1 {
+		return cli.NewExitError("must specify profile name", 1)
+	}
+
+	// Delete the indicated profile
+	name = c.Args().Get(0)
+	if _, ok := profileConfig.Profiles[name]; !ok {
+		return cli.NewExitError("profile does not exist", 1)
+	}
+	delete(profileConfig.Profiles, name)
+	if profileConfig.Current == name {
+		profileConfig.Current = "default"
+	}
+
+	fmt.Printf("deleted profile %s\n", name)
+	fmt.Printf("current profile is %s\n", profileConfig.Current)
+	return nil
+}
+
+func listVariables(c *cli.Context) (err error) {
+	var (
+		ok      bool
+		name    string
+		sb      strings.Builder
+		profile GDSProfile
+	)
+
+	name = profileConfig.Current
+	if profile, ok = profileConfig.Profiles[name]; !ok {
+		return cli.NewExitError("profile does not exist", 1)
+	}
+
+	for k, v := range profile.Variables {
+		sb.WriteString(fmt.Sprintf("%s=%s\n", k, v))
+	}
+	fmt.Println(sb.String())
+	return nil
+}
+
+func getProfileVariable(c *cli.Context) (err error) {
+	var (
+		ok      bool
+		profile GDSProfile
+		key     string
+		val     string
+	)
+	if c.Args().Len() < 1 {
+		return cli.NewExitError("must specify variable name", 1)
+	}
+
+	// Get the indicated variable from the config
+	key = c.Args().Get(0)
+	profile = profileConfig.Profiles[profileConfig.Current]
+	if val, ok = profile.Variables[key]; !ok {
+		return cli.NewExitError("variable does not exist in current profile", 1)
+	}
+
+	fmt.Printf("%s=%s\n", key, val)
+	return nil
+}
+
+func setProfileVariable(c *cli.Context) (err error) {
+	var (
+		key string
+		val string
+	)
+	if c.Args().Len() < 2 {
+		return cli.NewExitError("must specify variable name and value", 1)
+	}
+
+	// Set the variable in the config
+	key = c.Args().Get(0)
+	val = c.Args().Get(1)
+	profileConfig.Profiles[profileConfig.Current].Variables[key] = val
+
+	if err = writeProfileConfig(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	return nil
+}
+
+func deleteProfileVariable(c *cli.Context) (err error) {
+	if c.Args().Len() < 1 {
+		return cli.NewExitError("must specify variable name", 1)
+	}
+
+	// Delete the indicated profile variable
+	key := c.Args().Get(0)
+	if _, ok := profileConfig.Profiles[profileConfig.Current].Variables[key]; !ok {
+		return cli.NewExitError("variable does not exist", 1)
+	}
+	delete(profileConfig.Profiles[profileConfig.Current].Variables, key)
+	if err = writeProfileConfig(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	return nil
+}
+
+//===========================================================================
 // Peer Management Replica Actions
 //===========================================================================
 
@@ -917,10 +1203,10 @@ func cipherDecrypt(c *cli.Context) (err error) {
 	}
 
 	var ciphertext, signature []byte
-	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args().Slice()[0]); err != nil {
+	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args().Get(0)); err != nil {
 		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
 	}
-	if signature, err = base64.RawStdEncoding.DecodeString(c.Args().Slice()[1]); err != nil {
+	if signature, err = base64.RawStdEncoding.DecodeString(c.Args().Get(1)); err != nil {
 		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
 	}
 
