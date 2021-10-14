@@ -1090,7 +1090,7 @@ func manageProfiles(c *cli.Context) (err error) {
 
 	// Handle show named or active profile
 	if c.Args().Len() > 1 {
-		return cli.Exit("specify ony a single profile to print", 1)
+		return cli.Exit("specify only a single profile to print", 1)
 	}
 	var p profiles.Profiles
 	if p, err = profiles.Load(); err != nil {

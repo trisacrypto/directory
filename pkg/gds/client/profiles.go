@@ -77,7 +77,7 @@ func LoadActive(c *cli.Context) (p *Profile, err error) {
 
 // Active returns the profile with the specified name or the active profile if no name
 // is specified. If multiple profiles are marked active it returns the first active
-// profile with no ordering gurantees. If no profiles are marked active and there is
+// profile with no ordering guarantees. If no profiles are marked active and there is
 // one profile, that profile is returned, otherwise an error is returned.
 func (p Profiles) Active(name string) (_ *Profile, err error) {
 	if name != "" {
@@ -144,7 +144,7 @@ func (p Profiles) Save() (err error) {
 	return nil
 }
 
-// Install creates a default profile and saves it to disk, overwriting the previous contents.
+// Install creates default profiles and saves them to disk, overwriting the previous contents.
 func Install() (err error) {
 	profiles := make(Profiles)
 	profiles["production"] = &Profile{
