@@ -53,15 +53,17 @@ func (s *Service) replicaInterceptor(ctx context.Context, in interface{}, info *
 	}
 
 	// Fetch peer information from the TLS info.
-	var peer *PeerInfo
-	if peer, err = peerFromTLS(ctx); err != nil {
-		// TODO: Uncomment when mTLS is added
-		//log.Error().Err(err).Msg("unable to retrieve remote peer info")
-		///return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
-	}
+	// TODO: Uncomment when mTLS is added
+	/*
+		var peer *PeerInfo
+		if peer, err = peerFromTLS(ctx); err != nil {
+			log.Error().Err(err).Msg("unable to retrieve remote peer info")
+			return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
+		}
 
-	// Add peer information to the context.
-	ctx = context.WithValue(ctx, ContextKey("peer"), peer)
+		// Add peer information to the context.
+		ctx = context.WithValue(ctx, ContextKey("peer"), peer)
+	*/
 
 	// Call the handler to finalize the request and get the response.
 	out, err = handler(ctx, in)
