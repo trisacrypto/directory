@@ -31,19 +31,21 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg"
+	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"github.com/urfave/cli"
-	"google.golang.org/grpc"
+	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v2"
 )
+
+var profile *profiles.Profile
 
 func main() {
 	// Load the dotenv file if it exists
@@ -53,7 +55,8 @@ func main() {
 	app.Name = "gdsutil"
 	app.Version = pkg.Version()
 	app.Usage = "utilities for operating the GDS service and database"
-	app.Commands = []cli.Command{
+	app.Before = loadProfile
+	app.Commands = []*cli.Command{
 		{
 			Name:     "ldb:keys",
 			Usage:    "list the keys currently in the leveldb store",
@@ -61,18 +64,21 @@ func main() {
 			Action:   ldbKeys,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64encode",
-					Usage: "base64 encode keys (otherwise they will be utf-8 decoded)",
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "base64 encode keys (otherwise they will be utf-8 decoded)",
 				},
-				cli.StringFlag{
-					Name:  "p, prefix",
-					Usage: "specify a prefix to filter keys on",
+				&cli.StringFlag{
+					Name:    "prefix",
+					Aliases: []string{"p"},
+					Usage:   "specify a prefix to filter keys on",
 				},
 			},
 		},
@@ -84,18 +90,21 @@ func main() {
 			Action:    ldbGet,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the keys as base64 encoded values which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "write the fetched key to directory if specified, otherwise printed",
+				&cli.StringFlag{
+					Name:    "out",
+					Aliases: []string{"o"},
+					Usage:   "write the fetched key to directory if specified, otherwise printed",
 				},
 			},
 		},
@@ -107,19 +116,22 @@ func main() {
 			Action:    ldbPut,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the key and value as base64 encoded strings which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the key and value as base64 encoded strings which must be decoded",
 				},
-				cli.StringFlag{
-					Name:  "f, format",
-					Usage: "format of the data (raw, json, pb)",
-					Value: "json",
+				&cli.StringFlag{
+					Name:    "format",
+					Aliases: []string{"f"},
+					Usage:   "format of the data (raw, json, pb)",
+					Value:   "json",
 				},
 			},
 		},
@@ -131,14 +143,16 @@ func main() {
 			Action:    ldbDelete,
 			Before:    openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "b, b64decode",
-					Usage: "specify the keys as base64 encoded values which must be decoded",
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
 			},
 		},
@@ -149,15 +163,46 @@ func main() {
 			Action:   ldbList,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "path to write CSV data out to",
-					Value: "directory.csv",
+				&cli.StringFlag{
+					Name:    "out",
+					Aliases: []string{"o"},
+					Usage:   "path to write CSV data out to",
+					Value:   "directory.csv",
+				},
+			},
+		},
+		{
+			Name:      "profile",
+			Aliases:   []string{"config"},
+			Usage:     "view and manage profiles to configure gdsutil with",
+			UsageText: "gdsutil profile [name]\n   gdsutil profile --activate [name]\n   gdsutil profile --list\n   gdsutil profile --path\n   gdsutil profile --install",
+			Action:    manageProfiles,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "l",
+					Aliases: []string{"list"},
+					Usage:   "list the available profiles and exit",
+				},
+				&cli.BoolFlag{
+					Name:    "p",
+					Aliases: []string{"path"},
+					Usage:   "show the path to the configuration and exit",
+				},
+				&cli.BoolFlag{
+					Name:    "i",
+					Aliases: []string{"install"},
+					Usage:   "install the default profiles and exit",
+				},
+				&cli.StringFlag{
+					Name:    "a",
+					Aliases: []string{"activate"},
+					Usage:   "activate the profile with the specified name",
 				},
 			},
 		},
@@ -168,16 +213,22 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   addPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect the directory replica client",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to add multiple peers at a time?
-				cli.Uint64Flag{
-					Name:  "p, pid",
-					Usage: "specify the pid for the peer to add",
+				&cli.Uint64Flag{
+					Name:    "pid",
+					Aliases: []string{"p"},
+					Usage:   "specify the pid for the peer to add",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -188,16 +239,22 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   delPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect the directory replica client",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to rm multiple peers at a time?
-				cli.Uint64Flag{
-					Name:  "p, pid",
-					Usage: "specify the pid for the peer to tombstone",
+				&cli.Uint64Flag{
+					Name:    "pid",
+					Aliases: []string{"p"},
+					Usage:   "specify the pid for the peer to tombstone",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -208,20 +265,27 @@ func main() {
 			Before:   initReplicaClient,
 			Action:   listPeers,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "u, replica-endpoint",
-					Usage:  "the url to connect the directory replica client",
-					Value:  "replica.vaspdirectory.net:443",
-					EnvVar: "TRISA_DIRECTORY_REPLICA_URL",
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect the directory replica client",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO: have we standardized on how to reference regions?
-				cli.StringSliceFlag{
-					Name:  "r, region",
-					Usage: "specify a region for peers to be returned",
+				&cli.StringSliceFlag{
+					Name:    "region",
+					Aliases: []string{"r"},
+					Usage:   "specify a region for peers to be returned",
 				},
-				cli.BoolFlag{
-					Name:  "s, status",
-					Usage: "specify for status-only, will not return peer details",
+				&cli.BoolFlag{
+					Name:    "status",
+					Aliases: []string{"s"},
+					Usage:   "specify for status-only, will not return peer details",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -233,26 +297,31 @@ func main() {
 			Before:    openLevelDB,
 			Action:    gossip,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.BoolFlag{
-					Name:  "p, partial",
-					Usage: "ignore any objects not specified in request",
+				&cli.BoolFlag{
+					Name:    "partial",
+					Aliases: []string{"p"},
+					Usage:   "ignore any objects not specified in request",
 				},
-				cli.StringSliceFlag{
-					Name:  "n, namespaces",
-					Usage: "specify the namespaces to replicate (if empty, all are replicated)",
+				&cli.StringSliceFlag{
+					Name:    "namespaces",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespaces to replicate (if empty, all are replicated)",
 				},
-				cli.StringSliceFlag{
-					Name:  "o, objects",
-					Usage: "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
+				&cli.StringSliceFlag{
+					Name:    "objects",
+					Aliases: []string{"o"},
+					Usage:   "specify the object keys to replicate (otherwise all objects from namespaces will be used)",
 				},
-				cli.BoolFlag{
-					Name:  "D, dryrun",
-					Usage: "show changes that would occur, does not modify database",
+				&cli.BoolFlag{
+					Name:    "dryrun",
+					Aliases: []string{"D"},
+					Usage:   "show changes that would occur, does not modify database",
 				},
 			},
 		},
@@ -263,34 +332,40 @@ func main() {
 			Before:   openLevelDB,
 			Action:   gossipMigrate,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:   "a, addr",
-					Usage:  "bind addr of the local replica (for name processing)",
-					EnvVar: "GDS_REPLICA_BIND_ADDR",
+				&cli.StringFlag{
+					Name:    "addr",
+					Aliases: []string{"a"},
+					Usage:   "bind addr of the local replica (for name processing)",
+					EnvVars: []string{"GDS_REPLICA_BIND_ADDR"},
 				},
-				cli.Uint64Flag{
-					Name:   "p, pid",
-					Usage:  "process id of the local replica",
-					EnvVar: "GDS_REPLICA_PID",
+				&cli.Uint64Flag{
+					Name:    "pid",
+					Aliases: []string{"p"},
+					Usage:   "process id of the local replica",
+					EnvVars: []string{"GDS_REPLICA_PID"},
 				},
-				cli.StringFlag{
-					Name:   "r, region",
-					Usage:  "geographic region of the local replica",
-					EnvVar: "GDS_REPLICA_REGION",
+				&cli.StringFlag{
+					Name:    "region",
+					Aliases: []string{"r"},
+					Usage:   "geographic region of the local replica",
+					EnvVars: []string{"GDS_REPLICA_REGION"},
 				},
-				cli.StringFlag{
-					Name:   "n, name",
-					Usage:  "human readable name of the local replica",
-					EnvVar: "GDS_REPLICA_NAME",
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "human readable name of the local replica",
+					EnvVars: []string{"GDS_REPLICA_NAME"},
 				},
-				cli.BoolFlag{
-					Name:  "D, dryrun",
-					Usage: "show changes that would occur, does not modify database",
+				&cli.BoolFlag{
+					Name:    "dryrun",
+					Aliases: []string{"D"},
+					Usage:   "show changes that would occur, does not modify database",
 				},
 			},
 		},
@@ -301,10 +376,11 @@ func main() {
 			Category:  "cipher",
 			Action:    cipherDecrypt,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "k, key",
-					Usage:  "secret key to decrypt the cipher text",
-					EnvVar: "GDS_SECRET_KEY",
+				&cli.StringFlag{
+					Name:    "key",
+					Aliases: []string{"k"},
+					Usage:   "secret key to decrypt the cipher text",
+					EnvVars: []string{"GDS_SECRET_KEY"},
 				},
 			},
 		},
@@ -315,30 +391,36 @@ func main() {
 			Action:   registerExport,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "id",
+					Aliases: []string{"i"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "e, endpoint",
-					Usage: "endpoint to export registration for",
+				&cli.StringFlag{
+					Name:    "admin-endpoint",
+					Aliases: []string{"e"},
+					Usage:   "endpoint to export registration for",
 				},
-				cli.StringFlag{
-					Name:  "c, common-name",
-					Usage: "common name to export registration for",
+				&cli.StringFlag{
+					Name:    "common-name",
+					Aliases: []string{"c"},
+					Usage:   "common name to export registration for",
 				},
-				cli.StringFlag{
-					Name:  "o, outpath",
-					Usage: "path to write out JSON form to",
+				&cli.StringFlag{
+					Name:    "outpath",
+					Aliases: []string{"o"},
+					Usage:   "path to write out JSON form to",
 				},
 			},
 		},
@@ -349,18 +431,21 @@ func main() {
 			Action:   registerRepair,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "id",
+					Aliases: []string{"i"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
 			},
 		},
@@ -371,26 +456,31 @@ func main() {
 			Action:   registerReissue,
 			Before:   openLevelDB,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "d, db",
-					Usage:  "dsn to connect to trisa directory storage",
-					EnvVar: "GDS_DATABASE_URL",
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
-				cli.StringFlag{
-					Name:  "i, id",
-					Usage: "VASP ID to lookup registration",
+				&cli.StringFlag{
+					Name:    "id",
+					Aliases: []string{"i"},
+					Usage:   "VASP ID to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "n, name",
-					Usage: "VASP Name (common name) to lookup registration",
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "VASP Name (common name) to lookup registration",
 				},
-				cli.StringFlag{
-					Name:  "r, reason",
-					Usage: "reason for reissuing the certificates",
+				&cli.StringFlag{
+					Name:    "reason",
+					Aliases: []string{"r"},
+					Usage:   "reason for reissuing the certificates",
 				},
-				cli.StringFlag{
-					Name:  "e, email",
-					Usage: "email of user reissuing certs for audit log",
+				&cli.StringFlag{
+					Name:    "email",
+					Aliases: []string{"e"},
+					Usage:   "email of user reissuing certs for audit log",
 				},
 			},
 		},
@@ -400,14 +490,16 @@ func main() {
 			Category: "admin",
 			Action:   generateTokenKey,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "o, out",
-					Usage: "path to write keys out to (optional, will be saved as ksuid.pem by default)",
+				&cli.StringFlag{
+					Name:    "out",
+					Aliases: []string{"o"},
+					Usage:   "path to write keys out to (optional, will be saved as ksuid.pem by default)",
 				},
-				cli.IntFlag{
-					Name:  "s, size",
-					Usage: "number of bits for the generated keys",
-					Value: 4096,
+				&cli.IntFlag{
+					Name:    "size",
+					Aliases: []string{"s"},
+					Usage:   "number of bits for the generated keys",
+					Value:   4096,
 				},
 			},
 		},
@@ -439,7 +531,7 @@ func ldbKeys(c *cli.Context) (err error) {
 	}
 
 	if err = iter.Error(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	return nil
@@ -453,23 +545,23 @@ func ldbGet(c *cli.Context) (err error) {
 		// Check that out is a directory
 		var info fs.FileInfo
 		if info, err = os.Stat(out); err != nil {
-			return cli.NewExitError("specify an existing, writeable directory to output files to", 1)
+			return cli.Exit("specify an existing, writeable directory to output files to", 1)
 		}
 		if !info.IsDir() {
-			return cli.NewExitError("specify a directory to write files out to", 1)
+			return cli.Exit("specify a directory to write files out to", 1)
 		}
 	}
 
 	b64decode := c.Bool("b64decode")
-	for _, keys := range c.Args() {
+	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
-			return cli.NewExitError(fmt.Errorf("could not decode key: %s", err), 1)
+			return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
 		}
 
 		var data []byte
 		if data, err = ldb.Get(key, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Unmarshal the thing
@@ -482,15 +574,15 @@ func ldbGet(c *cli.Context) (err error) {
 		switch prefix {
 		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case wire.NamespaceIndices:
 			if jsonValue, err = wire.UnmarshalIndex(data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case wire.NamespaceSequence:
 			if jsonValue, err = wire.UnmarshalSequence(data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "warning: cannot unmarshal unknown namespace %q, printing raw data\n", prefix)
@@ -501,7 +593,7 @@ func ldbGet(c *cli.Context) (err error) {
 		switch {
 		case jsonValue != nil:
 			if outdata, err = json.MarshalIndent(jsonValue, "", "  "); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case pbValue != nil:
 			jsonpb := protojson.MarshalOptions{
@@ -513,7 +605,7 @@ func ldbGet(c *cli.Context) (err error) {
 				EmitUnpopulated: true,
 			}
 			if outdata, err = jsonpb.Marshal(pbValue); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		default:
 			outdata = data
@@ -522,7 +614,7 @@ func ldbGet(c *cli.Context) (err error) {
 		if out != "" {
 			path := filepath.Join(out, string(key)+".json")
 			if err = ioutil.WriteFile(path, outdata, 0644); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			fmt.Println(string(outdata) + "\n")
@@ -536,7 +628,7 @@ func ldbPut(c *cli.Context) (err error) {
 	defer ldb.Close()
 
 	if c.NArg() == 0 || c.NArg() > 2 {
-		return cli.NewExitError("specify path, key and path, or key and value as arguments", 1)
+		return cli.Exit("specify path, key and path, or key and value as arguments", 1)
 	}
 
 	// Determine the key and value as follows:
@@ -550,12 +642,12 @@ func ldbPut(c *cli.Context) (err error) {
 		name := filepath.Base(path)
 		ext := filepath.Ext(name)
 		if strings.TrimLeft(ext, ".") != format {
-			return cli.NewExitError(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
+			return cli.Exit(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
 		}
 
 		key = []byte(strings.TrimSuffix(name, ext))
 		if data, err = ioutil.ReadFile(path); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	} else {
 		key = []byte(args.Get(0))
@@ -565,10 +657,10 @@ func ldbPut(c *cli.Context) (err error) {
 		if isFile(varg) {
 			ext := filepath.Ext(varg)
 			if strings.TrimLeft(ext, ".") != format {
-				return cli.NewExitError(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
+				return cli.Exit(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
 			}
 			if data, err = ioutil.ReadFile(varg); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			data = []byte(varg)
@@ -580,16 +672,16 @@ func ldbPut(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
 	if b64decode {
 		if key, err = base64.RawStdEncoding.DecodeString(string(key)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		if data, err = base64.RawStdEncoding.DecodeString(string(data)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 
 	// Quick spot check
 	if len(data) == 0 || len(key) == 0 {
-		return cli.NewExitError("no key or value found", 1)
+		return cli.Exit("no key or value found", 1)
 	}
 
 	// Unmarshal the thing from data then
@@ -600,16 +692,16 @@ func ldbPut(c *cli.Context) (err error) {
 		switch format {
 		case "json":
 			if value, err = wire.RemarshalJSON(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		case "pb", "proto", "protobuf":
 			// Check if the protocol buffers can be unmarshaled; if so, the data is good to go
 			if _, err = wire.UnmarshalProto(prefix, data); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 			value = data
 		default:
-			return cli.NewExitError("unknown format: specify raw, bytes, json, or proto", 1)
+			return cli.Exit("unknown format: specify raw, bytes, json, or proto", 1)
 		}
 
 	} else {
@@ -619,12 +711,12 @@ func ldbPut(c *cli.Context) (err error) {
 
 	// Final spot check
 	if len(value) == 0 {
-		return cli.NewExitError("no value marshaled", 1)
+		return cli.Exit("no value marshaled", 1)
 	}
 
 	// Put the key/value to the database
 	if err = ldb.Put(key, value, nil); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -632,18 +724,18 @@ func ldbPut(c *cli.Context) (err error) {
 func ldbDelete(c *cli.Context) (err error) {
 	defer ldb.Close()
 	if c.NArg() == 0 {
-		return cli.NewExitError("specify at least one key to delete", 1)
+		return cli.Exit("specify at least one key to delete", 1)
 	}
 
 	b64decode := c.Bool("b64decode")
-	for _, keys := range c.Args() {
+	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		if err = ldb.Delete(key, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	}
 
@@ -662,7 +754,7 @@ func ldbList(c *cli.Context) (err error) {
 		vasp := new(pb.VASP)
 		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
 			iter.Release()
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		record := make(map[string]string)
@@ -677,7 +769,7 @@ func ldbList(c *cli.Context) (err error) {
 
 	if err = iter.Error(); err != nil {
 		iter.Release()
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	iter.Release()
 
@@ -687,7 +779,7 @@ func ldbList(c *cli.Context) (err error) {
 		cr := new(models.CertificateRequest)
 		if err = proto.Unmarshal(iter.Value(), cr); err != nil {
 			iter.Release()
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		record, ok := data[cr.Vasp]
@@ -702,14 +794,14 @@ func ldbList(c *cli.Context) (err error) {
 
 	if err = iter.Error(); err != nil {
 		iter.Release()
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	iter.Release()
 
 	// Write out a CSV file of the VASP list
 	var f *os.File
 	if f, err = os.OpenFile(c.String("out"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	w := csv.NewWriter(f)
 	w.Write([]string{"id", "name", "common_name", "registered_directory", "verified_on", "verification_status", "certreq", "certreq_status"})
@@ -720,7 +812,7 @@ func ldbList(c *cli.Context) (err error) {
 
 	w.Flush()
 	if err := w.Error(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("%d records written to %s\n", len(data), c.String("out"))
@@ -732,22 +824,8 @@ func ldbList(c *cli.Context) (err error) {
 //===========================================================================
 
 func openLevelDB(c *cli.Context) (err error) {
-	var uri string
-	if uri = c.String("db"); uri == "" {
-		return cli.NewExitError("specify path to leveldb database", 1)
-	}
-
-	var dsn *store.DSN
-	if dsn, err = store.ParseDSN(uri); err != nil {
-		return cli.NewExitError(err, 1)
-	}
-
-	if dsn.Scheme != "leveldb" && dsn.Scheme != "ldb" {
-		return cli.NewExitError("this action requires a leveldb DSN", 1)
-	}
-
-	if ldb, err = leveldb.OpenFile(dsn.Path, nil); err != nil {
-		return cli.NewExitError(err, 1)
+	if ldb, err = profile.OpenLevelDB(); err != nil {
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -758,6 +836,90 @@ func isFile(path string) bool {
 		return !os.IsNotExist(err)
 	}
 	return fi.Mode().IsRegular()
+}
+
+//===========================================================================
+// Profile Actions
+//===========================================================================
+
+func manageProfiles(c *cli.Context) (err error) {
+	// Handle list and then exit
+	if c.Bool("list") {
+		var p *profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if len(p.Profiles) == 0 {
+			fmt.Println("no available profiles")
+			return nil
+		}
+
+		fmt.Println("available profiles\n------------------")
+		for name := range p.Profiles {
+			if name == p.Active {
+				fmt.Printf("- *%s\n", name)
+			} else {
+				fmt.Printf("-  %s\n", name)
+			}
+
+		}
+
+		return nil
+	}
+
+	// Handle path and then exit
+	if c.Bool("path") {
+		var path string
+		if path, err = profiles.ProfilesPath(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(path)
+		return nil
+	}
+
+	// Handle install and then exit
+	if c.Bool("install") {
+		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle activate and then exit
+	if name := c.String("activate"); name != "" {
+		var p *profiles.Profiles
+		if p, err = profiles.Load(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = p.SetActive(name); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Printf("profile %q is now active\n", name)
+		return nil
+	}
+
+	// Handle show named or active profile
+	if c.Args().Len() > 1 {
+		return cli.Exit("specify only a single profile to print", 1)
+	}
+	var p *profiles.Profiles
+	if p, err = profiles.Load(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if profile, err = p.GetActive(c.Args().Get(0)); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var data []byte
+	if data, err = yaml.Marshal(p.Profiles[p.Active]); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Println(string(data))
+	return nil
 }
 
 //===========================================================================
@@ -774,13 +936,13 @@ func addPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.AddPeer with the pid
 	var out *peers.PeersStatus
 	if out, err = replicaClient.AddPeers(ctx, peer); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the returned result
@@ -794,13 +956,13 @@ func delPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.RmPeer with the pid
 	var out *peers.PeersStatus
 	if out, err = replicaClient.RmPeers(ctx, peer); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the returned result
@@ -816,13 +978,13 @@ func listPeers(c *cli.Context) (err error) {
 	}
 
 	// create a new context and pass the parent context in
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := profile.Context()
 	defer cancel()
 
 	// call client.GetPeers with filter
 	var out *peers.PeersList
 	if out, err = replicaClient.GetPeers(ctx, filter); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// print the peers
@@ -831,12 +993,9 @@ func listPeers(c *cli.Context) (err error) {
 }
 
 func initReplicaClient(c *cli.Context) (err error) {
-	// initialize a client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(c.String("replica-endpoint"), grpc.WithInsecure()); err != nil {
-		return cli.NewExitError(err, 1)
+	if replicaClient, err = profile.Replica.Connect(); err != nil {
+		return cli.Exit(err, 1)
 	}
-	replicaClient = peers.NewPeerManagementClient(cc)
 	return nil
 }
 
@@ -860,24 +1019,24 @@ const nonceSize = 12
 
 func cipherDecrypt(c *cli.Context) (err error) {
 	if c.NArg() != 2 {
-		return cli.NewExitError("must specify ciphertext and hmac arguments", 1)
+		return cli.Exit("must specify ciphertext and hmac arguments", 1)
 	}
 
 	var secret string
 	if secret = c.String("key"); secret == "" {
-		return cli.NewExitError("cipher key required", 1)
+		return cli.Exit("cipher key required", 1)
 	}
 
 	var ciphertext, signature []byte
-	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args()[0]); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode ciphertext: %s", err), 1)
+	if ciphertext, err = base64.RawStdEncoding.DecodeString(c.Args().Get(0)); err != nil {
+		return cli.Exit(fmt.Errorf("could not decode ciphertext: %s", err), 1)
 	}
-	if signature, err = base64.RawStdEncoding.DecodeString(c.Args()[1]); err != nil {
-		return cli.NewExitError(fmt.Errorf("could not decode signature: %s", err), 1)
+	if signature, err = base64.RawStdEncoding.DecodeString(c.Args().Get(1)); err != nil {
+		return cli.Exit(fmt.Errorf("could not decode signature: %s", err), 1)
 	}
 
 	if len(ciphertext) == 0 {
-		return cli.NewExitError("empty cipher text", 1)
+		return cli.Exit("empty cipher text", 1)
 	}
 
 	// Create a 32 byte signature of the key
@@ -891,22 +1050,22 @@ func cipherDecrypt(c *cli.Context) (err error) {
 
 	// Validate HMAC signature
 	if err = validateHMAC(key, data, signature); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	plainbytes, err := aesgcm.Open(nil, nonce, data, nil)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Println(string(plainbytes))
@@ -953,14 +1112,14 @@ func registerExport(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Remove sensitive data from contacts
@@ -973,7 +1132,7 @@ func registerExport(c *cli.Context) (err error) {
 	pbForm := &api.RegisterRequest{
 		Entity:           vasp.Entity,
 		Contacts:         vasp.Contacts,
-		TrisaEndpoint:    c.String("endpoint"),
+		TrisaEndpoint:    c.String("directory-endpoint"),
 		CommonName:       c.String("common-name"),
 		Website:          vasp.Website,
 		BusinessCategory: vasp.BusinessCategory,
@@ -995,12 +1154,12 @@ func registerExport(c *cli.Context) (err error) {
 
 	data, err := jsonpb.Marshal(pbForm)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	registrationForm := make(map[string]interface{})
 	if err = json.Unmarshal(data, &registrationForm); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	form := map[string]interface{}{
@@ -1012,7 +1171,7 @@ func registerExport(c *cli.Context) (err error) {
 	if path := c.String("outpath"); path != "" {
 		var f *os.File
 		if f, err = os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		defer f.Close()
 		w = f
@@ -1023,7 +1182,7 @@ func registerExport(c *cli.Context) (err error) {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	if err = encoder.Encode(form); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	return nil
 }
@@ -1039,20 +1198,20 @@ func registerRepair(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Find the CertificateRequest for the VASP
 	var certreq *models.CertificateRequest
 	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if certreq == nil {
@@ -1060,13 +1219,13 @@ func registerRepair(c *cli.Context) (err error) {
 
 		var conf config.Config
 		if conf, err = config.New(); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Connect to secret manager
 		var sm *secrets.SecretManager
 		if sm, err = secrets.New(conf.Secrets); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		// Create PKCS12 password along with certificate request.
@@ -1082,21 +1241,21 @@ func registerRepair(c *cli.Context) (err error) {
 		// Make a new secret of type "password"
 		secretType := "password"
 		if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 		if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		var data []byte
 		certreq.Modified = time.Now().Format(time.RFC3339)
 		key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 		if data, err = proto.Marshal(certreq); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		if err = ldb.Put(key, data, nil); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 
 		fmt.Printf("created new certificate request: %s\n", key)
@@ -1116,7 +1275,7 @@ func registerReissue(c *cli.Context) (err error) {
 
 	// Make sure there is a reason
 	if reason == "" || email == "" {
-		return cli.NewExitError("supply a reason and email of user to reissue the certs", 1)
+		return cli.Exit("supply a reason and email of user to reissue the certs", 1)
 	}
 
 	// Lookup VASP in database by ID or by name
@@ -1124,20 +1283,20 @@ func registerReissue(c *cli.Context) (err error) {
 	switch {
 	case vaspID != "":
 		if vasp, err = getVASPByID(vaspID); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	case name != "":
 		if vasp, err = getVASPByCommonName(name); err != nil {
-			return cli.NewExitError(err, 1)
+			return cli.Exit(err, 1)
 		}
 	default:
-		return cli.NewExitError("specify either ID or common name for lookup", 1)
+		return cli.Exit("specify either ID or common name for lookup", 1)
 	}
 
 	// Find the current CertificateRequest for the VASP
 	var certreq *models.CertificateRequest
 	if certreq, err = findCertificateRequest(vasp.Id); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Update the current CertificateRequest if it exists
@@ -1146,7 +1305,7 @@ func registerReissue(c *cli.Context) (err error) {
 		if certreq.Status < models.CertificateRequestState_COMPLETED {
 			fmt.Printf("canceling certificate request %s and setting state %s from %s\n", certreq.Id, models.CertificateRequestState_CR_ERRORED, certreq.Status)
 			if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_CR_ERRORED, reason, email); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 			certreq.RejectReason = reason
 			certreq.Modified = time.Now().Format(time.RFC3339)
@@ -1154,11 +1313,11 @@ func registerReissue(c *cli.Context) (err error) {
 			var data []byte
 			key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 			if data, err = proto.Marshal(certreq); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 
 			if err = ldb.Put(key, data, nil); err != nil {
-				return cli.NewExitError(err, 1)
+				return cli.Exit(err, 1)
 			}
 		} else {
 			fmt.Printf("certificate request %s is in state %s - making no changes\n", certreq.Id, certreq.Status)
@@ -1168,13 +1327,13 @@ func registerReissue(c *cli.Context) (err error) {
 	// Connect to the SecretManager to create a new PKCS12 Password
 	var conf config.Config
 	if conf, err = config.New(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Connect to secret manager
 	var sm *secrets.SecretManager
 	if sm, err = secrets.New(conf.Secrets); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Create a new certificate request for the VASP along with new PKCS12 password
@@ -1187,27 +1346,27 @@ func registerReissue(c *cli.Context) (err error) {
 	}
 
 	if err = models.UpdateCertificateRequestStatus(certreq, models.CertificateRequestState_READY_TO_SUBMIT, "reissue certificates", email); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Make a new secret of type "password"
 	secretType := "password"
 	if err = sm.With(certreq.Id).CreateSecret(context.TODO(), secretType); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 	if err = sm.With(certreq.Id).AddSecretVersion(context.TODO(), secretType, []byte(password)); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	var data []byte
 	certreq.Modified = time.Now().Format(time.RFC3339)
 	key := []byte(wire.NamespaceCertReqs + "::" + certreq.Id)
 	if data, err = proto.Marshal(certreq); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if err = ldb.Put(key, data, nil); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("created new certificate request: %s\n", key)
@@ -1275,7 +1434,7 @@ func generateTokenKey(c *cli.Context) (err error) {
 	// Create ksuid and determine outpath
 	var keyid ksuid.KSUID
 	if keyid, err = ksuid.NewRandom(); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	var out string
@@ -1286,20 +1445,20 @@ func generateTokenKey(c *cli.Context) (err error) {
 	// Generate RSA keys using crypto random
 	var key *rsa.PrivateKey
 	if key, err = rsa.GenerateKey(rand.Reader, c.Int("size")); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	// Open file to PEM encode keys to
 	var f *os.File
 	if f, err = os.OpenFile(out, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	if err = pem.Encode(f, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}); err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
@@ -1309,6 +1468,22 @@ func generateTokenKey(c *cli.Context) (err error) {
 //===========================================================================
 // Helper Functions
 //===========================================================================
+
+// loadProfile runs before every command so it cannot return an error; if it cannot
+// load the profile, it will attempt to create a default profile unless a named profile
+// was given.
+func loadProfile(c *cli.Context) (err error) {
+	if profile, err = profiles.LoadActive(c); err != nil {
+		if name := c.String("profile"); name != "" {
+			return cli.Exit(err, 1)
+		}
+		profile = profiles.New()
+		if err = profile.Update(c); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	return nil
+}
 
 // helper function to print JSON response and exit
 func printJSON(m proto.Message) error {
@@ -1323,7 +1498,7 @@ func printJSON(m proto.Message) error {
 
 	data, err := opts.Marshal(m)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	fmt.Println(string(data))

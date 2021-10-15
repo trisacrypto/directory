@@ -9,6 +9,7 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"github.com/urfave/cli/v2"
@@ -25,7 +26,6 @@ type Profile struct {
 	Replica     *ReplicaProfile   `yaml:"replica"`                // replica configuration
 	DatabaseURL string            `yaml:"database_url,omitempty"` // localhost only: the dsn to the leveldb database, usually $GDS_DATABASE_URL
 	Timeout     time.Duration     `yaml:"timeout,omitempty"`      // default timeout to create contexts for API connections, if not specified defaults to 30 seconds
-	Active      bool              `yaml:"active,omitempty"`       // if this is the active profile, it is treated as the default profile
 }
 
 type DirectoryProfile struct {
@@ -55,7 +55,7 @@ func New() *Profile {
 
 // Update the specified profile with the CLI context.
 func (p *Profile) Update(c *cli.Context) error {
-	if endpoint := c.String("endpoint"); endpoint != "" {
+	if endpoint := c.String("directory-endpoint"); endpoint != "" {
 		p.Directory.Endpoint = endpoint
 	}
 
@@ -63,8 +63,13 @@ func (p *Profile) Update(c *cli.Context) error {
 		p.Admin.Endpoint = endpoint
 	}
 
+	if endpoint := c.String("replica-endpoint"); endpoint != "" {
+		p.Replica.Endpoint = endpoint
+	}
+
 	if insecure := c.Bool("no-secure"); insecure {
 		p.Directory.Insecure = insecure
+		p.Replica.Insecure = insecure
 	}
 
 	if dburl := c.String("db"); dburl != "" {
@@ -131,4 +136,22 @@ func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, er
 		return nil, err
 	}
 	return client, nil
+}
+
+// Connect to the TRISA Directory Service and return a gRPC client
+func (p *ReplicaProfile) Connect() (_ peers.PeerManagementClient, err error) {
+	var opts []grpc.DialOption
+	if p.Insecure {
+		opts = append(opts, grpc.WithInsecure())
+	} else {
+		config := &tls.Config{}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+	}
+
+	// Connect the replica client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+		return nil, err
+	}
+	return peers.NewPeerManagementClient(cc), nil
 }
