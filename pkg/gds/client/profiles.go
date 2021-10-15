@@ -19,7 +19,8 @@ import (
 // 3. System level directory (/Library/Application Suport/rotational/gds on OS X
 // or /etc/xdg on Linux)
 // If no profile config is found, one will be created in the first available directory
-// based on the same search order above.
+// based on the search order: Current directory -> User -> System. This allows the user
+// to easily override the user or system config by creating a profiles.yaml in the CWD.
 //
 // The profiles make it easy to switch between client configurations to connect
 // to trisatest.net or vaspdirectory.net. The profiles have a user-supplied name for
@@ -83,11 +84,11 @@ func GetProfilesFolder() (folder *configdir.Config, err error) {
 	if folder == nil {
 		// Search for an available folder to create the config file
 		var folders []*configdir.Config
-		folders = cfgd.QueryFolders(configdir.Local)
+		folders = cfgd.QueryFolders(configdir.Global)
 		if len(folders) == 0 {
-			folders = cfgd.QueryFolders(configdir.Global)
+			folders = cfgd.QueryFolders(configdir.System)
 			if len(folders) == 0 {
-				folders = cfgd.QueryFolders(configdir.System)
+				folders = cfgd.QueryFolders(configdir.Local)
 				if len(folders) == 0 {
 					return nil, errors.New("no suitable directory for config file")
 				}
@@ -125,6 +126,10 @@ func Load() (p *Profiles, err error) {
 
 		if err = yaml.Unmarshal(data, &p); err != nil {
 			return nil, fmt.Errorf("could not unmarshal profiles: %s", err)
+		}
+
+		if p == nil {
+			return nil, fmt.Errorf("profile config is empty: %s", filepath.Join(folder.Path, profileYAML))
 		}
 
 		if p.Version != profileVersion {

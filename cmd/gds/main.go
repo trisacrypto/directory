@@ -53,7 +53,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:    "directory-endpoint",
-				Aliases: []string{"d"},
+				Aliases: []string{"e"},
 				Usage:   "the url to connect the directory service client",
 				EnvVars: []string{"TRISA_DIRECTORY_URL", "GDS_DIRECTORY_URL"},
 			},

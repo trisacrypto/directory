@@ -217,7 +217,6 @@ func main() {
 					Name:    "replica-endpoint",
 					Aliases: []string{"u"},
 					Usage:   "the url to connect the directory replica client",
-					Value:   "replica.vaspdirectory.net:443",
 					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to add multiple peers at a time?
@@ -244,7 +243,6 @@ func main() {
 					Name:    "replica-endpoint",
 					Aliases: []string{"u"},
 					Usage:   "the url to connect the directory replica client",
-					Value:   "replica.vaspdirectory.net:443",
 					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO allow the user to rm multiple peers at a time?
@@ -271,7 +269,6 @@ func main() {
 					Name:    "replica-endpoint",
 					Aliases: []string{"u"},
 					Usage:   "the url to connect the directory replica client",
-					Value:   "replica.vaspdirectory.net:443",
 					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
 				},
 				// TODO: have we standardized on how to reference regions?
@@ -1135,7 +1132,7 @@ func registerExport(c *cli.Context) (err error) {
 	pbForm := &api.RegisterRequest{
 		Entity:           vasp.Entity,
 		Contacts:         vasp.Contacts,
-		TrisaEndpoint:    c.String("admin-endpoint"),
+		TrisaEndpoint:    c.String("directory-endpoint"),
 		CommonName:       c.String("common-name"),
 		Website:          vasp.Website,
 		BusinessCategory: vasp.BusinessCategory,
