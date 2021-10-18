@@ -48,7 +48,7 @@ func TestVerifyContactURL(t *testing.T) {
 		Token: "1234defg4321",
 		VID:   "42",
 	}
-	require.Panics(t, func() { data.VerifyContactURL() }, "no panic when verify contact base url is not supplied")
+	require.Empty(t, data.VerifyContactURL(), "if no base url is provided, VerifyContactURL() should return empty string")
 
 	data = emails.VerifyContactData{
 		Name:    "Darlene Ulmsted",
@@ -71,7 +71,7 @@ func TestAdminReviewURL(t *testing.T) {
 		VID:   "42",
 		Token: "1234defg4321",
 	}
-	require.Panics(t, func() { data.AdminReviewURL() }, "no panic when verify contact base url is not supplied")
+	require.Empty(t, data.AdminReviewURL(), "if no base url provided, AdminReviewURL() should return empty string")
 
 	data = emails.ReviewRequestData{
 		VID:     "42",

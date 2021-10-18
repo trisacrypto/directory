@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 )
 
@@ -213,18 +212,9 @@ func (c SectigoConfig) Validate() error {
 }
 
 func (c EmailConfig) Validate() error {
-	if c.VerifyContactBaseURL == "" {
-		log.Warn().Msg("empty verify contact base url will cause a panic if an email is sent")
+	if c.AdminReviewBaseURL != "" && !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
+		return errors.New("admin review base URL must end in a /")
 	}
-
-	if c.AdminReviewBaseURL == "" {
-		log.Warn().Msg("empty admin review base url will cause a  panic if email is sent")
-	} else {
-		if !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
-			return errors.New("admin review base URL must end in a /")
-		}
-	}
-
 	return nil
 }
 

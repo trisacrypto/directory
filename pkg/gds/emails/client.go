@@ -26,6 +26,14 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 		client: sendgrid.NewSendClient(conf.SendGridAPIKey),
 	}
 
+	// Warn if email configuration isn't complete and will produce partial emails.
+	if conf.VerifyContactBaseURL == "" || conf.AdminReviewBaseURL == "" {
+		log.Warn().
+			Bool("missing_verify_contact_base_url", conf.VerifyContactBaseURL == "").
+			Bool("missing_admin_review_base_url", conf.AdminReviewBaseURL == "").
+			Msg("partial email configuration, some emails may not include links")
+	}
+
 	// Parse the admin and service emails from the configuration
 	if m.serviceEmail, err = mail.ParseAddress(conf.ServiceEmail); err != nil {
 		return nil, fmt.Errorf("could not parse service email %q: %s", conf.ServiceEmail, err)
