@@ -41,9 +41,9 @@ function formatDisplayedData(target) {
     return target ? target : "N/A"
 }
 
-const convertCountsToPercentages = (data) => {
+const getRatios = (data) => {
     const total = Object.values(data).reduce((acc, x) => acc + x);
-    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v / total]));
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, (v / total).toFixed(1)]));
 }
 
 function capitalizeFirstLetter(string) {
@@ -97,4 +97,4 @@ function getDirectoryURL() {
     return isTestNet() ? "https://admin.vaspdirectory.net" : "https://admin.trisatest.net"
 }
 
-export { isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, convertCountsToPercentages, capitalizeFirstLetter, getCookie }
+export { isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

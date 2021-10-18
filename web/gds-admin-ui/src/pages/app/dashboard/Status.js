@@ -1,18 +1,23 @@
 import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { Card, Row, Col } from 'react-bootstrap';
-import { capitalizeFirstLetter, convertCountsToPercentages } from '../../../utils';
+import { capitalizeFirstLetter, getRatios } from '../../../utils';
+import { Status as STATUS } from '../../../constants';
 
 const Status = ({ statuses }) => {
     const colors = ['#0acf97', '#727cf5', '#fa5c7c'];
 
-    const getDonutChartData = () => {
+    const statusRatios = () => {
         if (statuses && typeof statuses === "object") {
-            return Object.values(convertCountsToPercentages(statuses))
+            return getRatios(statuses)
         }
 
-        return []
+        return {}
     }
+
+    const getDonutChartData = () => Object.values(statusRatios())
+    const statusPercents = () => Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, val * 100.0]))
+
 
     const getDonutChartLabels = () => {
         if (statuses && typeof statuses === "object") {
@@ -58,7 +63,7 @@ const Status = ({ statuses }) => {
                     <Col lg={4}>
                         <i className="mdi mdi-progress-question text-warning mt-3 h3"></i>
                         <h3 className="fw-normal">
-                            <span>{statuses?.PENDING_REVIEW + '%'}</span>
+                            <span>{statusPercents()[STATUS.PENDING_REVIEW] + '%'}</span>
                         </h3>
                         <p className="text-muted mb-0">Pending</p>
                     </Col>
@@ -66,7 +71,7 @@ const Status = ({ statuses }) => {
                     <Col lg={4}>
                         <i className="mdi mdi-alert-octagram text-danger mt-3 h3"></i>
                         <h3 className="fw-normal">
-                            <span>{statuses?.REJECTED + '%'}</span>
+                            <span>{statusPercents()[STATUS.REJECTED] + '%'}</span>
                         </h3>
                         <p className="text-muted mb-0">Rejected</p>
                     </Col>
@@ -74,7 +79,7 @@ const Status = ({ statuses }) => {
                     <Col lg={4}>
                         <i className="mdi mdi-shield-check text-primary mt-3 h3"></i>
                         <h3 className="fw-normal">
-                            <span>{statuses?.VERIFIED + '%'}</span>
+                            <span>{statusPercents()[STATUS.VERIFIED] + '%'}</span>
                         </h3>
                         <p className="text-muted mb-0"> Verified</p>
                     </Col>
