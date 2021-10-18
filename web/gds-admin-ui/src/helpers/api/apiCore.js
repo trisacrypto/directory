@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { defaultEndpointPrefix, getCookie } from '../../utils';
 import jwtDecode from 'jwt-decode'
+import toast from 'react-hot-toast';
 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.baseURL = defaultEndpointPrefix();
@@ -14,8 +15,12 @@ axios.interceptors.response.use(
     (response) => {
         return response;
     },
-    async (error) => {
+    (error) => {
         let message;
+
+        if (error && !error.response) {
+            return Promise.reject('Network connection error')
+        }
 
         if (error && error.response && error.response.status === 404) {
             // window.location.href = '/not-found';
@@ -33,6 +38,9 @@ axios.interceptors.response.use(
                     break;
                 case 404:
                     message = 'Sorry! the data you are looking for could not be found';
+                    break;
+                case 500:
+                    message = 'Something went wrong';
                     break;
                 default: {
                     message =
@@ -202,13 +210,17 @@ class APICore {
             setAuthorization(res.data.access_token)
             return true
         }).catch((err) => {
+            console.log('[Error]', err)
+            toast.error("Something wrong happen while refreshing the token")
             this.setLoggedInUser(null)
             setAuthorization(null)
             return false
         })
+
+        return null
     }
 
-    isUserAuthenticated = async () => {
+    isUserAuthenticated = () => {
         const user = this.getLoggedInUser();
         if (!user) {
             return false;
@@ -225,13 +237,13 @@ class APICore {
             // The access token is valid -- we could just return true here
             // Alternatively, we could check if we're in that small window of time where we can reauthenticate when the access token is valid:
             if (isValidRefreshToken(user.refresh_token)) {
-                await this.reauthenticate(payload)
+                this.reauthenticate(payload)
             }
             return true;
         } else {
             // access token is invalid, check if we can reauthenticate
             if (isValidRefreshToken(user.refresh_token)) {
-                await this.reauthenticate(payload)
+                this.reauthenticate(payload)
             }
             // neither the access nor the refresh token is valid any longer
             this.setLoggedInUser(null)
@@ -263,7 +275,7 @@ class APICore {
     };
 
     deleteUserSession = () => {
-        sessionStorage.removeItem(AUTH_SESSION_KEY)
+        this.setLoggedInUser(null)
         setAuthorization(null)
         window.location.href = '/login'
     }
