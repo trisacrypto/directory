@@ -48,7 +48,7 @@ func (s *Service) replicaInterceptor(ctx context.Context, in interface{}, info *
 	start := time.Now()
 
 	// Check if we're in maintenance mode - status method should still return a full response.
-	if s.conf.Maintenance && info.FullMethod != "/trisa.gds.api.v1beta1.TRISADirectory/Status" {
+	if s.conf.Maintenance {
 		return nil, status.Error(codes.Unavailable, "the GDS service is currently in maintenance mode")
 	}
 
@@ -102,8 +102,9 @@ func peerFromTLS(ctx context.Context) (info *PeerInfo, err error) {
 			info = &PeerInfo{
 				Name:        &c[0].Subject,
 				DNSNames:    c[0].DNSNames,
-				IPAddresses: c[0].IPAddresses,
+				IPAddresses: []net.IP{net.ParseIP(gp.Addr.String())},
 			}
+			info.IPAddresses = append(info.IPAddresses, c[0].IPAddresses...)
 			return info, nil
 		}
 	}
