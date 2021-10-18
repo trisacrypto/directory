@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 )
 
@@ -85,7 +86,7 @@ type EmailConfig struct {
 	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
 	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
-	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps"`
+	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps/"`
 }
 
 type CertManConfig struct {
@@ -123,6 +124,10 @@ func New() (_ Config, err error) {
 	}
 
 	if err = conf.Sectigo.Validate(); err != nil {
+		return Config{}, err
+	}
+
+	if err = conf.Email.Validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -204,6 +209,22 @@ func (c SectigoConfig) Validate() error {
 	if !validProfile {
 		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(sectigo.AllProfiles[:], ", "))
 	}
+	return nil
+}
+
+func (c EmailConfig) Validate() error {
+	if c.VerifyContactBaseURL == "" {
+		log.Warn().Msg("empty verify contact base url will cause a panic if an email is sent")
+	}
+
+	if c.AdminReviewBaseURL == "" {
+		log.Warn().Msg("empty admin review base url will cause a  panic if email is sent")
+	} else {
+		if !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
+			return errors.New("admin review base URL must end in a /")
+		}
+	}
+
 	return nil
 }
 
