@@ -3,12 +3,15 @@
 <p>We have received a new TRISA Global Directory registration request from a VASP that
 needs to be reviewed. The requestor has verified their email address(es) and received a
 PKCS12 password to decrypt a certificate which will be generated only if you approve this
-request. The request YAML is:</p>
+request. You can view details about the registration on the Admin site:<p>
+
+<p><a href="{{ .AdminReviewURL }}">{{ .AdminReviewURL }}</a></p>
+
+<p>The request YAML is:</p>
 
 <pre>{{ .Request }}</pre>
 
-<p>To verify or reject the registration request, use the following metadata with the
-<code>gds review</code> command:</p>
+<p>To verify or reject the registration request, use the following metadata:</p>
 
 <ul>
 	<li>ID: <strong>{{ .VID }}</strong></li>

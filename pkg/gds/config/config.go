@@ -85,6 +85,7 @@ type EmailConfig struct {
 	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
 	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
+	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps"`
 }
 
 type CertManConfig struct {

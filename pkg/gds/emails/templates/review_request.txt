@@ -3,11 +3,15 @@ Hello TRISA Admins,
 We have received a new TRISA Global Directory registration request from a VASP that
 needs to be reviewed. The requestor has verified their email address(es) and received a
 PKCS12 password to decrypt a certificate which will be generated only if you approve this
-request. The request YAML is:
+request. You can view details about the registration on the Admin site:
+
+{{ .AdminReviewURL }}
+
+The request YAML is:
 
 {{ .Request }}
 
-To verify or reject the registration request, use the following metadata with the gds review command:
+To verify or reject the registration request, use the following metadata:
 
 ID: {{ .VID }}
 Token: {{ .Token }}

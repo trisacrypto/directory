@@ -28,9 +28,6 @@ func init() {
 // Template Contexts
 //===========================================================================
 
-// TODO: add this to the configuration rather than storing here.
-const defaultDirectoryVerifyURL = "https://vaspdirectory.net/verify-contact"
-
 // VerifyContactData to complete the verify contact email templates.
 type VerifyContactData struct {
 	Name    string // Used to address the email
@@ -50,9 +47,7 @@ func (d VerifyContactData) VerifyContactURL() string {
 			panic(err)
 		}
 	} else {
-		if link, err = url.Parse(defaultDirectoryVerifyURL); err != nil {
-			panic(err)
-		}
+		panic("verify contact base url missing")
 	}
 
 	params := link.Query()
@@ -69,6 +64,24 @@ type ReviewRequestData struct {
 	Request             string // The review request data as a nicely formatted JSON or YAML string
 	RegisteredDirectory string // The directory name for the review request
 	Attachment          []byte // Data to attach to the email
+	BaseURL             string // The URL of the admin review endpoint to build the AdminReviewURL
+}
+
+// TODO: how to return errors instead of panic inside of template execution?
+func (d ReviewRequestData) AdminReviewURL() string {
+	var (
+		link *url.URL
+		err  error
+	)
+	if d.BaseURL != "" {
+		if link, err = url.Parse(d.BaseURL); err != nil {
+			panic(err)
+		}
+	} else {
+		panic("admin review base url missing")
+	}
+
+	return link.ResolveReference(&url.URL{Path: d.VID}).String()
 }
 
 // RejectRegistrationData to complete reject registration email templates.

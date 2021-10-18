@@ -132,6 +132,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	ctx := ReviewRequestData{
 		VID:                 vasp.Id,
 		RegisteredDirectory: m.conf.DirectoryID,
+		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
 	if ctx.Token, err = models.GetAdminVerificationToken(vasp); err != nil {
 		return 0, err
