@@ -40,7 +40,7 @@ func NewReplica(svc *Service) (r *Replica, err error) {
 
 	// Initialize the gRPC server
 	r.db = svc.db
-	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
+	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.replicaInterceptor))
 	replica.RegisterReplicationServer(r.srv, r)
 	return r, nil
 }
