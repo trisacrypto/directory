@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"net/mail"
 	"net/url"
-	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
@@ -80,10 +78,6 @@ func TestSendEmails(t *testing.T) {
 	// will be read, making it simpler to run tests and set environment variables.
 	godotenv.Load()
 
-	if os.Getenv("GDS_TEST_SENDING_EMAILS") == "" {
-		t.Skip("skip generate and send emails test")
-	}
-
 	// This test uses the environment to send rendered emails with context specific
 	// emails - this is to test the rendering of the emails with data only; it does not
 	// go through any of the server workflow for generating tokens, etc.
@@ -91,8 +85,13 @@ func TestSendEmails(t *testing.T) {
 	err := envconfig.Process("gds", &conf)
 	require.NoError(t, err)
 
-	// This test sends emails from the serviceEmail using SendGrid to the adminsEmail
-	email, err := emails.NewMock(conf)
+	if !conf.EmailTesting {
+		t.Skip("skip generate and send emails test")
+	}
+
+	// This test mocks the SendGrid method for sending emails and stores them to an
+	// in-memory data structure instead.
+	email, err := emails.New(conf)
 	require.NoError(t, err)
 
 	sender, err := mail.ParseAddress(conf.ServiceEmail)
@@ -101,40 +100,42 @@ func TestSendEmails(t *testing.T) {
 	receipient, err := mail.ParseAddress(conf.AdminEmail)
 	require.NoError(t, err)
 
-	var received sgmail.SGMailV3
+	var expected []byte
 	vcdata := emails.VerifyContactData{Name: receipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify-contact"}
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, vcdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
-	require.Len(t, email.Client.Emails, 1)
-	err = json.Unmarshal(email.Client.Emails[0], &received)
+	require.Len(t, emails.MockEmails, 1)
+	expected, err = json.Marshal(msg)
 	require.NoError(t, err)
-	require.Equal(t, msg, received)
+	require.Equal(t, expected, emails.MockEmails[0])
 
 	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", Attachment: []byte(`{"hello": "world"}`)}
 	msg, err = emails.ReviewRequestEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, rrdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
-	require.Len(t, email.Client.Emails, 2)
-	err = json.Unmarshal(email.Client.Emails[1], &received)
+	require.Len(t, emails.MockEmails, 2)
+	expected, err = json.Marshal(msg)
 	require.NoError(t, err)
-	require.Equal(t, msg, received)
+	require.Equal(t, expected, emails.MockEmails[1])
 
 	rjdata := emails.RejectRegistrationData{Name: receipient.Name, Reason: "not a good time", VID: "42"}
 	msg, err = emails.RejectRegistrationEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, rjdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
-	require.Len(t, email.Client.Emails, 3)
-	err = json.Unmarshal(email.Client.Emails[2], &received)
+	require.Len(t, emails.MockEmails, 3)
+	expected, err = json.Marshal(msg)
 	require.NoError(t, err)
-	require.Equal(t, msg, received)
+	require.Equal(t, expected, emails.MockEmails[2])
 
 	dcdata := emails.DeliverCertsData{Name: receipient.Name, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	msg, err = emails.DeliverCertsEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, "testdata/foo.zip", dcdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
-	require.Len(t, email.Client.Emails, 4)
-	err = json.Unmarshal(email.Client.Emails[3], &received)
+	require.Len(t, emails.MockEmails, 4)
+	expected, err = json.Marshal(msg)
 	require.NoError(t, err)
-	require.Equal(t, msg, received)
+	require.Equal(t, expected, emails.MockEmails[3])
+
+	t.Cleanup(emails.PurgeMockEmails)
 }
