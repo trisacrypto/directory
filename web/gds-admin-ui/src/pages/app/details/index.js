@@ -11,19 +11,24 @@ import CertificateDetails from './CertificateDetails';
 import { getVasp } from "../../../services/vasps"
 import TrixoForm from './TrixoForm';
 import Ivms from './ivms';
+import { useHistory } from 'react-router-dom'
 
 const VaspDetails = (): React$Element<React$FragmentType> => {
     const [vasp, setVasp] = React.useState({});
     const params = useParams();
+    const history = useHistory();
+
 
     React.useEffect(() => {
         if (params && params.id) {
             getVasp(params.id).then(response => {
                 setVasp(response.data)
             }).catch(error => {
+                history.push('/not-found', { error: "Could not retrieve VASP record by ID" })
                 console.error("[BasicDetails] getVasp", error.message)
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params])
 
 

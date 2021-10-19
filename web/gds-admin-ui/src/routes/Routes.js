@@ -12,7 +12,6 @@ import AuthProvider from '../contexts/auth/auth-provider';
 const Routes = (props) => {
     const { layout } = useSelector((state) => ({
         layout: state.Layout,
-        // user: state.Auth.user,
     }));
 
     const getLayout = () => {
