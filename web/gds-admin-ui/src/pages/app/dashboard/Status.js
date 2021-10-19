@@ -5,7 +5,7 @@ import { capitalizeFirstLetter, getRatios } from '../../../utils';
 import { Status as STATUS } from '../../../constants';
 
 const Status = ({ statuses }) => {
-    const colors = ['#0acf97', '#727cf5', '#fa5c7c'];
+    const colors = ['#ffc107', '#dc3545', '#0d6efd'];
 
     const statusRatios = () => {
         if (statuses && typeof statuses === "object") {
@@ -15,7 +15,7 @@ const Status = ({ statuses }) => {
         return {}
     }
 
-    const getDonutChartData = () => Object.values(statusRatios())
+    const getDonutChartData = () => statuses ? Object.values(statuses) : []
     const statusPercents = () => Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, val * 100.0]))
 
 
@@ -53,7 +53,7 @@ const Status = ({ statuses }) => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mb-4">Review Speed</h4>
+                <h4 className="header-title mb-4">Registration Statuses</h4>
 
                 <div className="my-4 chartjs-chart" style={{ height: '202px' }}>
                     <Doughnut data={donutChartData} options={donutChartOpts} />
