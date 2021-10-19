@@ -60,17 +60,17 @@ const TasksChart = (): React$Element<any> => {
     }))
 
     const getWeeks = () => {
-        if (reviews && Array.isArray(reviews)) {
-            return reviews.map(review => review.week)
+        if (reviews && Array.isArray(reviews.weeks)) {
+            return reviews.weeks.map(review => review.week)
         }
 
         return []
     }
 
     const getData = (key = '') => {
-        if (reviews && Array.isArray(reviews)) {
-            return reviews.map(review => {
-                return review.registrations[key];
+        if (reviews && Array.isArray(reviews.weeks)) {
+            return reviews.weeks.map(week => {
+                return week.registrations[key];
             })
         }
 
