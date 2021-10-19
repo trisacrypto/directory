@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 
 // components
@@ -14,10 +14,7 @@ import logo from '../assets/images/gds-trisatest-logo.png';
 //constants
 import * as layoutConstants from '../constants/layout';
 import LanguageDropdown from '../components/LanguageDropdown';
-import { APICore } from '../helpers/api/apiCore';
-import { loginUserSuccess } from '../redux/auth/actions';
-import jwtDecode from 'jwt-decode';
-import { AuthActionTypes } from '../redux/auth/constants';
+import useAuth from '../contexts/auth/use-auth';
 
 // dummy search results
 const SearchResults = [];
@@ -29,22 +26,10 @@ type TopbarProps = {
     topbarDark?: boolean,
 };
 
-const api = new APICore();
 
 const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: TopbarProps): React$Element<any> => {
     const [isopen, setIsopen] = useState(false);
-    const dispatch = useDispatch()
-    const { user, loading } = useSelector(state => ({
-        user: state.Auth.user,
-        loading: state.Auth.loading
-    }))
-
-    React.useEffect(() => {
-        const { access_token } = api.getLoggedInUser()
-        const decodedToken = access_token && jwtDecode(access_token)
-        dispatch(loginUserSuccess(AuthActionTypes.LOGIN_USER_SUCCESS, decodedToken))
-    }, [dispatch])
-
+    const { user } = useAuth();
 
     const navbarCssClasses = navCssClasses || '';
     const containerCssClasses = !hideLogo ? 'container-fluid' : '';
@@ -79,7 +64,7 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: T
                         </li>
                         <li className="dropdown notification-list">
                             {
-                                !loading ? (
+                                !!user ? (
                                     <ProfileDropdown
                                         profilePic={user?.picture || profilePic}
                                         username={user?.name}

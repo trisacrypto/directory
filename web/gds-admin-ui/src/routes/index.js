@@ -1,6 +1,5 @@
 import React from 'react';
-import { Redirect } from 'react-router-dom';
-import { Route } from 'react-router-dom';
+import { Route, Redirect } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 
 const Login = React.lazy(() => import('../pages/account/Login'));
@@ -11,14 +10,56 @@ const VaspsDetails = React.lazy(() => import('../pages/app/details'))
 
 
 const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
+const ErrorPageNotFoundAlt = React.lazy(() => import('../pages/error/PageNotFoundAlt'));
 const ServerError = React.lazy(() => import('../pages/error/ServerError'));
 
 // root routes
 const rootRoute = {
     path: '/',
     exact: true,
-    component: () => <Redirect to="/dashboard" />,
-    route: PrivateRoute,
+    children: [
+        {
+            path: '/',
+            name: 'Project',
+            component: () => <Redirect to="/dashboard" />,
+            route: PrivateRoute,
+            exact: true
+        },
+        {
+            path: '/dashboard',
+            name: 'Project',
+            component: Dashboard,
+            route: PrivateRoute,
+            exact: true
+        },
+        {
+            path: '/vasps/:id',
+            name: 'Detail',
+            component: VaspsDetails,
+            route: PrivateRoute,
+            exact: true
+        },
+
+        {
+            path: '/vasps',
+            name: 'List',
+            component: VaspsList,
+            route: PrivateRoute,
+            exact: true
+        },
+        {
+            path: '/not-found',
+            name: 'NotFound',
+            component: ErrorPageNotFoundAlt,
+            route: PrivateRoute
+        },
+        {
+            path: '',
+            name: '',
+            component: () => <Redirect to="/error-404" />,
+            route: Route
+        },
+    ],
 };
 
 const authRoutes = [
@@ -30,52 +71,12 @@ const authRoutes = [
     }
 ]
 
-const dashboardRoutes = {
-    path: '/dashboard',
-    name: 'Dashboards',
-    icon: 'uil-home-alt',
-    header: 'Navigation',
-    exact: true,
-    children: [
-        {
-            path: '/dashboard',
-            name: 'Project',
-            component: Dashboard,
-            route: PrivateRoute,
-        },
-        {
-            path: '/vasps',
-            name: 'List',
-            component: VaspsList,
-            route: PrivateRoute,
-            exact: true
-        }
-    ],
-};
-
-const vaspsRoutes = {
-    path: '/vasps',
-    name: 'Vasps Summary',
-    children: [
-        {
-            path: '/vasps/:id',
-            name: 'Detail',
-            component: VaspsDetails,
-            route: PrivateRoute,
-        }
-    ],
-}
-
-const appRoutes = [
-    vaspsRoutes,
-];
-
 const otherPublicRoutes = [
     {
         path: '/error-404',
         name: 'Error - 404',
         component: ErrorPageNotFound,
-        route: Route,
+        route: PrivateRoute,
     },
     {
         path: '/error-500',
@@ -102,8 +103,8 @@ const flattenRoutes = (routes) => {
 
 
 // All routes
-const authProtectedRoutes = [rootRoute, dashboardRoutes, ...appRoutes];
-const publicRoutes = [...otherPublicRoutes, ...authRoutes];
+const authProtectedRoutes = [rootRoute];
+const publicRoutes = [...authRoutes, ...otherPublicRoutes];
 
 const authProtectedFlattenRoutes = flattenRoutes([...authProtectedRoutes]);
 const publicProtectedFlattenRoutes = flattenRoutes([...publicRoutes]);

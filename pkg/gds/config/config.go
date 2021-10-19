@@ -85,7 +85,8 @@ type EmailConfig struct {
 	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
 	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
-	EmailTesting         bool   `envconfig:"GDS_EMAIL_TESTING" required:"false"`
+	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps/"`
+  EmailTesting         bool   `envconfig:"GDS_EMAIL_TESTING" required:"false"`
 }
 
 type CertManConfig struct {
@@ -123,6 +124,10 @@ func New() (_ Config, err error) {
 	}
 
 	if err = conf.Sectigo.Validate(); err != nil {
+		return Config{}, err
+	}
+
+	if err = conf.Email.Validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -203,6 +208,13 @@ func (c SectigoConfig) Validate() error {
 
 	if !validProfile {
 		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(sectigo.AllProfiles[:], ", "))
+	}
+	return nil
+}
+
+func (c EmailConfig) Validate() error {
+	if c.AdminReviewBaseURL != "" && !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
+		return errors.New("admin review base URL must end in a /")
 	}
 	return nil
 }
