@@ -1,6 +1,7 @@
 package emails_test
 
 import (
+	"encoding/json"
 	"net/mail"
 	"net/url"
 	"os"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
@@ -90,7 +92,7 @@ func TestSendEmails(t *testing.T) {
 	require.NoError(t, err)
 
 	// This test sends emails from the serviceEmail using SendGrid to the adminsEmail
-	email, err := emails.New(conf)
+	email, err := emails.NewMock(conf)
 	require.NoError(t, err)
 
 	sender, err := mail.ParseAddress(conf.ServiceEmail)
@@ -99,23 +101,40 @@ func TestSendEmails(t *testing.T) {
 	receipient, err := mail.ParseAddress(conf.AdminEmail)
 	require.NoError(t, err)
 
+	var received sgmail.SGMailV3
 	vcdata := emails.VerifyContactData{Name: receipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify-contact"}
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, vcdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
+	require.Len(t, email.Client.Emails, 1)
+	err = json.Unmarshal(email.Client.Emails[0], &received)
+	require.NoError(t, err)
+	require.Equal(t, msg, received)
 
 	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", Attachment: []byte(`{"hello": "world"}`)}
 	msg, err = emails.ReviewRequestEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, rrdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
+	require.Len(t, email.Client.Emails, 2)
+	err = json.Unmarshal(email.Client.Emails[1], &received)
+	require.NoError(t, err)
+	require.Equal(t, msg, received)
 
 	rjdata := emails.RejectRegistrationData{Name: receipient.Name, Reason: "not a good time", VID: "42"}
 	msg, err = emails.RejectRegistrationEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, rjdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
+	require.Len(t, email.Client.Emails, 3)
+	err = json.Unmarshal(email.Client.Emails[2], &received)
+	require.NoError(t, err)
+	require.Equal(t, msg, received)
 
 	dcdata := emails.DeliverCertsData{Name: receipient.Name, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	msg, err = emails.DeliverCertsEmail(sender.Name, sender.Address, receipient.Name, receipient.Address, "testdata/foo.zip", dcdata)
 	require.NoError(t, err)
 	require.NoError(t, email.Send(msg))
+	require.Len(t, email.Client.Emails, 4)
+	err = json.Unmarshal(email.Client.Emails[3], &received)
+	require.NoError(t, err)
+	require.Equal(t, msg, received)
 }
