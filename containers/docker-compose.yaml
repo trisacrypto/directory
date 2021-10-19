@@ -24,6 +24,7 @@ services:
       - GDS_DATABASE_REINDEX_ON_BOOT=false
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
+      - GDS_ADMIN_MODE=release
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
       - GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE
       - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
@@ -41,6 +42,8 @@ services:
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
+      - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
       - GDS_BACKUP_ENABLED=true

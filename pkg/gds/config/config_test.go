@@ -43,6 +43,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_EMAIL":                          "admin@example.com",
 	"SENDGRID_API_KEY":                         "bar1234",
 	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify-contact",
+	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_CERTMAN_INTERVAL":                     "60s",
 	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
 	"GDS_BACKUP_ENABLED":                       "true",
@@ -104,6 +105,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_EMAIL"], conf.Email.AdminEmail)
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
 	require.Equal(t, testEnv["GDS_VERIFY_CONTACT_URL"], conf.Email.VerifyContactBaseURL)
+	require.Equal(t, testEnv["GDS_ADMIN_REVIEW_URL"], conf.Email.AdminReviewBaseURL)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
 	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
@@ -200,6 +202,20 @@ func TestRequiredConfig(t *testing.T) {
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
 
+}
+
+func TestEmailConfigValidation(t *testing.T) {
+	conf := config.EmailConfig{
+		VerifyContactBaseURL: "http://localhost:3000/verify-contact",
+		AdminReviewBaseURL:   "http://localhost:3001/vasps",
+	}
+
+	err := conf.Validate()
+	require.EqualError(t, err, "admin review base URL must end in a /")
+
+	conf.AdminReviewBaseURL += "/"
+	err = conf.Validate()
+	require.NoError(t, err)
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified

@@ -28,9 +28,6 @@ func init() {
 // Template Contexts
 //===========================================================================
 
-// TODO: add this to the configuration rather than storing here.
-const defaultDirectoryVerifyURL = "https://vaspdirectory.net/verify-contact"
-
 // VerifyContactData to complete the verify contact email templates.
 type VerifyContactData struct {
 	Name    string // Used to address the email
@@ -39,7 +36,9 @@ type VerifyContactData struct {
 	BaseURL string // The URL of the verify contact endpoint to build the VerifyContactURL
 }
 
-// TODO: how to return errors instead of panic inside of template execution?
+// VerifyContactURL composes the link to verify the contact from the context. If the
+// link is not able to be composed, the function returns an empty string and logs an
+// error because without the link the email is fairly useless.
 func (d VerifyContactData) VerifyContactURL() string {
 	var (
 		link *url.URL
@@ -47,12 +46,12 @@ func (d VerifyContactData) VerifyContactURL() string {
 	)
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
-			panic(err)
+			log.Error().Err(err).Msg("could not include verify contact link in email, could not parse verify contact base url")
+			return ""
 		}
 	} else {
-		if link, err = url.Parse(defaultDirectoryVerifyURL); err != nil {
-			panic(err)
-		}
+		log.Error().Msg("could not include verify contact link in email, no verify contact base url")
+		return ""
 	}
 
 	params := link.Query()
@@ -69,6 +68,27 @@ type ReviewRequestData struct {
 	Request             string // The review request data as a nicely formatted JSON or YAML string
 	RegisteredDirectory string // The directory name for the review request
 	Attachment          []byte // Data to attach to the email
+	BaseURL             string // The URL of the admin review endpoint to build the AdminReviewURL
+}
+
+// AdminReviewURL composes a link to the VASP detail in the admin UI. If the base url is
+// missing or can't be parsed, it logs an warning and returns empty string.
+// The AdminReviewURL is useful, but it is not a critical error.
+func (d ReviewRequestData) AdminReviewURL() string {
+	var (
+		link *url.URL
+		err  error
+	)
+	if d.BaseURL != "" {
+		if link, err = url.Parse(d.BaseURL); err != nil {
+			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			return ""
+		}
+	} else {
+		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		return ""
+	}
+	return link.ResolveReference(&url.URL{Path: d.VID}).String()
 }
 
 // RejectRegistrationData to complete reject registration email templates.

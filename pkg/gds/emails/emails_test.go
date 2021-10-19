@@ -21,12 +21,12 @@ func TestEmailBuilders(t *testing.T) {
 		recipientEmail = "rachel@example.com"
 	)
 
-	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42"}
+	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify-contact"}
 	mail, err := emails.VerifyContactEmail(sender, senderEmail, recipient, recipientEmail, vcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.VerifyContactRE, mail.Subject)
 
-	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42"}
+	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ReviewRequestEmail(sender, senderEmail, recipient, recipientEmail, rrdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReviewRequestRE, mail.Subject)
@@ -48,14 +48,7 @@ func TestVerifyContactURL(t *testing.T) {
 		Token: "1234defg4321",
 		VID:   "42",
 	}
-	link, err := url.Parse(data.VerifyContactURL())
-	require.NoError(t, err)
-	require.Equal(t, "https", link.Scheme)
-	require.Equal(t, "vaspdirectory.net", link.Host)
-	require.Equal(t, "/verify-contact", link.Path)
-	params := link.Query()
-	require.Equal(t, data.Token, params.Get("token"))
-	require.Equal(t, data.VID, params.Get("vaspID"))
+	require.Empty(t, data.VerifyContactURL(), "if no base url is provided, VerifyContactURL() should return empty string")
 
 	data = emails.VerifyContactData{
 		Name:    "Darlene Ulmsted",
@@ -63,14 +56,33 @@ func TestVerifyContactURL(t *testing.T) {
 		VID:     "42",
 		BaseURL: "http://localhost:8080/verify-contact",
 	}
-	link, err = url.Parse(data.VerifyContactURL())
+	link, err := url.Parse(data.VerifyContactURL())
 	require.NoError(t, err)
 	require.Equal(t, "http", link.Scheme)
 	require.Equal(t, "localhost:8080", link.Host)
 	require.Equal(t, "/verify-contact", link.Path)
-	params = link.Query()
+	params := link.Query()
 	require.Equal(t, data.Token, params.Get("token"))
 	require.Equal(t, data.VID, params.Get("vaspID"))
+}
+
+func TestAdminReviewURL(t *testing.T) {
+	data := emails.ReviewRequestData{
+		VID:   "42",
+		Token: "1234defg4321",
+	}
+	require.Empty(t, data.AdminReviewURL(), "if no base url provided, AdminReviewURL() should return empty string")
+
+	data = emails.ReviewRequestData{
+		VID:     "42",
+		Token:   "1234defg4321",
+		BaseURL: "http://localhost:8088/vasps/",
+	}
+	link, err := url.Parse(data.AdminReviewURL())
+	require.NoError(t, err)
+	require.Equal(t, "http", link.Scheme)
+	require.Equal(t, "localhost:8088", link.Host)
+	require.Equal(t, "/vasps/42", link.Path)
 }
 
 func TestSendEmails(t *testing.T) {
