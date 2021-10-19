@@ -52,7 +52,7 @@ services:
       - GDS_BACKUP_KEEP=1
       - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
-      - GDS_SECRETS_TESTING=true
+      - GDS_SECRETS_TESTING
     profiles:
       - gds
       - api

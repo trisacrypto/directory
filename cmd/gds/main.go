@@ -365,7 +365,7 @@ func main() {
 						Usage:   "specify the number of items per page",
 					},
 					&cli.StringFlag{
-						Name:    "S, status",
+						Name:    "status",
 						Aliases: []string{"S"},
 						Usage:   "filter by verification status",
 					},
