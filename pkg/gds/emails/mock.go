@@ -71,7 +71,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 		return &rest.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       "no From address",
-		}, errors.New("From address required")
+		}, errors.New("requires From address")
 	}
 
 	// Validate From address
@@ -87,7 +87,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 		return &rest.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       "no Personalization info",
-		}, errors.New("Personalization info required")
+		}, errors.New("requires Personalization info")
 	}
 
 	for _, p := range msg.Personalizations {
@@ -96,7 +96,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 			return &rest.Response{
 				StatusCode: http.StatusBadRequest,
 				Body:       "no To addresses",
-			}, errors.New("To address required")
+			}, errors.New("requires To address")
 		}
 
 		for _, t := range p.To {
@@ -105,7 +105,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 				return &rest.Response{
 					StatusCode: http.StatusBadRequest,
 					Body:       "no To address",
-				}, errors.New("To address is empty")
+				}, errors.New("empty To address")
 			}
 
 			if _, err := sgmail.ParseEmail(t.Address); err != nil {
