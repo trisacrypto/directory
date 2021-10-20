@@ -32,7 +32,7 @@ const Tasks = ({ data }) => {
             <Card.Body>
                 <h4 className="header-title mb-3">Pending Reviews</h4>
 
-                <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
+                <Table className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                     <tbody>
                         {
                             Array.isArray(data?.vasps) && data.vasps.map((vasp) => (
