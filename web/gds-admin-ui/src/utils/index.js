@@ -1,6 +1,8 @@
 import config from '../config';
 import { ENVIRONMENT, Status } from '../constants';
 import { DIRECTORY } from '../constants';
+import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
+import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
 
 export * from './array';
 
@@ -97,4 +99,9 @@ function getDirectoryURL() {
     return isTestNet() ? "https://admin.vaspdirectory.net" : "https://admin.trisatest.net"
 }
 
-export { isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+const getDirectoryLogo = () => {
+    return isTestNet() ? TrisatestLogo : VaspDirectoryLogo
+}
+
+
+export { getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

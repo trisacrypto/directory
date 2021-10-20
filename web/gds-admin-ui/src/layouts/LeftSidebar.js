@@ -4,14 +4,8 @@ import { Link } from 'react-router-dom';
 import SimpleBar from 'simplebar-react';
 import AppMenu from './Menu';
 import { getMenuItems } from '../helpers/menu';
+import { getDirectoryLogo, getDirectoryName, getDirectoryURL } from '../utils';
 
-import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
-import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
-import { getDirectoryName, getDirectoryURL, isTestNet } from '../utils';
-
-const getDirectoryLogo = () => {
-    return isTestNet() ? TrisatestLogo : VaspDirectoryLogo
-}
 
 const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
     return (

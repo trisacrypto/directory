@@ -5,7 +5,6 @@ import { Row, Col } from 'react-bootstrap';
 
 const ErrorPageNotFoundAlt = (): React$Element<React$FragmentType> => {
     const { state } = useLocation()
-    console.log(state)
 
     return (
         <React.Fragment>
