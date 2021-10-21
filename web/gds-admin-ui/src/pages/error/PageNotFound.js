@@ -3,8 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom'
-
-import Logo from '../../assets/images/gds-trisatest-logo.png';
+import { getDirectoryLogo } from '../../utils';
 
 const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
     const { state } = useLocation()
@@ -19,7 +18,7 @@ const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
                                 <Card.Header className="pt-4 pb-4 text-center bg-primary" style={{ background: "linear-gradient(90deg,#24a9df,#1aebb4)" }}>
                                     <Link to="/">
                                         <span>
-                                            <img src={Logo} alt="" height="38" />
+                                            <img src={getDirectoryLogo()} alt="" height="38" />
                                         </span>
                                     </Link>
                                 </Card.Header>

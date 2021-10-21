@@ -2,11 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card } from 'react-bootstrap';
-
-// components
-import Logo from '../../assets/images/gds-trisatest-logo.png';
-
 import notFoundImg from '../../assets/images/startman.svg';
+import { getDirectoryLogo } from '../../utils';
 
 const ServerError = (): React$Element<React$FragmentType> => {
     return (
@@ -20,7 +17,7 @@ const ServerError = (): React$Element<React$FragmentType> => {
                                 <Card.Header className="pt-4 pb-4 text-center bg-primary">
                                     <Link to="/">
                                         <span>
-                                            <img src={Logo} alt="" height="18" />
+                                            <img src={getDirectoryLogo()} alt="" height="18" />
                                         </span>
                                     </Link>
                                 </Card.Header>

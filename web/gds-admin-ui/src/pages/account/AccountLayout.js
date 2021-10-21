@@ -1,8 +1,7 @@
 // @flow
 import React, { useEffect } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
-
-import Logo from '../../assets/images/gds-trisatest-logo.png';
+import { getDirectoryLogo } from '../../utils';
 
 type AccountLayoutProps = {
     bottomLinks?: React$Element<any>,
@@ -28,7 +27,7 @@ const AccountLayout = ({ bottomLinks, children }: AccountLayoutProps): React$Ele
                             <Card>
                                 <Card.Header className="pt-4 pb-4 text-center bg-primary" style={{ background: "linear-gradient(90deg,#24a9df,#1aebb4)" }}>
                                     <span>
-                                        <img src={Logo} alt="" height="38" />
+                                        <img src={getDirectoryLogo()} alt="" height="38" />
                                     </span>
                                 </Card.Header>
                                 <Card.Body className="p-4">{children}</Card.Body>
