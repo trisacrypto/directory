@@ -58,6 +58,21 @@ func main() {
 	app.Before = loadProfile
 	app.Commands = []*cli.Command{
 		{
+			Name:     "ldb:populate",
+			Usage:    "populate empty audit logs based on current VASP data",
+			Category: "leveldb",
+			Action:   populate,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
+				},
+			},
+		},
+		{
 			Name:     "ldb:keys",
 			Usage:    "list the keys currently in the leveldb store",
 			Category: "leveldb",
@@ -740,6 +755,177 @@ func ldbDelete(c *cli.Context) (err error) {
 	}
 
 	return nil
+}
+
+func populate(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	populated := 0
+
+	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
+	for iter.Next() {
+		vasp := new(pb.VASP)
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			iter.Release()
+			fmt.Printf("populated %d VASP logs\n", populated)
+			return cli.Exit(err, 1)
+		}
+
+		var log []*models.AuditLogEntry
+		if log, err = models.GetAuditLog(vasp); err != nil {
+			iter.Release()
+			fmt.Printf("populated %d VASP logs\n", populated)
+			return cli.Exit(err, 1)
+		}
+
+		if len(log) > 0 {
+			continue
+		}
+
+		// Fill in initial state
+		var entry *models.AuditLogEntry
+
+		switch {
+		case vasp.VerificationStatus == pb.VerificationState_NO_VERIFICATION:
+			// Initial state, I don't think this can happen in the current code
+			// because new VASPs get automatically set to SUBMITTED but I'm adding
+			// the case here for completeness.
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.LastUpdated,
+				PreviousState: pb.VerificationState_NO_VERIFICATION,
+				CurrentState:  pb.VerificationState_NO_VERIFICATION,
+				Description:   "first listed",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+		case vasp.VerificationStatus == pb.VerificationState_SUBMITTED:
+			// VASP was only submitted
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.FirstListed,
+				PreviousState: pb.VerificationState_NO_VERIFICATION,
+				CurrentState:  pb.VerificationState_SUBMITTED,
+				Description:   "register request received",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+		case vasp.VerifiedOn == "":
+			// VASP was never verified
+
+			// Add initial entry
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.FirstListed,
+				PreviousState: pb.VerificationState_NO_VERIFICATION,
+				CurrentState:  pb.VerificationState_SUBMITTED,
+				Description:   "register request received",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+
+			// Add entry for the current state
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.LastUpdated,
+				PreviousState: pb.VerificationState_SUBMITTED,
+				CurrentState:  vasp.VerificationStatus,
+				Description:   "reconstructed VASP state change",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+		case vasp.VerifiedOn != "":
+			// VASP was verified at some point
+
+			// Add intital entry
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.FirstListed,
+				PreviousState: pb.VerificationState_NO_VERIFICATION,
+				CurrentState:  pb.VerificationState_SUBMITTED,
+				Description:   "register request received",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+
+			// Add verified entry
+			entry = &models.AuditLogEntry{
+				Timestamp:     vasp.VerifiedOn,
+				PreviousState: pb.VerificationState_PENDING_REVIEW,
+				CurrentState:  pb.VerificationState_REVIEWED,
+				Description:   "registration request received",
+				Source:        "automated",
+			}
+			if err = models.AppendAuditLog(vasp, entry); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+
+			if vasp.VerificationStatus != pb.VerificationState_REVIEWED {
+				// VASP changed to another state
+				entry = &models.AuditLogEntry{
+					Timestamp:     vasp.LastUpdated,
+					PreviousState: pb.VerificationState_REVIEWED,
+					CurrentState:  vasp.VerificationStatus,
+					Description:   "reconstructed VASP state change",
+					Source:        "automated",
+				}
+				if err = models.AppendAuditLog(vasp, entry); err != nil {
+					iter.Release()
+					fmt.Printf("populated %d VASP logs\n", populated)
+					return cli.Exit(err, 1)
+				}
+			}
+		default:
+			fmt.Printf("unknown state for VASP %s\n", vasp.Id)
+		}
+
+		if entry != nil {
+			key := makeKey([]byte("vasps::"), vasp.Id)
+			var value []byte
+			if value, err = proto.Marshal(vasp); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+
+			// Put the key/value to the database
+			if err = ldb.Put(key, value, nil); err != nil {
+				iter.Release()
+				fmt.Printf("populated %d VASP logs\n", populated)
+				return cli.Exit(err, 1)
+			}
+			populated++
+		}
+	}
+
+	fmt.Printf("successfully populated %d VASP logs\n", populated)
+
+	return nil
+}
+
+func makeKey(prefix []byte, id string) (key []byte) {
+	buf := []byte(id)
+	key = make([]byte, 0, len(prefix)+len(buf))
+	key = append(key, prefix...)
+	key = append(key, buf...)
+	return key
 }
 
 func ldbList(c *cli.Context) (err error) {
