@@ -27,11 +27,11 @@ msgstr "Über TRISA".
 
 #: src/components/ivms101/AddressList.js:48
 msgid "Add Address"
-msgstr "添加地址" Adresse hinzufügen"
+msgstr "Adresse hinzufügen"
 
 #: src/components/ivms101/LegalPersonName.js:173
 msgid "Add Legal Name"
-msgstr "添加身份证姓名"Rechtlichen Namen hinzufügen"
+msgstr "Rechtlichen Namen hinzufügen"
 
 #: src/components/ivms101/LegalPersonName.js:174
 msgid "Add Local Name"
@@ -95,7 +95,7 @@ msgstr "Armenisch"
 
 #: src/components/TRIXO.js:174
 msgid "At what threshold and currency does your organization conduct KYC?"
-msgstr " Ab welchem Schwellenwert und in welcher Währung betreibt Ihr Unternehmen KYC?"
+msgstr "Ab welchem Schwellenwert und in welcher Währung betreibt Ihr Unternehmen KYC?"
 
 #: src/components/Registration.js:433
 #: src/components/Registration.js:561
@@ -316,7 +316,7 @@ msgstr "Ist Ihre Organisation verpflichtet, die Standards der Travel Rule in den
 
 #: src/components/select/TransliterationMethodCode.js:17
 msgid "Kana"
-msgstr "Kana "
+msgstr "Kana"
 
 #: src/components/Registration.js:397
 msgid "Kiosk / Crypto ATM Operator"
@@ -464,7 +464,7 @@ msgstr "Bitte geben Sie die Informationen ein, die Ihre Organisation als juristi
 
 #: src/components/Registration.js:409
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
-msgstr "Bitte wählen Sie so viele Kategorien aus, wie nötig sind, um die Arten von Dienstleistungen für virtuelle Güter darzustellen, die Ihr Unternehmen anbietet "
+msgstr "Bitte wählen Sie so viele Kategorien aus, wie nötig sind, um die Arten von Dienstleistungen für virtuelle Güter darzustellen, die Ihr Unternehmen anbietet."
 
 #: src/components/Registration.js:384
 msgid "Please select the entity category that most closely matches your organization."
@@ -635,7 +635,7 @@ msgstr "Der Name, unter dem die juristische Person bekannt ist, unter Verwendung
 
 #: src/components/TRIXO.js:124
 msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
-msgstr "Der Name der primären Regulierungs- oder Aufsichtsbehörde für Ihr Land "
+msgstr "Der Name der primären Regulierungs- oder Aufsichtsbehörde für Ihr Land"
 
 #: src/components/Registration.js:641
 msgid "This is the only time the PKCS12 password is shown during the registration process.<0/>Please copy and paste this password and store somewhere safe!"
@@ -655,7 +655,7 @@ msgstr "Schwellenwert für die Durchführung von KYC, bevor dem Kunden erlaubt w
 
 #: src/components/Registration.js:326
 msgid "To assist in completing the registration form, which is somewhat lengthy, the form is broken into multiple sections, with information stored in your <0>local browser storage</0> so that you can come back and complete the process. <1>No information is sent until you submit the form in the summary section</1>."
-msgstr "Um Ihnen das Ausfüllen des Anmeldeformulars zu erleichtern, das recht umfangreich ist, ist dieses in mehrere Abschnitte unterteilt, deren Informationen in Ihrem <0>lokalen Browser-Speicher</0> gespeichert werden. dass Sie zurückkommen und den Vorgang abschließen können. <1>Es werden keine Informationen gesendet, bis Sie das Formular im Abschnitt "Zusammenfassung" abschicken</1>. "
+msgstr "Um Ihnen das Ausfüllen des Anmeldeformulars zu erleichtern, das recht umfangreich ist, ist dieses in mehrere Abschnitte unterteilt, deren Informationen in Ihrem <0>lokalen Browser-Speicher</0> gespeichert werden. dass Sie zurückkommen und den Vorgang abschließen können. <1>Es werden keine Informationen gesendet, bis Sie das Formular im Abschnitt "Zusammenfassung" abschicken</1>."
 
 #: src/components/Registration.js:351
 msgid "To get started, please tell us a bit about your organization."
@@ -682,7 +682,7 @@ msgstr "Unspezifiziert"
 
 #: src/components/select/TransliterationMethodCode.js:20
 msgid "Unspecified Standard"
-msgstr "Unspezifizierte  Norm "
+msgstr "Unspezifizierte Norm"
 
 #: src/components/Registration.js:388
 msgid "VASP Category"
