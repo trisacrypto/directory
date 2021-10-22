@@ -599,7 +599,7 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 	// Ignore parsing error since we'll get ValidationErrorUnverifiable but ensure that
 	// a token is returned in case it was a parsing error. See the following for more:
 	// https://github.com/dgrijalva/jwt-go/issues/37#issuecomment-58764625
-	var accessClaims *tokens.Claims
+	accessClaims := new(tokens.Claims)
 	if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
 		return fmt.Errorf("could not parse access token")
 	}
@@ -609,7 +609,7 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 	if accessClaims.ExpiresAt != 0 && now > accessClaims.ExpiresAt {
 		// access token is expired, check if refresh is not expired
 		if s.refreshToken != "" {
-			var refreshClaims *tokens.Claims
+			refreshClaims := new(tokens.Claims)
 			if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
 				return fmt.Errorf("could not parse refresh token")
 			}

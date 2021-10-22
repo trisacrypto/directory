@@ -234,7 +234,7 @@ func (c *Credentials) Validate() (err error) {
 		return errors.New("credentials incomplete")
 	}
 
-	var accessClaims *tokens.Claims
+	accessClaims := new(tokens.Claims)
 	if token, _ := jwt.ParseWithClaims(c.AccessToken, accessClaims, nil); token == nil {
 		return errors.New("could not parse access token")
 	}
@@ -242,7 +242,7 @@ func (c *Credentials) Validate() (err error) {
 	now := time.Now().Unix()
 	if accessClaims.ExpiresAt != 0 && now > accessClaims.ExpiresAt {
 		// access token is expired, check if refresh is not expired
-		var refreshClaims *tokens.Claims
+		refreshClaims := new(tokens.Claims)
 		if token, _ := jwt.ParseWithClaims(c.RefreshToken, refreshClaims, nil); token == nil {
 			return errors.New("could not parse refresh token")
 		}
