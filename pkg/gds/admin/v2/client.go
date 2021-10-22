@@ -601,7 +601,7 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 	// https://github.com/dgrijalva/jwt-go/issues/37#issuecomment-58764625
 	var accessClaims *tokens.Claims
 	if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
-		return fmt.Errorf("could not parse access token: %s", err)
+		return fmt.Errorf("could not parse access token")
 	}
 
 	// Manually check if the access token has not expired
@@ -611,7 +611,7 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 		if s.refreshToken != "" {
 			var refreshClaims *tokens.Claims
 			if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
-				return fmt.Errorf("could not parse refresh token: %s", err)
+				return fmt.Errorf("could not parse refresh token")
 			}
 
 			if now <= refreshClaims.ExpiresAt {
