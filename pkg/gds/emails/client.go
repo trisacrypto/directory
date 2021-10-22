@@ -21,9 +21,11 @@ import (
 
 // New email manager with the specified configuration.
 func New(conf config.EmailConfig) (m *EmailManager, err error) {
-	m = &EmailManager{
-		conf:   conf,
-		client: sendgrid.NewSendClient(conf.SendGridAPIKey),
+	m = &EmailManager{conf: conf}
+	if conf.Testing {
+		m.client = &mockSendGridClient{}
+	} else {
+		m.client = sendgrid.NewSendClient(conf.SendGridAPIKey)
 	}
 
 	// Warn if email configuration isn't complete and will produce partial emails.
@@ -49,9 +51,14 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 // EmailManager allows the server to send rich emails using the SendGrid service.
 type EmailManager struct {
 	conf         config.EmailConfig
-	client       *sendgrid.Client
+	client       EmailClient
 	serviceEmail *mail.Address
 	adminsEmail  *mail.Address
+}
+
+// EmailClient is an interface that can be implemented by SendGrid email clients.
+type EmailClient interface {
+	Send(email *sgmail.SGMailV3) (*rest.Response, error)
 }
 
 func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
