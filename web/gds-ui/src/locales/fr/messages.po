@@ -6,11 +6,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: fr\n"
-"Project-Id-Version: \n"
-"Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"Project-Id-Version: v1.2\n"
+"Report-Msgid-Bugs-To: @rebeccabilbro\n"
+"PO-Revision-Date: 2021-10-22 17:06-0500\n"
+"Last-Translator: fiverr.com/gomseu\n"
+"Language-Team: Rotational Labs\n"
 "Plural-Forms: \n"
 
 #: src/components/Footer.js:10
@@ -480,7 +480,7 @@ msgstr "Veuillez fournir une adresse électronique valide"
 
 #: src/components/ivms101/NationalIdentification.js:20
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
-msgstr ""
+msgstr "Veuillez fournir un numéro d'identification national valide. Nous recommandons l'utilisation de numéros LEI. Pour plus d'informations, veuillez visiter <0>GLEIF.org</0>."
 
 #: src/components/Contact.js:53
 msgid "Please supply a valid phone number or omit entirely if not required."
