@@ -600,8 +600,8 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 	// a token is returned in case it was a parsing error. See the following for more:
 	// https://github.com/dgrijalva/jwt-go/issues/37#issuecomment-58764625
 	accessClaims := new(tokens.Claims)
-	if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
-		return fmt.Errorf("could not parse access token")
+	if token, err := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
+		return fmt.Errorf("could not parse access token: %s", err)
 	}
 
 	// Manually check if the access token has not expired
