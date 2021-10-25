@@ -44,19 +44,13 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
             {vasp && (
                 <>
                     <Row>
-                        <Col>
+                        <Col md={6} xl={8} xxl={8}>
                             <BasicDetails data={vasp} />
-                        </Col>
-                        <Col>
-                            <Contact data={vasp?.vasp?.contacts} />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
                             <Ivms data={vasp.vasp?.entity} />
-                            <TrixoForm data={vasp.trixo} />
+                            <TrixoForm data={vasp?.trixo} />
                         </Col>
-                        <Col md={6}>
+                        <Col md={6} xl={4} xxl={4}>
+                            <Contact data={vasp?.vasp?.contacts} />
                             <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                         </Col>
                     </Row>
