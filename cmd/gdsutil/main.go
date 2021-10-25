@@ -824,6 +824,11 @@ func ldbList(c *cli.Context) (err error) {
 //===========================================================================
 
 func openLevelDB(c *cli.Context) (err error) {
+	// Ensure the DB from the command line populates the profile
+	if err = profile.Update(c); err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	if ldb, err = profile.OpenLevelDB(); err != nil {
 		return cli.Exit(err, 1)
 	}

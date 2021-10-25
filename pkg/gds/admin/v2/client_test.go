@@ -33,7 +33,7 @@ func TestClient(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure that the latest version of the client is returned
@@ -79,6 +79,36 @@ func TestClient(t *testing.T) {
 	require.EqualError(t, err, "[400] bad request")
 }
 
+func TestLoginHelpers(t *testing.T) {
+	creds := &MockCredentials{}
+	client, err := admin.New("http://localhost", creds)
+	require.NoError(t, err)
+
+	// Check Login
+	err = client.Login(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 1, creds.Calls["Login"])
+
+	// Check Refresh
+	err = client.Refresh(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 1, creds.Calls["Refresh"])
+
+	// Check Logout
+	err = client.Logout(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 1, creds.Calls["Logout"])
+}
+
+func TestClientNilCredentials(t *testing.T) {
+	// Should be able to pass nil credentials
+	client, err := admin.New("http://localhost", nil)
+	require.NoError(t, err)
+	require.NoError(t, client.Login(context.Background()))
+	require.NoError(t, client.Refresh(context.Background()))
+	require.NoError(t, client.Logout(context.Background()))
+}
+
 func TestAuthenticate(t *testing.T) {
 	fixture := &admin.AuthReply{
 		AccessToken:  "",
@@ -117,7 +147,7 @@ func TestAuthenticate(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Authenticate(context.TODO(), req)
@@ -163,7 +193,7 @@ func TestReuthenticate(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Reauthenticate(context.TODO(), req)
@@ -191,7 +221,7 @@ func TestStatus(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Status(context.TODO())
@@ -233,7 +263,7 @@ func TestSummary(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Summary(context.TODO())
@@ -271,7 +301,7 @@ func TestAutocomplete(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Autocomplete(context.TODO())
@@ -325,7 +355,7 @@ func TestListVASPs(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.ListVASPs(context.TODO(), params)
@@ -365,7 +395,7 @@ func TestRetrieveVASP(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure an ID is required to retrieve the VASP
@@ -409,7 +439,7 @@ func TestCreateReviewNote(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure a VASP ID is required to create a note
@@ -457,7 +487,7 @@ func TestListReviewNotes(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure a VASP ID is required to create a note
@@ -498,7 +528,7 @@ func UpdateReviewNote(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure a VASP ID is required to update a note
@@ -534,7 +564,7 @@ func TestDeleteReviewNote(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	// Ensure a VASP ID is required to delete a note
@@ -594,7 +624,7 @@ func TestReview(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Review(context.TODO(), req)
@@ -643,7 +673,7 @@ func TestResend(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.Resend(context.TODO(), req)
@@ -704,7 +734,7 @@ func TestReviewTimeline(t *testing.T) {
 	defer ts.Close()
 
 	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL)
+	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
 	out, err := client.ReviewTimeline(context.TODO(), fixture_params)
