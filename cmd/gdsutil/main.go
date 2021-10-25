@@ -1236,23 +1236,3 @@ func loadProfile(c *cli.Context) (err error) {
 	}
 	return nil
 }
-
-// helper function to print JSON response and exit
-func printJSON(m proto.Message) error {
-	opts := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
-
-	data, err := opts.Marshal(m)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-
-	fmt.Println(string(data))
-	return nil
-}
