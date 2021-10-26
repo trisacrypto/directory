@@ -1,9 +1,14 @@
 package emails
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"os"
 
 	"github.com/sendgrid/rest"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -16,6 +21,79 @@ func PurgeMockEmails() {
 }
 
 type mockSendGridClient struct{}
+
+type emailMetadata struct {
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+}
+
+func write(msg *sgmail.SGMailV3) (err error) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	header := textproto.MIMEHeader{}
+	header.Set("Content-Type", "application/json")
+	part, err := writer.CreatePart(header)
+	if err != nil {
+		writer.Close()
+		return err
+	}
+
+	metadata := emailMetadata{
+		From:    msg.From.Address,
+		Subject: msg.Subject,
+	}
+	for _, p := range msg.Personalizations {
+		for _, r := range p.To {
+			metadata.To = append(metadata.To, r.Address)
+		}
+	}
+	var b []byte
+	if b, err = json.Marshal(metadata); err != nil {
+		writer.Close()
+		return err
+	}
+	if _, err = part.Write(b); err != nil {
+		writer.Close()
+		return err
+	}
+
+	for _, c := range msg.Content {
+		header := textproto.MIMEHeader{}
+		header.Set("Content-Type", c.Type)
+		part, err := writer.CreatePart(header)
+		if err != nil {
+			writer.Close()
+			return err
+		}
+		if _, err = part.Write([]byte(c.Value)); err != nil {
+			writer.Close()
+			return err
+		}
+	}
+
+	for _, a := range msg.Attachments {
+		header := textproto.MIMEHeader{}
+		header.Set("Content-Type", a.Type)
+		header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", a.Filename))
+		part, err := writer.CreatePart(header)
+		if err != nil {
+			writer.Close()
+			return err
+		}
+		if _, err = part.Write([]byte(a.Content)); err != nil {
+			writer.Close()
+			return err
+		}
+	}
+
+	writer.Close()
+	if err = os.WriteFile("test.txt", body.Bytes(), 0644); err != nil {
+		return err
+	}
+	return nil
+}
 
 func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err error) {
 	// Marshal the email struct into bytes
@@ -80,6 +158,12 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 
 	// "Send" the email
 	MockEmails = append(MockEmails, data)
+	if err = write(msg); err != nil {
+		return &rest.Response{
+			StatusCode: http.StatusBadRequest,
+			Body:       "could not write email",
+		}, err
+	}
 
 	return &rest.Response{StatusCode: http.StatusOK}, nil
 }
