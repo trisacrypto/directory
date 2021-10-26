@@ -607,7 +607,7 @@ msgstr "技术联系信息"
 
 #: src/components/select/TransliterationMethodCode.js:19
 msgid "Thai"
-msgstr "泰国"
+msgstr "泰语"
 
 #: src/components/Registration.js:319
 msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
