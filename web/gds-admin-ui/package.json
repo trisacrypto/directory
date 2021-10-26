@@ -44,6 +44,9 @@
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
+        "rules": {
+            "no-console": "warn"
+        },
         "extends": [
             "react-app",
             "react-app/jest"

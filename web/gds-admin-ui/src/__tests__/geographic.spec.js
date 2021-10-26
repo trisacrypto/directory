@@ -1,11 +1,9 @@
 import { render } from '@testing-library/react';
-import Geographic, { renderField, renderLines } from '../pages/app/details/ivms/Geographic';
 import faker from 'faker';
 import { AddressTypeHeaders } from '../constants';
+import Geographic, { renderField, renderLines } from '../pages/app/details/BasicDetails/components/Geographic';
 
 describe('defaultEndpointPrefix', () => {
-    let addresses;
-
     it('should render component', () => {
         render(<Geographic />);
     });
@@ -47,6 +45,7 @@ describe('defaultEndpointPrefix', () => {
                 <div>
                   <address
                     data-testid="addressLine"
+                    style="font-style: italic;"
                   >
                     <div>
                       215 Alynn Way
@@ -96,24 +95,25 @@ describe('defaultEndpointPrefix', () => {
                 <div>
                   <address
                     data-testid="addressField"
+                    style="font-style: italic;"
                   >
-                    Toys
+                    Automotive
                      
                     <br />
-                    Outdoors
+                    Industrial
                      
                     <br />
                     23
                      
-                    Boyle Corner
+                    Towne Mountains
                     <br />
-                    Vineland
+                    Schenectady
                      
                     
                      
                     MA
                      
-                    47055-4062
+                    50224-0905
                       
                     <br />
                     US

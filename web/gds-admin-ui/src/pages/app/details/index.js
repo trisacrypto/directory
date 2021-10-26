@@ -10,7 +10,6 @@ import BasicDetails from './BasicDetails';
 import CertificateDetails from './CertificateDetails';
 import { getVasp } from "../../../services/vasps"
 import TrixoForm from './TrixoForm';
-import Ivms from './ivms';
 import { useHistory } from 'react-router-dom'
 
 const VaspDetails = (): React$Element<React$FragmentType> => {
@@ -44,19 +43,12 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
             {vasp && (
                 <>
                     <Row>
-                        <Col>
+                        <Col md={6} xl={8} xxl={8}>
                             <BasicDetails data={vasp} />
+                            <TrixoForm data={vasp?.trixo} />
                         </Col>
-                        <Col>
+                        <Col md={6} xl={4} xxl={4}>
                             <Contact data={vasp?.vasp?.contacts} />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
-                            <Ivms data={vasp.vasp?.entity} />
-                            <TrixoForm data={vasp.trixo} />
-                        </Col>
-                        <Col md={6}>
                             <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                         </Col>
                     </Row>
