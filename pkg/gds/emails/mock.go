@@ -83,7 +83,6 @@ func WriteMIME(msg *sgmail.SGMailV3, path string) (err error) {
 	for _, a := range msg.Attachments {
 		header := textproto.MIMEHeader{}
 		header.Set("Content-Type", a.Type)
-		//header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", a.Filename))
 		header.Set("Content-Disposition", a.Disposition)
 		part, err := writer.CreatePart(header)
 		if err != nil {
