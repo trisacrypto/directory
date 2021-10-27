@@ -2,14 +2,10 @@ package trtl
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"math/rand"
-	"net"
 
 	"github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
@@ -30,7 +26,7 @@ var (
 )
 
 // NewReplica creates a new GDS replica server derived from a parent Service.
-func NewReplica(conf *ReplicaConfig) (r *Replica, err error) {
+func NewReplica(conf config.ReplicaConfig) (r *Replica, err error) {
 	r = &Replica{
 		conf: &conf,
 	}
@@ -39,7 +35,7 @@ func NewReplica(conf *ReplicaConfig) (r *Replica, err error) {
 
 	// Initialize the gRPC server
 	// r.db = svc.db
-	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.replicaInterceptor))
+	r.srv = grpc.NewServer(grpc.UnaryInterceptor(r.replicaInterceptor))
 	replica.RegisterReplicationServer(r.srv, r)
 	return r, nil
 }
@@ -50,7 +46,6 @@ func NewReplica(conf *ReplicaConfig) (r *Replica, err error) {
 type Replica struct {
 	replica.UnimplementedReplicationServer
 	peers.UnimplementedPeerManagementServer
-	svc  *Service              // The parent Service the replica uses to interact with other components
 	srv  *grpc.Server          // The gRPC server that listens on its own independent port
 	conf *config.ReplicaConfig // The replica specific configuration (alias to r.svc.conf.Replica)
 	db   store.Store           // Database connection for managing objects (alias to s.svc.db)
@@ -58,34 +53,10 @@ type Replica struct {
 
 // Serve gRPC requests on the specified bind address.
 func (r *Replica) Serve() (err error) {
-	// This service should not be started in maintenance mode.
-	if r.svc.conf.Maintenance {
-		return errors.New("could not start replication service in maintenance mode")
-	}
-
 	if !r.conf.Enabled {
 		log.Warn().Msg("replication service is not enabled")
 		return nil
 	}
-
-	// Listen for TCP requests on the specified address and port
-	var sock net.Listener
-	if sock, err = net.Listen("tcp", r.conf.BindAddr); err != nil {
-		return fmt.Errorf("could not listen on %q", r.conf.BindAddr)
-	}
-
-	// Run the server
-	go func() {
-		defer sock.Close()
-		log.Info().
-			Str("listen", r.conf.BindAddr).
-			Str("version", pkg.Version()).
-			Msg("replication service started")
-
-		if err := r.srv.Serve(sock); err != nil {
-			r.svc.echan <- err
-		}
-	}()
 
 	// Run the Gossip background routine
 	go r.AntiEntropy()

@@ -11,10 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 type ContextKey string
@@ -29,11 +27,6 @@ type PeerInfo struct {
 func (s *Replica) replicaInterceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
 	// Track how long the method takes to execute.
 	start := time.Now()
-
-	// Check if we're in maintenance mode - status method should still return a full response.
-	if s.conf.Maintenance {
-		return nil, status.Error(codes.Unavailable, "the GDS service is currently in maintenance mode")
-	}
 
 	// Fetch peer information from the TLS info.
 	var peer *PeerInfo
