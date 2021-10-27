@@ -15,7 +15,9 @@ import update from 'immutability-helper';
 import LegalPerson from './ivms101/LegalPerson';
 import gds from '../api/gds';
 import { isTestNet } from '../lib/testnet';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
+import BusinessCategory from './select/BusinessCategory';
+import VASPCategory from './select/VASPCategory';
 
 
 const testNet = isTestNet();
@@ -374,11 +376,7 @@ class Registration extends React.Component {
                         value={this.state.formData.business_category}
                         onChange={this.createIntChangeHandler("business_category")}
                       >
-                        <option value={0}></option>
-                        <option value={1}><Trans>Private Organization</Trans></option>
-                        <option value={2}><Trans>Government Entity</Trans></option>
-                        <option value={3}><Trans>Business Entity</Trans></option>
-                        <option value={4}><Trans>Non-Commercial Entity</Trans></option>
+                        <BusinessCategory />
                       </Form.Control>
                       <Form.Text className="text-muted">
                         <Trans>Please select the entity category that most closely matches your organization.</Trans>
@@ -391,19 +389,7 @@ class Registration extends React.Component {
                         value={this.state.formData.vasp_categories}
                         onChange={this.createMultiselectChangeHandler("vasp_categories")}
                       >
-                        <option value="Exchange"><Trans>Centralized Exchange</Trans></option>
-                        <option value="DEX"><Trans>Decentralized Exchange</Trans></option>
-                        <option value="P2P"><Trans>Person-to-Person Exchange</Trans></option>
-                        <option value="Kiosk"><Trans>Kiosk / Crypto ATM Operator</Trans></option>
-                        <option value="Custodian"><Trans>Custody Provider</Trans></option>
-                        <option value="OTC"><Trans>Over-The-Counter Trading Desk</Trans></option>
-                        <option value="Fund"><Trans>Investment Fund - hedge funds, ETFs, and family offices</Trans></option>
-                        <option value="Project"><Trans>Token Project</Trans></option>
-                        <option value="Gambling"><Trans>Gambling or Gaming Site</Trans></option>
-                        <option value="Miner"><Trans>Mining Pool</Trans></option>
-                        <option value="Mixer"><Trans>Mixing Service</Trans></option>
-                        <option value="Individual"><Trans>Legal person</Trans></option>
-                        <option value="Other"><Trans>Other</Trans></option>
+                        <VASPCategory />
                       </Form.Control>
                       <Form.Text className="text-muted">
                         <Trans>Please select as many categories needed to represent the types of virtual asset services your organization provides.</Trans>

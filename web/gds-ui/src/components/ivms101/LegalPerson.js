@@ -5,7 +5,7 @@ import NationalIdentification from './NationalIdentification';
 import AddressList from './AddressList';
 import Form from 'react-bootstrap/Form';
 import update from 'immutability-helper';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 const LegalPerson = ({person, onChange}) => {

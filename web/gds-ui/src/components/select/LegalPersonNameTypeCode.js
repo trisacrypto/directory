@@ -1,14 +1,16 @@
 import React from 'react';
-import { Trans } from "@lingui/macro"
+import { useLingui } from "@lingui/react";
 
 
 const LegalPersonNameTypeCode = () => {
+  const { i18n } = useLingui();
+
   return (
     <>
-    <option value={0}><Trans>Unspecified</Trans></option>
-    <option value={1}><Trans>Legal Name</Trans></option>
-    <option value={2}><Trans>Short Name</Trans></option>
-    <option value={3}><Trans>Trading Name</Trans></option>
+    <option value={0}>{i18n._("Unspecified")}</option>
+    <option value={1}>{i18n._("Legal Name")}</option>
+    <option value={2}>{i18n._("Short Name")}</option>
+    <option value={3}>{i18n._("Trading Name")}</option>
     </>
   )
 }

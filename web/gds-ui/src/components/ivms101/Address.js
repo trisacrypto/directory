@@ -5,7 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 const addressLineExamples = [

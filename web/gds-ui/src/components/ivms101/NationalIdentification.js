@@ -3,7 +3,7 @@ import update from 'immutability-helper';
 import Form from 'react-bootstrap/Form';
 import Countries from '../select/Countries';
 import NationalIdentifierTypeCode from '../select/NationalIdentifierTypeCode';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 const NationalIdentification = ({data, onChange}) => {

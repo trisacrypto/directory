@@ -3,7 +3,7 @@ import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav'
 import { isTestNet } from '../lib/testnet';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 const testNet = isTestNet();

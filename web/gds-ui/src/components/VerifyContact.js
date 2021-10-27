@@ -4,7 +4,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Alert from 'react-bootstrap/Alert';
 import Spinner from 'react-bootstrap/Spinner';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 class VerifyContact extends React.Component {
   constructor(props) {
