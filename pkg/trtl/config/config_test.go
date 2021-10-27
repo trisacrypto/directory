@@ -10,7 +10,7 @@ import (
 )
 
 var testEnv = map[string]string{
-	"TRTL_REPLICA_ENABLED":         "true",
+	"TRTL_ENABLED":                 "true",
 	"TRTL_REPLICA_BIND_ADDR":       ":445",
 	"TRTL_REPLICA_PID":             "8",
 	"TRTL_REPLICA_NAME":            "mitchell",
