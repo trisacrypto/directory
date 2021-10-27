@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/mail"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -101,6 +104,12 @@ func (suite *EmailTestSuite) SetupSuite() {
 		ServiceEmail: "service@example.com",
 		AdminEmail:   "admin@example.com",
 	}
+
+	// Clean up the generated emails directory
+	err := os.RemoveAll(filepath.Join("testdata", "emails"))
+	suite.NoError(err)
+	err = os.MkdirAll(filepath.Join("testdata", "emails"), 0755)
+	suite.NoError(err)
 }
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
@@ -127,6 +136,10 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
+
+	// Write the email to a MIME file for manual inspection
+	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	require.NoError(err)
 }
 
 func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
@@ -149,6 +162,10 @@ func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
+
+	// Write the email to a MIME file for manual inspection
+	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	require.NoError(err)
 }
 
 func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
@@ -171,6 +188,10 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
+
+	// Write the email to a MIME file for manual inspection
+	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	require.NoError(err)
 }
 
 func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
@@ -193,4 +214,8 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
+
+	// Write the email to a MIME file for manual inspection
+	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	require.NoError(err)
 }

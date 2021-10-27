@@ -22,16 +22,18 @@ func PurgeMockEmails() {
 
 type mockSendGridClient struct{}
 
-type emailMetadata struct {
-	From    string   `json:"from"`
-	To      []string `json:"to"`
-	Subject string   `json:"subject"`
-}
+func WriteMIME(msg *sgmail.SGMailV3, path string) (err error) {
+	type emailMetadata struct {
+		From    string   `json:"from"`
+		To      []string `json:"to"`
+		Subject string   `json:"subject"`
+	}
 
-func write(msg *sgmail.SGMailV3) (err error) {
+	// Create a buffer to store the MIME data
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
+	// Create the metadata header
 	header := textproto.MIMEHeader{}
 	header.Set("Content-Type", "application/json")
 	part, err := writer.CreatePart(header)
@@ -40,6 +42,7 @@ func write(msg *sgmail.SGMailV3) (err error) {
 		return err
 	}
 
+	// Construct the metadata header
 	metadata := emailMetadata{
 		From:    msg.From.Address,
 		Subject: msg.Subject,
@@ -49,6 +52,8 @@ func write(msg *sgmail.SGMailV3) (err error) {
 			metadata.To = append(metadata.To, r.Address)
 		}
 	}
+
+	// Write the metadata header
 	var b []byte
 	if b, err = json.Marshal(metadata); err != nil {
 		writer.Close()
@@ -59,6 +64,7 @@ func write(msg *sgmail.SGMailV3) (err error) {
 		return err
 	}
 
+	// Write the email content sections
 	for _, c := range msg.Content {
 		header := textproto.MIMEHeader{}
 		header.Set("Content-Type", c.Type)
@@ -73,10 +79,12 @@ func write(msg *sgmail.SGMailV3) (err error) {
 		}
 	}
 
+	// Write the attachment sections
 	for _, a := range msg.Attachments {
 		header := textproto.MIMEHeader{}
 		header.Set("Content-Type", a.Type)
-		header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", a.Filename))
+		//header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", a.Filename))
+		header.Set("Content-Disposition", a.Disposition)
 		part, err := writer.CreatePart(header)
 		if err != nil {
 			writer.Close()
@@ -88,8 +96,9 @@ func write(msg *sgmail.SGMailV3) (err error) {
 		}
 	}
 
+	// Save the file to disk
 	writer.Close()
-	if err = os.WriteFile("test.txt", body.Bytes(), 0644); err != nil {
+	if err = os.WriteFile(path, body.Bytes(), 0644); err != nil {
 		return err
 	}
 	return nil
@@ -158,12 +167,6 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 
 	// "Send" the email
 	MockEmails = append(MockEmails, data)
-	if err = write(msg); err != nil {
-		return &rest.Response{
-			StatusCode: http.StatusBadRequest,
-			Body:       "could not write email",
-		}, err
-	}
 
 	return &rest.Response{StatusCode: http.StatusOK}, nil
 }
