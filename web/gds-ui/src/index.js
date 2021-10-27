@@ -16,7 +16,7 @@ i18n.load({
   ja: messagesJa,
   zh: messagesZh,
 });
-i18n.activate('fr');
+i18n.activate('en');
 
 const TransApp = () => (
   <I18nProvider i18n={i18n}>
