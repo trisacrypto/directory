@@ -89,13 +89,13 @@ message BatchReply {
 
 message CursorRequest {
     bytes prefix = 1;       // the prefix to range over, if nil all objects are returned
-    Options options = 3;
+    Options options = 2;
 }
 
 message CursorReply {
     int64 index = 1;        // the index of the cursor as it is iterating
     KVPair value = 2;       // the current key/value pair produced by the cursor
-    bool next = 3;          // if there is a next value that will be returned, false when the cursor is exhuasted
+    bool next = 3;          // true if there is a next value that will be returned, false when the cursor is exhuasted
 }
 
 message SyncRequest {
