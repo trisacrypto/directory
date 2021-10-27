@@ -2,26 +2,42 @@ package emails_test
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"net/mail"
 	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
 
+	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 )
 
-func setupDir(dir string) (err error) {
-	if err = os.RemoveAll(dir); err != nil {
-		return err
+// If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
+var eyeball = flag.Bool("eyeball", false, "Generate MIME emails for eyeball testing")
+
+// Creates a directory for the MIME emails if the eyeball flag is set.
+// If the eyeball flag is set, this will also purge the existing eyeball directory first.
+func setupMIMEDir(t *testing.T) {
+	if *eyeball {
+		path := filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()))
+		err := os.RemoveAll(path)
+		require.NoError(t, err)
+		err = os.MkdirAll(path, 0755)
+		require.NoError(t, err)
 	}
-	if err = os.MkdirAll(dir, 0755); err != nil {
-		return err
+}
+
+// generateMIME writes an SGMailV3 email to a MIME file for manual inspection if the eyeball flag is set.
+func generateMIME(t *testing.T, msg *sgmail.SGMailV3, name string) {
+	if *eyeball {
+		err := emails.WriteMIME(msg, filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()), name))
+		require.NoError(t, err)
 	}
-	return nil
 }
 
 func TestEmailBuilders(t *testing.T) {
@@ -30,37 +46,33 @@ func TestEmailBuilders(t *testing.T) {
 		senderEmail    = "lewis@example.com"
 		recipient      = "Rachel Lendt"
 		recipientEmail = "rachel@example.com"
-		dir            = filepath.Join("testdata", t.Name())
 	)
 
-	err := setupDir(dir)
-	require.NoError(t, err)
+	setupMIMEDir(t)
 
 	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify-contact"}
 	mail, err := emails.VerifyContactEmail(sender, senderEmail, recipient, recipientEmail, vcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.VerifyContactRE, mail.Subject)
-	err = emails.WriteMIME(mail, filepath.Join(dir, "verify-contact.mim"))
-	require.NoError(t, err)
+	generateMIME(t, mail, "verify-contact.mim")
 
 	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ReviewRequestEmail(sender, senderEmail, recipient, recipientEmail, rrdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReviewRequestRE, mail.Subject)
+	generateMIME(t, mail, "review-request.mim")
 
 	rjdata := emails.RejectRegistrationData{Name: recipient, Reason: "not a good time", VID: "42"}
 	mail, err = emails.RejectRegistrationEmail(sender, senderEmail, recipient, recipientEmail, rjdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.RejectRegistrationRE, mail.Subject)
-	err = emails.WriteMIME(mail, filepath.Join(dir, "reject-registration.mim"))
-	require.NoError(t, err)
+	generateMIME(t, mail, "reject-registration.mim")
 
 	dcdata := emails.DeliverCertsData{Name: recipient, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	mail, err = emails.DeliverCertsEmail(sender, senderEmail, recipient, recipientEmail, "testdata/foo.zip", dcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.DeliverCertsRE, mail.Subject)
-	err = emails.WriteMIME(mail, filepath.Join(dir, "deliver-certs.mim"))
-	require.NoError(t, err)
+	generateMIME(t, mail, "deliver-certs.mim")
 }
 
 func TestVerifyContactURL(t *testing.T) {
@@ -123,9 +135,10 @@ func (suite *EmailTestSuite) SetupSuite() {
 		ServiceEmail: "service@example.com",
 		AdminEmail:   "admin@example.com",
 	}
+}
 
-	err := setupDir(filepath.Join("testdata", suite.Suite.T().Name()))
-	suite.NoError(err)
+func (suite *EmailTestSuite) BeforeTest(suiteName, testName string) {
+	setupMIMEDir(suite.T())
 }
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
@@ -153,9 +166,7 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
 
-	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
-	require.NoError(err)
+	generateMIME(suite.T(), msg, "verify-contact.mim")
 }
 
 func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
@@ -179,9 +190,7 @@ func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
 
-	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
-	require.NoError(err)
+	generateMIME(suite.T(), msg, "review-request.mim")
 }
 
 func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
@@ -205,9 +214,7 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
 
-	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
-	require.NoError(err)
+	generateMIME(suite.T(), msg, "reject-registration.mim")
 }
 
 func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
@@ -231,7 +238,5 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	require.NoError(err)
 	require.Equal(expected, emails.MockEmails[0])
 
-	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
-	require.NoError(err)
+	generateMIME(suite.T(), msg, "deliver-certs.mim")
 }
