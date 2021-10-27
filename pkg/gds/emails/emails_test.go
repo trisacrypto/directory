@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,18 +14,34 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 )
 
+func setupDir(dir string) (err error) {
+	if err = os.RemoveAll(dir); err != nil {
+		return err
+	}
+	if err = os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestEmailBuilders(t *testing.T) {
 	var (
 		sender         = "Lewis Hudson"
 		senderEmail    = "lewis@example.com"
 		recipient      = "Rachel Lendt"
 		recipientEmail = "rachel@example.com"
+		dir            = filepath.Join("testdata", t.Name())
 	)
+
+	err := setupDir(dir)
+	require.NoError(t, err)
 
 	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify-contact"}
 	mail, err := emails.VerifyContactEmail(sender, senderEmail, recipient, recipientEmail, vcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.VerifyContactRE, mail.Subject)
+	err = emails.WriteMIME(mail, filepath.Join(dir, "verify-contact.mim"))
+	require.NoError(t, err)
 
 	rrdata := emails.ReviewRequestData{Request: "foo", Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ReviewRequestEmail(sender, senderEmail, recipient, recipientEmail, rrdata)
@@ -37,11 +52,15 @@ func TestEmailBuilders(t *testing.T) {
 	mail, err = emails.RejectRegistrationEmail(sender, senderEmail, recipient, recipientEmail, rjdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.RejectRegistrationRE, mail.Subject)
+	err = emails.WriteMIME(mail, filepath.Join(dir, "reject-registration.mim"))
+	require.NoError(t, err)
 
 	dcdata := emails.DeliverCertsData{Name: recipient, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	mail, err = emails.DeliverCertsEmail(sender, senderEmail, recipient, recipientEmail, "testdata/foo.zip", dcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.DeliverCertsRE, mail.Subject)
+	err = emails.WriteMIME(mail, filepath.Join(dir, "deliver-certs.mim"))
+	require.NoError(t, err)
 }
 
 func TestVerifyContactURL(t *testing.T) {
@@ -105,10 +124,7 @@ func (suite *EmailTestSuite) SetupSuite() {
 		AdminEmail:   "admin@example.com",
 	}
 
-	// Clean up the generated emails directory
-	err := os.RemoveAll(filepath.Join("testdata", "emails"))
-	suite.NoError(err)
-	err = os.MkdirAll(filepath.Join("testdata", "emails"), 0755)
+	err := setupDir(filepath.Join("testdata", suite.Suite.T().Name()))
 	suite.NoError(err)
 }
 
@@ -138,7 +154,7 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
 	require.NoError(err)
 }
 
@@ -164,7 +180,7 @@ func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
 	require.NoError(err)
 }
 
@@ -190,7 +206,7 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
 	require.NoError(err)
 }
 
@@ -216,6 +232,6 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	// Write the email to a MIME file for manual inspection
-	err = emails.WriteMIME(msg, filepath.Join("testdata", "emails", strings.Split(suite.T().Name(), "/")[1]+".mim"))
+	err = emails.WriteMIME(msg, filepath.Join("testdata", suite.T().Name()+".mim"))
 	require.NoError(err)
 }
