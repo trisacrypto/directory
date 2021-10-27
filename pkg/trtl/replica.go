@@ -1,4 +1,4 @@
-package gds
+package trtl
 
 import (
 	"context"
@@ -30,16 +30,15 @@ var (
 )
 
 // NewReplica creates a new GDS replica server derived from a parent Service.
-func NewReplica(svc *Service) (r *Replica, err error) {
+func NewReplica(conf *ReplicaConfig) (r *Replica, err error) {
 	r = &Replica{
-		svc:  svc,
-		conf: &svc.conf.Replica,
+		conf: &conf,
 	}
 
 	// TODO: Check if the database Store is an Honu DB, if not then the Replica cannot Gossip.
 
 	// Initialize the gRPC server
-	r.db = svc.db
+	// r.db = svc.db
 	r.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.replicaInterceptor))
 	replica.RegisterReplicationServer(r.srv, r)
 	return r, nil

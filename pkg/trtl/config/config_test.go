@@ -10,13 +10,13 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_REPLICA_ENABLED":         "true",
-	"GDS_REPLICA_BIND_ADDR":       ":445",
-	"GDS_REPLICA_PID":             "8",
-	"GDS_REPLICA_NAME":            "mitchell",
-	"GDS_REPLICA_REGION":          "us-east-1c",
-	"GDS_REPLICA_GOSSIP_INTERVAL": "30m",
-	"GDS_REPLICA_GOSSIP_SIGMA":    "3m",
+	"TRTL_REPLICA_ENABLED":         "true",
+	"TRTL_REPLICA_BIND_ADDR":       ":445",
+	"TRTL_REPLICA_PID":             "8",
+	"TRTL_REPLICA_NAME":            "mitchell",
+	"TRTL_REPLICA_REGION":          "us-east-1c",
+	"TRTL_REPLICA_GOSSIP_INTERVAL": "30m",
+	"TRTL_REPLICA_GOSSIP_SIGMA":    "3m",
 }
 
 func TestConfig(t *testing.T) {
@@ -38,18 +38,18 @@ func TestConfig(t *testing.T) {
 
 	// Test configuration set from the environment
 	require.Equal(t, true, conf.Enabled)
-	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.BindAddr)
+	require.Equal(t, testEnv["TRTL_REPLICA_BIND_ADDR"], conf.BindAddr)
 	require.Equal(t, uint64(8), conf.PID)
-	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Name)
-	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Region)
+	require.Equal(t, testEnv["TRTL_REPLICA_NAME"], conf.Name)
+	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Region)
 	require.Equal(t, 30*time.Minute, conf.GossipInterval)
 	require.Equal(t, 3*time.Minute, conf.GossipSigma)
 }
 
 func TestRequiredConfig(t *testing.T) {
 	required := []string{
-		"GDS_REPLICA_PID",
-		"GDS_REPLICA_REGION",
+		"TRTL_REPLICA_PID",
+		"TRTL_REPLICA_REGION",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -88,7 +88,7 @@ func TestRequiredConfig(t *testing.T) {
 	// Test required configuration
 	require.True(t, conf.Enabled)
 	require.Equal(t, uint64(8), conf.PID)
-	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Region)
+	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Region)
 
 }
 

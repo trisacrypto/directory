@@ -26,7 +26,7 @@ type PeerInfo struct {
 	IPAddresses []net.IP
 }
 
-func (s *Service) replicaInterceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
+func (s *Replica) replicaInterceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
 	// Track how long the method takes to execute.
 	start := time.Now()
 

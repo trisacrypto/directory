@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package gds.peers.v1;
-option go_package = "github.com/trisacrypto/directory/pkg/gds/peers/v1;peers";
+option go_package = "github.com/trisacrypto/directory/pkg/trtl/peers/v1;peers";
 
 // Peer contains metadata about how to connect to remote peers in the directory service
 // network. This message services as a data-transfer and exchange mechanism for dynamic
