@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
-	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
+	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"

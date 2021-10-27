@@ -9,8 +9,8 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
-	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"

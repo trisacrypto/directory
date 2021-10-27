@@ -9,10 +9,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
-	"github.com/trisacrypto/directory/pkg/gds/logger"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 func init() {
@@ -103,28 +103,23 @@ func New(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
-	if s.replica, err = NewReplica(s); err != nil {
-		return nil, err
-	}
-
 	return s, nil
 }
 
 // Service defines the entirety of the TRISA Global Directory Service including the GDS
 // server that handles TRISA requests, the Admin server that handles administrative
-// interactions, the Replica server that performs anti-entropy, as well as the smaller
-// routines and managers to handle email, secrets, backups, and certificates. E.g. this
-// is the parent service that coordinates all subservices.
+// interactions, as well as the smaller routines and managers to handle email, secrets,
+// backups, and certificates.
+// E.g. this is the parent service that coordinates all subservices.
 type Service struct {
-	db      store.Store
-	gds     *GDS
-	admin   *Admin
-	replica *Replica
-	conf    config.Config
-	certs   *sectigo.Sectigo
-	email   *emails.EmailManager
-	secret  *secrets.SecretManager
-	echan   chan error
+	db     store.Store
+	gds    *GDS
+	admin  *Admin
+	conf   config.Config
+	certs  *sectigo.Sectigo
+	email  *emails.EmailManager
+	secret *secrets.SecretManager
+	echan  chan error
 }
 
 // Serve GRPC requests on the specified addresses and all internal servers.
@@ -147,11 +142,6 @@ func (s *Service) Serve() (err error) {
 
 		// Start the backup manager go routine process
 		go s.BackupManager()
-
-		// Start the replica service
-		if err = s.replica.Serve(); err != nil {
-			return err
-		}
 	}
 
 	// The TRISADirectoryService service can run in maintenance mode
@@ -186,11 +176,6 @@ func (s *Service) Shutdown() (err error) {
 	}
 
 	if !s.conf.Maintenance {
-		// Shutdown the ReplicationServer gracefully
-		if err = s.replica.Shutdown(); err != nil {
-			log.Error().Err(err).Msg("could not shutdown Replication service")
-		}
-
 		// Close the database correctly
 		if err = s.db.Close(); err != nil {
 			log.Error().Err(err).Msg("could not shutdown database")
