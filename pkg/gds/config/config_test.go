@@ -27,13 +27,6 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_ALLOW_ORIGINS":                  "https://admin.trisatest.net",
 	"GDS_ADMIN_COOKIE_DOMAIN":                  "admin.trisatest.net",
 	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.trisatest.net",
-	"GDS_REPLICA_ENABLED":                      "true",
-	"GDS_REPLICA_BIND_ADDR":                    ":445",
-	"GDS_REPLICA_PID":                          "8",
-	"GDS_REPLICA_NAME":                         "mitchell",
-	"GDS_REPLICA_REGION":                       "us-east-1c",
-	"GDS_REPLICA_GOSSIP_INTERVAL":              "30m",
-	"GDS_REPLICA_GOSSIP_SIGMA":                 "3m",
 	"GDS_DATABASE_URL":                         "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
 	"SECTIGO_USERNAME":                         "foo",
@@ -84,19 +77,12 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Admin.Enabled)
 	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
 	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
-	require.Equal(t, true, conf.Replica.Enabled)
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Equal(t, testEnv["GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE"], conf.Admin.Oauth.GoogleAudience)
 	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
 	require.Len(t, conf.Admin.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_ADMIN_COOKIE_DOMAIN"], conf.Admin.CookieDomain)
 	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
-	require.Equal(t, testEnv["GDS_REPLICA_BIND_ADDR"], conf.Replica.BindAddr)
-	require.Equal(t, uint64(8), conf.Replica.PID)
-	require.Equal(t, testEnv["GDS_REPLICA_NAME"], conf.Replica.Name)
-	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
-	require.Equal(t, 30*time.Minute, conf.Replica.GossipInterval)
-	require.Equal(t, 3*time.Minute, conf.Replica.GossipSigma)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
@@ -154,8 +140,6 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE",
 		"GDS_ADMIN_TOKEN_KEYS",
 		"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS",
-		"GDS_REPLICA_PID",
-		"GDS_REPLICA_REGION",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -197,9 +181,6 @@ func TestRequiredConfig(t *testing.T) {
 	// Test required configuration
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, testEnv["GDS_SECRET_KEY"], conf.SecretKey)
-	require.True(t, conf.Replica.Enabled)
-	require.Equal(t, uint64(8), conf.Replica.PID)
-	require.Equal(t, testEnv["GDS_REPLICA_REGION"], conf.Replica.Region)
 	require.Equal(t, testEnv["GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE"], conf.Admin.Oauth.GoogleAudience)
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
