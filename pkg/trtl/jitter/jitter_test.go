@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/gds/jitter"
+	"github.com/trisacrypto/directory/pkg/trtl/jitter"
 )
 
 // NOTE: because this is a stochastic test it might fail; run again to make sure the
