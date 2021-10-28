@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package trtl.v1;
-option go_package = "github.com/trisacrypto/directory/pkg/trtl/v1;pb";
+package trtl.pb.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/trtl/pb/v1;pb";
 
 service Trtl {
     // Get is a unary request to retrieve a value for a key.
