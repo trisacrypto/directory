@@ -15,7 +15,7 @@ import (
 // 1. A database service for interacting with a database
 // 2. A peers management service for interacting with remote peers
 // 3. A replication service which implements auto-adapting anti-entropy replication.
-type Trtl struct {
+type Server struct {
 	srv     *grpc.Server    // The gRPC server that listens on its own independent port
 	conf    *config.Config  // Configuration for the trtl server
 	db      store.Store     // Database connection for managing objects (alias to s.svc.db)
@@ -26,8 +26,8 @@ type Trtl struct {
 }
 
 // New creates a new trtl server given a configuration.
-func New(db store.Store, conf config.Config) (t *Trtl, err error) {
-	t = &Trtl{
+func New(db store.Store, conf config.Config) (s *Server, err error) {
+	s = &Server{
 		conf:    &conf,
 		db:      db,
 		honu:    NewHonuService(),
@@ -38,14 +38,14 @@ func New(db store.Store, conf config.Config) (t *Trtl, err error) {
 	// TODO: Check if the database Store is an Honu DB, if not then the Replica cannot Gossip.
 
 	// Initialize the gRPC server
-	t.srv = grpc.NewServer(grpc.UnaryInterceptor(t.interceptor))
-	pb.RegisterTrtlServer(t.srv, t.honu)
-	peers.RegisterPeerManagementServer(t.srv, t.peer)
-	return t, nil
+	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.interceptor))
+	pb.RegisterTrtlServer(s.srv, s.honu)
+	peers.RegisterPeerManagementServer(s.srv, s.peer)
+	return s, nil
 }
 
 // Serve gRPC requests on the specified bind address.
-func (t *Trtl) Serve() (err error) {
+func (t *Server) Serve() (err error) {
 	if !t.conf.Enabled {
 		log.Warn().Msg("trtl service is not enabled")
 		return nil
@@ -76,7 +76,7 @@ func (t *Trtl) Serve() (err error) {
 }
 
 // Shutdown the trtl server gracefully.
-func (t *Trtl) Shutdown() (err error) {
+func (t *Server) Shutdown() (err error) {
 	log.Debug().Msg("gracefully shutting down trtl server")
 	t.srv.GracefulStop()
 	// TODO: Also need a way to stop the anti-entropy routine.

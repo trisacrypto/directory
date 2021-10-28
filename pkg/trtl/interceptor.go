@@ -25,7 +25,7 @@ type PeerInfo struct {
 }
 
 // The interceptor intercepts incoming gRPC requests and adds remote peer information to the context.
-func (t *Trtl) interceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
+func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
 	// Track how long the method takes to execute.
 	start := time.Now()
 

@@ -31,7 +31,7 @@ func TestServer(t *testing.T) {
 	require.NoError(t, err)
 	client := pb.NewTrtlClient(conn)
 	_, err = client.Get(ctx, &pb.GetRequest{Key: []byte("foo")})
-	require.Contains(t, err.Error(), "not implemented")
+	require.EqualError(t, err, "rpc error: code = Unimplemented desc = not implemented")
 
 	err = trtl.Shutdown()
 	require.NoError(t, err)
