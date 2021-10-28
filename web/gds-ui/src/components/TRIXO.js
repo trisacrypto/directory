@@ -6,11 +6,11 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
 import { Trans } from "@lingui/macro";
-import { useLingui } from "@lingui/react";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const TRIXO = ({data, onChange}) => {
-  const { i18n } = useLingui();
 
   const createChangeHandler = (field) => (event) => {
     const changes = {[field]: {$set: event.target.value}};

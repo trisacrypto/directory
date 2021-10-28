@@ -65,13 +65,13 @@ msgstr "管理联系人"
 msgid "Administrative or executive contact for your organization to field high-level requests or queries. (Required)."
 msgstr "您组织中负责处理高级请求或咨询的行政或管理联系人。(必填)。"
 
-#: src/components/select/NaturalPersonNameTypeCode.js:8
-#~ msgid "Alias Name"
-#~ msgstr "别名"
+#: src/components/select/NaturalPersonNameTypeCode.js:10
+msgid "Alias Name"
+msgstr "别名"
 
-#: src/components/select/NationalIdentifierTypeCode.js:8
-#~ msgid "Alien Registration Number"
-#~ msgstr "外国人登记号码"
+#: src/components/select/NationalIdentifierTypeCode.js:10
+msgid "Alien Registration Number"
+msgstr "外国人登记号码"
 
 #: src/components/ivms101/NationalIdentification.js:31
 msgid "An identifier issued by an appropriate issuing authority."
@@ -81,17 +81,17 @@ msgstr "由适当颁发机构颁发的识别码。"
 msgid "Applicable Regulations"
 msgstr "适用法规"
 
-#: src/components/select/TransliterationMethodCode.js:8
-#~ msgid "Arabic (Arabic language)"
-#~ msgstr "阿拉伯(阿拉伯语)"
-
-#: src/components/select/TransliterationMethodCode.js:9
-#~ msgid "Arabic (Persian language)"
-#~ msgstr "阿拉伯(波斯语)"
-
 #: src/components/select/TransliterationMethodCode.js:10
-#~ msgid "Armenian"
-#~ msgstr "亚美尼亚"
+msgid "Arabic (Arabic language)"
+msgstr "阿拉伯(阿拉伯语)"
+
+#: src/components/select/TransliterationMethodCode.js:11
+msgid "Arabic (Persian language)"
+msgstr "阿拉伯(波斯语)"
+
+#: src/components/select/TransliterationMethodCode.js:12
+msgid "Armenian"
+msgstr "亚美尼亚"
 
 #: src/components/TRIXO.js:177
 msgid "At what threshold and currency does your organization conduct KYC?"
@@ -115,25 +115,25 @@ msgstr "账单联系人"
 msgid "Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network. (Optional)."
 msgstr "您组织中处理与TRISA网络运营有关的账户和发票索取或咨询的账单联系人。(选填) "
 
-#: src/components/select/AddressTypeCode.js:9
-#~ msgid "Business"
-#~ msgstr "业务"
+#: src/components/select/AddressTypeCode.js:11
+msgid "Business"
+msgstr "业务"
 
 #: src/components/Registration.js:373
 msgid "Business Category"
 msgstr "业务类别"
 
-#: src/components/Registration.js:380
-#~ msgid "Business Entity"
-#~ msgstr "业务实体"
+#: src/components/select/BusinessCategory.js:13
+msgid "Business Entity"
+msgstr "业务实体"
 
 #: src/components/TRIXO.js:152
 msgid "CDD & Travel Rule Policies"
 msgstr "CDD与Travel Rule政策"
 
-#: src/components/Registration.js:394
-#~ msgid "Centralized Exchange"
-#~ msgstr "中心化交易所"
+#: src/components/select/VASPCategory.js:10
+msgid "Centralized Exchange"
+msgstr "中心化交易所"
 
 #: src/components/Registration.js:535
 msgid "Certificate Common Name"
@@ -173,17 +173,17 @@ msgstr "注册国家"
 msgid "Created and maintained by <0>Rotational Labs</0> in partnership with <1>CipherTrace</1> on behalf of <2>TRISA</2>."
 msgstr "由<0> Rotation Labs</0>代表<2>TRISA</2>与<1>CipherTrace</1>合作创建并维护。"
 
-#: src/components/Registration.js:398
-#~ msgid "Custody Provider"
-#~ msgstr "托管提供商"
+#: src/components/select/VASPCategory.js:14
+msgid "Custody Provider"
+msgstr "托管提供商"
 
 #: src/components/ivms101/LegalPerson.js:38
 msgid "Customer Number"
 msgstr "客户编号"
 
-#: src/components/select/TransliterationMethodCode.js:11
-#~ msgid "Cyrillic"
-#~ msgstr "西里尔文"
+#: src/components/select/TransliterationMethodCode.js:13
+msgid "Cyrillic"
+msgstr "西里尔文"
 
 #: src/components/TRIXO.js:246
 msgid "Data Protection Policies"
@@ -193,13 +193,13 @@ msgstr "数据保护政策"
 msgid "Date of Incorporation/Establishment"
 msgstr "成立/注册日期"
 
-#: src/components/Registration.js:395
-#~ msgid "Decentralized Exchange"
-#~ msgstr "去中心化交易所"
+#: src/components/select/VASPCategory.js:11
+msgid "Decentralized Exchange"
+msgstr "去中心化交易所"
 
-#: src/components/select/TransliterationMethodCode.js:12
-#~ msgid "Devanagari & related Indic"
-#~ msgstr "梵文和相关印度语"
+#: src/components/select/TransliterationMethodCode.js:14
+msgid "Devanagari & related Indic"
+msgstr "梵文和相关印度语"
 
 #: src/components/TopNav.js:25
 msgid "Documentation"
@@ -221,9 +221,9 @@ msgstr "您的组织是否保障和保护PII，包括根据Travel Rule从其他V
 msgid "Download"
 msgstr "下载"
 
-#: src/components/select/NationalIdentifierTypeCode.js:11
-#~ msgid "Driver's License Number"
-#~ msgstr "驾照号码"
+#: src/components/select/NationalIdentifierTypeCode.js:13
+msgid "Driver's License Number"
+msgstr "驾照号码"
 
 #: src/components/Registration.js:518
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
@@ -233,45 +233,45 @@ msgstr "每个VASP都需要为VASP之间的通信建立一个TRISA端点。请�
 msgid "Email address"
 msgstr "电子邮件地址"
 
-#: src/components/select/NationalIdentifierTypeCode.js:12
-#~ msgid "Foreign Investment Identity Number"
-#~ msgstr "外商投资登记号"
+#: src/components/select/NationalIdentifierTypeCode.js:14
+msgid "Foreign Investment Identity Number"
+msgstr "外商投资登记号"
 
 #: src/components/Contact.js:15
 msgid "Full Name"
 msgstr "全名"
 
-#: src/components/Registration.js:402
-#~ msgid "Gambling or Gaming Site"
-#~ msgstr "博彩或游戏网站"
+#: src/components/select/VASPCategory.js:18
+msgid "Gambling or Gaming Site"
+msgstr "博彩或游戏网站"
 
-#: src/components/select/AddressTypeCode.js:10
-#~ msgid "Geographic"
-#~ msgstr "地理"
+#: src/components/select/AddressTypeCode.js:12
+msgid "Geographic"
+msgstr "地理"
 
-#: src/components/select/TransliterationMethodCode.js:13
-#~ msgid "Georgian"
-#~ msgstr "格鲁吉亚"
+#: src/components/select/TransliterationMethodCode.js:15
+msgid "Georgian"
+msgstr "格鲁吉亚"
 
 #: src/components/LookupResults.js:17
 msgid "Global TRISA Directory Record"
 msgstr "全球TRISA目录记录"
 
-#: src/components/Registration.js:379
-#~ msgid "Government Entity"
-#~ msgstr "政府实体"
-
-#: src/components/select/TransliterationMethodCode.js:14
-#~ msgid "Greek"
-#~ msgstr "希腊"
-
-#: src/components/select/TransliterationMethodCode.js:15
-#~ msgid "Han (Hanzi, Kanji, Hanja)"
-#~ msgstr "汉字(中国汉字、日本汉字、韩国汉字)"
+#: src/components/select/BusinessCategory.js:12
+msgid "Government Entity"
+msgstr "政府实体"
 
 #: src/components/select/TransliterationMethodCode.js:16
-#~ msgid "Hebrew"
-#~ msgstr "希伯来语"
+msgid "Greek"
+msgstr "希腊"
+
+#: src/components/select/TransliterationMethodCode.js:17
+msgid "Han (Hanzi, Kanji, Hanja)"
+msgstr "汉字(中国汉字、日本汉字、韩国汉字)"
+
+#: src/components/select/TransliterationMethodCode.js:18
+msgid "Hebrew"
+msgstr "希伯来语"
 
 #: src/components/Registration.js:632
 msgid "ID: {0}<0/>Verification Status: \"{1}\""
@@ -285,9 +285,9 @@ msgstr "登记号码"
 msgid "Identification Type"
 msgstr "登记类型"
 
-#: src/components/select/NationalIdentifierTypeCode.js:15
-#~ msgid "Identity Card Number"
-#~ msgstr "登记卡号"
+#: src/components/select/NationalIdentifierTypeCode.js:17
+msgid "Identity Card Number"
+msgstr "登记卡号"
 
 #: src/components/ivms101/NationalIdentification.js:62
 msgid "If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List."
@@ -298,9 +298,9 @@ msgstr "如果识别号为LEI编号，则GLEIF注册机构列表中使用ID。"
 msgid "Introduction"
 msgstr "介绍"
 
-#: src/components/Registration.js:400
-#~ msgid "Investment Fund - hedge funds, ETFs, and family offices"
-#~ msgstr "投资基金 - 对冲基金、交易所交易基金和家族理财室"
+#: src/components/select/VASPCategory.js:16
+msgid "Investment Fund - hedge funds, ETFs, and family offices"
+msgstr "投资基金 - 对冲基金、交易所交易基金和家族理财室"
 
 #: src/components/TRIXO.js:139
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
@@ -314,34 +314,34 @@ msgstr "法律是否要求您的组织保护PII? "
 msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
 msgstr "您的组织是否须在其许可/批准/注册的司法管辖区遵守Travel Rule的适用标准? "
 
-#: src/components/select/TransliterationMethodCode.js:17
-#~ msgid "Kana"
-#~ msgstr "日本假名"
+#: src/components/select/TransliterationMethodCode.js:19
+msgid "Kana"
+msgstr "日本假名"
 
-#: src/components/Registration.js:397
-#~ msgid "Kiosk / Crypto ATM Operator"
-#~ msgstr "Kiosk / 加密货币ATM运营商"
+#: src/components/select/VASPCategory.js:13
+msgid "Kiosk / Crypto ATM Operator"
+msgstr "Kiosk / 加密货币ATM运营商"
 
-#: src/components/select/TransliterationMethodCode.js:18
-#~ msgid "Korean"
-#~ msgstr "韩语"
+#: src/components/select/TransliterationMethodCode.js:20
+msgid "Korean"
+msgstr "韩语"
 
-#: src/components/select/NationalIdentifierTypeCode.js:16
-#~ msgid "Legal Entity Identifier (LEI)"
-#~ msgstr "法律实体识别编码(LEI) "
+#: src/components/select/NationalIdentifierTypeCode.js:18
+msgid "Legal Entity Identifier (LEI)"
+msgstr "法律实体识别编码(LEI) "
 
-#: src/components/select/LegalPersonNameTypeCode.js:9
-#: src/components/select/NaturalPersonNameTypeCode.js:11
-#~ msgid "Legal Name"
-#~ msgstr "法定名称"
+#: src/components/select/LegalPersonNameTypeCode.js:11
+#: src/components/select/NaturalPersonNameTypeCode.js:13
+msgid "Legal Name"
+msgstr "法定名称"
 
 #: src/components/Registration.js:307
 msgid "Legal Person"
 msgstr "法人"
 
-#: src/components/Registration.js:405
-#~ msgid "Legal person"
-#~ msgstr "法人"
+#: src/components/select/VASPCategory.js:21
+msgid "Legal person"
+msgstr "法人"
 
 #: src/components/Registration.js:454
 msgid "Legal/Compliance Contact"
@@ -359,29 +359,29 @@ msgstr "加载中……"
 msgid "Local Name Identifiers"
 msgstr "本地名称识别编码"
 
-#: src/components/select/NaturalPersonNameTypeCode.js:10
-#~ msgid "Maiden Name"
-#~ msgstr "婚前姓"
+#: src/components/select/NaturalPersonNameTypeCode.js:12
+msgid "Maiden Name"
+msgstr "婚前姓"
 
 #: src/components/Registration.js:637
 msgid "Message from server: \"{0}\""
 msgstr "来自服务器的消息: \"{0}\" "
 
-#: src/components/Registration.js:403
-#~ msgid "Mining Pool"
-#~ msgstr "矿池"
+#: src/components/select/VASPCategory.js:19
+msgid "Mining Pool"
+msgstr "矿池"
 
-#: src/components/Registration.js:404
-#~ msgid "Mixing Service"
-#~ msgstr "混币服务"
+#: src/components/select/VASPCategory.js:20
+msgid "Mixing Service"
+msgstr "混币服务"
 
 #: src/components/ivms101/LegalPersonName.js:126
 msgid "Name Identifiers"
 msgstr "名字识别编码"
 
-#: src/components/select/NaturalPersonNameTypeCode.js:9
-#~ msgid "Name at Birth"
-#~ msgstr "出生名字"
+#: src/components/select/NaturalPersonNameTypeCode.js:11
+msgid "Name at Birth"
+msgstr "出生名字"
 
 #: src/components/TRIXO.js:120
 msgid "Name of Primary Regulator"
@@ -405,16 +405,16 @@ msgstr "自然人"
 msgid "Next"
 msgstr "下一步"
 
-#: src/components/TRIXO.js:145
-#: src/components/TRIXO.js:160
-#~ msgid "No"
-#~ msgstr "否"
+#: src/components/TRIXO.js:148
+#: src/components/TRIXO.js:163
+msgid "No"
+msgstr "否"
 
-#: src/components/Registration.js:381
-#~ msgid "Non-Commercial Entity"
-#~ msgstr "非商业实体"
+#: src/components/select/BusinessCategory.js:14
+msgid "Non-Commercial Entity"
+msgstr "非商业实体"
 
-#: src/components/select/VASPCategory.js:23
+#: src/components/select/VASPCategory.js:22
 msgid "Other"
 msgstr "其他"
 
@@ -422,29 +422,25 @@ msgstr "其他"
 msgid "Other Jursidictions"
 msgstr "其他管辖范围"
 
-#: src/components/select/VASPCategory.js:22
-#~ msgid "Otherxxx"
-#~ msgstr ""
+#: src/components/select/VASPCategory.js:15
+msgid "Over-The-Counter Trading Desk"
+msgstr "场外交易"
 
-#: src/components/Registration.js:399
-#~ msgid "Over-The-Counter Trading Desk"
-#~ msgstr "场外交易"
+#: src/components/TRIXO.js:147
+msgid "Partially"
+msgstr "部分"
 
-#: src/components/TRIXO.js:144
-#~ msgid "Partially"
-#~ msgstr "部分"
+#: src/components/TRIXO.js:162
+msgid "Partially Implemented"
+msgstr "部分实现"
 
-#: src/components/TRIXO.js:159
-#~ msgid "Partially Implemented"
-#~ msgstr "部分实现"
+#: src/components/select/NationalIdentifierTypeCode.js:11
+msgid "Passport Number"
+msgstr "护照号码"
 
-#: src/components/select/NationalIdentifierTypeCode.js:9
-#~ msgid "Passport Number"
-#~ msgstr "护照号码"
-
-#: src/components/Registration.js:396
-#~ msgid "Person-to-Person Exchange"
-#~ msgstr "面对面交易"
+#: src/components/select/VASPCategory.js:12
+msgid "Person-to-Person Exchange"
+msgstr "面对面交易"
 
 #: src/components/Contact.js:42
 msgid "Phone Number"
@@ -510,9 +506,9 @@ msgstr "主要国家管辖范围"
 msgid "Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email. (Required)."
 msgstr "处理相关技术咨询的主要联系人，主要是有关您参与TRISA网络的服务的运行和状态。可以是一个群组或管理员邮箱。(必填)。"
 
-#: src/components/Registration.js:378
-#~ msgid "Private Organization"
-#~ msgstr "私营组织"
+#: src/components/select/BusinessCategory.js:11
+msgid "Private Organization"
+msgstr "私营组织"
 
 #: src/components/LookupResults.js:21
 msgid "Registered Directory"
@@ -522,9 +518,9 @@ msgstr "注册目录"
 msgid "Registration Authority"
 msgstr "注册机构"
 
-#: src/components/select/NationalIdentifierTypeCode.js:10
-#~ msgid "Registration Authority Identifier"
-#~ msgstr "注册机构识别编码"
+#: src/components/select/NationalIdentifierTypeCode.js:12
+msgid "Registration Authority Identifier"
+msgstr "注册机构识别编码"
 
 #: src/components/TRIXO.js:65
 msgid "Regulator Name"
@@ -534,21 +530,21 @@ msgstr "监管机构名称"
 msgid "Reset"
 msgstr "重置"
 
-#: src/components/select/AddressTypeCode.js:8
-#~ msgid "Residential"
-#~ msgstr "住宅"
+#: src/components/select/AddressTypeCode.js:10
+msgid "Residential"
+msgstr "住宅"
 
 #: src/components/VerifyContact.js:80
 msgid "Return to Directory"
 msgstr "返回目录"
 
-#: src/components/select/LegalPersonNameTypeCode.js:10
-#~ msgid "Short Name"
-#~ msgstr "短名称"
+#: src/components/select/LegalPersonNameTypeCode.js:12
+msgid "Short Name"
+msgstr "短名称"
 
-#: src/components/select/NationalIdentifierTypeCode.js:14
-#~ msgid "Social Security Number"
-#~ msgstr "社会保险号"
+#: src/components/select/NationalIdentifierTypeCode.js:16
+msgid "Social Security Number"
+msgstr "社会保险号"
 
 #: src/components/LookupForm.js:49
 msgid "Submit"
@@ -601,17 +597,17 @@ msgstr "TRISA特定标识符(UUID)，仅在更新现有注册信息时提供。"
 msgid "TRIXO Questionnaire"
 msgstr "TRIXO问卷"
 
-#: src/components/select/NationalIdentifierTypeCode.js:13
-#~ msgid "Tax Identification Number"
-#~ msgstr "纳税人识别号"
+#: src/components/select/NationalIdentifierTypeCode.js:15
+msgid "Tax Identification Number"
+msgstr "纳税人识别号"
 
 #: src/components/Registration.js:435
 msgid "Technical Contact"
 msgstr "技术联系信息"
 
-#: src/components/select/TransliterationMethodCode.js:19
-#~ msgid "Thai"
-#~ msgstr "泰语"
+#: src/components/select/TransliterationMethodCode.js:21
+msgid "Thai"
+msgstr "泰语"
 
 #: src/components/Registration.js:321
 msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
@@ -665,28 +661,28 @@ msgstr "为了帮助您填写稍长的注册表单，我们已将表单分成多
 msgid "To get started, please tell us a bit about your organization."
 msgstr "首先，请介绍一下贵公司的情况。"
 
-#: src/components/Registration.js:401
-#~ msgid "Token Project"
-#~ msgstr "代币项目"
+#: src/components/select/VASPCategory.js:17
+msgid "Token Project"
+msgstr "代币项目"
 
-#: src/components/select/LegalPersonNameTypeCode.js:11
-#~ msgid "Trading Name"
-#~ msgstr "交易名称"
+#: src/components/select/LegalPersonNameTypeCode.js:13
+msgid "Trading Name"
+msgstr "交易名称"
 
 #: src/components/Registration.js:642
 msgid "Understood"
 msgstr "理解"
 
-#: src/components/select/AddressTypeCode.js:11
-#: src/components/select/LegalPersonNameTypeCode.js:8
-#: src/components/select/NationalIdentifierTypeCode.js:17
-#: src/components/select/NaturalPersonNameTypeCode.js:12
-#~ msgid "Unspecified"
-#~ msgstr "未指定"
+#: src/components/select/AddressTypeCode.js:13
+#: src/components/select/LegalPersonNameTypeCode.js:10
+#: src/components/select/NationalIdentifierTypeCode.js:19
+#: src/components/select/NaturalPersonNameTypeCode.js:14
+msgid "Unspecified"
+msgstr "未指定"
 
-#: src/components/select/TransliterationMethodCode.js:20
-#~ msgid "Unspecified Standard"
-#~ msgstr "未指定的标准"
+#: src/components/select/TransliterationMethodCode.js:22
+msgid "Unspecified Standard"
+msgstr "未指定的标准"
 
 #: src/components/Registration.js:386
 msgid "VASP Category"
@@ -716,10 +712,10 @@ msgstr "Travel Rule 合规的最低门槛是多少?"
 msgid "When you are verified you will be issued PKCS12 encrypted identity certificates for use in mTLS authentication between TRISA members. The password to decrypt those certificates is shown below:"
 msgstr "当您通过验证，您将获得PKCS12加密身份证书，用于TRISA成员之间的mTLS身份验证。解密这些证书的密码如下所示: "
 
-#: src/components/TRIXO.js:143
-#: src/components/TRIXO.js:158
-#~ msgid "Yes"
-#~ msgstr "是"
+#: src/components/TRIXO.js:146
+#: src/components/TRIXO.js:161
+msgid "Yes"
+msgstr "是"
 
 #: src/components/Registration.js:613
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."

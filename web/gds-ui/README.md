@@ -101,7 +101,7 @@ npm install --save @lingui/react
 }
 ```
 
-- Wrap all text messages that need to be translated with `<Trans> Message to be translated</Trans>`. Also add `import { Trans } from "@lingui/macro"` to each files containing wrapped messages.  
+- Wrap all text messages that need to be translated with `<Trans> Message to be translated</Trans>`. Also add `import { Trans } from "@lingui/macro"` to each file containing wrapped messages. For text inside a select menu, please use ``i18n._(t`text`)`` and also remember to add `import { i18n } from "@lingui/core"; import { t } from "@lingui/macro";` for each file.
 
 - Run `npm run extract` to extract all messages. Or run `npm run extract-c` to extract all messages while also removing the translations that are no longer in the source file. 
 

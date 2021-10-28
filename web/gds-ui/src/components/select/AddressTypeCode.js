@@ -1,9 +1,9 @@
 import React from 'react';
-import { useLingui } from "@lingui/react";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const AddressTypeCode = () => {
-  const { i18n } = useLingui();
 
   return (
     <>
