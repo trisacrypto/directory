@@ -2,11 +2,12 @@ package config
 
 import (
 	"errors"
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
-type ReplicaConfig struct {
+type Config struct {
 	Enabled        bool          `split_words:"true" default:"true"`
 	BindAddr       string        `split_words:"true" default:":4435"`
 	PID            uint64        `split_words:"true" required:"false"`
@@ -16,19 +17,19 @@ type ReplicaConfig struct {
 	GossipSigma    time.Duration `split_words:"true" default:"5s"`
 }
 
-// New creates a new ReplicaConfig object, loading environment variables and defaults.
-func New() (_ ReplicaConfig, err error) {
-	var conf ReplicaConfig
+// New creates a new Config object, loading environment variables and defaults.
+func New() (_ Config, err error) {
+	var conf Config
 	if err = envconfig.Process("trtl", &conf); err != nil {
-		return ReplicaConfig{}, err
+		return Config{}, err
 	}
 	if err = conf.Validate(); err != nil {
-		return ReplicaConfig{}, err
+		return Config{}, err
 	}
 	return conf, nil
 }
 
-func (c ReplicaConfig) Validate() error {
+func (c Config) Validate() error {
 	if c.Enabled {
 		if c.PID == 0 {
 			return errors.New("invalid configuration: PID required for enabled replica")
