@@ -12,6 +12,8 @@ import (
 // DirectoryAdministrationClient defines client-side interactions with the API.
 type DirectoryAdministrationClient interface {
 	Login(ctx context.Context) (err error)
+	Refresh(ctx context.Context) (err error)
+	Logout(ctx context.Context) (err error)
 	Status(ctx context.Context) (out *StatusReply, err error)
 	Authenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error)
 	Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error)

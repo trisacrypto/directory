@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { Col, Row } from 'react-bootstrap'
-import { AddressTypeHeaders } from '../../../../constants'
+import { AddressTypeHeaders } from '../../../../../constants'
 
 
 export const renderLines = (address) => (
@@ -88,12 +88,12 @@ function Geographic({ data }) {
 
 
     return (
-        <Col lg={6} className="mt-3">
+        <Col lg={6} className="">
             {
                 data && data.map((address, index) => (
                     <Row key={index}>
-                        <p className="fw-bold mb-2" data-testid="addressType">{AddressTypeHeaders[address?.address_type]} Address</p>
-                        <hr />
+                        <p className="mb-0" data-testid="addressType">{AddressTypeHeaders[address?.address_type]} Address</p>
+                        <hr className='my-1' />
                         {renderAddress(address)}
                     </Row>
                 ))

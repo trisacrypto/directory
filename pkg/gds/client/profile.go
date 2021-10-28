@@ -9,8 +9,8 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
-	"github.com/trisacrypto/directory/pkg/gds/peers/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -126,13 +126,7 @@ func (p *DirectoryProfile) Connect() (_ api.TRISADirectoryClient, err error) {
 // Connect to the GDS Admin API and return an admin client
 func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, err error) {
 	// Connect the admin client
-	if client, err = admin.New(p.Endpoint); err != nil {
-		return nil, err
-	}
-
-	// Attempt to login the admin client
-	// TODO: use audience and token keys stored on profile
-	if err = client.Login(context.TODO()); err != nil {
+	if client, err = admin.New(p.Endpoint, p); err != nil {
 		return nil, err
 	}
 	return client, nil

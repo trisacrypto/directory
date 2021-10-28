@@ -10,20 +10,17 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
-	"path/filepath"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-querystring/query"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/shibukawa/configdir"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 )
 
 // New creates a new admin.v2 API client that implements the Service interface.
-func New(endpoint string) (_ DirectoryAdministrationClient, err error) {
+func New(endpoint string, creds Credentials) (_ DirectoryAdministrationClient, err error) {
 	c := &APIv2{
+		creds: creds,
 		client: &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
@@ -44,58 +41,66 @@ func New(endpoint string) (_ DirectoryAdministrationClient, err error) {
 
 // APIv2 implements the Service interface.
 type APIv2 struct {
-	endpoint    *url.URL
-	client      *http.Client
-	accessToken string
-	csrfToken   string
+	endpoint     *url.URL
+	creds        Credentials
+	client       *http.Client
+	accessToken  string
+	refreshToken string
+	csrfToken    string
 }
 
 // Ensure the API implments the Service interface.
 var _ DirectoryAdministrationClient = &APIv2{}
 
-// Login prepares the client for authorized requests. It first looks for a stored token
-// on disk; if it finds none then it uses either a token manager or redirects the client
-// to the browser to authenticate with the server. If the access token is expired, it
-// uses the refresh token to reauthenticate and saves the resulting tokens back to disk.
+//===========================================================================
+// User Methods
+//===========================================================================
+
+// Login prepares the client for authorized requests. It uses the internal credentials
+// to set the access and refresh tokens but does not return an error if the internal
+// credentials is nil. Login can be called manually by the user, or it is called
+// automatically on requests that must be authenticated.
 func (s *APIv2) Login(ctx context.Context) (err error) {
-	var creds *AuthReply
-	if creds, err = s.Credentials(); err != nil {
-		// No credentials were found begin login process
-		// TODO: refactor this section to allow either local token generation or online login
-		return s.GenerateCredentials()
+	if s.creds != nil {
+		if s.accessToken, s.refreshToken, err = s.creds.Login(s); err != nil {
+			return err
+		}
 	}
-	s.accessToken = creds.AccessToken
-
-	// If we've successfully loaded the credentials check the access token to make sure it's still valid
-	parser := &jwt.Parser{}
-	claims := &tokens.Claims{}
-	if _, _, err = parser.ParseUnverified(creds.AccessToken, claims); err != nil {
-		s.DeleteCredentials()
-		return errors.New("access tokens unparseable, cached credentials have been deleted, please try again")
-	}
-
-	if err = claims.Valid(); err == nil {
-		return nil
-	}
-
-	// Access token is invalid attempt to reauthenticate
-	if creds, err = s.Reauthenticate(ctx, &AuthRequest{Credential: creds.RefreshToken}); err != nil {
-		s.DeleteCredentials()
-		return fmt.Errorf("could not reauthenticate (%s), cached credentials have been deleted, please try again", err)
-	}
-
-	// Save refreshed creds to disk
-	s.accessToken = creds.AccessToken
-
-	var data []byte
-	if data, err = json.Marshal(creds); err != nil {
-		return err
-	}
-
-	folders := cfgd.QueryFolders(configdir.Global)
-	folders[0].WriteFile(credentials, data)
-
 	return nil
+}
+
+// Refresh prepares the client to continue making authorized requests. It uses the
+// internal credentials to update the access and refresh tokens but does not return an
+// error if the internal credentials is nil. Refresh can be called manually by the user,
+// or it is called automatically on requests that must be authenticated.
+func (s *APIv2) Refresh(ctx context.Context) (err error) {
+	if s.creds != nil {
+		if s.accessToken, s.refreshToken, err = s.creds.Refresh(s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Logout removes the cached access and refresh tokens requiring the API to login again
+func (s *APIv2) Logout(ctx context.Context) (err error) {
+	// Remove tokens from the cache
+	s.accessToken = ""
+	s.refreshToken = ""
+	s.csrfToken = ""
+
+	if s.creds != nil {
+		return s.creds.Logout(s)
+	}
+	return nil
+}
+
+// Tokens returns the access and refresh tokens. It is not part of the
+// DirectoryAdministrationClient interface, so callers will have to type check *APIv2 to
+// get access to this method. It's intent is to provide the cached tokens to the
+// internal credentials on refresh or for auditing purposes and use in testing.
+func (s *APIv2) Tokens() (accessToken, refreshToken string) {
+	return s.accessToken, s.refreshToken
 }
 
 //===========================================================================
@@ -126,6 +131,7 @@ func (s *APIv2) ProtectAuthenticate(ctx context.Context) (err error) {
 }
 
 // Authenticate the the client to the Server using the supplied credentials.
+// This method calls ProtectAuthenticate before performing the authentication.
 func (s *APIv2) Authenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error) {
 	if err = s.ProtectAuthenticate(ctx); err != nil {
 		return nil, fmt.Errorf("could not protect authenticate from CSRF: %s", err)
@@ -146,6 +152,7 @@ func (s *APIv2) Authenticate(ctx context.Context, in *AuthRequest) (out *AuthRep
 }
 
 // Reauthenticate the the client to the Server using the supplied credentials.
+// This method calls ProtectAuthenticate before performing the reauthentication.
 func (s *APIv2) Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error) {
 	if err = s.ProtectAuthenticate(ctx); err != nil {
 		return nil, fmt.Errorf("could not protect reauthenticate from CSRF: %s", err)
@@ -194,6 +201,11 @@ func (s *APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 }
 
 func (s *APIv2) Summary(ctx context.Context) (out *SummaryReply, err error) {
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	//  Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/summary", nil, nil); err != nil {
@@ -209,6 +221,11 @@ func (s *APIv2) Summary(ctx context.Context) (out *SummaryReply, err error) {
 }
 
 func (s *APIv2) Autocomplete(ctx context.Context) (out *AutocompleteReply, err error) {
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	//  Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/autocomplete", nil, nil); err != nil {
@@ -228,6 +245,11 @@ func (s *APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVA
 	var params url.Values
 	if params, err = query.Values(in); err != nil {
 		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
 	}
 
 	//  Make the HTTP request
@@ -251,6 +273,11 @@ func (s *APIv2) RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPR
 		return nil, errors.New("id is required to compute the URL for the VASP")
 	}
 	path := fmt.Sprintf("/v2/vasps/%s", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
 
 	//  Make the HTTP request
 	var req *http.Request
@@ -276,6 +303,11 @@ func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteReques
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/notes", in.VASP)
 
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
@@ -299,6 +331,11 @@ func (s *APIv2) ListReviewNotes(ctx context.Context, id string) (out *ListReview
 
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/notes", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
 
 	// Make the HTTP request
 	var req *http.Request
@@ -324,6 +361,11 @@ func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteReques
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", in.VASP, in.NoteID)
 
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodPut, path, in, nil); err != nil {
@@ -348,6 +390,11 @@ func (s *APIv2) DeleteReviewNote(ctx context.Context, vaspID string, noteID stri
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/notes/%s", vaspID, noteID)
 
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
@@ -369,12 +416,13 @@ func (s *APIv2) Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply
 		return nil, ErrIDRequred
 	}
 
-	if err = s.ProtectAuthenticate(ctx); err != nil {
-		return nil, fmt.Errorf("could not protect review from CSRF: %s", err)
-	}
-
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/review", in.ID)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
 
 	//  Make the HTTP request
 	var req *http.Request
@@ -397,12 +445,13 @@ func (s *APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply
 		return nil, ErrIDRequred
 	}
 
-	if err = s.ProtectAuthenticate(ctx); err != nil {
-		return nil, fmt.Errorf("could not protect resend from CSRF: %s", err)
-	}
-
 	// Determine the path from the request
 	path := fmt.Sprintf("/v2/vasps/%s/resend", in.ID)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
 
 	//  Make the HTTP request
 	var req *http.Request
@@ -425,6 +474,12 @@ func (s *APIv2) ReviewTimeline(ctx context.Context, in *ReviewTimelineParams) (o
 	if params, err = query.Values(in); err != nil {
 		return nil, fmt.Errorf("could not encode query params: %s", err)
 	}
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/reviews", nil, &params); err != nil {
@@ -483,7 +538,7 @@ func (s *APIv2) NewRequest(ctx context.Context, method, path string, data interf
 	req.Header.Add("Accept-Encoding", acceptEncode)
 	req.Header.Add("Content-Type", contentType)
 
-	// Set authorizatoin and csrf protection if available
+	// Set authorization and csrf protection if available
 	if s.accessToken != "" {
 		req.Header.Add("Authorization", "Bearer "+s.accessToken)
 	}
@@ -532,99 +587,44 @@ func (s *APIv2) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 	return rep, nil
 }
 
-var cfgd = configdir.New("rotational", "gds")
+// checkAuthentication ensures that the client is prepared for authentication and should
+// be called by all client methods that require authentication. The check will call
+// Login() or Refresh() as needed depending on the state of the client.
+func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
+	// If no access token is available, call Login.
+	if s.accessToken == "" {
+		return s.Login(ctx)
+	}
 
-const (
-	credentials = "credentials.json"
-)
+	// Ignore parsing error since we'll get ValidationErrorUnverifiable but ensure that
+	// a token is returned in case it was a parsing error. See the following for more:
+	// https://github.com/dgrijalva/jwt-go/issues/37#issuecomment-58764625
+	accessClaims := new(tokens.Claims)
+	if token, err := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
+		return fmt.Errorf("could not parse access token: %s", err)
+	}
 
-// Credentials returns the cached access and refresh tokens from disk.
-func (s *APIv2) Credentials() (creds *AuthReply, err error) {
-	folder := cfgd.QueryFolderContainsFile(credentials)
-	if folder != nil {
-		var data []byte
-		if data, err = folder.ReadFile(credentials); err != nil {
-			return nil, err
+	// Manually check if the access token has not expired
+	now := time.Now().Unix()
+	if accessClaims.ExpiresAt != 0 && now > accessClaims.ExpiresAt {
+		// access token is expired, check if refresh is not expired
+		if s.refreshToken != "" {
+			refreshClaims := new(tokens.Claims)
+			if token, _ := jwt.ParseWithClaims(s.accessToken, accessClaims, nil); token == nil {
+				return fmt.Errorf("could not parse refresh token")
+			}
+
+			if now <= refreshClaims.ExpiresAt {
+				// refresh token is not expired, attempt a refresh
+				return s.Refresh(ctx)
+			}
 		}
 
-		creds = &AuthReply{}
-		if err = json.Unmarshal(data, creds); err != nil {
-			return nil, err
-		}
-
-		return creds, nil
-	}
-	return nil, errors.New("no credentials are available")
-}
-
-// DeleteCredentials removes cached access and refresh tokens
-func (s *APIv2) DeleteCredentials() (err error) {
-	folder := cfgd.QueryFolderContainsFile(credentials)
-	if folder != nil && folder.Exists(credentials) {
-		return os.Remove(filepath.Join(folder.Path, credentials))
+		// access and refresh tokens are both expired, login again
+		return s.Login(ctx)
 	}
 
-	return nil
-}
-
-// TODO: do better than this when we have client profiles
-type ClientConfig struct {
-	Audience  string            `envconfig:"GDS_ADMIN_AUDIENCE"`
-	TokenKeys map[string]string `envconfig:"GDS_ADMIN_TOKEN_KEYS"`
-}
-
-// GenerateCredentials creates a token manager to generate and save credentials
-func (s *APIv2) GenerateCredentials() (err error) {
-	var conf ClientConfig
-	if err = envconfig.Process("gds", &conf); err != nil {
-		return err
-	}
-
-	if len(conf.TokenKeys) == 0 {
-		return errors.New("invalid configuration: token keys are required for local key generation")
-	}
-
-	var tm *tokens.TokenManager
-	if tm, err = tokens.New(conf.TokenKeys, conf.Audience); err != nil {
-		return err
-	}
-
-	var accessToken, refreshToken *jwt.Token
-
-	claims := map[string]interface{}{
-		"hd":      "rotational.io",
-		"email":   "admin@rotational.io",
-		"name":    "GDS Admin CLI",
-		"picture": "",
-	}
-
-	// Create the access and refresh tokens from the claims
-	if accessToken, err = tm.CreateAccessToken(claims); err != nil {
-		return err
-	}
-
-	if refreshToken, err = tm.CreateRefreshToken(accessToken); err != nil {
-		return err
-	}
-
-	// Sign the tokens and return the response
-	creds := new(AuthReply)
-	if creds.AccessToken, err = tm.Sign(accessToken); err != nil {
-		return err
-	}
-	if creds.RefreshToken, err = tm.Sign(refreshToken); err != nil {
-		return err
-	}
-
-	// Save the credentials to disk
-	var data []byte
-	if data, err = json.Marshal(creds); err != nil {
-		return err
-	}
-
-	folders := cfgd.QueryFolders(configdir.Global)
-	folders[0].WriteFile(credentials, data)
-
-	s.accessToken = creds.AccessToken
+	// access token is not expired, try using it
+	// (doesn't mean it's not valid, but a 401 will be returned from server)
 	return nil
 }
