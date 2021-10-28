@@ -143,9 +143,9 @@ const TRIXO = ({data, onChange}) => {
           onChange={createChangeHandler("financial_transfers_permitted")}
         >
           <option value=""></option>
-          <option value="yes">{i18n._("Yes")}</option>
-          <option value="partial">{i18n._("Partially")}</option>
-          <option value="no">{i18n._("No")}</option>
+          <option value="yes">{i18n._(t`Yes`)}</option>
+          <option value="partial">{i18n._(t`Partially`)}</option>
+          <option value="no">{i18n._(t`No`)}</option>
         </Form.Control>
       </Form.Group>
       <fieldset>
@@ -158,9 +158,9 @@ const TRIXO = ({data, onChange}) => {
             onChange={createChangeHandler("has_required_regulatory_program")}
           >
             <option value=""></option>
-            <option value="yes">{i18n._("Yes")}</option>
-            <option value="partial">{i18n._("Partially Implemented")}</option>
-            <option value="no">{i18n._("No")}</option>
+            <option value="yes">{i18n._(t`Yes`)}</option>
+            <option value="partial">{i18n._(t`Partially Implemented`)}</option>
+            <option value="no">{i18n._(t`No`)}</option>
           </Form.Control>
         </Form.Group>
         <Form.Group>

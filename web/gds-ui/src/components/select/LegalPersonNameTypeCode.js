@@ -7,10 +7,10 @@ const LegalPersonNameTypeCode = () => {
 
   return (
     <>
-    <option value={0}>{i18n._("Unspecified")}</option>
-    <option value={1}>{i18n._("Legal Name")}</option>
-    <option value={2}>{i18n._("Short Name")}</option>
-    <option value={3}>{i18n._("Trading Name")}</option>
+    <option value={0}>{i18n._(t`Unspecified`)}</option>
+    <option value={1}>{i18n._(t`Legal Name`)}</option>
+    <option value={2}>{i18n._(t`Short Name`)}</option>
+    <option value={3}>{i18n._(t`Trading Name`)}</option>
     </>
   )
 }

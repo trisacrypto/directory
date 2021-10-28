@@ -7,10 +7,10 @@ const AddressTypeCode = () => {
 
   return (
     <>
-    <option value={1}>{i18n._("Residential")}</option>
-    <option value={2}>{i18n._("Business")}</option>
-    <option value={3}>{i18n._("Geographic")}</option>
-    <option value={0}>{i18n._("Unspecified")}</option>
+    <option value={1}>{i18n._(t`Residential`)}</option>
+    <option value={2}>{i18n._(t`Business`)}</option>
+    <option value={3}>{i18n._(t`Geographic`)}</option>
+    <option value={0}>{i18n._(t`Unspecified`)}</option>
     </>
   )
 }
