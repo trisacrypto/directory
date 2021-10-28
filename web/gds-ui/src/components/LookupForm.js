@@ -2,7 +2,7 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 class Lookup extends React.Component {

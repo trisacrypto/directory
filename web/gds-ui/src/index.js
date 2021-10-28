@@ -1,12 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { i18n } from '@lingui/core'
-import { I18nProvider } from '@lingui/react'
-import { messages } from './locales/en/messages'
+import { i18n } from '@lingui/core';
+import { I18nProvider } from '@lingui/react';
+import { messages as messagesEn } from './locales/en/messages';
+import { messages as messagesDe } from './locales/de/messages';
+import { messages as messagesFr } from './locales/fr/messages';
+import { messages as messagesZh } from './locales/zh/messages';
 
-i18n.load('en', messages)
-i18n.activate('en')
+i18n.load({
+  en: messagesEn,
+  de: messagesDe,
+  fr: messagesFr,
+  zh: messagesZh,
+});
+i18n.activate('en');
 
 const TransApp = () => (
   <I18nProvider i18n={i18n}>

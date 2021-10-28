@@ -1,15 +1,17 @@
 import React from 'react';
-import { Trans } from "@lingui/macro"
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const NaturalPersonNameTypeCode = () => {
+  
   return (
     <>
-    <option value={1}><Trans>Alias Name</Trans></option>
-    <option value={2}><Trans>Name at Birth</Trans></option>
-    <option value={3}><Trans>Maiden Name</Trans></option>
-    <option value={4}><Trans>Legal Name</Trans></option>
-    <option value={0}><Trans>Unspecified</Trans></option>
+    <option value={1}>{i18n._(t`Alias Name`)}</option>
+    <option value={2}>{i18n._(t`Name at Birth`)}</option>
+    <option value={3}>{i18n._(t`Maiden Name`)}</option>
+    <option value={4}>{i18n._(t`Legal Name`)}</option>
+    <option value={0}>{i18n._(t`Unspecified`)}</option>
     </>
   )
 }

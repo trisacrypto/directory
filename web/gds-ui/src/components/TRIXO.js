@@ -5,10 +5,13 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const TRIXO = ({data, onChange}) => {
+
   const createChangeHandler = (field) => (event) => {
     const changes = {[field]: {$set: event.target.value}};
     const updated = update(data, changes);
@@ -140,9 +143,9 @@ const TRIXO = ({data, onChange}) => {
           onChange={createChangeHandler("financial_transfers_permitted")}
         >
           <option value=""></option>
-          <option value="yes"><Trans>Yes</Trans></option>
-          <option value="partial"><Trans>Partially</Trans></option>
-          <option value="no"><Trans>No</Trans></option>
+          <option value="yes">{i18n._(t`Yes`)}</option>
+          <option value="partial">{i18n._(t`Partially`)}</option>
+          <option value="no">{i18n._(t`No`)}</option>
         </Form.Control>
       </Form.Group>
       <fieldset>
@@ -155,9 +158,9 @@ const TRIXO = ({data, onChange}) => {
             onChange={createChangeHandler("has_required_regulatory_program")}
           >
             <option value=""></option>
-            <option value="yes"><Trans>Yes</Trans></option>
-            <option value="partial"><Trans>Partially Implemented</Trans></option>
-            <option value="no"><Trans>No</Trans></option>
+            <option value="yes">{i18n._(t`Yes`)}</option>
+            <option value="partial">{i18n._(t`Partially Implemented`)}</option>
+            <option value="no">{i18n._(t`No`)}</option>
           </Form.Control>
         </Form.Group>
         <Form.Group>

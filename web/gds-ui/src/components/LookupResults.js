@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from 'react-bootstrap/Card';
 import { countryCodeEmoji, getCountryName } from '../lib/country';
-import { Trans } from "@lingui/macro"
+import { Trans } from "@lingui/macro";
 
 
 const LookupResults = (props) => {
