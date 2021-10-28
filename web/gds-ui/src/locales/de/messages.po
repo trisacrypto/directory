@@ -23,7 +23,7 @@ msgstr "Eine phonetische Darstellung des Namens, unter dem die juristische Perso
 
 #: src/components/TopNav.js:24
 msgid "About TRISA"
-msgstr "Über TRISA\"."
+msgstr "Über TRISA"
 
 #: src/components/ivms101/AddressList.js:48
 msgid "Add Address"
@@ -75,7 +75,7 @@ msgstr "Ausländerrechtliche Registrierungsnummer"
 
 #: src/components/ivms101/NationalIdentification.js:31
 msgid "An identifier issued by an appropriate issuing authority."
-msgstr "Eine Kennung, die von einer zuständigen Vergabestelle vergeben wird\"."
+msgstr "Eine Kennung, die von einer zuständigen Vergabestelle vergeben wird."
 
 #: src/components/TRIXO.js:211
 msgid "Applicable Regulations"
@@ -365,7 +365,7 @@ msgstr "Geburtsname"
 
 #: src/components/Registration.js:637
 msgid "Message from server: \"{0}\""
-msgstr "Nachricht vom Server: \"{0}\\"
+msgstr "Nachricht vom Server: \"{0}\""
 
 #: src/components/select/VASPCategory.js:19
 msgid "Mining Pool"
