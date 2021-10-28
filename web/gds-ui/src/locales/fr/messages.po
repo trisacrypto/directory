@@ -414,13 +414,17 @@ msgstr "Suivant"
 #~ msgid "Non-Commercial Entity"
 #~ msgstr "Entité non-commerciale"
 
-#: src/components/Registration.js:406
-#~ msgid "Other"
-#~ msgstr "Autre"
+#: src/components/select/VASPCategory.js:23
+msgid "Other"
+msgstr "Autre"
 
 #: src/components/TRIXO.js:131
 msgid "Other Jursidictions"
 msgstr "Autres Juridictions"
+
+#: src/components/select/VASPCategory.js:22
+#~ msgid "Otherxxx"
+#~ msgstr ""
 
 #: src/components/Registration.js:399
 #~ msgid "Over-The-Counter Trading Desk"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLingui } from "@lingui/react";
+import { t } from "@lingui/macro";
 
 
 const VASPCategory = () => {
@@ -19,7 +20,7 @@ const VASPCategory = () => {
     <option value="Miner">{i18n._("Mining Pool")}</option>
     <option value="Mixer">{i18n._("Mixing Service")}</option>
     <option value="Individual">{i18n._("Legal person")}</option>
-    <option value="Other">{i18n._("Other")}</option>
+    <option value="Other">{i18n._(t`Other`)}</option>
     </>
   )
 }
