@@ -1,6 +1,8 @@
 package peers
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (p *Peer) Key() string {
 	if p.Id == 0 {
