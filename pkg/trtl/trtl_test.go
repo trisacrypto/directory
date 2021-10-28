@@ -28,6 +28,7 @@ func TestServer(t *testing.T) {
 	// Test that we can get a response from a gRPC request.
 	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, "localhost:1313", grpc.WithInsecure())
+	require.NoError(t, err)
 	client := pb.NewTrtlClient(conn)
 	_, err = client.Get(ctx, &pb.GetRequest{Key: []byte("foo")})
 	require.Contains(t, err.Error(), "not implemented")
