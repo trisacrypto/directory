@@ -3,8 +3,8 @@ package trtl
 import (
 	"net"
 
+	"github.com/rotationalio/honu"
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
@@ -18,7 +18,7 @@ import (
 type Server struct {
 	srv     *grpc.Server    // The gRPC server that listens on its own independent port
 	conf    *config.Config  // Configuration for the trtl server
-	db      store.Store     // Database connection for managing objects (alias to s.svc.db)
+	store   *HonuStore      // Database connection for managing objects (alias to s.svc.db)
 	honu    *HonuService    // Service for interacting with a Honu database
 	peer    *PeerService    // Service for managing remote peers
 	replica *ReplicaService // Service that handles anti-entropy replication
@@ -26,13 +26,14 @@ type Server struct {
 }
 
 // New creates a new trtl server given a configuration.
-func New(db store.Store, conf config.Config) (s *Server, err error) {
+func New(db *honu.DB, conf config.Config) (s *Server, err error) {
+	store := NewHonuStore(db)
 	s = &Server{
 		conf:    &conf,
-		db:      db,
-		honu:    NewHonuService(),
-		peer:    NewPeerService(db),
-		replica: NewReplicaService(db, conf),
+		store:   store,
+		honu:    NewHonuService(store),
+		peer:    NewPeerService(store),
+		replica: NewReplicaService(store, conf),
 	}
 
 	// TODO: Check if the database Store is an Honu DB, if not then the Replica cannot Gossip.
@@ -73,6 +74,13 @@ func (t *Server) Serve() (err error) {
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
 	return nil
+}
+
+// Block until the server is shutdown
+func (t *Server) BlockUntilShutdown() (err error) {
+	err = <-t.echan
+	t.Shutdown()
+	return err
 }
 
 // Shutdown the trtl server gracefully.
