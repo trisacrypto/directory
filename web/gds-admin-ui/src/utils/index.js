@@ -115,4 +115,15 @@ function isValidHttpUrl(string) {
     return url.protocol === "http:" || url.protocol === "https:";
 }
 
-export { isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+/**
+ * 
+ * @param {Object} contact contact you want to verify
+ * @param {Object} verifiedContact list of verified contacts
+ * @returns boolean
+ */
+function isVerifiedContact(contact, verifiedContact) {
+    const verifiedContacts = typeof verifiedContact === 'object' ? Object.values(verifiedContact) : []
+    return verifiedContacts.includes(contact.email)
+}
+
+export { isVerifiedContact, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

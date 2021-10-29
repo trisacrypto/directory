@@ -48,7 +48,7 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                             <TrixoForm data={vasp?.trixo} />
                         </Col>
                         <Col md={6} xl={4} xxl={4}>
-                            <Contact data={vasp?.vasp?.contacts} />
+                            <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />
                             <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                         </Col>
                     </Row>
