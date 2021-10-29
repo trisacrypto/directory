@@ -5,6 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Alert from 'react-bootstrap/Alert';
 import Spinner from 'react-bootstrap/Spinner';
 import { Trans } from "@lingui/macro";
+import withTracker from '../lib/analytics';
 
 class VerifyContact extends React.Component {
   constructor(props) {
@@ -85,4 +86,4 @@ class VerifyContact extends React.Component {
   }
 }
 
-export default VerifyContact;
+export default withTracker(VerifyContact);

@@ -18,6 +18,7 @@ import { isTestNet } from '../lib/testnet';
 import { Trans } from "@lingui/macro";
 import BusinessCategory from './select/BusinessCategory';
 import VASPCategory from './select/VASPCategory';
+import withTracker from '../lib/analytics';
 
 
 const testNet = isTestNet();
@@ -648,4 +649,4 @@ class Registration extends React.Component {
   }
 }
 
-export default Registration;
+export default withTracker(Registration);
