@@ -22,12 +22,10 @@ const TopNav = () => {
         <Navbar.Toggle aria-controls="header-links" />
         <Navbar.Collapse id="header-links" className="justify-content-end">
           <Nav>
-            <Nav.Item>
-              <LanguageSelect />
-            </Nav.Item>
             <Nav.Link href="https://trisa.io/"><Trans>About TRISA</Trans></Nav.Link>
             <Nav.Link href="https://trisa.dev/"><Trans>Documentation</Trans></Nav.Link>
             <Nav.Link href={directoryURL} title={directoryURLTitle}>{directoryURLText}</Nav.Link>
+            <LanguageSelect />
           </Nav>
         </Navbar.Collapse>
       </Container>

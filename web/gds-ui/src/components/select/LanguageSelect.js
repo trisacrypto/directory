@@ -1,21 +1,58 @@
+import _ from 'lodash';
 import React, { useContext } from 'react';
-import Form from 'react-bootstrap/Form';
+import NavDropdown from 'react-bootstrap/NavDropdown';
 import LanguageContext from "../../contexts/LanguageContext";
+
+const languages = {
+  en: {
+    flag: "🇺🇸",
+    title: "English",
+  },
+  fr: {
+    flag: "🇫🇷",
+    title: "Française",
+  },
+  de: {
+    flag: "🇩🇪",
+    title: "Deutsch",
+  },
+  zh: {
+    flag: "🇨🇳",
+    title: "中国人",
+  },
+}
 
 const LanguageSelect = () => {
   const context = useContext(LanguageContext);
 
+  const selectLanguage = (lang) => (e) => {
+    e.preventDefault();
+    context.changeLanguage(lang);
+    return false;
+  }
+
+  const renderItems = () => {
+    return _.map(languages, (value, key) => {
+      return (
+        <NavDropdown.Item
+          key={key}
+          href="#"
+          onClick={selectLanguage(key)}
+        >
+          <span className="mr-1">{value.flag}</span> {value.title}
+        </NavDropdown.Item>
+      );
+    })
+  }
+
+  const currentLanguage = () => {
+    return <><span className="mr-1">{languages[context.language].flag}</span> {context.language.toUpperCase()}</>
+  }
+
   return (
-    <Form.Control
-      as="select" custom
-      value={context.language}
-      onChange={e => context.changeLanguage(e.target.value)}
-    >
-      <option value="en">English</option>
-      <option value="fr">French</option>
-      <option value="de">German</option>
-      <option value="zh">Chinese</option>
-    </Form.Control>
+    <NavDropdown title={currentLanguage()} id="select-language-dropdown">
+      {renderItems()}
+    </NavDropdown>
   );
 };
 
