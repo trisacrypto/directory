@@ -2,7 +2,7 @@
 import React from 'react'
 import { Card, Col, Dropdown, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from '../../../../constants';
-import { formatDisplayedData, isValidHttpUrl } from '../../../../utils';
+import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from '../../../../utils';
 import dayjs from 'dayjs';
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
@@ -10,6 +10,7 @@ import { BUSINESS_CATEGORY } from '../../../../constants/basic-details';
 import Geographic from './components/Geographic';
 import countryCodeEmoji from '../../../../utils/country';
 import { downloadFile } from '../../../../helpers/api/utils';
+import classNames from 'classnames';
 
 export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
 
@@ -79,7 +80,7 @@ function BasicDetails({ data }) {
                         <div>
                             <h4 className="m-0 d-inline-block">{data?.name}</h4>
                             {data?.traveler ? <span className='badge bg-primary rounded-pill px-1 ms-1 align-text-bottom'>Traveler</span> : null}
-                            {data?.vasp?.verification_status ? <span className='badge bg-warning rounded-pill px-1 ms-1 align-text-bottom'>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
+                            {data?.vasp?.verification_status ? <span className={classNames('badge rounded-pill px-1 ms-1 align-text-bottom', getStatusClassName(data?.vasp?.verification_status))}>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
                         </div>
                         <div className='d-flex align-items-center'>
                             <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }}>{countryCodeEmoji(data?.vasp?.entity?.country_of_registration)}</span>
