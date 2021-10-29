@@ -9,6 +9,7 @@ import Hero from './components/hero';
 import Footer from './components/Footer';
 import Lookup from './components/Lookup';
 import Alerts from './components/Alerts';
+import NotFound from './components/NotFound';
 import Registration from './components/Registration';
 import VerifyContact from './components/VerifyContact';
 import Route from './components/nav/Route';
@@ -44,45 +45,36 @@ class App extends React.Component {
   render() {
     return (
       <NetworkStore>
-      <TopNav />
-      <Hero />
-      <main role="main" className="overlap container">
-        <Row>
-          <Col md={{span: 8, offset: 2}}>
-            <Alerts alerts={this.state.alerts} onDismiss={this.onDismissAlert} />
-          </Col>
-        </Row>
-
-        <Route path="/verify-contact">
-          <VerifyContact />
-        </Route>
-
-        <MultiRoute paths={mainRoutes}>
-          <Tabs activeKey={this.state.currentPath} id="main-tab-nav" className="justify-content-center" onSelect={this.onTabSelect}>
-            <Tab eventKey="/" title="Directory">
-              <Lookup onAlert={this.onAlert} />
-            </Tab>
-            <Tab eventKey="/register" title="Register">
-              <Registration onAlert={this.onAlert} />
-            </Tab>
-          </Tabs>
-        </MultiRoute>
-
-        <NoRoute paths={allRoutes}>
+        <TopNav />
+        <Hero />
+        <main role="main" className="overlap container">
           <Row>
-          <Col md={{span: 6, offset: 3}} className="text-center">
-            <p className="big-number">404</p>
-            <h4>PAGE NOT FOUND</h4>
-            <p className="text-muted">
-              The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-            </p>
-            <a href="/" className="btn btn-secondary mt-2">Directory Home</a>
-          </Col>
-        </Row>
-        </NoRoute>
+            <Col md={{span: 8, offset: 2}}>
+              <Alerts alerts={this.state.alerts} onDismiss={this.onDismissAlert} />
+            </Col>
+          </Row>
 
-      </main>
-      <Footer />
+          <Route path="/verify-contact">
+            <VerifyContact />
+          </Route>
+
+          <MultiRoute paths={mainRoutes}>
+            <Tabs activeKey={this.state.currentPath} id="main-tab-nav" className="justify-content-center" onSelect={this.onTabSelect}>
+              <Tab eventKey="/" title="Directory">
+                <Lookup onAlert={this.onAlert} />
+              </Tab>
+              <Tab eventKey="/register" title="Register">
+                <Registration onAlert={this.onAlert} />
+              </Tab>
+            </Tabs>
+          </MultiRoute>
+
+          <NoRoute paths={allRoutes}>
+            <NotFound />
+          </NoRoute>
+
+        </main>
+        <Footer />
       </NetworkStore>
     );
   }

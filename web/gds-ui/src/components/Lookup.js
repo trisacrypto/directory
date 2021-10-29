@@ -4,6 +4,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import LookupForm from './LookupForm';
 import LookupResults from './LookupResults';
+import withTracker from '../lib/analytics';
 
 const Lookup = ({ onAlert }) => {
   const [results, setResults] = useState({});
@@ -38,4 +39,4 @@ const Lookup = ({ onAlert }) => {
   );
 }
 
-export default Lookup;
+export default withTracker(Lookup);
