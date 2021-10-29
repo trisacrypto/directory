@@ -16,6 +16,7 @@ const withTracker = (Component) => (props) => {
       case false:
         const ga4react = new GA4React(gaCode);
         ga4react.initialize().then((ga4) => {
+          console.log(`tracking initialized with ${gaCode}`);
           ga4.pageview(window.location.pathname);
         }, (err) => {
           console.error(err);

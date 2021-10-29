@@ -53,8 +53,18 @@ if [ -z "$REACT_APP_VASPDIRECTORY_CLIENT_ID" ]; then
     exit 1
 fi
 
+if [ -z "$REACT_APP_VASPDIRECTORY_ANALYTICS_ID" ]; then
+    echo "REACT_APP_VASPDIRECTORY_ANALYTICS_ID environment variable required"
+    exit 1
+fi
+
 if [ -z "$REACT_APP_TRISATEST_CLIENT_ID" ]; then
     echo "REACT_APP_TRISATEST_CLIENT_ID environment variable required"
+    exit 1
+fi
+
+if [ -z "$REACT_APP_TRISATEST_ANALYTICS_ID" ]; then
+    echo "REACT_APP_TRISATEST_ANALYTICS_ID environment variable required"
     exit 1
 fi
 
@@ -73,12 +83,14 @@ docker build \
     -t trisa/gds-ui:$TAG -f $DIR/gds-ui/Dockerfile \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://proxy.vaspdirectory.net \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
+    --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
     $REPO
 
 docker build \
     -t trisa/gds-testnet-ui:$TAG -f $DIR/gds-ui/Dockerfile \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://proxy.trisatest.net \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
+    --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_TRISATEST_ANALYTICS_ID} \
     $REPO
 
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
