@@ -5,6 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import TopNav from './components/TopNav';
+import Hero from './components/hero';
 import Footer from './components/Footer';
 import Lookup from './components/Lookup';
 import Alerts from './components/Alerts';
@@ -13,17 +14,11 @@ import VerifyContact from './components/VerifyContact';
 import Route from './components/nav/Route';
 import NoRoute from './components/nav/NoRoute';
 import MultiRoute from './components/nav/MultiRoute';
-import { isTestNet } from './lib/testnet';
+import { NetworkStore } from './contexts/NetworkContext';
 
-const testNet = isTestNet();
 const mainRoutes = new Set(["/", "/register"]);
 const allRoutes = new Set(["/", "/register", "/verify-contact"]);
 
-// Unchanging constants that should be configured when the react app is built.
-const headerClassName = testNet ? "bg-testnet-gradient" : "bg-gradient";
-const headerTitle = testNet ? "TRISA TestNet Directory" : "TRISA Global Directory Service";
-const headerLead = testNet ? "Get started with the TRISA TestNet to implement your Travel Rule compliance service." : "Become a TRISA certified Virtual Asset Service Provider.";
-const switchLink = testNet ? <a href="https://vaspdirectory.net">Production Directory Service</a> : <a href="https://trisatest.net">TestNet Directory Service</a>
 
 class App extends React.Component {
   state = { alerts: [], currentPath: window.location.pathname };
@@ -47,19 +42,10 @@ class App extends React.Component {
 
 
   render() {
-    console.log(testNet);
     return (
-      <>
+      <NetworkStore>
       <TopNav />
-      <header className={headerClassName}>
-        <div className="container">
-          <div className="text-center hero">
-            <h1>{headerTitle}</h1>
-            <p className="lead">{headerLead}</p>
-            <small>Looking for the {switchLink}?</small>
-          </div>
-        </div>
-      </header>
+      <Hero />
       <main role="main" className="overlap container">
         <Row>
           <Col md={{span: 8, offset: 2}}>
@@ -97,7 +83,7 @@ class App extends React.Component {
 
       </main>
       <Footer />
-      </>
+      </NetworkStore>
     );
   }
 }
