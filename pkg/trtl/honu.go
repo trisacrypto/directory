@@ -3,6 +3,7 @@ package trtl
 import (
 	"context"
 
+	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/object"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
@@ -13,11 +14,12 @@ import (
 // A HonuService implements the RPCs for interacting with a Honu database.
 type HonuService struct {
 	pb.UnimplementedTrtlServer
-	store *HonuStore
+	parent *Server
+	db     *honu.DB
 }
 
-func NewHonuService(store *HonuStore) *HonuService {
-	return &HonuService{store: store}
+func NewHonuService(s *Server) (*HonuService, error) {
+	return &HonuService{parent: s, db: s.db}, nil
 }
 
 // Get is a unary request to retrieve a value for a key.
@@ -25,7 +27,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 	if in.Options.ReturnMeta {
 		// Retrieve and return the metadata.
 		var object *object.Object
-		if object, err = h.store.Object(in.Key); err != nil {
+		if object, err = h.db.Object(in.Key); err != nil {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		out = &pb.GetReply{
@@ -51,7 +53,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 		// Just return the value for the given key.
 		var value []byte
 		log.Debug().Msg(string(in.Key))
-		if value, err = h.store.Get(in.Key); err != nil {
+		if value, err = h.db.Get(in.Key); err != nil {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		out = &pb.GetReply{

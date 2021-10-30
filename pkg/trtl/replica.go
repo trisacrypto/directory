@@ -25,15 +25,15 @@ var (
 
 // A ReplicaService manages anti-entropy replication between peers.
 type ReplicaService struct {
-	conf  config.Config
-	store *HonuStore
+	conf   config.Config
+	parent *Server
+	store  TemporaryPeerStore
 }
 
-func NewReplicaService(store *HonuStore, conf config.Config) *ReplicaService {
+func NewReplicaService(s *Server) (*ReplicaService, error) {
 	return &ReplicaService{
-		store: store,
-		conf:  conf,
-	}
+		parent: s, store: &notImplementedStore{},
+	}, nil
 }
 
 // AntiEntropy is a service that periodically selects a remote peer to synchronize with

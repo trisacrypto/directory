@@ -1,7 +1,10 @@
 package trtl
 
 import (
+	"fmt"
 	"net"
+	"os"
+	"os/signal"
 
 	"github.com/rotationalio/honu"
 	"github.com/rs/zerolog/log"
@@ -17,40 +20,72 @@ import (
 // 3. A replication service which implements auto-adapting anti-entropy replication.
 type Server struct {
 	srv     *grpc.Server    // The gRPC server that listens on its own independent port
-	conf    *config.Config  // Configuration for the trtl server
-	store   *HonuStore      // Database connection for managing objects (alias to s.svc.db)
+	conf    config.Config   // Configuration for the trtl server
+	db      *honu.DB        // Database connection for managing objects
 	honu    *HonuService    // Service for interacting with a Honu database
-	peer    *PeerService    // Service for managing remote peers
+	peers   *PeerService    // Service for managing remote peers
 	replica *ReplicaService // Service that handles anti-entropy replication
 	echan   chan error      // Channel for receiving errors from the gRPC server
 }
 
 // New creates a new trtl server given a configuration.
-func New(db *honu.DB, conf config.Config) (s *Server, err error) {
-	store := NewHonuStore(db)
-	s = &Server{
-		conf:    &conf,
-		store:   store,
-		honu:    NewHonuService(store),
-		peer:    NewPeerService(store),
-		replica: NewReplicaService(store, conf),
+func New(conf config.Config) (s *Server, err error) {
+	// Load the default configuration from the environment
+	if conf.IsZero() {
+		if conf, err = config.New(); err != nil {
+			return nil, err
+		}
 	}
 
-	// TODO: Check if the database Store is an Honu DB, if not then the Replica cannot Gossip.
+	// TODO: manage logging
 
-	// Initialize the gRPC server
-	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.interceptor))
+	// Create the server and prepare to serve
+	s = &Server{
+		conf:  conf,
+		echan: make(chan error, 1),
+		srv:   grpc.NewServer(grpc.UnaryInterceptor(s.interceptor)),
+	}
+
+	// TODO: check for maintenance mode
+
+	// Everything that follows this comment assumes we're not in maintenance mode
+	// Open a connection to the Honu wrapped database
+	if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
+		return nil, fmt.Errorf("honu error: %v", err)
+	}
+
+	// Initialize the Honu service
+	if s.honu, err = NewHonuService(s); err != nil {
+		return nil, err
+	}
 	pb.RegisterTrtlServer(s.srv, s.honu)
-	peers.RegisterPeerManagementServer(s.srv, s.peer)
+
+	// Initialize the Peer Management service
+	if s.peers, err = NewPeerService(s); err != nil {
+		return nil, err
+	}
+	peers.RegisterPeerManagementServer(s.srv, s.peers)
+
+	// TODO: initialize the Replica service
+
 	return s, nil
 }
 
 // Serve gRPC requests on the specified bind address.
 func (t *Server) Serve() (err error) {
+	// TODO: change from enabled to maintenance mode
 	if !t.conf.Enabled {
 		log.Warn().Msg("trtl service is not enabled")
 		return nil
 	}
+
+	// Catch OS signals for graceful shutdowns
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	go func() {
+		<-quit
+		t.echan <- t.Shutdown()
+	}()
 
 	// Run the Gossip background routine
 	go t.replica.AntiEntropy()
@@ -73,21 +108,24 @@ func (t *Server) Serve() (err error) {
 
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
+	if err = <-t.echan; err != nil {
+		return err
+	}
 	return nil
-}
-
-// Block until the server is shutdown
-func (t *Server) BlockUntilShutdown() (err error) {
-	err = <-t.echan
-	t.Shutdown()
-	return err
 }
 
 // Shutdown the trtl server gracefully.
 func (t *Server) Shutdown() (err error) {
-	log.Debug().Msg("gracefully shutting down trtl server")
+	// TODO: collect multi errors to return after shutdown
+	log.Info().Msg("gracefully shutting down trtl server")
 	t.srv.GracefulStop()
-	// TODO: Also need a way to stop the anti-entropy routine.
+
+	// TODO: Stop the anti-entropy routine.
+
+	if err = t.db.Close(); err != nil {
+		log.Error().Err(err).Msg("could not close database")
+	}
+
 	log.Debug().Msg("successful shutdown of trtl server")
 	return nil
 }

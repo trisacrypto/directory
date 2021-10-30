@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/rotationalio/honu"
-	honuconfig "github.com/rotationalio/honu/config"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
@@ -321,37 +319,25 @@ func main() {
 
 // serve starts the trtl server and blocks until it is stopped.
 func serve(c *cli.Context) (err error) {
-	var conf config.Config
-	var db *honu.DB
-
-	replicaConfig := honuconfig.ReplicaConfig{
-		PID:    c.Uint64("pid"),
-		Region: c.String("region"),
-	}
-	if db, err = honu.Open(c.String("db"), replicaConfig); err != nil {
-		return cli.Exit(err, 1)
+	// TODO: the configuration has primarily got to come from the environment.
+	conf := config.Config{
+		Enabled:  true,
+		BindAddr: c.String("bindaddr"),
+		PID:      c.Uint64("pid"),
+		Region:   c.String("region"),
+		Database: config.DatabaseConfig{
+			URL: c.String("db"),
+		},
 	}
 
 	var server *trtl.Server
-	conf = config.Config{
-		Enabled:  true,
-		BindAddr: c.String("bindaddr"),
-	}
-	if server, err = trtl.New(db, conf); err != nil {
+	if server, err = trtl.New(conf); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	if err = server.Serve(); err != nil {
 		return cli.Exit(err, 1)
 	}
-
-	fmt.Println("started the trtl data replication service")
-
-	// Block until the server is stopped.
-	if err = server.BlockUntilShutdown(); err != nil {
-		return cli.Exit(err, 1)
-	}
-	fmt.Println("server terminated")
 	return nil
 }
 

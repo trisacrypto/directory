@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rotationalio/honu"
-	honuconfig "github.com/rotationalio/honu/config"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
@@ -21,10 +19,8 @@ func TestServer(t *testing.T) {
 		Enabled:  true,
 		BindAddr: "localhost:1313",
 	}
-	// TODO: Create mocked leveldb
-	db, err := honu.Open("", honuconfig.ReplicaConfig{})
-	require.NoError(t, err)
-	server, err := trtl.New(db, config)
+
+	server, err := trtl.New(config)
 	require.NoError(t, err)
 
 	err = server.Serve()

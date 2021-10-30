@@ -2,23 +2,45 @@ package trtl
 
 import (
 	context "context"
+	"errors"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
 
+type TemporaryPeerStore interface {
+	CreatePeer(peer *peers.Peer) (string, error)
+	DeletePeer(id string) error
+	ListPeers() iterator.Iterator
+	AllPeers() ([]*peers.Peer, error)
+}
+
+type notImplementedStore struct{}
+
+func (s *notImplementedStore) CreatePeer(peer *peers.Peer) (string, error) {
+	return "", errors.New("not implemented")
+}
+func (s *notImplementedStore) DeletePeer(id string) error   { return errors.New("not implemented") }
+func (s *notImplementedStore) ListPeers() iterator.Iterator { return nil }
+func (s *notImplementedStore) AllPeers() ([]*peers.Peer, error) {
+	return nil, errors.New("not implemented")
+}
+
 // A PeerService implements the RPCs for managing remote peers.
 type PeerService struct {
 	peers.UnimplementedPeerManagementServer
-	store *HonuStore
+	parent *Server
+	store  TemporaryPeerStore
 }
 
-func NewPeerService(store *HonuStore) *PeerService {
+func NewPeerService(s *Server) (*PeerService, error) {
 	return &PeerService{
-		store: store,
-	}
+		parent: s,
+		store:  &notImplementedStore{},
+	}, nil
 }
 
 // GetPeers queries the data store to determine which peers it contains, and returns them
