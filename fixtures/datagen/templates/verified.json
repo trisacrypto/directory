@@ -1,0 +1,176 @@
+{
+    "id": "",
+    "registered_directory": "trisatest.net",
+    "entity": {
+        "name": {},
+        "geographic_addresses": [
+            {
+                "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+                "department": "",
+                "sub_department": "",
+                "street_name": "",
+                "building_number": "",
+                "building_name": "",
+                "floor": "",
+                "post_box": "",
+                "room": "",
+                "post_code": "",
+                "town_name": "",
+                "town_location_name": "",
+                "district_name": "",
+                "country_sub_division": "",
+                "address_line": [],
+                "country": ""
+            }
+        ],
+        "customer_number": "",
+        "national_identification": {
+            "national_identifier": "",
+            "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
+            "country_of_issue": "",
+            "registration_authority": ""
+        },
+        "country_of_registration": ""
+    },
+    "contacts": {
+        "technical": {
+            "name": "",
+            "email": "",
+            "phone": "",
+            "person": null,
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "verified": false,
+                "token": "",
+                "email_log": []
+            }
+        },
+        "administrative": {
+            "name": "",
+            "email": "",
+            "phone": "",
+            "person": null,
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "verified": false,
+                "token": "",
+                "email_log": []
+            }
+        },
+        "legal": {
+            "name": "",
+            "email": "",
+            "phone": "",
+            "person": null,
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "verified": false,
+                "token": "",
+                "email_log": []
+            }
+        },
+        "billing": {
+            "name": "Didna Respont",
+            "email": "lostmy@email.com",
+            "phone": "123-432-6666",
+            "person": null,
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "verified": false,
+                "token": "",
+                "email_log": []
+            }
+        }
+    },
+    "identity_certificate": {
+        "version": "3",
+        "serial_number": "",
+        "signature": "",
+        "signature_algorithm": "SHA384-RSA",
+        "public_key_algorithm": "RSA",
+        "subject": {
+            "common_name": "trisa.rotational.io",
+            "serial_number": "",
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "street_address": [],
+            "locality": [
+                "Menlo Park"
+            ],
+            "province": [
+                "California"
+            ],
+            "postal_code": [],
+            "country": [
+                "US"
+            ]
+        },
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "serial_number": "",
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "street_address": [],
+            "locality": [
+                "Menlo Park"
+            ],
+            "province": [
+                "California"
+            ],
+            "postal_code": [],
+            "country": [
+                "US"
+            ]
+        },
+        "not_before": "2021-06-01T17:16:15Z",
+        "not_after": "2022-07-01T17:16:14Z",
+        "revoked": false,
+        "data": "",
+        "chain": ""
+    },
+    "signing_certificates": [],
+    "common_name": "",
+    "trisa_endpoint": "",
+    "website": "",
+    "business_category": "BUSINESS_ENTITY",
+    "vasp_categories": [],
+    "established_on": "",
+    "trixo": {
+        "primary_national_jurisdiction": "",
+        "primary_regulator": "FinCEN",
+        "financial_transfers_permitted": "no",
+        "other_jurisdictions": [],
+        "has_required_regulatory_program": "yes",
+        "conducts_customer_kyc": true,
+        "kyc_threshold": 15,
+        "kyc_threshold_currency": "USD",
+        "must_comply_travel_rule": false,
+        "applicable_regulations": [
+            "FATF Recommendation 16"
+        ],
+        "compliance_threshold": 3000,
+        "compliance_threshold_currency": "USD",
+        "must_safeguard_pii": true,
+        "safeguards_pii": true
+    },
+    "verification_status": "",
+    "service_status": "UNKNOWN",
+    "verified_on": "",
+    "first_listed": "",
+    "last_updated": "",
+    "signature": "",
+    "version": {
+        "pid": "0",
+        "version": "9"
+    },
+    "extra": {
+        "@type": "type.googleapis.com/gds.models.v1.GDSExtraData",
+        "admin_verification_token": "",
+        "audit_log": [],
+        "review_notes": {}
+    }
+}
