@@ -406,24 +406,19 @@ func dbGet(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 
-		// TODO: Make the output look nicer
-		fmt.Println(string(resp.Value) + "\n")
-		if resp.Meta != nil {
-			fmt.Println("Metadata:")
-			jsonpb := protojson.MarshalOptions{
-				Multiline:       true,
-				Indent:          "  ",
-				AllowPartial:    true,
-				UseProtoNames:   true,
-				UseEnumNumbers:  false,
-				EmitUnpopulated: true,
-			}
-			var outdata []byte
-			if outdata, err = jsonpb.Marshal(resp.Meta); err != nil {
-				return cli.Exit(err, 1)
-			}
-			fmt.Println(string(outdata) + "\n")
+		jsonpb := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
 		}
+		var outdata []byte
+		if outdata, err = jsonpb.Marshal(resp); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(string(outdata) + "\n")
 	}
 	return nil
 }
