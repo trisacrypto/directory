@@ -6,7 +6,6 @@ import (
 
 	"github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"google.golang.org/grpc/codes"
@@ -26,15 +25,15 @@ var (
 
 // A ReplicaService manages anti-entropy replication between peers.
 type ReplicaService struct {
-	conf config.Config
-	db   store.Store
+	conf   config.Config
+	parent *Server
+	store  TemporaryPeerStore
 }
 
-func NewReplicaService(db store.Store, conf config.Config) *ReplicaService {
+func NewReplicaService(s *Server) (*ReplicaService, error) {
 	return &ReplicaService{
-		db:   db,
-		conf: conf,
-	}
+		parent: s, store: &notImplementedStore{},
+	}, nil
 }
 
 // AntiEntropy is a service that periodically selects a remote peer to synchronize with
@@ -50,10 +49,9 @@ func (*ReplicaService) AntiEntropy() {
 // cannot be selected, then nil is returned.
 func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 	// Select a random peer that is not self to perform anti entropy with.
-	peers, err := r.db.ListPeers().All()
+	peers, err := r.store.AllPeers()
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch peers from database")
-		return nil
 	}
 
 	if len(peers) > 1 {

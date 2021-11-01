@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -8,6 +9,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
+	"github.com/trisacrypto/directory/pkg/gds/store/wire"
+	"github.com/trisacrypto/directory/pkg/trtl"
+	"github.com/trisacrypto/directory/pkg/trtl/config"
+	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -39,6 +44,21 @@ func main() {
 					Usage:   "dsn to start the trtl database on",
 					EnvVars: []string{"GDS_DATABASE_URL"},
 				},
+				&cli.StringFlag{
+					Name:    "bindaddr",
+					Aliases: []string{"a"},
+					Usage:   "address to bind the trtl server to",
+				},
+				&cli.Uint64Flag{
+					Name:    "pid",
+					Aliases: []string{"p"},
+					Usage:   "processor ID for the trtl node",
+				},
+				&cli.StringFlag{
+					Name:    "region",
+					Aliases: []string{"r"},
+					Usage:   "region for the trtl node",
+				},
 			},
 		},
 		{
@@ -51,7 +71,7 @@ func main() {
 			Name:     "status",
 			Usage:    "check the status of the trtl database and replication service",
 			Category: "client",
-			Before:   initClient,
+			Before:   initDBClient,
 			Action:   status,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -68,10 +88,41 @@ func main() {
 			},
 		},
 		{
+			Name:      "db:get",
+			Usage:     "get a value from the trtl database",
+			ArgsUsage: "key [key ...]",
+			Category:  "client",
+			Before:    initDBClient,
+			Action:    dbGet,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect to the trtl replication service",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
+				},
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
+				},
+				&cli.BoolFlag{
+					Name:    "meta",
+					Aliases: []string{"m"},
+					Usage:   "return the metadata along with the value",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
+				},
+			},
+		},
+		{
 			Name:     "peers:add",
 			Usage:    "add peers to the network by pid",
 			Category: "client",
-			Before:   initClient,
+			Before:   initPeersClient,
 			Action:   addPeers,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -97,7 +148,7 @@ func main() {
 			Name:     "peers:delete",
 			Usage:    "remove a peer from the network by pid",
 			Category: "client",
-			Before:   initClient,
+			Before:   initPeersClient,
 			Action:   delPeers,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -123,7 +174,7 @@ func main() {
 			Name:     "peers:list",
 			Usage:    "get a status report of all peers in the network",
 			Category: "client",
-			Before:   initClient,
+			Before:   initPeersClient,
 			Action:   listPeers,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -268,8 +319,25 @@ func main() {
 
 // serve starts the trtl server and blocks until it is stopped.
 func serve(c *cli.Context) (err error) {
-	// TODO: invoke replica server
-	fmt.Println("started the trtl data replication service")
+	// TODO: the configuration has primarily got to come from the environment.
+	conf := config.Config{
+		Enabled:  true,
+		BindAddr: c.String("bindaddr"),
+		PID:      c.Uint64("pid"),
+		Region:   c.String("region"),
+		Database: config.DatabaseConfig{
+			URL: c.String("db"),
+		},
+	}
+
+	var server *trtl.Server
+	if server, err = trtl.New(conf); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = server.Serve(); err != nil {
+		return cli.Exit(err, 1)
+	}
 	return nil
 }
 
@@ -284,17 +352,28 @@ func validate(c *cli.Context) (err error) {
 // Client Functions
 //===========================================================================
 
-// TODO: Replace with trtl client once implemented
-var trtlClient peers.PeerManagementClient
+var dbClient pb.TrtlClient
+var peersClient peers.PeerManagementClient
 
-// initClient starts a trtl client.
-func initClient(c *cli.Context) (err error) {
+// initDBClient starts a trtl client with a connection to a trtl database.
+func initDBClient(c *cli.Context) (err error) {
 	if profile.Replica == nil {
 		return cli.Exit("replica not configured", 1)
 	}
 
-	// TODO: connect to the trtl server instead once implemented
-	if trtlClient, err = profile.Replica.Connect(); err != nil {
+	if dbClient, err = profile.Replica.ConnectDB(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+// initPeersClient starts a trtl client with a connection to a trtl database.
+func initPeersClient(c *cli.Context) (err error) {
+	if profile.Replica == nil {
+		return cli.Exit("replica not configured", 1)
+	}
+
+	if peersClient, err = profile.Replica.ConnectPeers(); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -304,6 +383,43 @@ func initClient(c *cli.Context) (err error) {
 func status(c *cli.Context) (err error) {
 	// TODO: call the trtl status RPC once implemented
 	fmt.Println("trtl status: available")
+	return nil
+}
+
+// dbGet prints values from the trtl database given a set of keys.
+func dbGet(c *cli.Context) (err error) {
+	b64decode := c.Bool("b64decode")
+	for _, keys := range c.Args().Slice() {
+		var key []byte
+		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
+			return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
+		}
+
+		var resp *pb.GetReply
+		req := &pb.GetRequest{
+			Key: key,
+			Options: &pb.Options{
+				ReturnMeta: c.Bool("meta"),
+			},
+		}
+		if resp, err = dbClient.Get(context.TODO(), req); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		jsonpb := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		var outdata []byte
+		if outdata, err = jsonpb.Marshal(resp); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(string(outdata) + "\n")
+	}
 	return nil
 }
 
@@ -321,7 +437,7 @@ func addPeers(c *cli.Context) (err error) {
 
 	// call client.AddPeer with the pid
 	var out *peers.PeersStatus
-	if out, err = trtlClient.AddPeers(ctx, peer); err != nil {
+	if out, err = peersClient.AddPeers(ctx, peer); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -342,7 +458,7 @@ func delPeers(c *cli.Context) (err error) {
 
 	// call client.RmPeer with the pid
 	var out *peers.PeersStatus
-	if out, err = trtlClient.RmPeers(ctx, peer); err != nil {
+	if out, err = peersClient.RmPeers(ctx, peer); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -365,7 +481,7 @@ func listPeers(c *cli.Context) (err error) {
 
 	// call client.GetPeers with filter
 	var out *peers.PeersList
-	if out, err = trtlClient.GetPeers(ctx, filter); err != nil {
+	if out, err = peersClient.GetPeers(ctx, filter); err != nil {
 		return cli.Exit(err, 1)
 	}
 

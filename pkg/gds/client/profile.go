@@ -10,6 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"github.com/urfave/cli/v2"
@@ -132,8 +133,26 @@ func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, er
 	return client, nil
 }
 
-// Connect to the TRISA Directory Service and return a gRPC client
-func (p *ReplicaProfile) Connect() (_ peers.PeerManagementClient, err error) {
+// Connect to the trtl database server and return a gRPC client
+func (p *ReplicaProfile) ConnectDB() (_ pb.TrtlClient, err error) {
+	var opts []grpc.DialOption
+	if p.Insecure {
+		opts = append(opts, grpc.WithInsecure())
+	} else {
+		config := &tls.Config{}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+	}
+
+	// Connect the replica client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+		return nil, err
+	}
+	return pb.NewTrtlClient(cc), nil
+}
+
+// Connect to the trtl database server and return a gRPC client
+func (p *ReplicaProfile) ConnectPeers() (_ peers.PeerManagementClient, err error) {
 	var opts []grpc.DialOption
 	if p.Insecure {
 		opts = append(opts, grpc.WithInsecure())
