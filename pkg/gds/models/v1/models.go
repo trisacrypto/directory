@@ -155,9 +155,9 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 
 // GetReviewNotes returns all of the review notes for a VASP as a map.
 func GetReviewNotes(vasp *pb.VASP) (_ map[string]*ReviewNote, err error) {
-	// If the extra data is nil, return nil (no review notes).
+	// If the extra data is nil, return an empty map (no review notes).
 	if vasp.Extra == nil {
-		return nil, nil
+		return map[string]*ReviewNote{}, nil
 	}
 
 	// Unmarshal the extra data field on the VASP.
