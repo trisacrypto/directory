@@ -180,7 +180,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
 
-			notes := v2.Group("/:vaspID/notes")
+			notes := vasps.Group("/:vaspID/notes")
 			{
 				notes.GET("", s.ListReviewNotes)
 				notes.POST("", csrf, s.CreateReviewNote)
