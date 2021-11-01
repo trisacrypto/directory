@@ -128,7 +128,7 @@ def fake_legal_name(vasp):
         "name_identifiers": [
             {
                 "legal_person_name": vasp,
-                "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_SHRT",
+                "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL",
             }
         ]
     }

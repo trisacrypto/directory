@@ -15,10 +15,5 @@
 # vendor/
 
 # Local configuration
-fixtures/backups
-fixtures/certs
-fixtures/creds
-fixtures/db
-fixtures/db.old
-
+fixtures/
 .env
