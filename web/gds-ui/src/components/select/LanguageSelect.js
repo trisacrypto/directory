@@ -18,7 +18,7 @@ const languages = {
   },
   zh: {
     flag: "🇨🇳",
-    title: "中国人",
+    title: "中文",
   },
 }
 
