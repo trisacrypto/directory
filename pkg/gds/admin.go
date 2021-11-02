@@ -836,7 +836,9 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 	}
 
 	// Compose the JSON response
-	out.Notes = make([]admin.ReviewNote, len(notes))
+	out = &admin.ListReviewNotesReply{
+		Notes: make([]admin.ReviewNote, len(notes)),
+	}
 	for _, n := range notes {
 		out.Notes = append(out.Notes, admin.ReviewNote{
 			ID:       n.Id,
