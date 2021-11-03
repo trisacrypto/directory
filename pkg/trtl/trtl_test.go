@@ -150,6 +150,8 @@ func (s *trtlTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
 	s.gzip = filepath.Join("testdata", "db.tar.gz")
+	err = os.MkdirAll("testdata", 0755)
+	require.NoError(err)
 	s.db, err = ioutil.TempDir("testdata", "db*")
 	require.NoError(err)
 	// TODO: Implement --update flag for generating a new gzipped database?
