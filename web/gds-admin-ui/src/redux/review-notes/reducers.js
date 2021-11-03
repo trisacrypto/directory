@@ -1,6 +1,6 @@
-import produce from "immer"
 import { DeleteReviewNotesActionTypes, UpdateReviewNotesActionTypes } from "."
 import { FetchReviewNotesActionTypes } from "./constants"
+import { produce } from 'immer'
 
 const INITIAL_STATE = {
     data: null,

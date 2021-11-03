@@ -22,6 +22,7 @@ function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable 
     const onSubmit = (data) => {
         const { note, noteId } = data
         setIsSubmiting(true)
+
         updateReviewNote(note?.trim(), noteId, vaspId).then(response => {
             const note = response?.data
             if (note) {
