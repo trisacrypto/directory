@@ -158,8 +158,8 @@ class APICore {
     /**
      * Deletes data
      */
-    delete = (url) => {
-        return axios.delete(url);
+    delete = (url, params) => {
+        return axios.delete(url, params);
     };
 
     /**

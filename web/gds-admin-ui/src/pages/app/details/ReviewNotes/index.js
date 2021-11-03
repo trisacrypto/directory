@@ -29,7 +29,7 @@ const Comments = () => {
             <Card.Body>
                 <h4 className="mt-0 mb-3">Reviewer Notes</h4>
                 <ReviewNoteForm vaspId={params?.id} />
-                <ReviewNotes />
+                <ReviewNotes vaspId={params?.id} />
             </Card.Body>
         </Card>
     );

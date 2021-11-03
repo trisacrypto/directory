@@ -17,4 +17,13 @@ function postReviewNote(note, vaspId) {
     })
 }
 
-export { getReviewNotes, postReviewNote }
+function deleteReviewNote(noteId, vaspId, params) {
+    const csrfToken = getCookie('csrf_token')
+    return api.delete(`/vasps/${vaspId}/notes/${noteId}`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+export { getReviewNotes, postReviewNote, deleteReviewNote }

@@ -4,3 +4,7 @@ export const FetchReviewNotesActionTypes = {
 
     FETCH_REVIEW_NOTES: '@@review_notes/FETCH_REVIEW_NOTES',
 };
+
+export const DeleteReviewNotesActionTypes = {
+    DELETE_REVIEW_NOTES: '@@review_notes/DELETE_REVIEW_NOTES',
+};

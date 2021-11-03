@@ -9,7 +9,7 @@ import Loader from '../../../../components/Loader';
 dayjs.extend(relativeTime)
 
 
-function ReviewNotes({ data }) {
+function ReviewNotes({ vaspId }) {
     const { user } = useUser()
     const reviewNotes = useSelector(getAllReviewNotes)
     const isLoading = useSelector(getReviewNoteLoadingState)
@@ -19,7 +19,7 @@ function ReviewNotes({ data }) {
     }
     if (!isLoading && reviewNotes?.length) {
         return reviewNotes.map((note) => note.id && (
-            <ReviewNote user={user?.email} note={note} key={note.id} />
+            <ReviewNote vaspId={vaspId} user={user?.email} note={note} key={note.id} />
         ))
     }
 

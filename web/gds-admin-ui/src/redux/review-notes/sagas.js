@@ -1,6 +1,7 @@
 import toast from "react-hot-toast"
 import { call, put, takeEvery } from "redux-saga/effects"
-import { getReviewNotes } from "../../services/review-notes"
+import { DeleteReviewNotesActionTypes } from "."
+import { getReviewNotes, deleteReviewNote as deleteNote } from "../../services/review-notes"
 import { fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess } from "./actions"
 import { FetchReviewNotesActionTypes } from "./constants"
 
@@ -22,6 +23,21 @@ function* fetchReviewNotes({ payload: { id } }) {
     }
 }
 
+function* deleteReviewNote({ payload: { noteId, vaspId } }) {
+    try {
+        const response = yield call(deleteNote, noteId, vaspId)
+        if (response) {
+            toast.success('The note has been deleted successfully')
+        }
+    } catch (error) {
+        toast.error(error.message)
+    }
+}
+
 export function* reviewNotesSaga() {
     yield takeEvery(FetchReviewNotesActionTypes.FETCH_REVIEW_NOTES, fetchReviewNotes)
+}
+
+export function* deleteReviewNoteSaga() {
+    yield takeEvery(DeleteReviewNotesActionTypes.DELETE_REVIEW_NOTES, deleteReviewNote)
 }
