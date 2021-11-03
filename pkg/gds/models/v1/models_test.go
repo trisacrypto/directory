@@ -46,8 +46,13 @@ func TestVASPExtra(t *testing.T) {
 	require.True(t, proto.Equal(entry, auditLog[0]))
 
 	// Attempt to create a review note
-	err = CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	note, err := CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
 	require.NoError(t, err)
+	require.Equal(t, "boats", note.Id)
+	require.Equal(t, "", note.Modified)
+	require.Equal(t, "pontoon@boatz.com", note.Author)
+	require.Equal(t, "", note.Editor)
+	require.Equal(t, "boats are cool", note.Text)
 
 	// Should be able to fetch the note
 	notes, err := GetReviewNotes(vasp)
@@ -183,8 +188,13 @@ func TestReviewNotes(t *testing.T) {
 	require.Error(t, err)
 
 	// Create a new note
-	err = CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	note, err := CreateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
 	require.NoError(t, err)
+	require.Equal(t, "boats", note.Id)
+	require.Equal(t, "", note.Modified)
+	require.Equal(t, "pontoon@boatz.com", note.Author)
+	require.Equal(t, "", note.Editor)
+	require.Equal(t, "boats are cool", note.Text)
 
 	notes, err = GetReviewNotes(vasp)
 	require.NoError(t, err)
@@ -204,8 +214,9 @@ func TestReviewNotes(t *testing.T) {
 	require.Error(t, err)
 
 	// Create a new note
-	err = CreateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
+	note, err = CreateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
 	require.NoError(t, err)
+	require.Equal(t, "jetskis are fun", note.Text)
 
 	notes, err = GetReviewNotes(vasp)
 	require.NoError(t, err)

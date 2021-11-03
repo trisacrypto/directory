@@ -294,7 +294,7 @@ func (s *APIv2) RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPR
 	return out, nil
 }
 
-func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *CreateReviewNoteReply, err error) {
+func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error) {
 	// vaspID is required for the endpoint
 	if in.VASP == "" {
 		return nil, ErrIDRequred
@@ -315,7 +315,7 @@ func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteReques
 	}
 
 	// Execute the request and get a response
-	out = &CreateReviewNoteReply{}
+	out = &ReviewNote{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

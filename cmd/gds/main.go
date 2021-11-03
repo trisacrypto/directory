@@ -952,7 +952,7 @@ func adminCreateNote(c *cli.Context) (err error) {
 		params.Text = string(data)
 	}
 
-	var rep *admin.CreateReviewNoteReply
+	var rep *admin.ReviewNote
 	if rep, err = adminClient.CreateReviewNote(ctx, params); err != nil {
 		return cli.Exit(err, 1)
 	}

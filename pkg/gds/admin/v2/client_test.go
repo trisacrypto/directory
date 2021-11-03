@@ -412,7 +412,7 @@ func TestRetrieveVASP(t *testing.T) {
 }
 
 func TestCreateReviewNote(t *testing.T) {
-	fixture := &admin.CreateReviewNoteReply{
+	fixture := &admin.ReviewNote{
 		ID: "af367d27-b0e7-48b5-8987-e48a0712a826",
 	}
 
