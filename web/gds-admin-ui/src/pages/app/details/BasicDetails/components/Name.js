@@ -9,7 +9,7 @@ function Name({ data }) {
 
     return (
         <Col className="mt-3">
-            <p className="mb-1 fw-bold">Name identifiers</p>
+            <p className="mb-1 fw-bold text-green">Name identifiers</p>
             <hr className='mb-1 mt-0' />
             <ul>
                 {

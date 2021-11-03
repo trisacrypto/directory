@@ -28,17 +28,15 @@ const Tasks = ({ data }) => {
     }
 
     return (
-        <Card>
+        <Card style={{ height: '95%' }}>
             <Card.Body>
                 <h4 className="header-title mb-3">Pending Reviews</h4>
-
                 <Table className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                     <tbody>
                         {
                             Array.isArray(data?.vasps) && data.vasps.map((vasp) => (
-
                                 <tr key={vasp.id}>
-                                    <td className="d-flex gap-2 align-items-center">
+                                    <td onClick={() => history.push(`/vasps/${vasp?.id}`)} className="d-flex gap-2 align-items-center" role="button">
                                         <div>
                                             {
                                                 vasp?.traveler ? <img src={CiphertraceFavicon} width="30" alt="Cyphertrace" /> : <img src={TrisaFavicon} width="30" className="img-fluid" alt="Trisa" />
@@ -46,9 +44,7 @@ const Tasks = ({ data }) => {
                                         </div>
                                         <div>
                                             <h5 className="font-14 my-1 d-flex gap-2">
-                                                <a href="/" className="text-body">
-                                                    {vasp?.name}
-                                                </a>
+                                                {vasp?.name}
                                             </h5>
                                             <span className="text-muted font-13">{dayjs(vasp?.last_updated).fromNow()}</span>
                                         </div>

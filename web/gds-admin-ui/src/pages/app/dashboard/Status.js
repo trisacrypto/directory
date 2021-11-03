@@ -5,7 +5,7 @@ import { capitalizeFirstLetter, getRatios } from '../../../utils';
 import { Status as STATUS } from '../../../constants';
 
 const Status = ({ statuses }) => {
-    const colors = ['#ffc107', '#dc3545', '#0d6efd'];
+    const colors = ['#ffc107', '#dc3545', '#42d29d', '#0d6efd'];
 
     const statusRatios = () => {
         if (statuses && typeof statuses === "object") {
@@ -60,29 +60,36 @@ const Status = ({ statuses }) => {
                 </div>
 
                 <Row className="text-center mt-2 py-2">
-                    <Col lg={4}>
-                        <i className="mdi mdi-progress-question text-warning mt-3 h3"></i>
-                        <h3 className="fw-normal">
+                    <Col lg={3}>
+                        <i className="mdi mdi-progress-question text-warning mt-3 h4"></i>
+                        <h4 className="fw-normal">
                             <span>{statusPercents()[STATUS.PENDING_REVIEW] + '%'}</span>
-                        </h3>
-                        <p className="text-muted mb-0">Pending</p>
+                        </h4>
+                        <p className="text-muted mb-0 fs-6">Pending</p>
                     </Col>
 
-                    <Col lg={4}>
-                        <i className="mdi mdi-alert-octagram text-danger mt-3 h3"></i>
-                        <h3 className="fw-normal">
+                    <Col lg={3}>
+                        <i className="mdi mdi-alert-octagram text-danger mt-3 h4"></i>
+                        <h4 className="fw-normal">
                             <span>{statusPercents()[STATUS.REJECTED] + '%'}</span>
-                        </h3>
-                        <p className="text-muted mb-0">Rejected</p>
+                        </h4>
+                        <p className="text-muted mb-0 fs-6">Rejected</p>
+                    </Col>
+                    <Col lg={3}>
+                        <i className="dripicons-download text-success mt-3 h4"></i>
+                        <h4 className="fw-normal">
+                            <span>{statusPercents()[STATUS.SUBMITTED] + '%'}</span>
+                        </h4>
+                        <p className="text-muted mb-0 fs-6" style={{ marginTop: 'revert' }}> Submitted</p>
+                    </Col>
+                    <Col lg={3}>
+                        <i className="mdi mdi-shield-check text-primary mt-3 h4"></i>
+                        <h4 className="fw-normal">
+                            <span>{statusPercents()[STATUS.VERIFIED] + '%'}</span>
+                        </h4>
+                        <p className="text-muted mb-0 fs-6"> Verified</p>
                     </Col>
 
-                    <Col lg={4}>
-                        <i className="mdi mdi-shield-check text-primary mt-3 h3"></i>
-                        <h3 className="fw-normal">
-                            <span>{statusPercents()[STATUS.VERIFIED] + '%'}</span>
-                        </h3>
-                        <p className="text-muted mb-0"> Verified</p>
-                    </Col>
                 </Row>
             </Card.Body>
         </Card>

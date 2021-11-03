@@ -43,7 +43,7 @@ const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
                 <Col lg={4}>
                     <Status statuses={summary?.statuses} />
                 </Col>
-                <Col sm={12} lg={8} style={{ overflowY: "scroll", height: "100%" }}>
+                <Col sm={12} lg={8} style={{ overflowY: "auto", height: "100%" }}>
                     {!isVaspsLoading ? <Tasks data={vasps} /> : null}
                 </Col>
             </Row>
