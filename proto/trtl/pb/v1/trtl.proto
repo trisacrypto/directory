@@ -29,7 +29,8 @@ service Trtl {
 
 message GetRequest {
     bytes key = 1;
-    Options options = 2;
+    bytes namespace = 2;
+    Options options = 3;
 }
 
 message GetReply {
@@ -40,7 +41,8 @@ message GetReply {
 message PutRequest {
     bytes key = 1;
     bytes value = 2;
-    Options options = 3;
+    bytes namespace = 3;
+    Options options = 4;
 }
 
 message PutReply {
@@ -50,7 +52,8 @@ message PutReply {
 
 message DeleteRequest {
     bytes key = 1;
-    Options options = 2;    // if return_meta=true then the meta of the version deleted is returned
+    bytes namespace = 2;
+    Options options = 3;    // if return_meta=true then the meta of the version deleted is returned
 }
 
 message DeleteReply {
@@ -131,7 +134,8 @@ message Options {
 message KVPair {
     bytes key = 1;
     bytes value = 2;
-    Meta meta = 3;
+    bytes namespace = 3;
+    Meta meta = 4;
 }
 
 // Meta is a simplified representation of the honu.object.v1.Object metadata that trtl

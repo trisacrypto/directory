@@ -1,6 +1,7 @@
 package trtl
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/rotationalio/honu"
@@ -27,6 +28,10 @@ func NewHonuService(s *Server) (*HonuService, error) {
 func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
 
+	if _, found := reservedNamespaces[string(in.Namespace)]; found {
+		log.Error().Msg("cannot use reserved namespace")
+		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
+	}
 	if len(in.Key) == 0 {
 		log.Error().Msg("missing key in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
@@ -35,17 +40,25 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		log.Error().Msg("missing options in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "options must be provided in Get request")
 	}
-	log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
+
+	var key []byte
+	if len(in.Namespace) > 0 {
+		key = prepend(in.Namespace, in.Key)
+	} else {
+		key = in.Key
+	}
+
+	log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
 	if in.Options.ReturnMeta {
 		// Retrieve and return the metadata.
 		var object *object.Object
-		if object, err = h.db.Object(in.Key); err != nil {
+		if object, err = h.db.Object(key); err != nil {
 			// TODO: Check for the honu not found error instead.
 			if err == leveldb.ErrNotFound {
-				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
+				log.Debug().Err(err).Str("key", string(key)).Msg("specified key not found")
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
-			log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
+			log.Error().Err(err).Str("key", string(key)).Msg("unable to retrieve object")
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &pb.GetReply{
@@ -71,13 +84,13 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 	// Just return the value for the given key.
 	var value []byte
-	if value, err = h.db.Get(in.Key); err != nil {
+	if value, err = h.db.Get(key); err != nil {
 		// TODO: Check for the honu not found error instead.
 		if err == leveldb.ErrNotFound {
-			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
+			log.Debug().Err(err).Str("key", string(key)).Msg("specified key not found")
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve value")
+		log.Error().Err(err).Str("key", string(key)).Msg("unable to retrieve value")
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 	return &pb.GetReply{
@@ -108,4 +121,14 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 func (h *HonuService) Sync(stream pb.Trtl_SyncServer) (err error) {
 	return status.Error(codes.Unimplemented, "not implemented")
+}
+
+// prepend the namespace to the key
+func prepend(namespace, key []byte) []byte {
+	return bytes.Join(
+		[][]byte{
+			namespace,
+			key,
+		}, []byte("::"),
+	)
 }
