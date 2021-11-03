@@ -35,6 +35,8 @@ type Sectigo struct {
 	profile string
 }
 
+// SectigoClient is an interface which can be implemented by an HTTP client for either
+// Sectigo API calls or for mock testing.
 type SectigoClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -46,7 +48,9 @@ type SectigoClient interface {
 // credentials will be loaded.
 func New(username, password, profile string) (client *Sectigo, err error) {
 	client = &Sectigo{
-		creds: &CredentialsManager{},
+		creds: &CredentialsManager{
+			creds: &Credentials{},
+		},
 		client: &http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
@@ -67,8 +71,8 @@ func New(username, password, profile string) (client *Sectigo, err error) {
 // password but the user does not have authority, a 403 status code.
 func (s *Sectigo) Authenticate() (err error) {
 	data := AuthenticationRequest{
-		Username: s.creds.Creds().Username,
-		Password: s.creds.Creds().Password,
+		Username: s.Creds().Username,
+		Password: s.Creds().Password,
 	}
 
 	body := new(bytes.Buffer)
@@ -706,13 +710,14 @@ func (s *Sectigo) RevokeCertificate(profileID, reasonCode int, serialNumber stri
 	return nil
 }
 
+// CredsManager returns the CredentialsClient for external access.
 func (s *Sectigo) CredsManager() CredentialsClient {
 	return s.creds
 }
 
 // Creds returns a copy of the underlying credentials object.
 func (s *Sectigo) Creds() Credentials {
-	return *s.creds.Creds()
+	return s.creds.Creds()
 }
 
 // Returns a request with default headers set along with the authentication header.

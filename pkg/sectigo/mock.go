@@ -2,8 +2,6 @@ package sectigo
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,11 +12,13 @@ import (
 	jwt "github.com/golang-jwt/jwt/v4"
 )
 
+// NewMock returns a Sectigo client containing a mocked CredentialsManager
+// and a mocked HTTP client. It can be used like a real Sectigo client, except
+// that it uses an in-memory credentials cache and calls mocked Sectigo handlers
+// instead of calling the real Sectigo API.
 func NewMock(username, password, profile string) (client *Sectigo, err error) {
 	client = &Sectigo{
-		creds: &mockCredentialsManager{
-			creds: Credentials{},
-		},
+		creds: &mockCredentialsManager{creds: &Credentials{}},
 		client: &mockHTTPClient{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
@@ -33,19 +33,16 @@ func NewMock(username, password, profile string) (client *Sectigo, err error) {
 }
 
 type mockCredentialsManager struct {
-	creds Credentials
+	creds *Credentials
 }
+
+var mockCredentialsCache Credentials
 
 type mockHTTPClient struct {
 	CheckRedirect func(req *http.Request, via []*http.Request) error
 }
 
-type mockCredentials struct {
-	creds Credentials
-}
-
-var mockCredentialsCache Credentials
-
+// mockUser is a mock to keep track of Sectigo users.
 type mockUser struct {
 	username   string
 	password   string
@@ -54,16 +51,19 @@ type mockUser struct {
 	refresh    string
 }
 
+// mockBatch is a mock to keep track of batches sent to Sectigo.
 type mockBatch struct {
 	processing ProcessingInfoResponse
 	filename   string
 }
 
+// mockProfile is a mock to keep track of Sectigo profiles.
 type mockProfile struct {
 	params  []*ProfileParamsResponse
 	details *ProfileDetailResponse
 }
 
+// mockCertificate is a mock to keep track of Sectigo certificates.
 type mockCertificate struct {
 	DeviceID     int
 	CommonName   string
@@ -72,6 +72,7 @@ type mockCertificate struct {
 	Status       string
 }
 
+// mockServer is an in-memory store to keep track of persistent Sectigo data and settings.
 type mockServer struct {
 	certs        bool
 	users        map[string]*mockUser
@@ -90,16 +91,36 @@ type mockServer struct {
 var mockEnv map[string]string
 var mockBackend *mockServer
 
+// generateToken generates a fake JWT token to send back to the Sectigo client.
 func generateToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
+	var token *jwt.Token
+	claims := jwt.StandardClaims{
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Minute * 10).Unix(),
+	}
+	if token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims); token == nil {
+		return "", fmt.Errorf("could not generate jwt token")
+	}
+	var signed string
+	var err error
+	if signed, err = token.SignedString([]byte("foo")); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(b), nil
+	return signed, nil
 }
 
+// getRequestIdParam is a helper function to get the ID param from a GET request.
+func getRequestIdParam(req *http.Request) (id int, err error) {
+	param := req.URL.Query().Get("id")
+	if id, err = strconv.Atoi(param); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+// Do is a replacement for the HTTPClient.Do which handles all the Sectigo API requests.
 func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
-	switch req.URL.Path {
+	switch req.URL.String() {
 	case urlFor(authenticateEP):
 		var request AuthenticationRequest
 		if err = json.NewDecoder(req.Body).Decode(&request); err != nil {
@@ -115,7 +136,8 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 		}
 
 		var user *mockUser
-		if user, ok := mockBackend.users[request.Username]; !ok || user.password != request.Password {
+		var ok bool
+		if user, ok = mockBackend.users[request.Username]; !ok || user.password != request.Password {
 			return &http.Response{
 				StatusCode: http.StatusUnauthorized,
 			}, fmt.Errorf("invalid username or password")
@@ -133,12 +155,12 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 		if response.AccessToken, err = generateToken(); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusInternalServerError,
-			}, err
+			}, fmt.Errorf("error generating access token: %s", err)
 		}
 		if response.RefreshToken, err = generateToken(); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusInternalServerError,
-			}, err
+			}, fmt.Errorf("error generating refresh token: %s", err)
 		}
 
 		mockBackend.access[response.AccessToken] = request.Username
@@ -270,13 +292,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(batchDetailEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var batch *mockBatch
 		var ok bool
 		if batch, ok = mockBackend.batches[id]; !ok {
@@ -300,13 +322,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(batchProcessingInfoEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var batch *mockBatch
 		var ok bool
 		if batch, ok = mockBackend.batches[id]; !ok {
@@ -327,13 +349,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(downloadEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var batch *mockBatch
 		var ok bool
 		if batch, ok = mockBackend.batches[id]; !ok {
@@ -381,13 +403,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(authorityUserBalanceAvailableEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var auth *AuthorityResponse
 		var ok bool
 		if auth, ok = mockBackend.authorities[id]; !ok {
@@ -425,13 +447,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(profileParametersEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var profile *mockProfile
 		var ok bool
 		if profile, ok = mockBackend.profiles[id]; !ok {
@@ -452,13 +474,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			Body:       ioutil.NopCloser(repBody),
 		}, nil
 	case urlFor(profileDetailEP):
-		param := req.URL.Query().Get("id")
 		var id int
-		if id, err = strconv.Atoi(param); err != nil {
+		if id, err = getRequestIdParam(req); err != nil {
 			return &http.Response{
 				StatusCode: http.StatusBadRequest,
 			}, err
 		}
+
 		var profile *mockProfile
 		var ok bool
 		if profile, ok = mockBackend.profiles[id]; !ok {
@@ -564,12 +586,13 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 	}, fmt.Errorf("error parsing URL path")
 }
 
-func (c *mockCredentialsManager) Creds() *Credentials {
-	return &c.creds
+func (c *mockCredentialsManager) Creds() Credentials {
+	return *c.creds
 }
 
 func (c *mockCredentialsManager) Load(username, password string) (err error) {
 	var ok bool
+	c.creds = &mockCredentialsCache
 	if username == "" {
 		if username, ok = mockEnv[UsernameEnv]; ok {
 			c.creds.Username = username
@@ -585,8 +608,6 @@ func (c *mockCredentialsManager) Load(username, password string) (err error) {
 	} else {
 		c.creds.Password = password
 	}
-
-	c.creds = mockCredentialsCache
 
 	if err = c.Check(); err != nil {
 		c.Clear()
@@ -604,7 +625,7 @@ func (c *mockCredentialsManager) Load(username, password string) (err error) {
 }
 
 func (c *mockCredentialsManager) Dump() (path string, err error) {
-	mockCredentialsCache = c.creds
+	mockCredentialsCache = *c.creds
 	return "", nil
 }
 
@@ -643,22 +664,22 @@ func (c *mockCredentialsManager) Update(accessToken, refreshToken string) (err e
 }
 
 func (c *mockCredentialsManager) Check() (err error) {
-	creds := CredentialsManager{creds: c.creds}
+	creds := &CredentialsManager{creds: c.creds}
 	return creds.Check()
 }
 
 func (c *mockCredentialsManager) Valid() bool {
-	creds := CredentialsManager{creds: c.creds}
+	creds := &CredentialsManager{creds: c.creds}
 	return creds.Valid()
 }
 
 func (c *mockCredentialsManager) Current() bool {
-	creds := CredentialsManager{creds: c.creds}
+	creds := &CredentialsManager{creds: c.creds}
 	return creds.Current()
 }
 
 func (c *mockCredentialsManager) Refreshable() bool {
-	creds := CredentialsManager{creds: c.creds}
+	creds := &CredentialsManager{creds: c.creds}
 	return creds.Refreshable()
 }
 

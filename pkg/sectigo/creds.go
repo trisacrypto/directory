@@ -26,10 +26,6 @@ const (
 )
 
 // Credentials stores login and authentication information to connect to the Sectigo API.
-// Its primary purpose is to cache access and refresh tokens to prevent multiple logins
-// accross different API commands and to store user authentication data or to fetch it
-// from the environment. It also provides helper methods for determining when tokens are
-// expired by reading the JWT data that has been returned.
 type Credentials struct {
 	Username     string            `yaml:"-" json:"-"`              // Username is fetched from environment or supplied by user (not stored in cache)
 	Password     string            `yaml:"-" json:"-"`              // Password is fetched from environment or supplied by user (not stored in cache)
@@ -43,12 +39,19 @@ type Credentials struct {
 	cache        *configdir.Config `yaml:"-"`                       // The cache directory the credentials are loaded and dumped to
 }
 
+// CredentialsManager implements an interface for managing a cached credential store.
+// Its primary purpose is to cache access and refresh tokens to prevent multiple logins
+// accross different API commands and to store user authentication data or to fetch it
+// from the environment. It also provides helper methods for determining when tokens are
+// expired by reading the JWT data that has been returned.
 type CredentialsManager struct {
-	creds Credentials
+	creds *Credentials
 }
 
+// CredentialsClient is an interface which can be implemented by either CredentialsManager
+// or a mock for testing or emulating the loading and storing of Credential objects.
 type CredentialsClient interface {
-	Creds() *Credentials
+	Creds() Credentials
 	Load(username, password string) error
 	Dump() (path string, err error)
 	Update(accessToken, refreshToken string) error
@@ -60,8 +63,9 @@ type CredentialsClient interface {
 	CacheFile() string
 }
 
-func (c *CredentialsManager) Creds() *Credentials {
-	return &c.creds
+// Return a copy of the underyling Creditentials object.
+func (c *CredentialsManager) Creds() Credentials {
+	return *c.creds
 }
 
 // Load initializes a Credentials object. If the username and password are specified,

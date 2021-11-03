@@ -29,7 +29,7 @@ func TestCredentials(t *testing.T) {
 	defer os.Clearenv()
 
 	// Load credentials from the environment with no cache
-	creds := CredentialsManager{creds: Credentials{}}
+	creds := CredentialsManager{creds: &Credentials{}}
 	require.NoError(t, creds.Load("", ""))
 
 	require.Equal(t, "foo", creds.Creds().Username)
