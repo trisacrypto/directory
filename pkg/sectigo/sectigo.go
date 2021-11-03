@@ -30,9 +30,13 @@ import (
 // request, and if not either refreshes the token or reauthenticates using its
 // credentials.
 type Sectigo struct {
-	client  http.Client
-	creds   *Credentials
+	client  SectigoClient
+	creds   CredentialsClient
 	profile string
+}
+
+type SectigoClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // New creates a Sectigo client ready to make HTTP requests, but unauthenticated. The
@@ -42,8 +46,8 @@ type Sectigo struct {
 // credentials will be loaded.
 func New(username, password, profile string) (client *Sectigo, err error) {
 	client = &Sectigo{
-		creds: &Credentials{},
-		client: http.Client{
+		creds: &CredentialsManager{},
+		client: &http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
 		profile: profile,
@@ -63,8 +67,8 @@ func New(username, password, profile string) (client *Sectigo, err error) {
 // password but the user does not have authority, a 403 status code.
 func (s *Sectigo) Authenticate() (err error) {
 	data := AuthenticationRequest{
-		Username: s.creds.Username,
-		Password: s.creds.Password,
+		Username: s.creds.Creds().Username,
+		Password: s.creds.Creds().Password,
 	}
 
 	body := new(bytes.Buffer)
@@ -117,12 +121,12 @@ func (s *Sectigo) Authenticate() (err error) {
 // the refresh access token if it exists. If the refresh token does not exist, then an
 // error is returned.
 func (s *Sectigo) Refresh() (err error) {
-	if s.creds.RefreshToken == "" {
+	if s.creds.Creds().RefreshToken == "" {
 		return ErrNotAuthenticated
 	}
 
 	body := new(bytes.Buffer)
-	fmt.Fprintf(body, "%s", s.creds.RefreshToken)
+	fmt.Fprintf(body, "%s", s.creds.Creds().RefreshToken)
 
 	req, err := http.NewRequest(http.MethodPost, urlFor(refreshEP), body)
 	if err != nil {
@@ -159,7 +163,7 @@ func (s *Sectigo) Refresh() (err error) {
 	// It appears that sectigo reuses the refresh token.
 	// TODO: verify refresh behavior to ensure that it's used correctly
 	if tokens.RefreshToken == "" {
-		tokens.RefreshToken = s.creds.RefreshToken
+		tokens.RefreshToken = s.creds.Creds().RefreshToken
 	}
 
 	if err = s.creds.Update(tokens.AccessToken, tokens.RefreshToken); err != nil {
@@ -276,7 +280,7 @@ func (s *Sectigo) UploadCSRBatch(profileId int, filename string, csrData []byte,
 	}
 
 	// set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.creds.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.creds.Creds().AccessToken))
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Accept", contentType)
 	req.Header.Set("User-Agent", userAgent)
@@ -702,9 +706,13 @@ func (s *Sectigo) RevokeCertificate(profileID, reasonCode int, serialNumber stri
 	return nil
 }
 
+func (s *Sectigo) CredsManager() CredentialsClient {
+	return s.creds
+}
+
 // Creds returns a copy of the underlying credentials object.
 func (s *Sectigo) Creds() Credentials {
-	return *s.creds
+	return *s.creds.Creds()
 }
 
 // Returns a request with default headers set along with the authentication header.
@@ -732,7 +740,7 @@ func (s *Sectigo) newRequest(method, url string, data interface{}) (req *http.Re
 	}
 
 	// Set Headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.creds.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.creds.Creds().AccessToken))
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", contentType)
 	req.Header.Set("User-Agent", userAgent)

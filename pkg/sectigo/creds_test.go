@@ -29,13 +29,13 @@ func TestCredentials(t *testing.T) {
 	defer os.Clearenv()
 
 	// Load credentials from the environment with no cache
-	creds := new(Credentials)
+	creds := CredentialsManager{creds: Credentials{}}
 	require.NoError(t, creds.Load("", ""))
 
-	require.Equal(t, "foo", creds.Username)
-	require.Equal(t, "secretz", creds.Password)
-	require.Zero(t, creds.AccessToken)
-	require.Zero(t, creds.RefreshToken)
+	require.Equal(t, "foo", creds.Creds().Username)
+	require.Equal(t, "secretz", creds.Creds().Password)
+	require.Zero(t, creds.Creds().AccessToken)
+	require.Zero(t, creds.Creds().RefreshToken)
 
 	// Set expired access and refresh tokens
 	require.Error(t, creds.Update(testAccessToken, testRefreshToken))
@@ -43,21 +43,21 @@ func TestCredentials(t *testing.T) {
 
 	// Set valid access and refresh tokens
 	require.NoError(t, creds.Update(testAccessToken, testRefreshToken))
-	require.NotZero(t, creds.AccessToken)
-	require.NotZero(t, creds.RefreshToken)
-	require.NotZero(t, creds.Subject)
-	require.NotZero(t, creds.IssuedAt)
-	require.NotZero(t, creds.ExpiresAt)
-	require.NotZero(t, creds.NotBefore)
-	require.NotZero(t, creds.RefreshBy)
+	require.NotZero(t, creds.Creds().AccessToken)
+	require.NotZero(t, creds.Creds().RefreshToken)
+	require.NotZero(t, creds.Creds().Subject)
+	require.NotZero(t, creds.Creds().IssuedAt)
+	require.NotZero(t, creds.Creds().ExpiresAt)
+	require.NotZero(t, creds.Creds().NotBefore)
+	require.NotZero(t, creds.Creds().RefreshBy)
 	require.True(t, creds.Valid())
 	require.True(t, creds.Current())
 
 	// Load credentials from user supplied values and cached tokens
 	require.NoError(t, creds.Load("teller", "tigerpaw"))
 
-	require.Equal(t, "teller", creds.Username)
-	require.Equal(t, "tigerpaw", creds.Password)
+	require.Equal(t, "teller", creds.Creds().Username)
+	require.Equal(t, "tigerpaw", creds.Creds().Password)
 }
 
 func checkCache() (err error) {

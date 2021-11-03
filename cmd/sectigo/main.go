@@ -228,7 +228,7 @@ func initAPI(c *cli.Context) (err error) {
 }
 
 func auth(c *cli.Context) (err error) {
-	creds := api.Creds()
+	creds := api.CredsManager()
 
 	if c.Bool("cache") {
 		if cacheFile := creds.CacheFile(); cacheFile != "" {
@@ -241,12 +241,12 @@ func auth(c *cli.Context) (err error) {
 
 	if c.Bool("debug") {
 		if creds.Valid() {
-			fmt.Printf("credentials are valid until %s\n", creds.ExpiresAt)
+			fmt.Printf("credentials are valid until %s\n", creds.Creds().ExpiresAt)
 			return nil
 		}
 
 		if creds.Current() {
-			fmt.Printf("credentials are current until %s\n", creds.RefreshBy)
+			fmt.Printf("credentials are current until %s\n", creds.Creds().RefreshBy)
 			return nil
 		}
 

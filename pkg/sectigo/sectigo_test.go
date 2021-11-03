@@ -14,8 +14,8 @@ func TestCredsCopy(t *testing.T) {
 	creds := api.Creds()
 	require.NotEqual(t, &api.creds, &creds)
 
-	require.Equal(t, api.creds.Username, creds.Username)
+	require.Equal(t, api.creds.Creds().Username, creds.Username)
 	creds.Username = "superbunny"
-	require.NotEqual(t, api.creds.Username, creds.Username)
-	require.Equal(t, api.creds.Username, "foo")
+	require.NotEqual(t, api.creds.Creds().Username, creds.Username)
+	require.Equal(t, api.creds.Creds().Username, "foo")
 }
