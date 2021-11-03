@@ -1,4 +1,3 @@
-// @flow
 import React from 'react';
 import { Row, Col, } from 'react-bootstrap';
 
@@ -13,7 +12,9 @@ import TrixoForm from './TrixoForm';
 import { useHistory } from 'react-router-dom'
 import AuditLog from './AuditLog';
 
-const VaspDetails = (): React$Element<React$FragmentType> => {
+const ReviewNotes = React.lazy(() => import('./ReviewNotes'))
+
+const VaspDetails = () => {
     const [vasp, setVasp] = React.useState({});
     const params = useParams();
     const history = useHistory();
@@ -47,6 +48,7 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                         <Col md={6} xl={8} xxl={8}>
                             <BasicDetails data={vasp} />
                             <TrixoForm data={vasp?.trixo} />
+                            <ReviewNotes />
                         </Col>
                         <Col md={6} xl={4} xxl={4}>
                             <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />
