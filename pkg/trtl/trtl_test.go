@@ -1,12 +1,17 @@
 package trtl_test
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/rotationalio/honu/object"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -18,23 +23,95 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func generateDB(s *suite.Suite) (db *leveldb.DB) {
-	// TODO: Load from a gzipped file.
-	db, err := leveldb.OpenFile("testdata/tmp", nil)
-	defer db.Close()
-	s.NoError(err)
+func extractGzip(s *trtlTestSuite) {
+	// Read the gzip file.
+	require := s.Require()
+	f, err := os.Open(s.gzip)
+	require.NoError(err)
+	defer f.Close()
+	gr, err := gzip.NewReader(f)
+	require.NoError(err)
+	defer gr.Close()
 
-	peer := &peers.Peer{
-		Id:       1,
-		Addr:     "localhost:1313",
-		Name:     "foo",
-		Region:   "foo",
-		Created:  "foo",
-		Modified: "foo",
-		Extra: map[string]string{
-			"foo": "bar",
-		},
+	// Write the contents to a directory.
+	tr := tar.NewReader(gr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err)
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode))
+			require.NoError(err)
+		case tar.TypeReg:
+			f, err := os.Create(filepath.Join(s.db, hdr.Name))
+			require.NoError(err)
+			_, err = io.Copy(f, tr)
+			require.NoError(err)
+			f.Close()
+		default:
+			require.Fail(fmt.Sprintf("extracting %s: unexpected type: %v", hdr.Name, hdr.Typeflag))
+		}
 	}
+}
+
+func writeGzip(s *trtlTestSuite) {
+	require := s.Require()
+	// Create a gzip file.
+	f, err := os.Create(s.gzip)
+	require.NoError(err)
+	defer f.Close()
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	// Create a tar file.
+	tw := tar.NewWriter(w)
+	defer tw.Close()
+
+	// Write the DB to the tar file.
+	err = filepath.Walk(s.db, func(path string, info os.FileInfo, err error) error {
+		require.NoError(err)
+		hdr, err := tar.FileInfoHeader(info, "")
+		require.NoError(err)
+		hdr.Name = path[len(s.db):]
+		err = tw.WriteHeader(hdr)
+		require.NoError(err)
+		if info.IsDir() {
+			return nil
+		}
+		f, err := os.Open(path)
+		require.NoError(err)
+		defer f.Close()
+		_, err = io.Copy(tw, f)
+		require.NoError(err)
+		return nil
+	})
+	require.NoError(err)
+}
+
+var peerFoo = peers.Peer{
+	Id:       1,
+	Addr:     "localhost:4435",
+	Name:     "foo",
+	Region:   "foo",
+	Created:  "foo",
+	Modified: "foo",
+	Extra: map[string]string{
+		"foo": "bar",
+	},
+}
+
+// generateDB generates an updated database and compresses it to a gzip file.
+// Note: This also generates a temporary directory which the suite teardown
+// should clean up.
+func generateDB(s *trtlTestSuite) {
+	require := s.Require()
+	db, err := leveldb.OpenFile(s.db, nil)
+	require.NoError(err)
+	defer db.Close()
+
 	meta := &object.Object{
 		Key:       []byte("foo"),
 		Namespace: "",
@@ -48,34 +125,52 @@ func generateDB(s *suite.Suite) (db *leveldb.DB) {
 			},
 		},
 	}
-	meta.Data, err = proto.Marshal(peer)
-	s.NoError(err)
+	meta.Data, err = proto.Marshal(&peerFoo)
+	require.NoError(err)
 	data, err := proto.Marshal(meta)
-	s.NoError(err)
+	require.NoError(err)
 	err = db.Put(meta.Key, data, nil)
-	s.NoError(err)
+	require.NoError(err)
 
 	val, err := db.Get(meta.Key, nil)
-	s.NoError(err)
-	s.Equal(data, val)
+	require.NoError(err)
+	require.Equal(data, val)
 
-	return db
+	writeGzip(s)
 }
 
 type trtlTestSuite struct {
 	suite.Suite
-	path string
-	db   *leveldb.DB
+	gzip string
+	db   string
+	conf config.Config
 }
 
 func (s *trtlTestSuite) SetupSuite() {
-	// TODO: Swap the path for a gzipped database.
+	var err error
+	require := s.Require()
+	s.gzip = filepath.Join("testdata", "db.tar.gz")
+	s.db, err = ioutil.TempDir("testdata", "db*")
+	require.NoError(err)
 	// TODO: Implement --update flag for generating a new gzipped database?
-	s.db = generateDB(&s.Suite)
+	if _, err := os.Stat(s.gzip); os.IsNotExist(err) {
+		generateDB(s)
+	} else {
+		extractGzip(s)
+	}
+
+	// Load default config and add database path.
+	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
+	os.Setenv("TRTL_PID", "1")
+	os.Setenv("TRTL_REGION", "foo")
+	s.conf, err = config.New()
+	require.NoError(err)
 }
 
 func (s *trtlTestSuite) TearDownSuite() {
-	// TODO: Delete the extracted version of the database.
+	require := s.Require()
+	err := os.RemoveAll(s.db)
+	require.NoError(err)
 }
 
 func TestTrtl(t *testing.T) {
@@ -84,25 +179,19 @@ func TestTrtl(t *testing.T) {
 
 // Test that we can call the Get RPC and get the correct response.
 func (s *trtlTestSuite) TestGet() {
+	require := s.Require()
 	// Should the --update flag have specific handling here?
 
-	config := config.Config{
-		Enabled:  true,
-		BindAddr: "localhost:1313",
-	}
-
-	server, err := trtl.New(config)
-	s.NoError(err)
+	server, err := trtl.New(s.conf)
+	require.NoError(err)
 
 	go server.Serve()
 	defer server.Shutdown()
 
-	fmt.Println("started server")
-
 	// Test that we can get a response from a gRPC request.
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "localhost:4435", grpc.WithInsecure())
-	s.NoError(err)
+	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
+	require.NoError(err)
 	client := pb.NewTrtlClient(conn)
 	reply, err := client.Get(ctx, &pb.GetRequest{
 		Key: []byte("foo"),
@@ -110,51 +199,11 @@ func (s *trtlTestSuite) TestGet() {
 			ReturnMeta: false,
 		},
 	})
-	s.NoError(err)
+	require.NoError(err)
 
-	// Compare the reply to the expected value.
-	peer := &peers.Peer{
-		Id:       1,
-		Addr:     "localhost:1313",
-		Name:     "foo",
-		Region:   "foo",
-		Created:  "foo",
-		Modified: "foo",
-		Extra: map[string]string{
-			"foo": "bar",
-		},
-	}
-
-	// unmrshal the reply into a Peer
+	// unmarshal the reply into a Peer
 	var actual peers.Peer
 	err = proto.Unmarshal(reply.Value, &actual)
-	s.NoError(err)
-	s.True(proto.Equal(peer, &actual))
-}
-
-// Test that we can start and stop a trtl server.
-func TestServer(t *testing.T) {
-	t.Skip()
-	// TODO: For the real tests we probably want to avoid binding a real address.
-	config := config.Config{
-		Enabled:  true,
-		BindAddr: "localhost:1313",
-	}
-
-	server, err := trtl.New(config)
-	require.NoError(t, err)
-
-	err = server.Serve()
-	require.NoError(t, err)
-
-	// Test that we can get a response from a gRPC request.
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "localhost:1313", grpc.WithInsecure())
-	require.NoError(t, err)
-	client := pb.NewTrtlClient(conn)
-	_, err = client.Get(ctx, &pb.GetRequest{Key: []byte("foo")})
-	require.EqualError(t, err, "rpc error: code = Unimplemented desc = not implemented")
-
-	err = server.Shutdown()
-	require.NoError(t, err)
+	require.NoError(err)
+	require.True(proto.Equal(&peerFoo, &actual))
 }

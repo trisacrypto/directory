@@ -50,6 +50,7 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Everything that follows this comment assumes we're not in maintenance mode
 	// Open a connection to the Honu wrapped database
+	fmt.Println("here")
 	if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
 		return nil, fmt.Errorf("honu error: %v", err)
 	}
