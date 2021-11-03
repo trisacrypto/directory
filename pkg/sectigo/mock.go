@@ -78,7 +78,6 @@ type mockServer struct {
 	users        map[string]*mockUser
 	access       map[string]string
 	refresh      map[string]string
-	ids          map[int]string
 	batches      map[int]*mockBatch
 	numBatches   int
 	licenses     *LicensesUsedResponse
@@ -186,11 +185,10 @@ func (c *mockHTTPClient) Do(req *http.Request) (rep *http.Response, err error) {
 			}, err
 		}
 
-		refresh := string(reqBody)
 		var name string
 		var user *mockUser
 		var ok bool
-		if name, ok = mockBackend.refresh[refresh]; !ok {
+		if name, ok = mockBackend.refresh[string(reqBody)]; !ok {
 			return &http.Response{
 				StatusCode: http.StatusUnauthorized,
 			}, fmt.Errorf("invalid refresh token")
