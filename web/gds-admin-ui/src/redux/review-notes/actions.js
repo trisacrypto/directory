@@ -15,5 +15,4 @@ const fetchReviewNotesApiResponseError = (error) => ({
     payload: { error },
 });
 
-
 export { fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }

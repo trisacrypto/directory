@@ -137,8 +137,8 @@ class APICore {
     /**
      * post given data to url
      */
-    create = (url, data) => {
-        return axios.post(url, data);
+    create = (url, data, config) => {
+        return axios.post(url, data, config);
     };
 
     /**

@@ -14,9 +14,11 @@ function ReviewNotes({ data }) {
     const reviewNotes = useSelector(getAllReviewNotes)
     const isLoading = useSelector(getReviewNoteLoadingState)
 
-    if (isLoading) return <Loader width={50} />
-    if (reviewNotes && reviewNotes.length) {
-        return data && data.map((note) => (
+    if (isLoading) {
+        return <Loader width={50} />
+    }
+    if (!isLoading && reviewNotes?.length) {
+        return reviewNotes.map((note) => note.id && (
             <ReviewNote user={user?.email} note={note} key={note.id} />
         ))
     }

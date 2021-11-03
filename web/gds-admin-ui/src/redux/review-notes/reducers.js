@@ -16,7 +16,7 @@ const reviewNotesReducers = (state = INITIAL_STATE, action) => {
         case FetchReviewNotesActionTypes.API_RESPONSE_SUCCESS:
             return {
                 ...state,
-                data: action.payload.data.notes,
+                data: action.payload.data,
                 loading: false
             }
         case FetchReviewNotesActionTypes.API_RESPONSE_ERROR:
