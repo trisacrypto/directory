@@ -9,9 +9,9 @@ function Name({ data }) {
 
     return (
         <Col className="mt-3">
-            <p className="mb-1 fw-bold text-green">Name identifiers</p>
+            <p className="mb-1 fw-bold">Name Identifiers</p>
             <hr className='mb-1 mt-0' />
-            <ul>
+            <ul className='list-unstyled'>
                 {
                     names?.map((value, index) => value ?
                         (

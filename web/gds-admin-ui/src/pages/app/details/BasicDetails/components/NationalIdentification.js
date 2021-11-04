@@ -11,7 +11,7 @@ function NationalIdentification({ data }) {
             {
                 data ? (
                     <Col className="mt-3">
-                        <p className="fw-bold mb-1 text-green">National identification</p>
+                        <p className="fw-bold mb-1">National Identification</p>
                         <hr className='my-1' />
                         <p className="mb-2 fw-bold">Issued by: <span className="fw-normal">{`${formatDisplayedData(countryCodeEmoji(data?.country_of_issue))} (${formatDisplayedData(data?.country_of_issue)}) by authority ${formatDisplayedData(data?.registration_authority)}`}</span></p>
                         <p className="mb-1 fw-bold">National identification type: <span className="fw-normal badge bg-primary rounded-pill px-1">{formatDisplayedData(NATIONAL_IDENTIFIER_TYPE[data?.national_identifier_type])}</span></p>
@@ -22,7 +22,7 @@ function NationalIdentification({ data }) {
 
                 ) : (
                     <Col>
-                        <p className="mb-1 fw-bold">National identification: <span className="fw-normal">{formatDisplayedData(data?.national_identification)}</span></p>
+                        <p className="mb-1 fw-bold">National Identification: <span className="fw-normal">{formatDisplayedData(data?.national_identification)}</span></p>
                     </Col>
                 )
             }
