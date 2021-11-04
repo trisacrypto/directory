@@ -139,7 +139,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 		switch in.Request.(type) {
 		case *pb.BatchRequest_Put:
 			var reply *pb.PutReply
-			if reply, err = h.Put(context.TODO(), in.Request.(*pb.BatchRequest_Put).Put); err != nil || !reply.Success {
+			if reply, err = h.Put(stream.Context(), in.Request.(*pb.BatchRequest_Put).Put); err != nil || !reply.Success {
 				out.Failed++
 				var errMsg string
 				if err != nil {
@@ -155,7 +155,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 			}
 		case *pb.BatchRequest_Delete:
 			var reply *pb.DeleteReply
-			if reply, err = h.Delete(context.TODO(), in.Request.(*pb.BatchRequest_Delete).Delete); err != nil || !reply.Success {
+			if reply, err = h.Delete(stream.Context(), in.Request.(*pb.BatchRequest_Delete).Delete); err != nil || !reply.Success {
 				out.Failed++
 				var errMsg string
 				if err != nil {
