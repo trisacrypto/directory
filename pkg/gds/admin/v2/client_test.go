@@ -412,13 +412,16 @@ func TestRetrieveVASP(t *testing.T) {
 }
 
 func TestCreateReviewNote(t *testing.T) {
-	fixture := &admin.CreateReviewNoteReply{
-		ID: "af367d27-b0e7-48b5-8987-e48a0712a826",
-	}
-
 	req := &admin.ModifyReviewNoteRequest{
 		VASP: "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
 		Text: "note text",
+	}
+
+	fixture := &admin.ReviewNote{
+		ID:      "af367d27-b0e7-48b5-8987-e48a0712a826",
+		Created: time.Now().Format(time.RFC3339),
+		Author:  "alice@example.com",
+		Text:    req.Text,
 	}
 
 	// Create a Test Server

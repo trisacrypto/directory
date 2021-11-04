@@ -736,6 +736,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 	var (
 		err    error
 		in     *admin.ModifyReviewNoteRequest
+		note   *models.ReviewNote
 		vasp   *pb.VASP
 		claims *tokens.Claims
 		vaspID string
@@ -795,7 +796,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 	}
 
 	// Create the note
-	if err = models.CreateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
+	if note, err = models.CreateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
 		log.Warn().Err(err).Msg("error creating review note")
 		if err == models.ErrorAlreadyExists {
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("note already exists"))
@@ -811,7 +812,14 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 	}
 
-	c.JSON(http.StatusCreated, &admin.CreateReviewNoteReply{ID: noteID})
+	c.JSON(http.StatusCreated, &admin.ReviewNote{
+		ID:       note.Id,
+		Created:  note.Created,
+		Modified: note.Modified,
+		Author:   note.Author,
+		Editor:   note.Editor,
+		Text:     note.Text,
+	})
 }
 
 // ListReviewNotes returns a list of review notes given a vaspID param.

@@ -21,7 +21,7 @@ type DirectoryAdministrationClient interface {
 	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
-	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *CreateReviewNoteReply, err error)
+	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
 	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error)
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
@@ -142,12 +142,6 @@ type ModifyReviewNoteRequest struct {
 
 	// Actual text of the note.
 	Text string `json:"text"`
-}
-
-// CreateReviewNoteReply contains information about the newly created note.
-type CreateReviewNoteReply struct {
-	// The ID of the new note.
-	ID string `json:"id"`
 }
 
 // ListReviewNotesReply contains information about a group of notes.
