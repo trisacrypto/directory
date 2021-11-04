@@ -2,7 +2,7 @@
 import React from 'react'
 import { Card, Col, Dropdown, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from '../../../../constants';
-import { formatDisplayedData, isValidHttpUrl } from '../../../../utils';
+import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from '../../../../utils';
 import dayjs from 'dayjs';
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
@@ -10,6 +10,7 @@ import { BUSINESS_CATEGORY } from '../../../../constants/basic-details';
 import Geographic from './components/Geographic';
 import countryCodeEmoji from '../../../../utils/country';
 import { downloadFile } from '../../../../helpers/api/utils';
+import classNames from 'classnames';
 
 export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
 
@@ -77,9 +78,9 @@ function BasicDetails({ data }) {
                     <BasicDetailsDropDown isNotPendingReview={isNotPendingReview} />
                     <div>
                         <div>
-                            <h4 className="m-0 d-inline-block">{data?.name}</h4>
+                            <h3 className="m-0 d-inline-block text-green">{data?.name}</h3>
                             {data?.traveler ? <span className='badge bg-primary rounded-pill px-1 ms-1 align-text-bottom'>Traveler</span> : null}
-                            {data?.vasp?.verification_status ? <span className='badge bg-warning rounded-pill px-1 ms-1 align-text-bottom'>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
+                            {data?.vasp?.verification_status ? <span className={classNames('badge rounded-pill px-1 ms-1 align-text-bottom', getStatusClassName(data?.vasp?.verification_status))}>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
                         </div>
                         <div className='d-flex align-items-center'>
                             <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }}>{countryCodeEmoji(data?.vasp?.entity?.country_of_registration)}</span>
@@ -88,7 +89,7 @@ function BasicDetails({ data }) {
                     </div>
                     <Row>
                         <Col>
-                            <h5>Business details <button onClick={handleIvmsJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h5>
+                            <h4 className='text-green mb-0'>Business details <button onClick={handleIvmsJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h4>
                             <p className="mb-2">
                                 {
                                     Array.isArray(data?.vasp?.vasp_categories) && data?.vasp?.vasp_categories.map((category, index) => <span key={index} className='badge bg-success rounded-pill px-1 me-1'>{category}</span>)
@@ -102,7 +103,8 @@ function BasicDetails({ data }) {
                                 </Col>
                                 <Col>
                                     <p className="mb-2 mt-md-3 mt-lg-3 fw-bold">Established on: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>
-                                    <h5 className='mt-3'>Address(es):</h5>
+                                    <h5 className='mt-3 text-green'>Address(es):</h5>
+                                    <hr className='m-0 mb-1' />
                                     <Geographic data={data?.vasp?.entity?.geographic_addresses} />
                                 </Col>
                             </Row>
@@ -110,7 +112,7 @@ function BasicDetails({ data }) {
                                 <p className="mb-2 fw-bold">Business categorie(s): <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
                             </Col>
                             <div className='mt-4'>
-                                <h5>TRISA details <button onClick={handleTrisaJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h5>
+                                <h4 className='text-green mb-0'>TRISA details <button onClick={handleTrisaJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h4>
                                 <hr className='my-1' />
                                 <p className="mb-2 fw-bold">ID: <span className="fw-normal">{formatDisplayedData(data?.vasp?.id)}</span></p>
                                 <p className="mb-2 fw-bold">Common name: <span className="fw-normal">{formatDisplayedData(data?.vasp?.common_name)}</span></p>

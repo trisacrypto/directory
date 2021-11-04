@@ -805,6 +805,12 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		return
 	}
 
+	// Persist the VASP record to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("error updating VASP record")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+	}
+
 	c.JSON(http.StatusCreated, &admin.CreateReviewNoteReply{ID: noteID})
 }
 
@@ -836,7 +842,9 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 	}
 
 	// Compose the JSON response
-	out.Notes = make([]admin.ReviewNote, len(notes))
+	out = &admin.ListReviewNotesReply{
+		Notes: make([]admin.ReviewNote, len(notes)),
+	}
 	for _, n := range notes {
 		out.Notes = append(out.Notes, admin.ReviewNote{
 			ID:       n.Id,
@@ -914,6 +922,12 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 		return
 	}
 
+	// Persist the VASP record to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("error updating VASP record")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+	}
+
 	c.JSON(http.StatusOK, &admin.Reply{Success: true})
 }
 
@@ -946,6 +960,12 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete review note"))
 		}
 		return
+	}
+
+	// Persist the VASP record to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("error updating VASP record")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 	}
 
 	c.JSON(http.StatusOK, &admin.Reply{Success: true})

@@ -45,7 +45,7 @@ function formatDisplayedData(target) {
 
 const getRatios = (data) => {
     const total = Object.values(data).reduce((acc, x) => acc + x);
-    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, (v / total).toFixed(1)]));
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, (v / total).toFixed(2)]));
 }
 
 function capitalizeFirstLetter(string) {
