@@ -122,7 +122,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 			return stream.SendAndClose(out)
 		}
 		if err != nil {
-			return err
+			return status.Error(codes.Internal, err.Error())
 		}
 
 		out.Operations++
