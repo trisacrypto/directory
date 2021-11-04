@@ -3,6 +3,7 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"io"
 
 	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/object"
@@ -111,8 +112,74 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
-func (h *HonuService) Batch(stream pb.Trtl_BatchServer) (err error) {
-	return status.Error(codes.Unimplemented, "not implemented")
+// Batch is a client-side streaming request to issue multiple commands, usually Put and Delete.
+func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
+	out := &pb.BatchReply{}
+	for {
+		// Read the next request from the stream.
+		in, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(out)
+		}
+		if err != nil {
+			return err
+		}
+
+		out.Operations++
+		if in.Request == nil {
+			out.Failed++
+			out.Errors = append(out.Errors, &pb.BatchReply_Error{
+				Id:    in.Id,
+				Error: "missing request field",
+			})
+			continue
+		}
+
+		// Process the request.
+		switch in.Request.(type) {
+		case *pb.BatchRequest_Put:
+			var reply *pb.PutReply
+			if reply, err = h.Put(context.TODO(), in.Request.(*pb.BatchRequest_Put).Put); err != nil || !reply.Success {
+				out.Failed++
+				var errMsg string
+				if err != nil {
+					errMsg = err.Error()
+				} else {
+					errMsg = "unexpected Put error"
+				}
+				out.Errors = append(out.Errors, &pb.BatchReply_Error{
+					Id:    in.Id,
+					Error: errMsg,
+				})
+				continue
+			}
+		case *pb.BatchRequest_Delete:
+			var reply *pb.DeleteReply
+			if reply, err = h.Delete(context.TODO(), in.Request.(*pb.BatchRequest_Delete).Delete); err != nil || !reply.Success {
+				out.Failed++
+				var errMsg string
+				if err != nil {
+					errMsg = err.Error()
+				} else {
+					errMsg = "unexpected Delete error"
+				}
+				out.Errors = append(out.Errors, &pb.BatchReply_Error{
+					Id:    in.Id,
+					Error: errMsg,
+				})
+				continue
+			}
+		default:
+			out.Failed++
+			out.Errors = append(out.Errors, &pb.BatchReply_Error{
+				Id:    in.Id,
+				Error: "unknown request type",
+			})
+			continue
+		}
+
+		out.Successful++
+	}
 }
 
 func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) (err error) {
