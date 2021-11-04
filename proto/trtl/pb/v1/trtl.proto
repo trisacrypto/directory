@@ -29,7 +29,7 @@ service Trtl {
 
 message GetRequest {
     bytes key = 1;
-    bytes namespace = 2;
+    string namespace = 2;
     Options options = 3;
 }
 
@@ -41,7 +41,7 @@ message GetReply {
 message PutRequest {
     bytes key = 1;
     bytes value = 2;
-    bytes namespace = 3;
+    string namespace = 3;
     Options options = 4;
 }
 
@@ -52,7 +52,7 @@ message PutReply {
 
 message DeleteRequest {
     bytes key = 1;
-    bytes namespace = 2;
+    string namespace = 2;
     Options options = 3;    // if return_meta=true then the meta of the version deleted is returned
 }
 
@@ -63,7 +63,8 @@ message DeleteReply {
 
 message IterRequest {
     bytes prefix = 1;       // the prefix to range over, if nil all objects are returned
-    Options options = 2;
+    string namespace = 2;
+    Options options = 3;
 }
 
 message IterReply {
@@ -134,7 +135,7 @@ message Options {
 message KVPair {
     bytes key = 1;
     bytes value = 2;
-    bytes namespace = 3;
+    string namespace = 3;
     Meta meta = 4;
 }
 

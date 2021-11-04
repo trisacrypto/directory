@@ -28,16 +28,16 @@ func NewHonuService(s *Server) (*HonuService, error) {
 func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
 
-	if _, found := reservedNamespaces[string(in.Namespace)]; found {
-		log.Error().Msg("cannot use reserved namespace")
+	if _, found := reservedNamespaces[in.Namespace]; found {
+		log.Warn().Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
-		log.Error().Msg("missing key in Trtl Get request")
+		log.Warn().Msg("missing key in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 	if in.Options == nil {
-		log.Error().Msg("missing options in Trtl Get request")
+		log.Warn().Msg("missing options in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "options must be provided in Get request")
 	}
 
@@ -45,7 +45,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	if len(in.Namespace) > 0 {
 		key = prepend(in.Namespace, in.Key)
 	} else {
-		key = in.Key
+		key = prepend("default", in.Key)
 	}
 
 	log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
@@ -124,10 +124,10 @@ func (h *HonuService) Sync(stream pb.Trtl_SyncServer) (err error) {
 }
 
 // prepend the namespace to the key
-func prepend(namespace, key []byte) []byte {
+func prepend(namespace string, key []byte) []byte {
 	return bytes.Join(
 		[][]byte{
-			namespace,
+			[]byte(namespace),
 			key,
 		}, []byte("::"),
 	)

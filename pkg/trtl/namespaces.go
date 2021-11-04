@@ -6,4 +6,5 @@ var reservedNamespaces = map[string]struct{}{
 	"peers":    struct{}{},
 	"sequence": struct{}{},
 	"index":    struct{}{},
+	"default":  struct{}{}, // if the user does not specify a namespace
 }
