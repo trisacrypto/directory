@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/rotationalio/honu/object"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -23,73 +25,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func extractGzip(s *trtlTestSuite) {
-	// Read the gzip file.
-	require := s.Require()
-	f, err := os.Open(s.gzip)
-	require.NoError(err)
-	defer f.Close()
-	gr, err := gzip.NewReader(f)
-	require.NoError(err)
-	defer gr.Close()
-
-	// Write the contents to a directory.
-	tr := tar.NewReader(gr)
-	for {
-		hdr, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		require.NoError(err)
-		switch hdr.Typeflag {
-		case tar.TypeDir:
-			err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode))
-			require.NoError(err)
-		case tar.TypeReg:
-			f, err := os.Create(filepath.Join(s.db, hdr.Name))
-			require.NoError(err)
-			_, err = io.Copy(f, tr)
-			require.NoError(err)
-			f.Close()
-		default:
-			require.Fail(fmt.Sprintf("extracting %s: unexpected type: %v", hdr.Name, hdr.Typeflag))
-		}
-	}
-}
-
-func writeGzip(s *trtlTestSuite) {
-	require := s.Require()
-	// Create a gzip file.
-	f, err := os.Create(s.gzip)
-	require.NoError(err)
-	defer f.Close()
-	w := gzip.NewWriter(f)
-	defer w.Close()
-
-	// Create a tar file.
-	tw := tar.NewWriter(w)
-	defer tw.Close()
-
-	// Write the DB to the tar file.
-	err = filepath.Walk(s.db, func(path string, info os.FileInfo, err error) error {
-		require.NoError(err)
-		hdr, err := tar.FileInfoHeader(info, "")
-		require.NoError(err)
-		hdr.Name = path[len(s.db):]
-		err = tw.WriteHeader(hdr)
-		require.NoError(err)
-		if info.IsDir() {
-			return nil
-		}
-		f, err := os.Open(path)
-		require.NoError(err)
-		defer f.Close()
-		_, err = io.Copy(tw, f)
-		require.NoError(err)
-		return nil
-	})
-	require.NoError(err)
-}
+var (
+	update = flag.Bool("update", false, "update the static test fixtures")
+)
 
 var peerFoo = peers.Peer{
 	Id:       1,
@@ -101,6 +39,36 @@ var peerFoo = peers.Peer{
 	Extra: map[string]string{
 		"foo": "bar",
 	},
+}
+
+type trtlTestSuite struct {
+	suite.Suite
+	gzip string
+	db   string
+	conf config.Config
+}
+
+func (s *trtlTestSuite) SetupSuite() {
+	var err error
+	require := s.Require()
+	s.gzip = filepath.Join("testdata", "db.tar.gz")
+	s.db, err = ioutil.TempDir("testdata", "db*")
+	require.NoError(err)
+
+	// Only regenerate the test database if requested or it doesn't exist.
+	if _, err = os.Stat(s.gzip); *update || os.IsNotExist(err) {
+		generateDB(s)
+	}
+
+	// Always extract the test database to a temporary directory.
+	extractGzip(s)
+
+	// Load default config and add database path.
+	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
+	os.Setenv("TRTL_PID", "1")
+	os.Setenv("TRTL_REGION", "foo")
+	s.conf, err = config.New()
+	require.NoError(err)
 }
 
 // generateDB generates an updated database and compresses it to a gzip file.
@@ -137,35 +105,76 @@ func generateDB(s *trtlTestSuite) {
 	require.Equal(data, val)
 
 	writeGzip(s)
+	log.Info().Msg("successfully regenerated test fixtures")
 }
 
-type trtlTestSuite struct {
-	suite.Suite
-	gzip string
-	db   string
-	conf config.Config
-}
-
-func (s *trtlTestSuite) SetupSuite() {
-	var err error
+// extractGzip extracts the gzipped database to the temporary directory.
+func extractGzip(s *trtlTestSuite) {
+	// Read the gzip file.
 	require := s.Require()
-	s.gzip = filepath.Join("testdata", "db.tar.gz")
-	err = os.MkdirAll("testdata", 0755)
+	f, err := os.Open(s.gzip)
 	require.NoError(err)
-	s.db, err = ioutil.TempDir("testdata", "db*")
+	defer f.Close()
+	gr, err := gzip.NewReader(f)
 	require.NoError(err)
-	// TODO: Implement --update flag for generating a new gzipped database?
-	if _, err := os.Stat(s.gzip); os.IsNotExist(err) {
-		generateDB(s)
-	} else {
-		extractGzip(s)
-	}
+	defer gr.Close()
 
-	// Load default config and add database path.
-	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
-	os.Setenv("TRTL_PID", "1")
-	os.Setenv("TRTL_REGION", "foo")
-	s.conf, err = config.New()
+	// Write the contents to a directory.
+	tr := tar.NewReader(gr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err)
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode))
+			require.NoError(err)
+		case tar.TypeReg:
+			f, err := os.Create(filepath.Join(s.db, hdr.Name))
+			require.NoError(err)
+			_, err = io.Copy(f, tr)
+			require.NoError(err)
+			f.Close()
+		default:
+			require.Fail(fmt.Sprintf("extracting %s: unexpected type: %v", hdr.Name, hdr.Typeflag))
+		}
+	}
+}
+
+// writeGzip writes the database in the temporary directory to a gzipped file.
+func writeGzip(s *trtlTestSuite) {
+	require := s.Require()
+	// Create a gzip file.
+	f, err := os.Create(s.gzip)
+	require.NoError(err)
+	defer f.Close()
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	// Create a tar file.
+	tw := tar.NewWriter(w)
+	defer tw.Close()
+
+	// Write the DB to the tar file.
+	err = filepath.Walk(s.db, func(path string, info os.FileInfo, err error) error {
+		require.NoError(err)
+		hdr, err := tar.FileInfoHeader(info, "")
+		require.NoError(err)
+		hdr.Name = path[len(s.db):]
+		err = tw.WriteHeader(hdr)
+		require.NoError(err)
+		if info.IsDir() {
+			return nil
+		}
+		f, err := os.Open(path)
+		require.NoError(err)
+		defer f.Close()
+		_, err = io.Copy(tw, f)
+		require.NoError(err)
+		return nil
+	})
 	require.NoError(err)
 }
 
