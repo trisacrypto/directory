@@ -1,0 +1,44 @@
+{
+    "alice": {
+        "namespace": "people",
+        "key": "45abc34d-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "value": {
+            "name": "Alice",
+            "email": "alice@example.com"
+        }
+    },
+    "bob": {
+        "namespace": "people",
+        "key": "98bea8c0-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "value": {
+            "name": "Bob",
+            "email": "bob@example.com"
+        }
+    },
+    "cert": {
+        "namespace": "certs",
+        "key": "23abc34d-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "value": {
+            "common_name": "alicecoin.com",
+            "verified": true,
+            "chain": ["alicecoin.com", "verisign.com"]
+        }
+    },
+    "object": {
+        "namespace": "default",
+        "key": "e76f8f8f-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "value": {
+            "data": "some unclassified data"
+        }
+    },
+    "peer": {
+        "namespace": "peers",
+        "key": "82abc34d-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "value": {
+            "Id": 1,
+            "Addr": "127.0.0.1:1234",
+            "Name": "peer",
+            "Region": "us-east-1"
+        }
+    }
+}
