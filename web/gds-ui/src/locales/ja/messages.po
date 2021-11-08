@@ -129,7 +129,7 @@ msgstr "事業体"
 
 #: src/components/TRIXO.js:152
 msgid "CDD & Travel Rule Policies"
-msgstr " CDD & Travel Rule Policies "
+msgstr " CDD & Travel Rule 規則 "
 
 #: src/components/select/VASPCategory.js:10
 msgid "Centralized Exchange"
@@ -291,7 +291,7 @@ msgstr "IDカード番号"
 
 #: src/components/ivms101/NationalIdentification.js:62
 msgid "If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List."
-msgstr "識別子がLEI番号の場合はGLEIF Registration Authorities Listに使用されているIDです。"
+msgstr "識別子がLEI番号の場合はGLEIF 登録認定機関リストに使用されているIDです。"
 
 #: src/components/Registration.js:306
 #: src/components/Registration.js:320
