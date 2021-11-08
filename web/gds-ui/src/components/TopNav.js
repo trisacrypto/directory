@@ -5,12 +5,14 @@ import Nav from 'react-bootstrap/Nav'
 import { isTestNet } from '../lib/testnet';
 import { Trans } from "@lingui/macro";
 import LanguageSelect from './select/LanguageSelect';
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const testNet = isTestNet();
 const directoryURL = testNet ? "https://vaspdirectory.net/" : "https://trisatest.net/";
 const directoryURLTitle = `You're currently on the ${testNet ? "TestNet" : "Production"} Directory`;
-const directoryURLText = `Switch to ${testNet ? "Production" : "TestNet"}`;
+const directoryURLText = i18n._(t`Switch to`+` ${testNet ? i18n._(t`Production`) : i18n._(t`TestNet`)}`);
 
 const TopNav = () => {
   return (

@@ -132,7 +132,7 @@ const TRIXO = ({data, onChange}) => {
         <p><Trans>Please add any other regulatory jurisdictions your organization complies with.</Trans></p>
         {otherJursidictions}
         <Form.Group>
-          <Button size="sm" onClick={createArrayPushHandler('other_jurisdictions', {'country': '', 'regulator_name': ''})}>Add Jurisdiction</Button>
+          <Button size="sm" onClick={createArrayPushHandler('other_jurisdictions', {'country': '', 'regulator_name': ''})}><Trans>Add Jurisdiction</Trans></Button>
         </Form.Group>
       </fieldset>
       <Form.Group>
@@ -168,7 +168,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="conductsCustomerKYC"
-            label="Conducts KYC before virtual asset transfers"
+            label={i18n._(t`Conducts KYC before virtual asset transfers`)}
             checked={data.conducts_customer_kyc}
             onChange={createBoolChangeHandler("conducts_customer_kyc")}
           />
@@ -202,7 +202,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="mustComplyTravelRule"
-            label="Must comply with the Travel Rule"
+            label={i18n._(t`Must comply with the Travel Rule`)}
             checked={data.must_comply_travel_rule}
             onChange={createBoolChangeHandler("must_comply_travel_rule")}
           />
@@ -249,7 +249,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="mustSafeguardPII"
-            label="Must Safeguard PII"
+            label={i18n._(t`Must Safeguard PII`)}
             checked={data.must_safeguard_pii}
             onChange={createBoolChangeHandler("must_safeguard_pii")}
           />
@@ -259,7 +259,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="safeguardsPII"
-            label="Safeguards PII"
+            label={i18n._(t`Safeguards PII`)}
             checked={data.safeguards_pii}
             onChange={createBoolChangeHandler("safeguards_pii")}
           />

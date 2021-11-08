@@ -3,6 +3,8 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { Trans } from "@lingui/macro";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 class Lookup extends React.Component {
@@ -27,7 +29,7 @@ class Lookup extends React.Component {
   }
 
   render() {
-    const detectedType = this.state.inputType !== '' ? `Detected input type: ${this.state.inputType}` : '';
+    const detectedType = this.state.inputType !== '' ? i18n._(t`Detected input type: ${this.state.inputType}`) : '';
 
     return (
       <Form className="justify-content-center" onSubmit={this.onFormSubmit}>
@@ -38,7 +40,7 @@ class Lookup extends React.Component {
             </Form.Label>
             <Form.Control
               id="lookupInput"
-              placeholder="Common Name or VASP ID"
+              placeholder={i18n._(t`Common Name or VASP ID`)}
               onChange={this.onTextInput}
             />
             <Form.Text id="passwordHelpBlock" muted>

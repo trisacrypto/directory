@@ -1,3 +1,7 @@
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
+
+
 const _ = require('lodash');
 const api = require('./trisa/gds/api/v1beta1/api_grpc_web_pb');
 const models = require('./trisa/gds/models/v1beta1/models_pb');
@@ -18,7 +22,7 @@ const defaultEndpoint = () => {
     case "production":
       return "https://proxy.vaspdirectory.net"
     default:
-      throw new Error("could not identify default GDS api endpoint");
+      throw new Error(i18n._(t`could not identify default GDS api endpoint`));
   }
 }
 
@@ -53,7 +57,7 @@ const protoFromObject = (ProtoClass, obj) => {
       if (msg[setter]) {
         msg[setter](value);
       } else {
-        throw new Error(`field ${field} with setter ${setter} does not exist on ${ProtoClass}`);
+        throw new Error(i18n._(t`field ${field} with setter ${setter} does not exist on ${ProtoClass}`));
       }
     } else if (_.isArray(value)) {
       // Handle Repeated
@@ -67,7 +71,7 @@ const protoFromObject = (ProtoClass, obj) => {
               const nested = protoFromObject(NestedProto, item);
               msg[setter](nested);
             } else {
-              throw new Error(`unknown nested proto type for field ${field} with setter ${setter}`);
+              throw new Error(i18n._(t`unknown nested proto type for field ${field} with setter ${setter}`));
             }
           } else {
             // Add primitive inside repeated array
@@ -75,7 +79,7 @@ const protoFromObject = (ProtoClass, obj) => {
           }
         }
       } else {
-        throw new Error(`repeated field ${field} with setter ${setter} does not exist on ${ProtoClass}`);
+        throw new Error(i18n._(t`repeated field ${field} with setter ${setter} does not exist on ${ProtoClass}`));
       }
     } else if (_.isObject(value)) {
       // Recursively call protoFromObject
@@ -86,13 +90,13 @@ const protoFromObject = (ProtoClass, obj) => {
         if (msg[setter]) {
           msg[setter](nested);
         } else {
-          throw new Error(`field ${field} with setter ${setter} does not exist on ${ProtoClass}`);
+          throw new Error(i18n._(t`field ${field} with setter ${setter} does not exist on ${ProtoClass}`));
         }
       } else {
-        throw new Error(`unknown nested proto type for field ${field} with setter ${setter}`);
+        throw new Error(i18n._(t`unknown nested proto type for field ${field} with setter ${setter}`));
       }
     } else {
-      throw new Error(`unhandled field ${field} with setter ${setter} and value type ${typeof(value)}`);
+      throw new Error(i18n._(t`unhandled field ${field} with setter ${setter} and value type ${typeof(value)}`));
     }
   }
   return msg
@@ -118,7 +122,7 @@ class GDS {
         req.setCommonName(query);
         break
       default:
-        throw new Error("unacceptable input type to lookup query");
+        throw new Error(i18n._(t`unacceptable input type to lookup query`));
     }
 
     let client = this.client;
@@ -136,7 +140,7 @@ class GDS {
   search = (query) => {
     // let client = this.client;
     return new Promise((resolve, reject) => {
-      reject(new Error("search API not implemented yet"));
+      reject(new Error(i18n._(t`search API not implemented yet`)));
     })
   }
 
@@ -154,7 +158,7 @@ class GDS {
           contacts[setter](null)
           req.setContacts(contacts);
         } else {
-          throw new Error(`could not nullify empty ${contact} contact`);
+          throw new Error(i18n._(t`could not nullify empty ${contact} contact`));
         }
       }
     }
@@ -176,7 +180,7 @@ class GDS {
 
   verifyContact = (vaspID, token) => {
     if (!vaspID || !token) {
-      throw new Error("vaspID and token are required");
+      throw new Error(i18n._(t`vaspID and token are required`));
     }
 
     const req = new api.VerifyContactRequest();

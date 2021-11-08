@@ -19,11 +19,13 @@ import { Trans } from "@lingui/macro";
 import BusinessCategory from './select/BusinessCategory';
 import VASPCategory from './select/VASPCategory';
 import withTracker from '../lib/analytics';
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 
 const testNet = isTestNet();
 const registrationFormVersion = "v1beta1";
-const submitButtonText = testNet ? "Submit TestNet Registration" : "Submit Production Registration"
+const submitButtonText = testNet ? i18n._(t`Submit TestNet Registration`) : i18n._(t`Submit Production Registration`)
 
 // Returns a legal person object with default values populated.
 const makeLegalPerson = () => {
@@ -398,8 +400,8 @@ class Registration extends React.Component {
                     </Form.Group>
                   </fieldset>
                   <Form.Group>
-                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}>Back</Button>{' '}
-                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"legal-person"})}>Next</Button>
+                    <Button variant="secondary" onClick={(e) => this.setState({tabKey:"introduction"})}><Trans>Back</Trans></Button>{' '}
+                    <Button variant="primary" onClick={(e) => this.setState({tabKey:"legal-person"})}><Trans>Next</Trans></Button>
                   </Form.Group>
                 </Tab.Pane>
                 <Tab.Pane eventKey="legal-person">
@@ -507,8 +509,8 @@ class Registration extends React.Component {
                     </Accordion>
 
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"legal-person"})}>Back</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Next</Button>
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"legal-person"})}><Trans>Back</Trans></Button>{' '}
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}><Trans>Next</Trans></Button>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
@@ -564,8 +566,8 @@ class Registration extends React.Component {
                       onChange={this.createChangeHandler("trixo")}
                     />
                     <Form.Group>
-                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}>Back</Button>{' '}
-                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"summary"})}>Next</Button>
+                      <Button variant="secondary" onClick={(e) => this.setState({tabKey:"trisa-implementation"})}><Trans>Back</Trans></Button>{' '}
+                      <Button variant="primary" onClick={(e) => this.setState({tabKey:"summary"})}><Trans>Next</Trans></Button>
                     </Form.Group>
                   </fieldset>
                 </Tab.Pane>
