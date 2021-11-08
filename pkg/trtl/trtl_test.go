@@ -81,7 +81,6 @@ func generateDB(s *trtlTestSuite) {
 	defer db.Close()
 
 	loadFixtures(s)
-	fmt.Println(dbFixtures["alice"])
 
 	// Write all the test fixtures to the database.
 	for _, fixture := range dbFixtures {
@@ -106,38 +105,52 @@ func generateDB(s *trtlTestSuite) {
 }
 
 // extractGzip extracts the gzipped database to the temporary directory.
-func extractGzip(s *trtlTestSuite) {
+func extractGzip(s *trtlTestSuite) (err error) {
+	var (
+		f  *os.File
+		gr *gzip.Reader
+	)
+
 	// Read the gzip file.
-	require := s.Require()
-	f, err := os.Open(s.gzip)
-	require.NoError(err)
+	if f, err = os.Open(s.gzip); err != nil {
+		return err
+	}
 	defer f.Close()
-	gr, err := gzip.NewReader(f)
-	require.NoError(err)
+	if gr, err = gzip.NewReader(f); err != nil {
+		return err
+	}
 	defer gr.Close()
 
-	// Write the contents to a directory.
+	// Write the contents to the temporary directory.
 	tr := tar.NewReader(gr)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
 			break
 		}
-		require.NoError(err)
+		if err != nil {
+			return err
+		}
 		switch hdr.Typeflag {
 		case tar.TypeDir:
-			err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode))
-			require.NoError(err)
+			if err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode)); err != nil {
+				return err
+			}
 		case tar.TypeReg:
-			f, err := os.Create(filepath.Join(s.db, hdr.Name))
-			require.NoError(err)
-			_, err = io.Copy(f, tr)
-			require.NoError(err)
-			f.Close()
+			var reg *os.File
+			if reg, err = os.Create(filepath.Join(s.db, hdr.Name)); err != nil {
+				return err
+			}
+			if _, err = io.Copy(reg, tr); err != nil {
+				reg.Close()
+				return err
+			}
+			reg.Close()
 		default:
-			require.Fail(fmt.Sprintf("extracting %s: unexpected type: %v", hdr.Name, hdr.Typeflag))
+			return fmt.Errorf("extracting %s: unknown type flag: %c", hdr.Name, hdr.Typeflag)
 		}
 	}
+	return nil
 }
 
 // writeGzip writes the database in the temporary directory to a gzipped file.
@@ -182,7 +195,10 @@ func (s *trtlTestSuite) SetupSuite() {
 	s.db, err = ioutil.TempDir("testdata", "db*")
 	require.NoError(err)
 
-	// Only regenerate the test database if requested or it doesn't exist.
+	// Regenerate the test database if requested or it doesn't exist.
+	// Note: generateDB calls loadFixtures under the hood in order to populate the
+	// database. The difference here is whether or not the gzipped file should be
+	// regenerated, which we need to do every time db.json is updated.
 	if _, err = os.Stat(s.gzip); *update || os.IsNotExist(err) {
 		generateDB(s)
 	} else {
@@ -190,7 +206,11 @@ func (s *trtlTestSuite) SetupSuite() {
 	}
 
 	// Always extract the test database to a temporary directory.
-	extractGzip(s)
+	if err = extractGzip(s); err != nil {
+		// Regenerate the test database if the extraction failed.
+		log.Warn().Err(err).Msg("unable to extract test fixtures")
+		generateDB(s)
+	}
 
 	// Load default config and add database path.
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
