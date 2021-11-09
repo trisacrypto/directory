@@ -5,6 +5,8 @@ import { messages as messagesEn } from '../locales/en/messages';
 import { messages as messagesDe } from '../locales/de/messages';
 import { messages as messagesFr } from '../locales/fr/messages';
 import { messages as messagesZh } from '../locales/zh/messages';
+import { messages as messagesJa } from '../locales/ja/messages';
+import { en, de, fr, zh, ja } from 'make-plural/plurals'
 
 
 const Context = React.createContext();
@@ -16,7 +18,15 @@ export const LanguageStore = ({ children }) => {
       de: messagesDe,
       fr: messagesFr,
       zh: messagesZh,
+      ja: messagesJa,
     });
+    i18n.loadLocaleData({
+      en: { plurals: en },
+      de: { plurals: de },
+      fr: { plurals: fr },
+      zh: { plurals: zh },
+      ja: { plurals: ja}
+    })
     i18n.activate('en');
   }, []);
 

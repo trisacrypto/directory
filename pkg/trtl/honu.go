@@ -37,10 +37,6 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		log.Warn().Msg("missing key in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
-	if in.Options == nil {
-		log.Warn().Msg("missing options in Trtl Get request")
-		return nil, status.Error(codes.InvalidArgument, "options must be provided in Get request")
-	}
 
 	var key []byte
 	if len(in.Namespace) > 0 {
@@ -49,8 +45,12 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		key = prepend("default", in.Key)
 	}
 
-	log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
-	if in.Options.ReturnMeta {
+	if in.Options != nil {
+		log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
+	} else {
+		log.Debug().Str("key", string(key)).Msg("Trtl Get")
+	}
+	if in.Options != nil && in.Options.ReturnMeta {
 		// Retrieve and return the metadata.
 		var object *object.Object
 		if object, err = h.db.Object(key); err != nil {

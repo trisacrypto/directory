@@ -380,6 +380,22 @@ func TestRetrieveVASP(t *testing.T) {
 			"technical": "technical@alice.us",
 		},
 		Traveler: false,
+		AuditLog: []map[string]interface{}{
+			{
+				"timestamp":      "2021-03-31T15:32:29Z",
+				"previous_state": "SUBMITTED",
+				"current_state":  "PENDING_REVIEW",
+				"description":    "at least one contact verified",
+				"source":         "jdoe@example.com",
+			},
+			{
+				"timestamp":      "2021-04-02T08:21:53Z",
+				"previous_state": "PENDING_REVIEW",
+				"current_state":  "APPROVED",
+				"description":    "approved by certified reviewer",
+				"source":         "admin@trisa.io",
+			},
+		},
 	}
 	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
 
@@ -505,7 +521,14 @@ func TestListReviewNotes(t *testing.T) {
 }
 
 func UpdateReviewNote(t *testing.T) {
-	fixture := &admin.Reply{Success: true}
+	fixture := &admin.ReviewNote{
+		ID:       "af367d27-b0e7-48b5-8987-e48a0712a826",
+		Created:  time.Now().Format(time.RFC3339),
+		Modified: time.Now().Add(time.Hour).Format(time.RFC3339),
+		Author:   "alice@example.com",
+		Editor:   "bob@example.com",
+		Text:     "updated note text",
+	}
 
 	req := &admin.ModifyReviewNoteRequest{
 		VASP:   "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",

@@ -93,7 +93,6 @@ function Geographic({ data }) {
                 data && data.map((address, index) => (
                     <Row key={index}>
                         <p className="mb-1 fw-bold" data-testid="addressType">{AddressTypeHeaders[address?.address_type]} Address:</p>
-                        {/* <hr className='my-1' /> */}
                         {renderAddress(address)}
                     </Row>
                 ))
