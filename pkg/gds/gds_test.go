@@ -83,6 +83,7 @@ func generateDB(s *gdsTestSuite) {
 		data, err := json.Marshal(vasp)
 		require.NoError(err)
 		err = db.Put([]byte(name), data, nil)
+		require.NoError(err)
 	}
 
 	err = utils.WriteGzip(s.db, s.golden)
