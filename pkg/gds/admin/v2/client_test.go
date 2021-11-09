@@ -380,6 +380,22 @@ func TestRetrieveVASP(t *testing.T) {
 			"technical": "technical@alice.us",
 		},
 		Traveler: false,
+		AuditLog: []map[string]interface{}{
+			{
+				"timestamp":      "2021-03-31T15:32:29Z",
+				"previous_state": "SUBMITTED",
+				"current_state":  "PENDING_REVIEW",
+				"description":    "at least one contact verified",
+				"source":         "jdoe@example.com",
+			},
+			{
+				"timestamp":      "2021-04-02T08:21:53Z",
+				"previous_state": "PENDING_REVIEW",
+				"current_state":  "APPROVED",
+				"description":    "approved by certified reviewer",
+				"source":         "admin@trisa.io",
+			},
+		},
 	}
 	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
 
