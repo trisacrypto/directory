@@ -341,3 +341,60 @@ func (s *trtlTestSuite) TestGet() {
 	require.Equal(alice.Namespace, reply.Meta.Namespace)
 	require.True(proto.Equal(expectedMeta, reply.Meta))
 }
+
+// Test that we can call the Batch RPC and get the correct response.
+func (s *trtlTestSuite) TestBatch() {
+	require := s.Require()
+
+	// Start the server.
+	server, err := trtl.New(s.conf)
+	require.NoError(err)
+	go server.Serve()
+	defer server.Shutdown()
+
+	// Start the gRPC client.
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	client := pb.NewTrtlClient(conn)
+
+	requests := map[int64]*pb.BatchRequest{
+		1: {
+			Id: 1,
+			Request: &pb.BatchRequest_Put{
+				Put: &pb.PutRequest{
+					Key:       []byte("foo"),
+					Namespace: "default",
+					Value:     []byte("bar"),
+				},
+			},
+		},
+		2: {
+			Id: 2,
+			Request: &pb.BatchRequest_Delete{
+				Delete: &pb.DeleteRequest{
+					Key:       []byte("foo"),
+					Namespace: "default",
+				},
+			},
+		},
+	}
+	stream, err := client.Batch(ctx)
+	require.NoError(err)
+	for _, r := range requests {
+		err = stream.Send(r)
+		require.NoError(err)
+	}
+	reply, err := stream.CloseAndRecv()
+	require.NoError(err)
+	require.Equal(int64(len(requests)), reply.Operations)
+	require.Equal(int64(len(requests)), reply.Failed)
+	require.Equal(int64(0), reply.Successful)
+	require.Len(reply.Errors, len(requests))
+	for _, e := range reply.Errors {
+		require.Contains(requests, e.Id)
+		require.Equal(requests[e.Id].Id, e.Id)
+		require.Contains(e.Error, "not implemented")
+	}
+}

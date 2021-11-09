@@ -114,6 +114,7 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 // Batch is a client-side streaming request to issue multiple commands, usually Put and Delete.
 func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
+	log.Debug().Msg("Trtl Batch")
 	out := &pb.BatchReply{}
 	for {
 		// Read the next request from the stream.
@@ -139,7 +140,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 		switch in.Request.(type) {
 		case *pb.BatchRequest_Put:
 			var reply *pb.PutReply
-			if reply, err = h.Put(stream.Context(), in.Request.(*pb.BatchRequest_Put).Put); err != nil || !reply.Success {
+			if reply, err = h.Put(stream.Context(), in.GetPut()); err != nil || !reply.Success {
 				out.Failed++
 				var errMsg string
 				if err != nil {
@@ -155,7 +156,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 			}
 		case *pb.BatchRequest_Delete:
 			var reply *pb.DeleteReply
-			if reply, err = h.Delete(stream.Context(), in.Request.(*pb.BatchRequest_Delete).Delete); err != nil || !reply.Success {
+			if reply, err = h.Delete(stream.Context(), in.GetDelete()); err != nil || !reply.Success {
 				out.Failed++
 				var errMsg string
 				if err != nil {
@@ -178,6 +179,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 			continue
 		}
 
+		// Each case continues on failure so if we get here, the request was successful.
 		out.Successful++
 	}
 }
