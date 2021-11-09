@@ -505,7 +505,14 @@ func TestListReviewNotes(t *testing.T) {
 }
 
 func UpdateReviewNote(t *testing.T) {
-	fixture := &admin.Reply{Success: true}
+	fixture := &admin.ReviewNote{
+		ID:       "af367d27-b0e7-48b5-8987-e48a0712a826",
+		Created:  time.Now().Format(time.RFC3339),
+		Modified: time.Now().Add(time.Hour).Format(time.RFC3339),
+		Author:   "alice@example.com",
+		Editor:   "bob@example.com",
+		Text:     "updated note text",
+	}
 
 	req := &admin.ModifyReviewNoteRequest{
 		VASP:   "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
