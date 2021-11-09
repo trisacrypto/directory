@@ -1,7 +1,6 @@
 package gds_test
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,13 +13,16 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/utils"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
 	update = flag.Bool("update", false, "update the gzipped test database")
 )
 
-var dbVASPs = make(map[string]map[string]interface{})
+var dbVASPs = map[string]*pb.VASP{}
 
 type gdsTestSuite struct {
 	suite.Suite
@@ -46,15 +48,12 @@ func loadFixtures(s *gdsTestSuite) {
 			return nil
 		}
 		// Unmarshal the JSON into the global fixtures map.
-		r, err := os.Open(path)
+		data, err := os.ReadFile(path)
 		require.NoError(err)
-		fmt.Println(info.Name())
 		if strings.HasPrefix(info.Name(), "vasps::") {
 			// TODO: Unmarshal into VASP object when the fixtures are fixed.
-			var vasp map[string]interface{}
-			data, err := ioutil.ReadAll(r)
-			require.NoError(err)
-			err = json.Unmarshal(data, &vasp)
+			vasp := &pb.VASP{}
+			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
 			dbVASPs[info.Name()] = vasp
 			return nil
@@ -63,7 +62,7 @@ func loadFixtures(s *gdsTestSuite) {
 		return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
 	})
 	require.NoError(err)
-	os.RemoveAll(filepath.Join("testdata", "fakes"))
+	os.RemoveAll(root)
 	require.NoError(err)
 }
 
@@ -80,7 +79,7 @@ func generateDB(s *gdsTestSuite) {
 
 	// Write all the test fixtures to the database.
 	for name, vasp := range dbVASPs {
-		data, err := json.Marshal(vasp)
+		data, err := proto.Marshal(vasp)
 		require.NoError(err)
 		err = db.Put([]byte(name), data, nil)
 		require.NoError(err)
@@ -88,7 +87,7 @@ func generateDB(s *gdsTestSuite) {
 
 	err = utils.WriteGzip(s.db, s.golden)
 	require.NoError(err)
-	log.Info().Str("db", s.golden).Msg("generated test database")
+	log.Info().Str("db", s.golden).Msg("successfully regenerated test database")
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -132,14 +131,15 @@ func (s *gdsTestSuite) TestFixtures() {
 	require := s.Require()
 	db, err := leveldb.OpenFile(s.db, nil)
 	require.NoError(err)
+	defer db.Close()
 
 	require.NotEmpty(dbVASPs)
 	for name, vasp := range dbVASPs {
 		data, err := db.Get([]byte(name), nil)
 		require.NoError(err)
-		actual := map[string]interface{}{}
-		err = json.Unmarshal(data, &actual)
+		actual := &pb.VASP{}
+		err = proto.Unmarshal(data, actual)
 		require.NoError(err)
-		require.Equal(vasp, actual)
+		require.True(proto.Equal(vasp, actual))
 	}
 }

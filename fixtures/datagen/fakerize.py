@@ -302,7 +302,7 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     record["identity_certificate"]["subject"]["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"
     record["website"] = "https://" + common_name + ".io"
-    record["vasp_categories"] = [random.sample(VASP_CATEGORIES, random.randint(1, 4))]
+    record["vasp_categories"] = random.sample(VASP_CATEGORIES, random.randint(1, 4))
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state
@@ -342,7 +342,7 @@ def make_unverified(
     record["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"
     record["website"] = "https://" + common_name + ".io"
-    record["vasp_categories"] = [random.sample(VASP_CATEGORIES, random.randint(1, 4))]
+    record["vasp_categories"] = random.sample(VASP_CATEGORIES, random.randint(1, 4))
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state

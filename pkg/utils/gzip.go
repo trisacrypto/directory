@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 )
 
-// ExtractGzip extracts a gzipped archive to the specified directory.
+// ExtractGzip extracts a gzipped archive to the specified directory and
+// returns the path to the root level of the extracted archive.
 // Caller must ensure that the destination directory exists.
 func ExtractGzip(file, destDir string) (root string, err error) {
 	var (
