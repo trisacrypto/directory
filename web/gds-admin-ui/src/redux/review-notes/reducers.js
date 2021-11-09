@@ -1,4 +1,5 @@
-import { DeleteReviewNotesActionTypes } from "."
+import produce from "immer"
+import { DeleteReviewNotesActionTypes, UpdateReviewNotesActionTypes } from "."
 import { FetchReviewNotesActionTypes } from "./constants"
 
 const INITIAL_STATE = {
@@ -31,6 +32,14 @@ const reviewNotesReducers = (state = INITIAL_STATE, action) => {
                 ...state,
                 data: filteredData
             }
+        case UpdateReviewNotesActionTypes.API_RESPONSE_SUCCESS:
+            return produce(state, draft => {
+                const idx = draft.data.findIndex(note => note?.id === action.payload.note?.id)
+
+                if (idx !== -1) {
+                    draft.data[idx] = action.payload.note
+                }
+            })
         default:
             return state;
     }

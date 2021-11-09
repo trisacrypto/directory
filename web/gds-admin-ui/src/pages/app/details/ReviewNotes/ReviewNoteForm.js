@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from '../../../../hooks/useSafeDispatch';
-import { createReviewNotesApiResponse, fetchReviewNotesApiResponse } from '../../../../redux/review-notes';
+import { fetchReviewNotesApiResponse } from '../../../../redux/review-notes';
 import { postReviewNote } from '../../../../services/review-notes';
 
 

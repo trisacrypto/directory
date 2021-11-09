@@ -1,3 +1,4 @@
+import axios from "axios";
 import { APICore } from "../helpers/api/apiCore";
 import { getCookie } from "../utils";
 
@@ -26,4 +27,16 @@ function deleteReviewNote(noteId, vaspId, params) {
     })
 }
 
-export { getReviewNotes, postReviewNote, deleteReviewNote }
+function updateReviewNote(note, noteID, vaspID) {
+    const csrfToken = getCookie('csrf_token');
+    const data = {
+        text: note
+    }
+    return axios.put(`/vasps/${vaspID}/notes/${noteID}`, data, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+export { getReviewNotes, postReviewNote, deleteReviewNote, updateReviewNote }
