@@ -20,6 +20,10 @@ const languages = {
     flag: "🇨🇳",
     title: "中文",
   },
+  ja: {
+    flag: "🇯🇵",
+    title: "日本語"
+  }
 }
 
 const LanguageSelect = () => {
