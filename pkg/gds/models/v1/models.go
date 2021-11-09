@@ -209,28 +209,27 @@ func CreateReviewNote(vasp *pb.VASP, id string, author string, text string) (not
 }
 
 // UpdateReviewNote updates a specified note on the VASP.
-func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (err error) {
+func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (note *ReviewNote, err error) {
 	// Validate note id.
 	if id == "" {
-		return errors.New("must specify a valid note id")
+		return nil, errors.New("must specify a valid note id")
 	}
 
 	// Update is invalid if the extra data doesn't exist.
 	if vasp.Extra == nil {
-		return errors.New("extra does not exist")
+		return nil, errors.New("extra does not exist")
 	}
 
 	// Unmarshal previous extra data.
 	extra := &GDSExtraData{}
 	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
-		return fmt.Errorf("could not deserialize previous extra: %s", err)
+		return nil, fmt.Errorf("could not deserialize previous extra: %s", err)
 	}
 
 	// Get the specified note.
-	var note *ReviewNote
 	var exists bool
 	if note, exists = extra.ReviewNotes[id]; !exists {
-		return ErrorNotFound
+		return nil, ErrorNotFound
 	}
 
 	// Update the note.
@@ -240,10 +239,10 @@ func UpdateReviewNote(vasp *pb.VASP, id string, editor string, text string) (err
 
 	// Serialize the extra data back to the VASP.
 	if vasp.Extra, err = anypb.New(extra); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return note, nil
 }
 
 // DeleteReviewNote deletes a specified note on the VASP.

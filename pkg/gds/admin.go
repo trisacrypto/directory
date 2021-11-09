@@ -873,6 +873,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	var (
 		err    error
 		in     *admin.ModifyReviewNoteRequest
+		note   *models.ReviewNote
 		vasp   *pb.VASP
 		claims *tokens.Claims
 		vaspID string
@@ -920,7 +921,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	}
 
 	// Update the note
-	if err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
+	if note, err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
 		log.Warn().Err(err).Msg("error updating review note")
 		if err == models.ErrorNotFound {
 			c.JSON(http.StatusNotFound, admin.ErrorResponse("review note not found"))
@@ -936,7 +937,14 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 	}
 
-	c.JSON(http.StatusOK, &admin.Reply{Success: true})
+	c.JSON(http.StatusOK, &admin.ReviewNote{
+		ID:       note.Id,
+		Created:  note.Created,
+		Modified: note.Modified,
+		Author:   note.Author,
+		Editor:   note.Editor,
+		Text:     note.Text,
+	})
 }
 
 // DeleteReviewNote deletes a review note given vaspID and noteID params.

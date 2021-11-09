@@ -352,7 +352,7 @@ func (s *APIv2) ListReviewNotes(ctx context.Context, id string) (out *ListReview
 	return out, nil
 }
 
-func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error) {
+func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error) {
 	// vaspID and noteID are required for the endpoint
 	if in.VASP == "" || in.NoteID == "" {
 		return nil, ErrIDRequred
@@ -373,7 +373,7 @@ func (s *APIv2) UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteReques
 	}
 
 	// Execute the request and get a response
-	out = &Reply{}
+	out = &ReviewNote{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

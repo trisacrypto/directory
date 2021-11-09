@@ -1000,7 +1000,7 @@ func adminUpdateNote(c *cli.Context) (err error) {
 		params.Text = string(data)
 	}
 
-	var rep *admin.Reply
+	var rep *admin.ReviewNote
 	if rep, err = adminClient.UpdateReviewNote(ctx, params); err != nil {
 		return cli.Exit(err, 1)
 	}
