@@ -31,7 +31,7 @@ msgstr "添加地址"
 
 #: src/components/TRIXO.js:135
 msgid "Add Jurisdiction"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/ivms101/LegalPersonName.js:173
 msgid "Add Legal Name"
@@ -55,7 +55,7 @@ msgstr "地址类型"
 
 #: src/components/ivms101/Address.js:39
 msgid "Address line {0} e.g. {1}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/ivms101/Address.js:47
 msgid "Address {0}"
@@ -120,7 +120,7 @@ msgstr "基本信息"
 
 #: src/components/hero/MainNet.js:13
 msgid "Become a TRISA certified Virtual Asset Service Provider."
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:493
 msgid "Billing Contact"
@@ -165,7 +165,7 @@ msgstr "您组织中负责有关合规要求和法律地位的合规官或法律
 
 #: src/components/TRIXO.js:171
 msgid "Conducts KYC before virtual asset transfers"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/VerifyContact.js:27
 msgid "Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser."
@@ -219,7 +219,7 @@ msgstr "去中心化交易所"
 
 #: src/components/LookupForm.js:32
 msgid "Detected input type: {0}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/select/TransliterationMethodCode.js:14
 msgid "Devanagari & related Indic"
@@ -227,7 +227,7 @@ msgstr "梵文和相关印度语"
 
 #: src/components/NotFound.js:17
 msgid "Directory Home"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/TopNav.js:28
 msgid "Documentation"
@@ -283,7 +283,7 @@ msgstr "格鲁吉亚"
 
 #: src/components/hero/TestNet.js:13
 msgid "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/LookupResults.js:17
 msgid "Global TRISA Directory Record"
@@ -397,7 +397,7 @@ msgstr ""
 
 #: src/components/hero/TestNet.js:16
 msgid "Looking for the <a href=\"https://vaspdirectory.net\">Production Directory Service</a>?"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/select/NaturalPersonNameTypeCode.js:12
 msgid "Maiden Name"
@@ -417,11 +417,11 @@ msgstr "混币服务"
 
 #: src/components/TRIXO.js:252
 msgid "Must Safeguard PII"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/TRIXO.js:205
 msgid "Must comply with the Travel Rule"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/ivms101/LegalPersonName.js:126
 msgid "Name Identifiers"
@@ -467,7 +467,7 @@ msgstr "非商业实体"
 
 #: src/components/Contact.js:52
 msgid "Optional - if supplied, use"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/select/VASPCategory.js:22
 msgid "Other"
@@ -483,7 +483,7 @@ msgstr "场外交易"
 
 #: src/components/NotFound.js:13
 msgid "PAGE NOT FOUND"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/TRIXO.js:147
 msgid "Partially"
@@ -571,7 +571,7 @@ msgstr "私营组织"
 
 #: src/components/TopNav.js:15
 msgid "Production"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/LookupResults.js:21
 msgid "Registered Directory"
@@ -591,7 +591,7 @@ msgstr "监管机构名称"
 
 #: src/components/Contact.js:52
 msgid "Required - please supply"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:585
 msgid "Reset"
@@ -607,7 +607,7 @@ msgstr "返回目录"
 
 #: src/components/TRIXO.js:262
 msgid "Safeguards PII"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/select/LegalPersonNameTypeCode.js:12
 msgid "Short Name"
@@ -623,11 +623,11 @@ msgstr "提交"
 
 #: src/components/Registration.js:28
 msgid "Submit Production Registration"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:28
 msgid "Submit TestNet Registration"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:295
 msgid "Submitting Registration …"
@@ -640,7 +640,7 @@ msgstr "小结"
 
 #: src/components/TopNav.js:15
 msgid "Switch to"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:526
 msgid "TRISA Endpoint"
@@ -648,7 +648,7 @@ msgstr "TRISA端点"
 
 #: src/components/hero/MainNet.js:11
 msgid "TRISA Global Directory Service"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/LookupResults.js:46
 msgid "TRISA Identity Signature"
@@ -673,7 +673,7 @@ msgstr "TRISA服务端点"
 
 #: src/components/hero/TestNet.js:11
 msgid "TRISA TestNet Directory"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/LookupResults.js:39
 msgid "TRISA Verification"
@@ -698,7 +698,7 @@ msgstr "技术联系信息"
 
 #: src/components/TopNav.js:15
 msgid "TestNet"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/select/TransliterationMethodCode.js:21
 msgid "Thai"
@@ -734,7 +734,7 @@ msgstr "您所在国家的主要监管机构或监管机构的名称"
 
 #: src/components/NotFound.js:15
 msgid "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:630
 msgid "This is the only time the PKCS12 password is shown during the registration process.<0/>Please copy and paste this password and store somewhere safe!"
@@ -822,11 +822,11 @@ msgstr "Directory Service 已经成功收到您的注册申请。确认邮件已
 
 #: src/api/gds.js:25
 msgid "could not identify default GDS api endpoint"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:161
 msgid "could not nullify empty {contact} contact"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Registration.js:591
 msgid "download data"
@@ -835,33 +835,33 @@ msgstr "下载数据"
 #: src/api/gds.js:60
 #: src/api/gds.js:93
 msgid "field {field} with setter {setter} does not exist on {ProtoClass}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:82
 msgid "repeated field {field} with setter {setter} does not exist on {ProtoClass}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:143
 msgid "search API not implemented yet"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:125
 msgid "unacceptable input type to lookup query"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:99
 msgid "unhandled field {field} with setter {setter} and value type {0}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:74
 #: src/api/gds.js:96
 msgid "unknown nested proto type for field {field} with setter {setter}"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/api/gds.js:183
 msgid "vaspID and token are required"
-msgstr "添加翻译添加翻译"
+msgstr ""
 
 #: src/components/Contact.js:52
 msgid "{0} full phone number with country code."
-msgstr "添加翻译添加翻译"
+msgstr ""
