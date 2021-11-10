@@ -180,7 +180,7 @@ func TestReviewNotes(t *testing.T) {
 	require.Len(t, notes, 0)
 
 	// Attempt to update a note from an empty map
-	err = UpdateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
+	_, err = UpdateReviewNote(vasp, "boats", "pontoon@boatz.com", "boats are cool")
 	require.Error(t, err)
 
 	// Attempt to update a note from an empty map
@@ -206,7 +206,7 @@ func TestReviewNotes(t *testing.T) {
 	require.Equal(t, "boats are cool", notes["boats"].Text)
 
 	// Attempt to update a note that doesn't exist
-	err = UpdateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
+	_, err = UpdateReviewNote(vasp, "jetskis", "admin@example.com", "jetskis are fun")
 	require.Error(t, err)
 
 	// Attempt to delete a note that doesn't exist
@@ -226,8 +226,15 @@ func TestReviewNotes(t *testing.T) {
 
 	// Update an existing note
 	expectedTime := time.Now()
-	err = UpdateReviewNote(vasp, "jetskis", "pontoon@boatz.com", "jetskis are loud")
+	note, err = UpdateReviewNote(vasp, "jetskis", "pontoon@boatz.com", "jetskis are loud")
 	require.NoError(t, err)
+	require.Equal(t, "jetskis", note.Id)
+	require.Equal(t, "jetskis are loud", note.Text)
+	require.Equal(t, "admin@example.com", note.Author)
+	require.Equal(t, "pontoon@boatz.com", note.Editor)
+	modifiedTime, err := time.Parse(time.RFC3339, note.Modified)
+	require.NoError(t, err)
+	require.LessOrEqual(t, modifiedTime.Sub(expectedTime), time.Minute)
 
 	// Editor and modified should be updated
 	notes, err = GetReviewNotes(vasp)
@@ -236,8 +243,6 @@ func TestReviewNotes(t *testing.T) {
 	require.Equal(t, "boats are cool", notes["boats"].Text)
 	require.Equal(t, "jetskis are loud", notes["jetskis"].Text)
 	require.Equal(t, "pontoon@boatz.com", notes["jetskis"].Editor)
-	modifiedTime, err := time.Parse(time.RFC3339, notes["jetskis"].Created)
-	require.NoError(t, err)
 	require.LessOrEqual(t, modifiedTime.Sub(expectedTime), time.Minute)
 
 	// Delete an existing note

@@ -23,7 +23,7 @@ type DirectoryAdministrationClient interface {
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
-	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *Reply, err error)
+	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
@@ -124,10 +124,11 @@ type VASPSnippet struct {
 // trisacrypto/trisa library to ensure they have all of the requried data that is
 // returned. Go developers should unmarshal the data into a *pb.VASP struct.
 type RetrieveVASPReply struct {
-	Name             string                 `json:"name"`
-	VASP             map[string]interface{} `json:"vasp"`
-	VerifiedContacts map[string]string      `json:"verified_contacts"`
-	Traveler         bool                   `json:"traveler"`
+	Name             string                   `json:"name"`
+	VASP             map[string]interface{}   `json:"vasp"`
+	VerifiedContacts map[string]string        `json:"verified_contacts"`
+	Traveler         bool                     `json:"traveler"`
+	AuditLog         []map[string]interface{} `json:"audit_log"`
 }
 
 // ModifyReviewNoteRequest is a request-like struct for creating or updating notes.

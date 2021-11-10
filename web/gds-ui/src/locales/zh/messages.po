@@ -21,7 +21,11 @@ msgstr "用于Cryptocurrency Travel Rule合规的<0>TRISA</0>架构的一个组�
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "法人名称的语音表达。"
 
+<<<<<<< HEAD
 #: src/components/TopNav.js:41
+=======
+#: src/components/TopNav.js:25
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "About TRISA"
 msgstr ""
 
@@ -65,11 +69,19 @@ msgstr "地址{0}"
 msgid "Addresses"
 msgstr "地址"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:475
 msgid "Administrative Contact"
 msgstr "管理联系人"
 
 #: src/components/Registration.js:480
+=======
+#: src/components/Registration.js:473
+msgid "Administrative Contact"
+msgstr "管理联系人"
+
+#: src/components/Registration.js:478
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Administrative or executive contact for your organization to field high-level requests or queries. (Required)."
 msgstr "您组织中负责处理高级请求或咨询的行政或管理联系人。(必填)。"
 
@@ -105,6 +117,7 @@ msgstr "亚美尼亚"
 msgid "At what threshold and currency does your organization conduct KYC?"
 msgstr "您的组织以多少门槛和货币实施KYC? "
 
+<<<<<<< HEAD
 #: src/components/Registration.js:403
 #: src/components/Registration.js:422
 #: src/components/Registration.js:512
@@ -127,6 +140,23 @@ msgid "Billing Contact"
 msgstr "账单联系人"
 
 #: src/components/Registration.js:498
+=======
+#: src/components/Registration.js:420
+#: src/components/Registration.js:548
+msgid "Back"
+msgstr "后退"
+
+#: src/components/Registration.js:307
+#: src/components/Registration.js:352
+msgid "Basic Details"
+msgstr "基本信息"
+
+#: src/components/Registration.js:491
+msgid "Billing Contact"
+msgstr "账单联系人"
+
+#: src/components/Registration.js:496
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network. (Optional)."
 msgstr "您组织中处理与TRISA网络运营有关的账户和发票索取或咨询的账单联系人。(选填) "
 
@@ -134,7 +164,11 @@ msgstr "您组织中处理与TRISA网络运营有关的账户和发票索取或�
 msgid "Business"
 msgstr "业务"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:376
+=======
+#: src/components/Registration.js:374
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Business Category"
 msgstr "业务类别"
 
@@ -150,7 +184,11 @@ msgstr "CDD与Travel Rule政策"
 msgid "Centralized Exchange"
 msgstr "中心化交易所"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:538
+=======
+#: src/components/Registration.js:536
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Certificate Common Name"
 msgstr "证书常用名"
 
@@ -159,6 +197,7 @@ msgstr "证书常用名"
 msgid "Common Name or VASP ID"
 msgstr "常用名或VASP ID"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:462
 msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. (Strongly recommended)."
 msgstr "您组织中负责有关合规要求和法律地位的合规官或法律联系人。(强烈推荐)。"
@@ -167,12 +206,23 @@ msgstr "您组织中负责有关合规要求和法律地位的合规官或法律
 msgid "Conducts KYC before virtual asset transfers"
 msgstr ""
 
+=======
+#: src/components/Registration.js:460
+msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. (Strongly recommended)."
+msgstr "您组织中负责有关合规要求和法律地位的合规官或法律联系人。(强烈推荐)。"
+
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 #: src/components/VerifyContact.js:27
 msgid "Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser."
 msgstr "联系方式验证需要您组织的注册ID以及发送到您邮箱的唯一令牌。请检查您电子邮件中的链接，或将完整链接复制并粘贴到您的浏览器。"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:311
 #: src/components/Registration.js:428
+=======
+#: src/components/Registration.js:309
+#: src/components/Registration.js:426
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Contacts"
 msgstr "联系人"
 
@@ -209,7 +259,11 @@ msgstr "西里尔文"
 msgid "Data Protection Policies"
 msgstr "数据保护政策"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:368
+=======
+#: src/components/Registration.js:366
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Date of Incorporation/Establishment"
 msgstr "成立/注册日期"
 
@@ -225,6 +279,7 @@ msgstr ""
 msgid "Devanagari & related Indic"
 msgstr "梵文和相关印度语"
 
+<<<<<<< HEAD
 #: src/App.js:65
 msgid "Directory"
 msgstr ""
@@ -234,6 +289,9 @@ msgid "Directory Home"
 msgstr ""
 
 #: src/components/TopNav.js:42
+=======
+#: src/components/TopNav.js:26
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Documentation"
 msgstr ""
 
@@ -249,7 +307,11 @@ msgstr "您的组织是否有根据其许可/批准/注册的管辖区法规制�
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
 msgstr "您的组织是否保障和保护PII，包括根据Travel Rule从其他VASP收到的PII ? "
 
+<<<<<<< HEAD
 #: src/components/Registration.js:584
+=======
+#: src/components/Registration.js:582
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Download"
 msgstr "下载"
 
@@ -257,7 +319,11 @@ msgstr "下载"
 msgid "Driver's License Number"
 msgstr "驾照号码"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:521
+=======
+#: src/components/Registration.js:519
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 msgstr "每个VASP都需要为VASP之间的通信建立一个TRISA端点。请指定颁发证书的详细端点信息。"
 
@@ -305,7 +371,11 @@ msgstr "汉字(中国汉字、日本汉字、韩国汉字)"
 msgid "Hebrew"
 msgstr "希伯来语"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:635
+=======
+#: src/components/Registration.js:633
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "ID: {0}<0/>Verification Status: \"{1}\""
 msgstr "ID: {0}<0/>验证状态: \"{1}\" "
 
@@ -325,8 +395,13 @@ msgstr "登记卡号"
 msgid "If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List."
 msgstr "如果识别号为LEI编号，则GLEIF注册机构列表中使用ID。"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:308
 #: src/components/Registration.js:322
+=======
+#: src/components/Registration.js:306
+#: src/components/Registration.js:320
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Introduction"
 msgstr "介绍"
 
@@ -367,7 +442,11 @@ msgstr "法律实体识别编码(LEI) "
 msgid "Legal Name"
 msgstr "法定名称"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:310
+=======
+#: src/components/Registration.js:308
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Legal Person"
 msgstr "法人"
 
@@ -375,11 +454,19 @@ msgstr "法人"
 msgid "Legal person"
 msgstr "法人"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:457
 msgid "Legal/Compliance Contact"
 msgstr "法律/合规联系人"
 
 #: src/components/Registration.js:342
+=======
+#: src/components/Registration.js:455
+msgid "Legal/Compliance Contact"
+msgstr "法律/合规联系人"
+
+#: src/components/Registration.js:340
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Load"
 msgstr "加载"
 
@@ -399,7 +486,11 @@ msgstr ""
 msgid "Maiden Name"
 msgstr "婚前姓"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:640
+=======
+#: src/components/Registration.js:638
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Message from server: \"{0}\""
 msgstr "来自服务器的消息: \"{0}\" "
 
@@ -443,12 +534,18 @@ msgstr "国家管辖范围"
 msgid "Natural Person"
 msgstr "自然人"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:341
 #: src/components/Registration.js:404
 #: src/components/Registration.js:423
 #: src/components/Registration.js:513
 #: src/components/Registration.js:551
 #: src/components/Registration.js:570
+=======
+#: src/components/Registration.js:339
+#: src/components/Registration.js:421
+#: src/components/Registration.js:549
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Next"
 msgstr "下一步"
 
@@ -513,6 +610,7 @@ msgstr "请添加您组织适用的任何其他监管管辖范围。"
 msgid "Please enter at least one geographic address."
 msgstr "请输入至少一个地址。"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:411
 msgid "Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers."
 msgstr "请输入将您的组织确定为法人的信息。此表格代表法人的IVMS 101数据结构，强烈建议将此表格用作TRISA传输过程中交换的KYC信息。"
@@ -522,6 +620,17 @@ msgid "Please select as many categories needed to represent the types of virtual
 msgstr "请输入将您的组织确定为法人的信息。此表格代表法人的IVMS 101数据结构，强烈建议将此表格用作TRISA传输过程中交换的KYC信息。"
 
 #: src/components/Registration.js:385
+=======
+#: src/components/Registration.js:409
+msgid "Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers."
+msgstr "请输入将您的组织确定为法人的信息。此表格代表法人的IVMS 101数据结构，强烈建议将此表格用作TRISA传输过程中交换的KYC信息。"
+
+#: src/components/Registration.js:396
+msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
+msgstr "请输入将您的组织确定为法人的信息。此表格代表法人的IVMS 101数据结构，强烈建议将此表格用作TRISA传输过程中交换的KYC信息。"
+
+#: src/components/Registration.js:383
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Please select the entity category that most closely matches your organization."
 msgstr "请选择尽可能多的类别，以表示您组织提供的虚拟资产服务类型。"
 
@@ -541,7 +650,11 @@ msgstr "请提供有效的国家身份证号。TRISA建议使用LEI编码。更�
 msgid "Please supply a valid phone number or omit entirely if not required."
 msgstr "请提供一个有效的电话号码，如果不需要，请省略全部。"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:430
+=======
+#: src/components/Registration.js:428
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed."
 msgstr "请提供您组织代表的联络信息。所有联系人都将收到一个电子邮件验证令牌，并且联系邮箱必须在能够继续注册前进行验证。"
 
@@ -557,7 +670,11 @@ msgstr "用于电子邮件沟通的首选名称。"
 msgid "Primary National Jurisdiction"
 msgstr "主要国家管辖范围"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:443
+=======
+#: src/components/Registration.js:441
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email. (Required)."
 msgstr "处理相关技术咨询的主要联系人，主要是有关您参与TRISA网络的服务的运行和状态。可以是一个群组或管理员邮箱。(必填)。"
 
@@ -585,11 +702,15 @@ msgstr "注册机构识别编码"
 msgid "Regulator Name"
 msgstr "监管机构名称"
 
+<<<<<<< HEAD
 #: src/components/Contact.js:53
 msgid "Required - please supply full phone number with country code."
 msgstr ""
 
 #: src/components/Registration.js:585
+=======
+#: src/components/Registration.js:583
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Reset"
 msgstr "重置"
 
@@ -617,6 +738,7 @@ msgstr "社会保险号"
 msgid "Submit"
 msgstr "提交"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:28
 msgid "Submit Production Registration"
 msgstr ""
@@ -640,6 +762,18 @@ msgid "Switch to Production"
 msgstr ""
 
 #: src/components/Registration.js:526
+=======
+#: src/components/Registration.js:293
+msgid "Submitting Registration …"
+msgstr "提交注册……"
+
+#: src/components/Registration.js:312
+#: src/components/Registration.js:574
+msgid "Summary"
+msgstr "小结"
+
+#: src/components/Registration.js:524
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "TRISA Endpoint"
 msgstr "TRISA端点"
 
@@ -651,8 +785,13 @@ msgstr ""
 msgid "TRISA Identity Signature"
 msgstr "TRISA身份签名"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:312
 #: src/components/Registration.js:519
+=======
+#: src/components/Registration.js:310
+#: src/components/Registration.js:517
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "TRISA Implementation"
 msgstr "TRISA实现"
 
@@ -660,7 +799,11 @@ msgstr "TRISA实现"
 msgid "TRISA Member ID"
 msgstr "TRISA成员ID"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:612
+=======
+#: src/components/Registration.js:610
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "TRISA Registration Request Submitted!"
 msgstr "TRISA注册申请已提交!"
 
@@ -680,8 +823,13 @@ msgstr "TRISA验证"
 msgid "TRISA specific identity number (UUID), only supplied if you're updating an existing registration request."
 msgstr "TRISA特定标识符(UUID)，仅在更新现有注册信息时提供。"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:313
 #: src/components/Registration.js:557
+=======
+#: src/components/Registration.js:311
+#: src/components/Registration.js:555
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "TRIXO Questionnaire"
 msgstr "TRIXO问卷"
 
@@ -689,7 +837,11 @@ msgstr "TRIXO问卷"
 msgid "Tax Identification Number"
 msgstr "纳税人识别号"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:438
+=======
+#: src/components/Registration.js:436
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Technical Contact"
 msgstr "技术联系信息"
 
@@ -697,6 +849,7 @@ msgstr "技术联系信息"
 msgid "Thai"
 msgstr "泰语"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:324
 msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
 msgstr "感谢您了解Travel Rule合规的TRISA网络。此表格是注册和发证过程的第一步。您提供的信息将用于验证您所代表的法律实体，并在适当的情况下，将向经验证的TRISA成员开放，以促进合规决策。"
@@ -706,6 +859,17 @@ msgid "The address and port of the TRISA endpoint for partner VASPs to connect o
 msgstr "TRISA端点的地址和端口，供合作伙伴VASP通过gRPC进行连接。"
 
 #: src/components/Registration.js:546
+=======
+#: src/components/Registration.js:322
+msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
+msgstr "感谢您了解Travel Rule合规的TRISA网络。此表格是注册和发证过程的第一步。您提供的信息将用于验证您所代表的法律实体，并在适当的情况下，将向经验证的TRISA成员开放，以促进合规决策。"
+
+#: src/components/Registration.js:532
+msgid "The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC."
+msgstr "TRISA端点的地址和端口，供合作伙伴VASP通过gRPC进行连接。"
+
+#: src/components/Registration.js:544
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases."
 msgstr "mTLS证书的通用名称。大多数情况下，它应该匹配没有端口的TRISA端点。"
 
@@ -725,6 +889,7 @@ msgstr "使用当地文字的法人名称。"
 msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
 msgstr "您所在国家的主要监管机构或监管机构的名称"
 
+<<<<<<< HEAD
 #: src/components/NotFound.js:15
 msgid "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."
 msgstr ""
@@ -738,6 +903,17 @@ msgid "This questionnaire is designed to help the TRISA working group and TRISA 
 msgstr "本问卷旨在帮助TRISA工作组和TRISA成员了解您组织的监管制度。您提供的信息将有助于确保正确和安全地进行所需的合规信息交换。所有经过认证的TRISA成员都可以获得这些信息。"
 
 #: src/components/Registration.js:337
+=======
+#: src/components/Registration.js:628
+msgid "This is the only time the PKCS12 password is shown during the registration process.<0/>Please copy and paste this password and store somewhere safe!"
+msgstr "这是注册过程中唯一一次显示PKCS12密码。<0/>请复制粘贴此密码并保存在安全的地方! "
+
+#: src/components/Registration.js:557
+msgid "This questionnaire is designed to help the TRISA working group and TRISA members understand the regulatory regime of your organization. The information you provide will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
+msgstr "本问卷旨在帮助TRISA工作组和TRISA成员了解您组织的监管制度。您提供的信息将有助于确保正确和安全地进行所需的合规信息交换。所有经过认证的TRISA成员都可以获得这些信息。"
+
+#: src/components/Registration.js:335
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "This registration form is currently in its beta implementation. On the summary page you are able to download the form to save offline. You may also load a saved form below."
 msgstr "此注册表单目前处于beta版阶段。在小结页面上，您可以下载表单以保存到本地。您也可以在下面加载已保存的表单。"
 
@@ -745,11 +921,19 @@ msgstr "此注册表单目前处于beta版阶段。在小结页面上，您可�
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "在允许客户发送/接收虚拟资产之前进行KYC的门槛"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:331
 msgid "To assist in completing the registration form, which is somewhat lengthy, the form is broken into multiple sections, with information stored in your <0>local browser storage</0> so that you can come back and complete the process. <1>No information is sent until you submit the form in the summary section</1>."
 msgstr "为了帮助您填写稍长的注册表单，我们已将表单分成多个部分，信息存储在您的<0>本地浏览器存储</0>中，以便您可以返回并完成填写。<1>除非您在小结部分提交表单，否则不会发送任何信息。</1> "
 
 #: src/components/Registration.js:356
+=======
+#: src/components/Registration.js:329
+msgid "To assist in completing the registration form, which is somewhat lengthy, the form is broken into multiple sections, with information stored in your <0>local browser storage</0> so that you can come back and complete the process. <1>No information is sent until you submit the form in the summary section</1>."
+msgstr "为了帮助您填写稍长的注册表单，我们已将表单分成多个部分，信息存储在您的<0>本地浏览器存储</0>中，以便您可以返回并完成填写。<1>除非您在小结部分提交表单，否则不会发送任何信息。</1> "
+
+#: src/components/Registration.js:354
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "To get started, please tell us a bit about your organization."
 msgstr "首先，请介绍一下贵公司的情况。"
 
@@ -761,7 +945,11 @@ msgstr "代币项目"
 msgid "Trading Name"
 msgstr "交易名称"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:645
+=======
+#: src/components/Registration.js:643
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Understood"
 msgstr "理解"
 
@@ -776,7 +964,11 @@ msgstr "未指定"
 msgid "Unspecified Standard"
 msgstr "未指定的标准"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:389
+=======
+#: src/components/Registration.js:387
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "VASP Category"
 msgstr "VASP类别"
 
@@ -792,7 +984,11 @@ msgstr "验证状态: {0}"
 msgid "Verifying Contact Information …"
 msgstr "验证联系方式…"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:359
+=======
+#: src/components/Registration.js:357
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "Website"
 msgstr "网址"
 
@@ -800,7 +996,11 @@ msgstr "网址"
 msgid "What is the minimum threshold for Travel Rule compliance?"
 msgstr "Travel Rule 合规的最低门槛是多少?"
 
+<<<<<<< HEAD
 #: src/components/Registration.js:622
+=======
+#: src/components/Registration.js:620
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "When you are verified you will be issued PKCS12 encrypted identity certificates for use in mTLS authentication between TRISA members. The password to decrypt those certificates is shown below:"
 msgstr "当您通过验证，您将获得PKCS12加密身份证书，用于TRISA成员之间的mTLS身份验证。解密这些证书的密码如下所示: "
 
@@ -809,6 +1009,7 @@ msgstr "当您通过验证，您将获得PKCS12加密身份证书，用于TRISA�
 msgid "Yes"
 msgstr "是"
 
+<<<<<<< HEAD
 #: src/components/TopNav.js:26
 msgid "You're currently on the Production Directory"
 msgstr ""
@@ -830,6 +1031,13 @@ msgid "could not nullify empty {contact} contact"
 msgstr ""
 
 #: src/components/Registration.js:591
+=======
+#: src/components/Registration.js:614
+msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
+msgstr "Directory Service 已经成功收到您的注册申请。确认邮件已经发送到所有在列联系人。联系信息一经验证，注册表格将发送给TRISA 审核委员会，以验证您在TRISA网络中的会员资格。"
+
+#: src/components/Registration.js:589
+>>>>>>> e91001e925921b41a4a1d42ffc23c04369861872
 msgid "download data"
 msgstr "下载数据"
 

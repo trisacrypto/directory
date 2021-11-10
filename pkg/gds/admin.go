@@ -2,7 +2,6 @@ package gds
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -18,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
@@ -681,10 +679,30 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 		VerifiedContacts: models.VerifiedContacts(vasp),
 		Traveler:         models.IsTraveler(vasp),
 	}
+
+	// Attempt to determine the VASP name from IVMS 101 data.
 	if out.Name, err = vasp.Name(); err != nil {
 		// This is a serious data validation error that needs to be addressed ASAP by
 		// the operations team but should not block this API return.
 		log.Error().Err(err).Msg("could not get VASP name")
+	}
+
+	// Add the audit log to the response, on error, create empty audit log response
+	if auditLog, err := models.GetAuditLog(vasp); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not get audit log for VASP detail")
+	} else {
+		out.AuditLog = make([]map[string]interface{}, 0, len(auditLog))
+		for i, entry := range auditLog {
+			if rewiredEntry, err := utils.Rewire(entry); err != nil {
+				// If we cannot rewire an audit log entry, do not serialize any audit
+				// log entries to prevent confusion about what has happened in the log.
+				log.Warn().Err(err).Str("id", vaspID).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
+				out.AuditLog = nil
+				break
+			} else {
+				out.AuditLog = append(out.AuditLog, rewiredEntry)
+			}
+		}
 	}
 
 	// Remove extra data from the VASP
@@ -704,26 +722,10 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 		vasp.Contacts.Billing.Extra = nil
 	}
 
-	// Serialize the VASP from protojson
-	jsonpb := protojson.MarshalOptions{
-		Multiline:       false,
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
-
-	var data []byte
-	if data, err = jsonpb.Marshal(vasp); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could marshal vasp json")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP json detail"))
-		return
-	}
-
-	// Remarshal the JSON (unnecessary work, but done to make things easier)
-	if err = json.Unmarshal(data, &out.VASP); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could unmarshal vasp json")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP json detail"))
+	// Rewire the VASP from protocol buffers to specific JSON serialization context
+	if out.VASP, err = utils.Rewire(vasp); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could rewire vasp json")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
 		return
 	}
 
@@ -873,6 +875,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	var (
 		err    error
 		in     *admin.ModifyReviewNoteRequest
+		note   *models.ReviewNote
 		vasp   *pb.VASP
 		claims *tokens.Claims
 		vaspID string
@@ -920,7 +923,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	}
 
 	// Update the note
-	if err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
+	if note, err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
 		log.Warn().Err(err).Msg("error updating review note")
 		if err == models.ErrorNotFound {
 			c.JSON(http.StatusNotFound, admin.ErrorResponse("review note not found"))
@@ -936,7 +939,14 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 	}
 
-	c.JSON(http.StatusOK, &admin.Reply{Success: true})
+	c.JSON(http.StatusOK, &admin.ReviewNote{
+		ID:       note.Id,
+		Created:  note.Created,
+		Modified: note.Modified,
+		Author:   note.Author,
+		Editor:   note.Editor,
+		Text:     note.Text,
+	})
 }
 
 // DeleteReviewNote deletes a review note given vaspID and noteID params.
