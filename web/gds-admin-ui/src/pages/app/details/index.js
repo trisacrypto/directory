@@ -11,6 +11,7 @@ import CertificateDetails from './CertificateDetails';
 import { getVasp } from "../../../services/vasps"
 import TrixoForm from './TrixoForm';
 import { useHistory } from 'react-router-dom'
+import AuditLog from './AuditLog';
 
 const VaspDetails = (): React$Element<React$FragmentType> => {
     const [vasp, setVasp] = React.useState({});
@@ -49,6 +50,7 @@ const VaspDetails = (): React$Element<React$FragmentType> => {
                         </Col>
                         <Col md={6} xl={4} xxl={4}>
                             <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />
+                            <AuditLog data={vasp?.vasp?.extra?.audit_log} />
                             <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                         </Col>
                     </Row>
