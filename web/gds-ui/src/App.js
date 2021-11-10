@@ -60,10 +60,10 @@ class App extends React.Component {
 
           <MultiRoute paths={mainRoutes}>
             <Tabs activeKey={this.state.currentPath} id="main-tab-nav" className="justify-content-center" onSelect={this.onTabSelect}>
-              <Tab eventKey="/" title="Directory">
+              <Tab eventKey="/" title={i18n._(t`Directory`)}>
                 <Lookup onAlert={this.onAlert} />
               </Tab>
-              <Tab eventKey="/register" title="Register">
+              <Tab eventKey="/register" title={i18n._(t`Register`)}>
                 <Registration onAlert={this.onAlert} />
               </Tab>
             </Tabs>
