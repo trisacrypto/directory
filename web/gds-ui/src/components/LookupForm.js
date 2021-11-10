@@ -29,7 +29,7 @@ class Lookup extends React.Component {
   }
 
   render() {
-    const detectedType = this.state.inputType !== '' ? i18n._(t`Detected input type: ${this.state.inputType}`) : '';
+    const detectedType = this.state.inputType !== '' ? t`Detected input type: ${this.state.inputType}` : '';
 
     return (
       <Form className="justify-content-center" onSubmit={this.onFormSubmit}>

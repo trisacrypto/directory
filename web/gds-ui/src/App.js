@@ -16,6 +16,8 @@ import Route from './components/nav/Route';
 import NoRoute from './components/nav/NoRoute';
 import MultiRoute from './components/nav/MultiRoute';
 import { NetworkStore } from './contexts/NetworkContext';
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/macro";
 
 const mainRoutes = new Set(["/", "/register"]);
 const allRoutes = new Set(["/", "/register", "/verify-contact"]);

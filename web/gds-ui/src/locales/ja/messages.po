@@ -21,7 +21,7 @@ msgstr ""
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr ""
 
-#: src/components/TopNav.js:27
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr ""
 
@@ -118,7 +118,7 @@ msgstr ""
 msgid "Basic Details"
 msgstr ""
 
-#: src/components/hero/MainNet.js:13
+#: src/components/hero/MainNet.js:14
 msgid "Become a TRISA certified Virtual Asset Service Provider."
 msgstr ""
 
@@ -225,11 +225,15 @@ msgstr ""
 msgid "Devanagari & related Indic"
 msgstr ""
 
+#: src/App.js:65
+msgid "Directory"
+msgstr ""
+
 #: src/components/NotFound.js:17
 msgid "Directory Home"
 msgstr ""
 
-#: src/components/TopNav.js:28
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr ""
 
@@ -279,10 +283,6 @@ msgstr ""
 
 #: src/components/select/TransliterationMethodCode.js:15
 msgid "Georgian"
-msgstr ""
-
-#: src/components/hero/TestNet.js:13
-msgid "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
 msgstr ""
 
 #: src/components/LookupResults.js:17
@@ -391,12 +391,8 @@ msgstr ""
 msgid "Local Name Identifiers"
 msgstr ""
 
-#: src/components/hero/MainNet.js:16
-msgid "Looking for the <a href=\"https://trisatest.net\">TestNet Directory Service</a>?"
-msgstr ""
-
-#: src/components/hero/TestNet.js:16
-msgid "Looking for the <a href=\"https://vaspdirectory.net\">Production Directory Service</a>?"
+#: src/components/hero/MainNet.js:17
+msgid "Looking for the <0>TestNet Directory Service</0>?"
 msgstr ""
 
 #: src/components/select/NaturalPersonNameTypeCode.js:12
@@ -465,8 +461,8 @@ msgstr ""
 msgid "Non-Commercial Entity"
 msgstr ""
 
-#: src/components/Contact.js:52
-msgid "Optional - if supplied, use"
+#: src/components/Contact.js:54
+msgid "Optional - if supplied, use full phone number with country code."
 msgstr ""
 
 #: src/components/select/VASPCategory.js:22
@@ -541,7 +537,7 @@ msgstr ""
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
 msgstr ""
 
-#: src/components/Contact.js:55
+#: src/components/Contact.js:58
 msgid "Please supply a valid phone number or omit entirely if not required."
 msgstr ""
 
@@ -569,8 +565,8 @@ msgstr ""
 msgid "Private Organization"
 msgstr ""
 
-#: src/components/TopNav.js:15
-msgid "Production"
+#: src/App.js:68
+msgid "Register"
 msgstr ""
 
 #: src/components/LookupResults.js:21
@@ -589,8 +585,8 @@ msgstr ""
 msgid "Regulator Name"
 msgstr ""
 
-#: src/components/Contact.js:52
-msgid "Required - please supply"
+#: src/components/Contact.js:53
+msgid "Required - please supply full phone number with country code."
 msgstr ""
 
 #: src/components/Registration.js:585
@@ -638,15 +634,16 @@ msgstr ""
 msgid "Summary"
 msgstr ""
 
-#: src/components/TopNav.js:15
-msgid "Switch to"
+#: src/components/TopNav.js:18
+#: src/components/TopNav.js:25
+msgid "Switch to Production"
 msgstr ""
 
 #: src/components/Registration.js:526
 msgid "TRISA Endpoint"
 msgstr ""
 
-#: src/components/hero/MainNet.js:11
+#: src/components/hero/MainNet.js:12
 msgid "TRISA Global Directory Service"
 msgstr ""
 
@@ -694,10 +691,6 @@ msgstr ""
 
 #: src/components/Registration.js:438
 msgid "Technical Contact"
-msgstr ""
-
-#: src/components/TopNav.js:15
-msgid "TestNet"
 msgstr ""
 
 #: src/components/select/TransliterationMethodCode.js:21
@@ -816,6 +809,14 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
+#: src/components/TopNav.js:26
+msgid "You're currently on the Production Directory"
+msgstr ""
+
+#: src/components/TopNav.js:19
+msgid "You're currently on the TestNet Directory"
+msgstr ""
+
 #: src/components/Registration.js:616
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
 msgstr ""
@@ -860,8 +861,4 @@ msgstr ""
 
 #: src/api/gds.js:183
 msgid "vaspID and token are required"
-msgstr ""
-
-#: src/components/Contact.js:52
-msgid "{0} full phone number with country code."
 msgstr ""

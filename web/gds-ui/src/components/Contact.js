@@ -49,7 +49,10 @@ const Contact = ({contact, onChange, required}) => {
         required={required}
       />
       <Form.Text className="text-muted">
-        <Trans> {required ? i18n._(t`Required - please supply `) : i18n._(t`Optional - if supplied, use`)} full phone number with country code.</Trans>
+        {required
+          ? <Trans>Required - please supply full phone number with country code.</Trans>
+          : <Trans>Optional - if supplied, use full phone number with country code.</Trans>
+        }
       </Form.Text>
       <Form.Control.Feedback type="invalid">
         <Trans>Please supply a valid phone number or omit entirely if not required.</Trans>

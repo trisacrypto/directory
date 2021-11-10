@@ -21,9 +21,9 @@ msgstr " Une composante de l'architecture <0>TRISA</0> pour la conformité à la
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "Une représentation phonétique du nom sous lequel la personne morale est connue."
 
-#: src/components/TopNav.js:27
+#: src/components/TopNav.js:41
 msgid "About TRISA"
-msgstr "À propos de TRISA"
+msgstr ""
 
 #: src/components/ivms101/AddressList.js:48
 msgid "Add Address"
@@ -118,7 +118,7 @@ msgstr "Retour"
 msgid "Basic Details"
 msgstr "Détails de Base"
 
-#: src/components/hero/MainNet.js:13
+#: src/components/hero/MainNet.js:14
 msgid "Become a TRISA certified Virtual Asset Service Provider."
 msgstr ""
 
@@ -225,13 +225,17 @@ msgstr ""
 msgid "Devanagari & related Indic"
 msgstr "Devanagari & Indic associé"
 
+#: src/App.js:65
+msgid "Directory"
+msgstr ""
+
 #: src/components/NotFound.js:17
 msgid "Directory Home"
 msgstr ""
 
-#: src/components/TopNav.js:28
+#: src/components/TopNav.js:42
 msgid "Documentation"
-msgstr "Documentation"
+msgstr ""
 
 #: src/components/TRIXO.js:167
 msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
@@ -280,10 +284,6 @@ msgstr "Géographique"
 #: src/components/select/TransliterationMethodCode.js:15
 msgid "Georgian"
 msgstr "Géorgien"
-
-#: src/components/hero/TestNet.js:13
-msgid "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
-msgstr ""
 
 #: src/components/LookupResults.js:17
 msgid "Global TRISA Directory Record"
@@ -391,12 +391,8 @@ msgstr "Chargement ..."
 msgid "Local Name Identifiers"
 msgstr "Identificateurs de noms locaux"
 
-#: src/components/hero/MainNet.js:16
-msgid "Looking for the <a href=\"https://trisatest.net\">TestNet Directory Service</a>?"
-msgstr ""
-
-#: src/components/hero/TestNet.js:16
-msgid "Looking for the <a href=\"https://vaspdirectory.net\">Production Directory Service</a>?"
+#: src/components/hero/MainNet.js:17
+msgid "Looking for the <0>TestNet Directory Service</0>?"
 msgstr ""
 
 #: src/components/select/NaturalPersonNameTypeCode.js:12
@@ -465,8 +461,8 @@ msgstr "Non"
 msgid "Non-Commercial Entity"
 msgstr "Entité non-commerciale"
 
-#: src/components/Contact.js:52
-msgid "Optional - if supplied, use"
+#: src/components/Contact.js:54
+msgid "Optional - if supplied, use full phone number with country code."
 msgstr ""
 
 #: src/components/select/VASPCategory.js:22
@@ -541,7 +537,7 @@ msgstr "Veuillez fournir une adresse électronique valide"
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
 msgstr "Veuillez fournir un numéro d'identification national valide. Nous recommandons l'utilisation de numéros LEI. Pour plus d'informations, veuillez visiter <0>GLEIF.org</0>."
 
-#: src/components/Contact.js:55
+#: src/components/Contact.js:58
 msgid "Please supply a valid phone number or omit entirely if not required."
 msgstr "Veuillez fournir un numéro de téléphone valide ou l'omettre entièrement s'il n'est pas nécessaire."
 
@@ -569,8 +565,8 @@ msgstr "Contact principal pour le traitement des requêtes techniques relatives 
 msgid "Private Organization"
 msgstr "Organisation Privée"
 
-#: src/components/TopNav.js:15
-msgid "Production"
+#: src/App.js:68
+msgid "Register"
 msgstr ""
 
 #: src/components/LookupResults.js:21
@@ -589,8 +585,8 @@ msgstr "Identifiant de l'Autorité d'Enregistrement "
 msgid "Regulator Name"
 msgstr "Nom du régulateur"
 
-#: src/components/Contact.js:52
-msgid "Required - please supply"
+#: src/components/Contact.js:53
+msgid "Required - please supply full phone number with country code."
 msgstr ""
 
 #: src/components/Registration.js:585
@@ -638,15 +634,16 @@ msgstr "Envoi de l'Enregistrement ..."
 msgid "Summary"
 msgstr "Résumé"
 
-#: src/components/TopNav.js:15
-msgid "Switch to"
+#: src/components/TopNav.js:18
+#: src/components/TopNav.js:25
+msgid "Switch to Production"
 msgstr ""
 
 #: src/components/Registration.js:526
 msgid "TRISA Endpoint"
 msgstr "Terminaison TRISA"
 
-#: src/components/hero/MainNet.js:11
+#: src/components/hero/MainNet.js:12
 msgid "TRISA Global Directory Service"
 msgstr ""
 
@@ -695,10 +692,6 @@ msgstr "Numéro d'Identification Fiscale"
 #: src/components/Registration.js:438
 msgid "Technical Contact"
 msgstr "Contact d’Assistance Technique"
-
-#: src/components/TopNav.js:15
-msgid "TestNet"
-msgstr ""
 
 #: src/components/select/TransliterationMethodCode.js:21
 msgid "Thai"
@@ -816,6 +809,14 @@ msgstr "Après votre vérification, vous recevrez des certificats d'identité cr
 msgid "Yes"
 msgstr "Oui"
 
+#: src/components/TopNav.js:26
+msgid "You're currently on the Production Directory"
+msgstr ""
+
+#: src/components/TopNav.js:19
+msgid "You're currently on the TestNet Directory"
+msgstr ""
+
 #: src/components/Registration.js:616
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
 msgstr "Votre demande d'inscription a été bien reçue par le service de répertoriage. Des courriels de vérification ont été envoyés à tous les contacts répertoriés. Une fois vos coordonnées vérifiées, le formulaire d'inscription sera envoyé à la commission d'examen TRISA pour vérifier votre appartenance au réseau TRISA."
@@ -860,8 +861,4 @@ msgstr ""
 
 #: src/api/gds.js:183
 msgid "vaspID and token are required"
-msgstr ""
-
-#: src/components/Contact.js:52
-msgid "{0} full phone number with country code."
 msgstr ""

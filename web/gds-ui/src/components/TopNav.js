@@ -10,10 +10,24 @@ import { t } from "@lingui/macro";
 
 
 const testNet = isTestNet();
-const directoryURL = testNet ? "https://vaspdirectory.net/" : "https://trisatest.net/";
-const directoryURLTitle = `You're currently on the ${testNet ? "TestNet" : "Production"} Directory`;
-const directoryURLText = i18n._(t`Switch to`+` ${testNet ? i18n._(t`Production`) : i18n._(t`TestNet`)}`);
 
+const getDirectoryURL = () => {
+  if (isTestNet()) {
+      return [
+          "https://vaspdirectory.net",
+          i18n._(t`Switch to Production`),
+          i18n._(t`You're currently on the TestNet Directory`),
+      ]    
+  }
+
+  return [
+          "https://trisatest.net",
+          i18n._(t`Switch to Production`),
+          i18n._(t`You're currently on the Production Directory`),
+      ]
+};
+
+const [ directoryURL, directoryURLText, directoryURLTitle ] = getDirectoryURL();
 const TopNav = () => {
   return (
     <Navbar variant="white" >

@@ -21,7 +21,7 @@ msgstr "A component of the <0>TRISA</0> architecture for Cryptocurrency Travel R
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "A phonetic representation of the name by which the legal person is known."
 
-#: src/components/TopNav.js:27
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr "About TRISA"
 
@@ -118,7 +118,7 @@ msgstr "Back"
 msgid "Basic Details"
 msgstr "Basic Details"
 
-#: src/components/hero/MainNet.js:13
+#: src/components/hero/MainNet.js:14
 msgid "Become a TRISA certified Virtual Asset Service Provider."
 msgstr "Become a TRISA certified Virtual Asset Service Provider."
 
@@ -225,11 +225,15 @@ msgstr "Detected input type: {0}"
 msgid "Devanagari & related Indic"
 msgstr "Devanagari & related Indic"
 
+#: src/App.js:65
+msgid "Directory"
+msgstr "Directory"
+
 #: src/components/NotFound.js:17
 msgid "Directory Home"
 msgstr "Directory Home"
 
-#: src/components/TopNav.js:28
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -280,10 +284,6 @@ msgstr "Geographic"
 #: src/components/select/TransliterationMethodCode.js:15
 msgid "Georgian"
 msgstr "Georgian"
-
-#: src/components/hero/TestNet.js:13
-msgid "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
-msgstr "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
 
 #: src/components/LookupResults.js:17
 msgid "Global TRISA Directory Record"
@@ -391,13 +391,9 @@ msgstr "Loading ..."
 msgid "Local Name Identifiers"
 msgstr "Local Name Identifiers"
 
-#: src/components/hero/MainNet.js:16
-msgid "Looking for the <a href=\"https://trisatest.net\">TestNet Directory Service</a>?"
-msgstr "Looking for the <a href=\"https://trisatest.net\">TestNet Directory Service</a>?"
-
-#: src/components/hero/TestNet.js:16
-msgid "Looking for the <a href=\"https://vaspdirectory.net\">Production Directory Service</a>?"
-msgstr "Looking for the <a href=\"https://vaspdirectory.net\">Production Directory Service</a>?"
+#: src/components/hero/MainNet.js:17
+msgid "Looking for the <0>TestNet Directory Service</0>?"
+msgstr "Looking for the <0>TestNet Directory Service</0>?"
 
 #: src/components/select/NaturalPersonNameTypeCode.js:12
 msgid "Maiden Name"
@@ -465,9 +461,9 @@ msgstr "No"
 msgid "Non-Commercial Entity"
 msgstr "Non-Commercial Entity"
 
-#: src/components/Contact.js:52
-msgid "Optional - if supplied, use"
-msgstr "Optional - if supplied, use"
+#: src/components/Contact.js:54
+msgid "Optional - if supplied, use full phone number with country code."
+msgstr "Optional - if supplied, use full phone number with country code."
 
 #: src/components/select/VASPCategory.js:22
 msgid "Other"
@@ -541,7 +537,7 @@ msgstr "Please supply a valid email address."
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
 msgstr "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
 
-#: src/components/Contact.js:55
+#: src/components/Contact.js:58
 msgid "Please supply a valid phone number or omit entirely if not required."
 msgstr "Please supply a valid phone number or omit entirely if not required."
 
@@ -569,9 +565,9 @@ msgstr "Primary contact for handling technical queries about the operation and s
 msgid "Private Organization"
 msgstr "Private Organization"
 
-#: src/components/TopNav.js:15
-msgid "Production"
-msgstr "Production"
+#: src/App.js:68
+msgid "Register"
+msgstr "Register"
 
 #: src/components/LookupResults.js:21
 msgid "Registered Directory"
@@ -589,9 +585,9 @@ msgstr "Registration Authority Identifier"
 msgid "Regulator Name"
 msgstr "Regulator Name"
 
-#: src/components/Contact.js:52
-msgid "Required - please supply"
-msgstr "Required - please supply"
+#: src/components/Contact.js:53
+msgid "Required - please supply full phone number with country code."
+msgstr "Required - please supply full phone number with country code."
 
 #: src/components/Registration.js:585
 msgid "Reset"
@@ -638,15 +634,16 @@ msgstr "Submitting Registration …"
 msgid "Summary"
 msgstr "Summary"
 
-#: src/components/TopNav.js:15
-msgid "Switch to"
-msgstr "Switch to"
+#: src/components/TopNav.js:18
+#: src/components/TopNav.js:25
+msgid "Switch to Production"
+msgstr "Switch to Production"
 
 #: src/components/Registration.js:526
 msgid "TRISA Endpoint"
 msgstr "TRISA Endpoint"
 
-#: src/components/hero/MainNet.js:11
+#: src/components/hero/MainNet.js:12
 msgid "TRISA Global Directory Service"
 msgstr "TRISA Global Directory Service"
 
@@ -695,10 +692,6 @@ msgstr "Tax Identification Number"
 #: src/components/Registration.js:438
 msgid "Technical Contact"
 msgstr "Technical Contact"
-
-#: src/components/TopNav.js:15
-msgid "TestNet"
-msgstr "TestNet"
 
 #: src/components/select/TransliterationMethodCode.js:21
 msgid "Thai"
@@ -816,6 +809,14 @@ msgstr "When you are verified you will be issued PKCS12 encrypted identity certi
 msgid "Yes"
 msgstr "Yes"
 
+#: src/components/TopNav.js:26
+msgid "You're currently on the Production Directory"
+msgstr "You're currently on the Production Directory"
+
+#: src/components/TopNav.js:19
+msgid "You're currently on the TestNet Directory"
+msgstr "You're currently on the TestNet Directory"
+
 #: src/components/Registration.js:616
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
 msgstr "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
@@ -861,7 +862,3 @@ msgstr "unknown nested proto type for field {field} with setter {setter}"
 #: src/api/gds.js:183
 msgid "vaspID and token are required"
 msgstr "vaspID and token are required"
-
-#: src/components/Contact.js:52
-msgid "{0} full phone number with country code."
-msgstr "{0} full phone number with country code."

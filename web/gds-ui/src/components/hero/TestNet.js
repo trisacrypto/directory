@@ -10,10 +10,10 @@ const TestNet = () => {
         <div className="text-center hero">
           <h1>{i18n._(t`TRISA TestNet Directory`)}</h1>
           <p className="lead">
-            {i18n._(t`Get started with the TRISA TestNet to implement your Travel Rule compliance service.`)}
+            <Trans>Get started with the TRISA TestNet to implement your Travel Rule compliance service.</Trans>
           </p>
           <small>
-            {i18n._(t`Looking for the <a href="https://vaspdirectory.net">Production Directory Service</a>?`)}
+            <Trans>Looking for the <a href="https://vaspdirectory.net">Production Directory Service</a>?</Trans>
           </small>
         </div>
       </div>
