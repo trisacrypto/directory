@@ -5,13 +5,28 @@ import Nav from 'react-bootstrap/Nav'
 import { isTestNet } from '../lib/testnet';
 import { Trans } from "@lingui/macro";
 import LanguageSelect from './select/LanguageSelect';
+import { t } from "@lingui/macro";
 
 
 const testNet = isTestNet();
-const directoryURL = testNet ? "https://vaspdirectory.net/" : "https://trisatest.net/";
-const directoryURLTitle = `You're currently on the ${testNet ? "TestNet" : "Production"} Directory`;
-const directoryURLText = `Switch to ${testNet ? "Production" : "TestNet"}`;
 
+const getDirectoryURL = () => {
+  if (isTestNet()) {
+      return [
+          "https://vaspdirectory.net",
+          t`Switch to Production`,
+          t`You're currently on the TestNet Directory`,
+      ]    
+  }
+
+  return [
+          "https://trisatest.net",
+          t`Switch to Production`,
+          t`You're currently on the Production Directory`,
+      ]
+};
+
+const [ directoryURL, directoryURLText, directoryURLTitle ] = getDirectoryURL();
 const TopNav = () => {
   return (
     <Navbar variant="white" >
