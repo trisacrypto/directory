@@ -19,13 +19,12 @@ import { Trans } from "@lingui/macro";
 import BusinessCategory from './select/BusinessCategory';
 import VASPCategory from './select/VASPCategory';
 import withTracker from '../lib/analytics';
-import { i18n } from "@lingui/core";
 import { t } from "@lingui/macro";
 
 
 const testNet = isTestNet();
 const registrationFormVersion = "v1beta1";
-const submitButtonText = testNet ? i18n._(t`Submit TestNet Registration`) : i18n._(t`Submit Production Registration`)
+const submitButtonText = testNet ? t`Submit TestNet Registration` : t`Submit Production Registration`
 
 // Returns a legal person object with default values populated.
 const makeLegalPerson = () => {

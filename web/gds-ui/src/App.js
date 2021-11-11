@@ -16,7 +16,6 @@ import Route from './components/nav/Route';
 import NoRoute from './components/nav/NoRoute';
 import MultiRoute from './components/nav/MultiRoute';
 import { NetworkStore } from './contexts/NetworkContext';
-import { i18n } from "@lingui/core";
 import { t } from "@lingui/macro";
 
 const mainRoutes = new Set(["/", "/register"]);
@@ -62,10 +61,10 @@ class App extends React.Component {
 
           <MultiRoute paths={mainRoutes}>
             <Tabs activeKey={this.state.currentPath} id="main-tab-nav" className="justify-content-center" onSelect={this.onTabSelect}>
-              <Tab eventKey="/" title={i18n._(t`Directory`)}>
+              <Tab eventKey="/" title={t`Directory`}>
                 <Lookup onAlert={this.onAlert} />
               </Tab>
-              <Tab eventKey="/register" title={i18n._(t`Register`)}>
+              <Tab eventKey="/register" title={t`Register`}>
                 <Registration onAlert={this.onAlert} />
               </Tab>
             </Tabs>

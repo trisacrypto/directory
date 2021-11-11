@@ -3,7 +3,6 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { Trans } from "@lingui/macro";
-import { i18n } from "@lingui/core";
 import { t } from "@lingui/macro";
 
 
@@ -40,7 +39,7 @@ class Lookup extends React.Component {
             </Form.Label>
             <Form.Control
               id="lookupInput"
-              placeholder={i18n._(t`Common Name or VASP ID`)}
+              placeholder={t`Common Name or VASP ID`}
               onChange={this.onTextInput}
             />
             <Form.Text id="passwordHelpBlock" muted>

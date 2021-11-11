@@ -6,7 +6,6 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import update from 'immutability-helper';
 import { Trans } from "@lingui/macro";
-import { i18n } from "@lingui/core";
 import { t } from "@lingui/macro";
 
 
@@ -143,9 +142,9 @@ const TRIXO = ({data, onChange}) => {
           onChange={createChangeHandler("financial_transfers_permitted")}
         >
           <option value=""></option>
-          <option value="yes">{i18n._(t`Yes`)}</option>
-          <option value="partial">{i18n._(t`Partially`)}</option>
-          <option value="no">{i18n._(t`No`)}</option>
+          <option value="yes">{t`Yes`}</option>
+          <option value="partial">{t`Partially`}</option>
+          <option value="no">{t`No`}</option>
         </Form.Control>
       </Form.Group>
       <fieldset>
@@ -158,9 +157,9 @@ const TRIXO = ({data, onChange}) => {
             onChange={createChangeHandler("has_required_regulatory_program")}
           >
             <option value=""></option>
-            <option value="yes">{i18n._(t`Yes`)}</option>
-            <option value="partial">{i18n._(t`Partially Implemented`)}</option>
-            <option value="no">{i18n._(t`No`)}</option>
+            <option value="yes">{t`Yes`}</option>
+            <option value="partial">{t`Partially Implemented`}</option>
+            <option value="no">{t`No`}</option>
           </Form.Control>
         </Form.Group>
         <Form.Group>
@@ -168,7 +167,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="conductsCustomerKYC"
-            label={i18n._(t`Conducts KYC before virtual asset transfers`)}
+            label={t`Conducts KYC before virtual asset transfers`}
             checked={data.conducts_customer_kyc}
             onChange={createBoolChangeHandler("conducts_customer_kyc")}
           />
@@ -202,7 +201,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="mustComplyTravelRule"
-            label={i18n._(t`Must comply with the Travel Rule`)}
+            label={t`Must comply with the Travel Rule`}
             checked={data.must_comply_travel_rule}
             onChange={createBoolChangeHandler("must_comply_travel_rule")}
           />
@@ -249,7 +248,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="mustSafeguardPII"
-            label={i18n._(t`Must Safeguard PII`)}
+            label={t`Must Safeguard PII`}
             checked={data.must_safeguard_pii}
             onChange={createBoolChangeHandler("must_safeguard_pii")}
           />
@@ -259,7 +258,7 @@ const TRIXO = ({data, onChange}) => {
           <Form.Check
             type="switch"
             id="safeguardsPII"
-            label={i18n._(t`Safeguards PII`)}
+            label={t`Safeguards PII`}
             checked={data.safeguards_pii}
             onChange={createBoolChangeHandler("safeguards_pii")}
           />

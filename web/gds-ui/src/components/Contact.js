@@ -1,8 +1,7 @@
 import React from 'react';
 import Form from 'react-bootstrap/Form';
 import { Trans } from "@lingui/macro";
-import { i18n } from "@lingui/core";
-import { t } from "@lingui/macro";
+
 
 const Contact = ({contact, onChange, required}) => {
   const createChangeHandler = (field) => (event) => {

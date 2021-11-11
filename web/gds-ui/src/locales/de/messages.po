@@ -21,7 +21,7 @@ msgstr "Eine Komponente der <0>TRISA</0>-Architektur zur Einhaltung der Cryptocu
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "Eine phonetische Darstellung des Namens, unter dem die juristische Person bekannt ist."
 
-#: src/components/TopNav.js:41
+#: src/components/TopNav.js:40
 msgid "About TRISA"
 msgstr "Über TRISA"
 
@@ -29,7 +29,7 @@ msgstr "Über TRISA"
 msgid "Add Address"
 msgstr "Adresse hinzufügen"
 
-#: src/components/TRIXO.js:135
+#: src/components/TRIXO.js:134
 msgid "Add Jurisdiction"
 msgstr ""
 
@@ -45,7 +45,7 @@ msgstr "Lokalen Namen hinzufügen"
 msgid "Add Phonetic Names"
 msgstr "Phonetische Namen hinzufügen"
 
-#: src/components/TRIXO.js:217
+#: src/components/TRIXO.js:216
 msgid "Add Regulation"
 msgstr "Regelung hinzufügen"
 
@@ -65,19 +65,19 @@ msgstr "Adresse {0}"
 msgid "Addresses"
 msgstr "Adressen"
 
-#: src/components/Registration.js:475
+#: src/components/Registration.js:474
 msgid "Administrative Contact"
 msgstr "Administrativer Kontakt"
 
-#: src/components/Registration.js:480
+#: src/components/Registration.js:479
 msgid "Administrative or executive contact for your organization to field high-level requests or queries. (Required)."
 msgstr "Kontaktperson in der Verwaltung oder in der Geschäftsleitung Ihrer Organisation, die für Anfragen auf höchster Ebene zuständig ist. (Erforderlich)."
 
-#: src/components/select/NaturalPersonNameTypeCode.js:10
+#: src/components/select/NaturalPersonNameTypeCode.js:9
 msgid "Alias Name"
 msgstr "Alias-Name"
 
-#: src/components/select/NationalIdentifierTypeCode.js:10
+#: src/components/select/NationalIdentifierTypeCode.js:9
 msgid "Alien Registration Number"
 msgstr "Ausländerrechtliche Registrierungsnummer"
 
@@ -85,36 +85,36 @@ msgstr "Ausländerrechtliche Registrierungsnummer"
 msgid "An identifier issued by an appropriate issuing authority."
 msgstr "Eine Kennung, die von einer zuständigen Vergabestelle vergeben wird."
 
-#: src/components/TRIXO.js:211
+#: src/components/TRIXO.js:210
 msgid "Applicable Regulations"
 msgstr "Geltende Vorschriften"
 
-#: src/components/select/TransliterationMethodCode.js:10
+#: src/components/select/TransliterationMethodCode.js:9
 msgid "Arabic (Arabic language)"
 msgstr "Arabisch (arabische Sprache)"
 
-#: src/components/select/TransliterationMethodCode.js:11
+#: src/components/select/TransliterationMethodCode.js:10
 msgid "Arabic (Persian language)"
 msgstr "Arabisch (persische Sprache)"
 
-#: src/components/select/TransliterationMethodCode.js:12
+#: src/components/select/TransliterationMethodCode.js:11
 msgid "Armenian"
 msgstr "Armenisch"
 
-#: src/components/TRIXO.js:177
+#: src/components/TRIXO.js:176
 msgid "At what threshold and currency does your organization conduct KYC?"
 msgstr "Ab welchem Schwellenwert und in welcher Währung betreibt Ihr Unternehmen KYC?"
 
-#: src/components/Registration.js:403
-#: src/components/Registration.js:422
-#: src/components/Registration.js:512
-#: src/components/Registration.js:550
-#: src/components/Registration.js:569
+#: src/components/Registration.js:402
+#: src/components/Registration.js:421
+#: src/components/Registration.js:511
+#: src/components/Registration.js:549
+#: src/components/Registration.js:568
 msgid "Back"
 msgstr "Zurück"
 
-#: src/components/Registration.js:309
-#: src/components/Registration.js:354
+#: src/components/Registration.js:308
+#: src/components/Registration.js:353
 msgid "Basic Details"
 msgstr "Grundlegende Details"
 
@@ -122,48 +122,48 @@ msgstr "Grundlegende Details"
 msgid "Become a TRISA certified Virtual Asset Service Provider."
 msgstr ""
 
-#: src/components/Registration.js:493
+#: src/components/Registration.js:492
 msgid "Billing Contact"
 msgstr "Kontakt für Rechnungsstellung"
 
-#: src/components/Registration.js:498
+#: src/components/Registration.js:497
 msgid "Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network. (Optional)."
 msgstr "Kontaktperson für die Rechnungsstellung in Ihrer Organisation, die Anfragen zu Konten und Rechnungen oder Fragen zum Betrieb des TRISA-Netzwerkes bearbeitet. (Optional)."
 
-#: src/components/select/AddressTypeCode.js:11
+#: src/components/select/AddressTypeCode.js:10
 msgid "Business"
 msgstr "Business"
 
-#: src/components/Registration.js:376
+#: src/components/Registration.js:375
 msgid "Business Category"
 msgstr "Business-Kategorie"
 
-#: src/components/select/BusinessCategory.js:13
+#: src/components/select/BusinessCategory.js:12
 msgid "Business Entity"
 msgstr "Wirtschaftliche Einheit"
 
-#: src/components/TRIXO.js:152
+#: src/components/TRIXO.js:151
 msgid "CDD & Travel Rule Policies"
 msgstr "CDD- und Travel Rule-Richtlinien"
 
-#: src/components/select/VASPCategory.js:10
+#: src/components/select/VASPCategory.js:9
 msgid "Centralized Exchange"
 msgstr "Zentraler Austausch"
 
-#: src/components/Registration.js:538
+#: src/components/Registration.js:537
 msgid "Certificate Common Name"
 msgstr "Zertifikat Allgemeiner Name"
 
-#: src/components/LookupForm.js:39
-#: src/components/LookupForm.js:43
+#: src/components/LookupForm.js:38
+#: src/components/LookupForm.js:42
 msgid "Common Name or VASP ID"
 msgstr "Allgemeiner Name oder VASP-ID"
 
-#: src/components/Registration.js:462
+#: src/components/Registration.js:461
 msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. (Strongly recommended)."
 msgstr "Compliance-Beauftragter oder juristischer Ansprechpartner für Anfragen zu den Compliance-Anforderungen und dem rechtlichen Status Ihrer Organisation. (Dringend empfohlen)."
 
-#: src/components/TRIXO.js:171
+#: src/components/TRIXO.js:170
 msgid "Conducts KYC before virtual asset transfers"
 msgstr ""
 
@@ -171,8 +171,8 @@ msgstr ""
 msgid "Contact verification requires both the registration ID of your organization as well as a unique token that was sent to your email address. Please check the link in your email or copy and paste the complete link into your browser."
 msgstr "Die Kontaktverifizierung erfordert sowohl die Registrierungs-ID Ihrer Organisation als auch ein eindeutiges Token, das an Ihre E-Mail-Adresse gesendet wurde. Bitte überprüfen Sie den Link in Ihrer E-Mail oder kopieren Sie den vollständigen Link und fügen Sie ihn in Ihren Browser ein."
 
-#: src/components/Registration.js:311
-#: src/components/Registration.js:428
+#: src/components/Registration.js:310
+#: src/components/Registration.js:427
 msgid "Contacts"
 msgstr "Kontakte"
 
@@ -193,7 +193,7 @@ msgstr "Land der Registrierung"
 msgid "Created and maintained by <0>Rotational Labs</0> in partnership with <1>CipherTrace</1> on behalf of <2>TRISA</2>."
 msgstr " Erstellt und gepflegt von <0>Rotational Labs</0> in Zusammenarbeit mit <1>CipherTrace</1> im Namen von <2>TRISA</2>."
 
-#: src/components/select/VASPCategory.js:14
+#: src/components/select/VASPCategory.js:13
 msgid "Custody Provider"
 msgstr "Verwahrungsanbieter"
 
@@ -201,31 +201,31 @@ msgstr "Verwahrungsanbieter"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
-#: src/components/select/TransliterationMethodCode.js:13
+#: src/components/select/TransliterationMethodCode.js:12
 msgid "Cyrillic"
 msgstr "Kyrillisch"
 
-#: src/components/TRIXO.js:246
+#: src/components/TRIXO.js:245
 msgid "Data Protection Policies"
 msgstr "Datenschutzrichtlinien"
 
-#: src/components/Registration.js:368
+#: src/components/Registration.js:367
 msgid "Date of Incorporation/Establishment"
 msgstr "Datum der Gründung/Errichtung"
 
-#: src/components/select/VASPCategory.js:11
+#: src/components/select/VASPCategory.js:10
 msgid "Decentralized Exchange"
 msgstr "Dezentrale Börse"
 
-#: src/components/LookupForm.js:32
+#: src/components/LookupForm.js:31
 msgid "Detected input type: {0}"
 msgstr ""
 
-#: src/components/select/TransliterationMethodCode.js:14
+#: src/components/select/TransliterationMethodCode.js:13
 msgid "Devanagari & related Indic"
 msgstr "Devanagari & verwandter Indikator"
 
-#: src/App.js:65
+#: src/App.js:64
 msgid "Directory"
 msgstr ""
 
@@ -233,55 +233,55 @@ msgstr ""
 msgid "Directory Home"
 msgstr ""
 
-#: src/components/TopNav.js:42
+#: src/components/TopNav.js:41
 msgid "Documentation"
 msgstr "Dokumentation"
 
-#: src/components/TRIXO.js:167
+#: src/components/TRIXO.js:166
 msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 msgstr "Betreibt Ihr Unternehmen KYC/CDD, bevor es seinen Kunden erlaubt, virtuelle Vermögenswerte zu senden/empfangen?"
 
-#: src/components/TRIXO.js:154
+#: src/components/TRIXO.js:153
 msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 msgstr "Verfügt Ihre Organisation über ein Programm, das Mindeststandards für AML, CFT, KYC/CDD und Sanktionen gemäß den Anforderungen der Rechtsordnung(en), in der/denen sie lizenziert/zugelassen/registriert ist, festlegt?"
 
-#: src/components/TRIXO.js:258
+#: src/components/TRIXO.js:257
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
 msgstr "Sichert und schützt Ihre Organisation personenbezogene Daten, auch solche, die sie von anderen VASPs im Rahmen der Travel Rule erhalten hat?"
 
-#: src/components/Registration.js:584
+#: src/components/Registration.js:583
 msgid "Download"
 msgstr "Download"
 
-#: src/components/select/NationalIdentifierTypeCode.js:13
+#: src/components/select/NationalIdentifierTypeCode.js:12
 msgid "Driver's License Number"
 msgstr "Nummer des Führerscheins"
 
-#: src/components/Registration.js:521
+#: src/components/Registration.js:520
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 msgstr "Jeder VASP muss einen TRISA-Endpunkt für die Kommunikation zwischen den VASP einrichten. Bitte geben Sie die Einzelheiten Ihres Endpunkts für die Ausstellung von Zertifikaten an."
 
-#: src/components/Contact.js:29
+#: src/components/Contact.js:28
 msgid "Email address"
 msgstr "E-Mail Adresse"
 
-#: src/components/select/NationalIdentifierTypeCode.js:14
+#: src/components/select/NationalIdentifierTypeCode.js:13
 msgid "Foreign Investment Identity Number"
 msgstr "Identitätsnummer für ausländische Investitionen"
 
-#: src/components/Contact.js:17
+#: src/components/Contact.js:16
 msgid "Full Name"
 msgstr "Vollständiger Name"
 
-#: src/components/select/VASPCategory.js:18
+#: src/components/select/VASPCategory.js:17
 msgid "Gambling or Gaming Site"
 msgstr "Website für Glücksspiele oder Spiele"
 
-#: src/components/select/AddressTypeCode.js:12
+#: src/components/select/AddressTypeCode.js:11
 msgid "Geographic"
 msgstr "Geografisch"
 
-#: src/components/select/TransliterationMethodCode.js:15
+#: src/components/select/TransliterationMethodCode.js:14
 msgid "Georgian"
 msgstr "Georgisch"
 
@@ -293,23 +293,23 @@ msgstr ""
 msgid "Global TRISA Directory Record"
 msgstr "Globaler TRISA-Verzeichniseintrag"
 
-#: src/components/select/BusinessCategory.js:12
+#: src/components/select/BusinessCategory.js:11
 msgid "Government Entity"
 msgstr "Staatliche Einrichtung"
 
-#: src/components/select/TransliterationMethodCode.js:16
+#: src/components/select/TransliterationMethodCode.js:15
 msgid "Greek"
 msgstr "Griechisch"
 
-#: src/components/select/TransliterationMethodCode.js:17
+#: src/components/select/TransliterationMethodCode.js:16
 msgid "Han (Hanzi, Kanji, Hanja)"
 msgstr "Han (Hanzi, Kanji, Hanja)"
 
-#: src/components/select/TransliterationMethodCode.js:18
+#: src/components/select/TransliterationMethodCode.js:17
 msgid "Hebrew"
 msgstr "Hebräisch"
 
-#: src/components/Registration.js:635
+#: src/components/Registration.js:634
 msgid "ID: {0}<0/>Verification Status: \"{1}\""
 msgstr "{0}<0/>Überprüfungsstatus: \"{1}\""
 
@@ -321,7 +321,7 @@ msgstr "Identifikationsnummer"
 msgid "Identification Type"
 msgstr "Identifikationstyp"
 
-#: src/components/select/NationalIdentifierTypeCode.js:17
+#: src/components/select/NationalIdentifierTypeCode.js:16
 msgid "Identity Card Number"
 msgstr "Nummer des Personalausweises"
 
@@ -329,61 +329,61 @@ msgstr "Nummer des Personalausweises"
 msgid "If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List."
 msgstr "Wenn der Identifikator eine LEI-Nummer ist, wird die ID in der Liste der GLEIF-Registrierungsbehörden verwendet."
 
-#: src/components/Registration.js:308
-#: src/components/Registration.js:322
+#: src/components/Registration.js:307
+#: src/components/Registration.js:321
 msgid "Introduction"
 msgstr "Einführung"
 
-#: src/components/select/VASPCategory.js:16
+#: src/components/select/VASPCategory.js:15
 msgid "Investment Fund - hedge funds, ETFs, and family offices"
 msgstr "Investmentfonds - Hedgefonds, ETFs und Family Offices"
 
-#: src/components/TRIXO.js:139
+#: src/components/TRIXO.js:138
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 msgstr "Ist es Ihrer Organisation erlaubt, in den Ländern, in denen sie tätig ist, Transfers von virtuellen Vermögenswerten zu senden und/oder zu empfangen?"
 
-#: src/components/TRIXO.js:248
+#: src/components/TRIXO.js:247
 msgid "Is your organization required by law to safeguard PII?"
 msgstr "Ist Ihre Organisation gesetzlich verpflichtet, PII zu schützen?"
 
-#: src/components/TRIXO.js:201
+#: src/components/TRIXO.js:200
 msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
 msgstr "Ist Ihre Organisation verpflichtet, die Standards der Travel Rule in den Ländern, in denen sie lizenziert/zugelassen/registriert ist, einzuhalten?"
 
-#: src/components/select/TransliterationMethodCode.js:19
+#: src/components/select/TransliterationMethodCode.js:18
 msgid "Kana"
 msgstr "Kana"
 
-#: src/components/select/VASPCategory.js:13
+#: src/components/select/VASPCategory.js:12
 msgid "Kiosk / Crypto ATM Operator"
 msgstr "Kiosk-/Krypto-ATM-Betreiber"
 
-#: src/components/select/TransliterationMethodCode.js:20
+#: src/components/select/TransliterationMethodCode.js:19
 msgid "Korean"
 msgstr "Koreanisch"
 
-#: src/components/select/NationalIdentifierTypeCode.js:18
+#: src/components/select/NationalIdentifierTypeCode.js:17
 msgid "Legal Entity Identifier (LEI)"
 msgstr "Legal Entity Identifier (LEI)"
 
-#: src/components/select/LegalPersonNameTypeCode.js:11
-#: src/components/select/NaturalPersonNameTypeCode.js:13
+#: src/components/select/LegalPersonNameTypeCode.js:10
+#: src/components/select/NaturalPersonNameTypeCode.js:12
 msgid "Legal Name"
 msgstr "Juristischer Name"
 
-#: src/components/Registration.js:310
+#: src/components/Registration.js:309
 msgid "Legal Person"
 msgstr "Juristische Person"
 
-#: src/components/select/VASPCategory.js:21
+#: src/components/select/VASPCategory.js:20
 msgid "Legal person"
 msgstr "Juristische Person"
 
-#: src/components/Registration.js:457
+#: src/components/Registration.js:456
 msgid "Legal/Compliance Contact"
 msgstr "Recht/Compliance Kontakt"
 
-#: src/components/Registration.js:342
+#: src/components/Registration.js:341
 msgid "Load"
 msgstr "Laden"
 
@@ -403,27 +403,27 @@ msgstr ""
 msgid "Looking for the <0>TestNet Directory Service</0>?"
 msgstr ""
 
-#: src/components/select/NaturalPersonNameTypeCode.js:12
+#: src/components/select/NaturalPersonNameTypeCode.js:11
 msgid "Maiden Name"
 msgstr "Geburtsname"
 
-#: src/components/Registration.js:640
+#: src/components/Registration.js:639
 msgid "Message from server: \"{0}\""
 msgstr "Nachricht vom Server: \"{0}\""
 
-#: src/components/select/VASPCategory.js:19
+#: src/components/select/VASPCategory.js:18
 msgid "Mining Pool"
 msgstr "Mining-Pool"
 
-#: src/components/select/VASPCategory.js:20
+#: src/components/select/VASPCategory.js:19
 msgid "Mixing Service"
 msgstr "Mixing-Dienst"
 
-#: src/components/TRIXO.js:252
+#: src/components/TRIXO.js:251
 msgid "Must Safeguard PII"
 msgstr ""
 
-#: src/components/TRIXO.js:205
+#: src/components/TRIXO.js:204
 msgid "Must comply with the Travel Rule"
 msgstr ""
 
@@ -431,11 +431,11 @@ msgstr ""
 msgid "Name Identifiers"
 msgstr "Namenskennungen"
 
-#: src/components/select/NaturalPersonNameTypeCode.js:11
+#: src/components/select/NaturalPersonNameTypeCode.js:10
 msgid "Name at Birth"
 msgstr "Name bei der Geburt"
 
-#: src/components/TRIXO.js:120
+#: src/components/TRIXO.js:119
 msgid "Name of Primary Regulator"
 msgstr "Name der primären Regulierungsbehörde"
 
@@ -443,7 +443,7 @@ msgstr "Name der primären Regulierungsbehörde"
 msgid "National Identification"
 msgstr "Nationale Identifikation"
 
-#: src/components/TRIXO.js:55
+#: src/components/TRIXO.js:54
 msgid "National Jurisdiction"
 msgstr "Nationale Zuständigkeit"
 
@@ -451,37 +451,37 @@ msgstr "Nationale Zuständigkeit"
 msgid "Natural Person"
 msgstr "Natürliche Person"
 
-#: src/components/Registration.js:341
-#: src/components/Registration.js:404
-#: src/components/Registration.js:423
-#: src/components/Registration.js:513
-#: src/components/Registration.js:551
-#: src/components/Registration.js:570
+#: src/components/Registration.js:340
+#: src/components/Registration.js:403
+#: src/components/Registration.js:422
+#: src/components/Registration.js:512
+#: src/components/Registration.js:550
+#: src/components/Registration.js:569
 msgid "Next"
 msgstr "Weiter"
 
-#: src/components/TRIXO.js:148
-#: src/components/TRIXO.js:163
+#: src/components/TRIXO.js:147
+#: src/components/TRIXO.js:162
 msgid "No"
 msgstr "Nein"
 
-#: src/components/select/BusinessCategory.js:14
+#: src/components/select/BusinessCategory.js:13
 msgid "Non-Commercial Entity"
 msgstr "Nicht-gewerbliche Körperschaft"
 
-#: src/components/Contact.js:54
+#: src/components/Contact.js:53
 msgid "Optional - if supplied, use full phone number with country code."
 msgstr ""
 
-#: src/components/select/VASPCategory.js:22
+#: src/components/select/VASPCategory.js:21
 msgid "Other"
 msgstr "Andere"
 
-#: src/components/TRIXO.js:131
+#: src/components/TRIXO.js:130
 msgid "Other Jursidictions"
 msgstr "Andere Gerichtsbarkeiten"
 
-#: src/components/select/VASPCategory.js:15
+#: src/components/select/VASPCategory.js:14
 msgid "Over-The-Counter Trading Desk"
 msgstr "Over-The-Counter Trading Desk"
 
@@ -489,23 +489,23 @@ msgstr "Over-The-Counter Trading Desk"
 msgid "PAGE NOT FOUND"
 msgstr ""
 
-#: src/components/TRIXO.js:147
+#: src/components/TRIXO.js:146
 msgid "Partially"
 msgstr "Teilweise"
 
-#: src/components/TRIXO.js:162
+#: src/components/TRIXO.js:161
 msgid "Partially Implemented"
 msgstr "Teilweise implementiert"
 
-#: src/components/select/NationalIdentifierTypeCode.js:11
+#: src/components/select/NationalIdentifierTypeCode.js:10
 msgid "Passport Number"
 msgstr "Reisepassnummer"
 
-#: src/components/select/VASPCategory.js:12
+#: src/components/select/VASPCategory.js:11
 msgid "Person-to-Person Exchange"
 msgstr "Austausch zwischen Personen"
 
-#: src/components/Contact.js:44
+#: src/components/Contact.js:43
 msgid "Phone Number"
 msgstr "Rufnummer"
 
@@ -513,7 +513,7 @@ msgstr "Rufnummer"
 msgid "Phonetic Name Identifiers"
 msgstr "Phonetische Namenskennungen"
 
-#: src/components/TRIXO.js:132
+#: src/components/TRIXO.js:131
 msgid "Please add any other regulatory jurisdictions your organization complies with."
 msgstr "Bitte fügen Sie alle anderen gesetzlichen Bestimmungen hinzu, die Ihre Organisation einhält."
 
@@ -521,23 +521,23 @@ msgstr "Bitte fügen Sie alle anderen gesetzlichen Bestimmungen hinzu, die Ihre 
 msgid "Please enter at least one geographic address."
 msgstr "Bitte geben Sie mindestens eine geografische Adresse ein"
 
-#: src/components/Registration.js:411
+#: src/components/Registration.js:410
 msgid "Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers."
 msgstr "Bitte geben Sie die Informationen ein, die Ihre Organisation als juristische Person ausweisen. Dieses Formular entspricht der IVMS 101-Datenstruktur für juristische Personen und wird dringend zur Verwendung als KYC-Information bei TRISA-Überweisungen empfohlen."
 
-#: src/components/Registration.js:398
+#: src/components/Registration.js:397
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 msgstr "Bitte wählen Sie so viele Kategorien aus, wie nötig sind, um die Arten von Dienstleistungen für virtuelle Güter darzustellen, die Ihr Unternehmen anbietet."
 
-#: src/components/Registration.js:385
+#: src/components/Registration.js:384
 msgid "Please select the entity category that most closely matches your organization."
 msgstr "Bitte wählen Sie die Kategorie, die am ehesten auf Ihre Organisation zutrifft."
 
-#: src/components/TRIXO.js:213
+#: src/components/TRIXO.js:212
 msgid "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g. \"FATF Recommendation 16\""
 msgstr "Bitte geben Sie die geltende(n) Vorschrift(en) für die Einhaltung der Travel Rule Standards an, z. B. \"FATF Recommendation 16\""
 
-#: src/components/Contact.js:40
+#: src/components/Contact.js:39
 msgid "Please supply a valid email address."
 msgstr "Bitte geben Sie eine gültige E-Mail Adresse an."
 
@@ -545,35 +545,35 @@ msgstr "Bitte geben Sie eine gültige E-Mail Adresse an."
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit <0>GLEIF.org</0>."
 msgstr "Bitte geben Sie eine gültige nationale Identifikationsnummer an. TRISA empfiehlt die Verwendung von LEI-Nummern. Für weitere Informationen besuchen Sie bitte <0>GLEIF.org</0>."
 
-#: src/components/Contact.js:58
+#: src/components/Contact.js:57
 msgid "Please supply a valid phone number or omit entirely if not required."
 msgstr "Bitte geben Sie eine gültige Telefonnummer an oder lassen Sie sie ganz weg, wenn sie nicht benötigt wird."
 
-#: src/components/Registration.js:430
+#: src/components/Registration.js:429
 msgid "Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed."
 msgstr "Bitte geben Sie die Kontaktinformationen für Vertreter Ihrer Organisation an. Alle Kontaktpersonen erhalten ein E-Mail-Verifizierungs-Token. Die E-Mail der Kontaktperson muss verifiziert werden, bevor die Registrierung fortgesetzt werden kann."
 
-#: src/components/Contact.js:37
+#: src/components/Contact.js:36
 msgid "Please use the email address associated with your organization."
 msgstr "Bitte verwenden Sie die mit Ihrer Organisation verbundene E-Mail-Adresse."
 
-#: src/components/Contact.js:25
+#: src/components/Contact.js:24
 msgid "Preferred name for email communication."
 msgstr "Bevorzugter Name für die E-Mail-Kommunikation."
 
-#: src/components/TRIXO.js:110
+#: src/components/TRIXO.js:109
 msgid "Primary National Jurisdiction"
 msgstr "Nationale Hauptzuständigkeit"
 
-#: src/components/Registration.js:443
+#: src/components/Registration.js:442
 msgid "Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email. (Required)."
 msgstr "Hauptansprechpartner für technische Fragen zum Betrieb und Status Ihres am TRISA-Netzwerk teilnehmenden Dienstes. Kann eine Gruppen- oder Administrator-E-Mail sein. (Erforderlich)."
 
-#: src/components/select/BusinessCategory.js:11
+#: src/components/select/BusinessCategory.js:10
 msgid "Private Organization"
 msgstr "Private Organisation"
 
-#: src/App.js:68
+#: src/App.js:67
 msgid "Register"
 msgstr ""
 
@@ -585,23 +585,23 @@ msgstr "Eingetragenes Verzeichnis"
 msgid "Registration Authority"
 msgstr "Registrierungsbehörde"
 
-#: src/components/select/NationalIdentifierTypeCode.js:12
+#: src/components/select/NationalIdentifierTypeCode.js:11
 msgid "Registration Authority Identifier"
 msgstr "Kennung der Registrierungsbehörde"
 
-#: src/components/TRIXO.js:65
+#: src/components/TRIXO.js:64
 msgid "Regulator Name"
 msgstr "Name des Regulierers"
 
-#: src/components/Contact.js:53
+#: src/components/Contact.js:52
 msgid "Required - please supply full phone number with country code."
 msgstr ""
 
-#: src/components/Registration.js:585
+#: src/components/Registration.js:584
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: src/components/select/AddressTypeCode.js:10
+#: src/components/select/AddressTypeCode.js:9
 msgid "Residential"
 msgstr "Wohnsitz"
 
@@ -609,45 +609,45 @@ msgstr "Wohnsitz"
 msgid "Return to Directory"
 msgstr "Zurück zum Verzeichnis"
 
-#: src/components/TRIXO.js:262
+#: src/components/TRIXO.js:261
 msgid "Safeguards PII"
 msgstr ""
 
-#: src/components/select/LegalPersonNameTypeCode.js:12
+#: src/components/select/LegalPersonNameTypeCode.js:11
 msgid "Short Name"
 msgstr "Kurzbezeichnung"
 
-#: src/components/select/NationalIdentifierTypeCode.js:16
+#: src/components/select/NationalIdentifierTypeCode.js:15
 msgid "Social Security Number"
 msgstr "Sozialversicherungsnummer"
 
-#: src/components/LookupForm.js:51
+#: src/components/LookupForm.js:50
 msgid "Submit"
 msgstr "Absenden"
 
-#: src/components/Registration.js:28
+#: src/components/Registration.js:27
 msgid "Submit Production Registration"
 msgstr ""
 
-#: src/components/Registration.js:28
+#: src/components/Registration.js:27
 msgid "Submit TestNet Registration"
 msgstr ""
 
-#: src/components/Registration.js:295
+#: src/components/Registration.js:294
 msgid "Submitting Registration …"
 msgstr "Absendung der Registrierung ..."
 
-#: src/components/Registration.js:314
-#: src/components/Registration.js:576
+#: src/components/Registration.js:313
+#: src/components/Registration.js:575
 msgid "Summary"
 msgstr "Zusammenfassung"
 
-#: src/components/TopNav.js:18
-#: src/components/TopNav.js:25
+#: src/components/TopNav.js:17
+#: src/components/TopNav.js:24
 msgid "Switch to Production"
 msgstr ""
 
-#: src/components/Registration.js:526
+#: src/components/Registration.js:525
 msgid "TRISA Endpoint"
 msgstr "TRISA-Endpunkt"
 
@@ -659,8 +659,8 @@ msgstr ""
 msgid "TRISA Identity Signature"
 msgstr "TRISA-Identitäts-Unterschrift"
 
-#: src/components/Registration.js:312
-#: src/components/Registration.js:519
+#: src/components/Registration.js:311
+#: src/components/Registration.js:518
 msgid "TRISA Implementation"
 msgstr "TRISA-Umsetzung"
 
@@ -668,7 +668,7 @@ msgstr "TRISA-Umsetzung"
 msgid "TRISA Member ID"
 msgstr "TRISA Mitglieds-ID"
 
-#: src/components/Registration.js:612
+#: src/components/Registration.js:611
 msgid "TRISA Registration Request Submitted!"
 msgstr "TRISA-Registrierungsantrag eingereicht"
 
@@ -688,36 +688,36 @@ msgstr "TRISA-Überprüfung"
 msgid "TRISA specific identity number (UUID), only supplied if you're updating an existing registration request."
 msgstr "TRISA-spezifische Identitätsnummer (UUID), wird nur angegeben, wenn Sie einen bestehenden Registrierungsantrag aktualisieren."
 
-#: src/components/Registration.js:313
-#: src/components/Registration.js:557
+#: src/components/Registration.js:312
+#: src/components/Registration.js:556
 msgid "TRIXO Questionnaire"
 msgstr "TRIXO Fragebogen"
 
-#: src/components/select/NationalIdentifierTypeCode.js:15
+#: src/components/select/NationalIdentifierTypeCode.js:14
 msgid "Tax Identification Number"
 msgstr "Steueridentifikationsnummer"
 
-#: src/components/Registration.js:438
+#: src/components/Registration.js:437
 msgid "Technical Contact"
 msgstr "Technischer Kontakt"
 
-#: src/components/select/TransliterationMethodCode.js:21
+#: src/components/select/TransliterationMethodCode.js:20
 msgid "Thai"
 msgstr "Thailändisch"
 
-#: src/components/Registration.js:324
+#: src/components/Registration.js:323
 msgid "Thank you for your interest in the TRISA network for Travel Rule Compliance. This multi-part form is the first step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions."
 msgstr "Vielen Dank für Ihr Interesse am TRISA-Netzwerk für Travel Rule Compliance. Dieses mehrteilige Formular ist der erste Schritt im Registrierungs- und Zertifikatserteilungsverfahren. Die von Ihnen zur Verfügung gestellten Informationen werden verwendet, um die von Ihnen vertretene juristische Person zu verifizieren und werden gegebenenfalls verifizierten TRISA-Mitgliedern zur Verfügung gestellt, um Entscheidungen über die Einhaltung der Vorschriften zu erleichtern."
 
-#: src/components/Registration.js:534
+#: src/components/Registration.js:533
 msgid "The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC."
 msgstr "Die Adresse und der Port des TRISA-Endpunkts, mit dem sich Partner-VASPs über gRPC verbinden können."
 
-#: src/components/Registration.js:546
+#: src/components/Registration.js:545
 msgid "The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases."
 msgstr "Der allgemeine Name für das mTLS-Zertifikat. Dieser sollte in den meisten Fällen mit dem TRISA-Endpunkt ohne den Port übereinstimmen."
 
-#: src/components/TRIXO.js:241
+#: src/components/TRIXO.js:240
 msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 msgstr "Die Mindestschwelle, ab der Ihre Organisation verpflichtet ist, Informationen zu den Travel Rules zu sammeln/zu senden."
 
@@ -729,7 +729,7 @@ msgstr "Name und Art des Namens, unter dem die juristische Person bekannt ist."
 msgid "The name by which the legal person is known using local characters."
 msgstr "Der Name, unter dem die juristische Person bekannt ist, unter Verwendung lokaler Schriftzeichen"
 
-#: src/components/TRIXO.js:127
+#: src/components/TRIXO.js:126
 msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
 msgstr "Der Name der primären Regulierungs- oder Aufsichtsbehörde für Ihr Land"
 
@@ -737,54 +737,54 @@ msgstr "Der Name der primären Regulierungs- oder Aufsichtsbehörde für Ihr Lan
 msgid "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."
 msgstr ""
 
-#: src/components/Registration.js:630
+#: src/components/Registration.js:629
 msgid "This is the only time the PKCS12 password is shown during the registration process.<0/>Please copy and paste this password and store somewhere safe!"
 msgstr "Dies ist das einzige Mal, dass das PKCS12-Passwort während des Registrierungsprozesses angezeigt wird.<0/>Bitte kopieren Sie dieses Passwort und speichern Sie es an einem sicheren Ort!"
 
-#: src/components/Registration.js:559
+#: src/components/Registration.js:558
 msgid "This questionnaire is designed to help the TRISA working group and TRISA members understand the regulatory regime of your organization. The information you provide will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
 msgstr "Dieser Fragebogen soll der TRISA-Arbeitsgruppe und den TRISA-Mitgliedern dabei helfen, das Regelwerk Ihrer Organisation zu verstehen. Die von Ihnen zur Verfügung gestellten Informationen werden dazu beitragen, dass der erforderliche Informationsaustausch über die Einhaltung der Vorschriften korrekt und sicher durchgeführt wird. Alle verifizierten TRISA-Mitglieder haben Zugang zu diesen Informationen."
 
-#: src/components/Registration.js:337
+#: src/components/Registration.js:336
 msgid "This registration form is currently in its beta implementation. On the summary page you are able to download the form to save offline. You may also load a saved form below."
 msgstr "Dieses Anmeldeformular befindet sich derzeit in der Beta-Phase. Auf der Übersichtsseite können Sie das Formular herunterladen, um es offline zu speichern. Sie können auch ein gespeichertes Formular hochladen."
 
-#: src/components/TRIXO.js:197
+#: src/components/TRIXO.js:196
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "Schwellenwert für die Durchführung von KYC, bevor dem Kunden erlaubt wird, virtuelle Vermögenswerte zu senden/empfangen"
 
-#: src/components/Registration.js:331
+#: src/components/Registration.js:330
 msgid "To assist in completing the registration form, which is somewhat lengthy, the form is broken into multiple sections, with information stored in your <0>local browser storage</0> so that you can come back and complete the process. <1>No information is sent until you submit the form in the summary section</1>."
 msgstr "Um Ihnen das Ausfüllen des Anmeldeformulars zu erleichtern, das recht umfangreich ist, ist dieses in mehrere Abschnitte unterteilt, deren Informationen in Ihrem <0>lokalen Browser-Speicher</0> gespeichert werden. dass Sie zurückkommen und den Vorgang abschließen können. <1>Es werden keine Informationen gesendet, bis Sie das Formular im Abschnitt \"Zusammenfassung\" abschicken</1>."
 
-#: src/components/Registration.js:356
+#: src/components/Registration.js:355
 msgid "To get started, please tell us a bit about your organization."
 msgstr "Bitte erzählen Sie uns zunächst ein wenig über Ihre Organisation."
 
-#: src/components/select/VASPCategory.js:17
+#: src/components/select/VASPCategory.js:16
 msgid "Token Project"
 msgstr "Token-Projekt"
 
-#: src/components/select/LegalPersonNameTypeCode.js:13
+#: src/components/select/LegalPersonNameTypeCode.js:12
 msgid "Trading Name"
 msgstr "Handelsname"
 
-#: src/components/Registration.js:645
+#: src/components/Registration.js:644
 msgid "Understood"
 msgstr "Verstanden"
 
-#: src/components/select/AddressTypeCode.js:13
-#: src/components/select/LegalPersonNameTypeCode.js:10
-#: src/components/select/NationalIdentifierTypeCode.js:19
-#: src/components/select/NaturalPersonNameTypeCode.js:14
+#: src/components/select/AddressTypeCode.js:12
+#: src/components/select/LegalPersonNameTypeCode.js:9
+#: src/components/select/NationalIdentifierTypeCode.js:18
+#: src/components/select/NaturalPersonNameTypeCode.js:13
 msgid "Unspecified"
 msgstr "Unspezifiziert"
 
-#: src/components/select/TransliterationMethodCode.js:22
+#: src/components/select/TransliterationMethodCode.js:21
 msgid "Unspecified Standard"
 msgstr "Unspezifizierte Norm"
 
-#: src/components/Registration.js:389
+#: src/components/Registration.js:388
 msgid "VASP Category"
 msgstr "VASP-Kategorie"
 
@@ -800,73 +800,73 @@ msgstr "Überprüfungsstatus: {0}"
 msgid "Verifying Contact Information …"
 msgstr "Überprüfen von Kontaktinformationen ..."
 
-#: src/components/Registration.js:359
+#: src/components/Registration.js:358
 msgid "Website"
 msgstr "Website"
 
-#: src/components/TRIXO.js:221
+#: src/components/TRIXO.js:220
 msgid "What is the minimum threshold for Travel Rule compliance?"
 msgstr "Was ist die Mindestschwelle für die Einhaltung der Travel Rules?"
 
-#: src/components/Registration.js:622
+#: src/components/Registration.js:621
 msgid "When you are verified you will be issued PKCS12 encrypted identity certificates for use in mTLS authentication between TRISA members. The password to decrypt those certificates is shown below:"
 msgstr "Wenn Sie verifiziert sind, werden Ihnen PKCS12-verschlüsselte Identitätszertifikate zur Verwendung bei der mTLS-Authentifizierung zwischen TRISA-Mitgliedern ausgestellt. Das Passwort zum Entschlüsseln dieser Zertifikate ist unten angegeben:"
 
-#: src/components/TRIXO.js:146
-#: src/components/TRIXO.js:161
+#: src/components/TRIXO.js:145
+#: src/components/TRIXO.js:160
 msgid "Yes"
 msgstr "Ja"
 
-#: src/components/TopNav.js:26
+#: src/components/TopNav.js:25
 msgid "You're currently on the Production Directory"
 msgstr ""
 
-#: src/components/TopNav.js:19
+#: src/components/TopNav.js:18
 msgid "You're currently on the TestNet Directory"
 msgstr ""
 
-#: src/components/Registration.js:616
+#: src/components/Registration.js:615
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
 msgstr "Ihre Registrierungsanfrage ist erfolgreich beim Verzeichnisdienst eingegangen. An alle aufgeführten Kontakte wurden Bestätigungs-E-Mails gesendet. Sobald Ihre Kontaktinformationen überprüft wurden, wird das Registrierungsformular an den TRISA-Prüfungsausschuss geschickt, um Ihre Mitgliedschaft im TRISA-Netzwerk zu überprüfen"
 
-#: src/api/gds.js:25
+#: src/api/gds.js:24
 msgid "could not identify default GDS api endpoint"
 msgstr ""
 
-#: src/api/gds.js:161
+#: src/api/gds.js:160
 msgid "could not nullify empty {contact} contact"
 msgstr ""
 
-#: src/components/Registration.js:591
+#: src/components/Registration.js:590
 msgid "download data"
 msgstr "Daten herunterladen"
 
-#: src/api/gds.js:60
-#: src/api/gds.js:93
+#: src/api/gds.js:59
+#: src/api/gds.js:92
 msgid "field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
 
-#: src/api/gds.js:82
+#: src/api/gds.js:81
 msgid "repeated field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
 
-#: src/api/gds.js:143
+#: src/api/gds.js:142
 msgid "search API not implemented yet"
 msgstr ""
 
-#: src/api/gds.js:125
+#: src/api/gds.js:124
 msgid "unacceptable input type to lookup query"
 msgstr ""
 
-#: src/api/gds.js:99
+#: src/api/gds.js:98
 msgid "unhandled field {field} with setter {setter} and value type {0}"
 msgstr ""
 
-#: src/api/gds.js:74
-#: src/api/gds.js:96
+#: src/api/gds.js:73
+#: src/api/gds.js:95
 msgid "unknown nested proto type for field {field} with setter {setter}"
 msgstr ""
 
-#: src/api/gds.js:183
+#: src/api/gds.js:182
 msgid "vaspID and token are required"
 msgstr ""

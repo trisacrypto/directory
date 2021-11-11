@@ -5,7 +5,6 @@ import Nav from 'react-bootstrap/Nav'
 import { isTestNet } from '../lib/testnet';
 import { Trans } from "@lingui/macro";
 import LanguageSelect from './select/LanguageSelect';
-import { i18n } from "@lingui/core";
 import { t } from "@lingui/macro";
 
 
@@ -15,15 +14,15 @@ const getDirectoryURL = () => {
   if (isTestNet()) {
       return [
           "https://vaspdirectory.net",
-          i18n._(t`Switch to Production`),
-          i18n._(t`You're currently on the TestNet Directory`),
+          t`Switch to Production`,
+          t`You're currently on the TestNet Directory`,
       ]    
   }
 
   return [
           "https://trisatest.net",
-          i18n._(t`Switch to Production`),
-          i18n._(t`You're currently on the Production Directory`),
+          t`Switch to Production`,
+          t`You're currently on the Production Directory`,
       ]
 };
 
