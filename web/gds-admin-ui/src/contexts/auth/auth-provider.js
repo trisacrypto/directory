@@ -3,7 +3,8 @@ import jwtDecode from "jwt-decode";
 import { AUTH_SESSION_KEY } from "./constants";
 import AuthContext from './auth-context';
 import useSessionStorageState from "../../hooks/useSessionStorage";
-import { APICore, setAuthorization } from "../../helpers/api/apiCore";
+import { APICore, setAuthorization, setCookie } from "../../helpers/api/apiCore";
+import { getCookie } from "../../utils";
 
 const api = new APICore()
 
@@ -23,11 +24,14 @@ const AuthProvider = ({ children }) => {
 
     const setAuthInfo = (token) => {
         const tokenDecoded = jwtDecode(token.access_token)
+        const csrfToken = getCookie('csrf_token')
         api.setLoggedInUser(token)
         setAuthorization(token.access_token)
+        setCookie(csrfToken)
         setAuthState({
             user: tokenDecoded
         })
+
 
     }
 

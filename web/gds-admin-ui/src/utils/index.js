@@ -3,6 +3,8 @@ import { ENVIRONMENT, Status } from '../constants';
 import { DIRECTORY } from '../constants';
 import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
 import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
+import dayjs from 'dayjs';
+import crypto from 'crypto'
 
 export * from './array';
 
@@ -126,4 +128,14 @@ function isVerifiedContact(contact, verifiedContact) {
     return verifiedContacts.includes(contact.email)
 }
 
-export { isVerifiedContact, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+const formatDate = (date) => date ? dayjs(date).format('DD-MM-YYYY') : 'N/A';
+
+/**
+ * 
+ * @param {string} data string to hash
+ */
+function generateMd5(data = '') {
+    return crypto.createHash('md5').update(data).digest("hex");
+}
+
+export { generateMd5, formatDate, isVerifiedContact, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
