@@ -1,13 +1,9 @@
 package trtl_test
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,6 +16,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -100,92 +97,9 @@ func generateDB(s *trtlTestSuite) {
 		require.NoError(err)
 	}
 
-	writeGzip(s)
+	err = utils.WriteGzip(s.db, s.gzip)
+	require.NoError(err)
 	log.Info().Msg("successfully regenerated test fixtures")
-}
-
-// extractGzip extracts the gzipped database to the temporary directory.
-func extractGzip(s *trtlTestSuite) (err error) {
-	var (
-		f  *os.File
-		gr *gzip.Reader
-	)
-
-	// Read the gzip file.
-	if f, err = os.Open(s.gzip); err != nil {
-		return err
-	}
-	defer f.Close()
-	if gr, err = gzip.NewReader(f); err != nil {
-		return err
-	}
-	defer gr.Close()
-
-	// Write the contents to the temporary directory.
-	tr := tar.NewReader(gr)
-	for {
-		hdr, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		switch hdr.Typeflag {
-		case tar.TypeDir:
-			if err = os.MkdirAll(filepath.Join(s.db, hdr.Name), os.FileMode(hdr.Mode)); err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			var reg *os.File
-			if reg, err = os.Create(filepath.Join(s.db, hdr.Name)); err != nil {
-				return err
-			}
-			if _, err = io.Copy(reg, tr); err != nil {
-				reg.Close()
-				return err
-			}
-			reg.Close()
-		default:
-			return fmt.Errorf("extracting %s: unknown type flag: %c", hdr.Name, hdr.Typeflag)
-		}
-	}
-	return nil
-}
-
-// writeGzip writes the database in the temporary directory to a gzipped file.
-func writeGzip(s *trtlTestSuite) {
-	require := s.Require()
-	// Create a gzip file.
-	f, err := os.Create(s.gzip)
-	require.NoError(err)
-	defer f.Close()
-	w := gzip.NewWriter(f)
-	defer w.Close()
-
-	// Create a tar file.
-	tw := tar.NewWriter(w)
-	defer tw.Close()
-
-	// Write the DB to the tar file.
-	err = filepath.Walk(s.db, func(path string, info os.FileInfo, err error) error {
-		require.NoError(err)
-		hdr, err := tar.FileInfoHeader(info, "")
-		require.NoError(err)
-		hdr.Name = path[len(s.db):]
-		err = tw.WriteHeader(hdr)
-		require.NoError(err)
-		if info.IsDir() {
-			return nil
-		}
-		f, err := os.Open(path)
-		require.NoError(err)
-		defer f.Close()
-		_, err = io.Copy(tw, f)
-		require.NoError(err)
-		return nil
-	})
-	require.NoError(err)
 }
 
 func (s *trtlTestSuite) SetupSuite() {
@@ -206,7 +120,7 @@ func (s *trtlTestSuite) SetupSuite() {
 	}
 
 	// Always extract the test database to a temporary directory.
-	if err = extractGzip(s); err != nil {
+	if _, err = utils.ExtractGzip(s.gzip, s.db); err != nil {
 		// Regenerate the test database if the extraction failed.
 		log.Warn().Err(err).Msg("unable to extract test fixtures")
 		generateDB(s)
@@ -340,4 +254,61 @@ func (s *trtlTestSuite) TestGet() {
 	require.Equal([]byte(alice.Key), reply.Meta.Key)
 	require.Equal(alice.Namespace, reply.Meta.Namespace)
 	require.True(proto.Equal(expectedMeta, reply.Meta))
+}
+
+// Test that we can call the Batch RPC and get the correct response.
+func (s *trtlTestSuite) TestBatch() {
+	require := s.Require()
+
+	// Start the server.
+	server, err := trtl.New(s.conf)
+	require.NoError(err)
+	go server.Serve()
+	defer server.Shutdown()
+
+	// Start the gRPC client.
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	client := pb.NewTrtlClient(conn)
+
+	requests := map[int64]*pb.BatchRequest{
+		1: {
+			Id: 1,
+			Request: &pb.BatchRequest_Put{
+				Put: &pb.PutRequest{
+					Key:       []byte("foo"),
+					Namespace: "default",
+					Value:     []byte("bar"),
+				},
+			},
+		},
+		2: {
+			Id: 2,
+			Request: &pb.BatchRequest_Delete{
+				Delete: &pb.DeleteRequest{
+					Key:       []byte("foo"),
+					Namespace: "default",
+				},
+			},
+		},
+	}
+	stream, err := client.Batch(ctx)
+	require.NoError(err)
+	for _, r := range requests {
+		err = stream.Send(r)
+		require.NoError(err)
+	}
+	reply, err := stream.CloseAndRecv()
+	require.NoError(err)
+	require.Equal(int64(len(requests)), reply.Operations)
+	require.Equal(int64(len(requests)), reply.Failed)
+	require.Equal(int64(0), reply.Successful)
+	require.Len(reply.Errors, len(requests))
+	for _, e := range reply.Errors {
+		require.Contains(requests, e.Id)
+		require.Equal(requests[e.Id].Id, e.Id)
+		require.Contains(e.Error, "not implemented")
+	}
 }

@@ -45,7 +45,6 @@ describe('defaultEndpointPrefix', () => {
                 <div>
                   <address
                     data-testid="addressLine"
-                    style="font-style: italic;"
                   >
                     <div>
                       215 Alynn Way
@@ -95,25 +94,24 @@ describe('defaultEndpointPrefix', () => {
                 <div>
                   <address
                     data-testid="addressField"
-                    style="font-style: italic;"
                   >
-                    Automotive
+                    Beauty
                      
                     <br />
-                    Industrial
+                    Shoes
                      
                     <br />
                     23
                      
-                    Towne Mountains
+                    Jayson Hill
                     <br />
-                    Schenectady
+                    Brooklyn Park
                      
                     
                      
                     MA
                      
-                    50224-0905
+                    60946
                       
                     <br />
                     US

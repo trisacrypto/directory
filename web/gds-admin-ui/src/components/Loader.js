@@ -1,21 +1,6 @@
 // @flow
-import React from 'react';
+import { ReactComponent as LoaderIcon } from '../assets/images/loader.svg';
 
-/**
- * Renders the preloader
- */
-const Loader = (): React$Element<any> => {
-    return (
-        <div className="preloader" id="preloader">
-            <div className="status" id="status">
-                <div className="bouncing-loader">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default Loader;
+export default function Loader(props) {
+    return <LoaderIcon {...props} />
+} 

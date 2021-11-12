@@ -36,7 +36,7 @@ const Address = ({index, address, onChange, onDelete}) => {
           onChange={createArrayChangeHandler('address_line', idx)}
         />
         <Form.Text className="text-muted">
-          {`Address line ${idx+1} e.g. ${addressLineExamples[idx]}`}
+          <Trans>{`Address line ${idx+1} e.g. ${addressLineExamples[idx]}`}</Trans>
         </Form.Text>
       </Form.Group>
     );
