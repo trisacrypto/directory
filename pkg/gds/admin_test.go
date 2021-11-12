@@ -3,7 +3,6 @@ package gds
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -48,24 +47,6 @@ func initAdmin(s *gdsTestSuite) (admin *Admin) {
 	admin.tokens, err = tokens.MockTokenManager()
 	require.NoError(err)
 	return admin
-}
-
-// generateToken generates a fake JWT token to send back to the Sectigo client.
-func generateToken() (string, error) {
-	var token *jwt.Token
-	claims := jwt.StandardClaims{
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Minute * 10).Unix(),
-	}
-	if token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims); token == nil {
-		return "", fmt.Errorf("could not generate jwt token")
-	}
-	var signed string
-	var err error
-	if signed, err = token.SignedString([]byte("foo")); err != nil {
-		return "", err
-	}
-	return signed, nil
 }
 
 // apiRequest is a helper struct to make it easier to organize all the different
