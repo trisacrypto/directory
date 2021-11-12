@@ -1,4 +1,4 @@
-package gds_test
+package gds
 
 import (
 	"flag"
@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -22,13 +24,30 @@ var (
 	update = flag.Bool("update", false, "update the gzipped test database")
 )
 
-var dbVASPs = map[string]*pb.VASP{}
-
 type gdsTestSuite struct {
 	suite.Suite
-	fakes  string
-	db     string
-	golden string
+	fakes   string
+	db      string
+	golden  string
+	dbVASPs map[string]*pb.VASP
+}
+
+// Overwrite the test database with a subset of VASPs (for small-scale unit testing).
+func WriteVASPs(s *gdsTestSuite, ids []string) {
+	require := s.Require()
+	err := os.RemoveAll(s.db)
+	require.NoError(err)
+	db, err := leveldb.OpenFile(s.db, nil)
+	require.NoError(err)
+	defer db.Close()
+	for _, id := range ids {
+		vasp, ok := s.dbVASPs[id]
+		require.True(ok)
+		data, err := proto.Marshal(vasp)
+		require.NoError(err)
+		err = db.Put([]byte("vasps::"+id), data, nil)
+		require.NoError(err)
+	}
 }
 
 // loadFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
@@ -37,6 +56,8 @@ func loadFixtures(s *gdsTestSuite) {
 	// Extract the gzipped archive.
 	root, err := utils.ExtractGzip(s.fakes, "testdata")
 	require.NoError(err)
+
+	s.dbVASPs = make(map[string]*pb.VASP)
 
 	// Load the JSON fixtures from disk.
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -50,12 +71,12 @@ func loadFixtures(s *gdsTestSuite) {
 		// Unmarshal the JSON into the global fixtures map.
 		data, err := os.ReadFile(path)
 		require.NoError(err)
-		if strings.HasPrefix(info.Name(), "vasps::") {
-			// TODO: Unmarshal into VASP object when the fixtures are fixed.
+		key := strings.TrimSuffix(info.Name(), ".json")
+		if strings.HasPrefix(key, "vasps::") {
 			vasp := &pb.VASP{}
 			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
-			dbVASPs[info.Name()] = vasp
+			s.dbVASPs[strings.TrimPrefix(key, "vasps::")] = vasp
 			return nil
 		}
 
@@ -78,10 +99,10 @@ func generateDB(s *gdsTestSuite) {
 	loadFixtures(s)
 
 	// Write all the test fixtures to the database.
-	for name, vasp := range dbVASPs {
+	for id, vasp := range s.dbVASPs {
 		data, err := proto.Marshal(vasp)
 		require.NoError(err)
-		err = db.Put([]byte(name), data, nil)
+		err = db.Put([]byte("vasps::"+id), data, nil)
 		require.NoError(err)
 	}
 
@@ -93,6 +114,9 @@ func generateDB(s *gdsTestSuite) {
 func (s *gdsTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
+	gin.SetMode(gin.TestMode)
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	s.fakes = filepath.Join("testdata", "fakes.tgz")
 	s.golden = filepath.Join("testdata", "db.tgz")
 	s.db, err = ioutil.TempDir("testdata", "db-*")
@@ -133,9 +157,9 @@ func (s *gdsTestSuite) TestFixtures() {
 	require.NoError(err)
 	defer db.Close()
 
-	require.NotEmpty(dbVASPs)
-	for name, vasp := range dbVASPs {
-		data, err := db.Get([]byte(name), nil)
+	require.NotEmpty(s.dbVASPs)
+	for name, vasp := range s.dbVASPs {
+		data, err := db.Get([]byte("vasps::"+name), nil)
 		require.NoError(err)
 		actual := &pb.VASP{}
 		err = proto.Unmarshal(data, actual)

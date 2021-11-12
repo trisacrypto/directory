@@ -604,8 +604,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	// Query the list of VASPs from the data store
 	iter := s.db.ListVASPs()
 	defer iter.Release()
-	for iter.Next() {
-		out.Count++
+	for out.Count = 0; iter.Next(); out.Count++ {
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// In the page range so add to the list reply
 			// Fetch VASP from the database
@@ -774,8 +773,9 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		// Create note ID if not provided
 		noteID = uuid.New().String()
 	} else {
+		noteID = in.NoteID
 		// Only allow reasonably-lengthed note IDs (generated IDs are also 36 characters)
-		if len(in.NoteID) > 36 {
+		if len(noteID) > 36 {
 			log.Warn().Err(err).Msg("invalid note ID")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("note ID cannot be longer than 36 characters"))
 			return
@@ -787,7 +787,6 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("note ID contains unescaped characters: %s", noteID)))
 			return
 		}
-		noteID = in.NoteID
 	}
 
 	// Lookup the VASP record associated with the request
@@ -853,7 +852,7 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 
 	// Compose the JSON response
 	out = &admin.ListReviewNotesReply{
-		Notes: make([]admin.ReviewNote, len(notes)),
+		Notes: []admin.ReviewNote{},
 	}
 	for _, n := range notes {
 		out.Notes = append(out.Notes, admin.ReviewNote{
