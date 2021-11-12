@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
@@ -35,13 +36,18 @@ func initAdmin(s *gdsTestSuite) (admin *Admin) {
 		Testing:      true,
 	})
 	require.NoError(err)
-	return &Admin{
+	admin = &Admin{
 		svc: &Service{
 			email: manager,
 		},
-		db:   db,
-		conf: &config.AdminConfig{},
+		db: db,
+		conf: &config.AdminConfig{
+			CookieDomain: "example.com",
+		},
 	}
+	admin.tokens, err = tokens.MockTokenManager()
+	require.NoError(err)
+	return admin
 }
 
 // generateToken generates a fake JWT token to send back to the Sectigo client.
@@ -62,17 +68,29 @@ func generateToken() (string, error) {
 	return signed, nil
 }
 
-// doAdminRequest is a helper function for making an admin API request and retrieving
+// apiRequest is a helper struct to make it easier to organize all the different
+// parameters required for making an in-code API request.
+type apiRequest struct {
+	fn      func(c *gin.Context)
+	method  string
+	path    string
+	headers map[string]string
+	params  map[string]string
+	in      interface{}
+	claims  *tokens.Claims
+}
+
+// doAdminRequest is a helper function for making an API request and retrieving
 // the response.
-func (s *gdsTestSuite) doRequest(fn func(c *gin.Context), method, path string, headers, params map[string]string, request interface{}, reply interface{}, claims *tokens.Claims) (status int) {
+func (s *gdsTestSuite) doRequest(request *apiRequest, reply interface{}) (res *http.Response) {
 	var body io.ReadWriter
 	var err error
 	require := s.Require()
 
 	// Encode the JSON request
-	if request != nil {
+	if request.in != nil {
 		body = &bytes.Buffer{}
-		err = json.NewEncoder(body).Encode(request)
+		err = json.NewEncoder(body).Encode(request.in)
 		require.NoError(err)
 	} else {
 		body = nil
@@ -81,18 +99,18 @@ func (s *gdsTestSuite) doRequest(fn func(c *gin.Context), method, path string, h
 	// Construct the HTTP request
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	if claims != nil {
-		c.Set(admin.UserClaims, claims)
+	if request.claims != nil {
+		c.Set(admin.UserClaims, request.claims)
 	}
-	c.Request = httptest.NewRequest(method, path, body)
+	c.Request = httptest.NewRequest(request.method, request.path, body)
 	c.Request.Header.Add("Content-Type", "application/json")
-	if headers != nil {
-		for k, v := range headers {
+	if request.headers != nil {
+		for k, v := range request.headers {
 			c.Request.Header.Add(k, v)
 		}
 	}
-	if params != nil {
-		for k, v := range params {
+	if request.params != nil {
+		for k, v := range request.params {
 			c.Params = append(c.Params, gin.Param{
 				Key:   k,
 				Value: v,
@@ -101,8 +119,8 @@ func (s *gdsTestSuite) doRequest(fn func(c *gin.Context), method, path string, h
 	}
 
 	// Call the admin function and return the response
-	fn(c)
-	res := w.Result()
+	request.fn(c)
+	res = w.Result()
 	defer res.Body.Close()
 	if reply != nil {
 		bytes, err := ioutil.ReadAll(res.Body)
@@ -110,7 +128,7 @@ func (s *gdsTestSuite) doRequest(fn func(c *gin.Context), method, path string, h
 		err = json.Unmarshal(bytes, reply)
 		require.NoError(err)
 	}
-	return res.StatusCode
+	return res
 }
 
 // Test that we get a good response from ProtectAuthenticate.
@@ -118,9 +136,14 @@ func (s *gdsTestSuite) TestProtectAuthenticate() {
 	require := s.Require()
 	a := initAdmin(s)
 
+	request := &apiRequest{
+		fn:     a.ProtectAuthenticate,
+		method: http.MethodPost,
+		path:   "/v2/foo",
+	}
 	actual := &admin.Reply{}
-	status := s.doRequest(a.ProtectAuthenticate, http.MethodPost, "/v2/protect/authenticate", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	res := s.doRequest(request, actual)
+	require.Equal(http.StatusOK, res.StatusCode)
 	expected := &admin.Reply{Success: true}
 	require.Equal(expected, actual)
 }
@@ -131,18 +154,23 @@ func (s *gdsTestSuite) TestAuthenticate() {
 	a := initAdmin(s)
 
 	// Missing credential
-	req := &admin.AuthRequest{}
-	status := s.doRequest(a.Authenticate, http.MethodPost, "/v2/authenticate", nil, nil, req, nil, nil)
-	require.Equal(http.StatusUnauthorized, status)
+	request := &apiRequest{
+		fn:     a.Authenticate,
+		method: http.MethodPost,
+		path:   "/v2/authenticate",
+		in:     &admin.AuthRequest{},
+	}
+	res := s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
 	// Invalid credential
-	req = &admin.AuthRequest{
+	request.in = &admin.AuthRequest{
 		Credential: "invalid",
 	}
-	status = s.doRequest(a.Authenticate, http.MethodPost, "/v2/authenticate", nil, nil, req, nil, nil)
-	require.Equal(http.StatusUnauthorized, status)
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
-	// TODO: Test the successful authentication path
+	// MAYBE: Can we mock the token validation to test the success path?
 }
 
 // Test the Reauthenticate endpoint.
@@ -150,19 +178,86 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	require := s.Require()
 	a := initAdmin(s)
 
+	claims := &tokens.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Id:        uuid.NewString(),
+			Audience:  "http://localhost",
+			IssuedAt:  time.Now().Unix(),
+			NotBefore: time.Now().Unix(),
+			ExpiresAt: time.Now().Unix(),
+		},
+	}
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	refreshToken, err := a.tokens.CreateRefreshToken(accessToken)
+	require.NoError(err)
+	access, err := a.tokens.Sign(accessToken)
+	require.NoError(err)
+	refresh, err := a.tokens.Sign(refreshToken)
+	require.NoError(err)
+
 	// Missing access token
-	req := &admin.AuthRequest{}
-	status := s.doRequest(a.Reauthenticate, http.MethodPost, "/v2/reauthenticate", nil, nil, req, nil, nil)
-	require.Equal(http.StatusUnauthorized, status)
+	request := &apiRequest{
+		fn:     a.Reauthenticate,
+		method: http.MethodPost,
+		path:   "/v2/reauthenticate",
+		in: &admin.AuthRequest{
+			Credential: refresh,
+		},
+	}
+	res := s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
 	// Invalid access token
-	headers := map[string]string{
+	request.headers = map[string]string{
 		"Authorization": "Bearer invalid",
 	}
-	status = s.doRequest(a.Reauthenticate, http.MethodPost, "/v2/reauthenticate", headers, nil, req, nil, nil)
-	require.Equal(http.StatusUnauthorized, status)
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
-	// TODO: Mock token manager to test the successful reauthentication path
+	// Missing refresh token
+	request.in = &admin.AuthRequest{}
+	request.headers = map[string]string{
+		"Authorization": "Bearer " + access,
+	}
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
+
+	// Invalid refresh token
+	request.in = &admin.AuthRequest{
+		Credential: "invalid",
+	}
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
+
+	// Mismatched access and refresh tokens
+	claims.Id = uuid.NewString()
+	otherToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	other, err := a.tokens.Sign(otherToken)
+	require.NoError(err)
+	request.in = &admin.AuthRequest{
+		Credential: refresh,
+	}
+	request.headers = map[string]string{
+		"Authorization": "Bearer " + other,
+	}
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
+
+	// Successful reauthentication
+	request.in = &admin.AuthRequest{
+		Credential: refresh,
+	}
+	request.headers = map[string]string{
+		"Authorization": "Bearer " + access,
+	}
+	res = s.doRequest(request, nil)
+	require.Equal(http.StatusOK, res.StatusCode)
+	// Double cookie tokens should be set
+	cookies := res.Cookies()
+	require.Len(cookies, 2)
+	for _, cookie := range cookies {
+		require.Equal(a.conf.CookieDomain, cookie.Domain)
+	}
 }
 
 // Test that the Summary endpoint returns the correct response.
@@ -170,9 +265,14 @@ func (s *gdsTestSuite) TestSummary() {
 	require := s.Require()
 	a := initAdmin(s)
 
+	request := &apiRequest{
+		fn:     a.Summary,
+		method: http.MethodGet,
+		path:   "/v2/summary",
+	}
 	actual := &admin.SummaryReply{}
-	status := s.doRequest(a.Summary, http.MethodGet, "/v2/summary", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep := s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Test against the expected response
 	expected := &admin.SummaryReply{
@@ -204,9 +304,14 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	WriteVASPs(s, vasps)
 	a := initAdmin(s)
 
+	request := &apiRequest{
+		fn:     a.Autocomplete,
+		method: http.MethodGet,
+		path:   "/v2/autocomplete",
+	}
 	actual := &admin.AutocompleteReply{}
-	status := s.doRequest(a.Autocomplete, http.MethodGet, "/v2/autocomplete", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep := s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Construct the expected response
 	expected := &admin.AutocompleteReply{
@@ -264,9 +369,14 @@ func (s *gdsTestSuite) TestListVASPs() {
 	}
 
 	// List all VASPs on the same page
+	request := &apiRequest{
+		fn:     a.ListVASPs,
+		method: http.MethodGet,
+		path:   "/v2/vasps",
+	}
 	actual := &admin.ListVASPsReply{}
-	status := s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep := s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(len(vasps), actual.Count)
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
@@ -277,12 +387,14 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(snippets, actual.VASPs)
 
 	// List VASPs with an invalid status
-	status = s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps?status=invalid", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	request.path = "/v2/vasps?status=invalid"
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// List VASPs with the specified status
-	status = s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps?status="+snippets[0].VerificationStatus, nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(len(vasps), actual.Count)
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
@@ -290,24 +402,27 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(snippets[0], actual.VASPs[0])
 
 	// List VASPs on multiple pages
-	status = s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps?page=1&page_size=1", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	request.path = "/v2/vasps?page=1&page_size=1"
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(len(vasps), actual.Count)
 	require.Equal(1, actual.Page)
 	require.Equal(1, actual.PageSize)
 	require.Len(actual.VASPs, 1)
 	require.Equal(snippets[0], actual.VASPs[0])
 
-	status = s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps?page=2&page_size=1", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	request.path = "/v2/vasps?page=2&page_size=1"
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(len(vasps), actual.Count)
 	require.Equal(2, actual.Page)
 	require.Equal(1, actual.PageSize)
 	require.Len(actual.VASPs, 1)
 	require.Equal(snippets[1], actual.VASPs[0])
 
-	status = s.doRequest(a.ListVASPs, http.MethodGet, "/v2/vasps?page=3&page_size=1", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	request.path = "/v2/vasps?page=3&page_size=1"
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(len(vasps), actual.Count)
 	require.Equal(3, actual.Page)
 	require.Equal(1, actual.PageSize)
@@ -324,16 +439,22 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	a := initAdmin(s)
 
 	// Retrieve a VASP that doesn't exist
-	status := s.doRequest(a.RetrieveVASP, http.MethodGet, "/v2/vasps/invalid", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	request := &apiRequest{
+		fn:     a.RetrieveVASP,
+		method: http.MethodGet,
+		path:   "/v2/vasps/invalid",
+	}
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Retrieve a VASP that exists
-	actual := &admin.RetrieveVASPReply{}
-	params := map[string]string{
+	request.path = "/v2/vasps/" + vasps[0]
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 	}
-	status = s.doRequest(a.RetrieveVASP, http.MethodGet, "/v2/vasps/"+vasps[0], nil, params, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	actual := &admin.RetrieveVASPReply{}
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	expected := &admin.RetrieveVASPReply{
 		Name: "CharlieBank",
 		VerifiedContacts: map[string]string{
@@ -374,47 +495,52 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	}
 
 	// Supplying an invalid note ID
-	req := &admin.ModifyReviewNoteRequest{
-		NoteID: "invalid slug",
+	request := &apiRequest{
+		fn:     a.CreateReviewNote,
+		method: http.MethodPost,
+		path:   "/v2/vasps/" + vasps[0] + "/notes",
+		in: &admin.ModifyReviewNoteRequest{
+			NoteID: "invalid slug",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
 	}
-	claims := &tokens.Claims{
-		Email: "admin@example.com",
-	}
-	status := s.doRequest(a.CreateReviewNote, http.MethodPost, "/v2/vasps/"+vasps[0]+"/notes", nil, nil, req, nil, claims)
-	require.Equal(http.StatusBadRequest, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Supplying an invalid VASP ID
-	req = &admin.ModifyReviewNoteRequest{
+	request.in = &admin.ModifyReviewNoteRequest{
 		VASP: "invalid",
 	}
-	params := map[string]string{
+	request.params = map[string]string{
 		"vaspID": "invalid",
 	}
-	status = s.doRequest(a.CreateReviewNote, http.MethodPost, "/v2/vasps/invalid/notes", nil, params, req, nil, claims)
-	require.Equal(http.StatusNotFound, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Successfully creating a review note
-	req = &admin.ModifyReviewNoteRequest{
+	request.in = &admin.ModifyReviewNoteRequest{
 		VASP:   vasps[0],
 		NoteID: "89bceb0e-41aa-11ec-9d29-acde48001122",
 		Text:   "foo",
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 	}
 	actual := &admin.ReviewNote{}
 	created := time.Now()
-	status = s.doRequest(a.CreateReviewNote, http.MethodPost, "/v2/vasps/"+vasps[0]+"/notes", nil, params, req, actual, claims)
-	require.Equal(http.StatusCreated, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusCreated, rep.StatusCode)
 	// Validate returned note
-	require.Equal(req.NoteID, actual.ID)
+	require.Equal("89bceb0e-41aa-11ec-9d29-acde48001122", actual.ID)
 	ts, err := time.Parse(time.RFC3339, actual.Created)
 	require.NoError(err)
 	require.True(ts.Sub(created) < time.Minute)
 	require.Empty(actual.Modified)
-	require.Equal(claims.Email, actual.Author)
+	require.Equal(request.claims.Email, actual.Author)
 	require.Empty(actual.Editor)
-	require.Equal(req.Text, actual.Text)
+	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
 	v, err := a.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
@@ -430,8 +556,8 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(notes[actual.ID].Editor)
 
 	// Should not be able to create a review note if it already exists
-	status = s.doRequest(a.CreateReviewNote, http.MethodPost, "/v2/vasps/"+vasps[0]+"/notes", nil, params, req, nil, claims)
-	require.Equal(http.StatusBadRequest, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 }
 
 // Test the ListReviewNotes endpoint.
@@ -444,19 +570,24 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 	}
 
 	// Supplying an invalid VASP ID
-	params := map[string]string{
-		"vaspID": "invalid",
+	request := &apiRequest{
+		fn:     a.ListReviewNotes,
+		method: http.MethodGet,
+		path:   "/v2/vasps/invalid/notes",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
 	}
-	status := s.doRequest(a.ListReviewNotes, http.MethodGet, "/v2/vasps/invalid/notes", nil, params, nil, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Successfully listing review notes
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 	}
 	actual := &admin.ListReviewNotesReply{}
-	status = s.doRequest(a.ListReviewNotes, http.MethodGet, "/v2/vasps/"+vasps[0]+"/notes", nil, params, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	expected := &admin.ListReviewNotesReply{
 		Notes: []admin.ReviewNote{
 			{
@@ -484,55 +615,60 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	noteID := "d9ebcfa4-41aa-11ec-9d29-acde48001122"
 
 	// Supplying an invalid note ID
-	req := &admin.ModifyReviewNoteRequest{
-		VASP:   vasps[0],
-		NoteID: "invalid slug",
+	request := &apiRequest{
+		fn:     a.UpdateReviewNote,
+		method: http.MethodPut,
+		path:   "/v2/vasps/" + vasps[0] + "/notes/invalid",
+		in: &admin.ModifyReviewNoteRequest{
+			VASP:   vasps[0],
+			NoteID: "invalid slug",
+		},
+		params: map[string]string{
+			"vaspID": vasps[0],
+			"noteID": "invalid slug",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
 	}
-	params := map[string]string{
-		"vaspID": vasps[0],
-		"noteID": "invalid slug",
-	}
-	claims := &tokens.Claims{
-		Email: "admin@example.com",
-	}
-	status := s.doRequest(a.UpdateReviewNote, http.MethodPut, "/v2/vasps/"+vasps[0]+"/notes/invalid", nil, params, req, nil, claims)
-	require.Equal(http.StatusNotFound, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Supplying an invalid VASP ID
-	req = &admin.ModifyReviewNoteRequest{
+	request.in = &admin.ModifyReviewNoteRequest{
 		VASP:   "invalid",
 		NoteID: noteID,
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": "invalid",
 		"noteID": noteID,
 	}
-	status = s.doRequest(a.UpdateReviewNote, http.MethodPut, "/v2/vasps/invalid/notes/"+noteID, nil, params, req, nil, claims)
-	require.Equal(http.StatusNotFound, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Successfully updating a review note
-	req = &admin.ModifyReviewNoteRequest{
+	request.in = &admin.ModifyReviewNoteRequest{
 		VASP:   vasps[0],
 		NoteID: noteID,
 		Text:   "bar",
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 		"noteID": noteID,
 	}
 	actual := &admin.ReviewNote{}
 	modified := time.Now()
-	status = s.doRequest(a.UpdateReviewNote, http.MethodPut, "/v2/vasps/"+vasps[0]+"/notes/"+noteID, nil, params, req, actual, claims)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	// Validate returned note
-	require.Equal(req.NoteID, actual.ID)
+	require.Equal(noteID, actual.ID)
 	require.Equal("2021-07-26T11:25:44Z", actual.Created)
 	ts, err := time.Parse(time.RFC3339, actual.Modified)
 	require.NoError(err)
 	require.True(ts.Sub(modified) < time.Minute)
 	require.Equal("admin@trisa.io", actual.Author)
-	require.Equal(claims.Email, actual.Editor)
-	require.Equal(req.Text, actual.Text)
+	require.Equal(request.claims.Email, actual.Editor)
+	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
 	v, err := a.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
@@ -560,28 +696,33 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	noteID := "d9ebcfa4-41aa-11ec-9d29-acde48001122"
 
 	// Supplying an invalid note ID
-	params := map[string]string{
-		"vaspID": vasps[0],
-		"noteID": "invalid slug",
+	request := &apiRequest{
+		fn:     a.DeleteReviewNote,
+		method: http.MethodDelete,
+		path:   "/v2/vasps/" + vasps[0] + "/notes/invalid",
+		params: map[string]string{
+			"vaspID": vasps[0],
+			"noteID": "invalid slug",
+		},
 	}
-	status := s.doRequest(a.DeleteReviewNote, http.MethodDelete, "/v2/vasps/"+vasps[0]+"/notes/invalid", nil, params, nil, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Supplying an invalid VASP ID
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": "invalid",
 		"noteID": noteID,
 	}
-	status = s.doRequest(a.DeleteReviewNote, http.MethodDelete, "/v2/vasps/invalid/notes/"+noteID, nil, params, nil, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Successfully deleting a review note
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 		"noteID": noteID,
 	}
-	status = s.doRequest(a.DeleteReviewNote, http.MethodDelete, "/v2/vasps/"+vasps[0]+"/notes/"+noteID, nil, params, nil, nil, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	// Record on the database should be deleted
 	v, err := a.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
@@ -600,38 +741,43 @@ func (s *gdsTestSuite) TestReview() {
 	}
 
 	// Supplying an invalid VASP ID
-	req := &admin.ReviewRequest{
-		ID:                     "invalid",
-		AdminVerificationToken: "foo",
-		Accept:                 true,
+	request := &apiRequest{
+		fn:     a.Review,
+		method: http.MethodPost,
+		path:   "/v2/vasps/invalid/review",
+		in: &admin.ReviewRequest{
+			ID:                     "invalid",
+			AdminVerificationToken: "foo",
+			Accept:                 true,
+		},
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
 	}
-	params := map[string]string{
-		"vaspID": "invalid",
-	}
-	status := s.doRequest(a.Review, http.MethodPost, "/v2/vasps/invalid/review", nil, params, req, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// No verification token supplied
-	req = &admin.ReviewRequest{
+	request.in = &admin.ReviewRequest{
 		ID:     vasps[0],
 		Accept: true,
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vasps[0],
 	}
-	status = s.doRequest(a.Review, http.MethodPost, "/v2/vasps/"+vasps[0]+"/review", nil, params, req, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// No rejection reason supplied
-	req = &admin.ReviewRequest{
+	request.in = &admin.ReviewRequest{
 		ID:                     vasps[0],
 		AdminVerificationToken: "foo",
 		Accept:                 false,
 	}
-	status = s.doRequest(a.Review, http.MethodPost, "/v2/vasps/"+vasps[0]+"/review", nil, params, req, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
-	// TODO: Test the accept and reject paths
+	// TODO: Test the accept and reject paths - may require CertReq fixtures
 }
 
 // Test the Resend endpoint.
@@ -643,29 +789,34 @@ func (s *gdsTestSuite) TestResend() {
 	vaspRejected := "da8bd0e4-41aa-11ec-9d29-acde48001122"
 
 	// Supplying an invalid VASP ID
-	req := &admin.ResendRequest{
-		ID:     "invalid",
-		Action: admin.ResendVerifyContact,
+	request := &apiRequest{
+		fn:     a.Resend,
+		method: http.MethodPost,
+		path:   "/v2/vasps/invalid/resend",
+		in: &admin.ResendRequest{
+			ID:     "invalid",
+			Action: admin.ResendVerifyContact,
+		},
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
 	}
-	params := map[string]string{
-		"vaspID": "invalid",
-	}
-	status := s.doRequest(a.Resend, http.MethodPost, "/v2/vasps/invalid/resend", nil, params, req, nil, nil)
-	require.Equal(http.StatusNotFound, status)
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// ResendVerifyContact email
-	req = &admin.ResendRequest{
+	request.in = &admin.ResendRequest{
 		ID:     vaspErrored,
 		Action: admin.ResendVerifyContact,
 		Reason: "verify",
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vaspErrored,
 	}
 	actual := &admin.ResendReply{}
 	sent := time.Now()
-	status = s.doRequest(a.Resend, http.MethodPost, "/v2/vasps/"+vaspErrored+"/resend", nil, params, req, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
 	// Email audit log should be updated
@@ -680,34 +831,34 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal("verify_contact", emails[0].Reason)
 
 	// ResendReview email
-	req = &admin.ResendRequest{
+	request.in = &admin.ResendRequest{
 		ID:     vaspErrored,
 		Action: admin.ResendReview,
 		Reason: "review",
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vaspErrored,
 	}
 	actual = &admin.ResendReply{}
 	sent = time.Now()
-	status = s.doRequest(a.Resend, http.MethodPost, "/v2/vasps/"+vaspErrored+"/resend", nil, params, req, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "review request resent")
 
 	// ResendRejection email
-	req = &admin.ResendRequest{
+	request.in = &admin.ResendRequest{
 		ID:     vaspRejected,
 		Action: admin.ResendRejection,
 		Reason: "reject",
 	}
-	params = map[string]string{
+	request.params = map[string]string{
 		"vaspID": vaspRejected,
 	}
 	actual = &admin.ResendReply{}
 	sent = time.Now()
-	status = s.doRequest(a.Resend, http.MethodPost, "/v2/vasps/"+vaspRejected+"/resend", nil, params, req, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
 	// Email audit logs should be updated
@@ -739,25 +890,34 @@ func (s *gdsTestSuite) TestReviewTimeline() {
 	a := initAdmin(s)
 
 	// Invalid start date
-	status := s.doRequest(a.ReviewTimeline, http.MethodPost, "/v2/reviews?start=09-01-2021", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	request := &apiRequest{
+		fn:     a.ReviewTimeline,
+		method: http.MethodGet,
+		path:   "/v2/reviews?start=09-01-2021",
+	}
+	rep := s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Start date is before epoch
-	status = s.doRequest(a.ReviewTimeline, http.MethodPost, "/v2/reviews?start=1968-01-01", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	request.path = "/v2/reviews?start=1968-01-01"
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Invalid end date
-	status = s.doRequest(a.ReviewTimeline, http.MethodPost, "/v2/reviews?end=09-01-2021", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	request.path = "/v2/reviews?end=09-01-2021"
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Start date is after end date
-	status = s.doRequest(a.ReviewTimeline, http.MethodPost, "/v2/reviews?start=2021-01-01&end=2020-01-01", nil, nil, nil, nil, nil)
-	require.Equal(http.StatusBadRequest, status)
+	request.path = "/v2/reviews?start=2021-01-01&end=2020-01-01"
+	rep = s.doRequest(request, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Successful retrieval of review timeline
+	request.path = "/v2/reviews?start=2021-09-20&end=2021-09-30"
 	actual := &admin.ReviewTimelineReply{}
-	status = s.doRequest(a.ReviewTimeline, http.MethodPost, "/v2/reviews?start=2021-09-20&end=2021-09-30", nil, nil, nil, actual, nil)
-	require.Equal(http.StatusOK, status)
+	rep = s.doRequest(request, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	expected := &admin.ReviewTimelineReply{
 		Weeks: []admin.ReviewTimelineRecord{
 			{

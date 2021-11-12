@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -115,7 +114,6 @@ func (s *gdsTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
 	gin.SetMode(gin.TestMode)
-	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	s.fakes = filepath.Join("testdata", "fakes.tgz")
 	s.golden = filepath.Join("testdata", "db.tgz")
