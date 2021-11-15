@@ -88,6 +88,7 @@ func TestLoad(t *testing.T) {
 
 	// Load should return the default profiles
 	profiles, err := client.Load()
+	require.NoError(t, err)
 	require.Equal(t, expected, profiles)
 }
 
