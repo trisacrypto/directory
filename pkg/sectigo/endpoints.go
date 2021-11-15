@@ -5,10 +5,6 @@ import (
 	"net/url"
 )
 
-func init() {
-	buildEndpoints()
-}
-
 const (
 	contentType         = "application/json;charset=UTF-8"
 	downloadContentType = "application/octet-stream"
@@ -144,22 +140,6 @@ const (
 	revokeCertificateEP             = "revokeCertificate"
 )
 
-// Convert the endpoints into absolute URLs by resolving them with the base URL.
-func buildEndpoints() {
-	fmt.Println(baseURL)
-	fmt.Println("rebuilding endpoints")
-	for key, endpoint := range endpoints {
-		endpoint.Host = baseURL.Host
-		endpoints[key] = baseURL.ResolveReference(endpoint)
-		//fmt.Printf("%s: %s\n", key, endpoints[key])
-	}
-}
-
-func setBaseURL(url *url.URL) {
-	baseURL = url
-	buildEndpoints()
-}
-
 // Get a URL for the specified endpoint with the given parameters.
 func urlFor(endpoint string, params ...interface{}) string {
 	u, ok := endpoints[endpoint]
@@ -168,11 +148,11 @@ func urlFor(endpoint string, params ...interface{}) string {
 		panic(fmt.Sprintf("no endpoint named %q", endpoint))
 	}
 
-	// Copy the URL so the original URL isn't modified
+	// Construct the full URL from the base URL and endpoint path.
+	v := baseURL.ResolveReference(u)
+
 	if len(params) > 0 {
-		v := *u
-		v.Path = fmt.Sprintf(u.Path, params...)
-		return v.String()
+		v.Path = fmt.Sprintf(v.Path, params...)
 	}
-	return u.String()
+	return v.String()
 }
