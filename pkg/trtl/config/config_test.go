@@ -40,13 +40,13 @@ func TestConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test configuration set from the environment
-	require.Equal(t, true, conf.Enabled)
 	require.Equal(t, testEnv["TRTL_REPLICA_BIND_ADDR"], conf.BindAddr)
-	require.Equal(t, uint64(8), conf.PID)
-	require.Equal(t, testEnv["TRTL_REPLICA_NAME"], conf.Name)
-	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Region)
-	require.Equal(t, 30*time.Minute, conf.GossipInterval)
-	require.Equal(t, 3*time.Minute, conf.GossipSigma)
+	require.Equal(t, true, conf.Replica.Enabled)
+	require.Equal(t, uint64(8), conf.Replica.PID)
+	require.Equal(t, testEnv["TRTL_REPLICA_NAME"], conf.Replica.Name)
+	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Replica.Region)
+	require.Equal(t, 30*time.Minute, conf.Replica.GossipInterval)
+	require.Equal(t, 3*time.Minute, conf.Replica.GossipSigma)
 }
 
 func TestRequiredConfig(t *testing.T) {
@@ -92,9 +92,9 @@ func TestRequiredConfig(t *testing.T) {
 	}
 
 	// Test required configuration
-	require.True(t, conf.Enabled)
-	require.Equal(t, uint64(8), conf.PID)
-	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Region)
+	require.True(t, conf.Replica.Enabled)
+	require.Equal(t, uint64(8), conf.Replica.PID)
+	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Replica.Region)
 
 }
 
