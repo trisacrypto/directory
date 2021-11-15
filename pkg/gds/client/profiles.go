@@ -141,7 +141,7 @@ func Load() (p *Profiles, err error) {
 	return nil, fmt.Errorf("no profiles are available: %s", err)
 }
 
-// LoadActive is a shorthand for Load() then Active() and finally Update()
+// LoadActive is a shorthand for Load() then GetActive() and finally Update()
 func LoadActive(c *cli.Context) (p *Profile, err error) {
 	var profiles *Profiles
 	if profiles, err = Load(); err != nil {
@@ -161,7 +161,7 @@ func LoadActive(c *cli.Context) (p *Profile, err error) {
 
 // GetActive returns the profile with the specified name or the active profile if no name
 // is specified.
-func (p Profiles) GetActive(name string) (_ *Profile, err error) {
+func (p *Profiles) GetActive(name string) (_ *Profile, err error) {
 	if name != "" {
 		profile, ok := p.Profiles[name]
 		if !ok {
@@ -174,7 +174,7 @@ func (p Profiles) GetActive(name string) (_ *Profile, err error) {
 }
 
 // SetActive marks the profile with the specified name as active.
-func (p Profiles) SetActive(name string) (err error) {
+func (p *Profiles) SetActive(name string) (err error) {
 	if _, ok := p.Profiles[name]; !ok {
 		return fmt.Errorf("no profile named %q found", name)
 	}
@@ -190,7 +190,7 @@ func (p Profiles) SetActive(name string) (err error) {
 
 // Save the profiles to disk in the specified configuration folder. If the configuration
 // folder is nil, the configuration folder is located and created if it doesn't exist.
-func (p Profiles) Save(folder *configdir.Config) (err error) {
+func (p *Profiles) Save(folder *configdir.Config) (err error) {
 	if folder == nil {
 		if folder, err = GetProfilesFolder(); err != nil {
 			return fmt.Errorf("could not find profiles folder: %s", err)
