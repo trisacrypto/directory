@@ -15,8 +15,8 @@ type Config struct {
 	BindAddr    string              `split_words:"true" default:":4435"`
 	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool                `split_words:"true" default:"false"`
-	Replica     ReplicaConfig
 	Database    DatabaseConfig
+	Replica     ReplicaConfig
 	processed   bool
 }
 
