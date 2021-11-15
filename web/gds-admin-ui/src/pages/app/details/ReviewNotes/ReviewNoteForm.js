@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from '../../../../hooks/useSafeDispatch';
-import { fetchReviewNotesApiResponse } from '../../../../redux/review-notes';
+import { createReviewNoteApiResponseSuccess } from '../../../../redux/review-notes';
 import { postReviewNote } from '../../../../services/review-notes';
 
 
@@ -24,8 +24,12 @@ function ReviewNoteForm({ vaspId }) {
         setIsSubmiting(true)
 
         postReviewNote(note, vaspId).then(response => {
-            safeDispatch(fetchReviewNotesApiResponse(vaspId))
-            toast.success('Review note added successfully')
+            const data = response?.data
+            console.log('[data]', data)
+            if (data) {
+                safeDispatch(createReviewNoteApiResponseSuccess(data))
+                toast.success('Review note added successfully')
+            }
             setIsSubmiting(false)
             reset({ note: '' })
         }).catch(error => {
@@ -41,7 +45,7 @@ function ReviewNoteForm({ vaspId }) {
                 className="form-control form-control-light mb-2"
                 placeholder="Write a review note"
                 id="review-note"
-                rows="7"></textarea>
+                rows="3"></textarea>
             <div className="text-end">
                 <div className="btn-group mb-2 ms-2">
                     <button type="submit" className="btn btn-primary btn-sm" disabled={!watchedNote || isSubmitting}>
