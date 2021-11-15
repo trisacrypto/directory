@@ -19,3 +19,15 @@ func TestCredsCopy(t *testing.T) {
 	require.NotEqual(t, api.creds.Username, creds.Username)
 	require.Equal(t, api.creds.Username, "foo")
 }
+
+func TestAuthenticate(t *testing.T) {
+	api, err := New("foo", "supersecret", "CipherTrace EE")
+	require.NoError(t, err)
+
+	s, err := NewMockServer(nil)
+	require.NoError(t, err)
+	defer s.server.Close()
+
+	err = api.Authenticate()
+	require.NoError(t, err)
+}

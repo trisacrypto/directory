@@ -146,9 +146,18 @@ const (
 
 // Convert the endpoints into absolute URLs by resolving them with the base URL.
 func buildEndpoints() {
+	fmt.Println(baseURL)
+	fmt.Println("rebuilding endpoints")
 	for key, endpoint := range endpoints {
+		endpoint.Host = baseURL.Host
 		endpoints[key] = baseURL.ResolveReference(endpoint)
+		//fmt.Printf("%s: %s\n", key, endpoints[key])
 	}
+}
+
+func setBaseURL(url *url.URL) {
+	baseURL = url
+	buildEndpoints()
 }
 
 // Get a URL for the specified endpoint with the given parameters.
