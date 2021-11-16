@@ -20,33 +20,20 @@ import (
 )
 
 var (
-	update = flag.Bool("update", false, "update the gzipped test database")
+	update          = flag.Bool("update", false, "update the gzipped test database")
+	smallDBFixtures = []string{
+		"vasps::d9da630e-41aa-11ec-9d29-acde48001122",
+		"vasps::d9efca14-41aa-11ec-9d29-acde48001122",
+	}
 )
 
 type gdsTestSuite struct {
 	suite.Suite
-	fakes   string
-	db      string
-	golden  string
-	dbVASPs map[string]*pb.VASP
-}
-
-// Overwrite the test database with a subset of VASPs (for small-scale unit testing).
-func WriteVASPs(s *gdsTestSuite, ids []string) {
-	require := s.Require()
-	err := os.RemoveAll(s.db)
-	require.NoError(err)
-	db, err := leveldb.OpenFile(s.db, nil)
-	require.NoError(err)
-	defer db.Close()
-	for _, id := range ids {
-		vasp, ok := s.dbVASPs[id]
-		require.True(ok)
-		data, err := proto.Marshal(vasp)
-		require.NoError(err)
-		err = db.Put([]byte("vasps::"+id), data, nil)
-		require.NoError(err)
-	}
+	fakes    string
+	db       string
+	smallDB  string
+	golden   string
+	fixtures map[string]interface{}
 }
 
 // loadFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
@@ -56,7 +43,7 @@ func loadFixtures(s *gdsTestSuite) {
 	root, err := utils.ExtractGzip(s.fakes, "testdata")
 	require.NoError(err)
 
-	s.dbVASPs = make(map[string]*pb.VASP)
+	s.fixtures = make(map[string]interface{})
 
 	// Load the JSON fixtures from disk.
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -75,7 +62,7 @@ func loadFixtures(s *gdsTestSuite) {
 			vasp := &pb.VASP{}
 			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
-			s.dbVASPs[strings.TrimPrefix(key, "vasps::")] = vasp
+			s.fixtures[key] = vasp
 			return nil
 		}
 
@@ -86,6 +73,24 @@ func loadFixtures(s *gdsTestSuite) {
 	require.NoError(err)
 }
 
+// writeObj writes a protobuf object to the given database.
+func writeObj(s *gdsTestSuite, db *leveldb.DB, key string, obj interface{}) {
+	var (
+		data []byte
+		err  error
+	)
+	require := s.Require()
+	switch obj.(type) {
+	case *pb.VASP:
+		vasp := obj.(*pb.VASP)
+		data, err = proto.Marshal(vasp)
+		require.NoError(err)
+	default:
+		require.Fail(fmt.Sprintf("unrecognized object for key: %s", key))
+	}
+	require.NoError(db.Put([]byte(key), data, nil))
+}
+
 // generateDB generates an updated database and compresses it to a gzip file.
 // Note: This also generates a temporary directory which the suite teardown
 // should clean up.
@@ -94,19 +99,26 @@ func generateDB(s *gdsTestSuite) {
 	db, err := leveldb.OpenFile(s.db, nil)
 	require.NoError(err)
 	defer db.Close()
-
+	small, err := leveldb.OpenFile(s.smallDB, nil)
+	require.NoError(err)
+	defer small.Close()
 	loadFixtures(s)
 
 	// Write all the test fixtures to the database.
-	for id, vasp := range s.dbVASPs {
-		data, err := proto.Marshal(vasp)
-		require.NoError(err)
-		err = db.Put([]byte("vasps::"+id), data, nil)
-		require.NoError(err)
+	for id, obj := range s.fixtures {
+		writeObj(s, db, id, obj)
+	}
+
+	// Write test fixtures to the small database.
+	for _, id := range smallDBFixtures {
+		obj, ok := s.fixtures[id]
+		require.True(ok)
+		writeObj(s, small, id, obj)
 	}
 
 	err = utils.WriteGzip(s.db, s.golden)
 	require.NoError(err)
+
 	log.Info().Str("db", s.golden).Msg("successfully regenerated test database")
 }
 
