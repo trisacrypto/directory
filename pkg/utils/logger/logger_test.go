@@ -55,7 +55,7 @@ func TestSeverityHook(t *testing.T) {
 	require.NotEmpty(t, tw.lastLog[logger.GCPFieldKeyMsg])
 
 	log.Debug().Msg("is it on?")
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.DebugLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "DEBUG", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
@@ -64,7 +64,7 @@ func TestSeverityHook(t *testing.T) {
 	require.NotEmpty(t, tw.lastLog[logger.GCPFieldKeyMsg])
 
 	log.Info().Str("extra", "foo").Msg("my name is bob")
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.InfoLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "INFO", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
@@ -75,7 +75,7 @@ func TestSeverityHook(t *testing.T) {
 	require.Equal(t, "foo", tw.lastLog["extra"])
 
 	log.Warn().Msg("don't run with scissors")
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.WarnLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "WARNING", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
@@ -84,7 +84,7 @@ func TestSeverityHook(t *testing.T) {
 	require.NotEmpty(t, tw.lastLog[logger.GCPFieldKeyMsg])
 
 	log.Error().Err(errors.New("bad things")).Msg("oops")
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.ErrorLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "ERROR", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
@@ -96,7 +96,7 @@ func TestSeverityHook(t *testing.T) {
 
 	// Must use WithLevel or the program will exit and the test will fail.
 	log.WithLevel(zerolog.FatalLevel).Err(errors.New("murder")).Msg("dying")
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.FatalLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "CRITICAL", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
@@ -109,7 +109,7 @@ func TestSeverityHook(t *testing.T) {
 	require.Panics(t, func() {
 		log.Panic().Err(errors.New("run away!")).Msg("squeeeee!!!")
 	})
-	require.Equal(t, uint16(1), tw.levels[zerolog.TraceLevel])
+	require.Equal(t, uint16(1), tw.levels[zerolog.PanicLevel])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeySeverity)
 	require.Equal(t, "ALERT", tw.lastLog[logger.GCPFieldKeySeverity])
 	require.Contains(t, tw.lastLog, logger.GCPFieldKeyMsg)
