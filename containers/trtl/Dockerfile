@@ -28,15 +28,14 @@ COPY proto ./proto
 RUN go test -timeout 30s -v ./...
 
 # Build binaries
-RUN go build -v -o /go/bin/gds ./cmd/gds
-RUN go build -v -o /go/bin/sectigo ./cmd/sectigo
+RUN go build -v -o /go/bin/trtl ./cmd/trtl
 RUN go build -v -o /go/bin/gdsutil ./cmd/gdsutil
 
 # Final Stage
 FROM ${FINAL_IMAGE} AS final
 
 LABEL maintainer="TRISA <info@trisa.io>"
-LABEL description="Global TRISA Directory Service"
+LABEL description="GDS Replicated Data Backend (TRTL)"
 
 # Ensure ca-certificates are up to date
 RUN set -x && apt-get update && \
@@ -44,8 +43,7 @@ RUN set -x && apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder /go/bin/gds /usr/local/bin/gds
-COPY --from=builder /go/bin/sectigo /usr/local/bin/sectigo
+COPY --from=builder /go/bin/trtl /usr/local/bin/trtl
 COPY --from=builder /go/bin/gdsutil /usr/local/bin/gdsutil
 
-CMD [ "/usr/local/bin/gds", "serve" ]
+CMD [ "/usr/local/bin/trtl", "serve" ]

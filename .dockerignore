@@ -1,0 +1,8 @@
+.env
+.git
+.github
+.vscode
+fixtures
+.DS_Store
+LICENSE
+README.md
