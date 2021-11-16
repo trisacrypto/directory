@@ -319,15 +319,27 @@ func main() {
 
 // serve starts the trtl server and blocks until it is stopped.
 func serve(c *cli.Context) (err error) {
-	// TODO: the configuration has primarily got to come from the environment.
-	conf := config.Config{
-		Enabled:  true,
-		BindAddr: c.String("bindaddr"),
-		PID:      c.Uint64("pid"),
-		Region:   c.String("region"),
-		Database: config.DatabaseConfig{
-			URL: c.String("db"),
-		},
+	// Load the configuration from the environment
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Overide environment configuration from CLI flags
+	if addr := c.String("bindaddr"); addr != "" {
+		conf.BindAddr = addr
+	}
+
+	if pid := c.Uint64("pid"); pid > 0 {
+		conf.Replica.PID = pid
+	}
+
+	if region := c.String("region"); region != "" {
+		conf.Replica.Region = region
+	}
+
+	if dburl := c.String("db"); dburl != "" {
+		conf.Database.URL = dburl
 	}
 
 	var server *trtl.Server
