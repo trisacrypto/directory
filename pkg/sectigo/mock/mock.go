@@ -42,7 +42,7 @@ func New() (s *Server, err error) {
 
 	s = &Server{
 		handlers: make(map[string]gin.HandlerFunc),
-		router:   gin.Default(),
+		router:   gin.New(),
 	}
 
 	s.setupHandlers()

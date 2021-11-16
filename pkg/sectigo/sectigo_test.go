@@ -2,6 +2,7 @@ package sectigo_test
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,13 @@ func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	require := s.Require()
 	s.api, err = New("foo", "supersecret", "CipherTrace EE")
 	require.NoError(err)
+}
+
+func (s *SectigoTestSuite) AfterTest(suiteName, testName string) {
+	creds := s.api.Creds()
+	if path := creds.CacheFile(); path != "" {
+		os.RemoveAll(path)
+	}
 }
 
 func (s *SectigoTestSuite) TestCredsCopy() {
@@ -79,5 +87,5 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 	s.api, err = New("invalid", "invalid", "CipherTrace EE")
 	require.NoError(err)
 	err = s.api.Authenticate()
-	require.Error(err)
+	require.EqualError(err, ErrInvalidCredentials.Error())
 }
