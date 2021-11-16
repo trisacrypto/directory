@@ -552,7 +552,7 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "COMPLETED"
-    batch = random.randint(100000, 999999)
+    batch = str(random.randint(100000, 999999))
     record["batch_id"] = batch
     network = random.choice(NETWORKS)
     record[
@@ -599,7 +599,7 @@ def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.jso
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "CR_ERRORED"
-    batch = random.randint(100000, 999999)
+    batch = str(random.randint(100000, 999999))
     record["batch_id"] = batch
     network = random.choice(NETWORKS)
     record[
@@ -626,7 +626,7 @@ def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.js
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "CR_REJECTED"
-    batch = random.randint(100000, 999999)
+    batch = str(random.randint(100000, 999999))
     record["batch_id"] = batch
     network = random.choice(NETWORKS)
     record[
