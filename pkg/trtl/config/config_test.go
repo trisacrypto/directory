@@ -78,7 +78,7 @@ func TestRequiredConfig(t *testing.T) {
 	}
 	t.Cleanup(cleanup)
 
-	// Replica verification is predicated on its being enabled
+	// Replica verification is predicated on it being enabled
 	os.Setenv("GDS_REPLICA_ENABLED", "true")
 
 	// Ensure that we've captured the complete set of required environment variables
