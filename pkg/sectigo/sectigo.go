@@ -72,7 +72,13 @@ func (s *Sectigo) Authenticate() (err error) {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, urlFor(authenticateEP), body)
+	ep, err := Endpoint(AuthenticateEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, ep.String(), body)
 	if err != nil {
 		return err
 	}
@@ -124,7 +130,13 @@ func (s *Sectigo) Refresh() (err error) {
 	body := new(bytes.Buffer)
 	fmt.Fprintf(body, "%s", s.creds.RefreshToken)
 
-	req, err := http.NewRequest(http.MethodPost, urlFor(refreshEP), body)
+	ep, err := Endpoint(RefreshEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, ep.String(), body)
 	if err != nil {
 		return err
 	}
@@ -184,9 +196,15 @@ func (s *Sectigo) CreateSingleCertBatch(authority int, name string, params map[s
 		ProfileParams: params,
 	}
 
+	ep, err := Endpoint(CreateSingleCertBatchEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPut, urlFor(createSingleCertBatchEP), batchInfo); err != nil {
+	if req, err = s.newRequest(http.MethodPut, ep.String(), batchInfo); err != nil {
 		return nil, err
 	}
 
@@ -269,9 +287,15 @@ func (s *Sectigo) UploadCSRBatch(profileId int, filename string, csrData []byte,
 	// content length header is accurate (otherwise there will be a 500 error)
 	writer.Close()
 
+	ep, err := Endpoint(UploadCSREP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create multipart request (cannot use newRequest to ensure multipart is constructed correctly)
 	var req *http.Request
-	if req, err = http.NewRequest(http.MethodPost, urlFor(uploadCSREP), body); err != nil {
+	if req, err = http.NewRequest(http.MethodPost, ep.String(), body); err != nil {
 		return nil, err
 	}
 
@@ -308,9 +332,15 @@ func (s *Sectigo) BatchDetail(id int) (batch *BatchResponse, err error) {
 		return nil, err
 	}
 
+	ep, err := Endpoint(BatchDetailEP, id)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(batchDetailEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -338,9 +368,15 @@ func (s *Sectigo) ProcessingInfo(batch int) (status *ProcessingInfoResponse, err
 		return nil, err
 	}
 
+	ep, err := Endpoint(BatchProcessingInfoEP, batch)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(batchProcessingInfoEP, batch), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -378,9 +414,15 @@ func (s *Sectigo) Download(batch int, dir string) (path string, err error) {
 		return "", err
 	}
 
+	ep, err := Endpoint(DownloadEP, batch)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(downloadEP, batch), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return "", err
 	}
 
@@ -431,9 +473,15 @@ func (s *Sectigo) LicensesUsed() (stats *LicensesUsedResponse, err error) {
 		return nil, err
 	}
 
+	ep, err := Endpoint(DevicesEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(devicesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -461,9 +509,15 @@ func (s *Sectigo) UserAuthorities() (authorities []*AuthorityResponse, err error
 		return nil, err
 	}
 
+	ep, err := Endpoint(UserAuthoritiesEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(userAuthoritiesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -491,9 +545,15 @@ func (s *Sectigo) AuthorityAvailableBalance(id int) (balance int, err error) {
 		return 0, err
 	}
 
+	ep, err := Endpoint(AuthorityUserBalanceAvailableEP, id)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(authorityUserBalanceAvailableEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return 0, err
 	}
 
@@ -522,9 +582,15 @@ func (s *Sectigo) Profiles() (profiles []*ProfileResponse, err error) {
 		return nil, err
 	}
 
+	ep, err := Endpoint(ProfilesEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profilesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -552,9 +618,15 @@ func (s *Sectigo) ProfileParams(id int) (params []*ProfileParamsResponse, err er
 		return nil, err
 	}
 
+	ep, err := Endpoint(ProfileParametersEP, id)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profileParametersEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -582,9 +654,15 @@ func (s *Sectigo) ProfileDetail(id int) (profile *ProfileDetailResponse, err err
 		return nil, err
 	}
 
+	ep, err := Endpoint(ProfileDetailEP, id)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profileDetailEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -611,9 +689,15 @@ func (s *Sectigo) Organization() (org *OrganizationResponse, err error) {
 		return nil, err
 	}
 
+	ep, err := Endpoint(CurrentUserOrganizationEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(currentUserOrganizationEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, ep.String(), nil); err != nil {
 		return nil, err
 	}
 
@@ -645,9 +729,15 @@ func (s *Sectigo) FindCertificate(commonName, serialNumber string) (certs *FindC
 		SerialNumber: serialNumber,
 	}
 
+	ep, err := Endpoint(FindCertificateEP)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPost, urlFor(findCertificateEP), query); err != nil {
+	if req, err = s.newRequest(http.MethodPost, ep.String(), query); err != nil {
 		return nil, err
 	}
 
@@ -684,9 +774,15 @@ func (s *Sectigo) RevokeCertificate(profileID, reasonCode int, serialNumber stri
 		SerialNumber: serialNumber,
 	}
 
+	ep, err := Endpoint(RevokeCertificateEP, profileID)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPost, urlFor(revokeCertificateEP, profileID), query); err != nil {
+	if req, err = s.newRequest(http.MethodPost, ep.String(), query); err != nil {
 		return err
 	}
 
