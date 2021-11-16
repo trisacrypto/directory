@@ -652,10 +652,10 @@ def make_cert_log(state, start, end):
     prior_state = None
     while current_state in CERT_STATE_CHANGES:
         prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
+        states.insert(0, prior_state)
         if prior_state == "INITIALIZED":
             current_state = "STOP"
         else:
-            states.insert(0, prior_state)
             current_state = prior_state
 
     dates = make_dates(first=start, last=end, count=len(states))
