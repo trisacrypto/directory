@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -21,9 +22,12 @@ func TestOpenLevelDB(t *testing.T) {
 	require.Error(t, err)
 
 	// Valid DB DSN
-	profile = &client.Profile{DatabaseURL: "leveldb:///foo"}
+	dbpath, err := ioutil.TempDir("", "gdsdb-*")
+	require.NoError(t, err, "could not create temp directory")
+	defer os.RemoveAll(dbpath)
+
+	profile = &client.Profile{DatabaseURL: "leveldb:///" + dbpath}
 	db, err := profile.OpenLevelDB()
 	require.NoError(t, err)
 	defer db.Close()
-	defer os.RemoveAll("foo")
 }

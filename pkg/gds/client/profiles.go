@@ -11,6 +11,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func init() {
+	// Initialize default config dir for profiles
+	cfgd = configdir.New("rotational", "gds")
+	cfgd.LocalPath, _ = filepath.Abs(".")
+}
+
+var cfgd configdir.ConfigDir
+
 // Profiles are stored in one of three locations, and are searched for in the following
 // order:
 // 1. Current directory (".")
@@ -34,16 +42,14 @@ type Profiles struct {
 	Profiles map[string]*Profile `yaml:"profiles"`
 }
 
-var cfgd = configdir.New("rotational", "gds")
-
 const (
-	profileYAML    = "profiles.yaml"
-	profileVersion = "v1"
+	ProfileYAML    = "profiles.yaml"
+	ProfileVersion = "v1"
 )
 
 func DefaultProfiles() *Profiles {
 	return &Profiles{
-		Version: profileVersion,
+		Version: ProfileVersion,
 		Active:  "testnet",
 		Profiles: map[string]*Profile{
 			"production": {
@@ -79,8 +85,7 @@ func DefaultProfiles() *Profiles {
 // GetProfilesFolder returns a pointer to the folder where the profiles are stored. If
 // no such folder is configured, it creates an empty config file in a suitable folder.
 func GetProfilesFolder() (folder *configdir.Config, err error) {
-	cfgd.LocalPath, _ = filepath.Abs(".")
-	folder = cfgd.QueryFolderContainsFile(profileYAML)
+	folder = cfgd.QueryFolderContainsFile(ProfileYAML)
 	if folder == nil {
 		// Search for an available folder to create the config file
 		var folders []*configdir.Config
@@ -99,7 +104,7 @@ func GetProfilesFolder() (folder *configdir.Config, err error) {
 		folder = folders[0]
 		p := DefaultProfiles()
 		if err = p.Save(folder); err != nil {
-			return nil, fmt.Errorf("could not create new config file at %s: %s", filepath.Join(folder.Path, profileYAML), err)
+			return nil, fmt.Errorf("could not create new config file at %s: %s", filepath.Join(folder.Path, ProfileYAML), err)
 		}
 	}
 	return folder, nil
@@ -112,7 +117,7 @@ func ProfilesPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("no profiles are available: %s", err)
 	}
-	return filepath.Join(folder.Path, profileYAML), nil
+	return filepath.Join(folder.Path, ProfileYAML), nil
 }
 
 // Load the profiles from disk if they're available.
@@ -120,8 +125,8 @@ func Load() (p *Profiles, err error) {
 	var folder *configdir.Config
 	if folder, err = GetProfilesFolder(); err == nil {
 		var data []byte
-		if data, err = folder.ReadFile(profileYAML); err != nil {
-			return nil, fmt.Errorf("could not read %s: %s", filepath.Join(folder.Path, profileYAML), err)
+		if data, err = folder.ReadFile(ProfileYAML); err != nil {
+			return nil, fmt.Errorf("could not read %s: %s", filepath.Join(folder.Path, ProfileYAML), err)
 		}
 
 		if err = yaml.Unmarshal(data, &p); err != nil {
@@ -129,11 +134,11 @@ func Load() (p *Profiles, err error) {
 		}
 
 		if p == nil {
-			return nil, fmt.Errorf("profile config is empty: %s", filepath.Join(folder.Path, profileYAML))
+			return nil, fmt.Errorf("profile config is empty: %s", filepath.Join(folder.Path, ProfileYAML))
 		}
 
-		if p.Version != profileVersion {
-			return nil, fmt.Errorf("invalid profile version %s, expected %s", p.Version, profileVersion)
+		if p.Version != ProfileVersion {
+			return nil, fmt.Errorf("invalid profile version %s, expected %s", p.Version, ProfileVersion)
 		}
 
 		return p, nil
@@ -203,7 +208,7 @@ func (p *Profiles) Save(folder *configdir.Config) (err error) {
 	}
 
 	// Save the configuration to the folder
-	if err = folder.WriteFile(profileYAML, data); err != nil {
+	if err = folder.WriteFile(ProfileYAML, data); err != nil {
 		return fmt.Errorf("could not write profiles to disk: %s", err)
 	}
 
@@ -213,4 +218,11 @@ func (p *Profiles) Save(folder *configdir.Config) (err error) {
 // Install creates default profiles and saves them to disk, overwriting the previous contents.
 func Install() (err error) {
 	return DefaultProfiles().Save(nil)
+}
+
+// SetConfigDir is a helper utility to modify where the profiles package looks for the
+// profiles.yaml file. This is generally used in tests but can also be used in
+// environments where the default search path doesn't make sense.
+func SetConfigDir(cd configdir.ConfigDir) {
+	cfgd = cd
 }
