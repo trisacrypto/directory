@@ -10,7 +10,7 @@ WORKDIR /usr/src/app
 # Dependencies
 COPY web/gds-ui/package.json ./
 COPY web/gds-ui/yarn.lock ./
-RUN yarn
+RUN yarn install --frozen-lockfile --check-files
 
 # Set production environment variable for build context
 ARG REACT_APP_GDS_API_ENDPOINT="https://proxy.vaspdirectory.net"
