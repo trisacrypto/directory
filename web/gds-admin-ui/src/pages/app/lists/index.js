@@ -1,10 +1,10 @@
 // @flow
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button } from 'react-bootstrap';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
-
+import Select from 'react-select'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 
@@ -79,10 +79,17 @@ const columns = [
     }
 ];
 
+const options = () => Object.entries(StatusLabel).map(([k, v]) => ({ value: k, label: v }))
 
-const VaspsList = (): React$Element<React$FragmentType> => {
+const customStyles = {
+    control: (styles) => ({ ...styles, paddingLeft: '9px !important' })
+};
+
+
+const VaspsList = () => {
     const dispatch = useDispatch()
     const data = useSelector((state) => state.Vasps.data)
+    const history = useHistory()
 
     const sizePerPageList = [
         {
@@ -127,6 +134,21 @@ const VaspsList = (): React$Element<React$FragmentType> => {
         downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
     }
 
+    const getQueryString = (arr) => {
+        return arr && Array.isArray(arr) ? arr.map(v => v.value.toLowerCase()).join('+') : ''
+    }
+
+    const handleSelectChange = (value) => {
+        const params = getQueryString(value)
+
+        if (params.length) {
+            history.push(`/vasps?status=${params}`)
+        } else {
+            history.push(`/vasps`)
+        }
+        console.log('[Params]', params)
+    }
+
     return (
         <React.Fragment>
             <PageTitle
@@ -142,7 +164,23 @@ const VaspsList = (): React$Element<React$FragmentType> => {
                         <Card.Body>
                             <Row>
                                 <Col sm={12}>
-                                    <div className="text-sm-end">
+                                    <div className="d-flex gap-1 justify-content-end">
+                                        <Select
+                                            className="app-search dropdown text-right mw-25"
+                                            classNamePrefix="react-select"
+                                            placeholder="Filter by status(es)..."
+                                            onChange={handleSelectChange}
+                                            options={options()}
+                                            isMulti
+                                            styles={customStyles}
+                                            theme={theme => ({
+                                                ...theme,
+                                                colors: {
+                                                    ...theme.colors,
+                                                    neutral50: '#98a6ad'
+                                                }
+                                            })}
+                                        />
                                         <Button onClick={() => exportToCsv(data.vasps)} className="btn btn-light mb-2">Export</Button>
                                     </div>
                                 </Col>
