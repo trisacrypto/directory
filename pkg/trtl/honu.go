@@ -107,7 +107,7 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	}
 	if len(in.Key) == 0 {
 		log.Warn().Msg("missing key in Trtl Put request")
-		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
+		return nil, status.Error(codes.InvalidArgument, "key must be provided in Put request")
 	}
 	if len(in.Value) == 0 {
 		log.Warn().Msg("missing value in Trtl Put request")
