@@ -12,6 +12,7 @@ package mock
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -30,6 +31,7 @@ type Server struct {
 	server   *httptest.Server
 	router   *gin.Engine
 	handlers map[string]gin.HandlerFunc
+	calls    map[string]int
 }
 
 // New initializes a new server which mocks the Sectigo REST API. By default, it sets up
@@ -43,6 +45,7 @@ func New() (s *Server, err error) {
 	s = &Server{
 		handlers: make(map[string]gin.HandlerFunc),
 		router:   gin.New(),
+		calls:    make(map[string]int),
 	}
 
 	s.setupHandlers()
@@ -66,6 +69,11 @@ func (s *Server) URL() *url.URL {
 	return u
 }
 
+// GetCalls returns the map of called endpoints.
+func (s *Server) GetCalls() map[string]int {
+	return s.calls
+}
+
 // Handle is a helper function that adds a handler to the mock server's handlers map and
 // returns that handler function when the endpoint is called.
 func (s *Server) Handle(endpoint string, handler gin.HandlerFunc) error {
@@ -86,7 +94,7 @@ func (s *Server) handle(endpoint, method string, handler gin.HandlerFunc) {
 
 	// Modify any %d format directives to gin :params
 	for i := 0; strings.Contains(ep.Path, "%d"); i++ {
-		ep.Path = strings.Replace(ep.Path, "%d", fmt.Sprintf("param%d", i), 1)
+		ep.Path = strings.Replace(ep.Path, "%d", fmt.Sprintf(":param%d", i), 1)
 	}
 
 	// If there are any other % directives, panic
@@ -101,6 +109,7 @@ func (s *Server) handle(endpoint, method string, handler gin.HandlerFunc) {
 			c.JSON(http.StatusNotFound, "endpoint not found")
 		}
 	})
+	s.calls[endpoint] = 0
 }
 
 // setupHandlers is a helper function which instantiates the handlers map with the
@@ -124,7 +133,7 @@ func (s *Server) setupHandlers() {
 	s.handle(sectigo.ProfileDetailEP, http.MethodGet, s.profileDetail)
 	s.handle(sectigo.CurrentUserOrganizationEP, http.MethodGet, s.currentUserOrganization)
 	s.handle(sectigo.FindCertificateEP, http.MethodPost, s.findCertificate)
-	s.handle(sectigo.RevokeCertificateEP, http.MethodGet, s.revokeCertificate)
+	s.handle(sectigo.RevokeCertificateEP, http.MethodPost, s.revokeCertificate)
 }
 
 func generateToken() (string, error) {
@@ -151,6 +160,7 @@ func (s *Server) authenticate(c *gin.Context) {
 		refresh string
 		err     error
 	)
+	s.calls[sectigo.AuthenticateEP]++
 	if err = c.BindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -175,6 +185,7 @@ func (s *Server) refresh(c *gin.Context) {
 		refresh string
 		err     error
 	)
+	s.calls[sectigo.RefreshEP]++
 	if access, err = generateToken(); err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -191,6 +202,7 @@ func (s *Server) refresh(c *gin.Context) {
 
 func (s *Server) createSingleCertBatch(c *gin.Context) {
 	var in *sectigo.CreateSingleCertBatchRequest
+	s.calls[sectigo.CreateSingleCertBatchEP]++
 	if err := c.BindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -205,9 +217,27 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 }
 
 func (s *Server) uploadCSR(c *gin.Context) {
-	var in *sectigo.UploadCSRBatchRequest
-	if err := c.BindJSON(&in); err != nil {
+	var (
+		form  *multipart.Form
+		files []*multipart.FileHeader
+		err   error
+		ok    bool
+	)
+	s.calls[sectigo.UploadCSREP]++
+	if form, err = c.MultipartForm(); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	if _, ok := form.Value["profileId"]; !ok {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("missing profile id"))
+		return
+	}
+	if files, ok = form.File["files"]; !ok {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("multipart form missing files part"))
+		return
+	}
+	if len(files) != 1 {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("expected 1 file, got %d", len(files)))
 		return
 	}
 	c.JSON(http.StatusOK, &sectigo.BatchResponse{
@@ -219,7 +249,8 @@ func (s *Server) uploadCSR(c *gin.Context) {
 }
 
 func (s *Server) batchDetail(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.BatchDetailEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing batch id")
 		return
@@ -234,7 +265,8 @@ func (s *Server) batchDetail(c *gin.Context) {
 }
 
 func (s *Server) batchProcessingInfo(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.BatchProcessingInfoEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing batch id")
 		return
@@ -248,7 +280,8 @@ func (s *Server) batchProcessingInfo(c *gin.Context) {
 }
 
 func (s *Server) download(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.DownloadEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing batch id")
 		return
@@ -262,6 +295,7 @@ func (s *Server) download(c *gin.Context) {
 }
 
 func (s *Server) devices(c *gin.Context) {
+	s.calls[sectigo.DevicesEP]++
 	c.JSON(http.StatusOK, &sectigo.LicensesUsedResponse{
 		Ordered: 1,
 		Issued:  1,
@@ -269,6 +303,7 @@ func (s *Server) devices(c *gin.Context) {
 }
 
 func (s *Server) userAuthorities(c *gin.Context) {
+	s.calls[sectigo.UserAuthoritiesEP]++
 	c.JSON(http.StatusOK, []*sectigo.AuthorityResponse{
 		{
 			ID:      42,
@@ -279,7 +314,8 @@ func (s *Server) userAuthorities(c *gin.Context) {
 }
 
 func (s *Server) authorityUserBalanceAvailable(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.AuthorityUserBalanceAvailableEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing authority id")
 		return
@@ -288,6 +324,7 @@ func (s *Server) authorityUserBalanceAvailable(c *gin.Context) {
 }
 
 func (s *Server) profiles(c *gin.Context) {
+	s.calls[sectigo.ProfilesEP]++
 	c.JSON(http.StatusOK, []*sectigo.ProfileResponse{
 		{
 			ProfileID: 42,
@@ -297,7 +334,8 @@ func (s *Server) profiles(c *gin.Context) {
 }
 
 func (s *Server) profileParameters(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.ProfileParametersEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing profile id")
 		return
@@ -311,7 +349,8 @@ func (s *Server) profileParameters(c *gin.Context) {
 }
 
 func (s *Server) profileDetail(c *gin.Context) {
-	id := c.Param("id")
+	s.calls[sectigo.ProfileDetailEP]++
+	id := c.Param("param0")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, "missing profile id")
 		return
@@ -323,6 +362,7 @@ func (s *Server) profileDetail(c *gin.Context) {
 }
 
 func (s *Server) currentUserOrganization(c *gin.Context) {
+	s.calls[sectigo.CurrentUserOrganizationEP]++
 	c.JSON(http.StatusOK, &sectigo.OrganizationResponse{
 		OrganizationID:   42,
 		OrganizationName: "foo.io",
@@ -330,6 +370,7 @@ func (s *Server) currentUserOrganization(c *gin.Context) {
 }
 
 func (s *Server) findCertificate(c *gin.Context) {
+	s.calls[sectigo.FindCertificateEP]++
 	var in *sectigo.FindCertificateRequest
 	if err := c.BindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -356,6 +397,12 @@ func (s *Server) findCertificate(c *gin.Context) {
 }
 
 func (s *Server) revokeCertificate(c *gin.Context) {
+	s.calls[sectigo.RevokeCertificateEP]++
+	id := c.Param("param0")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, "missing certificate id")
+		return
+	}
 	var in *sectigo.RevokeCertificateRequest
 	if err := c.BindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, err)
