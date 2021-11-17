@@ -1,8 +1,22 @@
-.env
+# Development
 .git
 .github
 .vscode
-fixtures
-.DS_Store
 LICENSE
 README.md
+
+# OS Droppings
+.DS_Store
+
+# Node stuff
+node_modules
+build
+
+# Docker stuff
+.dockerignore
+Dockerfile
+Dockerfile.prod
+
+# Local configuration
+fixtures
+.env
