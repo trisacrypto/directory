@@ -276,7 +276,7 @@ func (s *trtlTestSuite) TestPut() {
 	defer conn.Close()
 	client := pb.NewTrtlClient(conn)
 
-	// Put a value from a reserved namespace - should fail.
+	// Put a value to a reserved namespace - should fail.
 	_, err = client.Put(ctx, &pb.PutRequest{
 		Namespace: "default",
 		Key:       []byte(object.Key),
