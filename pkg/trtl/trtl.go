@@ -118,13 +118,8 @@ func (t *Server) Serve() (err error) {
 	}
 
 	// Run the gRPC server
-	go func() {
-		defer sock.Close()
-		log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
-		if err := t.srv.Serve(sock); err != nil {
-			t.echan <- err
-		}
-	}()
+	go t.Run(sock)
+	log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
 
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
@@ -132,6 +127,16 @@ func (t *Server) Serve() (err error) {
 		return err
 	}
 	return nil
+}
+
+// Run the gRPC server. This method is extracted from the Serve function so that it can
+// be run in its own go routine and to allow tests to Run a bufconn server without
+// starting a live server with all of the various go routines and channels running.
+func (t *Server) Run(sock net.Listener) {
+	defer sock.Close()
+	if err := t.srv.Serve(sock); err != nil {
+		t.echan <- err
+	}
 }
 
 // Shutdown the trtl server gracefully.
