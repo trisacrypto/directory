@@ -19,6 +19,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
 )
@@ -116,6 +118,18 @@ func (s *trtlTestSuite) connect() (*grpc.ClientConn, error) {
 
 func (s *trtlTestSuite) dialer(context.Context, string) (net.Conn, error) {
 	return s.conn.Dial()
+}
+
+// StatusError is a helper assertion function that checks a gRPC status error
+func (s *trtlTestSuite) StatusError(err error, code codes.Code, theError string) {
+	require := s.Require()
+	require.Error(err, "no status error returned")
+
+	var serr *status.Status
+	serr, ok := status.FromError(err)
+	require.True(ok, "error is not a grpc status error")
+	require.Equal(code, serr.Code(), "status code does not match")
+	require.Equal(theError, serr.Message(), "status error message does not match")
 }
 
 func (s *trtlTestSuite) SetupSuite() {

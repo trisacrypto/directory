@@ -1,7 +1,7 @@
 {
     "alice": {
         "namespace": "people",
-        "key": "45abc34d-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "key": "213zzyo7bhPiycT864TwYko5lwd",
         "value": {
             "name": "Alice",
             "email": "alice@example.com"
@@ -9,10 +9,74 @@
     },
     "bob": {
         "namespace": "people",
-        "key": "98bea8c0-f8f9-4f0e-b8e3-f8f9f8f8f8f8",
+        "key": "213zzxUKxplwljF0o9pbkA6vtpE",
         "value": {
             "name": "Bob",
             "email": "bob@example.com"
+        }
+    },
+    "charlie": {
+        "namespace": "people",
+        "key": "213zzz51uThrKmAX5nc63qrUkRp",
+        "value": {
+            "name": "Charlie",
+            "email": "charlie@example.com"
+        }
+    },
+    "darlene": {
+        "namespace": "people",
+        "key": "213zztqX5hZrYTbAAh3Xjc7QYr8",
+        "value": {
+            "name": "Darlene",
+            "email": "darlene@example.com"
+        }
+    },
+    "erica": {
+        "namespace": "people",
+        "key": "213zzut6CEwi9RYTAnhAvhNEeME",
+        "value": {
+            "name": "Erica",
+            "email": "erica@example.com"
+        }
+    },
+    "franklin": {
+        "namespace": "people",
+        "key": "21403L4qznViscr4qzfKRiBBGkH",
+        "value": {
+            "name": "Franklin",
+            "email": "franklin@example.com"
+        }
+    },
+    "gregor": {
+        "namespace": "people",
+        "key": "21403Hdh6mShTENwrimgCyXRWjI",
+        "value": {
+            "name": "Gregor",
+            "email": "gregor@example.com"
+        }
+    },
+    "helen": {
+        "namespace": "people",
+        "key": "21403MdwcbQqLWIVSCUwVc3vYs8",
+        "value": {
+            "name": "Helen",
+            "email": "helen@example.com"
+        }
+    },
+    "ivan": {
+        "namespace": "people",
+        "key": "21403Mo6vqoRu6PJ2AqpWqbgQd9",
+        "value": {
+            "name": "Ivan",
+            "email": "ivan@example.com"
+        }
+    },
+    "juliet": {
+        "namespace": "people",
+        "key": "21403ME0b07vjf3WuUlHb70JAxi",
+        "value": {
+            "name": "Juliet",
+            "email": "juliet@example.com"
         }
     },
     "cert": {

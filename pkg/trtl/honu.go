@@ -150,6 +150,17 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		opts.PageSize = 100
 	}
 
+	// Test valid options
+	if opts.IterNoKeys && opts.IterNoValues && !opts.ReturnMeta {
+		log.Debug().
+			Str("namespace", in.Namespace).
+			Bool("iter_no_keys", opts.IterNoKeys).
+			Bool("iter_no_values", opts.IterNoValues).
+			Bool("return_meta", opts.ReturnMeta).
+			Msg("request with no data would be returned")
+		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+	}
+
 	// Compute the actual starting prefix as the namespace plus the key
 	var prefix []byte
 	if in.Namespace != "" {
