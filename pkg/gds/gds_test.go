@@ -59,7 +59,7 @@ func loadFixtures(s *gdsTestSuite) {
 			dbVASPs[info.Name()] = vasp
 			return nil
 		}
-		if strings.HasPrefix(info.Name(), "certs::") {
+		if strings.HasPrefix(info.Name(), "certreqs::") {
 			cert := &models.CertificateRequest{}
 			err = protojson.Unmarshal(data, cert)
 			require.NoError(err)

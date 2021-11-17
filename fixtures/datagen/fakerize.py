@@ -699,4 +699,4 @@ if __name__ == "__main__":
     store(fakes, kind="vasps")
 
     fakes = augment_certs()
-    store(fakes, kind="certs")
+    store(fakes, kind="certreqs")
