@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package trtl.pb.v1;
+package trtl.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/trtl/pb/v1;pb";
 
 service Trtl {
