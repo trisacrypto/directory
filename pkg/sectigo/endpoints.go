@@ -49,36 +49,36 @@ var endpoints = map[string]*url.URL{
 	UsersEP:                         {Path: "/api/v1/users"},
 	CheckEmailEP:                    {Path: "/api/v1/users/check_email"},
 	UserDetailEP:                    {Path: "/api/v1/users/%d"},
-	userProfilesEP:                  {Path: "/api/v1/users/profiles"},
-	usersOrganizationsEP:            {Path: "/api/v1/users/organizations/%d"},
-	removeUserEP:                    {Path: "/api/v1/users/remove_user"},
-	currentUserEP:                   {Path: "/api/v1/users/current"},
-	updateEmailEP:                   {Path: "/api/v1/users/update_email"},
-	checkUserEP:                     {Path: "/api/v1/users/check_user"},
-	userCredentialsEP:               {Path: "/api/v1/users/credentials"},
+	UserProfilesEP:                  {Path: "/api/v1/users/profiles"},
+	UsersOrganizationsEP:            {Path: "/api/v1/users/organizations/%d"},
+	RemoveUserEP:                    {Path: "/api/v1/users/remove_user"},
+	CurrentUserEP:                   {Path: "/api/v1/users/current"},
+	UpdateEmailEP:                   {Path: "/api/v1/users/update_email"},
+	CheckUserEP:                     {Path: "/api/v1/users/check_user"},
+	UserCredentialsEP:               {Path: "/api/v1/users/credentials"},
 	ProfilesEP:                      {Path: "/api/v1/profiles"},
 	ProfileDetailEP:                 {Path: "/api/v1/profiles/%d"},
-	profileBalanceEP:                {Path: "/api/v1/profiles/%d/balance"},
+	ProfileBalanceEP:                {Path: "/api/v1/profiles/%d/balance"},
 	ProfileParametersEP:             {Path: "/api/v1/profiles/%d/parameters"},
-	profileSubjectDNEP:              {Path: "/api/v1/profiles/%d/dn"},
-	organizationsEP:                 {Path: "/api/v1/organizations"},
-	organizationDetailEP:            {Path: "/api/v1/organizations/%d"},
+	ProfileSubjectDNEP:              {Path: "/api/v1/profiles/%d/dn"},
+	OrganizationsEP:                 {Path: "/api/v1/organizations"},
+	OrganizationDetailEP:            {Path: "/api/v1/organizations/%d"},
 	CurrentUserOrganizationEP:       {Path: "/api/v1/organizations/user"},
-	checkOrganizationEP:             {Path: "/api/v1/organizations/check_organization"},
-	updateAuthorityEP:               {Path: "/api/v1/organizations/%d/authorities/%d"},
-	organizationAuthoritiesEP:       {Path: "/api/v1/organizations/%d/all_authorities"},
+	CheckOrganizationEP:             {Path: "/api/v1/organizations/check_organization"},
+	UpdateAuthorityEP:               {Path: "/api/v1/organizations/%d/authorities/%d"},
+	OrganizationAuthoritiesEP:       {Path: "/api/v1/organizations/%d/all_authorities"},
 	AuthorityDetailEP:               {Path: "/api/v1/organizations/%d/authority/%d"},
-	authoritiesEP:                   {Path: "/api/v1/organizations/%d/authority"},
-	organizationListItemsEP:         {Path: "/api/v1/organizations/select/items"},
-	organizationParametersEP:        {Path: "/api/v1/organizations/profile_parameters/%d"},
-	ecosystemsEP:                    {Path: "/api/v1/ecosystems"},
-	userEcosystemEP:                 {Path: "/api/v1/ecosystems/ecosystem"},
-	ecosystemBalanceEP:              {Path: "/api/v1/ecosystems/ecosystem/balance"},
-	ecosystemsStatisticsEP:          {Path: "/api/v1/ecosystems/statistics"},
-	ecosystemAdminDetailEP:          {Path: "/api/v1/ecosystems/users/%d"},
-	ecosystemAdminsEP:               {Path: "/api/v1/ecosystems/users"},
+	AuthoritiesEP:                   {Path: "/api/v1/organizations/%d/authority"},
+	OrganizationListItemsEP:         {Path: "/api/v1/organizations/select/items"},
+	OrganizationParametersEP:        {Path: "/api/v1/organizations/profile_parameters/%d"},
+	EcosystemsEP:                    {Path: "/api/v1/ecosystems"},
+	UserEcosystemEP:                 {Path: "/api/v1/ecosystems/ecosystem"},
+	EcosystemBalanceEP:              {Path: "/api/v1/ecosystems/ecosystem/balance"},
+	EcosystemsStatisticsEP:          {Path: "/api/v1/ecosystems/statistics"},
+	EcosystemAdminDetailEP:          {Path: "/api/v1/ecosystems/users/%d"},
+	EcosystemAdminsEP:               {Path: "/api/v1/ecosystems/users"},
 	FindCertificateEP:               {Path: "/api/v1/certificates/find"},
-	revokeDeviceCertificateEP:       {Path: "/api/v1/certificates/revoke"},
+	RevokeDeviceCertificateEP:       {Path: "/api/v1/certificates/revoke"},
 	RevokeCertificateEP:             {Path: "/api/v1/certificates/%d/revoke"},
 }
 
@@ -107,36 +107,36 @@ const (
 	UsersEP                         = "users"
 	CheckEmailEP                    = "checkEmail"
 	UserDetailEP                    = "userDetail"
-	userProfilesEP                  = "userProfiles"
-	usersOrganizationsEP            = "usersOrganizations"
-	removeUserEP                    = "removeUser"
-	currentUserEP                   = "currentUser"
-	updateEmailEP                   = "updateEmail"
-	checkUserEP                     = "checkUser"
-	userCredentialsEP               = "userCredentials"
+	UserProfilesEP                  = "userProfiles"
+	UsersOrganizationsEP            = "usersOrganizations"
+	RemoveUserEP                    = "removeUser"
+	CurrentUserEP                   = "currentUser"
+	UpdateEmailEP                   = "updateEmail"
+	CheckUserEP                     = "checkUser"
+	UserCredentialsEP               = "userCredentials"
 	ProfilesEP                      = "profiles"
 	ProfileDetailEP                 = "profileDetail"
-	profileBalanceEP                = "profileBalance"
+	ProfileBalanceEP                = "profileBalance"
 	ProfileParametersEP             = "profileParameters"
-	profileSubjectDNEP              = "profileSubjectDN"
-	organizationsEP                 = "organizations"
-	organizationDetailEP            = "organizationDetail"
+	ProfileSubjectDNEP              = "profileSubjectDN"
+	OrganizationsEP                 = "organizations"
+	OrganizationDetailEP            = "organizationDetail"
 	CurrentUserOrganizationEP       = "currentUserOrganization"
-	checkOrganizationEP             = "checkOrganization"
-	updateAuthorityEP               = "updateAuthority"
-	organizationAuthoritiesEP       = "organizationAuthorities"
+	CheckOrganizationEP             = "checkOrganization"
+	UpdateAuthorityEP               = "updateAuthority"
+	OrganizationAuthoritiesEP       = "organizationAuthorities"
 	AuthorityDetailEP               = "authorityDetail"
-	authoritiesEP                   = "authorities"
-	organizationListItemsEP         = "organizationListItems"
-	organizationParametersEP        = "organizationParameters"
-	ecosystemsEP                    = "ecosystems"
-	userEcosystemEP                 = "userEcosystem"
-	ecosystemBalanceEP              = "ecosystemBalance"
-	ecosystemsStatisticsEP          = "ecosystemsStatistics"
-	ecosystemAdminDetailEP          = "ecosystemAdminDetail"
-	ecosystemAdminsEP               = "ecosystemAdmins"
+	AuthoritiesEP                   = "authorities"
+	OrganizationListItemsEP         = "organizationListItems"
+	OrganizationParametersEP        = "organizationParameters"
+	EcosystemsEP                    = "ecosystems"
+	UserEcosystemEP                 = "userEcosystem"
+	EcosystemBalanceEP              = "ecosystemBalance"
+	EcosystemsStatisticsEP          = "ecosystemsStatistics"
+	EcosystemAdminDetailEP          = "ecosystemAdminDetail"
+	EcosystemAdminsEP               = "ecosystemAdmins"
 	FindCertificateEP               = "findCertificate"
-	revokeDeviceCertificateEP       = "revokeDeviceCertificate"
+	RevokeDeviceCertificateEP       = "revokeDeviceCertificate"
 	RevokeCertificateEP             = "revokeCertificate"
 )
 
@@ -154,6 +154,18 @@ func Endpoint(endpoint string, params ...interface{}) (u *url.URL, err error) {
 		v.Path = fmt.Sprintf(v.Path, params...)
 	}
 	return v, nil
+}
+
+// urlFor returns the string of the resolved URL for the named endpoint for constructing
+// http requests inside of client methods. If the endpoint doesn't exist, it panics
+// instead of returning an error because this is a developer, not a user error.
+func urlFor(endpoint string, params ...interface{}) string {
+	ep, err := Endpoint(endpoint, params...)
+	if err != nil {
+		// This is a developer error, so we should panic (original functionality)
+		panic(err)
+	}
+	return ep.String()
 }
 
 // SetBaseURL updates Sectigo to use a different scheme and host to determine endpoints
