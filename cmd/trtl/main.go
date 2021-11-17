@@ -119,6 +119,47 @@ func main() {
 			},
 		},
 		{
+			Name: "db:put",
+			// TODO: would we ever want to put multiple values using the CLI? If so, what arg format would we expect to use?
+			Usage:    "put a single value to a key in the trtl database",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   dbPut,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect to the trtl replication service",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
+				},
+				&cli.StringFlag{
+					Name:    "key",
+					Aliases: []string{"k"},
+					Usage:   "specify the key as a string",
+				},
+				&cli.StringFlag{
+					Name:    "namespace",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespace as a string",
+				},
+				&cli.StringFlag{
+					Name:    "value",
+					Aliases: []string{"v"},
+					Usage:   "specify the value to put as a string",
+				},
+				&cli.BoolFlag{
+					Name:    "meta",
+					Aliases: []string{"m"},
+					Usage:   "return the metadata along with the value",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
+				},
+			},
+		},
+		{
 			Name:     "peers:add",
 			Usage:    "add peers to the network by pid",
 			Category: "client",
@@ -432,6 +473,37 @@ func dbGet(c *cli.Context) (err error) {
 		}
 		fmt.Println(string(outdata) + "\n")
 	}
+	return nil
+}
+
+// dbPut puts a value to to a key in the trtl database
+func dbPut(c *cli.Context) (err error) {
+	var resp *pb.PutReply
+	req := &pb.PutRequest{
+		Key:       []byte(c.String("key")),
+		Value:     []byte(c.String("value")),
+		Namespace: c.String("namespace"),
+		Options: &pb.Options{
+			ReturnMeta: c.Bool("meta"),
+		},
+	}
+	if resp, err = dbClient.Put(context.TODO(), req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+	var outdata []byte
+	if outdata, err = jsonpb.Marshal(resp); err != nil {
+		return cli.Exit(err, 1)
+	}
+	fmt.Println(string(outdata) + "\n")
 	return nil
 }
 

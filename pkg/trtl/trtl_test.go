@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/rotationalio/honu/object"
@@ -256,6 +257,105 @@ func (s *trtlTestSuite) TestGet() {
 	require.True(proto.Equal(expectedMeta, reply.Meta))
 }
 
+// Test that we can call the Put RPC and get the correct response.
+func (s *trtlTestSuite) TestPut() {
+	require := s.Require()
+	alice := dbFixtures["alice"]
+	object := dbFixtures["object"]
+
+	// Start the server.
+	server, err := trtl.New(s.conf)
+	require.NoError(err)
+	go server.Serve()
+	defer server.Shutdown()
+
+	// Start the gRPC client.
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	client := pb.NewTrtlClient(conn)
+
+	// Put a value from a reserved namespace - should fail.
+	_, err = client.Put(ctx, &pb.PutRequest{
+		Namespace: "default",
+		Key:       []byte(object.Key),
+		Value:     []byte("foo"),
+	})
+	require.Error(err)
+
+	// Put a value without the key - should fail.
+	_, err = client.Put(ctx, &pb.PutRequest{
+		Namespace: object.Namespace,
+		Value:     []byte("foo"),
+	})
+	require.Error(err)
+
+	// Put without a value - should fail.
+	_, err = client.Put(ctx, &pb.PutRequest{
+		Namespace: object.Namespace,
+		Key:       []byte(object.Key),
+	})
+	require.Error(err)
+
+	// Put a value to the default namespace.
+	reply, err := client.Put(ctx, &pb.PutRequest{
+		Key:   []byte("testKey"),
+		Value: []byte("testVal"),
+	})
+	require.NoError(err)
+	require.True(reply.Success)
+	require.Empty((reply.Meta))
+
+	// Put a value to a valid namespace with return_meta=false.
+	reply, err = client.Put(ctx, &pb.PutRequest{
+		Namespace: alice.Namespace,
+		Key:       []byte(alice.Key),
+		Value:     []byte("arlo guthrie"),
+		Options: &pb.Options{
+			ReturnMeta: false,
+		},
+	})
+	require.NoError(err)
+	require.True(reply.Success)
+	require.Empty((reply.Meta))
+
+	// Put a value with return_meta=true.
+	expectedPID, err := strconv.Atoi((os.Getenv("TRTL_REPLICA_PID")))
+	require.NoError(err)
+	expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
+	expectedMeta := &pb.Meta{
+		Key:       []byte(alice.Key),
+		Namespace: alice.Namespace,
+		Region:    metaRegion,
+		Owner:     metaOwner,
+		Version: &pb.Version{
+			Pid:     uint64(expectedPID),
+			Version: 4,
+			Region:  expectedRegion,
+		},
+		Parent: &pb.Version{
+			Pid:     uint64(expectedPID),
+			Version: 3,
+			Region:  expectedRegion,
+		},
+	}
+	reply, err = client.Put(ctx, &pb.PutRequest{
+		Namespace: alice.Namespace,
+		Key:       []byte(alice.Key),
+		Value:     []byte("cheshire cat"),
+		Options: &pb.Options{
+			ReturnMeta: true,
+		},
+	})
+	require.NoError(err)
+	require.True(reply.Success)
+	require.NotNil(reply.Meta)
+	require.Equal([]byte(alice.Key), reply.Meta.Key)
+	require.Equal(alice.Namespace, reply.Meta.Namespace)
+	require.True(proto.Equal(expectedMeta, reply.Meta))
+}
+
 // Test that we can call the Batch RPC and get the correct response.
 func (s *trtlTestSuite) TestBatch() {
 	require := s.Require()
@@ -306,9 +406,6 @@ func (s *trtlTestSuite) TestBatch() {
 	require.Equal(int64(len(requests)), reply.Failed)
 	require.Equal(int64(0), reply.Successful)
 	require.Len(reply.Errors, len(requests))
-	for _, e := range reply.Errors {
-		require.Contains(requests, e.Id)
-		require.Equal(requests[e.Id].Id, e.Id)
-		require.Contains(e.Error, "not implemented")
-	}
+	require.Contains(requests, reply.Errors[1].Id)
+	require.Equal(requests[reply.Errors[1].Id].Id, reply.Errors[1].Id)
 }
