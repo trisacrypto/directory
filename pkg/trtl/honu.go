@@ -106,7 +106,7 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in Trtl Get request")
+		log.Warn().Msg("missing key in Trtl Put request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 	if len(in.Value) == 0 {
