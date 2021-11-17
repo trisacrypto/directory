@@ -15,7 +15,7 @@ const (
 var defaultURL = &url.URL{Scheme: "https", Host: "iot.sectigo.com"}
 var baseURL = defaultURL
 
-// endpoints maps methods to URLs, which are full constructed with the baseURL. Some
+// endpoints maps methods to URLs, which are fully constructed using the baseURL. Some
 // endpoint paths contain string format verbs intended for dynamic REST urls by making a
 // copy of the url.URL and replacing the Path with the output of
 // fmt.Sprintf(endpoints[method].Path, param). If the format verb is not replaced in
