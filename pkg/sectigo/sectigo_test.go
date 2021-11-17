@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/trisacrypto/directory/pkg/sectigo"
 	. "github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 )
@@ -66,22 +65,22 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		name string
 		f    func(t *testing.T)
 	}{
-		{name: sectigo.AuthenticateEP, f: s.authenticate},
-		{name: sectigo.RefreshEP, f: s.refresh}, // must be called after authenticate
-		{name: sectigo.CreateSingleCertBatchEP, f: s.createSingleCertBatch},
-		{name: sectigo.UploadCSREP, f: s.uploadCSRBatch},
-		{name: sectigo.BatchDetailEP, f: s.batchDetail},
-		{name: sectigo.BatchProcessingInfoEP, f: s.processingInfo},
-		{name: sectigo.DownloadEP, f: s.download},
-		{name: sectigo.DevicesEP, f: s.licensesUsed},
-		{name: sectigo.UserAuthoritiesEP, f: s.userAuthorities},
-		{name: sectigo.AuthorityBalanceAvailableEP, f: s.authorityAvailableBalance},
-		{name: sectigo.CurrentUserOrganizationEP, f: s.organization},
-		{name: sectigo.ProfilesEP, f: s.profiles},
-		{name: sectigo.ProfileParametersEP, f: s.profileParams},
-		{name: sectigo.ProfileDetailEP, f: s.profileDetail},
-		{name: sectigo.FindCertificateEP, f: s.findCertificate},
-		{name: sectigo.RevokeCertificateEP, f: s.revokeCertificate},
+		{name: AuthenticateEP, f: s.authenticate},
+		{name: RefreshEP, f: s.refresh}, // must be called after authenticate
+		{name: CreateSingleCertBatchEP, f: s.createSingleCertBatch},
+		{name: UploadCSREP, f: s.uploadCSRBatch},
+		{name: BatchDetailEP, f: s.batchDetail},
+		{name: BatchProcessingInfoEP, f: s.processingInfo},
+		{name: DownloadEP, f: s.download},
+		{name: DevicesEP, f: s.licensesUsed},
+		{name: UserAuthoritiesEP, f: s.userAuthorities},
+		{name: AuthorityBalanceAvailableEP, f: s.authorityAvailableBalance},
+		{name: CurrentUserOrganizationEP, f: s.organization},
+		{name: ProfilesEP, f: s.profiles},
+		{name: ProfileParametersEP, f: s.profileParams},
+		{name: ProfileDetailEP, f: s.profileDetail},
+		{name: FindCertificateEP, f: s.findCertificate},
+		{name: RevokeCertificateEP, f: s.revokeCertificate},
 	}
 	for _, t := range tests {
 		s.T().Run(t.name, t.f)
@@ -195,9 +194,10 @@ func (s *SectigoTestSuite) revokeCertificate(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func (s *SectigoTestSuite) authenticateInvalidCreds(t *testing.T) {
+func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
+	require := s.Require()
 	m, err := mock.New()
-	require.NoError(t, err)
+	require.NoError(err)
 	defer m.Close()
 
 	m.Handle(AuthenticateEP, func(c *gin.Context) {
@@ -217,7 +217,7 @@ func (s *SectigoTestSuite) authenticateInvalidCreds(t *testing.T) {
 	})
 
 	s.api, err = New("invalid", "invalid", "CipherTrace EE")
-	require.NoError(t, err)
+	require.NoError(err)
 	err = s.api.Authenticate()
-	require.EqualError(t, err, ErrInvalidCredentials.Error())
+	require.EqualError(err, ErrInvalidCredentials.Error())
 }
