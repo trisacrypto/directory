@@ -128,8 +128,8 @@ func (s *trtlTestSuite) SetupSuite() {
 
 	// Load default config and add database path.
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
-	os.Setenv("TRTL_PID", "1")
-	os.Setenv("TRTL_REGION", "foo")
+	os.Setenv("TRTL_REPLICA_PID", "8")
+	os.Setenv("TRTL_REPLICA_REGION", "minneapolis")
 	s.conf, err = config.New()
 	require.NoError(err)
 }

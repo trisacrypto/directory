@@ -58,7 +58,7 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 		// 10 attempts to select a random peer that is not self.
 		for i := 0; i < 10; i++ {
 			peer = peers[rand.Intn(len(peers))]
-			if peer.Id != r.conf.PID {
+			if peer.Id != r.conf.Replica.PID {
 				return peer
 			}
 		}

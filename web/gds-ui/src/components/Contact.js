@@ -2,6 +2,7 @@ import React from 'react';
 import Form from 'react-bootstrap/Form';
 import { Trans } from "@lingui/macro";
 
+
 const Contact = ({contact, onChange, required}) => {
   const createChangeHandler = (field) => (event) => {
     let data = {...contact};
@@ -47,7 +48,10 @@ const Contact = ({contact, onChange, required}) => {
         required={required}
       />
       <Form.Text className="text-muted">
-        {required ? "Required - please supply " : "Optional - if supplied, use"} full phone number with country code.
+        {required
+          ? <Trans>Required - please supply full phone number with country code.</Trans>
+          : <Trans>Optional - if supplied, use full phone number with country code.</Trans>
+        }
       </Form.Text>
       <Form.Control.Feedback type="invalid">
         <Trans>Please supply a valid phone number or omit entirely if not required.</Trans>

@@ -30,7 +30,7 @@ proto.trisa.gds.api.v1beta1 = require('./api_pb.js');
 /**
  * @param {string} hostname
  * @param {?Object} credentials
- * @param {?Object} options
+ * @param {?grpc.web.ClientOptions} options
  * @constructor
  * @struct
  * @final
@@ -38,7 +38,7 @@ proto.trisa.gds.api.v1beta1 = require('./api_pb.js');
 proto.trisa.gds.api.v1beta1.TRISADirectoryClient =
     function(hostname, credentials, options) {
   if (!options) options = {};
-  options['format'] = 'text';
+  options.format = 'text';
 
   /**
    * @private @const {!grpc.web.GrpcWebClientBase} The client
@@ -56,7 +56,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient =
 /**
  * @param {string} hostname
  * @param {?Object} credentials
- * @param {?Object} options
+ * @param {?grpc.web.ClientOptions} options
  * @constructor
  * @struct
  * @final
@@ -64,7 +64,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient =
 proto.trisa.gds.api.v1beta1.TRISADirectoryPromiseClient =
     function(hostname, credentials, options) {
   if (!options) options = {};
-  options['format'] = 'text';
+  options.format = 'text';
 
   /**
    * @private @const {!grpc.web.GrpcWebClientBase} The client
@@ -102,30 +102,11 @@ const methodDescriptor_TRISADirectory_Lookup = new grpc.web.MethodDescriptor(
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.LookupRequest,
- *   !proto.trisa.gds.api.v1beta1.LookupReply>}
- */
-const methodInfo_TRISADirectory_Lookup = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.LookupReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.LookupRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.LookupReply.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.LookupRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.LookupReply)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.LookupReply)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.LookupReply>|undefined}
  *     The XHR Node Readable Stream
@@ -144,7 +125,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.lookup =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.LookupRequest} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.LookupReply>}
  *     Promise that resolves to the response
@@ -182,30 +163,11 @@ const methodDescriptor_TRISADirectory_Search = new grpc.web.MethodDescriptor(
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.SearchRequest,
- *   !proto.trisa.gds.api.v1beta1.SearchReply>}
- */
-const methodInfo_TRISADirectory_Search = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.SearchReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.SearchRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.SearchReply.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.SearchRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.SearchReply)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.SearchReply)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.SearchReply>|undefined}
  *     The XHR Node Readable Stream
@@ -224,7 +186,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.search =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.SearchRequest} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.SearchReply>}
  *     Promise that resolves to the response
@@ -262,30 +224,11 @@ const methodDescriptor_TRISADirectory_Register = new grpc.web.MethodDescriptor(
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.RegisterRequest,
- *   !proto.trisa.gds.api.v1beta1.RegisterReply>}
- */
-const methodInfo_TRISADirectory_Register = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.RegisterReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.RegisterReply.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.RegisterReply)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.RegisterReply)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.RegisterReply>|undefined}
  *     The XHR Node Readable Stream
@@ -304,7 +247,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.register =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.RegisterRequest} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.RegisterReply>}
  *     Promise that resolves to the response
@@ -342,30 +285,11 @@ const methodDescriptor_TRISADirectory_VerifyContact = new grpc.web.MethodDescrip
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.VerifyContactRequest,
- *   !proto.trisa.gds.api.v1beta1.VerifyContactReply>}
- */
-const methodInfo_TRISADirectory_VerifyContact = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.VerifyContactReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.VerifyContactReply.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.VerifyContactReply)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.VerifyContactReply)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.VerifyContactReply>|undefined}
  *     The XHR Node Readable Stream
@@ -384,7 +308,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.verifyContact =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.VerifyContactRequest} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.VerifyContactReply>}
  *     Promise that resolves to the response
@@ -422,30 +346,11 @@ const methodDescriptor_TRISADirectory_Verification = new grpc.web.MethodDescript
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.VerificationRequest,
- *   !proto.trisa.gds.api.v1beta1.VerificationReply>}
- */
-const methodInfo_TRISADirectory_Verification = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.VerificationReply,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.VerificationReply.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.VerificationReply)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.VerificationReply)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.VerificationReply>|undefined}
  *     The XHR Node Readable Stream
@@ -464,7 +369,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.verification =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.VerificationRequest} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.VerificationReply>}
  *     Promise that resolves to the response
@@ -502,30 +407,11 @@ const methodDescriptor_TRISADirectory_Status = new grpc.web.MethodDescriptor(
 
 
 /**
- * @const
- * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.trisa.gds.api.v1beta1.HealthCheck,
- *   !proto.trisa.gds.api.v1beta1.ServiceState>}
- */
-const methodInfo_TRISADirectory_Status = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.trisa.gds.api.v1beta1.ServiceState,
-  /**
-   * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request
-   * @return {!Uint8Array}
-   */
-  function(request) {
-    return request.serializeBinary();
-  },
-  proto.trisa.gds.api.v1beta1.ServiceState.deserializeBinary
-);
-
-
-/**
  * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.trisa.gds.api.v1beta1.ServiceState)}
+ * @param {function(?grpc.web.RpcError, ?proto.trisa.gds.api.v1beta1.ServiceState)}
  *     callback The callback function(error, response)
  * @return {!grpc.web.ClientReadableStream<!proto.trisa.gds.api.v1beta1.ServiceState>|undefined}
  *     The XHR Node Readable Stream
@@ -544,7 +430,7 @@ proto.trisa.gds.api.v1beta1.TRISADirectoryClient.prototype.status =
 /**
  * @param {!proto.trisa.gds.api.v1beta1.HealthCheck} request The
  *     request proto
- * @param {?Object<string, string>} metadata User defined
+ * @param {?Object<string, string>=} metadata User defined
  *     call metadata
  * @return {!Promise<!proto.trisa.gds.api.v1beta1.ServiceState>}
  *     Promise that resolves to the response

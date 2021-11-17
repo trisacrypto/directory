@@ -7,7 +7,8 @@ export const Status = {
     VERIFIED: "VERIFIED",
     REJECTED: "REJECTED",
     APPEALED: "APPEALED",
-    ERRORED: "ERRORED"
+    ERRORED: "ERRORED",
+    NO_VERIFICATION: "NO_VERIFICATION"
 }
 
 export const StatusLabel = {
@@ -19,5 +20,6 @@ export const StatusLabel = {
     VERIFIED: "Verified",
     REJECTED: "Rejected",
     APPEALED: "Appealed",
-    ERRORED: "Errored"
+    ERRORED: "Errored",
+    NO_VERIFICATION: "No Verification"
 }

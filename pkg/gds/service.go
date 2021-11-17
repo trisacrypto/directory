@@ -16,9 +16,6 @@ import (
 )
 
 func init() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	// Initialize zerolog with GCP logging requirements
 	zerolog.TimeFieldFormat = time.RFC3339
 	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
@@ -40,7 +37,7 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Set the global level
-	zerolog.SetGlobalLevel(zerolog.Level(conf.LogLevel))
+	zerolog.SetGlobalLevel(conf.GetLogLevel())
 
 	// Set human readable logging if specified
 	if conf.ConsoleLog {

@@ -137,8 +137,8 @@ class APICore {
     /**
      * post given data to url
      */
-    create = (url, data) => {
-        return axios.post(url, data);
+    create = (url, data, config) => {
+        return axios.post(url, data, config);
     };
 
     /**
@@ -158,8 +158,8 @@ class APICore {
     /**
      * Deletes data
      */
-    delete = (url) => {
-        return axios.delete(url);
+    delete = (url, params) => {
+        return axios.delete(url, params);
     };
 
     /**

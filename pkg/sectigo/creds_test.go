@@ -1,4 +1,4 @@
-package sectigo
+package sectigo_test
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/shibukawa/configdir"
 	"github.com/stretchr/testify/require"
+	. "github.com/trisacrypto/directory/pkg/sectigo"
 )
 
 var (
@@ -61,9 +62,9 @@ func TestCredentials(t *testing.T) {
 }
 
 func checkCache() (err error) {
-	cdir := configdir.New(vendorName, applicationName).QueryCacheFolder()
-	if cdir.Exists(credentialsCache) {
-		return fmt.Errorf("credentials already exists at %s", filepath.Join(cdir.Path, credentialsCache))
+	cdir := configdir.New(VendorName, ApplicationName).QueryCacheFolder()
+	if cdir.Exists(CredentialsCache) {
+		return fmt.Errorf("credentials already exists at %s", filepath.Join(cdir.Path, CredentialsCache))
 	}
 	return nil
 }

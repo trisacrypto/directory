@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -27,6 +28,12 @@ var (
 	}
 )
 
+<<<<<<< HEAD
+=======
+var dbVASPs = map[string]*pb.VASP{}
+var dbCerts = map[string]*models.CertificateRequest{}
+
+>>>>>>> 3b2d3de1bc2f0b111d34d63cc87d3819e2fd81b7
 type gdsTestSuite struct {
 	suite.Suite
 	fakes    string
@@ -57,15 +64,25 @@ func loadFixtures(s *gdsTestSuite) {
 		// Unmarshal the JSON into the global fixtures map.
 		data, err := os.ReadFile(path)
 		require.NoError(err)
+<<<<<<< HEAD
 		key := strings.TrimSuffix(info.Name(), ".json")
 		if strings.HasPrefix(key, "vasps::") {
+=======
+		if strings.HasPrefix(info.Name(), "vasps::") {
+>>>>>>> 3b2d3de1bc2f0b111d34d63cc87d3819e2fd81b7
 			vasp := &pb.VASP{}
 			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
 			s.fixtures[key] = vasp
 			return nil
 		}
-
+		if strings.HasPrefix(info.Name(), "certs::") {
+			cert := &models.CertificateRequest{}
+			err = protojson.Unmarshal(data, cert)
+			require.NoError(err)
+			dbCerts[info.Name()] = cert
+			return nil
+		}
 		return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
 	})
 	require.NoError(err)

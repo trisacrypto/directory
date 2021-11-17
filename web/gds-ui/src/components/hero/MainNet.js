@@ -1,16 +1,18 @@
 import React from 'react';
+import { Trans } from "@lingui/macro";
+
 
 const MainNet = () => {
   return (
     <header className="bg-gradient">
       <div className="container">
         <div className="text-center hero">
-          <h1>TRISA Global Directory Service</h1>
+          <h1><Trans>TRISA Global Directory Service</Trans></h1>
           <p className="lead">
-            Become a TRISA certified Virtual Asset Service Provider.
+            <Trans>Become a TRISA certified Virtual Asset Service Provider.</Trans>
           </p>
           <small>
-            Looking for the <a href="https://trisatest.net">TestNet Directory Service</a>?
+            <Trans>Looking for the <a href="https://trisatest.net">TestNet Directory Service</a>?</Trans>
           </small>
         </div>
       </div>

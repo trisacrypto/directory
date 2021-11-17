@@ -1,4 +1,5 @@
 // @flow
+import jwtDecode from 'jwt-decode';
 import { useEffect, useState, useMemo } from 'react';
 
 import { APICore } from '../helpers/api/apiCore';
@@ -10,7 +11,8 @@ const useUser = (): { user: any | void, ... } => {
 
     useEffect(() => {
         if (api.isUserAuthenticated()) {
-            setuser(api.getLoggedInUser());
+            const decodedUser = jwtDecode(api.getLoggedInUser()?.access_token)
+            setuser(decodedUser);
         }
     }, [api]);
 
