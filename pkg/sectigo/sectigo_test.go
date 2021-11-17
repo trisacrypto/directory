@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -132,7 +133,8 @@ func (s *SectigoTestSuite) download(t *testing.T) {
 
 	rep, err := s.api.Download(42, dir)
 	require.NoError(t, err)
-	require.NotEmpty(t, rep)
+	require.Equal(t, filepath.Join(dir, "42.zip"), rep)
+	require.FileExists(t, rep)
 }
 
 func (s *SectigoTestSuite) licensesUsed(t *testing.T) {

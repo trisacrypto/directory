@@ -287,11 +287,13 @@ func (s *Server) download(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &sectigo.ProcessingInfoResponse{
-		Active:  0,
-		Success: 1,
-		Failed:  0,
-	})
+	someJSON := struct {
+		Field string `json:"field"`
+	}{
+		Field: "foo",
+	}
+
+	c.JSON(http.StatusOK, someJSON)
 }
 
 func (s *Server) devices(c *gin.Context) {
