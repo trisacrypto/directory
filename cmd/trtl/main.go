@@ -490,20 +490,27 @@ func dbPut(c *cli.Context) (err error) {
 	if resp, err = dbClient.Put(context.TODO(), req); err != nil {
 		return cli.Exit(err, 1)
 	}
+	if resp.Success {
+		fmt.Printf("successfully put value %s to key %s", req.Value, req.Key)
+	} else {
+		fmt.Printf("could not put value %s to key %s", req.Value, req.Key)
+	}
+	if resp.Meta != nil {
+		jsonpb := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		var outdata []byte
+		if outdata, err = jsonpb.Marshal(resp); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(string(outdata) + "\n")
+	}
 
-	jsonpb := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
-	var outdata []byte
-	if outdata, err = jsonpb.Marshal(resp); err != nil {
-		return cli.Exit(err, 1)
-	}
-	fmt.Println(string(outdata) + "\n")
 	return nil
 }
 
