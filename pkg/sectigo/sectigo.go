@@ -72,7 +72,7 @@ func (s *Sectigo) Authenticate() (err error) {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, urlFor(authenticateEP), body)
+	req, err := http.NewRequest(http.MethodPost, urlFor(AuthenticateEP), body)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (s *Sectigo) Refresh() (err error) {
 	body := new(bytes.Buffer)
 	fmt.Fprintf(body, "%s", s.creds.RefreshToken)
 
-	req, err := http.NewRequest(http.MethodPost, urlFor(refreshEP), body)
+	req, err := http.NewRequest(http.MethodPost, urlFor(RefreshEP), body)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (s *Sectigo) CreateSingleCertBatch(authority int, name string, params map[s
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPut, urlFor(createSingleCertBatchEP), batchInfo); err != nil {
+	if req, err = s.newRequest(http.MethodPut, urlFor(CreateSingleCertBatchEP), batchInfo); err != nil {
 		return nil, err
 	}
 
@@ -271,7 +271,7 @@ func (s *Sectigo) UploadCSRBatch(profileId int, filename string, csrData []byte,
 
 	// create multipart request (cannot use newRequest to ensure multipart is constructed correctly)
 	var req *http.Request
-	if req, err = http.NewRequest(http.MethodPost, urlFor(uploadCSREP), body); err != nil {
+	if req, err = http.NewRequest(http.MethodPost, urlFor(UploadCSREP), body); err != nil {
 		return nil, err
 	}
 
@@ -310,7 +310,7 @@ func (s *Sectigo) BatchDetail(id int) (batch *BatchResponse, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(batchDetailEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(BatchDetailEP, id), nil); err != nil {
 		return nil, err
 	}
 
@@ -340,7 +340,7 @@ func (s *Sectigo) ProcessingInfo(batch int) (status *ProcessingInfoResponse, err
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(batchProcessingInfoEP, batch), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(BatchProcessingInfoEP, batch), nil); err != nil {
 		return nil, err
 	}
 
@@ -380,7 +380,7 @@ func (s *Sectigo) Download(batch int, dir string) (path string, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(downloadEP, batch), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(DownloadEP, batch), nil); err != nil {
 		return "", err
 	}
 
@@ -433,7 +433,7 @@ func (s *Sectigo) LicensesUsed() (stats *LicensesUsedResponse, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(devicesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(DevicesEP), nil); err != nil {
 		return nil, err
 	}
 
@@ -463,7 +463,7 @@ func (s *Sectigo) UserAuthorities() (authorities []*AuthorityResponse, err error
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(userAuthoritiesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(UserAuthoritiesEP), nil); err != nil {
 		return nil, err
 	}
 
@@ -493,7 +493,7 @@ func (s *Sectigo) AuthorityAvailableBalance(id int) (balance int, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(authorityUserBalanceAvailableEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(AuthorityUserBalanceAvailableEP, id), nil); err != nil {
 		return 0, err
 	}
 
@@ -524,7 +524,7 @@ func (s *Sectigo) Profiles() (profiles []*ProfileResponse, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profilesEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(ProfilesEP), nil); err != nil {
 		return nil, err
 	}
 
@@ -554,7 +554,7 @@ func (s *Sectigo) ProfileParams(id int) (params []*ProfileParamsResponse, err er
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profileParametersEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(ProfileParametersEP, id), nil); err != nil {
 		return nil, err
 	}
 
@@ -584,7 +584,7 @@ func (s *Sectigo) ProfileDetail(id int) (profile *ProfileDetailResponse, err err
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(profileDetailEP, id), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(ProfileDetailEP, id), nil); err != nil {
 		return nil, err
 	}
 
@@ -613,7 +613,7 @@ func (s *Sectigo) Organization() (org *OrganizationResponse, err error) {
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodGet, urlFor(currentUserOrganizationEP), nil); err != nil {
+	if req, err = s.newRequest(http.MethodGet, urlFor(CurrentUserOrganizationEP), nil); err != nil {
 		return nil, err
 	}
 
@@ -647,7 +647,7 @@ func (s *Sectigo) FindCertificate(commonName, serialNumber string) (certs *FindC
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPost, urlFor(findCertificateEP), query); err != nil {
+	if req, err = s.newRequest(http.MethodPost, urlFor(FindCertificateEP), query); err != nil {
 		return nil, err
 	}
 
@@ -686,7 +686,7 @@ func (s *Sectigo) RevokeCertificate(profileID, reasonCode int, serialNumber stri
 
 	// create request
 	var req *http.Request
-	if req, err = s.newRequest(http.MethodPost, urlFor(revokeCertificateEP, profileID), query); err != nil {
+	if req, err = s.newRequest(http.MethodPost, urlFor(RevokeCertificateEP, profileID), query); err != nil {
 		return err
 	}
 

@@ -44,7 +44,7 @@ func NewTrtlClient(cc grpc.ClientConnInterface) TrtlClient {
 
 func (c *trtlClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetReply, error) {
 	out := new(GetReply)
-	err := c.cc.Invoke(ctx, "/trtl.pb.v1.Trtl/Get", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.v1.Trtl/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *trtlClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallO
 
 func (c *trtlClient) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutReply, error) {
 	out := new(PutReply)
-	err := c.cc.Invoke(ctx, "/trtl.pb.v1.Trtl/Put", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.v1.Trtl/Put", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *trtlClient) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallO
 
 func (c *trtlClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteReply, error) {
 	out := new(DeleteReply)
-	err := c.cc.Invoke(ctx, "/trtl.pb.v1.Trtl/Delete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.v1.Trtl/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *trtlClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc
 
 func (c *trtlClient) Iter(ctx context.Context, in *IterRequest, opts ...grpc.CallOption) (*IterReply, error) {
 	out := new(IterReply)
-	err := c.cc.Invoke(ctx, "/trtl.pb.v1.Trtl/Iter", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.v1.Trtl/Iter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (c *trtlClient) Iter(ctx context.Context, in *IterRequest, opts ...grpc.Cal
 }
 
 func (c *trtlClient) Batch(ctx context.Context, opts ...grpc.CallOption) (Trtl_BatchClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[0], "/trtl.pb.v1.Trtl/Batch", opts...)
+	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[0], "/trtl.v1.Trtl/Batch", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (x *trtlBatchClient) CloseAndRecv() (*BatchReply, error) {
 }
 
 func (c *trtlClient) Cursor(ctx context.Context, in *CursorRequest, opts ...grpc.CallOption) (Trtl_CursorClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[1], "/trtl.pb.v1.Trtl/Cursor", opts...)
+	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[1], "/trtl.v1.Trtl/Cursor", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (x *trtlCursorClient) Recv() (*CursorReply, error) {
 }
 
 func (c *trtlClient) Sync(ctx context.Context, opts ...grpc.CallOption) (Trtl_SyncClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[2], "/trtl.pb.v1.Trtl/Sync", opts...)
+	stream, err := c.cc.NewStream(ctx, &Trtl_ServiceDesc.Streams[2], "/trtl.v1.Trtl/Sync", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func _Trtl_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/trtl.pb.v1.Trtl/Get",
+		FullMethod: "/trtl.v1.Trtl/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TrtlServer).Get(ctx, req.(*GetRequest))
@@ -262,7 +262,7 @@ func _Trtl_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/trtl.pb.v1.Trtl/Put",
+		FullMethod: "/trtl.v1.Trtl/Put",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TrtlServer).Put(ctx, req.(*PutRequest))
@@ -280,7 +280,7 @@ func _Trtl_Delete_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/trtl.pb.v1.Trtl/Delete",
+		FullMethod: "/trtl.v1.Trtl/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TrtlServer).Delete(ctx, req.(*DeleteRequest))
@@ -298,7 +298,7 @@ func _Trtl_Iter_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/trtl.pb.v1.Trtl/Iter",
+		FullMethod: "/trtl.v1.Trtl/Iter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TrtlServer).Iter(ctx, req.(*IterRequest))
@@ -383,7 +383,7 @@ func (x *trtlSyncServer) Recv() (*SyncRequest, error) {
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Trtl_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "trtl.pb.v1.Trtl",
+	ServiceName: "trtl.v1.Trtl",
 	HandlerType: (*TrtlServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -421,5 +421,5 @@ var Trtl_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "trtl/pb/v1/trtl.proto",
+	Metadata: "trtl/v1/trtl.proto",
 }
