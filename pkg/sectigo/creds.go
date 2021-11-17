@@ -20,9 +20,9 @@ const (
 
 // Cache directory configuration
 const (
-	vendorName       = "trisa"
-	applicationName  = "sectigo"
-	credentialsCache = "credentials.yaml"
+	VendorName       = "trisa"
+	ApplicationName  = "sectigo"
+	CredentialsCache = "credentials.yaml"
 )
 
 // Credentials stores login and authentication information to connect to the Sectigo API.
@@ -70,9 +70,9 @@ func (creds *Credentials) Load(username, password string) (err error) {
 
 	// Load tokens from the cache file, stored in an OS-specific application cache, e.g.
 	// usually $HOME/.cache or $HOME/Library/Caches for a specific user.
-	creds.cache = configdir.New(vendorName, applicationName).QueryCacheFolder()
-	if creds.cache.Exists(credentialsCache) {
-		data, _ := creds.cache.ReadFile(credentialsCache)
+	creds.cache = configdir.New(VendorName, ApplicationName).QueryCacheFolder()
+	if creds.cache.Exists(CredentialsCache) {
+		data, _ := creds.cache.ReadFile(CredentialsCache)
 		yaml.Unmarshal(data, &creds)
 	}
 
@@ -103,11 +103,11 @@ func (creds *Credentials) Dump() (path string, err error) {
 	}
 
 	// Attempt storage to user folder
-	if err = creds.cache.WriteFile(credentialsCache, data); err != nil {
+	if err = creds.cache.WriteFile(CredentialsCache, data); err != nil {
 		return "", err
 	}
 
-	return filepath.Join(creds.cache.Path, credentialsCache), nil
+	return filepath.Join(creds.cache.Path, CredentialsCache), nil
 }
 
 // Update the credentials with new access and refresh tokens. Credentials are checked
@@ -219,8 +219,8 @@ func (creds *Credentials) Clear() {
 
 // CacheFile returns the path to the credentials cache if it exists.
 func (creds *Credentials) CacheFile() string {
-	if creds.cache.Exists(credentialsCache) {
-		return filepath.Join(creds.cache.Path, credentialsCache)
+	if creds.cache.Exists(CredentialsCache) {
+		return filepath.Join(creds.cache.Path, CredentialsCache)
 	}
 	return ""
 }
