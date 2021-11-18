@@ -1,8 +1,8 @@
 import config from '../config';
-import { ENVIRONMENT, Status, VERIFIED_CONTACT_STATUS } from '../constants';
-import { DIRECTORY } from '../constants';
-import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
-import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
+import { ENVIRONMENT, Status, VERIFIED_CONTACT_STATUS } from 'constants/index';
+import { DIRECTORY } from 'constants/index';
+import TrisatestLogo from 'assets/images/gds-trisatest-logo.png';
+import VaspDirectoryLogo from 'assets/images/gds-vaspdirectory-logo.png';
 import dayjs from 'dayjs';
 import crypto from 'crypto'
 

@@ -1,7 +1,7 @@
 // @flow
 import { LayoutActionTypes } from './constants';
 
-import * as layoutConstants from '../../constants/layout';
+import * as layoutConstants from 'constants/layout';
 
 const INIT_STATE = {
     layoutType: layoutConstants.LAYOUT_VERTICAL,
@@ -13,7 +13,7 @@ const INIT_STATE = {
 
 type LayoutAction = { type: string, payload?: string | null };
 
-type State = { showRightSidebar?: boolean, +value?: boolean };
+type State = { showRightSidebar?: boolean, +value ?: boolean };
 
 const Layout = (state: State = INIT_STATE, action: LayoutAction): any => {
     switch (action.type) {

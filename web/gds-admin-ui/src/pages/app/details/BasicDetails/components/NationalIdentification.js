@@ -1,9 +1,9 @@
 
 import React from 'react'
 import { Col } from 'react-bootstrap'
-import { NATIONAL_IDENTIFIER_TYPE } from '../../../../../constants/national-identification'
-import { formatDisplayedData } from '../../../../../utils'
-import countryCodeEmoji, { isoCountries } from '../../../../../utils/country'
+import { NATIONAL_IDENTIFIER_TYPE } from 'constants/national-identification'
+import { formatDisplayedData } from 'utils'
+import countryCodeEmoji, { isoCountries } from 'utils/country'
 
 function NationalIdentification({ data }) {
     return (

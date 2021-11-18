@@ -2,10 +2,10 @@ import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom'
 import dayjs from 'dayjs';
-import ResendEmail from '../../../components/ResendEmail';
-import { StatusLabel } from '../../../constants';
-import TrisaFavicon from '../../../assets/images/trisa_favicon.png'
-import CiphertraceFavicon from '../../../assets/images/ciphertrace.ico'
+import ResendEmail from 'components/ResendEmail';
+import { StatusLabel } from 'constants/index';
+import TrisaFavicon from 'assets/images/trisa_favicon.png'
+import CiphertraceFavicon from 'assets/images/ciphertrace.ico'
 
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)

@@ -1,11 +1,11 @@
 import React from 'react'
 import dayjs from 'dayjs';
 import ReviewNote from './ReviewNote';
-import useUser from '../../../../hooks/useUser';
+import useUser from 'hooks/useUser';
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useSelector } from 'react-redux';
-import { getAllReviewNotes, getReviewNoteLoadingState } from '../../../../redux/selectors';
-import Loader from '../../../../components/Loader';
+import { getAllReviewNotes, getReviewNoteLoadingState } from 'redux/selectors';
+import Loader from 'components/Loader';
 dayjs.extend(relativeTime)
 
 

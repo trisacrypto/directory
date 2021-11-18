@@ -1,9 +1,9 @@
 import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { Card, Row, Col } from 'react-bootstrap';
-import { capitalizeFirstLetter, getRatios } from '../../../utils';
-import { Status as STATUS } from '../../../constants';
-import Loader from '../../../components/Loader'
+import { capitalizeFirstLetter, getRatios } from 'utils';
+import { Status as STATUS } from 'constants/index';
+import Loader from 'components/Loader'
 
 const Status = ({ statuses }) => {
     const colors = ['#0d6efd', '#dc3545', '#ffc107'];

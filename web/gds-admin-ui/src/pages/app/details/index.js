@@ -1,13 +1,13 @@
 import React from 'react';
 import { Row, Col, } from 'react-bootstrap';
 
-import PageTitle from '../../../components/PageTitle';
+import PageTitle from 'components/PageTitle';
 import { useParams } from "react-router-dom"
 
 import Contact from './contact';
 import BasicDetails from './BasicDetails';
 import CertificateDetails from './CertificateDetails';
-import { getVasp } from "../../../services/vasps"
+import { getVasp } from "services/vasps"
 import TrixoForm from './TrixoForm';
 import { useHistory } from 'react-router-dom'
 import AuditLog from './AuditLog';

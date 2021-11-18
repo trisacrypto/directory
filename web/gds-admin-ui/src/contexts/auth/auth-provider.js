@@ -2,9 +2,9 @@ import React from "react";
 import jwtDecode from "jwt-decode";
 import { AUTH_SESSION_KEY } from "./constants";
 import AuthContext from './auth-context';
-import useSessionStorageState from "../../hooks/useSessionStorage";
-import { APICore, setAuthorization, setCookie } from "../../helpers/api/apiCore";
-import { getCookie } from "../../utils";
+import useSessionStorageState from "hooks/useSessionStorage";
+import { APICore, setAuthorization, setCookie } from "helpers/api/apiCore";
+import { getCookie } from "utils";
 
 const api = new APICore()
 

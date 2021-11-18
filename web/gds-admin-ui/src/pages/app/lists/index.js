@@ -8,14 +8,14 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 
-import PageTitle from '../../../components/PageTitle';
-import Table from '../../../components/Table';
+import PageTitle from 'components/PageTitle';
+import Table from 'components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchVasps } from '../../../redux/dashboard/actions';
-import { StatusLabel } from '../../../constants';
-import { downloadFile, generateCSV } from '../../../helpers/api/utils';
-import { getStatusClassName } from '../../../utils';
+import { fetchVasps } from 'redux/dashboard/actions';
+import { StatusLabel } from 'constants/index';
+import { downloadFile, generateCSV } from 'helpers/api/utils';
+import { getStatusClassName } from 'utils';
 dayjs.extend(relativeTime)
 
 

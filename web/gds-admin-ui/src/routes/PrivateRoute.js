@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 
-import { APICore } from '../helpers/api/apiCore';
+import { APICore } from 'helpers/api/apiCore';
 
 
 const PrivateRoute = ({ component: Component, ...rest }) => {

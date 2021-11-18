@@ -3,9 +3,9 @@ import { Button } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
-import useSafeDispatch from '../../../../hooks/useSafeDispatch';
-import { updateReviewNoteApiResponseSuccess } from '../../../../redux/review-notes';
-import { updateReviewNote } from '../../../../services/review-notes';
+import useSafeDispatch from 'hooks/useSafeDispatch';
+import { updateReviewNoteApiResponseSuccess } from 'redux/review-notes';
+import { updateReviewNote } from 'services/review-notes';
 
 function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable }) {
     const { register, handleSubmit, watch } = useForm({

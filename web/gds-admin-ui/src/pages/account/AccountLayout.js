@@ -1,7 +1,7 @@
 // @flow
 import React, { useEffect } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
-import { getDirectoryLogo } from '../../utils';
+import { getDirectoryLogo } from 'utils';
 
 type AccountLayoutProps = {
     bottomLinks?: React$Element<any>,
