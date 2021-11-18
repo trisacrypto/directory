@@ -20,27 +20,31 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const (
+	vaspPrefix = "vasps::"
+	certPrefix = "certReqs::"
+)
+
 var (
 	update          = flag.Bool("update", false, "update the gzipped test database")
 	smallDBFixtures = []string{
-		"vasps::d9da630e-41aa-11ec-9d29-acde48001122",
-		"vasps::d9efca14-41aa-11ec-9d29-acde48001122",
+		vaspPrefix + "d9da630e-41aa-11ec-9d29-acde48001122",
+		vaspPrefix + "d9efca14-41aa-11ec-9d29-acde48001122",
 	}
 )
 
-<<<<<<< HEAD
-=======
-var dbVASPs = map[string]*pb.VASP{}
-var dbCerts = map[string]*models.CertificateRequest{}
-
->>>>>>> 3b2d3de1bc2f0b111d34d63cc87d3819e2fd81b7
 type gdsTestSuite struct {
 	suite.Suite
-	fakes    string
-	db       string
-	smallDB  string
-	golden   string
-	fixtures map[string]interface{}
+	fakes       string
+	dbPath      string
+	smallDBPath string
+	dbGzip      string
+	smallDBGzip string
+	fixtures    map[string]interface{}
+}
+
+func getVASPIDFromKey(key string) string {
+	return strings.TrimPrefix(key, vaspPrefix)
 }
 
 // loadFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
@@ -64,23 +68,19 @@ func loadFixtures(s *gdsTestSuite) {
 		// Unmarshal the JSON into the global fixtures map.
 		data, err := os.ReadFile(path)
 		require.NoError(err)
-<<<<<<< HEAD
 		key := strings.TrimSuffix(info.Name(), ".json")
-		if strings.HasPrefix(key, "vasps::") {
-=======
-		if strings.HasPrefix(info.Name(), "vasps::") {
->>>>>>> 3b2d3de1bc2f0b111d34d63cc87d3819e2fd81b7
+		switch {
+		case strings.HasPrefix(key, vaspPrefix):
 			vasp := &pb.VASP{}
 			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
 			s.fixtures[key] = vasp
 			return nil
-		}
-		if strings.HasPrefix(info.Name(), "certs::") {
+		case strings.HasPrefix(key, certPrefix):
 			cert := &models.CertificateRequest{}
 			err = protojson.Unmarshal(data, cert)
 			require.NoError(err)
-			dbCerts[info.Name()] = cert
+			s.fixtures[key] = cert
 			return nil
 		}
 		return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
@@ -102,6 +102,10 @@ func writeObj(s *gdsTestSuite, db *leveldb.DB, key string, obj interface{}) {
 		vasp := obj.(*pb.VASP)
 		data, err = proto.Marshal(vasp)
 		require.NoError(err)
+	case *models.CertificateRequest:
+		cert := obj.(*models.CertificateRequest)
+		data, err = proto.Marshal(cert)
+		require.NoError(err)
 	default:
 		require.Fail(fmt.Sprintf("unrecognized object for key: %s", key))
 	}
@@ -113,10 +117,10 @@ func writeObj(s *gdsTestSuite, db *leveldb.DB, key string, obj interface{}) {
 // should clean up.
 func generateDB(s *gdsTestSuite) {
 	require := s.Require()
-	db, err := leveldb.OpenFile(s.db, nil)
+	db, err := leveldb.OpenFile(s.dbPath, nil)
 	require.NoError(err)
 	defer db.Close()
-	small, err := leveldb.OpenFile(s.smallDB, nil)
+	small, err := leveldb.OpenFile(s.smallDBPath, nil)
 	require.NoError(err)
 	defer small.Close()
 	loadFixtures(s)
@@ -133,10 +137,10 @@ func generateDB(s *gdsTestSuite) {
 		writeObj(s, small, id, obj)
 	}
 
-	err = utils.WriteGzip(s.db, s.golden)
+	err = utils.WriteGzip(s.dbPath, s.dbGzip)
 	require.NoError(err)
 
-	log.Info().Str("db", s.golden).Msg("successfully regenerated test database")
+	log.Info().Str("db", s.dbGzip).Msg("successfully regenerated test database")
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -145,15 +149,18 @@ func (s *gdsTestSuite) SetupSuite() {
 	gin.SetMode(gin.TestMode)
 
 	s.fakes = filepath.Join("testdata", "fakes.tgz")
-	s.golden = filepath.Join("testdata", "db.tgz")
-	s.db, err = ioutil.TempDir("testdata", "db-*")
+	s.dbGzip = filepath.Join("testdata", "db.tgz")
+	s.dbPath, err = ioutil.TempDir("testdata", "db-*")
+	s.smallDBPath, err = ioutil.TempDir("testdata", "smalldb-*")
 	require.NoError(err)
 
 	// Regenerate the test database if requested or it doesn't exist.
 	// Note: generateDB calls loadFixtures under the hood in order to populate the
 	// database. The difference here is whether or not the gzipped file should be
 	// regenerated, which we need to do every time the JSON fixtures are updated.
-	if _, err = os.Stat(s.golden); *update || os.IsNotExist(err) {
+	_, dbErr := os.Stat(s.dbGzip)
+	_, smallDBErr := os.Stat(s.smallDBPath)
+	if *update || os.IsNotExist(dbErr) || os.IsNotExist(smallDBErr) {
 		generateDB(s)
 	} else {
 		loadFixtures(s)
@@ -162,16 +169,22 @@ func (s *gdsTestSuite) SetupSuite() {
 
 func (s *gdsTestSuite) BeforeTest(suite, test string) {
 	// Extract the test database to a temporary directory.
-	if _, err := utils.ExtractGzip(s.golden, s.db); err != nil {
-		log.Warn().Err(err).Msg("unable to extract test fixtures")
+	if _, err := utils.ExtractGzip(s.dbGzip, s.dbPath); err != nil {
+		log.Warn().Err(err).Str("db", s.dbGzip).Msg("unable to extract test fixtures")
+		generateDB(s)
+	}
+
+	// Extract the small test database to a temporary directory.
+	if _, err := utils.ExtractGzip(s.smallDBGzip, s.smallDBPath); err != nil {
+		log.Warn().Err(err).Str("db", s.smallDBGzip).Msg("unable to extract test fixtures")
 		generateDB(s)
 	}
 }
 
 func (s *gdsTestSuite) AfterTest(suite, test string) {
 	require := s.Require()
-	err := os.RemoveAll(s.db)
-	require.NoError(err)
+	require.NoError(os.RemoveAll(s.dbPath))
+	require.NoError(os.RemoveAll(s.smallDBPath))
 }
 
 func TestGds(t *testing.T) {
@@ -180,17 +193,53 @@ func TestGds(t *testing.T) {
 
 func (s *gdsTestSuite) TestFixtures() {
 	require := s.Require()
-	db, err := leveldb.OpenFile(s.db, nil)
+	db, err := leveldb.OpenFile(s.dbPath, nil)
 	require.NoError(err)
 	defer db.Close()
+	smallDB, err := leveldb.OpenFile(s.smallDBPath, nil)
+	require.NoError(err)
+	defer smallDB.Close()
 
-	require.NotEmpty(s.dbVASPs)
-	for name, vasp := range s.dbVASPs {
-		data, err := db.Get([]byte("vasps::"+name), nil)
+	require.NotEmpty(s.fixtures)
+	for name, obj := range s.fixtures {
+		data, err := db.Get([]byte(name), nil)
 		require.NoError(err)
-		actual := &pb.VASP{}
-		err = proto.Unmarshal(data, actual)
+		switch obj.(type) {
+		case *pb.VASP:
+			expected := obj.(*pb.VASP)
+			actual := &pb.VASP{}
+			err = proto.Unmarshal(data, actual)
+			require.NoError(err)
+			require.True(proto.Equal(expected, actual))
+		case *models.CertificateRequest:
+			expected := obj.(*models.CertificateRequest)
+			actual := &models.CertificateRequest{}
+			err = proto.Unmarshal(data, actual)
+			require.NoError(err)
+			require.True(proto.Equal(expected, actual))
+		default:
+			require.Fail(fmt.Sprintf("unrecognized object for key: %s", name))
+		}
+	}
+
+	for _, key := range smallDBFixtures {
+		data, err := smallDB.Get([]byte(key), nil)
 		require.NoError(err)
-		require.True(proto.Equal(vasp, actual))
+		switch {
+		case strings.HasPrefix(key, vaspPrefix):
+			expected := s.fixtures[key].(*pb.VASP)
+			actual := &pb.VASP{}
+			err = proto.Unmarshal(data, actual)
+			require.NoError(err)
+			require.True(proto.Equal(expected, actual))
+		case strings.HasPrefix(key, certPrefix):
+			expected := s.fixtures[key].(*models.CertificateRequest)
+			actual := &models.CertificateRequest{}
+			err = proto.Unmarshal(data, actual)
+			require.NoError(err)
+			require.True(proto.Equal(expected, actual))
+		default:
+			require.Fail(fmt.Sprintf("unrecognized object for key: %s", key))
+		}
 	}
 }
