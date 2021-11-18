@@ -420,12 +420,10 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 	}
 	defer iter.Release()
 
-	var nMessages uint64
+	// Create a closure for making a reply for the iterator to ensure the first and
+	// subsequent messages are all created the same way.
 	var msg *pb.CursorReply
-
-	// Attempt to collect the first result from the query set
-	if iter.Next() {
-		// TODO: should we compose this into its own function?
+	makeReply := func() error {
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
@@ -467,6 +465,28 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 					Region:  object.Version.Parent.Region,
 				},
 			}
+		}
+		return nil
+	}
+
+	// Create a closure for sending messages to ensure message sends are tracked
+	var nMessages uint64
+	send := func() error {
+		// Send the message on the stream
+		if err = stream.Send(msg); err != nil {
+			log.Error().Err(err).Msg("could not send cursor reply during iteration")
+			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
+		}
+
+		// Count the number of messages successfully sent
+		nMessages++
+		return nil
+	}
+
+	// Attempt to collect the first result from the query set
+	if iter.Next() {
+		if err = makeReply(); err != nil {
+			return err
 		}
 	} else {
 		// There are no results to send, close the cursor
@@ -495,56 +515,13 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 		// Send the previous message, marking next as true
 		msg.Next = true
-		if err = stream.Send(msg); err != nil {
-			log.Error().Err(err).Msg("could not send cursor reply during iteration")
-			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
+		if err = send(); err != nil {
+			return err
 		}
-
-		// Count the number of messages successfully sent
-		nMessages++
 
 		// Create the next message
-		// Fetch the metadata since it will need to be loaded for the response anyway.
-		var object *object.Object
-		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
-			return status.Error(codes.FailedPrecondition, "database is in invalid state")
-		}
-
-		// Create the key value pair to send in the cursor stream
-		// NOTE: cannot call iter.Next() here or the iterator will advance
-		msg = &pb.CursorReply{
-			Next:  false,
-			Value: &pb.KVPair{},
-		}
-
-		if !opts.IterNoKeys {
-			msg.Value.Key = object.Key
-			msg.Value.Namespace = object.Namespace
-		}
-
-		if !opts.IterNoValues {
-			msg.Value.Value = object.Data
-		}
-
-		if opts.ReturnMeta {
-			// TODO: this is duplicated code with the Get method, make it a helper function.
-			msg.Value.Meta = &pb.Meta{
-				Key:       object.Key,
-				Namespace: object.Namespace,
-				Region:    object.Region,
-				Owner:     object.Owner,
-				Version: &pb.Version{
-					Pid:     object.Version.Pid,
-					Version: object.Version.Version,
-					Region:  object.Version.Region,
-				},
-				Parent: &pb.Version{
-					Pid:     object.Version.Parent.Pid,
-					Version: object.Version.Parent.Version,
-					Region:  object.Version.Parent.Region,
-				},
-			}
+		if err = makeReply(); err != nil {
+			return err
 		}
 	}
 
@@ -555,13 +532,9 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 	// Send the final message, next should be false
 	msg.Next = false
-	if err = stream.Send(msg); err != nil {
-		log.Error().Err(err).Msg("could not send cursor reply during iteration")
-		return status.Errorf(codes.Aborted, "send error occurred: %s", err)
+	if err = send(); err != nil {
+		return err
 	}
-
-	// Count the number of messages successfully sent
-	nMessages++
 
 	// Cursor stream complete
 	log.Info().
