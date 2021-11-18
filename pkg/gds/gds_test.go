@@ -22,11 +22,11 @@ import (
 
 const (
 	vaspPrefix = "vasps::"
-	certPrefix = "certReqs::"
+	certPrefix = "certreqs::"
 )
 
 var (
-	update          = flag.Bool("update", false, "update the gzipped test database")
+	update          = flag.Bool("update", false, "update the gzipped test databases")
 	smallDBFixtures = []string{
 		vaspPrefix + "d9da630e-41aa-11ec-9d29-acde48001122",
 		vaspPrefix + "d9efca14-41aa-11ec-9d29-acde48001122",
@@ -48,10 +48,10 @@ func getVASPIDFromKey(key string) string {
 }
 
 // loadFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
-func loadFixtures(s *gdsTestSuite) {
+func (s *gdsTestSuite) loadFixtures() {
 	require := s.Require()
 	// Extract the gzipped archive.
-	root, err := utils.ExtractGzip(s.fakes, "testdata")
+	root, err := utils.ExtractGzip(s.fakes, "testdata", true)
 	require.NoError(err)
 
 	s.fixtures = make(map[string]interface{})
@@ -86,12 +86,11 @@ func loadFixtures(s *gdsTestSuite) {
 		return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
 	})
 	require.NoError(err)
-	os.RemoveAll(root)
-	require.NoError(err)
+	require.NoError(os.RemoveAll(root))
 }
 
 // writeObj writes a protobuf object to the given database.
-func writeObj(s *gdsTestSuite, db *leveldb.DB, key string, obj interface{}) {
+func (s *gdsTestSuite) writeObj(db *leveldb.DB, key string, obj interface{}) {
 	var (
 		data []byte
 		err  error
@@ -115,7 +114,7 @@ func writeObj(s *gdsTestSuite, db *leveldb.DB, key string, obj interface{}) {
 // generateDB generates an updated database and compresses it to a gzip file.
 // Note: This also generates a temporary directory which the suite teardown
 // should clean up.
-func generateDB(s *gdsTestSuite) {
+func (s *gdsTestSuite) generateDB() {
 	require := s.Require()
 	db, err := leveldb.OpenFile(s.dbPath, nil)
 	require.NoError(err)
@@ -123,24 +122,23 @@ func generateDB(s *gdsTestSuite) {
 	small, err := leveldb.OpenFile(s.smallDBPath, nil)
 	require.NoError(err)
 	defer small.Close()
-	loadFixtures(s)
+	s.loadFixtures()
 
 	// Write all the test fixtures to the database.
 	for id, obj := range s.fixtures {
-		writeObj(s, db, id, obj)
+		s.writeObj(db, id, obj)
 	}
+	require.NoError(utils.WriteGzip(s.dbPath, s.dbGzip))
+	log.Info().Str("db", s.dbGzip).Msg("successfully regenerated test database")
 
 	// Write test fixtures to the small database.
 	for _, id := range smallDBFixtures {
 		obj, ok := s.fixtures[id]
 		require.True(ok)
-		writeObj(s, small, id, obj)
+		s.writeObj(small, id, obj)
 	}
-
-	err = utils.WriteGzip(s.dbPath, s.dbGzip)
-	require.NoError(err)
-
-	log.Info().Str("db", s.dbGzip).Msg("successfully regenerated test database")
+	require.NoError(utils.WriteGzip(s.smallDBPath, s.smallDBGzip))
+	log.Info().Str("db", s.smallDBGzip).Msg("successfully regenerated test database")
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -150,6 +148,7 @@ func (s *gdsTestSuite) SetupSuite() {
 
 	s.fakes = filepath.Join("testdata", "fakes.tgz")
 	s.dbGzip = filepath.Join("testdata", "db.tgz")
+	s.smallDBGzip = filepath.Join("testdata", "smalldb.tgz")
 	s.dbPath, err = ioutil.TempDir("testdata", "db-*")
 	s.smallDBPath, err = ioutil.TempDir("testdata", "smalldb-*")
 	require.NoError(err)
@@ -159,25 +158,25 @@ func (s *gdsTestSuite) SetupSuite() {
 	// database. The difference here is whether or not the gzipped file should be
 	// regenerated, which we need to do every time the JSON fixtures are updated.
 	_, dbErr := os.Stat(s.dbGzip)
-	_, smallDBErr := os.Stat(s.smallDBPath)
+	_, smallDBErr := os.Stat(s.smallDBGzip)
 	if *update || os.IsNotExist(dbErr) || os.IsNotExist(smallDBErr) {
-		generateDB(s)
+		s.generateDB()
 	} else {
-		loadFixtures(s)
+		s.loadFixtures()
 	}
 }
 
 func (s *gdsTestSuite) BeforeTest(suite, test string) {
 	// Extract the test database to a temporary directory.
-	if _, err := utils.ExtractGzip(s.dbGzip, s.dbPath); err != nil {
+	if _, err := utils.ExtractGzip(s.dbGzip, s.dbPath, false); err != nil {
 		log.Warn().Err(err).Str("db", s.dbGzip).Msg("unable to extract test fixtures")
-		generateDB(s)
+		s.generateDB()
 	}
 
 	// Extract the small test database to a temporary directory.
-	if _, err := utils.ExtractGzip(s.smallDBGzip, s.smallDBPath); err != nil {
+	if _, err := utils.ExtractGzip(s.smallDBGzip, s.smallDBPath, false); err != nil {
 		log.Warn().Err(err).Str("db", s.smallDBGzip).Msg("unable to extract test fixtures")
-		generateDB(s)
+		s.generateDB()
 	}
 }
 
