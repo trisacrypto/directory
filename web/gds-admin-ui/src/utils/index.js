@@ -1,5 +1,5 @@
 import config from '../config';
-import { ENVIRONMENT, Status } from '../constants';
+import { ENVIRONMENT, Status, VERIFIED_CONTACT_STATUS } from '../constants';
 import { DIRECTORY } from '../constants';
 import TrisatestLogo from '../assets/images/gds-trisatest-logo.png';
 import VaspDirectoryLogo from '../assets/images/gds-vaspdirectory-logo.png';
@@ -117,15 +117,19 @@ function isValidHttpUrl(string) {
     return url.protocol === "http:" || url.protocol === "https:";
 }
 
-/**
- * 
- * @param {Object} contact contact you want to verify
- * @param {Object} verifiedContact list of verified contacts
- * @returns boolean
- */
-function isVerifiedContact(contact, verifiedContact) {
-    const verifiedContacts = typeof verifiedContact === 'object' ? Object.values(verifiedContact) : []
-    return verifiedContacts.includes(contact.email)
+function verifiedContactStatus({ data, type = '', verifiedContact }) {
+
+    // perform verified
+    if (Object.keys(verifiedContact).includes(type.toLowerCase())) {
+        return VERIFIED_CONTACT_STATUS.VERIFIED
+    }
+
+    // perform alternate verified
+    if (Object.values(verifiedContact).includes(data?.email)) {
+        return VERIFIED_CONTACT_STATUS.ALTERNATE_VERIFIED
+    }
+
+    return VERIFIED_CONTACT_STATUS.UNVERIFIED
 }
 
 const formatDate = (date) => date ? dayjs(date).format('DD-MM-YYYY') : 'N/A';
@@ -138,4 +142,4 @@ function generateMd5(data = '') {
     return crypto.createHash('md5').update(data).digest("hex");
 }
 
-export { generateMd5, formatDate, isVerifiedContact, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+export { verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
