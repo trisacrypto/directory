@@ -3,12 +3,16 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 
 	"github.com/rotationalio/honu"
+	"github.com/rotationalio/honu/iterator"
 	"github.com/rotationalio/honu/object"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/comparer"
+	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -170,8 +174,194 @@ func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
+// Iter is a unary request to fetch a materialized collection of key/value pairs based
+// on a shared prefix. If no prefix is specified an entire namespace may be returned.
+// This RPC supports pagination to ensure that replies do not get to large. The default
+// page size is 100 items, though this can be modified in the options. The next page
+// token in the result will contain the next page to request, or will be empty if there
+// are no more results to be supplied.
+//
+// Note that there are no snapshot guarantees during iteration, meaning that if the
+// underlying database changes between requests, these changes could be reflected during
+// iteration. For snapshot isolation in iteration, use the Cursor RPC.
+//
+// There are several options that modulate the Iter response:
+//   - return_meta: each key/value pair will contain the object metadata
+//   - iter_no_keys: each key/value pair will not have a key associated with it
+//   - iter_no_values: each key/value pair will not have a value associaed with it
+//   - page_token: the page of results that the user wishes to fetch
+//   - page_size: the number of results to be returned in the request
 func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	// Ensure the namespace is not reserved
+	if _, found := reservedNamespaces[in.Namespace]; found {
+		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		return nil, status.Error(codes.PermissionDenied, "cannot used reserved namespace")
+	}
+
+	// Load the options from the request
+	var opts *pb.Options
+	if in.Options != nil {
+		opts = in.Options
+	} else {
+		// Create empty options
+		opts = &pb.Options{}
+	}
+
+	// Load defaults into options
+	if opts.PageSize == 0 {
+		opts.PageSize = 100
+	}
+
+	// Test valid options
+	if opts.IterNoKeys && opts.IterNoValues && !opts.ReturnMeta {
+		log.Debug().
+			Str("namespace", in.Namespace).
+			Bool("iter_no_keys", opts.IterNoKeys).
+			Bool("iter_no_values", opts.IterNoValues).
+			Bool("return_meta", opts.ReturnMeta).
+			Msg("iter request would return no data")
+		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+	}
+
+	// Compute the actual starting prefix as the namespace plus the key
+	var prefix []byte
+	if in.Namespace != "" {
+		prefix = prepend(in.Namespace, in.Prefix)
+	} else {
+		prefix = prepend("default", in.Prefix)
+	}
+
+	// If a page cursor is provided load it, otherwise create the cursor for iteration
+	cursor := &internal.PageCursor{}
+	if opts.PageToken != "" {
+		if err = cursor.Load(opts.PageToken); err != nil {
+			log.Warn().Err(err).Msg("invalid page token on iter request")
+			return nil, status.Error(codes.InvalidArgument, "invalid page token")
+		}
+
+		// Validate the request has not changed
+		if cursor.PageSize != opts.PageSize {
+			log.Debug().Int32("cursor", cursor.PageSize).Int32("opts", opts.PageSize).Msg("invalid iter request: mismatched page size")
+			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
+		}
+
+		if !bytes.HasPrefix(cursor.NextKey, prefix) {
+			log.Debug().Msg("invalid iter request: mismatched prefix")
+			return nil, status.Error(codes.InvalidArgument, "prefix and namespace cannot change between requests")
+		}
+
+	} else {
+		// Create a new cursor
+		cursor.PageSize = opts.PageSize
+	}
+
+	// Create response
+	out = &pb.IterReply{
+		Values: make([]*pb.KVPair, 0, cursor.PageSize),
+	}
+
+	// TODO: in order to support more complex iteration such as jumping to the next key
+	// in the page, honu needs to offer better support for leveldb iteration options.
+	// Until this is implemented, we just iterate over the prefix until we get to the
+	// start of the next page, which is extremely inefficient, especially for large
+	// datasets. [Create a story for implementing iter.Seek() in Honu]
+	var iter iterator.Iterator
+	if iter, err = h.db.Iter(prefix); err != nil {
+		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
+		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
+	}
+	defer iter.Release()
+
+	for iter.Next() {
+		// Determine if we need to seek to the next page or not
+		key := iter.Key()
+		if len(cursor.NextKey) > 0 {
+			// We need to seek since there is a page token
+			// If the current key is lexicographically before the next key, then we need
+			// to continue seeking. Note that we cannot use equality here because the
+			// next key may have been deleted between requests, which means we'd seek to
+			// the end of the iteration without returning the page. Unfortunately, the
+			// lexicographic ordering that we're computing is heavily dependent on the
+			// underlying representation, so I'm just guessing with leveldb for now.
+			// TODO: this needs to be replaced with honu Seek!
+			if comparer.DefaultComparer.Compare(key, cursor.NextKey) < 0 {
+				continue
+			} else {
+				// We've reached the end of the seek, we need to reset the cursor so
+				// that we can capture the next key or stop if there are no more results
+				cursor.NextKey = nil
+			}
+		}
+
+		// Check if we're done iterating (e.g. at the end of the page with a next page)
+		if len(out.Values) == int(cursor.PageSize) {
+			// The current key is the next key for the next page, stop iteration
+			cursor.NextKey = key
+			break
+		}
+
+		// Otherwise append the current key value pair to the page.
+		// Fetch the metadata since it will need to be loaded for the response anyway.
+		var object *object.Object
+		if object, err = iter.Object(); err != nil {
+			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(key)).Msg("could not fetch object metadata")
+			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
+		}
+
+		// Create the key value pair
+		pair := &pb.KVPair{}
+		if !opts.IterNoKeys {
+			pair.Key = object.Key
+			pair.Namespace = object.Namespace
+		}
+
+		if !opts.IterNoValues {
+			pair.Value = object.Data
+		}
+
+		if opts.ReturnMeta {
+			// TODO: this is duplicated code with the Get method, make it a helper function.
+			pair.Meta = &pb.Meta{
+				Key:       object.Key,
+				Namespace: object.Namespace,
+				Region:    object.Region,
+				Owner:     object.Owner,
+				Version: &pb.Version{
+					Pid:     object.Version.Pid,
+					Version: object.Version.Version,
+					Region:  object.Version.Region,
+				},
+				Parent: &pb.Version{
+					Pid:     object.Version.Parent.Pid,
+					Version: object.Version.Parent.Version,
+					Region:  object.Version.Parent.Region,
+				},
+			}
+		}
+
+		out.Values = append(out.Values, pair)
+	}
+
+	if err = iter.Error(); err != nil {
+		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
+		return nil, status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
+	}
+
+	// Check if there is a next page cursor
+	if len(cursor.NextKey) != 0 {
+		if out.NextPageToken, err = cursor.Dump(); err != nil {
+			log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not serialize next page token")
+			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
+		}
+	}
+
+	// Request complete
+	log.Info().
+		Str("namespace", in.Namespace).
+		Int("count", len(out.Values)).
+		Bool("has_next_page", out.NextPageToken != "").
+		Msg("iter request complete")
+	return out, nil
 }
 
 // Batch is a client-side streaming request to issue multiple commands, usually Put and Delete.
@@ -246,8 +436,144 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 	}
 }
 
+// Cursor is a server-side streaming request to fetch a collection of key/value pairs
+// based on a shared prefix. If no prefix is specified an entire namespace may be
+// returned. The pairs are streamed one value at a time so that the client can control
+// iteration and materialization without overloading either the server or the network.
+//
+// Note that there is a snapshot guarantee during iteration, meaning that if the
+// underlying database changes via a concurrent request, the cursor stream will not be
+// effected. Use Cursor instead of Iter if you require snapshot isolation reads.
+//
+// There are several options that modulate the Cursor stream:
+//   - return_meta: each key/value pair will contain the object metadata
+//   - iter_no_keys: each key/value pair will not have a key associated with it
+//   - iter_no_values: each key/value pair will not have a value associaed with it
+//   - page_token: the page of results that the user wishes to fetch
+//   - page_size: the number of results to be returned in the request
 func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) (err error) {
-	return status.Error(codes.Unimplemented, "not implemented")
+	// Fetch the stream context
+	ctx := stream.Context()
+
+	// Ensure the namespace is not reserved
+	if _, found := reservedNamespaces[in.Namespace]; found {
+		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		return status.Error(codes.PermissionDenied, "cannot used reserved namespace")
+	}
+
+	// Load the options from the request
+	var opts *pb.Options
+	if in.Options != nil {
+		opts = in.Options
+	} else {
+		// Create empty options
+		opts = &pb.Options{}
+	}
+
+	// Test valid options
+	if opts.IterNoKeys && opts.IterNoValues && !opts.ReturnMeta {
+		log.Debug().
+			Str("namespace", in.Namespace).
+			Bool("iter_no_keys", opts.IterNoKeys).
+			Bool("iter_no_values", opts.IterNoValues).
+			Bool("return_meta", opts.ReturnMeta).
+			Msg("cursor request would return no data")
+		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+	}
+
+	// Compute the actual starting prefix as the namespace plus the key
+	var prefix []byte
+	if in.Namespace != "" {
+		prefix = prepend(in.Namespace, in.Prefix)
+	} else {
+		prefix = prepend("default", in.Prefix)
+	}
+
+	// TODO: should we support more complex iteration such as seeks in the cursor request?
+	var iter iterator.Iterator
+	if iter, err = h.db.Iter(prefix); err != nil {
+		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
+		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
+	}
+	defer iter.Release()
+
+	var nMessages uint64
+	for iter.Next() {
+		// Check if the client has closed the stream
+		select {
+		case <-ctx.Done():
+			if err = ctx.Err(); err != nil && err != io.EOF {
+				log.Error().Err(err).Msg("cursor canceled by client with error")
+				return status.Errorf(codes.Canceled, "cursor canceled by client: %s", err)
+			}
+			log.Info().
+				Str("namespace", in.Namespace).
+				Uint64("count", nMessages).
+				Msg("cursor request canceled by client")
+			return nil
+		default:
+		}
+
+		// Fetch the metadata since it will need to be loaded for the response anyway.
+		var object *object.Object
+		if object, err = iter.Object(); err != nil {
+			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
+			return status.Error(codes.FailedPrecondition, "database is in invalid state")
+		}
+
+		// Create the key value pair to send in the cursor stream
+		// NOTE: cannot call iter.Next() here or the iterator will advance
+		msg := &pb.KVPair{}
+		if !opts.IterNoKeys {
+			msg.Key = object.Key
+			msg.Namespace = object.Namespace
+		}
+
+		if !opts.IterNoValues {
+			msg.Value = object.Data
+		}
+
+		if opts.ReturnMeta {
+			// TODO: this is duplicated code with the Get method, make it a helper function.
+			msg.Meta = &pb.Meta{
+				Key:       object.Key,
+				Namespace: object.Namespace,
+				Region:    object.Region,
+				Owner:     object.Owner,
+				Version: &pb.Version{
+					Pid:     object.Version.Pid,
+					Version: object.Version.Version,
+					Region:  object.Version.Region,
+				},
+				Parent: &pb.Version{
+					Pid:     object.Version.Parent.Pid,
+					Version: object.Version.Parent.Version,
+					Region:  object.Version.Parent.Region,
+				},
+			}
+		}
+
+		// Send the message on the stream
+		if err = stream.Send(msg); err != nil {
+			log.Error().Err(err).Msg("could not send cursor reply during iteration")
+			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
+		}
+
+		// Count the number of messages successfully sent
+		nMessages++
+	}
+
+	if err = iter.Error(); err != nil {
+		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
+		return status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
+	}
+
+	// Cursor stream complete
+	log.Info().
+		Str("namespace", in.Namespace).
+		Uint64("count", nMessages).
+		Msg("cursor request complete")
+	return nil
 }
 
 func (h *HonuService) Sync(stream pb.Trtl_SyncServer) (err error) {
