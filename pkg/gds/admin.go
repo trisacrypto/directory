@@ -570,16 +570,18 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	// Determine status filter
-	var status pb.VerificationState
-	if in.Status != "" {
-		in.Status = strings.ToUpper(strings.ReplaceAll(in.Status, " ", "_"))
-		sn, ok := pb.VerificationState_value[in.Status]
-		if !ok {
-			log.Warn().Str("status", in.Status).Msg("unknown verification status")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown verification status %q", in.Status)))
-			return
+	filters := make(map[pb.VerificationState]struct{})
+	if in.StatusFilters != nil {
+		for i, s := range in.StatusFilters {
+			in.StatusFilters[i] = strings.ToUpper(strings.ReplaceAll(s, " ", "_"))
+			sn, ok := pb.VerificationState_value[in.StatusFilters[i]]
+			if !ok {
+				log.Warn().Str("status", in.StatusFilters[i]).Msg("unknown verification status")
+				c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown verification status %q", in.StatusFilters[i])))
+				return
+			}
+			filters[pb.VerificationState(sn)] = struct{}{}
 		}
-		status = pb.VerificationState(sn)
 	}
 
 	// Set pagination defaults if not specified in query
@@ -604,8 +606,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	// Query the list of VASPs from the data store
 	iter := s.db.ListVASPs()
 	defer iter.Release()
-	for iter.Next() {
-		out.Count++
+	for out.Count = 0; iter.Next(); out.Count++ {
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// In the page range so add to the list reply
 			// Fetch VASP from the database
@@ -615,8 +616,8 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 				continue
 			}
 
-			// Check the status before continuing
-			if status != pb.VerificationState_NO_VERIFICATION && vasp.VerificationStatus != status {
+			// Check against the status filters before continuing
+			if _, ok := filters[vasp.VerificationStatus]; len(filters) > 0 && !ok {
 				continue
 			}
 

@@ -87,9 +87,9 @@ type AutocompleteReply struct {
 // ListVASPsParams is a request-like struct that passes query params to the ListVASPs
 // GET request. All query params are optional and modify how and what data is retrieved.
 type ListVASPsParams struct {
-	Status   string `url:"status,omitempty" form:"status"`
-	Page     int    `url:"page,omitempty" form:"page" default:"1"`             // defaults to page 1 if not included
-	PageSize int    `url:"page_size,omitempty" form:"page_size" default:"100"` // defaults to 100 if not included
+	StatusFilters []string `url:"status_filters,omitempty" form:"status_filters"`
+	Page          int      `url:"page,omitempty" form:"page" default:"1"`             // defaults to page 1 if not included
+	PageSize      int      `url:"page_size,omitempty" form:"page_size" default:"100"` // defaults to 100 if not included
 }
 
 // ListVASPsReply contains a summary data structure of all VASPs managed by the directory.
