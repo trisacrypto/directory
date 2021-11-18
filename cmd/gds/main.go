@@ -874,9 +874,9 @@ func adminListVASPs(c *cli.Context) (err error) {
 	defer cancel()
 
 	params := &admin.ListVASPsParams{
-		Page:     c.Int("page"),
-		PageSize: c.Int("page-size"),
-		Status:   c.String("status"),
+		Page:          c.Int("page"),
+		PageSize:      c.Int("page-size"),
+		StatusFilters: c.StringSlice("status-filters"),
 	}
 
 	var rep *admin.ListVASPsReply
