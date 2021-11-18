@@ -207,18 +207,19 @@ func (s *trtlTestSuite) TestIter() {
 	s.StatusError(err, codes.InvalidArgument, "prefix and namespace cannot change between requests")
 
 	// Test ordered non-paginated request with prefix
-	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("213")})
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215")})
 	require.NoError(err, "could not fetch complete iteration")
 	require.Empty(rep.NextPageToken, "a next page token was returned for a one page response")
 	require.Len(rep.Values, 5, "incorrect responses returned did the fixtures change?")
 
 	expectedOrder := []string{
-		"alice", "bob", "charlie", "darelene", "erica",
+		"alice", "bob", "charlie", "darlene", "erica",
 		"franklin", "gregor", "helen", "ivan", "juliet",
 	}
 
 	for i := 0; i < 5; i++ {
 		expected := dbFixtures[expectedOrder[i]]
+		require.NotNil(expected)
 		pair := rep.Values[i]
 		require.Equal("people", pair.Namespace)
 		require.Empty(pair.Meta)
@@ -230,7 +231,7 @@ func (s *trtlTestSuite) TestIter() {
 	}
 
 	// Test No Keys
-	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("213"), Options: &pb.Options{IterNoKeys: true}})
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215"), Options: &pb.Options{IterNoKeys: true}})
 	require.NoError(err, "could not fetch complete iteration")
 	require.NotEmpty(rep.Values, "no values returned, expected more than 1")
 
@@ -241,7 +242,7 @@ func (s *trtlTestSuite) TestIter() {
 	}
 
 	// Test No Values
-	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("213"), Options: &pb.Options{IterNoValues: true}})
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215"), Options: &pb.Options{IterNoValues: true}})
 	require.NoError(err, "could not fetch complete iteration")
 	require.NotEmpty(rep.Values, "no values returned, expected more than 1")
 
@@ -252,7 +253,7 @@ func (s *trtlTestSuite) TestIter() {
 	}
 
 	// Test Return Meta
-	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("213"), Options: &pb.Options{ReturnMeta: true}})
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215"), Options: &pb.Options{ReturnMeta: true}})
 	require.NoError(err, "could not fetch complete iteration")
 	require.NotEmpty(rep.Values, "no values returned, expected more than 1")
 
@@ -288,8 +289,6 @@ func (s *trtlTestSuite) TestIter() {
 		if rep.NextPageToken == "" {
 			break
 		}
-
-		fmt.Println(rep)
 	}
 
 	require.Equal(4, pages, "number of people pages changed, have fixtures been modified?")

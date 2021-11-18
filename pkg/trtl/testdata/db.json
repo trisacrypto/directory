@@ -1,7 +1,7 @@
 {
     "alice": {
         "namespace": "people",
-        "key": "213zzyo7bhPiycT864TwYko5lwd",
+        "key": "215jKbTZaxhiYTlFg2Oar6GtTRo",
         "value": {
             "name": "Alice",
             "email": "alice@example.com"
@@ -9,7 +9,7 @@
     },
     "bob": {
         "namespace": "people",
-        "key": "213zzxUKxplwljF0o9pbkA6vtpE",
+        "key": "215jKn3WBJH9GtDyhrDTfbDp3Fu",
         "value": {
             "name": "Bob",
             "email": "bob@example.com"
@@ -17,7 +17,7 @@
     },
     "charlie": {
         "namespace": "people",
-        "key": "213zzz51uThrKmAX5nc63qrUkRp",
+        "key": "215jKrSAf53dHtWiETJvrE9dVvk",
         "value": {
             "name": "Charlie",
             "email": "charlie@example.com"
@@ -25,7 +25,7 @@
     },
     "darlene": {
         "namespace": "people",
-        "key": "213zztqX5hZrYTbAAh3Xjc7QYr8",
+        "key": "215jLPDqQmihZn9LRKR3dDOIRLe",
         "value": {
             "name": "Darlene",
             "email": "darlene@example.com"
@@ -33,7 +33,7 @@
     },
     "erica": {
         "namespace": "people",
-        "key": "213zzut6CEwi9RYTAnhAvhNEeME",
+        "key": "215jMHx9AYKuIU2BSOHpOmrrYKj",
         "value": {
             "name": "Erica",
             "email": "erica@example.com"
@@ -41,7 +41,7 @@
     },
     "franklin": {
         "namespace": "people",
-        "key": "21403L4qznViscr4qzfKRiBBGkH",
+        "key": "216jMLwJTj7JUpbGezGCl5iQDG2",
         "value": {
             "name": "Franklin",
             "email": "franklin@example.com"
@@ -49,7 +49,7 @@
     },
     "gregor": {
         "namespace": "people",
-        "key": "21403Hdh6mShTENwrimgCyXRWjI",
+        "key": "216jSMoCV00P4mBXGJzTMiE1zmm",
         "value": {
             "name": "Gregor",
             "email": "gregor@example.com"
@@ -57,7 +57,7 @@
     },
     "helen": {
         "namespace": "people",
-        "key": "21403MdwcbQqLWIVSCUwVc3vYs8",
+        "key": "216jTPSoq9uwjUGqdPF23KWFJ82",
         "value": {
             "name": "Helen",
             "email": "helen@example.com"
@@ -65,7 +65,7 @@
     },
     "ivan": {
         "namespace": "people",
-        "key": "21403Mo6vqoRu6PJ2AqpWqbgQd9",
+        "key": "216jUrdMsgAo9MzNbk1RcnLwHOb",
         "value": {
             "name": "Ivan",
             "email": "ivan@example.com"
@@ -73,7 +73,7 @@
     },
     "juliet": {
         "namespace": "people",
-        "key": "21403ME0b07vjf3WuUlHb70JAxi",
+        "key": "216jWMa5WpXmjlVZabbQyoR53nO",
         "value": {
             "name": "Juliet",
             "email": "juliet@example.com"

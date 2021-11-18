@@ -224,6 +224,10 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			// TODO: this needs to be replaced with honu Seek!
 			if comparer.DefaultComparer.Compare(key, cursor.NextKey) < 0 {
 				continue
+			} else {
+				// We've reached the end of the seek, we need to reset the cursor so
+				// that we can capture the next key or stop if there are no more results
+				cursor.NextKey = nil
 			}
 		}
 
