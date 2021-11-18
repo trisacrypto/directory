@@ -613,11 +613,13 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			var vasp *pb.VASP
 			if vasp = iter.VASP(); vasp == nil {
 				// VASP could not be parsed; error logged in VASP() method continue iteration
+				out.Count--
 				continue
 			}
 
 			// Check against the status filters before continuing
 			if _, ok := filters[vasp.VerificationStatus]; len(filters) > 0 && !ok {
+				out.Count--
 				continue
 			}
 
