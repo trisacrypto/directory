@@ -420,83 +420,7 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 	}
 	defer iter.Release()
 
-	// Create a closure for making a reply for the iterator to ensure the first and
-	// subsequent messages are all created the same way.
-	var msg *pb.CursorReply
-	makeReply := func() error {
-		// Fetch the metadata since it will need to be loaded for the response anyway.
-		var object *object.Object
-		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
-			return status.Error(codes.FailedPrecondition, "database is in invalid state")
-		}
-
-		// Create the key value pair to send in the cursor stream
-		// NOTE: cannot call iter.Next() here or the iterator will advance
-		msg = &pb.CursorReply{
-			Next:  false,
-			Value: &pb.KVPair{},
-		}
-
-		if !opts.IterNoKeys {
-			msg.Value.Key = object.Key
-			msg.Value.Namespace = object.Namespace
-		}
-
-		if !opts.IterNoValues {
-			msg.Value.Value = object.Data
-		}
-
-		if opts.ReturnMeta {
-			// TODO: this is duplicated code with the Get method, make it a helper function.
-			msg.Value.Meta = &pb.Meta{
-				Key:       object.Key,
-				Namespace: object.Namespace,
-				Region:    object.Region,
-				Owner:     object.Owner,
-				Version: &pb.Version{
-					Pid:     object.Version.Pid,
-					Version: object.Version.Version,
-					Region:  object.Version.Region,
-				},
-				Parent: &pb.Version{
-					Pid:     object.Version.Parent.Pid,
-					Version: object.Version.Parent.Version,
-					Region:  object.Version.Parent.Region,
-				},
-			}
-		}
-		return nil
-	}
-
-	// Create a closure for sending messages to ensure message sends are tracked
 	var nMessages uint64
-	send := func() error {
-		// Send the message on the stream
-		if err = stream.Send(msg); err != nil {
-			log.Error().Err(err).Msg("could not send cursor reply during iteration")
-			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
-		}
-
-		// Count the number of messages successfully sent
-		nMessages++
-		return nil
-	}
-
-	// Attempt to collect the first result from the query set
-	if iter.Next() {
-		if err = makeReply(); err != nil {
-			return err
-		}
-	} else {
-		// There are no results to send, close the cursor
-		log.Info().
-			Str("namespace", in.Namespace).
-			Uint64("count", nMessages).
-			Msg("no results returned by cursor")
-		return nil
-	}
-
 	for iter.Next() {
 		// Check if the client has closed the stream
 		select {
@@ -513,27 +437,58 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		default:
 		}
 
-		// Send the previous message, marking next as true
-		msg.Next = true
-		if err = send(); err != nil {
-			return err
+		// Fetch the metadata since it will need to be loaded for the response anyway.
+		var object *object.Object
+		if object, err = iter.Object(); err != nil {
+			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
+			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
-		// Create the next message
-		if err = makeReply(); err != nil {
-			return err
+		// Create the key value pair to send in the cursor stream
+		// NOTE: cannot call iter.Next() here or the iterator will advance
+		msg := &pb.KVPair{}
+		if !opts.IterNoKeys {
+			msg.Key = object.Key
+			msg.Namespace = object.Namespace
 		}
+
+		if !opts.IterNoValues {
+			msg.Value = object.Data
+		}
+
+		if opts.ReturnMeta {
+			// TODO: this is duplicated code with the Get method, make it a helper function.
+			msg.Meta = &pb.Meta{
+				Key:       object.Key,
+				Namespace: object.Namespace,
+				Region:    object.Region,
+				Owner:     object.Owner,
+				Version: &pb.Version{
+					Pid:     object.Version.Pid,
+					Version: object.Version.Version,
+					Region:  object.Version.Region,
+				},
+				Parent: &pb.Version{
+					Pid:     object.Version.Parent.Pid,
+					Version: object.Version.Parent.Version,
+					Region:  object.Version.Parent.Region,
+				},
+			}
+		}
+
+		// Send the message on the stream
+		if err = stream.Send(msg); err != nil {
+			log.Error().Err(err).Msg("could not send cursor reply during iteration")
+			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
+		}
+
+		// Count the number of messages successfully sent
+		nMessages++
 	}
 
 	if err = iter.Error(); err != nil {
 		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
 		return status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
-	}
-
-	// Send the final message, next should be false
-	msg.Next = false
-	if err = send(); err != nil {
-		return err
 	}
 
 	// Cursor stream complete

@@ -348,7 +348,7 @@ func (s *trtlTestSuite) TestCursor() {
 	s.StatusError(err, codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 
 	// Test iter default prefix, default options, expecting 1 response from default namespace
-	results := make([]*pb.CursorReply, 0, 1)
+	results := make([]*pb.KVPair, 0, 1)
 	stream, err = client.Cursor(ctx, &pb.CursorRequest{})
 	require.NoError(err, "could not create cursor stream")
 	for {
@@ -357,10 +357,10 @@ func (s *trtlTestSuite) TestCursor() {
 			break
 		}
 		require.NoError(err, "received non-EOF error from recv")
-		require.NotEmpty(rep.Value.Key, "key not supplied in iter by default")
-		require.NotEmpty(rep.Value.Value, "value not supplied in iter by default")
-		require.Equal("default", rep.Value.Namespace, "non-default namespace fetched")
-		require.Empty(rep.Value.Meta, "meta returned by default")
+		require.NotEmpty(rep.Key, "key not supplied in iter by default")
+		require.NotEmpty(rep.Value, "value not supplied in iter by default")
+		require.Equal("default", rep.Namespace, "non-default namespace fetched")
+		require.Empty(rep.Meta, "meta returned by default")
 
 		results = append(results, rep)
 	}
@@ -377,23 +377,15 @@ func (s *trtlTestSuite) TestCursor() {
 
 	i := 0
 	for {
-		rep, err := stream.Recv()
+		pair, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		require.NoError(err, "received non-EOF error from recv")
 
-		// We're expecting 5 values returned, so Next should be false on i==4
-		if i < 4 {
-			require.True(rep.Next, "cursor next is false with more results expected")
-		} else {
-			require.False(rep.Next, "cursor next is true with no more results expected")
-		}
-
 		expected := dbFixtures[expectedOrder[i]]
 		require.NotNil(expected)
 
-		pair := rep.Value
 		require.Equal("people", pair.Namespace)
 		require.Empty(pair.Meta)
 		require.Equal(expected.Key, string(pair.Key), "incorrect key on index %d", i)
@@ -410,13 +402,12 @@ func (s *trtlTestSuite) TestCursor() {
 	require.NoError(err, "could not create cursor stream")
 
 	for {
-		rep, err := stream.Recv()
+		pair, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		require.NoError(err, "received non-EOF error from recv")
 
-		pair := rep.Value
 		require.Empty(pair.Key, "key returned on no keys")
 		require.NotEmpty(pair.Value, "value not returned")
 		require.Empty(pair.Meta, "meta returned without request")
@@ -427,13 +418,12 @@ func (s *trtlTestSuite) TestCursor() {
 	require.NoError(err, "could not create cursor stream")
 
 	for {
-		rep, err := stream.Recv()
+		pair, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		require.NoError(err, "received non-EOF error from recv")
 
-		pair := rep.Value
 		require.NotEmpty(pair.Key, "key not returned")
 		require.Empty(pair.Value, "value returned on no values")
 		require.Empty(pair.Meta, "meta returned without request")
@@ -444,13 +434,12 @@ func (s *trtlTestSuite) TestCursor() {
 	require.NoError(err, "could not create cursor stream")
 
 	for {
-		rep, err := stream.Recv()
+		pair, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		require.NoError(err, "received non-EOF error from recv")
 
-		pair := rep.Value
 		require.NotEmpty(pair.Key, "key not returned")
 		require.NotEmpty(pair.Value, "value not returned")
 		require.NotEmpty(pair.Meta, "meta not returned on request")

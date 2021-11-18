@@ -128,7 +128,7 @@ func (c *trtlClient) Cursor(ctx context.Context, in *CursorRequest, opts ...grpc
 }
 
 type Trtl_CursorClient interface {
-	Recv() (*CursorReply, error)
+	Recv() (*KVPair, error)
 	grpc.ClientStream
 }
 
@@ -136,8 +136,8 @@ type trtlCursorClient struct {
 	grpc.ClientStream
 }
 
-func (x *trtlCursorClient) Recv() (*CursorReply, error) {
-	m := new(CursorReply)
+func (x *trtlCursorClient) Recv() (*KVPair, error) {
+	m := new(KVPair)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func _Trtl_Cursor_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type Trtl_CursorServer interface {
-	Send(*CursorReply) error
+	Send(*KVPair) error
 	grpc.ServerStream
 }
 
@@ -349,7 +349,7 @@ type trtlCursorServer struct {
 	grpc.ServerStream
 }
 
-func (x *trtlCursorServer) Send(m *CursorReply) error {
+func (x *trtlCursorServer) Send(m *KVPair) error {
 	return x.ServerStream.SendMsg(m)
 }
 

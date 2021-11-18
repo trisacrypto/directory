@@ -20,7 +20,7 @@ service Trtl {
     rpc Batch(stream BatchRequest) returns (BatchReply) {};
 
     // Cursor is a server-side streaming request to iterate in a memory safe fashion.
-    rpc Cursor(CursorRequest) returns (stream CursorReply) {};
+    rpc Cursor(CursorRequest) returns (stream KVPair) {};
 
     // Sync is a bi-directional streaming mechanism to issue access requests synchronously.
     rpc Sync(stream SyncRequest) returns (stream SyncReply) {};
@@ -96,11 +96,6 @@ message CursorRequest {
     bytes prefix = 1;       // the prefix to range over, if nil all objects are returned
     string namespace = 2;
     Options options = 3;
-}
-
-message CursorReply {
-    bool next = 1;          // true if there is a next value that will be returned, false when the cursor is exhuasted
-    KVPair value = 2;       // the current key/value pair produced by the cursor
 }
 
 message SyncRequest {
