@@ -355,7 +355,7 @@ func TestListVASPs(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/v2/vasps", r.URL.Path)
-		require.Equal(t, "page=2&page_size=10&status_filters=pending_review&status_filters=verified", r.URL.RawQuery)
+		require.Equal(t, "page=2&page_size=10&status=pending_review&status=verified", r.URL.RawQuery)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
