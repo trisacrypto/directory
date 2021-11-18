@@ -374,6 +374,21 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 	}
 }
 
+// Cursor is a server-side streaming request to fetch a collection of key/value pairs
+// based on a shared prefix. If no prefix is specified an entire namespace may be
+// returned. The pairs are streamed one value at a time so that the client can control
+// iteration and materialization without overloading either the server or the network.
+//
+// Note that there is a snapshot guarantee during iteration, meaning that if the
+// underlying database changes via a concurrent request, the cursor stream will not be
+// effected. Use Cursor instead of Iter if you require snapshot isolation reads.
+//
+// There are several options that modulate the Cursor stream:
+//   - return_meta: each key/value pair will contain the object metadata
+//   - iter_no_keys: each key/value pair will not have a key associated with it
+//   - iter_no_values: each key/value pair will not have a value associaed with it
+//   - page_token: the page of results that the user wishes to fetch
+//   - page_size: the number of results to be returned in the request
 func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) (err error) {
 	// Fetch the stream context
 	ctx := stream.Context()
