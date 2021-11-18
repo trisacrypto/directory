@@ -3,7 +3,7 @@ package trtl_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"io"
 
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"google.golang.org/grpc/codes"
@@ -319,11 +319,140 @@ func (s *trtlTestSuite) TestIter() {
 		if rep.NextPageToken == "" {
 			break
 		}
-
-		fmt.Println(rep)
 	}
 
 	require.Equal(2, pages, "number of people pages changed, have fixtures been modified?")
 	require.Equal(10, people, "number of people has changed, have fixtures been modified?")
+}
 
+func (s *trtlTestSuite) TestCursor() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	conn, err := s.connect()
+	require.NoError(err)
+	defer conn.Close()
+	client := pb.NewTrtlClient(conn)
+
+	// Test cannot use reserved namespace
+	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "index"})
+	require.NoError(err, "could not create cursor stream")
+	_, err = stream.Recv()
+	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")
+
+	// Test Invalid Options
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Options: &pb.Options{IterNoKeys: true, IterNoValues: true}})
+	require.NoError(err, "could not create cursor stream")
+	_, err = stream.Recv()
+	s.StatusError(err, codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+
+	// Test iter default prefix, default options, expecting 1 response from default namespace
+	results := make([]*pb.CursorReply, 0, 1)
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{})
+	require.NoError(err, "could not create cursor stream")
+	for {
+		rep, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+		require.NotEmpty(rep.Value.Key, "key not supplied in iter by default")
+		require.NotEmpty(rep.Value.Value, "value not supplied in iter by default")
+		require.Equal("default", rep.Value.Namespace, "non-default namespace fetched")
+		require.Empty(rep.Value.Meta, "meta returned by default")
+
+		results = append(results, rep)
+	}
+	require.Len(results, 1, "too many responses returned, did the fixtures change?")
+
+	// Test ordered request with prefix
+	expectedOrder := []string{
+		"alice", "bob", "charlie", "darlene", "erica",
+		"franklin", "gregor", "helen", "ivan", "juliet",
+	}
+
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Prefix: []byte("215")})
+	require.NoError(err, "could not create cursor stream")
+
+	i := 0
+	for {
+		rep, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+
+		// We're expecting 5 values returned, so Next should be false on i==4
+		if i < 4 {
+			require.True(rep.Next, "cursor next is false with more results expected")
+		} else {
+			require.False(rep.Next, "cursor next is true with no more results expected")
+		}
+
+		expected := dbFixtures[expectedOrder[i]]
+		require.NotNil(expected)
+
+		pair := rep.Value
+		require.Equal("people", pair.Namespace)
+		require.Empty(pair.Meta)
+		require.Equal(expected.Key, string(pair.Key), "incorrect key on index %d", i)
+
+		var value map[string]interface{}
+		require.NoError(json.Unmarshal(pair.Value, &value), "could not unmarshal value from db")
+		require.Equal(expected.Value, value)
+		i++
+	}
+	require.Equal(5, i, "expected 5 results returned, have fixtures changed?")
+
+	// Test No Keys
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Prefix: []byte("216"), Options: &pb.Options{IterNoKeys: true}})
+	require.NoError(err, "could not create cursor stream")
+
+	for {
+		rep, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+
+		pair := rep.Value
+		require.Empty(pair.Key, "key returned on no keys")
+		require.NotEmpty(pair.Value, "value not returned")
+		require.Empty(pair.Meta, "meta returned without request")
+	}
+
+	// Test No Values
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Prefix: []byte("216"), Options: &pb.Options{IterNoValues: true}})
+	require.NoError(err, "could not create cursor stream")
+
+	for {
+		rep, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+
+		pair := rep.Value
+		require.NotEmpty(pair.Key, "key not returned")
+		require.Empty(pair.Value, "value returned on no values")
+		require.Empty(pair.Meta, "meta returned without request")
+	}
+
+	// Test Return Meta
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Prefix: []byte("216"), Options: &pb.Options{ReturnMeta: true}})
+	require.NoError(err, "could not create cursor stream")
+
+	for {
+		rep, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+
+		pair := rep.Value
+		require.NotEmpty(pair.Key, "key not returned")
+		require.NotEmpty(pair.Value, "value not returned")
+		require.NotEmpty(pair.Meta, "meta not returned on request")
+	}
 }
