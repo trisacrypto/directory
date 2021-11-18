@@ -364,8 +364,8 @@ func main() {
 						Aliases: []string{"s"},
 						Usage:   "specify the number of items per page",
 					},
-					&cli.StringFlag{
-						Name:    "status",
+					&cli.StringSliceFlag{
+						Name:    "status-filters",
 						Aliases: []string{"S"},
 						Usage:   "filter by verification status",
 					},
@@ -874,9 +874,9 @@ func adminListVASPs(c *cli.Context) (err error) {
 	defer cancel()
 
 	params := &admin.ListVASPsParams{
-		Page:     c.Int("page"),
-		PageSize: c.Int("page-size"),
-		Status:   c.String("status"),
+		Page:          c.Int("page"),
+		PageSize:      c.Int("page-size"),
+		StatusFilters: c.StringSlice("status-filters"),
 	}
 
 	var rep *admin.ListVASPsReply
