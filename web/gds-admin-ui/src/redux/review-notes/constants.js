@@ -10,8 +10,12 @@ export const DeleteReviewNotesActionTypes = {
 };
 
 export const UpdateReviewNotesActionTypes = {
-    UPDATE_REVIEW_NOTE: '@@update_review_notes/API_RESPONSE_ERROR',
+    UPDATE_REVIEW_NOTE: '@@update_review_notes/API_RESPONSE',
 
-    API_RESPONSE_SUCCESS: '@@update_review_notes/API_RESPONSE_ERROR',
+    API_RESPONSE_SUCCESS: '@@update_review_notes/API_RESPONSE_SUCCESS',
     API_RESPONSE_ERROR: '@@update_review_notes/API_RESPONSE_ERROR'
+}
+
+export const CreateReviewNoteActionTypes = {
+    API_RESPONSE_SUCCESS: '@@create_review_notes/API_RESPONSE_SUCCESS',
 }
