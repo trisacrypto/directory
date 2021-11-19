@@ -35,7 +35,7 @@ describe('defaultEndpointPrefix', () => {
 
             const { getByTestId } = render(<Geographic data={addresses} />);
 
-            expect(getByTestId(/addressType/i).textContent).toBe(`${addressType} Address`);
+            expect(getByTestId(/addressType/i).textContent).toBe(`${addressType} Address:`);
         });
 
         it('should render correctly address line', () => {
@@ -95,23 +95,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Beauty
+                    Shoes
                      
                     <br />
-                    Shoes
+                    Electronics
                      
                     <br />
                     23
                      
-                    Jayson Hill
+                    Greenholt Shoals
                     <br />
-                    Brooklyn Park
+                    Missoula
                      
                     
                      
                     MA
                      
-                    60946
+                    73918-7366
                       
                     <br />
                     US

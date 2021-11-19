@@ -1,4 +1,4 @@
-import { DeleteReviewNotesActionTypes, UpdateReviewNotesActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, UpdateReviewNotesActionTypes } from ".";
 import { FetchReviewNotesActionTypes } from "./constants";
 
 const fetchReviewNotesApiResponse = (vaspId) => ({
@@ -31,5 +31,13 @@ const updateReviewNoteApiResponseSuccess = (note) => ({
 })
 
 
+const createReviewNoteApiResponseSuccess = (note) => ({
+    type: CreateReviewNoteActionTypes.API_RESPONSE_SUCCESS,
+    payload: {
+        note
+    }
+})
 
-export { updateReviewNoteApiResponseSuccess, deleteReviewNoteApiResponse, fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }
+
+
+export { createReviewNoteApiResponseSuccess, updateReviewNoteApiResponseSuccess, deleteReviewNoteApiResponse, fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }
