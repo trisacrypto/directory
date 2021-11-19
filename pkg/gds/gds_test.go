@@ -102,14 +102,12 @@ func (s *gdsTestSuite) writeObj(db *leveldb.DB, key string, obj interface{}) {
 		err  error
 	)
 	require := s.Require()
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case *pb.VASP:
-		vasp := obj.(*pb.VASP)
-		data, err = proto.Marshal(vasp)
+		data, err = proto.Marshal(obj)
 		require.NoError(err)
 	case *models.CertificateRequest:
-		cert := obj.(*models.CertificateRequest)
-		data, err = proto.Marshal(cert)
+		data, err = proto.Marshal(obj)
 		require.NoError(err)
 	default:
 		require.Fail(fmt.Sprintf("unrecognized object for key: %s", key))
@@ -225,15 +223,13 @@ func (s *gdsTestSuite) TestFixtures() {
 	for name, obj := range s.fixtures {
 		data, err := db.Get([]byte(name), nil)
 		require.NoError(err)
-		switch obj.(type) {
+		switch expected := obj.(type) {
 		case *pb.VASP:
-			expected := obj.(*pb.VASP)
 			actual := &pb.VASP{}
 			err = proto.Unmarshal(data, actual)
 			require.NoError(err)
 			require.True(proto.Equal(expected, actual))
 		case *models.CertificateRequest:
-			expected := obj.(*models.CertificateRequest)
 			actual := &models.CertificateRequest{}
 			err = proto.Unmarshal(data, actual)
 			require.NoError(err)
