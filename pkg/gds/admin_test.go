@@ -375,11 +375,23 @@ func (s *gdsTestSuite) TestListVASPs() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	require.Equal(len(snippets), actual.Count)
+	require.Equal(1, actual.Count)
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
 	require.Len(actual.VASPs, 1)
 	require.Equal(snippets[0], actual.VASPs[0])
+
+	// List VASPs with multiple status filters
+	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus + "&status=" + snippets[1].VerificationStatus
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ListVASPs, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	require.Equal(2, actual.Count)
+	require.Equal(1, actual.Page)
+	require.Equal(100, actual.PageSize)
+	require.Len(actual.VASPs, 2)
+	require.Equal(snippets[0], actual.VASPs[0])
+	require.Equal(snippets[1], actual.VASPs[1])
 
 	// List VASPs on multiple pages
 	request.path = "/v2/vasps?page=1&page_size=1"
