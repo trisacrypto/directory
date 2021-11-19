@@ -1,4 +1,4 @@
-package gds
+package gds_test
 
 import (
 	"flag"
@@ -13,7 +13,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -41,6 +44,9 @@ type gdsTestSuite struct {
 	dbGzip      string
 	smallDBGzip string
 	fixtures    map[string]interface{}
+	conf        *config.Config
+	db          store.Store
+	tokens      *tokens.TokenManager
 }
 
 func getVASPIDFromKey(key string) string {
@@ -150,8 +156,24 @@ func (s *gdsTestSuite) SetupSuite() {
 	s.dbGzip = filepath.Join("testdata", "db.tgz")
 	s.smallDBGzip = filepath.Join("testdata", "smalldb.tgz")
 	s.dbPath, err = ioutil.TempDir("testdata", "db-*")
+	require.NoError(err)
 	s.smallDBPath, err = ioutil.TempDir("testdata", "smalldb-*")
 	require.NoError(err)
+
+	s.conf = &config.Config{
+		Admin: config.AdminConfig{
+			CookieDomain: "example.com",
+			Oauth: config.OauthConfig{
+				GoogleAudience:         "http://localhost",
+				AuthorizedEmailDomains: []string{"example.com"},
+			},
+		},
+		Email: config.EmailConfig{
+			ServiceEmail: "service@example.com",
+			AdminEmail:   "admin@example.com",
+			Testing:      true,
+		},
+	}
 
 	// Regenerate the test database if requested or it doesn't exist.
 	// Note: generateDB calls loadFixtures under the hood in order to populate the

@@ -1,4 +1,4 @@
-package gds
+package gds_test
 
 import (
 	"bytes"
@@ -13,42 +13,22 @@ import (
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/trisacrypto/directory/pkg/gds"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
-func (s *gdsTestSuite) initAdmin(dbPath string) (admin *Admin) {
+func (s *gdsTestSuite) initAdmin(dbPath string) (admin *gds.Admin) {
+	var err error
 	require := s.Require()
-	db, err := store.Open(config.DatabaseConfig{
+	s.conf.Database = config.DatabaseConfig{
 		URL: "leveldb:///" + dbPath,
-	})
-	require.NoError(err)
-	manager, err := emails.New(config.EmailConfig{
-		ServiceEmail: "service@example.com",
-		AdminEmail:   "admin@example.com",
-		Testing:      true,
-	})
-	require.NoError(err)
-	admin = &Admin{
-		svc: &Service{
-			email: manager,
-		},
-		db: db,
-		conf: &config.AdminConfig{
-			CookieDomain: "example.com",
-			Oauth: config.OauthConfig{
-				GoogleAudience:         "http://localhost",
-				AuthorizedEmailDomains: []string{"example.com"},
-			},
-		},
 	}
-	admin.tokens, err = tokens.MockTokenManager()
+	admin, s.db, s.tokens, err = gds.NewMockedAdmin(*s.conf)
 	require.NoError(err)
 	return admin
 }
@@ -141,7 +121,7 @@ func (s *gdsTestSuite) TestProtectAuthenticate() {
 	cookies := res.Cookies()
 	require.Len(cookies, 2)
 	for _, cookie := range cookies {
-		require.Equal(a.conf.CookieDomain, cookie.Domain)
+		require.Equal(s.conf.Admin.CookieDomain, cookie.Domain)
 	}
 }
 
@@ -168,31 +148,7 @@ func (s *gdsTestSuite) TestAuthenticate() {
 	res = s.doRequest(a.Authenticate, c, w, nil)
 	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
-	// Valid credential
-	creds := map[string]interface{}{
-		"sub":     "102374163855881761273",
-		"hd":      "example.com",
-		"email":   "admin@example.com",
-		"name":    "Jon Doe",
-		"picture": "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
-	}
-	accessToken, err := a.tokens.CreateAccessToken(creds)
-	require.NoError(err)
-	access, err := a.tokens.Sign(accessToken)
-	require.NoError(err)
-	request.in = &admin.AuthRequest{
-		Credential: access,
-	}
-	c, w = s.makeRequest(request)
-	res = s.doRequest(a.Authenticate, c, w, nil)
-	require.Equal(http.StatusOK, res.StatusCode)
-
-	// Double cookie tokens should be set
-	cookies := res.Cookies()
-	require.Len(cookies, 2)
-	for _, cookie := range cookies {
-		require.Equal(a.conf.CookieDomain, cookie.Domain)
-	}
+	// TODO: Test successful authentication path
 }
 
 // Test the Reauthenticate endpoint.
@@ -210,11 +166,11 @@ func (s *gdsTestSuite) TestReauthenticate() {
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	refreshToken, err := a.tokens.CreateRefreshToken(accessToken)
+	refreshToken, err := s.tokens.CreateRefreshToken(accessToken)
 	require.NoError(err)
-	access, err := a.tokens.Sign(accessToken)
+	access, err := s.tokens.Sign(accessToken)
 	require.NoError(err)
-	refresh, err := a.tokens.Sign(refreshToken)
+	refresh, err := s.tokens.Sign(refreshToken)
 	require.NoError(err)
 
 	// Missing access token
@@ -257,7 +213,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	// Mismatched access and refresh tokens
 	claims.Id = uuid.NewString()
 	otherToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	other, err := a.tokens.Sign(otherToken)
+	other, err := s.tokens.Sign(otherToken)
 	require.NoError(err)
 	request.in = &admin.AuthRequest{
 		Credential: refresh,
@@ -283,7 +239,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	cookies := res.Cookies()
 	require.Len(cookies, 2)
 	for _, cookie := range cookies {
-		require.Equal(a.conf.CookieDomain, cookie.Domain)
+		require.Equal(s.conf.Admin.CookieDomain, cookie.Domain)
 	}
 }
 
@@ -570,7 +526,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(actual.Editor)
 	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
-	v, err := a.db.RetrieveVASP(vasps[0])
+	v, err := s.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -702,7 +658,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
-	v, err := a.db.RetrieveVASP(vasps[0])
+	v, err := s.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -758,7 +714,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	rep = s.doRequest(a.DeleteReviewNote, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	// Record on the database should be deleted
-	v, err := a.db.RetrieveVASP(vasps[0])
+	v, err := s.db.RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -813,7 +769,8 @@ func (s *gdsTestSuite) TestReview() {
 	rep = s.doRequest(a.Review, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
-	// TODO: Test the accept and reject paths - may require CertReq fixtures
+	// TODO: Add tests for accept and reject paths. This requires VASP fixtures with
+	// a non-empty adminVerificationToken.
 }
 
 // Test the Resend endpoint.
@@ -857,7 +814,7 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
 	// Email audit log should be updated
-	v, err := a.db.RetrieveVASP(vaspErrored)
+	v, err := s.db.RetrieveVASP(vaspErrored)
 	require.NoError(err)
 	emails, err := models.GetEmailLog(v.Contacts.Billing)
 	require.NoError(err)
@@ -901,7 +858,7 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
 	// Email audit logs should be updated
-	v, err = a.db.RetrieveVASP(vaspRejected)
+	v, err = s.db.RetrieveVASP(vaspRejected)
 	require.NoError(err)
 	emails, err = models.GetEmailLog(v.Contacts.Administrative)
 	require.NoError(err)
