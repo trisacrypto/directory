@@ -25,7 +25,7 @@ const AuditLog = ({ data }) => {
                                         <h5 className="text-primary mb-1" data-testid="audit-log-desc" href="/">{log.description}</h5>
                                         <small className="d-block" data-testid="audit-log-state">
                                             <span className="fst-italic" data-testid="audit-log-source">{log.source}</span> from{' '}
-                                            <span className="fst-italic" data-testid="audit-log-previous-state">{StatusLabel[log.previous_state]}</span> -{' '}
+                                            <span className="fst-italic" data-testid="audit-log-previous-state">{StatusLabel[log.previous_state]}</span> &rarr;{' '}
                                             <span className="fst-italic" data-testid="audit-log-current-state">{StatusLabel[log.current_state]}</span>
                                         </small>
                                         <small className="d-block" data-testid="audit-log-timestamp">{dayjs(log?.timestamp).toLocaleString()}</small>
