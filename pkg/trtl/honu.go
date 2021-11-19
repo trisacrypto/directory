@@ -142,12 +142,11 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// if Options include a request for metadata, we need to do a Get
 	if in.Options != nil && in.Options.ReturnMeta {
-		opts := &pb.Options{ReturnMeta: true}
-		req := &pb.GetRequest{Key: in.Key, Namespace: in.Namespace, Options: opts}
-		get, err := h.Get(ctx, req)
+		get, err := h.db.Object(key)
 		if err != nil {
-			// We failed to get the metadata, but still return the PutReply
-			return out, err
+			// We failed to get the metadata, return both the success reply and an error
+			log.Error().Err(err).Msg("could not retrieve metadata after Put")
+			return out, status.Errorf(codes.Aborted, "could not get metadata: %s", err)
 		}
 
 		out.Meta = &pb.Meta{
