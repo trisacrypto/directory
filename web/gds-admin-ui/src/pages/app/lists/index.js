@@ -1,10 +1,10 @@
-// @flow
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Row, Col, Card, Button } from 'react-bootstrap';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
 import Select from 'react-select'
+import qs from 'query-string'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 
@@ -12,10 +12,12 @@ import PageTitle from 'components/PageTitle';
 import Table from 'components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchVasps } from 'redux/dashboard/actions';
-import { StatusLabel } from 'constants/index';
-import { downloadFile, generateCSV } from 'helpers/api/utils';
-import { getStatusClassName } from 'utils';
+import { fetchVasps } from '../../../redux/dashboard/actions';
+import { StatusLabel } from '../../../constants';
+import { downloadFile, generateCSV } from '../../../helpers/api/utils';
+import { getStatusClassName } from '../../../utils';
+import useSafeDispatch from 'hooks/useSafeDispatch';
+import { getAllVasps, getVaspsLoadingState } from 'redux/selectors/vasps';
 dayjs.extend(relativeTime)
 
 
@@ -81,14 +83,42 @@ const columns = [
 
 const options = () => Object.entries(StatusLabel).map(([k, v]) => ({ value: k, label: v }))
 
+const getOption = (key) => {
+    const _options = options()
+    let opt = []
+
+    for (let option of _options) {
+        if (typeof key === 'string' && option.value.toLowerCase() === key) {
+            opt = [option]
+        }
+
+        if (Array.isArray(key)) {
+            for (let k of key) {
+                if (k === option.value.toLowerCase()) {
+                    opt.push(option)
+                }
+            }
+
+        }
+    }
+    return opt
+}
+
 const customStyles = {
     control: (styles) => ({ ...styles, paddingLeft: '9px !important' })
 };
 
 
 const VaspsList = () => {
+    const location = useLocation()
+    const parsedQuery = qs.parse(location.search)
+    const query = qs.stringify(parsedQuery);
+
+    const [queryParams, setQueryParams] = React.useState(query)
     const dispatch = useDispatch()
-    const data = useSelector((state) => state.Vasps.data)
+    const safeDispatch = useSafeDispatch(dispatch)
+    const data = useSelector(getAllVasps)
+    const isLoading = useSelector(getVaspsLoadingState)
     const history = useHistory()
 
     const sizePerPageList = [
@@ -111,8 +141,8 @@ const VaspsList = () => {
     ];
 
     React.useEffect(() => {
-        dispatch(fetchVasps())
-    }, [dispatch])
+        safeDispatch(fetchVasps({ queryParams }))
+    }, [safeDispatch, queryParams])
 
 
     function exportToCsv(rows) {
@@ -135,18 +165,17 @@ const VaspsList = () => {
     }
 
     const getQueryString = (arr) => {
-        return arr && Array.isArray(arr) ? arr.map(v => v.value.toLowerCase()).join('+') : ''
+        const queries = arr && Array.isArray(arr) ? arr.map(v => v.value.toLowerCase()) : ''
+        return qs.stringify({ status: queries })
     }
 
     const handleSelectChange = (value) => {
         const params = getQueryString(value)
-
-        if (params.length) {
-            history.push(`/vasps?status=${params}`)
-        } else {
-            history.push(`/vasps`)
-        }
-        console.log('[Params]', params)
+        setQueryParams(params)
+        history.push({
+            pathname: '/vasps',
+            search: params
+        })
     }
 
     return (
@@ -171,6 +200,7 @@ const VaspsList = () => {
                                             placeholder="Filter by status(es)..."
                                             onChange={handleSelectChange}
                                             options={options()}
+                                            defaultValue={getOption(parsedQuery.status)}
                                             isMulti
                                             styles={customStyles}
                                             theme={theme => ({
@@ -181,16 +211,17 @@ const VaspsList = () => {
                                                 }
                                             })}
                                         />
-                                        <Button onClick={() => exportToCsv(data.vasps)} className="btn btn-light mb-2">Export</Button>
+                                        <Button onClick={() => exportToCsv(data?.vasps)} className="btn btn-light mb-2">Export</Button>
                                     </div>
                                 </Col>
                             </Row>
+
                             {
-                                data && data.vasps && data.vasps.length &&
+                                !isLoading && data &&
                                 <Table
                                     columns={columns}
                                     data={data?.vasps}
-                                    pageSize={data.page_size || 100}
+                                    pageSize={data?.page_size || 100}
                                     sizePerPageList={sizePerPageList}
                                     isSortable={true}
                                     pagination={true}

@@ -29,6 +29,7 @@ const VaspDetails = () => {
                 console.error("[BasicDetails] getVasp", error.message)
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id])
 
 

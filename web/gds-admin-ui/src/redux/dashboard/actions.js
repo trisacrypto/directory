@@ -44,9 +44,9 @@ const fetchVaspsApiResponseError = (actionType: string, data: any): Action => ({
     payload: { actionType, data },
 });
 
-const fetchVasps = (payload = {}): Action => ({
+const fetchVasps = ({ queryParams }) => ({
     type: FetchVaspsActionTypes.FETCH_VASPS,
-    payload,
+    payload: { queryParams },
 });
 
 const fecthRegistrationsReviews = (): Action => ({
