@@ -150,19 +150,19 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		}
 
 		out.Meta = &pb.Meta{
-			Key:       get.Meta.Key,
-			Namespace: get.Meta.Namespace,
-			Region:    get.Meta.Region,
-			Owner:     get.Meta.Owner,
+			Key:       get.Key,
+			Namespace: get.Namespace,
+			Region:    get.Region,
+			Owner:     get.Owner,
 			Version: &pb.Version{
-				Pid:     get.Meta.Version.Pid,
-				Version: get.Meta.Version.Version,
-				Region:  get.Meta.Version.Region,
+				Pid:     get.Version.Pid,
+				Version: get.Version.Version,
+				Region:  get.Version.Region,
 			},
 			Parent: &pb.Version{
-				Pid:     get.Meta.Parent.Pid,
-				Version: get.Meta.Parent.Version,
-				Region:  get.Meta.Parent.Region,
+				Pid:     get.Version.Parent.Pid,
+				Version: get.Version.Parent.Version,
+				Region:  get.Version.Parent.Region,
 			},
 		}
 	}
