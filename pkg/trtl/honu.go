@@ -126,9 +126,9 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	}
 
 	if in.Options != nil {
-		log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Put")
+		log.Debug().Bytes("key", key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Put")
 	} else {
-		log.Debug().Str("key", string(key)).Msg("Trtl Put")
+		log.Debug().Bytes("key", key).Msg("Trtl Put")
 	}
 
 	var success bool
