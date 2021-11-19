@@ -176,6 +176,7 @@ func (s *trtlTestSuite) TestPut() {
 	require.Empty((reply.Meta))
 
 	// Put a value with return_meta=true.
+	// TODO update os.Getenv to use test fixtures in sc-2098
 	expectedPID, err := strconv.Atoi((os.Getenv("TRTL_REPLICA_PID")))
 	require.NoError(err)
 	expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
@@ -195,6 +196,7 @@ func (s *trtlTestSuite) TestPut() {
 			Region:  expectedRegion,
 		},
 	}
+	// TODO this test modifies the DB state so could cause subsequent tests to have unexpected results
 	reply, err = client.Put(ctx, &pb.PutRequest{
 		Namespace: alice.Namespace,
 		Key:       []byte(alice.Key),

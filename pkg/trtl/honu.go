@@ -140,7 +140,7 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	out = &pb.PutReply{Success: success}
 
-	// if Options include a request for metadata, we need to do a Get
+	// if Options include a request for metadata, we need to do a get
 	if in.Options != nil && in.Options.ReturnMeta {
 		get, err := h.db.Object(key)
 		if err != nil {
