@@ -9,6 +9,7 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/golang-jwt/jwt/v4 v4.0.0
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.2.0
 	github.com/googleapis/gax-go v1.0.3

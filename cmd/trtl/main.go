@@ -160,6 +160,41 @@ func main() {
 			},
 		},
 		{
+			Name:     "db:del",
+			Usage:    "delete a single key in the trtl database",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   dbDelete,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "replica-endpoint",
+					Aliases: []string{"u"},
+					Usage:   "the url to connect to the trtl replication service",
+					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
+				},
+				&cli.StringFlag{
+					Name:    "key",
+					Aliases: []string{"k"},
+					Usage:   "specify the key as a string",
+				},
+				&cli.StringFlag{
+					Name:    "namespace",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespace as a string",
+				},
+				&cli.BoolFlag{
+					Name:    "meta",
+					Aliases: []string{"m"},
+					Usage:   "return the metadata along with the value",
+				},
+				&cli.BoolFlag{
+					Name:    "S",
+					Aliases: []string{"no-secure"},
+					Usage:   "do not connect via TLS (e.g. for development)",
+				},
+			},
+		},
+		{
 			Name:     "peers:add",
 			Usage:    "add peers to the network by pid",
 			Category: "client",
@@ -494,6 +529,43 @@ func dbPut(c *cli.Context) (err error) {
 		fmt.Printf("successfully put value %s to key %s", req.Value, req.Key)
 	} else {
 		fmt.Printf("could not put value %s to key %s", req.Value, req.Key)
+	}
+	if resp.Meta != nil {
+		jsonpb := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		var outdata []byte
+		if outdata, err = jsonpb.Marshal(resp); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(string(outdata) + "\n")
+	}
+
+	return nil
+}
+
+// dbDelete deletes a key in the trtl database
+func dbDelete(c *cli.Context) (err error) {
+	var resp *pb.DeleteReply
+	req := &pb.DeleteRequest{
+		Key:       []byte(c.String("key")),
+		Namespace: c.String("namespace"),
+		Options: &pb.Options{
+			ReturnMeta: c.Bool("meta"),
+		},
+	}
+	if resp, err = dbClient.Delete(context.TODO(), req); err != nil {
+		return cli.Exit(err, 1)
+	}
+	if resp.Success {
+		fmt.Printf("successfully deleted key %s", req.Key)
+	} else {
+		fmt.Printf("could not delete key %s", req.Key)
 	}
 	if resp.Meta != nil {
 		jsonpb := protojson.MarshalOptions{

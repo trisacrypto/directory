@@ -170,7 +170,64 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 }
 
 func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	if _, found := reservedNamespaces[in.Namespace]; found {
+		log.Warn().Msg("cannot use reserved namespace")
+		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
+	}
+	if len(in.Key) == 0 {
+		log.Warn().Msg("missing key in Trtl Delete request")
+		return nil, status.Error(codes.InvalidArgument, "key must be provided in Delete request")
+	}
+
+	var key []byte
+	if len(in.Namespace) > 0 {
+		key = prepend(in.Namespace, in.Key)
+	} else {
+		key = prepend("default", in.Key)
+	}
+
+	if in.Options != nil {
+		log.Debug().Bytes("key", key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Delete")
+	} else {
+		log.Debug().Bytes("key", key).Msg("Trtl Delete")
+	}
+
+	var success bool
+	if err := h.db.Delete(key); err != nil {
+		success = false
+	} else {
+		success = true
+	}
+
+	out = &pb.DeleteReply{Success: success}
+
+	// if Options include a request for metadata, we need to do a get
+	if in.Options != nil && in.Options.ReturnMeta {
+		get, err := h.db.Object(key)
+		if err != nil {
+			// We failed to get the metadata, return both the success reply and an error
+			log.Error().Err(err).Msg("could not retrieve metadata after Delete")
+			return out, status.Errorf(codes.Aborted, "could not get metadata: %s", err)
+		}
+
+		out.Meta = &pb.Meta{
+			Key:       get.Key,
+			Namespace: get.Namespace,
+			Region:    get.Region,
+			Owner:     get.Owner,
+			Version: &pb.Version{
+				Pid:     get.Version.Pid,
+				Version: get.Version.Version,
+				Region:  get.Version.Region,
+			},
+			Parent: &pb.Version{
+				Pid:     get.Version.Parent.Pid,
+				Version: get.Version.Parent.Version,
+				Region:  get.Version.Parent.Region,
+			},
+		}
+	}
+	return out, nil
 }
 
 // Iter is a unary request to fetch a materialized collection of key/value pairs based
