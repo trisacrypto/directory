@@ -213,6 +213,95 @@ func (s *trtlTestSuite) TestPut() {
 	require.True(proto.Equal(expectedMeta, reply.Meta))
 }
 
+// Test that we can call the Delete RPC and get the correct response.
+func (s *trtlTestSuite) TestDelete() {
+	require := s.Require()
+	ctx := context.Background()
+	tempNS := "temp"
+
+	// Start the gRPC client.
+	conn, err := s.connect()
+	require.NoError(err)
+	defer conn.Close()
+	client := pb.NewTrtlClient(conn)
+
+	// Delete from a reserved namespace - should fail.
+	_, err = client.Delete(ctx, &pb.DeleteRequest{
+		Namespace: "default",
+		Key:       []byte("jerky"),
+	})
+	require.Error(err)
+
+	// Delete a value without the key - should fail.
+	_, err = client.Delete(ctx, &pb.DeleteRequest{
+		Namespace: tempNS,
+	})
+	require.Error(err)
+
+	// Doing a valid Put, then valid Delete should not error & should return success
+	tempKey := []byte("tempkey")
+	tempVal := []byte("deleteme")
+
+	_, err = client.Put(ctx, &pb.PutRequest{
+		Key:       tempKey,
+		Value:     tempVal,
+		Namespace: tempNS,
+	})
+	require.NoError(err)
+	noMeta, err := client.Delete(ctx, &pb.DeleteRequest{
+		Key:       tempKey,
+		Namespace: tempNS,
+	})
+	require.NoError(err)
+	require.True(noMeta.Success)
+	require.Nil(noMeta.Meta)
+
+	// Doing a valid Put, then Delete with meta gives back success and metadata
+	_, err = client.Put(ctx, &pb.PutRequest{
+		Key:       tempKey,
+		Value:     tempVal,
+		Namespace: tempNS,
+	})
+	require.NoError(err)
+	withMeta, err := client.Delete(ctx, &pb.DeleteRequest{
+		Key:       tempKey,
+		Namespace: tempNS,
+		Options: &pb.Options{
+			ReturnMeta: true,
+		},
+	})
+	// TODO uncomment when sc-2102 and sc-2103 are fixed
+	// TODO update os.Getenv to use test fixtures in sc-2098
+	// pid := os.Getenv("TRTL_REPLICA_PID")
+	// expectedPID, err := strconv.Atoi(pid)
+	// require.NoError(err)
+	// expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
+	// owner := bytes.Join([][]byte{[]byte(pid), []byte(expectedRegion)}, []byte(":"))
+	// expectedMeta := &pb.Meta{
+	// 	Key:       tempKey,
+	// 	Namespace: tempNS,
+	// 	Region:    expectedRegion,
+	// 	Owner:     string(owner),
+	// 	Version: &pb.Version{
+	// 		Pid:     uint64(expectedPID),
+	// 		Version: 2,
+	// 		Region:  expectedRegion,
+	// 	},
+	// 	Parent: &pb.Version{
+	// 		Pid:     uint64(expectedPID),
+	// 		Version: 1,
+	// 		Region:  expectedRegion,
+	// 	},
+	// }
+	require.NoError(err)
+	require.True(withMeta.Success)
+	require.NotNil(withMeta.Meta)
+	// TODO uncomment when sc-2102 and sc-2103 are fixed
+	// require.Equal(tempKey, withMeta.Meta.Key)
+	// require.Equal(tempNS, withMeta.Meta.Namespace)
+	// require.True(proto.Equal(expectedMeta, withMeta.Meta))
+}
+
 // Test that we can call the Batch RPC and get the correct response.
 func (s *trtlTestSuite) TestBatch() {
 	require := s.Require()
