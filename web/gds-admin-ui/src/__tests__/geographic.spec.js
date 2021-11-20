@@ -98,20 +98,20 @@ describe('defaultEndpointPrefix', () => {
                     Shoes
                      
                     <br />
-                    Electronics
+                    Sports
                      
                     <br />
                     23
                      
-                    Greenholt Shoals
+                    Runolfsdottir Village
                     <br />
-                    Missoula
+                    Rochester Hills
                      
                     
                      
                     MA
                      
-                    73918-7366
+                    35731
                       
                     <br />
                     US
