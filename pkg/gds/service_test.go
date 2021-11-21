@@ -84,7 +84,7 @@ func (s *gdsTestSuite) SetupSuite() {
 	}
 
 	// Start with an empty fixtures service
-	s.loadEmptyFixtures()
+	s.LoadEmptyFixtures()
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -104,13 +104,13 @@ func TestGds(t *testing.T) {
 
 func (s *gdsTestSuite) TestFixtures() {
 	// Ensure all fixtures are loaded and extracted
-	s.loadFullFixtures()
-	s.loadSmallFixtures()
-	s.loadEmptyFixtures()
+	s.LoadFullFixtures()
+	s.LoadSmallFixtures()
+	s.LoadEmptyFixtures()
 
 	// Close the empty fixtures so we can open a leveldb connection to it
 	s.svc.GetStore().Close()
-	defer s.resetEmptyFixtures()
+	defer s.ResetEmptyFixtures()
 
 	require := s.Require()
 	expected := map[fixtureType]map[string]int{
@@ -346,16 +346,16 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 	log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("FIXTURE LOADED")
 }
 
-func (s *gdsTestSuite) loadEmptyFixtures() {
+func (s *gdsTestSuite) LoadEmptyFixtures() {
 	s.loadFixtures(empty, "")
 }
 
-// loadFullFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
-func (s *gdsTestSuite) loadFullFixtures() {
+// LoadFullFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
+func (s *gdsTestSuite) LoadFullFixtures() {
 	s.loadFixtures(full, fullDBFixturePath)
 }
 
-func (s *gdsTestSuite) loadSmallFixtures() {
+func (s *gdsTestSuite) LoadSmallFixtures() {
 	s.loadFixtures(small, smallDBFixturePath)
 }
 
@@ -372,15 +372,15 @@ func (s *gdsTestSuite) resetFixtures(ftype fixtureType) {
 	s.ftype = unknown
 }
 
-func (s *gdsTestSuite) resetEmptyFixtures() {
+func (s *gdsTestSuite) ResetEmptyFixtures() {
 	s.resetFixtures(empty)
 }
 
-func (s *gdsTestSuite) resetFullFixtures() {
+func (s *gdsTestSuite) ResetFullFixtures() {
 	s.resetFixtures(full)
 }
 
-func (s *gdsTestSuite) resetSmallFixtures() {
+func (s *gdsTestSuite) ResetSmallFixtures() {
 	s.resetFixtures(small)
 }
 

@@ -112,7 +112,8 @@ func MockConfig() config.Config {
 		},
 	}
 
-	if err := conf.Mark(); err != nil {
+	var err error
+	if conf, err = conf.Mark(); err != nil {
 		panic(err)
 	}
 	return conf

@@ -113,7 +113,7 @@ func (s *gdsTestSuite) TestProtectAuthenticate() {
 // Test the Authenticate endpoint.
 func (s *gdsTestSuite) TestAuthenticate() {
 	require := s.Require()
-	s.loadFullFixtures()
+	s.LoadFullFixtures()
 	a := s.svc.GetAdmin()
 
 	// Missing credential
@@ -139,7 +139,7 @@ func (s *gdsTestSuite) TestAuthenticate() {
 
 // Test the Reauthenticate endpoint.
 func (s *gdsTestSuite) TestReauthenticate() {
-	s.loadFullFixtures()
+	s.LoadFullFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 	tm := a.GetTokenManager()
@@ -233,7 +233,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 
 // Test that the Summary endpoint returns the correct response.
 func (s *gdsTestSuite) TestSummary() {
-	s.loadFullFixtures()
+	s.LoadFullFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -273,7 +273,7 @@ func (s *gdsTestSuite) TestSummary() {
 
 // Test that the Autocomplete endpoint returns the correct response.
 func (s *gdsTestSuite) TestAutocomplete() {
-	s.loadSmallFixtures()
+	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -302,7 +302,7 @@ func (s *gdsTestSuite) TestAutocomplete() {
 
 // Test the ListVASPs endpoint.
 func (s *gdsTestSuite) TestListVASPs() {
-	s.loadSmallFixtures()
+	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -422,7 +422,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 // Test the RetrieveVASP endpoint.
 func (s *gdsTestSuite) TestRetrieveVASP() {
-	s.loadSmallFixtures()
+	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -475,8 +475,8 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 
 // Test the CreateReviewNote endpoint.
 func (s *gdsTestSuite) TestCreateReviewNote() {
-	s.loadFullFixtures()
-	defer s.resetFullFixtures()
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -556,7 +556,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 
 // Test the ListReviewNotes endpoint.
 func (s *gdsTestSuite) TestListReviewNotes() {
-	s.loadFullFixtures()
+	s.LoadFullFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -601,8 +601,8 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 
 // Test the UpdateReviewNote endpoint.
 func (s *gdsTestSuite) TestUpdateReviewNote() {
-	s.loadFullFixtures()
-	defer s.resetFullFixtures()
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -687,8 +687,8 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 
 // Test the DeleteReviewNote endpoint.
 func (s *gdsTestSuite) TestDeleteReviewNote() {
-	s.loadFullFixtures()
-	defer s.resetFullFixtures()
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -739,8 +739,8 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 
 // Test the Review endpoint.
 func (s *gdsTestSuite) TestReview() {
-	s.loadFullFixtures()
-	defer s.resetFullFixtures()
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -794,8 +794,8 @@ func (s *gdsTestSuite) TestReview() {
 
 // Test the Resend endpoint.
 func (s *gdsTestSuite) TestResend() {
-	s.loadFullFixtures()
-	defer s.resetFullFixtures()
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -900,7 +900,7 @@ func (s *gdsTestSuite) TestResend() {
 
 // Test the ReviewTimeline endpoint.
 func (s *gdsTestSuite) TestReviewTimeline() {
-	s.loadSmallFixtures()
+	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 

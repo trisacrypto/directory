@@ -127,12 +127,12 @@ func (c Config) IsZero() bool {
 }
 
 // Mark a manually constructed as processed as long as it is validated.
-func (c Config) Mark() error {
+func (c Config) Mark() (Config, error) {
 	if err := c.Validate(); err != nil {
-		return err
+		return c, err
 	}
 	c.processed = true
-	return nil
+	return c, nil
 }
 
 func (c Config) Validate() (err error) {
