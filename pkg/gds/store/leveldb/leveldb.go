@@ -105,8 +105,9 @@ func (s *Store) Close() error {
 // name and ignores any ID fields that are set on the VASP, instead assigning new IDs.
 func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	// Create UUID for record
-	// TODO: check uniqueness of the ID
-	v.Id = uuid.New().String()
+	if v.Id == "" {
+		v.Id = uuid.New().String()
+	}
 	key := s.vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint

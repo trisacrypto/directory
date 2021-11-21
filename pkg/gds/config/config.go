@@ -105,15 +105,7 @@ func New() (_ Config, err error) {
 	}
 
 	// Validate config-specific constraints
-	if err = conf.Admin.Validate(); err != nil {
-		return Config{}, err
-	}
-
-	if err = conf.Sectigo.Validate(); err != nil {
-		return Config{}, err
-	}
-
-	if err = conf.Email.Validate(); err != nil {
+	if err = conf.Validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -132,6 +124,31 @@ func (c Config) GetLogLevel() zerolog.Level {
 
 func (c Config) IsZero() bool {
 	return !c.processed
+}
+
+// Mark a manually constructed as processed as long as it is validated.
+func (c Config) Mark() (Config, error) {
+	if err := c.Validate(); err != nil {
+		return c, err
+	}
+	c.processed = true
+	return c, nil
+}
+
+func (c Config) Validate() (err error) {
+	if err = c.Admin.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Sectigo.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Email.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c AdminConfig) Validate() error {

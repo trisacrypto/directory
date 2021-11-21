@@ -12,7 +12,7 @@ import (
 // ExtractGzip extracts a gzipped archive to the specified directory and
 // returns the path to the root level of the extracted archive.
 // Caller must ensure that the destination directory exists.
-func ExtractGzip(file, destDir string) (root string, err error) {
+func ExtractGzip(file, destDir string, skipHidden bool) (root string, err error) {
 	var (
 		f  *os.File
 		gr *gzip.Reader
@@ -48,6 +48,10 @@ func ExtractGzip(file, destDir string) (root string, err error) {
 			}
 		case tar.TypeReg:
 			var reg *os.File
+			if skipHidden && hdr.Name[0] == '.' {
+				// Skip hidden files if requested.
+				continue
+			}
 			if reg, err = os.Create(filepath.Join(destDir, hdr.Name)); err != nil {
 				return "", err
 			}

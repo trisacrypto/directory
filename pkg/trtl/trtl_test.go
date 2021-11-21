@@ -150,7 +150,7 @@ func (s *trtlTestSuite) SetupSuite() {
 	}
 
 	// Always extract the test database to a temporary directory.
-	if _, err = utils.ExtractGzip(s.gzip, s.db); err != nil {
+	if _, err = utils.ExtractGzip(s.gzip, s.db, false); err != nil {
 		// Regenerate the test database if the extraction failed.
 		log.Warn().Err(err).Msg("unable to extract test fixtures")
 		s.generateDB()
