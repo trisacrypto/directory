@@ -1482,3 +1482,12 @@ func (s *Admin) Available() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+//===========================================================================
+// Accessors - used primarily for testing
+//===========================================================================
+
+// GetTokenManager returns the underlying token manager for testing.
+func (s *Admin) GetTokenManager() *tokens.TokenManager {
+	return s.tokens
+}

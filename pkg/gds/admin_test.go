@@ -13,25 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/trisacrypto/directory/pkg/gds"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
-	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
-	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
-
-func (s *gdsTestSuite) initAdmin(dbPath string) (admin *gds.Admin) {
-	var err error
-	require := s.Require()
-	s.conf.Database = config.DatabaseConfig{
-		URL: "leveldb:///" + dbPath,
-	}
-	admin, s.db, s.tokens, err = gds.NewMockedAdmin(*s.conf)
-	require.NoError(err)
-	return admin
-}
 
 // httpRequest is a helper struct to make it easier to organize all the different
 // parameters required for making an in-code API request.
@@ -73,23 +59,22 @@ func (s *gdsTestSuite) makeRequest(request *httpRequest) (*gin.Context, *httptes
 			c.Request.Header.Add(k, v)
 		}
 	}
-	if request.params != nil {
-		for k, v := range request.params {
-			c.Params = append(c.Params, gin.Param{
-				Key:   k,
-				Value: v,
-			})
-		}
+
+	for k, v := range request.params {
+		c.Params = append(c.Params, gin.Param{
+			Key:   k,
+			Value: v,
+		})
 	}
 	return c, w
 }
 
 // doRequest is a helper function for making an admin API request and retrieving
 // the response.
-func (s *gdsTestSuite) doRequest(fn gin.HandlerFunc, c *gin.Context, w *httptest.ResponseRecorder, reply interface{}) (res *http.Response) {
+func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *httptest.ResponseRecorder, reply interface{}) (res *http.Response) {
 	require := s.Require()
 	// Call the admin function and return the HTTP response
-	fn(c)
+	handle(c)
 	res = w.Result()
 	defer res.Body.Close()
 	if reply != nil {
@@ -103,13 +88,13 @@ func (s *gdsTestSuite) doRequest(fn gin.HandlerFunc, c *gin.Context, w *httptest
 
 // Test that we get a good response from ProtectAuthenticate.
 func (s *gdsTestSuite) TestProtectAuthenticate() {
+	a := s.svc.GetAdmin()
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
-
 	request := &httpRequest{
-		method: http.MethodPost,
-		path:   "/v2/foo",
+		method: http.MethodGet,
+		path:   "/v2/authenticate",
 	}
+
 	actual := &admin.Reply{}
 	c, w := s.makeRequest(request)
 	res := s.doRequest(a.ProtectAuthenticate, c, w, actual)
@@ -121,14 +106,15 @@ func (s *gdsTestSuite) TestProtectAuthenticate() {
 	cookies := res.Cookies()
 	require.Len(cookies, 2)
 	for _, cookie := range cookies {
-		require.Equal(s.conf.Admin.CookieDomain, cookie.Domain)
+		require.Equal(s.svc.GetConf().Admin.CookieDomain, cookie.Domain)
 	}
 }
 
 // Test the Authenticate endpoint.
 func (s *gdsTestSuite) TestAuthenticate() {
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	s.loadFullFixtures()
+	a := s.svc.GetAdmin()
 
 	// Missing credential
 	request := &httpRequest{
@@ -153,8 +139,10 @@ func (s *gdsTestSuite) TestAuthenticate() {
 
 // Test the Reauthenticate endpoint.
 func (s *gdsTestSuite) TestReauthenticate() {
+	s.loadFullFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
+	tm := a.GetTokenManager()
 
 	claims := &tokens.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -166,11 +154,11 @@ func (s *gdsTestSuite) TestReauthenticate() {
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	refreshToken, err := s.tokens.CreateRefreshToken(accessToken)
+	refreshToken, err := tm.CreateRefreshToken(accessToken)
 	require.NoError(err)
-	access, err := s.tokens.Sign(accessToken)
+	access, err := tm.Sign(accessToken)
 	require.NoError(err)
-	refresh, err := s.tokens.Sign(refreshToken)
+	refresh, err := tm.Sign(refreshToken)
 	require.NoError(err)
 
 	// Missing access token
@@ -213,7 +201,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	// Mismatched access and refresh tokens
 	claims.Id = uuid.NewString()
 	otherToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	other, err := s.tokens.Sign(otherToken)
+	other, err := tm.Sign(otherToken)
 	require.NoError(err)
 	request.in = &admin.AuthRequest{
 		Credential: refresh,
@@ -239,14 +227,15 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	cookies := res.Cookies()
 	require.Len(cookies, 2)
 	for _, cookie := range cookies {
-		require.Equal(s.conf.Admin.CookieDomain, cookie.Domain)
+		require.Equal(s.svc.GetConf().Admin.CookieDomain, cookie.Domain)
 	}
 }
 
 // Test that the Summary endpoint returns the correct response.
 func (s *gdsTestSuite) TestSummary() {
+	s.loadFullFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	request := &httpRequest{
 		method: http.MethodGet,
@@ -284,8 +273,9 @@ func (s *gdsTestSuite) TestSummary() {
 
 // Test that the Autocomplete endpoint returns the correct response.
 func (s *gdsTestSuite) TestAutocomplete() {
+	s.loadSmallFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.smallDBPath)
+	a := s.svc.GetAdmin()
 
 	request := &httpRequest{
 		method: http.MethodGet,
@@ -299,12 +289,12 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	// Construct the expected response
 	expected := &admin.AutocompleteReply{
 		Names: map[string]string{
-			"trisa.charliebank.io":         getVASPIDFromKey(smallDBFixtures[0]),
+			"trisa.charliebank.io":         "d9da630e-41aa-11ec-9d29-acde48001122",
 			"https://trisa.charliebank.io": "https://trisa.charliebank.io",
-			"CharlieBank":                  getVASPIDFromKey(smallDBFixtures[0]),
-			"trisa.delta.io":               getVASPIDFromKey(smallDBFixtures[1]),
+			"CharlieBank":                  "d9da630e-41aa-11ec-9d29-acde48001122",
+			"trisa.delta.io":               "d9efca14-41aa-11ec-9d29-acde48001122",
 			"https://trisa.delta.io":       "https://trisa.delta.io",
-			"Delta Assets":                 getVASPIDFromKey(smallDBFixtures[1]),
+			"Delta Assets":                 "d9efca14-41aa-11ec-9d29-acde48001122",
 		},
 	}
 	require.Equal(expected, actual)
@@ -312,17 +302,17 @@ func (s *gdsTestSuite) TestAutocomplete() {
 
 // Test the ListVASPs endpoint.
 func (s *gdsTestSuite) TestListVASPs() {
+	s.loadSmallFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.smallDBPath)
+	a := s.svc.GetAdmin()
 
 	snippets := []admin.VASPSnippet{
 		{
-			ID:                  getVASPIDFromKey(smallDBFixtures[0]),
+			ID:                  "d9da630e-41aa-11ec-9d29-acde48001122",
 			Name:                "CharlieBank",
 			CommonName:          "trisa.charliebank.io",
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_SUBMITTED.String(),
-			LastUpdated:         "2021-09-27T04:12:23Z",
 			VerifiedContacts: map[string]bool{
 				"administrative": false,
 				"billing":        true,
@@ -331,12 +321,11 @@ func (s *gdsTestSuite) TestListVASPs() {
 			},
 		},
 		{
-			ID:                  getVASPIDFromKey(smallDBFixtures[1]),
+			ID:                  "d9efca14-41aa-11ec-9d29-acde48001122",
 			Name:                "Delta Assets",
 			CommonName:          "trisa.delta.io",
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_APPEALED.String(),
-			LastUpdated:         "2021-09-18T10:58:22Z",
 			VerifiedContacts: map[string]bool{
 				"administrative": false,
 				"billing":        true,
@@ -362,6 +351,13 @@ func (s *gdsTestSuite) TestListVASPs() {
 	sort.Slice(actual.VASPs, func(i, j int) bool {
 		return actual.VASPs[i].ID < actual.VASPs[j].ID
 	})
+
+	// Make sure the last modified timestamps are the same since the fixture will be
+	// updated when it is inserted into the database.
+	for i, vasp := range actual.VASPs {
+		snippets[i].LastUpdated = vasp.LastUpdated
+	}
+
 	require.Equal(snippets, actual.VASPs)
 
 	// List VASPs with an invalid status
@@ -426,8 +422,9 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 // Test the RetrieveVASP endpoint.
 func (s *gdsTestSuite) TestRetrieveVASP() {
+	s.loadSmallFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.smallDBPath)
+	a := s.svc.GetAdmin()
 
 	// Retrieve a VASP that doesn't exist
 	request := &httpRequest{
@@ -439,9 +436,9 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	require.Equal(http.StatusNotFound, rep.StatusCode)
 
 	// Retrieve a VASP that exists
-	request.path = "/v2/vasps/" + getVASPIDFromKey(smallDBFixtures[0])
+	request.path = "/v2/vasps/" + "d9da630e-41aa-11ec-9d29-acde48001122"
 	request.params = map[string]string{
-		"vaspID": getVASPIDFromKey(smallDBFixtures[0]),
+		"vaspID": "d9da630e-41aa-11ec-9d29-acde48001122",
 	}
 	actual := &admin.RetrieveVASPReply{}
 	c, w = s.makeRequest(request)
@@ -464,25 +461,25 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 			},
 		},
 	}
+
+	actualVASP, err := remarshalProto(vasps, actual.VASP)
+	require.NoError(err, "could not remarshall actual VASP")
+
 	// RetrieveVASP removes the extra data from the VASP before returning it
-	obj, ok := s.fixtures[smallDBFixtures[0]]
-	require.True(ok)
-	v := obj.(*pb.VASP)
-	v.Extra = nil
-	v.Contacts.Administrative.Extra = nil
-	v.Contacts.Legal.Extra = nil
-	v.Contacts.Technical.Extra = nil
-	v.Contacts.Billing.Extra = nil
-	var err error
-	expected.VASP, err = utils.Rewire(v)
-	require.NoError(err)
+	s.CompareFixture(vasps, "d9da630e-41aa-11ec-9d29-acde48001122", actualVASP, true)
+
+	// Compare non-vasp results
+	actual.VASP = nil
 	require.Equal(expected, actual)
 }
 
 // Test the CreateReviewNote endpoint.
 func (s *gdsTestSuite) TestCreateReviewNote() {
+	s.loadFullFixtures()
+	defer s.resetFullFixtures()
+
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vasps := []string{
 		"d9da630e-41aa-11ec-9d29-acde48001122",
@@ -538,7 +535,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(actual.Editor)
 	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
-	v, err := s.db.RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -559,8 +556,9 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 
 // Test the ListReviewNotes endpoint.
 func (s *gdsTestSuite) TestListReviewNotes() {
+	s.loadFullFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vasps := []string{
 		"d9da630e-41aa-11ec-9d29-acde48001122",
@@ -603,8 +601,11 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 
 // Test the UpdateReviewNote endpoint.
 func (s *gdsTestSuite) TestUpdateReviewNote() {
+	s.loadFullFixtures()
+	defer s.resetFullFixtures()
+
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vasps := []string{
 		"d9da630e-41aa-11ec-9d29-acde48001122",
@@ -670,7 +671,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
-	v, err := s.db.RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -686,8 +687,11 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 
 // Test the DeleteReviewNote endpoint.
 func (s *gdsTestSuite) TestDeleteReviewNote() {
+	s.loadFullFixtures()
+	defer s.resetFullFixtures()
+
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vasps := []string{
 		"d9da630e-41aa-11ec-9d29-acde48001122",
@@ -726,7 +730,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	rep = s.doRequest(a.DeleteReviewNote, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	// Record on the database should be deleted
-	v, err := s.db.RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -735,8 +739,11 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 
 // Test the Review endpoint.
 func (s *gdsTestSuite) TestReview() {
+	s.loadFullFixtures()
+	defer s.resetFullFixtures()
+
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vasps := []string{
 		"d9da630e-41aa-11ec-9d29-acde48001122",
@@ -787,8 +794,11 @@ func (s *gdsTestSuite) TestReview() {
 
 // Test the Resend endpoint.
 func (s *gdsTestSuite) TestResend() {
+	s.loadFullFixtures()
+	defer s.resetFullFixtures()
+
 	require := s.Require()
-	a := s.initAdmin(s.dbPath)
+	a := s.svc.GetAdmin()
 
 	vaspErrored := "da2b165a-41aa-11ec-9d29-acde48001122"
 	vaspRejected := "da8bd0e4-41aa-11ec-9d29-acde48001122"
@@ -826,7 +836,7 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
 	// Email audit log should be updated
-	v, err := s.db.RetrieveVASP(vaspErrored)
+	v, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
 	require.NoError(err)
 	emails, err := models.GetEmailLog(v.Contacts.Billing)
 	require.NoError(err)
@@ -870,7 +880,7 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
 	// Email audit logs should be updated
-	v, err = s.db.RetrieveVASP(vaspRejected)
+	v, err = s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
 	emails, err = models.GetEmailLog(v.Contacts.Administrative)
 	require.NoError(err)
@@ -890,8 +900,9 @@ func (s *gdsTestSuite) TestResend() {
 
 // Test the ReviewTimeline endpoint.
 func (s *gdsTestSuite) TestReviewTimeline() {
+	s.loadSmallFixtures()
 	require := s.Require()
-	a := s.initAdmin(s.smallDBPath)
+	a := s.svc.GetAdmin()
 
 	// Invalid start date
 	request := &httpRequest{

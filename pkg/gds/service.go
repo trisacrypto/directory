@@ -181,3 +181,27 @@ func (s *Service) Shutdown() (err error) {
 
 	return nil
 }
+
+//===========================================================================
+// Accessors - used primarily for testing
+//===========================================================================
+
+// GetStore returns the underlying database store used by all sub-services.
+func (s *Service) GetStore() store.Store {
+	return s.db
+}
+
+// GetGDS returns the GDS gRPC server
+func (s *Service) GetGDS() *GDS {
+	return s.gds
+}
+
+// GetAdmin returns the Admin server
+func (s *Service) GetAdmin() *Admin {
+	return s.admin
+}
+
+// GetConf returns a copy of the current configuration
+func (s *Service) GetConf() config.Config {
+	return s.conf
+}
