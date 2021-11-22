@@ -119,6 +119,34 @@ The following is how we installed and setup i18n in this project.
    }
    ```
 
+### Plural usage
+
+In general, there are 6 plural forms (based on [CLDR](http://cldr.unicode.org/index/cldr-spec/plural-rules)]):
+
+- zero
+
+- one (singular)
+
+- two (dual)
+
+- few (paucal)
+
+- many (also used for fractions if they have a separate class)
+
+- other (required—general plural form—also used if the language only has a single form)
+
+To use the plural forms in user messaging, e.g., [n] books, we can wrap our message as:
+
+```
+i18n.plural({
+  value: numBooks,
+  one: "# book",
+  other: "# books"
+})
+```
+
+When extracted by lingui command, the message is formatted as `{numBooks, plural, one {# book} other {# books}}` and the translators will need to follow the [plural forms](https://unicode-org.github.io/cldr-staging/charts/latest/supplemental/language_plural_rules.html) in their target language. E.g., if translating this message into Czech, it should become `{numBooks, plural, one {# kniha} few {# knihy} other {# knih}}`.
+
 ## Other Notes
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started). To learn React, check out the [React documentation](https://reactjs.org/).
