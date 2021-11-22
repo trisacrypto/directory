@@ -98,6 +98,7 @@ describe('defaultEndpointPrefix', () => {
                     Shoes
                      
                     <br />
+
                     Music
                      
                     <br />
