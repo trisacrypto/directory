@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { Card, Col, Row } from 'react-bootstrap';
-import { formatDisplayedData } from "../../../utils"
+import { formatDisplayedData } from "utils"
 
 
 

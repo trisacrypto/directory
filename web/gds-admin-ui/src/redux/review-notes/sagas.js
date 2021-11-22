@@ -1,7 +1,7 @@
 import toast from "react-hot-toast"
 import { call, put, takeEvery } from "redux-saga/effects"
 import { DeleteReviewNotesActionTypes } from "."
-import { getReviewNotes, deleteReviewNote as deleteNote } from "../../services/review-notes"
+import { getReviewNotes, deleteReviewNote as deleteNote } from "services/review-notes"
 import { fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess } from "./actions"
 import { FetchReviewNotesActionTypes } from "./constants"
 

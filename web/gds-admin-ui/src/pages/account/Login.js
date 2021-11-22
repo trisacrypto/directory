@@ -1,13 +1,13 @@
 import React from 'react';
 import { Redirect, useLocation } from 'react-router-dom';
 import AccountLayout from './AccountLayout';
-import SignWithGoogle from '../../components/Auth/SignWithGoogle';
-import config from "../../config";
-import { APICore, setCookie } from '../../helpers/api/apiCore';
-import { getCookie } from '../../utils';
+import SignWithGoogle from 'components/Auth/SignWithGoogle';
+import config from "config";
+import { APICore, setCookie } from 'helpers/api/apiCore';
+import { getCookie } from 'utils';
 import toast from 'react-hot-toast';
-import useAuth from '../../contexts/auth/use-auth';
-import { postCredentials } from '../../helpers/api/auth';
+import useAuth from 'contexts/auth/use-auth';
+import { postCredentials } from 'helpers/api/auth';
 import { Alert } from 'react-bootstrap';
 
 

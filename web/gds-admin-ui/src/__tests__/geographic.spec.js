@@ -98,20 +98,21 @@ describe('defaultEndpointPrefix', () => {
                     Shoes
                      
                     <br />
-                    Sports
+
+                    Music
                      
                     <br />
                     23
                      
-                    Runolfsdottir Village
+                    Frida Hollow
                     <br />
-                    Rochester Hills
+                    Rancho Cucamonga
                      
                     
                      
                     MA
                      
-                    35731
+                    81030-8195
                       
                     <br />
                     US

@@ -2,7 +2,7 @@
 import { all, call, fork, takeEvery, put } from 'redux-saga/effects';
 
 import { LayoutActionTypes } from './constants';
-import * as layoutConstants from '../../constants';
+import * as layoutConstants from 'constants/index';
 import {
     changeLayoutWidth as changeLayoutWidthAction,
     changeSidebarTheme as changeLeftSidebarThemeAction,
@@ -66,7 +66,7 @@ function* changeLayout({ payload: layout }) {
             yield put(changeSidebarTypeAction(layoutConstants.LEFT_SIDEBAR_TYPE_SCROLLABLE));
             yield put(changeLeftSidebarThemeAction(layoutConstants.LEFT_SIDEBAR_THEME_DEFAULT));
         }
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -76,7 +76,7 @@ function* changeLayout({ payload: layout }) {
 function* changeLayoutWidth({ payload: width }) {
     try {
         yield call(changeBodyAttribute, 'data-layout-mode', width);
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -86,7 +86,7 @@ function* changeLayoutWidth({ payload: width }) {
 function* changeLeftSidebarTheme({ payload: theme }) {
     try {
         yield call(changeBodyAttribute, 'data-leftbar-theme', theme);
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -96,7 +96,7 @@ function* changeLeftSidebarTheme({ payload: theme }) {
 function* changeLeftSidebarType({ payload: type }) {
     try {
         yield call(changeBodyAttribute, 'data-leftbar-compact-mode', type);
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -105,7 +105,7 @@ function* changeLeftSidebarType({ payload: type }) {
 function* toggleRightSidebar() {
     try {
         yield call(manageBodyClass, 'end-bar-enabled');
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -114,7 +114,7 @@ function* toggleRightSidebar() {
 function* showRightSidebar() {
     try {
         yield call(manageBodyClass, 'end-bar-enabled', 'add');
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
@@ -123,7 +123,7 @@ function* showRightSidebar() {
 function* hideRightSidebar() {
     try {
         yield call(manageBodyClass, 'end-bar-enabled', 'remove');
-    } catch (error) {}
+    } catch (error) { }
 }
 
 /**
