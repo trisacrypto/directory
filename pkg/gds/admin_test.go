@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
@@ -84,6 +86,41 @@ func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *http
 		require.NoError(err)
 	}
 	return res
+}
+
+// Test that the middleware returns the corect error when making unauthenticated
+// requests to protected endpoints.
+func (s *gdsTestSuite) TestAuthenticationMiddleware() {
+	s.svc.GetAdmin().SetHealth(true)
+	for _, endpoint := range []struct {
+		name   string
+		method string
+		path   string
+		status int
+	}{
+		{"authenticate", http.MethodPost, "/v2/authenticate", http.StatusForbidden},
+		{"summary", http.MethodGet, "/v2/summary", http.StatusUnauthorized},
+		{"autocomplete", http.MethodGet, "/v2/autocomplete", http.StatusUnauthorized},
+		{"reviews", http.MethodGet, "/v2/reviews", http.StatusUnauthorized},
+		{"listVASPs", http.MethodGet, "/v2/vasps", http.StatusUnauthorized},
+		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", http.StatusUnauthorized},
+		{"review", http.MethodPost, "/v2/vasps/42/review", http.StatusUnauthorized},
+		{"resend", http.MethodPost, "/v2/vasps/42/resend", http.StatusUnauthorized},
+		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", http.StatusUnauthorized},
+		{"createReviewNote", http.MethodPost, "/v2/vasps/42/notes", http.StatusUnauthorized},
+		{"updateReviewNote", http.MethodPut, "/v2/vasps/42/notes/1", http.StatusUnauthorized},
+		{"deleteReviewNote", http.MethodDelete, "/v2/vasps/42/notes/1", http.StatusUnauthorized},
+	} {
+		s.T().Run(endpoint.name, func(t *testing.T) {
+			serv := httptest.NewServer(s.svc.GetAdmin().Routes())
+			defer serv.Close()
+			r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+			require.NoError(t, err)
+			res, err := http.DefaultClient.Do(r)
+			require.NoError(t, err)
+			require.Equal(t, endpoint.status, res.StatusCode)
+		})
+	}
 }
 
 // Test that we get a good response from ProtectAuthenticate.

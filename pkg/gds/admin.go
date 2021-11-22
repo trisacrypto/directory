@@ -130,11 +130,6 @@ func (s *Admin) Shutdown() (err error) {
 	return nil
 }
 
-// Routes returns the Admin API router for testing purposes.
-func (s *Admin) Routes() http.Handler {
-	return s.router
-}
-
 func (s *Admin) setupRoutes() (err error) {
 	// Application Middleware
 	s.router.Use(ginzerolog.Logger("gin"))
@@ -1490,4 +1485,9 @@ func (s *Admin) Available() gin.HandlerFunc {
 // GetTokenManager returns the underlying token manager for testing.
 func (s *Admin) GetTokenManager() *tokens.TokenManager {
 	return s.tokens
+}
+
+// Routes returns the Admin API router for testing purposes.
+func (s *Admin) Routes() http.Handler {
+	return s.router
 }
