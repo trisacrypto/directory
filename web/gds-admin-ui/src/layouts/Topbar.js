@@ -4,17 +4,17 @@ import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 
 // components
-import ProfileDropdown from '../components/ProfileDropdown';
-import SearchDropdown from '../components/SearchDropdown';
-import TopbarSearch from '../components/TopbarSearch';
+import ProfileDropdown from 'components/ProfileDropdown';
+import SearchDropdown from 'components/SearchDropdown';
+import TopbarSearch from 'components/TopbarSearch';
 
-import profilePic from '../assets/images/avatar-1.jpg';
-import logo from '../assets/images/gds-trisatest-logo.png';
+import profilePic from 'assets/images/avatar-1.jpg';
+import logo from 'assets/images/gds-trisatest-logo.png';
 
 //constants
-import * as layoutConstants from '../constants/layout';
-import LanguageDropdown from '../components/LanguageDropdown';
-import useAuth from '../contexts/auth/use-auth';
+import * as layoutConstants from 'constants/layout';
+import LanguageDropdown from 'components/LanguageDropdown';
+import useAuth from 'contexts/auth/use-auth';
 
 // dummy search results
 const SearchResults = [];

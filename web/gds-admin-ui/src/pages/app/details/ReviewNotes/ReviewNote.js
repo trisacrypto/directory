@@ -2,9 +2,9 @@ import dayjs from 'dayjs'
 import React from 'react'
 import Gravatar from 'react-gravatar'
 import { useDispatch } from 'react-redux'
-import useSafeDispatch from '../../../../hooks/useSafeDispatch'
-import { deleteReviewNoteApiResponse } from '../../../../redux/review-notes'
-import { generateMd5 } from '../../../../utils'
+import useSafeDispatch from 'hooks/useSafeDispatch'
+import { deleteReviewNoteApiResponse } from 'redux/review-notes'
+import { generateMd5 } from 'utils'
 import EditReviewNote from './EditReviewNote'
 
 function ReviewNote({ note, vaspId }) {

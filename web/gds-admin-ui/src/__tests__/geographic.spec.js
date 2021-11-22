@@ -98,20 +98,20 @@ describe('defaultEndpointPrefix', () => {
                     Shoes
                      
                     <br />
-                    Electronics
+                    Music
                      
                     <br />
                     23
                      
-                    Greenholt Shoals
+                    Frida Hollow
                     <br />
-                    Missoula
+                    Rancho Cucamonga
                      
                     
                      
                     MA
                      
-                    73918-7366
+                    81030-8195
                       
                     <br />
                     US

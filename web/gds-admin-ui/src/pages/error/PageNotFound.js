@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom'
-import { getDirectoryLogo } from '../../utils';
+import { getDirectoryLogo } from 'utils';
 
 const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
     const { state } = useLocation()

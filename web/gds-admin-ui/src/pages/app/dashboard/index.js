@@ -4,8 +4,8 @@ import { Row, Col } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
 // components
-import PageTitle from '../../../components/PageTitle';
-import { fecthRegistrationsReviews, fetchCertificates, fetchPendingVasps, fetchSummary } from '../../../redux/dashboard/actions';
+import PageTitle from 'components/PageTitle';
+import { fecthRegistrationsReviews, fetchCertificates, fetchPendingVasps, fetchSummary } from 'redux/dashboard/actions';
 
 import Statistics from './Statistics';
 import Status from './Status';

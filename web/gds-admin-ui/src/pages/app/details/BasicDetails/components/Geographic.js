@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { Col, Row } from 'react-bootstrap'
-import { AddressTypeHeaders } from '../../../../../constants'
+import { AddressTypeHeaders } from 'constants/index'
 
 
 export const renderLines = (address) => (

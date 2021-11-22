@@ -1,8 +1,8 @@
 
 import React from 'react'
 import { Col } from 'react-bootstrap'
-import { NAME_IDENTIFIER_TYPE } from '../../../../../constants/basic-details'
-import { formatDisplayedData } from '../../../../../utils'
+import { NAME_IDENTIFIER_TYPE } from 'constants/basic-details'
+import { formatDisplayedData } from 'utils'
 
 function Name({ data }) {
     const names = React.useMemo(() => data && [].concat(...Object.values(data)), [data])

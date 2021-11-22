@@ -1,5 +1,5 @@
 // @flow
-import { getCookie } from '../../utils';
+import { getCookie } from 'utils';
 import { APICore } from './apiCore';
 
 const api = new APICore();

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { defaultEndpointPrefix, getCookie } from '../../utils';
+import { defaultEndpointPrefix, getCookie } from 'utils';
 import jwtDecode from 'jwt-decode'
 import toast from 'react-hot-toast';
 

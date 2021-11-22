@@ -1,7 +1,7 @@
 
 import toast from "react-hot-toast"
 import { call, put, takeEvery, fork, all } from "redux-saga/effects"
-import { getRegistrationReviews, getSummary, getVasps } from "../../services/dashboard"
+import { getRegistrationReviews, getSummary, getVasps } from "services/dashboard"
 import { fetchVaspsApiResponseSuccess, fetchVaspsApiResponseError, fetchSummaryApiResponseSuccess, fetchSummaryApiResponseError, fetchRegistrationsReviewsSuccess, fetchRegistrationsReviewsError } from "./actions"
 import { FetchPendingVaspsActionTypes, FetchRegistrationsReviewsActionTypes, FetchSummaryActionTypes, FetchVaspsActionTypes } from "./constants"
 

@@ -2,9 +2,9 @@
 import classNames from 'classnames';
 import React from 'react'
 import { Row } from 'react-bootstrap';
-import { VERIFIED_CONTACT_STATUS, VERIFIED_CONTACT_STATUS_LABEL } from '../../../../constants';
-import { formatDisplayedData, verifiedContactStatus } from '../../../../utils';
+import { formatDisplayedData, verifiedContactStatus } from 'utils';
 import PropTypes from 'prop-types';
+import { VERIFIED_CONTACT_STATUS, VERIFIED_CONTACT_STATUS_LABEL } from 'constants/index';
 
 function Contact({ data, type, verifiedContact }) {
     const status = verifiedContactStatus({ data, type, verifiedContact })

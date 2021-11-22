@@ -3,8 +3,8 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SimpleBar from 'simplebar-react';
 import AppMenu from './Menu';
-import { getMenuItems } from '../helpers/menu';
-import { getDirectoryLogo, getDirectoryName, getDirectoryURL } from '../utils';
+import { getMenuItems } from 'helpers/menu';
+import { getDirectoryLogo, getDirectoryName, getDirectoryURL } from 'utils';
 
 
 const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
