@@ -135,7 +135,7 @@ In general, there are 6 plural forms (based on [CLDR](http://cldr.unicode.org/in
 
 - other (required—general plural form—also used if the language only has a single form)
 
-To use the plural forms in user messaging, we can wrap our message as:
+To use the plural forms in user messaging, e.g., [n] books, we can wrap our message as:
 
 ```
 i18n.plural({
