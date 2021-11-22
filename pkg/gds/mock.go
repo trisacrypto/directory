@@ -12,6 +12,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	"google.golang.org/grpc"
 )
 
 // NewMock creates and returns a mocked Service for testing, using values provided in
@@ -37,6 +39,15 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	if svc.db, err = store.Open(conf.Database); err != nil {
 		return nil, err
 	}
+
+	gds := &GDS{
+		svc:  svc,
+		conf: &svc.conf.GDS,
+		db:   svc.db,
+	}
+	gds.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
+	api.RegisterTRISADirectoryServer(gds.srv, gds)
+	svc.gds = gds
 
 	admin := &Admin{
 		svc:  svc,
