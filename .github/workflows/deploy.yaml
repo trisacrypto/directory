@@ -69,6 +69,242 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  # GDS UI: vaspdirectory.net
+  gds-ui:
+    name: GDS UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as basenames for tags
+          # this should be configured for each container built
+          images: |
+            trisa/gds-ui
+            gcr.io/trisa-gds/gds-ui
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Login to GCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_SERVICE_ACCOUNT }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          # context and Dockerfile - should be configured for each image
+          context: .
+          file: ./containers/gds-ui/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_GDS_API_ENDPOINT=https://proxy.vaspdirectory.net
+            REACT_APP_GDS_IS_TESTNET=false
+            REACT_APP_ANALYTICS_ID=${{ secrets.REACT_APP_VASPDIRECTORY_ANALYTICS_ID }}
+
+  # GDS TestNet UI: trisatest.net
+  gds-testnet-ui:
+    name: GDS TestNet UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as basenames for tags
+          # this should be configured for each container built
+          images: |
+            trisa/gds-testnet-ui
+            gcr.io/trisa-gds/gds-testnet-ui
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Login to GCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_SERVICE_ACCOUNT }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          # context and Dockerfile - should be configured for each image
+          context: .
+          file: ./containers/gds-ui/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_GDS_API_ENDPOINT=https://proxy.trisatest.net
+            REACT_APP_GDS_IS_TESTNET=true
+            REACT_APP_ANALYTICS_ID=${{ secrets.REACT_APP_TRISATEST_ANALYTICS_ID }}
+
+  # GDS Admin UI: admin.vaspdirectory.net
+  gds-admin-ui:
+    name: GDS Admin UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as basenames for tags
+          # this should be configured for each container built
+          images: |
+            trisa/gds-admin-ui
+            gcr.io/trisa-gds/gds-admin-ui
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Login to GCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_SERVICE_ACCOUNT }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          # context and Dockerfile - should be configured for each image
+          context: .
+          file: ./containers/gds-admin-ui/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2
+            REACT_APP_GDS_IS_TESTNET=false
+            REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_VASPDIRECTORY_CLIENT_ID }}
+
+  # GDS TestNet Admin UI: admin.trisatest.net
+  gds-testnet-admin-ui:
+    name: GDS TestNet Admin UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as basenames for tags
+          # this should be configured for each container built
+          images: |
+            trisa/gds-testnet-admin-ui
+            gcr.io/trisa-gds/gds-testnet-admin-ui
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Login to GCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_SERVICE_ACCOUNT }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          # context and Dockerfile - should be configured for each image
+          context: .
+          file: ./containers/gds-admin-ui/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2
+            REACT_APP_GDS_IS_TESTNET=true
+            REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_TRISATEST_CLIENT_ID }}
+
   # Envoy gRPC Proxy for grpc-web
   grpc-proxy:
     name: gRPC Proxy
