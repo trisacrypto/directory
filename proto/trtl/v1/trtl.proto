@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package trtl.pb.v1;
+package trtl.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/trtl/pb/v1;pb";
 
 service Trtl {
@@ -20,7 +20,7 @@ service Trtl {
     rpc Batch(stream BatchRequest) returns (BatchReply) {};
 
     // Cursor is a server-side streaming request to iterate in a memory safe fashion.
-    rpc Cursor(CursorRequest) returns (stream CursorReply) {};
+    rpc Cursor(CursorRequest) returns (stream KVPair) {};
 
     // Sync is a bi-directional streaming mechanism to issue access requests synchronously.
     rpc Sync(stream SyncRequest) returns (stream SyncReply) {};
@@ -69,6 +69,7 @@ message IterRequest {
 
 message IterReply {
     repeated KVPair values = 1;
+    string next_page_token = 2;
 }
 
 message BatchRequest {
@@ -93,13 +94,8 @@ message BatchReply {
 
 message CursorRequest {
     bytes prefix = 1;       // the prefix to range over, if nil all objects are returned
-    Options options = 2;
-}
-
-message CursorReply {
-    int64 index = 1;        // the index of the cursor as it is iterating
-    KVPair value = 2;       // the current key/value pair produced by the cursor
-    bool next = 3;          // true if there is a next value that will be returned, false when the cursor is exhuasted
+    string namespace = 2;
+    Options options = 3;
 }
 
 message SyncRequest {
@@ -127,8 +123,11 @@ message SyncReply {
 // Options conditions all accesses to trtl, e.g. there are not different structs for
 // Get vs Put options. The semantics of each option depends on the type of request.
 message Options {
-    bool return_meta = 1;   // generally, return the version information for the object in the response
-    bool iter_no_keys = 2;  // do not include keys in an Iter or Batch response, to reduce data transfer load
+    bool return_meta = 1;     // generally, return the version information for the object in the response
+    bool iter_no_keys = 2;    // do not include keys in an Iter or Batch response, to reduce data transfer load
+    bool iter_no_values = 3;  // do not include values in an Iter or Batch response, to reduce data transfer load
+    string page_token = 4;    // specify the page token to fetch the next page of results
+    int32 page_size = 5;      // specify the number of results per page, cannot change between page requests
 }
 
 // A key/value pair that is returned in Iter and Cursor requests

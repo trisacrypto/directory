@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,35 +16,42 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
-	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	update = flag.Bool("update", false, "update the static test fixtures")
+const (
+	metaRegion = "us-east-1"
+	metaOwner  = "foo"
+	bufSize    = 1024 * 1024
 )
 
-// dbFixtures is a test fixtures map used to both generate the static test database
-// and verify the results of the trtl DB calls. It maps a test fixture name to an entry
-// containing a namespace, key, and value stored in the database.
-var dbFixtures = map[string]*dbEntry{}
+var (
+	// CLI flag, specify go test -update to regenerate static test fixtures
+	update = flag.Bool("update", false, "update the static test fixtures")
 
-const metaRegion = "us-east-1"
-const metaOwner = "foo"
+	// dbFixtures is a test fixtures map used to both generate the static test database
+	// and verify the results of the trtl DB calls. It maps a test fixture name to an entry
+	// containing a namespace, key, and value stored in the database.
+	dbFixtures = map[string]*dbEntry{}
 
-var metaVersion = &object.Version{
-	Pid:     1,
-	Version: 2,
-	Region:  metaRegion,
-	Parent: &object.Version{
+	// the version of all objects in the fixtures
+	metaVersion = &object.Version{
 		Pid:     1,
-		Version: 1,
+		Version: 2,
 		Region:  metaRegion,
-	},
-}
+		Parent: &object.Version{
+			Pid:     1,
+			Version: 1,
+			Region:  metaRegion,
+		},
+	}
+)
 
 type dbEntry struct {
 	Namespace string                 `json:"namespace"`
@@ -55,12 +63,13 @@ type trtlTestSuite struct {
 	suite.Suite
 	gzip string
 	db   string
+	trtl *trtl.Server
 	conf config.Config
+	conn *bufconn.Listener
 }
 
-// loadFixtures loads the test fixtures from a JSON file and stores them in the
-// dbFixtures map.
-func loadFixtures(s *trtlTestSuite) {
+// loads the test fixtures from a JSON file and stores them in the dbFixtures map
+func (s *trtlTestSuite) loadFixtures() {
 	require := s.Require()
 	fixtures, err := ioutil.ReadFile("testdata/db.json")
 	require.NoError(err)
@@ -68,16 +77,16 @@ func loadFixtures(s *trtlTestSuite) {
 	require.NoError(err)
 }
 
-// generateDB generates an updated database and compresses it to a gzip file.
+// generates an updated database and compresses it to a gzip file.
 // Note: This also generates a temporary directory which the suite teardown
 // should clean up.
-func generateDB(s *trtlTestSuite) {
+func (s *trtlTestSuite) generateDB() {
 	require := s.Require()
 	db, err := leveldb.OpenFile(s.db, nil)
 	require.NoError(err)
 	defer db.Close()
 
-	loadFixtures(s)
+	s.loadFixtures()
 
 	// Write all the test fixtures to the database.
 	for _, fixture := range dbFixtures {
@@ -102,6 +111,27 @@ func generateDB(s *trtlTestSuite) {
 	log.Info().Msg("successfully regenerated test fixtures")
 }
 
+func (s *trtlTestSuite) connect() (*grpc.ClientConn, error) {
+	ctx := context.Background()
+	return grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(s.dialer), grpc.WithInsecure())
+}
+
+func (s *trtlTestSuite) dialer(context.Context, string) (net.Conn, error) {
+	return s.conn.Dial()
+}
+
+// StatusError is a helper assertion function that checks a gRPC status error
+func (s *trtlTestSuite) StatusError(err error, code codes.Code, theError string) {
+	require := s.Require()
+	require.Error(err, "no status error returned")
+
+	var serr *status.Status
+	serr, ok := status.FromError(err)
+	require.True(ok, "error is not a grpc status error")
+	require.Equal(code, serr.Code(), "status code does not match")
+	require.Equal(theError, serr.Message(), "status error message does not match")
+}
+
 func (s *trtlTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
@@ -114,24 +144,35 @@ func (s *trtlTestSuite) SetupSuite() {
 	// database. The difference here is whether or not the gzipped file should be
 	// regenerated, which we need to do every time db.json is updated.
 	if _, err = os.Stat(s.gzip); *update || os.IsNotExist(err) {
-		generateDB(s)
+		s.generateDB()
 	} else {
-		loadFixtures(s)
+		s.loadFixtures()
 	}
 
 	// Always extract the test database to a temporary directory.
-	if _, err = utils.ExtractGzip(s.gzip, s.db); err != nil {
+	if _, err = utils.ExtractGzip(s.gzip, s.db, false); err != nil {
 		// Regenerate the test database if the extraction failed.
 		log.Warn().Err(err).Msg("unable to extract test fixtures")
-		generateDB(s)
+		s.generateDB()
 	}
 
 	// Load default config and add database path.
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
-	os.Setenv("TRTL_PID", "1")
-	os.Setenv("TRTL_REGION", "foo")
+	os.Setenv("TRTL_REPLICA_PID", "8")
+	os.Setenv("TRTL_REPLICA_REGION", "minneapolis")
 	s.conf, err = config.New()
 	require.NoError(err)
+
+	// Create the trtl server
+	s.trtl, err = trtl.New(s.conf)
+	require.NoError(err)
+
+	// Create a bufcon listener so that there are no actual network requests
+	s.conn = bufconn.Listen(bufSize)
+
+	// Run the test server without signals, background routines or maintenance mode checks
+	// TODO: do we need to check if there was an error when starting run?
+	go s.trtl.Run(s.conn)
 }
 
 func (s *trtlTestSuite) TearDownSuite() {
@@ -142,173 +183,4 @@ func (s *trtlTestSuite) TearDownSuite() {
 
 func TestTrtl(t *testing.T) {
 	suite.Run(t, new(trtlTestSuite))
-}
-
-// Test that we can call the Get RPC and get the correct response.
-func (s *trtlTestSuite) TestGet() {
-	var actual interface{}
-
-	require := s.Require()
-	alice := dbFixtures["alice"]
-	object := dbFixtures["object"]
-
-	// Start the server.
-	server, err := trtl.New(s.conf)
-	require.NoError(err)
-	go server.Serve()
-	defer server.Shutdown()
-
-	// Start the gRPC client.
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
-
-	// Retrieve a value from a reserved namespace - should fail.
-	_, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: "default",
-		Key:       []byte(object.Key),
-	})
-	require.Error(err)
-
-	// Retrieve a value without the key - should fail.
-	_, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: object.Namespace,
-	})
-	require.Error(err)
-
-	// Retrieve a value from the default namespace.
-	reply, err := client.Get(ctx, &pb.GetRequest{
-		Key: []byte(object.Key),
-	})
-	require.NoError(err)
-	err = json.Unmarshal(reply.Value, &actual)
-	require.NoError(err)
-	require.Equal(object.Value, actual)
-
-	// Retrieve a value from a valid namespace.
-	reply, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: alice.Namespace,
-		Key:       []byte(alice.Key),
-	})
-	require.NoError(err)
-	err = json.Unmarshal(reply.Value, &actual)
-	require.NoError(err)
-	require.Equal(alice.Value, actual)
-
-	// Retrieve a value from a non-existent namespace - should fail.
-	_, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: "invalid",
-		Key:       []byte(alice.Key),
-	})
-	require.Error(err)
-
-	// Retrieve a value from a non-existent key - should fail.
-	_, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: alice.Namespace,
-		Key:       []byte("invalid"),
-	})
-	require.Error(err)
-
-	// Retrieve a value with return_meta=false.
-	reply, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: alice.Namespace,
-		Key:       []byte(alice.Key),
-		Options: &pb.Options{
-			ReturnMeta: false,
-		},
-	})
-	require.NoError(err)
-	require.Nil(reply.Meta)
-	err = json.Unmarshal(reply.Value, &actual)
-	require.NoError(err)
-	require.Equal(alice.Value, actual)
-
-	// Retrieve a value with return_meta=true.
-	expectedMeta := &pb.Meta{
-		Key:       []byte(alice.Key),
-		Namespace: alice.Namespace,
-		Region:    metaRegion,
-		Owner:     metaOwner,
-		Version: &pb.Version{
-			Pid:     metaVersion.Pid,
-			Version: metaVersion.Version,
-			Region:  metaVersion.Region,
-		},
-		Parent: &pb.Version{
-			Pid:     metaVersion.Parent.Pid,
-			Version: metaVersion.Parent.Version,
-			Region:  metaVersion.Parent.Region,
-		},
-	}
-	reply, err = client.Get(ctx, &pb.GetRequest{
-		Namespace: alice.Namespace,
-		Key:       []byte(alice.Key),
-		Options: &pb.Options{
-			ReturnMeta: true,
-		},
-	})
-	require.NoError(err)
-	require.NotNil(reply.Meta)
-	require.Equal([]byte(alice.Key), reply.Meta.Key)
-	require.Equal(alice.Namespace, reply.Meta.Namespace)
-	require.True(proto.Equal(expectedMeta, reply.Meta))
-}
-
-// Test that we can call the Batch RPC and get the correct response.
-func (s *trtlTestSuite) TestBatch() {
-	require := s.Require()
-
-	// Start the server.
-	server, err := trtl.New(s.conf)
-	require.NoError(err)
-	go server.Serve()
-	defer server.Shutdown()
-
-	// Start the gRPC client.
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "localhost"+s.conf.BindAddr, grpc.WithInsecure())
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
-
-	requests := map[int64]*pb.BatchRequest{
-		1: {
-			Id: 1,
-			Request: &pb.BatchRequest_Put{
-				Put: &pb.PutRequest{
-					Key:       []byte("foo"),
-					Namespace: "default",
-					Value:     []byte("bar"),
-				},
-			},
-		},
-		2: {
-			Id: 2,
-			Request: &pb.BatchRequest_Delete{
-				Delete: &pb.DeleteRequest{
-					Key:       []byte("foo"),
-					Namespace: "default",
-				},
-			},
-		},
-	}
-	stream, err := client.Batch(ctx)
-	require.NoError(err)
-	for _, r := range requests {
-		err = stream.Send(r)
-		require.NoError(err)
-	}
-	reply, err := stream.CloseAndRecv()
-	require.NoError(err)
-	require.Equal(int64(len(requests)), reply.Operations)
-	require.Equal(int64(len(requests)), reply.Failed)
-	require.Equal(int64(0), reply.Successful)
-	require.Len(reply.Errors, len(requests))
-	for _, e := range reply.Errors {
-		require.Contains(requests, e.Id)
-		require.Equal(requests[e.Id].Id, e.Id)
-		require.Contains(e.Error, "not implemented")
-	}
 }

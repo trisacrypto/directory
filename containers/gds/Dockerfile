@@ -1,22 +1,51 @@
-FROM golang:1.16 AS builder
+# Dynamic Builds
+ARG BUILDER_IMAGE=golang:1.16-buster
+ARG FINAL_IMAGE=debian:buster-slim
 
-WORKDIR /srv/build
+# Build stage
+FROM ${BUILDER_IMAGE} as builder
 
-COPY . .
-RUN go test ./... && go build -v ./cmd/gds
-RUN go build -v ./cmd/sectigo
-RUN go build -v ./cmd/gdsutil
+# Ensure ca-certificates are up to date
+RUN update-ca-certificates
 
-FROM ubuntu:bionic
+WORKDIR $GOPATH/src/github.com/trisacrypto/directory
+
+# Use modules for dependencies
+COPY go.mod .
+COPY go.sum .
+
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+RUN go mod download
+RUN go mod verify
+
+# Copy only what is needed (ignore web and fixtures)
+COPY cmd ./cmd
+COPY pkg ./pkg
+COPY proto ./proto
+
+# Run tests to avoid building a broken container
+RUN go test -timeout 30s -v ./...
+
+# Build binaries
+RUN go build -v -o /go/bin/gds ./cmd/gds
+RUN go build -v -o /go/bin/sectigo ./cmd/sectigo
+RUN go build -v -o /go/bin/gdsutil ./cmd/gdsutil
+
+# Final Stage
+FROM ${FINAL_IMAGE} AS final
 
 LABEL maintainer="TRISA <info@trisa.io>"
 LABEL description="Global TRISA Directory Service"
 
-RUN apt-get update && apt-get install -y ca-certificates
-RUN apt-get update && apt-get install -y wget gnupg
+# Ensure ca-certificates are up to date
+RUN set -x && apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /srv/build/gds /bin/
-COPY --from=builder /srv/build/sectigo /bin/
-COPY --from=builder /srv/build/gdsutil /bin/
+# Copy the binary to the production image from the builder stage.
+COPY --from=builder /go/bin/gds /usr/local/bin/gds
+COPY --from=builder /go/bin/sectigo /usr/local/bin/sectigo
+COPY --from=builder /go/bin/gdsutil /usr/local/bin/gdsutil
 
-ENTRYPOINT [ "/bin/gds", "serve" ]
+CMD [ "/usr/local/bin/gds", "serve" ]

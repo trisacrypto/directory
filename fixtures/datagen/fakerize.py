@@ -13,12 +13,12 @@
 import os
 import json
 import uuid
-import lorem
 import random
 import secrets
 import datetime
-from faker import Faker
 
+import lorem
+from faker import Faker
 
 ##########################################################################
 # Global Variables
@@ -57,7 +57,7 @@ FAKE_VASPS = {
     "Romeo Montague Labs LLC": "VERIFIED",
     "Oscar Inc": "PENDING_REVIEW",
 }
-STATE_CHANGES = {
+VASP_STATE_CHANGES = {
     "SUBMITTED": {
         "previous_state": "NO_VERIFICATION",
         "current_state": "SUBMITTED",
@@ -111,6 +111,94 @@ STATE_CHANGES = {
         "current_state": "APPEALED",
         "description": "registration appealed",
         "source": "admin@rotational.io",
+    },
+}
+
+NETWORKS = ["trisatest.net", "vaspdirectory.net"]
+URLWORDS = [
+    "cacao",
+    "pepper",
+    "jackolantern",
+    "bones",
+    "countably",
+    "roosevelt",
+    "mountain",
+    "ace",
+    "lighthouse",
+    "tauceti",
+    "planetary",
+    "colloquial",
+    "sculptural",
+    "estimator",
+    "geodistributed",
+    "princeton",
+    "excelsior",
+    "gormandize",
+    "wistful",
+    "philosophers",
+    "hellenic",
+]
+FAKE_CERTS = {
+    "Papa": "INITIALIZED",
+    "Quebec": "COMPLETED",
+    "Sierra": "CR_REJECTED",
+    "Tango": "CR_ERRORED",
+    "Uniform": "COMPLETED",
+    "Victor": "COMPLETED",
+    "Whiskey": "CR_REJECTED",
+    "XRay": "INITIALIZED",
+    "Yankee": "INITIALIZED",
+    "Zulu": "COMPLETED",
+}
+
+CERT_STATE_CHANGES = {
+    "INITIALIZED": {
+        "previous_state": "INITIALIZED",
+        "current_state": "INITIALIZED",
+        "description": "created certificate request",
+        "source": "automated",
+    },
+    "READY_TO_SUBMIT": {
+        "previous_state": "INITIALIZED",
+        "current_state": "READY_TO_SUBMIT",
+        "description": "registration request received",
+        "source": "admin@rotational.io",
+    },
+    "PROCESSING": {
+        "previous_state": "READY_TO_SUBMIT",
+        "current_state": "PROCESSING",
+        "description": "certificate submitted",
+        "source": "automated",
+    },
+    "CR_REJECTED": {
+        "previous_state": "PROCESSING",
+        "current_state": "CR_REJECTED",
+        "description": "failed domain verification",
+        "source": "automated",
+    },
+    "CR_ERRORED": {
+        "previous_state": "PROCESSING",
+        "current_state": "CR_ERRORED",
+        "description": "certificate limit reached",
+        "source": "automated",
+    },
+    "DOWNLOADING": {
+        "previous_state": "PROCESSING",
+        "current_state": "DOWNLOADING",
+        "description": "certificate ready for download",
+        "source": "automated",
+    },
+    "DOWNLOADED": {
+        "previous_state": "DOWNLOADING",
+        "current_state": "DOWNLOADED",
+        "description": "certificate downloaded",
+        "source": "automated",
+    },
+    "COMPLETED": {
+        "previous_state": "DOWNLOADED",
+        "current_state": "COMPLETED",
+        "description": "certificate request complete",
+        "source": "automated",
     },
 }
 
@@ -195,7 +283,7 @@ def make_dates(first="2021-06-15T05:11:13Z", last="2021-10-25T17:15:43Z", count=
     return [datetime.datetime.strftime(date, format) for date in sorted(dates)]
 
 
-def make_log(state="VERIFIED"):
+def make_vasp_log(state="VERIFIED"):
     """
     Create a fake audit log depending on the dates provided
     and the setting of `state`.
@@ -206,8 +294,8 @@ def make_log(state="VERIFIED"):
     states = [state]
     current_state = state
     prior_state = None
-    while current_state in STATE_CHANGES:
-        prior_state = STATE_CHANGES[current_state]["previous_state"]
+    while current_state in VASP_STATE_CHANGES:
+        prior_state = VASP_STATE_CHANGES[current_state]["previous_state"]
         states.insert(0, prior_state)
         current_state = prior_state
 
@@ -216,7 +304,7 @@ def make_log(state="VERIFIED"):
 
     for st, dt in zip(states[1:], dates):
         log = dict()
-        log.update(STATE_CHANGES[st])
+        log.update(VASP_STATE_CHANGES[st])
         log["timestamp"] = dt
         logs.append(log)
 
@@ -267,6 +355,23 @@ def synthesize_secrets(record):
     return record
 
 
+def store(fakes, kind="vasps", directory="fixtures/datagen/synthetic"):
+    """
+    Save `fakes` dictionary to a new directory (create if not exists)
+    Each file should be the name of the fakerized uuid
+    Return the path
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    for idx, fake in fakes.items():
+        fname = os.path.join(directory, kind + "::" + idx + ".json")
+        with open(fname, "w") as outfile:
+            json.dump(fake, outfile, indent=4, sort_keys=True)
+
+    return directory
+
+
 ##########################################################################
 # VASP Creation Functions
 ##########################################################################
@@ -306,7 +411,7 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state
-    record["extra"]["audit_log"] = make_log(state=state)
+    record["extra"]["audit_log"] = make_vasp_log(state=state)
     record["first_listed"] = record["extra"]["audit_log"][0]["timestamp"]
     record["verified_on"] = record["extra"]["audit_log"][-1]["timestamp"]
     record["last_updated"] = record["extra"]["audit_log"][-1]["timestamp"]
@@ -346,7 +451,7 @@ def make_unverified(
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state
-    record["extra"]["audit_log"] = make_log(state=state)
+    record["extra"]["audit_log"] = make_vasp_log(state=state)
     record["first_listed"] = record["extra"]["audit_log"][0]["timestamp"]
     record["last_updated"] = record["extra"]["audit_log"][-1]["timestamp"]
     record["extra"]["review_notes"] = make_notes()
@@ -396,11 +501,8 @@ def make_pending(vasp, idx):
 
 def augment_vasps(fake_names=FAKE_VASPS):
     """
-    From the dictionary produced by the load_data function, potentially cleaned by the
-    clean_vasp function,
-     - Generate new records from keys of FAKE_VASPS, using values to set VASP state
-     remaining data is random
-     - Add review comments to each record
+    Generate new records from keys of FAKE_VASPS, using values to set VASP state
+    The remaining data is random. Add review comments to each record
     Returns synthetic records as a single dictionary
     """
     synthetic_vasps = dict()
@@ -419,28 +521,182 @@ def augment_vasps(fake_names=FAKE_VASPS):
             synthetic_vasps[idx] = make_rejected(vasp, idx)
         elif state == "SUBMITTED":
             synthetic_vasps[idx] = make_submitted(vasp, idx)
+        else:
+            print("Skipping unrecognized state: %s", state)
 
     return synthetic_vasps
 
 
-def store(fakes, directory="fixtures/datagen/synthetic"):
-    """
-    Save `fakes` dictionary to a new directory (create if not exists)
-    Each file should be the name of the fakerized uuid
-    Return the path
-    """
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+##########################################################################
+# CertReq Creation Functions
+##########################################################################
 
-    for idx, fake in fakes.items():
-        fname = os.path.join(directory, "vasps::" + idx + ".json")
-        with open(fname, "w") as outfile:
-            json.dump(fake, outfile, indent=4, sort_keys=True)
 
-    return directory
+def make_common_name(cert):
+    """
+    Make a synthetic but well-structured common name
+    """
+    return cert + "." + random.choice(URLWORDS) + random.choice(DOMAINS)
+
+
+def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+    """
+    Make a cert req in the COMPLETED state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = str(uuid.uuid1())
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "COMPLETED"
+    batch = str(random.randint(100000, 999999))
+    record["batch_id"] = batch
+    network = random.choice(NETWORKS)
+    record[
+        "batch_name"
+    ] = f"{network} certificate request for {common_name} (id: {idx})"
+    record["batch_status"] = "READY_FOR_DOWNLOAD"
+    record["order_number"] = batch
+    start, end = make_dates(count=2)
+    record["creation_date"] = end
+    record["created"] = start
+    record["modified"] = end
+    record["audit_log"] = make_cert_log("COMPLETED", start, end)
+    return record
+
+
+def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+    """
+    Make a cert req in the INITIALIZED state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = str(uuid.uuid1())
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "INITIALIZED"
+    start = make_dates(count=1)[0]
+    record["created"] = start
+    record["modified"] = start
+    record["audit_log"] = make_cert_log("INITIALIZED", start, start)
+    return record
+
+
+def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+    """
+    Make a cert req in the CR_ERRORED state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = str(uuid.uuid1())
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "CR_ERRORED"
+    batch = str(random.randint(100000, 999999))
+    record["batch_id"] = batch
+    network = random.choice(NETWORKS)
+    record[
+        "batch_name"
+    ] = f"{network} certificate request for {common_name} (id: {idx})"
+    record["batch_status"] = "FAILED"
+    record["order_number"] = batch
+    start, end = make_dates(count=2)
+    record["created"] = start
+    record["modified"] = start
+    record["audit_log"] = make_cert_log("CR_ERRORED", start, end)
+    return record
+
+
+def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+    """
+    Make a cert req in the CR_REJECTED state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = str(uuid.uuid1())
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "CR_REJECTED"
+    batch = str(random.randint(100000, 999999))
+    record["batch_id"] = batch
+    network = random.choice(NETWORKS)
+    record[
+        "batch_name"
+    ] = f"{network} certificate request for {common_name} (id: {idx})"
+    record["batch_status"] = "REJECTED"
+    record["order_number"] = batch
+    start, end = make_dates(count=2)
+    record["created"] = start
+    record["modified"] = start
+    record["reject_reason"] = lorem.sentence()
+    record["audit_log"] = make_cert_log("CR_REJECTED", start, end)
+    return record
+
+
+def make_cert_log(state, start, end):
+    """
+    Return a list of dictionaries representing a synthetic but plausible audit log
+    """
+    logs = []
+
+    states = [state]
+    current_state = state
+    prior_state = None
+    while current_state in CERT_STATE_CHANGES:
+        prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
+        states.insert(0, prior_state)
+        if prior_state == "INITIALIZED":
+            current_state = "STOP"
+        else:
+            current_state = prior_state
+
+    dates = make_dates(first=start, last=end, count=len(states))
+
+    for st, dt in zip(states, dates):
+        log = dict()
+        log.update(CERT_STATE_CHANGES[st])
+        log["timestamp"] = dt
+        logs.append(log)
+
+    return logs
+
+
+def augment_certs(fake_names=FAKE_CERTS):
+    """
+    Generate new records from keys of FAKE_CERTS, using values to set cert state
+    The remaining data is random. Add audit logs to each record
+    Returns synthetic records as a single dictionary
+    """
+    synthetic_certs = dict()
+
+    for cert, state in fake_names.items():
+        idx = str(uuid.uuid1())
+        cert = cert.lower()
+        if state == "INITIALIZED":
+            synthetic_certs[idx] = make_initialized(cert, idx)
+        elif state == "COMPLETED":
+            synthetic_certs[idx] = make_completed(cert, idx)
+        elif state == "CR_ERRORED":
+            synthetic_certs[idx] = make_cr_errored(cert, idx)
+        elif state == "CR_REJECTED":
+            synthetic_certs[idx] = make_cr_rejected(cert, idx)
+        else:
+            print("Skipping unrecognized state: %s", state)
+
+    return synthetic_certs
 
 
 if __name__ == "__main__":
-
     fakes = augment_vasps()
-    store(fakes)
+    store(fakes, kind="vasps")
+
+    fakes = augment_certs()
+    store(fakes, kind="certreqs")

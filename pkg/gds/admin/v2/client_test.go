@@ -330,6 +330,15 @@ func TestListVASPs(t *testing.T) {
 				Traveler:           false,
 				VerifiedContacts:   map[string]bool{"billing": false, "technical": true},
 			},
+			{
+				ID:                 "5b180719-62c4-4674-ab2a-279ddb0e487a",
+				Name:               "Charlie VASP",
+				CommonName:         "trisa.charlie.co.uk",
+				VerificationStatus: "submitted",
+				LastUpdated:        "2021-09-21T22:02:39Z",
+				Traveler:           false,
+				VerifiedContacts:   map[string]bool{"administrative": false, "billing": true},
+			},
 		},
 		Page:     2,
 		PageSize: 10,
@@ -337,16 +346,16 @@ func TestListVASPs(t *testing.T) {
 	}
 
 	params := &admin.ListVASPsParams{
-		Status:   "pending_review",
-		Page:     2,
-		PageSize: 10,
+		StatusFilters: []string{"pending_review", "verified"},
+		Page:          2,
+		PageSize:      10,
 	}
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/v2/vasps", r.URL.Path)
-		require.Equal(t, "page=2&page_size=10&status=pending_review", r.URL.RawQuery)
+		require.Equal(t, "page=2&page_size=10&status=pending_review&status=verified", r.URL.RawQuery)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)

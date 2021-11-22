@@ -14,7 +14,7 @@ function ReviewNote({ note, vaspId }) {
 
     const handleDeleteClick = () => {
         if (note && vaspId) {
-            if (window.confirm('Do you really want to delete it ?')) {
+            if (window.confirm("Are you sure you want to delete this reviewer's note?")) {
                 safeDispatch(deleteReviewNoteApiResponse(note?.id, vaspId))
             }
         }

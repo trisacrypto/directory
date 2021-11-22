@@ -5,14 +5,28 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/rotationalio/honu"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
 )
+
+func init() {
+	// Initialize zerolog with GCP logging requirements
+	zerolog.TimeFieldFormat = time.RFC3339
+	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
+	zerolog.MessageFieldName = logger.GCPFieldKeyMsg
+
+	// Add the severity hook for GCP logging
+	var gcpHook logger.SeverityHook
+	log.Logger = zerolog.New(os.Stdout).Hook(gcpHook).With().Timestamp().Logger()
+}
 
 // A Trtl server implements the following services
 // 1. A database service for interacting with a database
@@ -37,7 +51,13 @@ func New(conf config.Config) (s *Server, err error) {
 		}
 	}
 
-	// TODO: manage logging
+	// Set the global level
+	zerolog.SetGlobalLevel(conf.GetLogLevel())
+
+	// Set human readable logging if specified
+	if conf.ConsoleLog {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
 
 	// Create the server and prepare to serve
 	s = &Server{
@@ -73,12 +93,6 @@ func New(conf config.Config) (s *Server, err error) {
 
 // Serve gRPC requests on the specified bind address.
 func (t *Server) Serve() (err error) {
-	// TODO: change from enabled to maintenance mode
-	if !t.conf.Enabled {
-		log.Warn().Msg("trtl service is not enabled")
-		return nil
-	}
-
 	// Catch OS signals for graceful shutdowns
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -87,8 +101,14 @@ func (t *Server) Serve() (err error) {
 		t.echan <- t.Shutdown()
 	}()
 
-	// Run the Gossip background routine
-	go t.replica.AntiEntropy()
+	// Run management routines only if we're not in maintenance mode
+	if t.conf.Maintenance {
+		log.Warn().Msg("starting trtl in maintenance mode")
+	} else {
+		// These services should not run in maintenance mode
+		// Run the Gossip background routine
+		go t.replica.AntiEntropy()
+	}
 
 	// Listen for TCP requests
 	var sock net.Listener
@@ -98,13 +118,8 @@ func (t *Server) Serve() (err error) {
 	}
 
 	// Run the gRPC server
-	go func() {
-		defer sock.Close()
-		log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
-		if err := t.srv.Serve(sock); err != nil {
-			t.echan <- err
-		}
-	}()
+	go t.Run(sock)
+	log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
 
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
@@ -112,6 +127,16 @@ func (t *Server) Serve() (err error) {
 		return err
 	}
 	return nil
+}
+
+// Run the gRPC server. This method is extracted from the Serve function so that it can
+// be run in its own go routine and to allow tests to Run a bufconn server without
+// starting a live server with all of the various go routines and channels running.
+func (t *Server) Run(sock net.Listener) {
+	defer sock.Close()
+	if err := t.srv.Serve(sock); err != nil {
+		t.echan <- err
+	}
 }
 
 // Shutdown the trtl server gracefully.

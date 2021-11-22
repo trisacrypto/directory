@@ -29,8 +29,7 @@ const VaspDetails = () => {
                 console.error("[BasicDetails] getVasp", error.message)
             })
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [params])
+    }, [params.id])
 
 
     return (
@@ -52,7 +51,7 @@ const VaspDetails = () => {
                         </Col>
                         <Col md={6} xl={4} xxl={4}>
                             <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />
-                            <AuditLog data={vasp?.vasp?.extra?.audit_log} />
+                            <AuditLog data={vasp?.audit_log} />
                             <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                         </Col>
                     </Row>

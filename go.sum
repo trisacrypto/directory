@@ -211,8 +211,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rotationalio/honu v0.2.0 h1:lh2lLzncZ/W96pEZl6nHO4nH9H4Qu0EXuI19OXu8VOA=
-github.com/rotationalio/honu v0.2.0/go.mod h1:B84BYXs6ty05crUCgRTHYkDvuRnID2i7XyP/zkm9yoE=
+github.com/rotationalio/honu v0.2.1 h1:6Ro77Kg2CiIkc0Tx6YwEo8H1YkBQdTuksTZ0MXWGi2g=
+github.com/rotationalio/honu v0.2.1/go.mod h1:B84BYXs6ty05crUCgRTHYkDvuRnID2i7XyP/zkm9yoE=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.21.0 h1:Q3vdXlfLNT+OftyBHsU0Y445MD+8m8axjKgf2si0QcM=
 github.com/rs/zerolog v1.21.0/go.mod h1:ZPhntP/xmq1nnND05hhpAh2QMhSsA4UN3MGZ6O2J3hM=

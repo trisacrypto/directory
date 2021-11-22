@@ -10,16 +10,17 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 // Config uses envconfig to load required settings from the environment and validate
 // them in preparation for running the TRISA Global Directory Service.
 type Config struct {
-	DirectoryID string          `split_words:"true" default:"vaspdirectory.net"`
-	SecretKey   string          `split_words:"true" required:"true"`
-	Maintenance bool            `split_words:"true" default:"false"`
-	LogLevel    LogLevelDecoder `split_words:"true" default:"info"`
-	ConsoleLog  bool            `split_words:"true" default:"false"`
+	DirectoryID string              `split_words:"true" default:"vaspdirectory.net"`
+	SecretKey   string              `split_words:"true" required:"true"`
+	Maintenance bool                `split_words:"true" default:"false"`
+	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
+	ConsoleLog  bool                `split_words:"true" default:"false"`
 	GDS         GDSConfig
 	Admin       AdminConfig
 	Database    DatabaseConfig
@@ -104,15 +105,7 @@ func New() (_ Config, err error) {
 	}
 
 	// Validate config-specific constraints
-	if err = conf.Admin.Validate(); err != nil {
-		return Config{}, err
-	}
-
-	if err = conf.Sectigo.Validate(); err != nil {
-		return Config{}, err
-	}
-
-	if err = conf.Email.Validate(); err != nil {
+	if err = conf.Validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -131,6 +124,31 @@ func (c Config) GetLogLevel() zerolog.Level {
 
 func (c Config) IsZero() bool {
 	return !c.processed
+}
+
+// Mark a manually constructed as processed as long as it is validated.
+func (c Config) Mark() (Config, error) {
+	if err := c.Validate(); err != nil {
+		return c, err
+	}
+	c.processed = true
+	return c, nil
+}
+
+func (c Config) Validate() (err error) {
+	if err = c.Admin.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Sectigo.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Email.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c AdminConfig) Validate() error {
@@ -183,33 +201,6 @@ func (c SectigoConfig) Validate() error {
 func (c EmailConfig) Validate() error {
 	if c.AdminReviewBaseURL != "" && !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
 		return errors.New("admin review base URL must end in a /")
-	}
-	return nil
-}
-
-// LogLevelDecoder deserializes the log level from a config string.
-type LogLevelDecoder zerolog.Level
-
-// Decode implements envconfig.Decoder
-func (ll *LogLevelDecoder) Decode(value string) error {
-	value = strings.TrimSpace(strings.ToLower(value))
-	switch value {
-	case "panic":
-		*ll = LogLevelDecoder(zerolog.PanicLevel)
-	case "fatal":
-		*ll = LogLevelDecoder(zerolog.FatalLevel)
-	case "error":
-		*ll = LogLevelDecoder(zerolog.ErrorLevel)
-	case "warn":
-		*ll = LogLevelDecoder(zerolog.WarnLevel)
-	case "info":
-		*ll = LogLevelDecoder(zerolog.InfoLevel)
-	case "debug":
-		*ll = LogLevelDecoder(zerolog.DebugLevel)
-	case "trace":
-		*ll = LogLevelDecoder(zerolog.TraceLevel)
-	default:
-		return fmt.Errorf("unknown log level %q", value)
 	}
 	return nil
 }

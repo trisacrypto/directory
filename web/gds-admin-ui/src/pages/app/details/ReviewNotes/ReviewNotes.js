@@ -23,7 +23,7 @@ function ReviewNotes({ vaspId }) {
         ))
     }
 
-    return <div className='text-center fst-italic text-muted'>No reviewer notes</div>
+    return !reviewNotes?.length && <div className='text-center fst-italic text-muted'>No reviewer notes</div>
 }
 
 export default ReviewNotes

@@ -16,9 +16,6 @@ import (
 )
 
 func init() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	// Initialize zerolog with GCP logging requirements
 	zerolog.TimeFieldFormat = time.RFC3339
 	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
@@ -40,7 +37,7 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Set the global level
-	zerolog.SetGlobalLevel(zerolog.Level(conf.LogLevel))
+	zerolog.SetGlobalLevel(conf.GetLogLevel())
 
 	// Set human readable logging if specified
 	if conf.ConsoleLog {
@@ -183,4 +180,28 @@ func (s *Service) Shutdown() (err error) {
 	}
 
 	return nil
+}
+
+//===========================================================================
+// Accessors - used primarily for testing
+//===========================================================================
+
+// GetStore returns the underlying database store used by all sub-services.
+func (s *Service) GetStore() store.Store {
+	return s.db
+}
+
+// GetGDS returns the GDS gRPC server
+func (s *Service) GetGDS() *GDS {
+	return s.gds
+}
+
+// GetAdmin returns the Admin server
+func (s *Service) GetAdmin() *Admin {
+	return s.admin
+}
+
+// GetConf returns a copy of the current configuration
+func (s *Service) GetConf() config.Config {
+	return s.conf
 }
