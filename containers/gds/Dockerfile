@@ -25,7 +25,7 @@ COPY pkg ./pkg
 COPY proto ./proto
 
 # Run tests to avoid building a broken container
-RUN go test -timeout 30s -v ./...
+RUN go test -timeout 30s ./...
 
 # Build binaries
 RUN go build -v -o /go/bin/gds ./cmd/gds
