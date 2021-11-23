@@ -21,7 +21,7 @@ function* fetchSummary() {
 
 function* fetchPendingVasps() {
     try {
-        const response = yield call(getVasps, { status: 'pending+review' })
+        const response = yield call(getVasps, "status=pending+review")
         const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
@@ -30,10 +30,11 @@ function* fetchPendingVasps() {
     }
 }
 
-function* fetchVasps() {
+function* fetchVasps({ payload }) {
     try {
-        const response = yield call(getVasps)
-        const data = response.data
+        const response = yield call(getVasps, payload?.queryParams)
+        const data = response?.data
+
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
         toast.error(error)

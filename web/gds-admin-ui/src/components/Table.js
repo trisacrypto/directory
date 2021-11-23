@@ -1,4 +1,3 @@
-// @flow
 import React, { useRef, useEffect, forwardRef } from 'react';
 import {
     useTable,
@@ -42,7 +41,7 @@ const GlobalFilter = ({ preGlobalFilteredRows, globalFilter, setGlobalFilter, se
 
 const IndeterminateCheckbox = forwardRef(({ indeterminate, ...rest }, ref) => {
     const defaultRef = useRef();
-    const resolvedRef: any = ref || defaultRef;
+    const resolvedRef = ref || defaultRef;
 
     useEffect(() => {
         resolvedRef.current.indeterminate = indeterminate;
@@ -58,25 +57,8 @@ const IndeterminateCheckbox = forwardRef(({ indeterminate, ...rest }, ref) => {
     );
 });
 
-type TableProps = {
-    isSearchable?: boolean,
-    isSortable?: boolean,
-    pagination?: boolean,
-    isSelectable?: boolean,
-    isExpandable?: boolean,
-    pageSize: number,
-    columns: Array<any>,
-    data: Array<any>,
-    searchBoxClass?: string,
-    tableClass?: string,
-    theadClass?: string,
-    sizePerPageList: {
-        text: string,
-        value: number,
-    }[],
-};
 
-const Table = (props: TableProps): React$Element<React$FragmentType> => {
+const Table = (props) => {
     const isSearchable = props['isSearchable'] || false;
     const isSortable = props['isSortable'] || false;
     const pagination = props['pagination'] || false;
@@ -171,7 +153,11 @@ const Table = (props: TableProps): React$Element<React$FragmentType> => {
                             </tr>
                         ))}
                     </thead>
+
                     <tbody {...dataTable.getTableBodyProps()}>
+                        {
+                            !rows.length ? <tr><td>No vasps available</td></tr> : null
+                        }
                         {(rows || []).map((row, i) => {
                             dataTable.prepareRow(row);
                             return (

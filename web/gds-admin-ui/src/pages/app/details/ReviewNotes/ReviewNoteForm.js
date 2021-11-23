@@ -25,7 +25,6 @@ function ReviewNoteForm({ vaspId }) {
 
         postReviewNote(note, vaspId).then(response => {
             const data = response?.data
-            console.log('[data]', data)
             if (data) {
                 safeDispatch(createReviewNoteApiResponseSuccess(data))
                 toast.success('Review note added successfully')

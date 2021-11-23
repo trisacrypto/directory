@@ -90,12 +90,8 @@ class APICore {
     get = (url, params) => {
         let response;
         if (params) {
-            var queryString = params
-                ? Object.keys(params)
-                    .map((key) => key + '=' + params[key])
-                    .join('&')
-                : '';
-            response = axios.get(`${url}?${queryString}`, params);
+            var queryString = params ? params : ''
+            response = axios.get(`${url}?${queryString}`);
         } else {
             response = axios.get(`${url}`, params)
         }
