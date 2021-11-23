@@ -714,6 +714,12 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Test an update to common name for reviewd VASP returns a 400 error
+	request.in = &admin.UpdateVASPRequest{CommonName: "string"}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 }
 
 // Test the CreateReviewNote endpoint.
