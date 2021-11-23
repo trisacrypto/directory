@@ -19,6 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -29,6 +30,7 @@ const (
 	vasps    = "vasps"
 	certreqs = "certreqs"
 	index    = "index"
+	bufSize  = 1024 * 1024
 )
 
 var (
@@ -61,6 +63,7 @@ type gdsTestSuite struct {
 	fixtures map[string]map[string]interface{}
 	svc      *gds.Service
 	dbPaths  map[fixtureType]string
+	grpc     *bufconn.GRPCListener
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -85,6 +88,10 @@ func (s *gdsTestSuite) SetupSuite() {
 
 	// Start with an empty fixtures service
 	s.LoadEmptyFixtures()
+
+	// Create a bufconn listener so that there are no actual network requests
+	s.grpc = bufconn.New(bufSize)
+	go s.svc.GetGDS().Run(s.grpc.Listener)
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -96,6 +103,7 @@ func (s *gdsTestSuite) TearDownSuite() {
 		os.RemoveAll(path)
 		log.Info().Str("path", path).Msg("cleaned up database fixture")
 	}
+	s.grpc.Release()
 }
 
 func TestGds(t *testing.T) {

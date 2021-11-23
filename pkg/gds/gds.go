@@ -71,21 +71,22 @@ func (s *GDS) Serve() (err error) {
 	}
 
 	// Run the server
-	go func() {
-		defer sock.Close()
-		log.Info().
-			Str("listen", s.conf.BindAddr).
-			Str("version", pkg.Version()).
-			Msg("trisa directory server started")
-
-		if err := s.srv.Serve(sock); err != nil {
-			s.svc.echan <- err
-		}
-	}()
+	go s.Run(sock)
+	log.Info().Str("listen", s.conf.BindAddr).Str("version", pkg.Version()).Msg("trisa directory server started")
 
 	// Now that the go routine is started return nil, meaning the service has started
 	// successfully with no problems.
 	return nil
+}
+
+// Run the gRPC server. This method is extracted from the Serve function so that it can
+// be run in its own go routine and to allow tests to Run a bufconn server without
+// starting a live server with all of the various go routines and channels running.
+func (s *GDS) Run(sock net.Listener) {
+	defer sock.Close()
+	if err := s.srv.Serve(sock); err != nil {
+		s.svc.echan <- err
+	}
 }
 
 // Shutdown the TRISA Directory Service gracefully

@@ -1,11 +1,9 @@
 package trtl_test
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,11 +15,10 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -65,7 +62,7 @@ type trtlTestSuite struct {
 	db   string
 	trtl *trtl.Server
 	conf config.Config
-	conn *bufconn.Listener
+	grpc *bufconn.GRPCListener
 }
 
 // loads the test fixtures from a JSON file and stores them in the dbFixtures map
@@ -109,15 +106,6 @@ func (s *trtlTestSuite) generateDB() {
 	err = utils.WriteGzip(s.db, s.gzip)
 	require.NoError(err)
 	log.Info().Msg("successfully regenerated test fixtures")
-}
-
-func (s *trtlTestSuite) connect() (*grpc.ClientConn, error) {
-	ctx := context.Background()
-	return grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(s.dialer), grpc.WithInsecure())
-}
-
-func (s *trtlTestSuite) dialer(context.Context, string) (net.Conn, error) {
-	return s.conn.Dial()
 }
 
 // StatusError is a helper assertion function that checks a gRPC status error
@@ -167,18 +155,19 @@ func (s *trtlTestSuite) SetupSuite() {
 	s.trtl, err = trtl.New(s.conf)
 	require.NoError(err)
 
-	// Create a bufcon listener so that there are no actual network requests
-	s.conn = bufconn.Listen(bufSize)
+	// Create a bufconn listener so that there are no actual network requests
+	s.grpc = bufconn.New(bufSize)
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	// TODO: do we need to check if there was an error when starting run?
-	go s.trtl.Run(s.conn)
+	go s.trtl.Run(s.grpc.Listener)
 }
 
 func (s *trtlTestSuite) TearDownSuite() {
 	require := s.Require()
 	err := os.RemoveAll(s.db)
 	require.NoError(err)
+	s.grpc.Release()
 }
 
 func TestTrtl(t *testing.T) {

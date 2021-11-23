@@ -22,13 +22,12 @@ func (s *trtlTestSuite) TestGet() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Retrieve a value from a reserved namespace - should fail.
-	_, err = client.Get(ctx, &pb.GetRequest{
+	_, err := client.Get(ctx, &pb.GetRequest{
 		Namespace: "default",
 		Key:       []byte(object.Key),
 	})
@@ -126,13 +125,12 @@ func (s *trtlTestSuite) TestPut() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Put a value to a reserved namespace - should fail.
-	_, err = client.Put(ctx, &pb.PutRequest{
+	_, err := client.Put(ctx, &pb.PutRequest{
 		Namespace: "default",
 		Key:       []byte(object.Key),
 		Value:     []byte("foo"),
@@ -220,13 +218,12 @@ func (s *trtlTestSuite) TestDelete() {
 	tempNS := "temp"
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Delete from a reserved namespace - should fail.
-	_, err = client.Delete(ctx, &pb.DeleteRequest{
+	_, err := client.Delete(ctx, &pb.DeleteRequest{
 		Namespace: "default",
 		Key:       []byte("jerky"),
 	})
@@ -308,10 +305,9 @@ func (s *trtlTestSuite) TestBatch() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	requests := map[int64]*pb.BatchRequest{
 		1: {
@@ -355,13 +351,12 @@ func (s *trtlTestSuite) TestIter() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
-	_, err = client.Iter(ctx, &pb.IterRequest{Namespace: "index"})
+	_, err := client.Iter(ctx, &pb.IterRequest{Namespace: "index"})
 	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")
 
 	// Test Invalid Options
@@ -513,10 +508,9 @@ func (s *trtlTestSuite) TestCursor() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	conn, err := s.connect()
-	require.NoError(err)
-	defer conn.Close()
-	client := pb.NewTrtlClient(conn)
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
 	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "index"})
