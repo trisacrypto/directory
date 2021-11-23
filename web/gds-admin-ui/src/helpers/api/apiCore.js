@@ -210,7 +210,7 @@ class APICore {
             setAuthorization(res.data.access_token)
             return true
         }).catch((err) => {
-            console.log('[Error]', err)
+            console.error('[ERROR]', err)
             toast.error("Something wrong happen while refreshing the token")
             this.setLoggedInUser(null)
             setAuthorization(null)

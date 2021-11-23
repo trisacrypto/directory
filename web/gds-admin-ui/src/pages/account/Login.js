@@ -36,7 +36,7 @@ const Login = () => {
 
                 }).catch(error => {
                     toast.error(error)
-                    console.log('[Login] error:', error.message)
+                    console.error('[LOGIN] error:', error.message)
                 })
             }
         }
@@ -56,7 +56,7 @@ const Login = () => {
                 setRedirectOnLogin(true)
             }).catch(error => {
                 setLogginError(error)
-                console.log('[Login] handleCredentialResponse', error)
+                console.error('[LOGIN] handleCredentialResponse', error)
             })
         }
 

@@ -61,7 +61,7 @@ function Geographic({ data }) {
 
     const hasAddressFieldAndLine = (address) => {
         if (hasAddressField(address) && hasAddressLine(address)) {
-            console.warn("cannot render address")
+            console.warn("[ERROR]", "cannot render address")
             return true
         }
         return false
@@ -69,7 +69,7 @@ function Geographic({ data }) {
 
     const renderAddress = (address) => {
         if (hasAddressFieldAndLine(address)) {
-            console.log("invalid address with both fields and lines");
+            console.warn("[ERROR]", "invalid address with both fields and lines");
             return <div>Invalid Address</div>
         }
 
@@ -81,7 +81,7 @@ function Geographic({ data }) {
             return renderField(address)
         }
 
-        console.log("could not render address")
+        console.warn("[ERROR]", "could not render address")
         return <div>Unparseable Address</div>
     }
 

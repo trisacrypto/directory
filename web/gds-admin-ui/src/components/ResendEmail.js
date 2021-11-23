@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { getCookie } from '../utils';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const deliverCertsLabel = (
     <>
@@ -97,10 +98,10 @@ function ResendEmail({ toggle, modal, vasp }) {
             }
         }).then(res => {
             setIsSubmitting(false)
-            console.log("[onSubmit] sucess", res.data)
+            toast.success("Email sent successfully")
         }).catch(err => {
             setIsSubmitting(false)
-            console.log("[onSubmit] error", err)
+            console.error("[onSubmit] error", err)
         })
     };
 
