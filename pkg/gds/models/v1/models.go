@@ -156,6 +156,14 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 		extra.CertificateRequests = make([]string, 0, 1)
 	}
 
+	// Do not allow duplicate certificate requests to be appended
+	for _, containsID := range extra.CertificateRequests {
+		if certreqID == containsID {
+			// Do not return an error
+			return nil
+		}
+	}
+
 	// Append certificate request ID to the array.
 	extra.CertificateRequests = append(extra.CertificateRequests, certreqID)
 
