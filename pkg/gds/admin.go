@@ -1487,7 +1487,7 @@ func (s *Admin) GetTokenManager() *tokens.TokenManager {
 	return s.tokens
 }
 
-// Routes returns the Admin API router for testing purposes.
-func (s *Admin) Routes() http.Handler {
+// GetRouter returns the Admin API router for testing purposes.
+func (s *Admin) GetRouter() http.Handler {
 	return s.router
 }

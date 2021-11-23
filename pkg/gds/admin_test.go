@@ -92,7 +92,12 @@ func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *http
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
+	// We're not directly running the admin server so we need to manually set it to
+	// healthy.
 	s.svc.GetAdmin().SetHealth(true)
+	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
+	defer serv.Close()
+
 	// Endpoints that are authenticated or CSRF protected
 	for _, endpoint := range []struct {
 		name      string
@@ -121,8 +126,6 @@ func (s *gdsTestSuite) TestMiddleware() {
 		switch {
 		case endpoint.authorize && endpoint.csrf:
 			s.T().Run(endpoint.name, func(t *testing.T) {
-				serv := httptest.NewServer(s.svc.GetAdmin().Routes())
-				defer serv.Close()
 				// Request is not authenticated
 				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
 				require.NoError(t, err)
@@ -156,8 +159,6 @@ func (s *gdsTestSuite) TestMiddleware() {
 				status = http.StatusForbidden
 			}
 			s.T().Run(endpoint.name, func(t *testing.T) {
-				serv := httptest.NewServer(s.svc.GetAdmin().Routes())
-				defer serv.Close()
 				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
 				require.NoError(t, err)
 				res, err := http.DefaultClient.Do(r)
