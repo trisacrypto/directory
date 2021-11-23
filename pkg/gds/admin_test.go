@@ -425,6 +425,84 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	require.Equal(expected, actual)
 }
 
+// Test the ReviewTimeline endpoint.
+func (s *gdsTestSuite) TestReviewTimeline() {
+	s.LoadSmallFixtures()
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// Invalid start date
+	request := &httpRequest{
+		method: http.MethodGet,
+		path:   "/v2/reviews?start=09-01-2021",
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Start date is before epoch
+	request.path = "/v2/reviews?start=1968-01-01"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Invalid end date
+	request.path = "/v2/reviews?end=09-01-2021"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Start date is after end date
+	request.path = "/v2/reviews?start=2021-01-01&end=2020-01-01"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Successful retrieval of review timeline
+	request.path = "/v2/reviews?start=2021-09-20&end=2021-09-30"
+	actual := &admin.ReviewTimelineReply{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	expected := &admin.ReviewTimelineReply{
+		Weeks: []admin.ReviewTimelineRecord{
+			{
+				Week:         "2021-09-20",
+				VASPsUpdated: 0,
+				Registrations: map[string]int{
+					pb.VerificationState_NO_VERIFICATION.String():     0,
+					pb.VerificationState_SUBMITTED.String():           0,
+					pb.VerificationState_EMAIL_VERIFIED.String():      0,
+					pb.VerificationState_PENDING_REVIEW.String():      0,
+					pb.VerificationState_REVIEWED.String():            0,
+					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
+					pb.VerificationState_VERIFIED.String():            0,
+					pb.VerificationState_REJECTED.String():            0,
+					pb.VerificationState_APPEALED.String():            0,
+					pb.VerificationState_ERRORED.String():             0,
+				},
+			},
+			{
+				Week:         "2021-09-27",
+				VASPsUpdated: 1,
+				Registrations: map[string]int{
+					pb.VerificationState_NO_VERIFICATION.String():     0,
+					pb.VerificationState_SUBMITTED.String():           1,
+					pb.VerificationState_EMAIL_VERIFIED.String():      0,
+					pb.VerificationState_PENDING_REVIEW.String():      0,
+					pb.VerificationState_REVIEWED.String():            0,
+					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
+					pb.VerificationState_VERIFIED.String():            0,
+					pb.VerificationState_REJECTED.String():            0,
+					pb.VerificationState_APPEALED.String():            0,
+					pb.VerificationState_ERRORED.String():             0,
+				},
+			},
+		},
+	}
+	require.Equal(expected, actual)
+}
+
 // Test the ListVASPs endpoint.
 func (s *gdsTestSuite) TestListVASPs() {
 	s.LoadSmallFixtures()
@@ -596,6 +674,46 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	// Compare non-vasp results
 	actual.VASP = nil
 	require.Equal(expected, actual)
+}
+
+func (s *gdsTestSuite) TestUpdateVASP() {
+	s.LoadSmallFixtures()
+	defer s.ResetSmallFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// Attempt to update a VASP that doesn't exist
+	request := &httpRequest{
+		method: http.MethodPatch,
+		path:   "/v2/vasps/invalid",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
+		in: &admin.UpdateVASPRequest{},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
+
+	// Update a VASP that exists
+	request.path = "/v2/vasps/" + "d9da630e-41aa-11ec-9d29-acde48001122"
+	request.params["vaspID"] = "d9da630e-41aa-11ec-9d29-acde48001122"
+
+	// Test request VASP and URL do not match returns a 400 error
+	request.in = &admin.UpdateVASPRequest{VASP: "bce77e90-82e0-4685-8139-6ec5d4b83615"}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Test an update with no changes returns a 400 error
+	request.in = &admin.UpdateVASPRequest{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 }
 
 // Test the CreateReviewNote endpoint.
@@ -1022,82 +1140,4 @@ func (s *gdsTestSuite) TestResend() {
 	require.NoError(err)
 	require.True(ts.Sub(sent) < time.Minute)
 	require.Equal("rejection", emails[0].Reason)
-}
-
-// Test the ReviewTimeline endpoint.
-func (s *gdsTestSuite) TestReviewTimeline() {
-	s.LoadSmallFixtures()
-	require := s.Require()
-	a := s.svc.GetAdmin()
-
-	// Invalid start date
-	request := &httpRequest{
-		method: http.MethodGet,
-		path:   "/v2/reviews?start=09-01-2021",
-	}
-	c, w := s.makeRequest(request)
-	rep := s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Start date is before epoch
-	request.path = "/v2/reviews?start=1968-01-01"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Invalid end date
-	request.path = "/v2/reviews?end=09-01-2021"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Start date is after end date
-	request.path = "/v2/reviews?start=2021-01-01&end=2020-01-01"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Successful retrieval of review timeline
-	request.path = "/v2/reviews?start=2021-09-20&end=2021-09-30"
-	actual := &admin.ReviewTimelineReply{}
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, actual)
-	require.Equal(http.StatusOK, rep.StatusCode)
-	expected := &admin.ReviewTimelineReply{
-		Weeks: []admin.ReviewTimelineRecord{
-			{
-				Week:         "2021-09-20",
-				VASPsUpdated: 0,
-				Registrations: map[string]int{
-					pb.VerificationState_NO_VERIFICATION.String():     0,
-					pb.VerificationState_SUBMITTED.String():           0,
-					pb.VerificationState_EMAIL_VERIFIED.String():      0,
-					pb.VerificationState_PENDING_REVIEW.String():      0,
-					pb.VerificationState_REVIEWED.String():            0,
-					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
-					pb.VerificationState_VERIFIED.String():            0,
-					pb.VerificationState_REJECTED.String():            0,
-					pb.VerificationState_APPEALED.String():            0,
-					pb.VerificationState_ERRORED.String():             0,
-				},
-			},
-			{
-				Week:         "2021-09-27",
-				VASPsUpdated: 1,
-				Registrations: map[string]int{
-					pb.VerificationState_NO_VERIFICATION.String():     0,
-					pb.VerificationState_SUBMITTED.String():           1,
-					pb.VerificationState_EMAIL_VERIFIED.String():      0,
-					pb.VerificationState_PENDING_REVIEW.String():      0,
-					pb.VerificationState_REVIEWED.String():            0,
-					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
-					pb.VerificationState_VERIFIED.String():            0,
-					pb.VerificationState_REJECTED.String():            0,
-					pb.VerificationState_APPEALED.String():            0,
-					pb.VerificationState_ERRORED.String():             0,
-				},
-			},
-		},
-	}
-	require.Equal(expected, actual)
 }
