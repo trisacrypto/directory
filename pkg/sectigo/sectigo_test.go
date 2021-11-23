@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	. "github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 )
@@ -28,7 +29,12 @@ type SectigoTestSuite struct {
 func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	var err error
 	require := s.Require()
-	s.api, err = New("foo", "supersecret", "CipherTrace EE")
+	conf := config.SectigoConfig{
+		Username: "foo",
+		Password: "supersecret",
+		Profile:  "CipherTrace EE",
+	}
+	s.api, err = New(conf)
 	require.NoError(err)
 	s.server, err = mock.New()
 	require.NoError(err)
@@ -218,8 +224,11 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 		c.JSON(http.StatusInternalServerError, "how did we get here?")
 	})
 
-	s.api, err = New("invalid", "invalid", "CipherTrace EE")
+	conf := config.SectigoConfig{
+		Username: "invalid",
+		Password: "invalid",
+	}
+	s.api, err = New(conf)
 	require.NoError(err)
-	err = s.api.Authenticate()
-	require.EqualError(err, ErrInvalidCredentials.Error())
+	require.EqualError(s.api.Authenticate(), ErrInvalidCredentials.Error())
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc"
@@ -63,6 +64,11 @@ func NewMock(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 	svc.admin = admin
+
+	if svc.certs, err = sectigo.New(conf.Sectigo); err != nil {
+		return nil, err
+	}
+
 	return svc, nil
 }
 

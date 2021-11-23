@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/sectigo/profiles"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -185,7 +185,7 @@ func (c OauthConfig) Validate() error {
 func (c SectigoConfig) Validate() error {
 	// Check valid certificate profiles
 	validProfile := false
-	for _, profile := range sectigo.AllProfiles {
+	for _, profile := range profiles.AllProfiles {
 		if profile == c.Profile {
 			validProfile = true
 			break
@@ -193,7 +193,7 @@ func (c SectigoConfig) Validate() error {
 	}
 
 	if !validProfile {
-		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(sectigo.AllProfiles[:], ", "))
+		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(profiles.AllProfiles[:], ", "))
 	}
 	return nil
 }

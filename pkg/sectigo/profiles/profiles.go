@@ -1,4 +1,4 @@
-package sectigo
+package profiles
 
 // Valid Sectigo Certificate Profile Names and IDs
 // TODO: do not hardcode this, but get programatically from Sectigo API
@@ -12,8 +12,4 @@ const (
 var AllProfiles = [4]string{
 	ProfileCipherTraceEE, ProfileIDCipherTraceEE,
 	ProfileCipherTraceEndEntityCertificate, ProfileIDCipherTraceEndEntityCertificate,
-}
-
-func (s *Sectigo) Profile() string {
-	return s.profile
 }

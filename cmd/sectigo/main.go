@@ -11,7 +11,9 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	sectigoprofiles "github.com/trisacrypto/directory/pkg/sectigo/profiles"
 	"github.com/urfave/cli"
 )
 
@@ -217,7 +219,12 @@ func main() {
 }
 
 func initAPI(c *cli.Context) (err error) {
-	if api, err = sectigo.New(c.String("username"), c.String("password"), c.String("profile")); err != nil {
+	conf := config.SectigoConfig{
+		Username: c.String("username"),
+		Password: c.String("password"),
+		Profile:  c.String("profile"),
+	}
+	if api, err = sectigo.New(conf); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
@@ -291,7 +298,7 @@ func createSingle(c *cli.Context) (err error) {
 		fmt.Printf("pkcs12 password: %s\n", params["pkcs12Password"])
 	}
 
-	if api.Profile() == sectigo.ProfileCipherTraceEndEntityCertificate || api.Profile() == sectigo.ProfileIDCipherTraceEndEntityCertificate {
+	if api.Profile() == sectigoprofiles.ProfileCipherTraceEndEntityCertificate || api.Profile() == sectigoprofiles.ProfileIDCipherTraceEndEntityCertificate {
 		params["localityName"] = c.String("locality")
 		params["stateOrProvinceName"] = c.String("state")
 		params["countryName"] = c.String("country")

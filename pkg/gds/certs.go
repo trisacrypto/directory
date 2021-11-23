@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/sectigo/profiles"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
@@ -128,7 +129,7 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	params["pkcs12Password"] = string(pkcs12Password)
 
 	profile := s.certs.Profile()
-	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
+	if profile == profiles.ProfileCipherTraceEndEntityCertificate || profile == profiles.ProfileIDCipherTraceEndEntityCertificate {
 		// Default to TRISA Production locality since none has been provided.
 		// TODO: make this part of the certificate request.
 		params["localityName"] = "Menlo Park"

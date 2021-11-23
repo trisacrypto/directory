@@ -15,6 +15,8 @@ import (
 	"net/textproto"
 	"os"
 	"path/filepath"
+
+	"github.com/trisacrypto/directory/pkg/gds/config"
 )
 
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.
@@ -40,16 +42,16 @@ type Sectigo struct {
 // $SECTIGO_USERNAME and $SECTIGO_PASSWORD respectively; alternatively if not given and
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
-func New(username, password, profile string) (client *Sectigo, err error) {
+func New(config config.SectigoConfig) (client *Sectigo, err error) {
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
-		profile: profile,
+		profile: config.Profile,
 	}
 
-	if err = client.creds.Load(username, password); err != nil {
+	if err = client.creds.Load(config.Username, config.Password); err != nil {
 		return nil, err
 	}
 
@@ -814,4 +816,8 @@ func certificateAuthRedirectPolicy(req *http.Request, via []*http.Request) error
 		return http.ErrUseLastResponse
 	}
 	return nil
+}
+
+func (s *Sectigo) Profile() string {
+	return s.profile
 }
