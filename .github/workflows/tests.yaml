@@ -10,7 +10,7 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Go Lint
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
@@ -28,7 +28,7 @@ jobs:
         run: staticcheck ./...
 
   test:
-    name: Test
+    name: Go Test
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
@@ -66,7 +66,7 @@ jobs:
           file: ./coverage.txt
 
   build:
-    name: Build
+    name: Go Build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go

@@ -8,8 +8,8 @@ FROM ${BUILDER_IMAGE} as builder
 WORKDIR /usr/src/app
 
 # Dependencies
-COPY web/gds-ui/package.json ./
-COPY web/gds-ui/yarn.lock ./
+COPY web/gds-admin-ui/package.json ./
+COPY web/gds-admin-ui/yarn.lock ./
 RUN yarn install --frozen-lockfile --check-files
 
 # Set production environment variable for build context

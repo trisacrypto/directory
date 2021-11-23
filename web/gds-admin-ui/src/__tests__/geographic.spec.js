@@ -48,12 +48,12 @@ describe('defaultEndpointPrefix', () => {
                   >
                     <div>
                       215 Alynn Way
-                       
+
                     </div>
-                    
+
                     <div>
                       Queenstown, MD 21658
-                       
+
                     </div>
                     <div>
                       US
@@ -96,24 +96,23 @@ describe('defaultEndpointPrefix', () => {
                     data-testid="addressField"
                   >
                     Shoes
-                     
-                    <br />
 
-                    Music
-                     
+                    <br />
+                    Sports
+
                     <br />
                     23
-                     
-                    Frida Hollow
+
+                    Runolfsdottir Village
                     <br />
-                    Rancho Cucamonga
-                     
-                    
-                     
+                    Rochester Hills
+
+
+
                     MA
-                     
-                    81030-8195
-                      
+
+                    35731
+
                     <br />
                     US
                   </address>
