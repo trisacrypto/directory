@@ -296,6 +296,13 @@ func TestCertReqIDs(t *testing.T) {
 	ids, err = GetCertReqIDs(vasp)
 	require.NoError(t, err)
 	require.Len(t, ids, 2)
+
+	// Do not allow duplicate IDs
+	err = AppendCertReqID(vasp, "9676bf6a-ffdb-4185-8fa5-87cdae6f6eef")
+	require.NoError(t, err)
+	ids, err = GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
 }
 
 func TestContactExtra(t *testing.T) {
