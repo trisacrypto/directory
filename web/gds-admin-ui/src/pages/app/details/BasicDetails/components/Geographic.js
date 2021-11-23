@@ -2,6 +2,7 @@
 import React from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { AddressTypeHeaders } from 'constants/index'
+import PropTypes from 'prop-types';
 
 
 export const renderLines = (address) => (
@@ -99,6 +100,10 @@ function Geographic({ data }) {
             }
         </Col>
     )
+}
+
+Geographic.propTypes = {
+    data: PropTypes.arrayOf(PropTypes.object).isRequired
 }
 
 export default Geographic

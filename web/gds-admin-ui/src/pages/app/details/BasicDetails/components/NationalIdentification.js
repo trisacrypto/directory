@@ -4,6 +4,7 @@ import { Col } from 'react-bootstrap'
 import { NATIONAL_IDENTIFIER_TYPE } from 'constants/national-identification'
 import { formatDisplayedData } from 'utils'
 import countryCodeEmoji, { isoCountries } from 'utils/country'
+import PropTypes from 'prop-types';
 
 function NationalIdentification({ data }) {
     return (
@@ -28,6 +29,10 @@ function NationalIdentification({ data }) {
             }
         </Col>
     )
+}
+
+NationalIdentification.propTypes = {
+    data: PropTypes.object
 }
 
 export default NationalIdentification

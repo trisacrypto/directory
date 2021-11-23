@@ -1,4 +1,3 @@
-// @flow
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SimpleBar from 'simplebar-react';
@@ -7,7 +6,7 @@ import { getMenuItems } from 'helpers/menu';
 import { getDirectoryLogo, getDirectoryName, getDirectoryURL } from 'utils';
 
 
-const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
+const SideBarContent = ({ hideUserProfile }) => {
     return (
         <>
             {!hideUserProfile && (
@@ -23,18 +22,10 @@ const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
     );
 };
 
+const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }) => {
+    const menuNodeRef = useRef(null);
 
-type LeftSidebarProps = {
-    hideLogo: boolean,
-    hideUserProfile: boolean,
-    isLight: boolean,
-    isCondensed: boolean,
-};
-
-const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSidebarProps): React$Element<any> => {
-    const menuNodeRef: any = useRef(null);
-
-    const handleOtherClick = (e: any) => {
+    const handleOtherClick = (e) => {
         if (menuNodeRef && menuNodeRef.current && menuNodeRef.current.contains(e.target)) return;
         if (document.body) {
             document.body.classList.remove('sidebar-enable');

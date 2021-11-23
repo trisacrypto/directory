@@ -1,10 +1,11 @@
+import React from "react";
 import { Card } from "react-bootstrap";
 import SimpleBar from 'simplebar-react';
 import TimelineItem from "../../../components/TimelineItem";
 import Timeline from '../../../components/Timeline'
 import { StatusLabel } from "../../../constants";
 import dayjs from "dayjs";
-import React from "react";
+import PropTypes from 'prop-types';
 
 
 const AuditLog = ({ data }) => {
@@ -40,5 +41,9 @@ const AuditLog = ({ data }) => {
         </Card>
     ) : null;
 };
+
+AuditLog.propTypes = {
+    data: PropTypes.arrayOf(PropTypes.object).isRequired
+}
 
 export default AuditLog;

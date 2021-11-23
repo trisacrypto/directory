@@ -6,6 +6,7 @@ import ResendEmail from 'components/ResendEmail';
 import { StatusLabel } from 'constants/index';
 import TrisaFavicon from 'assets/images/trisa_favicon.png'
 import CiphertraceFavicon from 'assets/images/ciphertrace.ico'
+import PropTypes from 'prop-types';
 
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -85,5 +86,9 @@ const Tasks = ({ data }) => {
         </Card>
     );
 };
+
+Tasks.propTypes = {
+    data: PropTypes.object
+}
 
 export default Tasks;
