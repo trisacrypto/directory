@@ -9,7 +9,6 @@ import (
 
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
-	s.LoadEmptyFixtures()
 	require := s.Require()
 	ctx := context.Background()
 

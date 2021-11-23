@@ -1,4 +1,4 @@
-package listener
+package bufconn
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type GRPCListener struct {
 
 func New(bufSize int) *GRPCListener {
 	return &GRPCListener{
-		Listener: bufconn.Listen(1024 * 1024),
+		Listener: bufconn.Listen(bufSize),
 	}
 }
 
