@@ -124,6 +124,48 @@ func AppendAuditLog(vasp *pb.VASP, entry *AuditLogEntry) (err error) {
 	return nil
 }
 
+// GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.
+func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
+	// If the extra data is nil, return nil (no certificate requests).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetCertificateRequests(), nil
+}
+
+// AppendCertReqID adds the certificate request ID to the VASP if its not already added.
+func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
+	// Entry must be non-nil.
+	if certreqID == "" {
+		return errors.New("cannot append empty certificate request ID to extra")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.CertificateRequests = make([]string, 0, 1)
+	}
+
+	// Append certificate request ID to the array.
+	extra.CertificateRequests = append(extra.CertificateRequests, certreqID)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateCertificateRequestStatus changes the status of a CertificateRequest and appends
 // an entry to the audit log.
 func UpdateCertificateRequestStatus(request *CertificateRequest, state CertificateRequestState, description string, source string) (err error) {

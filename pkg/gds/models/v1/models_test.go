@@ -93,6 +93,22 @@ func TestVASPExtra(t *testing.T) {
 	require.Equal(t, "pontoon@boatz.com", notes["boats"].Author)
 	require.Equal(t, "", notes["boats"].Editor)
 	require.Equal(t, "boats are cool", notes["boats"].Text)
+
+	// Attempt to append certificate request IDs
+	for _, cfid := range []string{"b5841869-105f-411c-8722-4045aad72717", "230d5e77-9983-4f1f-80ea-d379d56519af"} {
+		err = AppendCertReqID(vasp, cfid)
+		require.NoError(t, err)
+	}
+
+	// Should be able to fetch the certificate request IDs
+	ids, err := GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
+
+	// Verification token should be unchanged
+	token, err = GetAdminVerificationToken(vasp)
+	require.NoError(t, err)
+	require.Equal(t, "jetskis", token)
 }
 
 func TestAuditLog(t *testing.T) {
@@ -253,6 +269,33 @@ func TestReviewNotes(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, notes, 1)
 	require.Equal(t, "jetskis are loud", notes["jetskis"].Text)
+}
+
+func TestCertReqIDs(t *testing.T) {
+	vasp := &pb.VASP{}
+
+	// No extra, Get should return nil
+	ids, err := GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Empty(t, ids)
+
+	// Cannot append an empty ID
+	err = AppendCertReqID(vasp, "")
+	require.EqualError(t, err, "cannot append empty certificate request ID to extra")
+
+	// Append an ID from empty
+	err = AppendCertReqID(vasp, "1df61840-7033-40fb-8ce9-538c87e242f5")
+	require.NoError(t, err)
+	ids, err = GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 1)
+
+	// Append an ID with data already inside
+	err = AppendCertReqID(vasp, "9676bf6a-ffdb-4185-8fa5-87cdae6f6eef")
+	require.NoError(t, err)
+	ids, err = GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
 }
 
 func TestContactExtra(t *testing.T) {
