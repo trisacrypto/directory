@@ -1,21 +1,9 @@
-// @flow
 import React, { useEffect, Suspense } from 'react';
+import PropTypes from 'prop-types';
 
 const loading = () => <div className=""></div>;
 
-type DefaultLayoutProps = {
-    layout: {
-        layoutType: string,
-        layoutWidth: string,
-        leftSideBarTheme: string,
-        leftSideBarType: string,
-        showRightSidebar: boolean,
-    },
-    user: any,
-    children?: any,
-};
-
-const DefaultLayout = (props: DefaultLayoutProps): React$Element<any> => {
+const DefaultLayout = (props) => {
     useEffect(() => {
         if (document.body) document.body.classList.add('authentication-bg');
 
@@ -33,4 +21,9 @@ const DefaultLayout = (props: DefaultLayoutProps): React$Element<any> => {
         </>
     );
 };
+
+DefaultLayout.propTypes = {
+    children: PropTypes.node.isRequired
+}
+
 export default DefaultLayout;

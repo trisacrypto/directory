@@ -1,4 +1,3 @@
-// @flow
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Container } from 'react-bootstrap';
@@ -14,15 +13,7 @@ const Footer = React.lazy(() => import('./Footer'));
 
 const loading = () => <div className=""></div>;
 
-type VerticalLayoutProps = {
-    children?: any,
-};
-
-type VerticalLayoutState = {
-    isMenuOpened?: boolean,
-};
-
-const VerticalLayout = ({ children }: VerticalLayoutProps, state: VerticalLayoutState): React$Element<any> => {
+const VerticalLayout = ({ children }, state) => {
     const dispatch = useDispatch();
 
     const { leftSideBarTheme, leftSideBarType } = useSelector((state) => ({

@@ -1,4 +1,3 @@
-// @flow
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SimpleBar from 'simplebar-react';
@@ -7,7 +6,7 @@ import { getMenuItems } from 'helpers/menu';
 import { getDirectoryLogo, getDirectoryName, getDirectoryURL } from 'utils';
 
 
-const SideBarContent = ({ hideUserProfile }: SideBarContentProps) => {
+const SideBarContent = ({ hideUserProfile }) => {
     return (
         <>
             {!hideUserProfile && (

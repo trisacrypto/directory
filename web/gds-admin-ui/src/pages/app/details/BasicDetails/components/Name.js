@@ -3,6 +3,7 @@ import React from 'react'
 import { Col } from 'react-bootstrap'
 import { NAME_IDENTIFIER_TYPE } from 'constants/basic-details'
 import { formatDisplayedData } from 'utils'
+import PropTypes from 'prop-types';
 
 function Name({ data }) {
     const names = React.useMemo(() => data && [].concat(...Object.values(data)), [data])
@@ -22,6 +23,10 @@ function Name({ data }) {
             </ul>
         </Col>
     )
+}
+
+Name.propTypes = {
+    data: PropTypes.object
 }
 
 export default Name

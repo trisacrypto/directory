@@ -4,6 +4,7 @@ import { Card, Row, Col } from 'react-bootstrap';
 import { capitalizeFirstLetter, getRatios } from 'utils';
 import { Status as STATUS } from 'constants/index';
 import Loader from 'components/Loader'
+import PropTypes from 'prop-types';
 
 const Status = ({ statuses }) => {
     const colors = ['#0d6efd', '#dc3545', '#ffc107'];
@@ -118,5 +119,9 @@ const Status = ({ statuses }) => {
         </Card>
     );
 };
+
+Status.propTypes = {
+    statuses: PropTypes.object
+}
 
 export default Status;

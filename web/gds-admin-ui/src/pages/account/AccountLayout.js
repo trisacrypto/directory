@@ -1,14 +1,9 @@
-// @flow
 import React, { useEffect } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { getDirectoryLogo } from 'utils';
+import PropTypes from 'prop-types';
 
-type AccountLayoutProps = {
-    bottomLinks?: React$Element<any>,
-    children?: any,
-};
-
-const AccountLayout = ({ bottomLinks, children }: AccountLayoutProps): React$Element<any> => {
+const AccountLayout = ({ children }) => {
 
     useEffect(() => {
         if (document.body) document.body.classList.add('authentication-bg');
@@ -32,8 +27,6 @@ const AccountLayout = ({ bottomLinks, children }: AccountLayoutProps): React$Ele
                                 </Card.Header>
                                 <Card.Body className="p-4">{children}</Card.Body>
                             </Card>
-
-                            {bottomLinks}
                         </Col>
                     </Row>
                 </Container>
@@ -44,5 +37,9 @@ const AccountLayout = ({ bottomLinks, children }: AccountLayoutProps): React$Ele
         </>
     );
 };
+
+AccountLayout.propTypes = {
+    children: PropTypes.node.isRequired
+}
 
 export default AccountLayout;
