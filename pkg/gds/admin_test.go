@@ -3,16 +3,19 @@ package gds_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
@@ -84,6 +87,88 @@ func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *http
 		require.NoError(err)
 	}
 	return res
+}
+
+// Test that the middleware returns the corect error when making unauthenticated
+// requests to protected endpoints.
+func (s *gdsTestSuite) TestMiddleware() {
+	// We're not directly running the admin server so we need to manually set it to
+	// healthy.
+	s.svc.GetAdmin().SetHealth(true)
+	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
+	defer serv.Close()
+
+	// Endpoints that are authenticated or CSRF protected
+	for _, endpoint := range []struct {
+		name      string
+		method    string
+		path      string
+		authorize bool
+		csrf      bool
+	}{
+		// CSRF protected endpoints
+		{"authenticate", http.MethodPost, "/v2/authenticate", false, true},
+		{"reauthenticate", http.MethodPost, "/v2/reauthenticate", false, true},
+		// Authenticated endpoints
+		{"summary", http.MethodGet, "/v2/summary", true, false},
+		{"autocomplete", http.MethodGet, "/v2/autocomplete", true, false},
+		{"reviews", http.MethodGet, "/v2/reviews", true, false},
+		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
+		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
+		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
+		// Authenticated and CSRF protected endpoints
+		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},
+		{"resend", http.MethodPost, "/v2/vasps/42/resend", true, true},
+		{"createReviewNote", http.MethodPost, "/v2/vasps/42/notes", true, true},
+		{"updateReviewNote", http.MethodPut, "/v2/vasps/42/notes/1", true, true},
+		{"deleteReviewNote", http.MethodDelete, "/v2/vasps/42/notes/1", true, true},
+	} {
+		switch {
+		case endpoint.authorize && endpoint.csrf:
+			s.T().Run(endpoint.name, func(t *testing.T) {
+				// Request is not authenticated
+				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				require.NoError(t, err)
+				res, err := http.DefaultClient.Do(r)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+				// Request is authenticated but CSRF token is missing
+				r, err = http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				require.NoError(t, err)
+				creds := map[string]interface{}{
+					"sub":     "102374163855881761273",
+					"hd":      "example.com",
+					"email":   "jon@example.com",
+					"name":    "Jon Doe",
+					"picture": "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
+				}
+				accessToken, err := s.svc.GetAdmin().GetTokenManager().CreateAccessToken(creds)
+				require.NoError(t, err)
+				access, err := s.svc.GetAdmin().GetTokenManager().Sign(accessToken)
+				require.NoError(t, err)
+				r.Header.Add("Authorization", "Bearer "+access)
+				res, err = http.DefaultClient.Do(r)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusForbidden, res.StatusCode)
+			})
+		case endpoint.authorize || endpoint.csrf:
+			var status int
+			if endpoint.authorize {
+				status = http.StatusUnauthorized
+			} else {
+				status = http.StatusForbidden
+			}
+			s.T().Run(endpoint.name, func(t *testing.T) {
+				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				require.NoError(t, err)
+				res, err := http.DefaultClient.Do(r)
+				require.NoError(t, err)
+				require.Equal(t, status, res.StatusCode)
+			})
+		default:
+			s.Require().Fail(fmt.Sprintf("misconfigured test: %s, authorize or csrf must be true", endpoint.name))
+		}
+	}
 }
 
 // Test that we get a good response from ProtectAuthenticate.

@@ -46,6 +46,11 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	if admin.tokens, err = tokens.MockTokenManager(); err != nil {
 		return nil, err
 	}
+	gin.SetMode(admin.conf.Mode)
+	admin.router = gin.New()
+	if err = admin.setupRoutes(); err != nil {
+		return nil, err
+	}
 	svc.admin = admin
 	return svc, nil
 }
