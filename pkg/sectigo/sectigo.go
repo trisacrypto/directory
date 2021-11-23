@@ -42,16 +42,16 @@ type Sectigo struct {
 // $SECTIGO_USERNAME and $SECTIGO_PASSWORD respectively; alternatively if not given and
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
-func New(config config.SectigoConfig) (client *Sectigo, err error) {
+func New(conf config.SectigoConfig) (client *Sectigo, err error) {
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
-		profile: config.Profile,
+		profile: conf.Profile,
 	}
 
-	if err = client.creds.Load(config.Username, config.Password); err != nil {
+	if err = client.creds.Load(conf.Username, conf.Password); err != nil {
 		return nil, err
 	}
 

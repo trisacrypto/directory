@@ -12,6 +12,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc"
@@ -69,6 +70,12 @@ func NewMock(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
+	if conf.Sectigo.Testing {
+		if svc.mock, err = mock.New(); err != nil {
+			return nil, err
+		}
+	}
+
 	return svc, nil
 }
 
@@ -107,6 +114,7 @@ func MockConfig() config.Config {
 			Username: "foo",
 			Password: "supersecretsquirrel",
 			Profile:  "CipherTrace EE",
+			Testing:  true,
 		},
 		Email: config.EmailConfig{
 			ServiceEmail:         "GDS <service@gds.dev>",
