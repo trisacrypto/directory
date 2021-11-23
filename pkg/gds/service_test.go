@@ -19,7 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/utils"
-	"github.com/trisacrypto/directory/pkg/utils/listener"
+	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -63,7 +63,7 @@ type gdsTestSuite struct {
 	fixtures map[string]map[string]interface{}
 	svc      *gds.Service
 	dbPaths  map[fixtureType]string
-	grpc     *listener.GRPCListener
+	grpc     *bufconn.GRPCListener
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -90,7 +90,7 @@ func (s *gdsTestSuite) SetupSuite() {
 	s.LoadEmptyFixtures()
 
 	// Create a bufconn listener so that there are no actual network requests
-	s.grpc = listener.New(bufSize)
+	s.grpc = bufconn.New(bufSize)
 	go s.svc.GetGDS().Run(s.grpc.Listener)
 }
 

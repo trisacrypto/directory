@@ -15,7 +15,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
-	"github.com/trisacrypto/directory/pkg/utils/listener"
+	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 
 	"google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -62,7 +62,7 @@ type trtlTestSuite struct {
 	db   string
 	trtl *trtl.Server
 	conf config.Config
-	grpc *listener.GRPCListener
+	grpc *bufconn.GRPCListener
 }
 
 // loads the test fixtures from a JSON file and stores them in the dbFixtures map
@@ -156,7 +156,7 @@ func (s *trtlTestSuite) SetupSuite() {
 	require.NoError(err)
 
 	// Create a bufconn listener so that there are no actual network requests
-	s.grpc = listener.New(bufSize)
+	s.grpc = bufconn.New(bufSize)
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	// TODO: do we need to check if there was an error when starting run?
