@@ -203,23 +203,36 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", "automated"); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
-		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 
 	// Make a new secret of type "password"
 	secretType := "password"
 	if err = s.svc.secret.With(certRequest.Id).CreateSecret(ctx, secretType); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not create new secret for pkcs12 password")
-		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 	if err = s.svc.secret.With(certRequest.Id).AddSecretVersion(ctx, secretType, []byte(password)); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("unable to add secret version for pkcs12 password")
-		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 
+	// Create certificate request
 	if err = s.db.UpdateCertReq(certRequest); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not save certificate request")
-		return nil, status.Error(codes.FailedPrecondition, "internal error with registration, please contact admins")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
+	}
+
+	// Add the CertificateRequest to the VASP
+	if err = models.AppendCertReqID(vasp, certRequest.Id); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not add cert request to VASP")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
+	}
+
+	// Store VASP with updated certificate requests
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with certificate request ID")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 
 	out = &api.RegisterReply{
