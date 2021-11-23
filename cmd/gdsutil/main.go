@@ -339,9 +339,128 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "migrate",
+			Usage:    "migrate VASP documents to include certificate requests",
+			Category: "migrate",
+			Action:   migrate,
+			Before:   openLevelDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Usage:   "dsn to connect to trisa directory storage",
+					EnvVars: []string{"GDS_DATABASE_URL"},
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
+}
+
+//===========================================================================
+// Temporary Migrate Command
+//===========================================================================
+
+// THIS should not be merged into the main branch! If you see it, delete it!
+func migrate(c *cli.Context) (err error) {
+	defer ldb.Close()
+
+	// Iterate over all the certificate requests, assigning them to their VASP
+	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceCertReqs)), nil)
+	defer iter.Release()
+
+	var (
+		migrated uint32
+		errors   uint32
+	)
+
+	for iter.Next() {
+		var msg proto.Message
+		if msg, err = wire.UnmarshalProto(wire.NamespaceCertReqs, iter.Value()); err != nil {
+			fmt.Println("could not unmarshal certreq")
+			errors++
+			continue
+		}
+
+		careq := msg.(*models.CertificateRequest)
+		vaspKey := []byte(strings.Join([]string{wire.NamespaceVASPs, careq.Vasp}, "::"))
+
+		var data []byte
+		if data, err = ldb.Get(vaspKey, nil); err != nil {
+			fmt.Println("could not fetch VASP for certreq")
+			errors++
+			continue
+		}
+
+		if msg, err = wire.UnmarshalProto(wire.NamespaceVASPs, data); err != nil {
+			fmt.Println("could not unmarshal VASP")
+			errors++
+			continue
+		}
+
+		vasp := msg.(*pb.VASP)
+		if err = models.AppendCertReqID(vasp, careq.Id); err != nil {
+			fmt.Println("could not append certreq ID to VASP")
+			errors++
+			continue
+		}
+
+		// Save VASP back to disk
+		if data, err = proto.Marshal(vasp); err != nil {
+			fmt.Println("could not marshal VASP to save back to db")
+			errors++
+			continue
+		}
+
+		if err = ldb.Put(vaspKey, data, nil); err != nil {
+			fmt.Println("could not save VASP back to db")
+			errors++
+			continue
+		}
+
+		migrated++
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Sanity check
+	iter2 := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
+	defer iter2.Release()
+
+	for iter2.Next() {
+		msg, err := wire.UnmarshalProto(wire.NamespaceVASPs, iter2.Value())
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		vasp := msg.(*pb.VASP)
+		careqs, err := models.GetCertReqIDs(vasp)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		switch len(careqs) {
+		case 0:
+			fmt.Println("vasp missing careqs after migrate")
+		case 1:
+			continue
+		default:
+			fmt.Printf("vasp has %d careqs after migrate\n", len(careqs))
+		}
+	}
+
+	if err = iter2.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("migrated %d certifcate requests, %d errors\n", migrated, errors)
+	return nil
 }
 
 //===========================================================================
