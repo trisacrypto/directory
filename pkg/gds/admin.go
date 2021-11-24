@@ -247,7 +247,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	}
 
 	// Validate the credential with Google
-	if claims, err = idtoken.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
+	if claims, err = s.tokens.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
 		log.Warn().Err(err).Msg("invalid credentials used for authentication")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
