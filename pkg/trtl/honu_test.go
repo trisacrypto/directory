@@ -1,6 +1,7 @@
 package trtl_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -8,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
-	"google.golang.org/grpc/codes"
+	codes "google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -267,36 +268,34 @@ func (s *trtlTestSuite) TestDelete() {
 			ReturnMeta: true,
 		},
 	})
-	// TODO uncomment when sc-2102 and sc-2103 are fixed
 	// TODO update os.Getenv to use test fixtures in sc-2098
-	// pid := os.Getenv("TRTL_REPLICA_PID")
-	// expectedPID, err := strconv.Atoi(pid)
-	// require.NoError(err)
-	// expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
-	// owner := bytes.Join([][]byte{[]byte(pid), []byte(expectedRegion)}, []byte(":"))
-	// expectedMeta := &pb.Meta{
-	// 	Key:       tempKey,
-	// 	Namespace: tempNS,
-	// 	Region:    expectedRegion,
-	// 	Owner:     string(owner),
-	// 	Version: &pb.Version{
-	// 		Pid:     uint64(expectedPID),
-	// 		Version: 2,
-	// 		Region:  expectedRegion,
-	// 	},
-	// 	Parent: &pb.Version{
-	// 		Pid:     uint64(expectedPID),
-	// 		Version: 1,
-	// 		Region:  expectedRegion,
-	// 	},
-	// }
+	pid := os.Getenv("TRTL_REPLICA_PID")
+	expectedPID, err := strconv.Atoi(pid)
+	require.NoError(err)
+	expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
+	owner := bytes.Join([][]byte{[]byte(pid), []byte(expectedRegion)}, []byte(":"))
+	expectedMeta := &pb.Meta{
+		Key:       tempKey,
+		Namespace: tempNS,
+		Region:    expectedRegion,
+		Owner:     string(owner),
+		Version: &pb.Version{
+			Pid:     uint64(expectedPID),
+			Version: 4,
+			Region:  expectedRegion,
+		},
+		Parent: &pb.Version{
+			Pid:     uint64(expectedPID),
+			Version: 3,
+			Region:  expectedRegion,
+		},
+	}
 	require.NoError(err)
 	require.True(withMeta.Success)
 	require.NotNil(withMeta.Meta)
-	// TODO uncomment when sc-2102 and sc-2103 are fixed
-	// require.Equal(tempKey, withMeta.Meta.Key)
-	// require.Equal(tempNS, withMeta.Meta.Namespace)
-	// require.True(proto.Equal(expectedMeta, withMeta.Meta))
+	require.Equal(tempKey, withMeta.Meta.Key)
+	require.Equal(tempNS, withMeta.Meta.Namespace)
+	require.True(proto.Equal(expectedMeta, withMeta.Meta))
 }
 
 // Test that we can call the Batch RPC and get the correct response.
@@ -379,10 +378,6 @@ func (s *trtlTestSuite) TestIter() {
 	s.StatusError(err, codes.InvalidArgument, "invalid page token")
 	_, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Options: &pb.Options{PageToken: token, PageSize: 27}})
 	s.StatusError(err, codes.InvalidArgument, "page size cannot change between requests")
-	_, err = client.Iter(ctx, &pb.IterRequest{Namespace: "things", Options: &pb.Options{PageToken: token, PageSize: 2}})
-	s.StatusError(err, codes.InvalidArgument, "prefix and namespace cannot change between requests")
-	_, err = client.Iter(ctx, &pb.IterRequest{Prefix: []byte("zed"), Namespace: "people", Options: &pb.Options{PageToken: token, PageSize: 2}})
-	s.StatusError(err, codes.InvalidArgument, "prefix and namespace cannot change between requests")
 
 	// Test ordered non-paginated request with prefix
 	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215")})
@@ -434,7 +429,6 @@ func (s *trtlTestSuite) TestIter() {
 	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215"), Options: &pb.Options{ReturnMeta: true}})
 	require.NoError(err, "could not fetch complete iteration")
 	require.NotEmpty(rep.Values, "no values returned, expected more than 1")
-
 	for _, pair := range rep.Values {
 		require.NotEmpty(pair.Key, "key not returned")
 		require.NotEmpty(pair.Value, "value not returned")
@@ -457,7 +451,7 @@ func (s *trtlTestSuite) TestIter() {
 		}
 
 		rep, err = client.Iter(ctx, req)
-		require.NoError(err, "could make paginated request")
+		require.NoError(err, "could not make paginated request")
 		require.LessOrEqual(len(rep.Values), 3, "invalid page size returned")
 
 		pages++
@@ -487,7 +481,7 @@ func (s *trtlTestSuite) TestIter() {
 		}
 
 		rep, err = client.Iter(ctx, req)
-		require.NoError(err, "could make paginated request")
+		require.NoError(err, "could not make paginated request")
 		require.Equal(len(rep.Values), 5, "invalid page size returned")
 
 		pages++

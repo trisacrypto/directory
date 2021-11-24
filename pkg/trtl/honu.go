@@ -1,7 +1,6 @@
 package trtl
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"io"
@@ -9,6 +8,7 @@ import (
 	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/iterator"
 	"github.com/rotationalio/honu/object"
+	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
@@ -42,60 +42,51 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 
-	var key []byte
-	if len(in.Namespace) > 0 {
-		key = prepend(in.Namespace, in.Key)
-	} else {
-		key = prepend("default", in.Key)
-	}
-
-	if in.Options != nil {
-		log.Debug().Str("key", string(key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
-	} else {
-		log.Debug().Str("key", string(key)).Msg("Trtl Get")
-	}
 	if in.Options != nil && in.Options.ReturnMeta {
 		// Retrieve and return the metadata.
+		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
+
+		// Check if we have a namespace
 		var object *object.Object
-		if object, err = h.db.Object(key); err != nil {
+		if in.Namespace != "" {
+			object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace))
+		} else {
+			object, err = h.db.Object(in.Key)
+		}
+
+		if err != nil {
 			// TODO: Check for the honu not found error instead.
 			if err == leveldb.ErrNotFound {
-				log.Debug().Err(err).Str("key", string(key)).Msg("specified key not found")
+				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
-			log.Error().Err(err).Str("key", string(key)).Msg("unable to retrieve object")
+			log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &pb.GetReply{
 			Value: object.Data,
-			Meta: &pb.Meta{
-				Key:       object.Key,
-				Namespace: object.Namespace,
-				Region:    object.Region,
-				Owner:     object.Owner,
-				Version: &pb.Version{
-					Pid:     object.Version.Pid,
-					Version: object.Version.Version,
-					Region:  object.Version.Region,
-				},
-				Parent: &pb.Version{
-					Pid:     object.Version.Parent.Pid,
-					Version: object.Version.Parent.Version,
-					Region:  object.Version.Parent.Region,
-				},
-			},
+			Meta:  returnMeta(*object),
 		}, nil
 	}
 
-	// Just return the value for the given key.
+	// No metadata requested; just return the value for the given key.
+	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
+
+	// But we do have to check if we have a namespace
 	var value []byte
-	if value, err = h.db.Get(key); err != nil {
-		// TODO: Check for the honu not found error instead.
+	if in.Namespace != "" {
+		value, err = h.db.Get(in.Key, options.WithNamespace(in.Namespace))
+	} else {
+		value, err = h.db.Get(in.Key)
+	}
+
+	// TODO: Check for the honu not found error instead.
+	if err != nil {
 		if err == leveldb.ErrNotFound {
-			log.Debug().Err(err).Str("key", string(key)).Msg("specified key not found")
+			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		log.Error().Err(err).Str("key", string(key)).Msg("unable to retrieve value")
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve value")
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 	return &pb.GetReply{
@@ -118,54 +109,30 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		return nil, status.Error(codes.InvalidArgument, "value must be provided in Put request")
 	}
 
-	var key []byte
-	if len(in.Namespace) > 0 {
-		key = prepend(in.Namespace, in.Key)
-	} else {
-		key = prepend("default", in.Key)
-	}
-
 	if in.Options != nil {
-		log.Debug().Bytes("key", key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Put")
+		log.Debug().Bytes("key", in.Key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Put")
 	} else {
-		log.Debug().Bytes("key", key).Msg("Trtl Put")
+		log.Debug().Bytes("key", in.Key).Msg("Trtl Put")
 	}
 
-	var success bool
-	if err := h.db.Put(key, in.Value); err != nil {
-		success = false
+	// Check if we have a namespace
+	var object *object.Object
+	if in.Namespace != "" {
+		object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace))
 	} else {
-		success = true
+		object, err = h.db.Put(in.Key, in.Value)
+	}
+	if err != nil {
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to put object")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	out = &pb.PutReply{Success: success}
+	out = &pb.PutReply{Success: true}
 
-	// if Options include a request for metadata, we need to do a get
 	if in.Options != nil && in.Options.ReturnMeta {
-		get, err := h.db.Object(key)
-		if err != nil {
-			// We failed to get the metadata, return both the success reply and an error
-			log.Error().Err(err).Msg("could not retrieve metadata after Put")
-			return out, status.Errorf(codes.Aborted, "could not get metadata: %s", err)
-		}
-
-		out.Meta = &pb.Meta{
-			Key:       get.Key,
-			Namespace: get.Namespace,
-			Region:    get.Region,
-			Owner:     get.Owner,
-			Version: &pb.Version{
-				Pid:     get.Version.Pid,
-				Version: get.Version.Version,
-				Region:  get.Version.Region,
-			},
-			Parent: &pb.Version{
-				Pid:     get.Version.Parent.Pid,
-				Version: get.Version.Parent.Version,
-				Region:  get.Version.Parent.Region,
-			},
-		}
+		out.Meta = returnMeta(*object)
 	}
+
 	return out, nil
 }
 
@@ -179,60 +146,36 @@ func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Delete request")
 	}
 
-	var key []byte
-	if len(in.Namespace) > 0 {
-		key = prepend(in.Namespace, in.Key)
-	} else {
-		key = prepend("default", in.Key)
-	}
-
 	if in.Options != nil {
-		log.Debug().Bytes("key", key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Delete")
+		log.Debug().Bytes("key", in.Key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Delete")
 	} else {
-		log.Debug().Bytes("key", key).Msg("Trtl Delete")
+		log.Debug().Bytes("key", in.Key).Msg("Trtl Delete")
 	}
 
-	var success bool
-	if err := h.db.Delete(key); err != nil {
-		success = false
+	// Check if we have a namespace
+	var object *object.Object
+	if in.Namespace != "" {
+		object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace))
 	} else {
-		success = true
+		object, err = h.db.Delete(in.Key)
+	}
+	if err != nil {
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	out = &pb.DeleteReply{Success: success}
+	out = &pb.DeleteReply{Success: true}
 
-	// if Options include a request for metadata, we need to do a get
 	if in.Options != nil && in.Options.ReturnMeta {
-		get, err := h.db.Object(key)
-		if err != nil {
-			// We failed to get the metadata, return both the success reply and an error
-			log.Error().Err(err).Msg("could not retrieve metadata after Delete")
-			return out, status.Errorf(codes.Aborted, "could not get metadata: %s", err)
-		}
-
-		out.Meta = &pb.Meta{
-			Key:       get.Key,
-			Namespace: get.Namespace,
-			Region:    get.Region,
-			Owner:     get.Owner,
-			Version: &pb.Version{
-				Pid:     get.Version.Pid,
-				Version: get.Version.Version,
-				Region:  get.Version.Region,
-			},
-			Parent: &pb.Version{
-				Pid:     get.Version.Parent.Pid,
-				Version: get.Version.Parent.Version,
-				Region:  get.Version.Parent.Region,
-			},
-		}
+		out.Meta = returnMeta(*object)
 	}
+
 	return out, nil
 }
 
 // Iter is a unary request to fetch a materialized collection of key/value pairs based
 // on a shared prefix. If no prefix is specified an entire namespace may be returned.
-// This RPC supports pagination to ensure that replies do not get to large. The default
+// This RPC supports pagination to ensure that replies do not get too large. The default
 // page size is 100 items, though this can be modified in the options. The next page
 // token in the result will contain the next page to request, or will be empty if there
 // are no more results to be supplied.
@@ -244,7 +187,7 @@ func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 // There are several options that modulate the Iter response:
 //   - return_meta: each key/value pair will contain the object metadata
 //   - iter_no_keys: each key/value pair will not have a key associated with it
-//   - iter_no_values: each key/value pair will not have a value associaed with it
+//   - iter_no_values: each key/value pair will not have a value associated with it
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
@@ -279,14 +222,6 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	}
 
-	// Compute the actual starting prefix as the namespace plus the key
-	var prefix []byte
-	if in.Namespace != "" {
-		prefix = prepend(in.Namespace, in.Prefix)
-	} else {
-		prefix = prepend("default", in.Prefix)
-	}
-
 	// If a page cursor is provided load it, otherwise create the cursor for iteration
 	cursor := &internal.PageCursor{}
 	if opts.PageToken != "" {
@@ -299,11 +234,6 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		if cursor.PageSize != opts.PageSize {
 			log.Debug().Int32("cursor", cursor.PageSize).Int32("opts", opts.PageSize).Msg("invalid iter request: mismatched page size")
 			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
-		}
-
-		if !bytes.HasPrefix(cursor.NextKey, prefix) {
-			log.Debug().Msg("invalid iter request: mismatched prefix")
-			return nil, status.Error(codes.InvalidArgument, "prefix and namespace cannot change between requests")
 		}
 
 	} else {
@@ -322,7 +252,13 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	// start of the next page, which is extremely inefficient, especially for large
 	// datasets. [Create a story for implementing iter.Seek() in Honu]
 	var iter iterator.Iterator
-	if iter, err = h.db.Iter(prefix); err != nil {
+
+	if in.Namespace != "" {
+		iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace))
+	} else {
+		iter, err = h.db.Iter(in.Prefix)
+	}
+	if err != nil {
 		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
@@ -376,23 +312,7 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		}
 
 		if opts.ReturnMeta {
-			// TODO: this is duplicated code with the Get method, make it a helper function.
-			pair.Meta = &pb.Meta{
-				Key:       object.Key,
-				Namespace: object.Namespace,
-				Region:    object.Region,
-				Owner:     object.Owner,
-				Version: &pb.Version{
-					Pid:     object.Version.Pid,
-					Version: object.Version.Version,
-					Region:  object.Version.Region,
-				},
-				Parent: &pb.Version{
-					Pid:     object.Version.Parent.Pid,
-					Version: object.Version.Parent.Version,
-					Region:  object.Version.Parent.Region,
-				},
-			}
+			pair.Meta = returnMeta(*object)
 		}
 
 		out.Values = append(out.Values, pair)
@@ -504,7 +424,7 @@ func (h *HonuService) Batch(stream pb.Trtl_BatchServer) error {
 // There are several options that modulate the Cursor stream:
 //   - return_meta: each key/value pair will contain the object metadata
 //   - iter_no_keys: each key/value pair will not have a key associated with it
-//   - iter_no_values: each key/value pair will not have a value associaed with it
+//   - iter_no_values: each key/value pair will not have a value associated with it
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) (err error) {
@@ -537,20 +457,20 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	}
 
-	// Compute the actual starting prefix as the namespace plus the key
-	var prefix []byte
-	if in.Namespace != "" {
-		prefix = prepend(in.Namespace, in.Prefix)
-	} else {
-		prefix = prepend("default", in.Prefix)
-	}
-
+	// Check to see if there is a namespace
 	// TODO: should we support more complex iteration such as seeks in the cursor request?
 	var iter iterator.Iterator
-	if iter, err = h.db.Iter(prefix); err != nil {
+
+	if in.Namespace != "" {
+		iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace))
+	} else {
+		iter, err = h.db.Iter(in.Prefix)
+	}
+	if err != nil {
 		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
+
 	defer iter.Release()
 
 	var nMessages uint64
@@ -590,23 +510,7 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		}
 
 		if opts.ReturnMeta {
-			// TODO: this is duplicated code with the Get method, make it a helper function.
-			msg.Meta = &pb.Meta{
-				Key:       object.Key,
-				Namespace: object.Namespace,
-				Region:    object.Region,
-				Owner:     object.Owner,
-				Version: &pb.Version{
-					Pid:     object.Version.Pid,
-					Version: object.Version.Version,
-					Region:  object.Version.Region,
-				},
-				Parent: &pb.Version{
-					Pid:     object.Version.Parent.Pid,
-					Version: object.Version.Parent.Version,
-					Region:  object.Version.Parent.Region,
-				},
-			}
+			msg.Meta = returnMeta(*object)
 		}
 
 		// Send the message on the stream
@@ -636,12 +540,22 @@ func (h *HonuService) Sync(stream pb.Trtl_SyncServer) (err error) {
 	return status.Error(codes.Unimplemented, "not implemented")
 }
 
-// prepend the namespace to the key
-func prepend(namespace string, key []byte) []byte {
-	return bytes.Join(
-		[][]byte{
-			[]byte(namespace),
-			key,
-		}, []byte("::"),
-	)
+// returnMeta is a helper function for returning the metadata on an object
+func returnMeta(object object.Object) *pb.Meta {
+	return &pb.Meta{
+		Key:       object.Key,
+		Namespace: object.Namespace,
+		Region:    object.Region,
+		Owner:     object.Owner,
+		Version: &pb.Version{
+			Pid:     object.Version.Pid,
+			Version: object.Version.Version,
+			Region:  object.Version.Region,
+		},
+		Parent: &pb.Version{
+			Pid:     object.Version.Parent.Pid,
+			Version: object.Version.Parent.Version,
+			Region:  object.Version.Parent.Region,
+		},
+	}
 }
