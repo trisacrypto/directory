@@ -268,6 +268,7 @@ func (s *trtlTestSuite) TestDelete() {
 			ReturnMeta: true,
 		},
 	})
+	require.NoError(err)
 	// TODO update os.Getenv to use test fixtures in sc-2098
 	pid := os.Getenv("TRTL_REPLICA_PID")
 	expectedPID, err := strconv.Atoi(pid)
