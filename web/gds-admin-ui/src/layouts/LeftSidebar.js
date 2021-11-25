@@ -22,18 +22,10 @@ const SideBarContent = ({ hideUserProfile }) => {
     );
 };
 
+const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }) => {
+    const menuNodeRef = useRef(null);
 
-type LeftSidebarProps = {
-    hideLogo: boolean,
-    hideUserProfile: boolean,
-    isLight: boolean,
-    isCondensed: boolean,
-};
-
-const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }: LeftSidebarProps): React$Element<any> => {
-    const menuNodeRef: any = useRef(null);
-
-    const handleOtherClick = (e: any) => {
+    const handleOtherClick = (e) => {
         if (menuNodeRef && menuNodeRef.current && menuNodeRef.current.contains(e.target)) return;
         if (document.body) {
             document.body.classList.remove('sidebar-enable');

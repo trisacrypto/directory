@@ -57,7 +57,7 @@ function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable 
 EditReviewNote.propTypes = {
     note: PropTypes.object.isRequired,
     handleCancelEditingClick: PropTypes.func.isRequired,
-    vaspId: PropTypes.number.isRequired,
+    vaspId: PropTypes.string.isRequired,
     setIsEditable: PropTypes.func.isRequired
 }
 
