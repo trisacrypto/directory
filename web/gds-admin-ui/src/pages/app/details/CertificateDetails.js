@@ -1,58 +1,117 @@
 
+import FileInformationCard from 'components/FileInformationCard';
 import React from 'react'
-import { Card, Col, Row } from 'react-bootstrap';
+import { Card, Col, Dropdown, Row } from 'react-bootstrap';
 import { formatDisplayedData } from 'utils';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(relativeTime)
+
+
+export const IdentityCertificateDropDown = () => {
+
+    return (
+        <Dropdown className="float-end" align="end">
+            <Dropdown.Toggle
+                data-testid="dripicons-dots-3"
+                variant="link"
+                tag="a"
+                className="card-drop arrow-none cursor-pointer p-0 shadow-none">
+                <i className="dripicons-dots-3"></i>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+                <Dropdown.Item>
+                    <i className="mdi mdi-card-search me-1"></i>Copy signature
+                </Dropdown.Item>
+                <Dropdown.Item>
+                    <i className="mdi mdi-card-search me-1"></i>Copy serial number
+                </Dropdown.Item>
+                <Dropdown.Item>
+                    <i className="mdi mdi-card-search me-1"></i>View details
+                </Dropdown.Item>
+            </Dropdown.Menu>
+        </Dropdown>
+    )
+}
 
 function CertificateDetails({ data }) {
+    const getExpireColorStyle = (notAfter) => {
+        const _notAfter = dayjs(notAfter).unix()
+        const threeMonthsFromNow = dayjs().add(3, 'month').unix()
+
+        // console.log('[+3month]', dayjs().add(3, 'month').format())
+        // console.log('[AFTER]', dayjs(notAfter).format())
+        // console.log('[NOW]', dayjs().format())
+        if (dayjs().unix() > _notAfter) {
+            return 'text-danger'
+        }
+
+        if (_notAfter < threeMonthsFromNow) {
+            return 'text-warning'
+        }
+
+        return 'text-success'
+    }
+
+    const getBadgeClassName = () => {
+        const threeMonthsFromNow = dayjs().add(3, 'month').unix()
+        const _notAfter = dayjs(data?.not_after).unix()
+
+        if (data?.revoked || (dayjs().unix() > _notAfter)) {
+            return 'bg-danger'
+        }
+
+        if (_notAfter < threeMonthsFromNow) {
+            return 'bg-warning'
+        }
+
+        return 'bg-primary'
+    }
+
+    const getBadgeLabel = () => {
+        const threeMonthsFromNow = dayjs().add(3, 'month').unix()
+        const _notAfter = dayjs(data?.not_after).unix()
+
+        if (data?.revoked) {
+            return 'revoked'
+        }
+
+        if (_notAfter < threeMonthsFromNow) {
+            return 'expiring soon'
+        }
+
+        if (dayjs().unix() > _notAfter) {
+            return 'expired'
+        }
+
+        return 'valid'
+    }
+
     return (
         <Card>
-            <Card.Body>
-                <h4 className="mt-0 mb-3">Certificate details</h4>
-                <p className="fw-bold mb-2">Signature Algorithm: <span className="fw-normal">{formatDisplayedData(data?.signature_algorithm)}</span></p>
-                <p className="fw-bold mb-2">Version: <span className="fw-normal">{formatDisplayedData(data?.version)}</span></p>
-                <p className="fw-bold mb-2">Not Before: <span className="fw-normal">{formatDisplayedData(data?.not_before)}</span></p>
-                <p className="fw-bold mb-2">Not After: <span className="fw-normal">{formatDisplayedData(data?.not_after)}</span></p>
-                <p className="fw-bold mb-2">Public Key Algorithm: <span className="fw-normal">{formatDisplayedData(data?.public_key_algorithm)}</span></p>
-                <p className="fw-bold mb-2">Revoked: <span className="fw-normal">{formatDisplayedData(data?.revoked)}</span></p>
-                <p className="fw-bold mb-2">Serial Number: <span className="fw-normal">{formatDisplayedData(data?.serial_number)}</span></p>
+            {
+                !data ? <Card.Body className='fst-italic text-muted'>Identity certificate not available</Card.Body> : (
+                    <Card.Body>
+                        <IdentityCertificateDropDown />
+                        <h4 className="m-0 text-black">Identity Certificate</h4>
+                        <span className={`badge rounded-pill px-1 ${getBadgeClassName()}`}>{getBadgeLabel()}</span>
 
-                <Row>
-                    <Col>
-                        <p className="fw-bold mb-2 mt-3">Issuer</p>
-                        <hr />
-                        <p className="fw-bold mb-2">Common Name: <span className="fw-normal">{formatDisplayedData(data?.issuer?.common_name)}</span></p>
-                        <p className="fw-bold mb-2">Country: <span className="fw-normal">{formatDisplayedData(data?.issuer?.country)}</span></p>
-                        <p className="fw-bold mb-2">Locality: <span className="fw-normal">{formatDisplayedData(data?.issuer?.locality
-                        )}</span></p>
-                        <p className="fw-bold mb-2">Organisation: <span className="fw-normal">{formatDisplayedData(data?.issuer?.organization)}</span></p>
-                        <p className="fw-bold mb-2">Organisation Unit: <span className="fw-normal">{formatDisplayedData(data?.issuer?.organizational_unit)}</span></p>
-                        <p className="fw-bold mb-2">Postal Code: <span className="fw-normal">{formatDisplayedData(data?.issuer?.postal_code)}</span></p>
-                        <p className="fw-bold mb-2">Province: <span className="fw-normal">{formatDisplayedData(data?.issuer?.province)}</span></p>
-                        <p className="fw-bold mb-2">Serial Number: <span className="fw-normal">{formatDisplayedData(data?.issuer?.serial_number)}</span></p>
-                        <p className="fw-bold mb-2">Street Adress: <span className="fw-normal">{formatDisplayedData(data?.issuer?.street_address)}</span></p>
-                    </Col>
-                    <Col>
-                        <p className="fw-bold mb-2 mt-3">Subject</p>
-                        <hr />
-                        <p className="fw-bold mb-2">Common Name: <span className="fw-normal">{formatDisplayedData(data?.subject?.common_name)}</span></p>
-                        <p className="fw-bold mb-2">Country: <span className="fw-normal">{formatDisplayedData(data?.subject?.country)}</span></p>
-                        <p className="fw-bold mb-2">Locality: <span className="fw-normal">{formatDisplayedData(data?.subject?.locality)}</span></p>
-                        <p className="fw-bold mb-2">Organisation: <span className="fw-normal">{formatDisplayedData(data?.subject?.organization)}</span></p>
-                        <p className="fw-bold mb-2">Organisation Unit: <span className="fw-normal">{formatDisplayedData(data?.subject?.organizational_unit)}</span></p>
-                        <p className="fw-bold mb-2">Postal Code: <span className="fw-normal">{formatDisplayedData(data?.subject?.postal_code)}</span></p>
-                        <p className="fw-bold mb-2">Province: <span className="fw-normal">{formatDisplayedData(data?.subject?.province)}</span></p>
-                        <p className="fw-bold mb-2">Serial Number: <span className="fw-normal">{formatDisplayedData(data?.serial_number)}</span></p>
-                        <p className="fw-bold mb-2">Street Adress: <span className="fw-normal">{formatDisplayedData(data?.subject?.street_address)}</span></p>
-                    </Col>
+                        <p className="fw-bold mb-1 mt-3">Serial number: <span className="fw-normal">{formatDisplayedData(data?.serial_number)}</span></p>
+                        <p className={`mb-1 ${getExpireColorStyle(data?.not_after)}`}><span className='fw-bold'>Expires:</span>  {new Date(data?.not_after).toUTCString()}</p>
+                        <p className='mb-1'><span className='fw-bold'>Issuer: </span>{data?.issuer?.common_name}</p>
+                        <p className='mb-1'><span className='fw-bold'>Subject: </span>{data?.subject?.common_name}</p>
 
-                </Row>
-                {/* <p className="fw-bold mb-2">Subject: <span className="fw-normal">{formatDisplayedData(data?.subject)}</span></p> */}
-                <p className="fw-bold mb-2">Signature: <span className="fw-normal">{formatDisplayedData(data?.signature)}</span></p>
-                <p className="fw-bold mb-2">Chain: <span className="fw-normal">{formatDisplayedData(data?.chain)}</span></p>
-                <p className="fw-bold mb-2">Data: <span className="fw-normal">{formatDisplayedData(data?.data)}</span></p>
-            </Card.Body>
+                        <Row>
+                            <Col>
+                                <FileInformationCard name="Public identity key" ext="Base64" />
+                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" />
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                )
+            }
         </Card>
     )
 }
 
-export default CertificateDetails
+export default React.memo(CertificateDetails)
