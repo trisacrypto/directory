@@ -1,14 +1,15 @@
 
-import FileInformationCard from 'components/FileInformationCard';
 import React from 'react'
+import FileInformationCard from 'components/FileInformationCard';
+import PropTypes from 'prop-types'
 import { Card, Col, Dropdown, Row } from 'react-bootstrap';
-import { formatDisplayedData } from 'utils';
+import { copyToClipboard, formatDisplayedData } from 'utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 
-export const IdentityCertificateDropDown = () => {
+export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCopySerialNumberClick, handleViewDetailsClick }) => {
 
     return (
         <Dropdown className="float-end" align="end">
@@ -20,18 +21,24 @@ export const IdentityCertificateDropDown = () => {
                 <i className="dripicons-dots-3"></i>
             </Dropdown.Toggle>
             <Dropdown.Menu>
-                <Dropdown.Item>
-                    <i className="mdi mdi-card-search me-1"></i>Copy signature
+                <Dropdown.Item onClick={handleCopySignatureClick}>
+                    <i className="mdi mdi-content-copy me-1"></i>Copy signature
                 </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-card-search me-1"></i>Copy serial number
+                <Dropdown.Item onClick={handleCopySerialNumberClick}>
+                    <i className="mdi mdi-content-copy me-1"></i>Copy serial number
                 </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-card-search me-1"></i>View details
+                <Dropdown.Item onClick={handleViewDetailsClick}>
+                    <i className="mdi mdi-information-outline me-1"></i>View details
                 </Dropdown.Item>
             </Dropdown.Menu>
         </Dropdown>
     )
+}
+
+IdentityCertificateDropDown.propTypes = {
+    handleCopySignatureClick: PropTypes.func.isRequired,
+    handleCopySerialNumberClick: PropTypes.func.isRequired,
+    handleViewDetailsClick: PropTypes.func.isRequired
 }
 
 function CertificateDetails({ data }) {
@@ -39,9 +46,6 @@ function CertificateDetails({ data }) {
         const _notAfter = dayjs(notAfter).unix()
         const threeMonthsFromNow = dayjs().add(3, 'month').unix()
 
-        // console.log('[+3month]', dayjs().add(3, 'month').format())
-        // console.log('[AFTER]', dayjs(notAfter).format())
-        // console.log('[NOW]', dayjs().format())
         if (dayjs().unix() > _notAfter) {
             return 'text-danger'
         }
@@ -87,12 +91,24 @@ function CertificateDetails({ data }) {
         return 'valid'
     }
 
+
+    const handleCopySignatureClick = async (signature) => {
+        await copyToClipboard(signature)
+    }
+
+    const handleCopySerialNumberClick = async (serial) => {
+        await copyToClipboard(serial)
+    }
+
     return (
         <Card>
             {
                 !data ? <Card.Body className='fst-italic text-muted'>Identity certificate not available</Card.Body> : (
                     <Card.Body>
-                        <IdentityCertificateDropDown />
+                        <IdentityCertificateDropDown
+                            handleCopySerialNumberClick={() => handleCopySerialNumberClick(data?.serial_number)}
+                            handleCopySignatureClick={() => handleCopySignatureClick(data?.signature)}
+                        />
                         <h4 className="m-0 text-black">Identity Certificate</h4>
                         <span className={`badge rounded-pill px-1 ${getBadgeClassName()}`}>{getBadgeLabel()}</span>
 
