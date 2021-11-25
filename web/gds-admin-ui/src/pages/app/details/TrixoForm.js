@@ -12,6 +12,15 @@ function TrixoForm({ data }) {
     const getConductsCustomerKYC = (status) => status ? "does" : "does not"
     const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
     const getSafeguardPii = (status) => status ? "does" : "does not"
+    const validateIsoCode = (cc = '') => {
+        if (typeof cc === 'string' && cc.length !== 2) {
+            const matches = cc.match(/\b(\w)/g);
+            const acronym = matches?.join('')
+            return acronym?.length === 2 ? acronym : ''
+        }
+
+        return cc
+    }
 
     return (
         <Card>
@@ -23,7 +32,7 @@ function TrixoForm({ data }) {
 
                         <h5 className='text-black'>Jurisdictions</h5>
                         <hr className='mt-1' />
-                        <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(data?.primary_national_jurisdiction)} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
+                        <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(validateIsoCode(data?.primary_national_jurisdiction))} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
                         <p>
                             {
                                 Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map(juridiction => {

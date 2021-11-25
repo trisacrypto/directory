@@ -5,6 +5,7 @@ import TrisatestLogo from 'assets/images/gds-trisatest-logo.png';
 import VaspDirectoryLogo from 'assets/images/gds-vaspdirectory-logo.png';
 import dayjs from 'dayjs';
 import crypto from 'crypto'
+import toast from 'react-hot-toast';
 
 export * from './array';
 
@@ -167,4 +168,18 @@ function getBase64Size(str) {
     return buffer.length
 }
 
-export { getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+/**
+ * Copy an element to the clipboard
+ * @param {string} target item to copy to clipboard
+ * @returns Promise<void>
+ */
+async function copyToClipboard(target = '') {
+    try {
+        await navigator.clipboard.writeText(target);
+        toast.success('Copied to clipboard')
+    } catch (err) {
+        throw err
+    }
+}
+
+export { copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
