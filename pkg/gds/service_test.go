@@ -71,6 +71,9 @@ func (s *gdsTestSuite) SetupSuite() {
 	require := s.Require()
 	gin.SetMode(gin.TestMode)
 
+	// Create a bufconn listener to use for gRPC requests
+	s.grpc = bufconn.New(bufSize)
+
 	// Create database paths to unpack fixtures to
 	s.dbPaths = make(map[fixtureType]string)
 	for _, ftype := range []fixtureType{empty, small, full} {
@@ -88,10 +91,6 @@ func (s *gdsTestSuite) SetupSuite() {
 
 	// Start with an empty fixtures service
 	s.LoadEmptyFixtures()
-
-	// Create a bufconn listener so that there are no actual network requests
-	s.grpc = bufconn.New(bufSize)
-	go s.svc.GetGDS().Run(s.grpc.Listener)
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -230,6 +229,8 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 			a.Contacts.Billing.Extra, b.Contacts.Billing.Extra = nil, nil
 		}
 
+		fmt.Println(a)
+		fmt.Println(b)
 		require.True(proto.Equal(a, b), "vasps are not the same")
 
 	case certreqs:
@@ -345,11 +346,26 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 		}
 	}
 
+	// Shutdown old GDS server
+	if s.svc != nil {
+		if err := s.svc.GetGDS().Shutdown(); err != nil {
+			log.Warn().Err(err).Msg("could not shutdown GDS server to start new one")
+		}
+	}
+	if s.grpc != nil {
+		s.grpc.Release()
+	}
+
 	// Create the new service with a database to the specified path
 	conf := gds.MockConfig()
 	conf.Database.URL = "leveldb:///" + s.dbPaths[ftype]
 	s.svc, err = gds.NewMock(conf)
 	require.NoError(err, "could not create mock GDS service")
+
+	// Start the new GDS server using a bufconn listener to avoid network requests
+	s.grpc = bufconn.New(bufSize)
+	go s.svc.GetGDS().Run(s.grpc.Listener)
+
 	s.ftype = ftype
 	log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("FIXTURE LOADED")
 }
