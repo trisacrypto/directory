@@ -1,4 +1,3 @@
-// @flow
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Card } from 'react-bootstrap';
@@ -53,7 +52,7 @@ const barChartOpts = {
 };
 
 
-const TasksChart = (): React$Element<any> => {
+const TasksChart = () => {
     const { reviews, isLoading } = useSelector(state => ({
         reviews: state.Reviews.data,
         isLoading: state.Reviews.loading

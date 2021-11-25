@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import useSafeDispatch from '../../../../hooks/useSafeDispatch';
 import { createReviewNoteApiResponseSuccess } from '../../../../redux/review-notes';
 import { postReviewNote } from '../../../../services/review-notes';
+import PropTypes from 'prop-types';
 
 
 function ReviewNoteForm({ vaspId }) {
@@ -54,6 +55,10 @@ function ReviewNoteForm({ vaspId }) {
             </div>
         </form>
     )
+}
+
+ReviewNoteForm.propTypes = {
+    vaspId: PropTypes.string.isRequired
 }
 
 export default ReviewNoteForm

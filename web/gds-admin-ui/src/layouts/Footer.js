@@ -1,8 +1,7 @@
-// @flow
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 
-const Footer = (): React$Element<any> => {
+const Footer = () => {
     const currentYear = new Date().getFullYear();
     return (
         <React.Fragment>

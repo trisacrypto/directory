@@ -105,7 +105,7 @@ function BasicDetails({ data }) {
                                     <p className="mb-2 mt-md-3 mt-lg-3 fw-bold">Established on: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>
                                     <h5 className='mt-3'>Address(es):</h5>
                                     <hr className='m-0 mb-1' />
-                                    <Geographic data={data?.vasp?.entity?.geographic_addresses} />
+                                    <Geographic data={data?.vasp?.entity?.geographic_addresses || []} />
                                 </Col>
                             </Row>
                             <Col>

@@ -1,4 +1,3 @@
-// @flow
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +12,7 @@ import Tasks from './Tasks';
 import TasksChart from './TasksChart';
 
 
-const ProjectDashboardPage = (): React$Element<React$FragmentType> => {
+const ProjectDashboardPage = () => {
     const dispatch = useDispatch();
     const { summary, vasps, isVaspsLoading } = useSelector(state => ({
         summary: state.Summary.data,

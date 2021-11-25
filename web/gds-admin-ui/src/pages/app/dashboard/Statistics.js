@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Row, Col } from 'react-bootstrap';
-
+import PropTypes from 'prop-types';
 
 const Statistics = ({ data }) => {
 
@@ -71,5 +71,9 @@ const Statistics = ({ data }) => {
         </>
     );
 };
+
+Statistics.propTypes = {
+    data: PropTypes.object
+}
 
 export default Statistics;

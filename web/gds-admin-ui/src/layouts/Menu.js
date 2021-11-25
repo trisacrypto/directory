@@ -1,4 +1,3 @@
-// @flow
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { Collapse } from 'react-bootstrap';
@@ -104,18 +103,7 @@ const MenuItemLink = ({ item, className }) => {
  * Renders the application menu
  */
 
-type AppMenuProps = {
-    menuItems: Array<any>,
-    location: {
-        hash: string,
-        key: string,
-        pathname: string,
-        search: string,
-        state: any,
-    },
-};
-
-const AppMenu = ({ menuItems, location }: AppMenuProps) => {
+const AppMenu = ({ menuItems, location }) => {
     const menuRef = useRef(null);
 
     const [activeMenuItems, setActiveMenuItems] = useState([]);
@@ -135,7 +123,7 @@ const AppMenu = ({ menuItems, location }: AppMenuProps) => {
         let matchingMenuItem = null;
 
         if (div) {
-            let items: any = div.getElementsByClassName('side-nav-link-ref');
+            let items = div.getElementsByClassName('side-nav-link-ref');
             for (let i = 0; i < items.length; ++i) {
                 if (location.pathname === items[i].pathname) {
                     matchingMenuItem = items[i];
@@ -192,4 +180,4 @@ const AppMenu = ({ menuItems, location }: AppMenuProps) => {
     );
 };
 
-export default (withRouter(AppMenu): any);
+export default (withRouter(AppMenu));
