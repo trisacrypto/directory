@@ -229,8 +229,6 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 			a.Contacts.Billing.Extra, b.Contacts.Billing.Extra = nil, nil
 		}
 
-		fmt.Println(a)
-		fmt.Println(b)
 		require.True(proto.Equal(a, b), "vasps are not the same")
 
 	case certreqs:
