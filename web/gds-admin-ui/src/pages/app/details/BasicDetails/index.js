@@ -11,8 +11,11 @@ import Geographic from './components/Geographic';
 import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
+import { actionType, useModal } from 'contexts/modal';
 
-export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
+export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
+    const { dispatch } = useModal()
+    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
 
     return (
         <Dropdown className="float-end" align="end">
@@ -33,7 +36,7 @@ export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
                 <Dropdown.Item>
                     <i className="mdi mdi-printer me-1"></i>Print
                 </Dropdown.Item>
-                <Dropdown.Item>
+                <Dropdown.Item onClick={handleClose}>
                     <i className="mdi mdi-email me-1"></i>Resend
                 </Dropdown.Item>
             </Dropdown.Menu>
@@ -75,7 +78,7 @@ function BasicDetails({ data }) {
         <>
             <Card className="d-block">
                 <Card.Body>
-                    <BasicDetailsDropDown isNotPendingReview={isNotPendingReview} />
+                    <BasicDetailsDropDown isNotPendingReview={isNotPendingReview} vasp={data} />
                     <div>
                         <div>
                             <h3 className="m-0 d-inline-block text-dark">{data?.name}</h3>

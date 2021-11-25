@@ -20,6 +20,7 @@ function TrixoForm({ data }) {
                 <p className='lh-lg'>Organization <span className='fw-bold'>{financialTransfersPermitted[data?.financial_transfers_permitted]}</span> permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates</p>
                 <Row>
                     <Col xs={12} md={6}>
+
                         <h5 className='text-black'>Jurisdictions</h5>
                         <hr className='mt-1' />
                         <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(data?.primary_national_jurisdiction)} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
@@ -58,6 +59,7 @@ function TrixoForm({ data }) {
                     <Col xs={12} md={6}>
                         <h5 className='text-black'>Data Protection Policies</h5>
                         <hr className='mt-1' />
+
                         <p className='lh-lg'>Organization <span className='fw-bold'>{getMustSafeguardPii(data?.must_safeguard_pii)}</span> safeguard PII by law.</p>
                         <p className='lh-lg'>Organization <span className='fw-bold'>{getSafeguardPii(data?.safeguard_pii)}</span> secure and protect PII, including PII received from other VASPs under the Travel Rule.</p>
                     </Col>

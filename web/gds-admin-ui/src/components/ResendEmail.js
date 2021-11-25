@@ -7,6 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { getCookie } from '../utils';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { actionType, useModal } from 'contexts/modal';
 
 const deliverCertsLabel = (
     <>
@@ -72,7 +73,7 @@ const schemaResolver = yupResolver(
     })
 );
 
-function ResendEmail({ toggle, modal, vasp }) {
+function ResendEmail() {
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { register, handleSubmit, formState: { errors }, control } = useForm({
         shouldUnregister: true, resolver: schemaResolver,
@@ -81,9 +82,12 @@ function ResendEmail({ toggle, modal, vasp }) {
             email_type: null
         }
     });
+    const { toggle, dispatch, vasp } = useModal()
     const emailType = useWatch({
         control, name: "email_type"
     })
+
+    const handleClose = () => dispatch({ type: actionType.CLOSE_MODAL })
 
     const onSubmit = (data) => {
         const cookie = getCookie('csrf_token')
@@ -108,9 +112,9 @@ function ResendEmail({ toggle, modal, vasp }) {
 
     return (
         <div>
-            <Modal show={modal} dialogClassName="modal-right">
+            <Modal show={toggle} dialogClassName="modal-right">
                 <Form noValidate onSubmit={handleSubmit(onSubmit)}>
-                    <Modal.Header onHide={toggle} closeButton>
+                    <Modal.Header onHide={handleClose} closeButton>
                         <h4 className="modal-title">Resend Email</h4>
                     </Modal.Header>
                     <Modal.Body>
@@ -154,7 +158,7 @@ function ResendEmail({ toggle, modal, vasp }) {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="light" onClick={toggle}>
+                        <Button variant="light" onClick={handleClose}>
                             Cancel
                         </Button>{' '}
                         <Button type="submit" variant="primary" disabled={isSubmitting}>
