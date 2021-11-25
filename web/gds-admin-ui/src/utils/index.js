@@ -142,4 +142,12 @@ function generateMd5(data = '') {
     return crypto.createHash('md5').update(data).digest("hex");
 }
 
-export { verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+function currencyFormatter({ style = 'currency', currency = "USD" }) {
+    return new Intl.NumberFormat('en-US', {
+        style,
+        currency,
+
+    })
+}
+
+export { currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

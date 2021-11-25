@@ -32,7 +32,6 @@ const VaspDetails = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id])
 
-
     return (
         <React.Fragment>
             <PageTitle
@@ -47,7 +46,7 @@ const VaspDetails = () => {
                     <Row>
                         <Col md={6} xl={8} xxl={8}>
                             <BasicDetails data={vasp} />
-                            <TrixoForm data={vasp?.trixo} />
+                            <TrixoForm data={vasp?.vasp?.trixo} />
                             <ReviewNotes />
                         </Col>
                         <Col md={6} xl={4} xxl={4}>
