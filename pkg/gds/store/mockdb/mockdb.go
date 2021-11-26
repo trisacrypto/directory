@@ -4,7 +4,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -47,18 +46,6 @@ type MockDB struct {
 
 	OnDeleteCertReq      func(id string) error
 	DeleteCertReqInvoked bool
-
-	OnListPeers      func() iterator.ReplicaIterator
-	ListPeersInvoked bool
-
-	OnCreatePeer      func(p *peers.Peer) (string, error)
-	CreatePeerInvoked bool
-
-	OnRetrievePeer      func(id string) (*peers.Peer, error)
-	RetrievePeerInvoked bool
-
-	OnDeletePeer      func(id string) error
-	DeletePeerInvoked bool
 
 	OnReindex      func() error
 	ReindexInvoked bool
@@ -125,26 +112,6 @@ func (m *MockDB) UpdateCertReq(r *models.CertificateRequest) error {
 func (m *MockDB) DeleteCertReq(id string) error {
 	m.DeleteCertReqInvoked = true
 	return m.OnDeleteCertReq(id)
-}
-
-func (m *MockDB) ListPeers() iterator.ReplicaIterator {
-	m.ListPeersInvoked = true
-	return m.OnListPeers()
-}
-
-func (m *MockDB) CreatePeer(p *peers.Peer) (string, error) {
-	m.CreatePeerInvoked = true
-	return m.OnCreatePeer(p)
-}
-
-func (m *MockDB) RetrievePeer(id string) (*peers.Peer, error) {
-	m.RetrievePeerInvoked = true
-	return m.OnRetrievePeer(id)
-}
-
-func (m *MockDB) DeletePeer(id string) error {
-	m.DeletePeerInvoked = true
-	return m.OnDeletePeer(id)
 }
 
 func (m *MockDB) Reindex() error {

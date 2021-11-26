@@ -5,7 +5,6 @@ import (
 
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -64,21 +63,6 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 	return nil
 }
 
-func (s *Store) ListPeers() iterator.ReplicaIterator {
-	return nil
-}
-
-func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
-	return "", nil
-}
-
-func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
-	return nil, nil
-}
-
-func (s *Store) DeletePeer(id string) error {
-	return nil
-}
 func (s *Store) Backup(path string) (err error) {
 	return nil
 }

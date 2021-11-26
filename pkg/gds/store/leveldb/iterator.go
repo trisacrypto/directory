@@ -5,7 +5,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/wire"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -19,10 +18,6 @@ type vaspIterator struct {
 }
 
 type certReqIterator struct {
-	iterWrapper
-}
-
-type peerIterator struct {
 	iterWrapper
 }
 
@@ -90,31 +85,4 @@ func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {
 	}
 
 	return reqs, nil
-}
-
-func (i *peerIterator) Peer() *peers.Peer {
-	peer := new(peers.Peer)
-	if err := proto.Unmarshal(i.iter.Value(), peer); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceReplicas).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
-		return nil
-	}
-	return peer
-}
-
-func (i *peerIterator) All() (pl []*peers.Peer, err error) {
-	pl = make([]*peers.Peer, 0)
-	defer i.iter.Release()
-	for i.iter.Next() {
-		peer := new(peers.Peer)
-		if err = proto.Unmarshal(i.iter.Value(), peer); err != nil {
-			return nil, err
-		}
-		pl = append(pl, peer)
-	}
-
-	if err = i.iter.Error(); err != nil {
-		return nil, err
-	}
-
-	return pl, nil
 }

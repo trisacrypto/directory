@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	. "github.com/trisacrypto/directory/pkg/gds/store/wire"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -52,20 +51,6 @@ func TestWire(t *testing.T) {
 	require.Equal(t, "87657b4d-e72c-4526-9332-c8fc56adb367", certreq.Id)
 	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", certreq.Vasp)
 	require.Equal(t, models.CertificateRequestState_COMPLETED, certreq.Status)
-
-	// Test Unmarshal Peers
-	in, err = ioutil.ReadFile("testdata/peers::8.json")
-	require.NoError(t, err)
-	out, err = RemarshalJSON(NamespaceReplicas, in)
-	require.NoError(t, err)
-	msg, err = UnmarshalProto(NamespaceReplicas, out)
-	require.NoError(t, err)
-	peer, ok := msg.(*peers.Peer)
-	require.True(t, ok)
-
-	// Make sure Peer is valid
-	require.Equal(t, "0008", peer.Key())
-	require.Equal(t, "localhost:4435", peer.Addr)
 
 	// Test Unmarshal category index
 	in, err = ioutil.ReadFile("testdata/index::categories.json")
