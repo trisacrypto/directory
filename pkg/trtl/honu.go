@@ -30,11 +30,16 @@ func NewHonuService(s *Server) (*HonuService, error) {
 }
 
 // Get is a unary request to retrieve a value for a key.
+// If metadata is requested in the GetRequest, the request will use honu.Object() to
+// retrieve the entire object, including the metadata. If no metadata is requested, the
+// request will use honu.Get() to get only the value.
+// If a namespace is provided, the namespace is passed to the internal honu Options,
+// to look in that namespace only.
 func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
 
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Msg("cannot use reserved namespace")
+		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
@@ -43,7 +48,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	}
 
 	if in.Options != nil && in.Options.ReturnMeta {
-		// Retrieve and return the metadata.
+		// Retrieve and return the metadata (uses honu.Object())
 		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
 
 		// Check if we have a namespace
@@ -69,7 +74,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		}, nil
 	}
 
-	// No metadata requested; just return the value for the given key.
+	// No metadata requested; just return the value for the given key (uses honu.Get())
 	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
 
 	// But we do have to check if we have a namespace
@@ -95,9 +100,11 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 }
 
 // Put is a unary request to store a value for a key.
+// If a namespace is provided, the namespace is passed to the internal honu Options,
+// to put the value to that namespace.
 func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Msg("cannot use reserved namespace")
+		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
@@ -122,6 +129,7 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	} else {
 		object, err = h.db.Put(in.Key, in.Value)
 	}
+
 	if err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to put object")
 		return nil, status.Error(codes.Internal, err.Error())
@@ -136,9 +144,12 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	return out, nil
 }
 
+// Delete is a unary request to delete a key.
+// If a namespace is provided, the namespace is passed to the internal honu Options,
+// to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Msg("cannot use reserved namespace")
+		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
@@ -159,6 +170,7 @@ func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	} else {
 		object, err = h.db.Delete(in.Key)
 	}
+
 	if err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
 		return nil, status.Error(codes.Internal, err.Error())
@@ -220,6 +232,8 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			Bool("return_meta", opts.ReturnMeta).
 			Msg("iter request would return no data")
 		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+	} else {
+		log.Debug().Msg("Trtl Iter")
 	}
 
 	// If a page cursor is provided load it, otherwise create the cursor for iteration
@@ -253,6 +267,7 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	// datasets. [Create a story for implementing iter.Seek() in Honu]
 	var iter iterator.Iterator
 
+	// TODO Prefix can be nil - do we need to consider?
 	if in.Namespace != "" {
 		iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace))
 	} else {
@@ -455,6 +470,8 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			Bool("return_meta", opts.ReturnMeta).
 			Msg("cursor request would return no data")
 		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
+	} else {
+		log.Debug().Msg("Trtl Batch")
 	}
 
 	// Check to see if there is a namespace
