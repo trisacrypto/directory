@@ -202,4 +202,39 @@ function exportToCsv(rows) {
     downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
 }
 
-export { exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+function isValidIvmsAddress(address) {
+    if (address) {
+        return !!(address.country && address.address_type)
+    }
+    return false;
+}
+
+function hasAddressField(address) {
+    if (isValidIvmsAddress(address) && !hasAddressLine(address)) {
+        return !!(address.street_name && (address.building_number || address.building_name))
+    }
+    return false
+}
+
+function hasAddressLine(address) {
+    if (isValidIvmsAddress(address)) {
+        return Array.isArray(address.address_line) && address.address_line.length > 0
+    }
+    return false;
+}
+
+function hasAddressFieldAndLine(address) {
+    if (hasAddressField(address) && hasAddressLine(address)) {
+        console.warn("cannot render address")
+        return true
+    }
+    return false
+}
+
+const getMustComplyRegulations = (status) => status ? "must" : "must not"
+const getConductsCustomerKYC = (status) => status ? "does" : "does not"
+const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
+const getSafeguardPii = (status) => status ? "does" : "does not"
+
+
+export { getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
