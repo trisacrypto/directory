@@ -7,6 +7,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
 // TestRegister tests that the Register RPC correcty registers a new VASP with GDS.
@@ -103,6 +104,160 @@ func (s *gdsTestSuite) TestRegister() {
 	// Should not be able to register an identical VASP
 	_, err = client.Register(ctx, request)
 	require.Error(err)
+}
+
+// TestLookup test that the Lookup RPC correctly returns details for a VASP.
+func (s *gdsTestSuite) TestLookup() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+	vasp := s.fixtures[vasps][id].(*pb.VASP)
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Supplied VASP ID does not exist
+	request := &api.LookupRequest{
+		Id: "abc12345-41aa-11ec-9d29-acde48001122",
+	}
+	_, err := client.Lookup(ctx, request)
+	require.Error(err)
+
+	expected := &api.LookupReply{
+		Id:                  id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		IdentityCertificate: vasp.IdentityCertificate,
+		Country:             vasp.Entity.CountryOfRegistration,
+		VerifiedOn:          vasp.VerifiedOn,
+		Name:                "CharlieBank",
+	}
+
+	// VASP exists in the database
+	request.Id = id
+	reply, err := client.Lookup(ctx, request)
+	require.NoError(err)
+	require.True(proto.Equal(expected, reply))
+	// TODO: Check that a signing certificate is returned
+
+	// Supplied Common Name does not exist
+	request.Id = ""
+	request.CommonName = "invalid.name"
+	_, err = client.Lookup(ctx, request)
+	require.Error(err)
+}
+
+// TestSearch tests that the Search RPC returns the correct search results.
+func (s *gdsTestSuite) TestSearch() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// No search criteria - should not return anything
+	request := &api.SearchRequest{}
+	reply, err := client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Search by name
+	request.Name = []string{"CharlieBank"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+	vasp := s.fixtures[vasps][id].(*pb.VASP)
+	require.Equal(id, reply.Results[0].Id)
+	require.Equal(vasp.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
+	require.Equal(vasp.CommonName, reply.Results[0].CommonName)
+	require.Equal(vasp.TrisaEndpoint, reply.Results[0].Endpoint)
+
+	// Multiple results
+	request.Name = []string{"CharlieBank", "Delta Assets"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 2)
+
+	// Search by website
+	request = &api.SearchRequest{
+		Website: []string{"https://trisa.charliebank.io"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by country
+	request = &api.SearchRequest{
+		Name:    []string{"CharlieBank"},
+		Country: []string{vasp.Entity.CountryOfRegistration},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by country - no results
+	request = &api.SearchRequest{
+		Name:    []string{"CharlieBank"},
+		Country: []string{"US"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Filter by category
+	request = &api.SearchRequest{
+		Name:             []string{"CharlieBank"},
+		BusinessCategory: []pb.BusinessCategory{vasp.BusinessCategory},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by business category - no results
+	request = &api.SearchRequest{
+		Name:             []string{"CharlieBank"},
+		BusinessCategory: []pb.BusinessCategory{pb.BusinessCategory_GOVERNMENT_ENTITY},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Filter by VASP category
+	request = &api.SearchRequest{
+		Name:         []string{"CharlieBank"},
+		VaspCategory: []string{"Miner"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by VASP category - no results
+	request = &api.SearchRequest{
+		Name:         []string{"CharlieBank"},
+		VaspCategory: []string{"Project"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
 }
 
 // TestStatus tests that the Status RPC returns the correct status response.
