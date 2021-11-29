@@ -89,6 +89,18 @@ func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *http
 	return res
 }
 
+// createAccessCredential is a helper function for generating JWT credential strings
+// using the mocked token manager for authentication tests.
+func (s *gdsTestSuite) createAccessString(creds map[string]interface{}) string {
+	require := s.Require()
+	tm := s.svc.GetAdmin().GetTokenManager()
+	accessToken, err := tm.CreateAccessToken(creds)
+	require.NoError(err)
+	access, err := tm.Sign(accessToken)
+	require.NoError(err)
+	return access
+}
+
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
@@ -142,10 +154,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 					"name":    "Jon Doe",
 					"picture": "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
 				}
-				accessToken, err := s.svc.GetAdmin().GetTokenManager().CreateAccessToken(creds)
-				require.NoError(t, err)
-				access, err := s.svc.GetAdmin().GetTokenManager().Sign(accessToken)
-				require.NoError(t, err)
+				access := s.createAccessString(creds)
 				r.Header.Add("Authorization", "Bearer "+access)
 				res, err = http.DefaultClient.Do(r)
 				require.NoError(t, err)
@@ -219,7 +228,37 @@ func (s *gdsTestSuite) TestAuthenticate() {
 	res = s.doRequest(a.Authenticate, c, w, nil)
 	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
-	// TODO: Test successful authentication path
+	// Unauthorized domain
+	creds := map[string]interface{}{
+		"sub":     "102374163855881761273",
+		"hd":      "unauthorized.dev",
+		"email":   "jon@gds.dev",
+		"name":    "Jon Doe",
+		"picture": "https://foo.googleusercontent.com/test!/Aoh14gJceTrUA",
+	}
+	access := s.createAccessString(creds)
+	request.in = &admin.AuthRequest{
+		Credential: access,
+	}
+	c, w = s.makeRequest(request)
+	res = s.doRequest(a.Authenticate, c, w, nil)
+	require.Equal(http.StatusUnauthorized, res.StatusCode)
+
+	// Successful authentication
+	creds["hd"] = "gds.dev"
+	access = s.createAccessString(creds)
+	request.in = &admin.AuthRequest{
+		Credential: access,
+	}
+	c, w = s.makeRequest(request)
+	res = s.doRequest(a.Authenticate, c, w, nil)
+	require.Equal(http.StatusOK, res.StatusCode)
+	// Double cookie tokens should be set
+	cookies := res.Cookies()
+	require.Len(cookies, 2)
+	for _, cookie := range cookies {
+		require.Equal(s.svc.GetConf().Admin.CookieDomain, cookie.Domain)
+	}
 }
 
 // Test the Reauthenticate endpoint.

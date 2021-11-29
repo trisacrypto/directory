@@ -2,6 +2,7 @@
 package tokens
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -41,6 +42,7 @@ type TokenManager struct {
 	currentKeyID ksuid.KSUID
 	currentKey   *rsa.PrivateKey
 	keys         map[ksuid.KSUID]*rsa.PublicKey
+	validate     func(ctx context.Context, idToken, audience string) (*idtoken.Payload, error)
 }
 
 // Claims implements custom claims for the GDS application to hold user data provided
@@ -61,6 +63,7 @@ func New(keys map[string]string, audience string) (tm *TokenManager, err error) 
 	tm = &TokenManager{
 		keys:     make(map[ksuid.KSUID]*rsa.PublicKey),
 		audience: audience,
+		validate: idtoken.Validate,
 	}
 
 	for kid, path := range keys {
@@ -220,6 +223,16 @@ func (tm *TokenManager) Keys() map[ksuid.KSUID]*rsa.PublicKey {
 // CurrentKey returns the ksuid of the current key being used to sign tokens.
 func (tm *TokenManager) CurrentKey() ksuid.KSUID {
 	return tm.currentKeyID
+}
+
+// Validate the given token using the provided audience and return the token's payload.
+// This method provides a convenient way for tests to circumvent Google's specific
+// validation logic in order to test successful authentication.
+func (tm *TokenManager) Validate(ctx context.Context, idToken, audience string) (*idtoken.Payload, error) {
+	if tm.validate == nil {
+		return nil, errors.New("no token validation function configured")
+	}
+	return tm.validate(ctx, idToken, audience)
 }
 
 // keyFunc is an jwt.KeyFunc that selects the RSA public key from the list of managed

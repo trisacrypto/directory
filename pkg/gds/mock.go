@@ -92,7 +92,7 @@ func MockConfig() config.Config {
 			CookieDomain: "admin.gds.dev",
 			Audience:     "http://api.admin.gds.dev",
 			Oauth: config.OauthConfig{
-				GoogleAudience:         "4284607864536-notarealgoogleaudience.apps.googleusercontent.com",
+				GoogleAudience:         "http://localhost",
 				AuthorizedEmailDomains: []string{"gds.dev"},
 			},
 			TokenKeys: nil,
