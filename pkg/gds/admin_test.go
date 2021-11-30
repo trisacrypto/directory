@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -920,6 +921,7 @@ func (s *gdsTestSuite) TestReview() {
 func (s *gdsTestSuite) TestResend() {
 	s.LoadFullFixtures()
 	defer s.ResetFullFixtures()
+	defer emails.PurgeMockEmails()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
