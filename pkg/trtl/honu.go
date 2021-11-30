@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/rotationalio/honu"
+	engine "github.com/rotationalio/honu/engines"
 	"github.com/rotationalio/honu/iterator"
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
@@ -61,7 +62,7 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 		if err != nil {
 			// TODO: Check for the honu not found error instead.
-			if err == leveldb.ErrNotFound {
+			if err == engine.ErrNotFound {
 				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
