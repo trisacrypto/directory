@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -107,6 +108,7 @@ func (s *gdsTestSuite) TestRegister() {
 
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
+	s.LoadEmptyFixtures()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -121,6 +123,37 @@ func (s *gdsTestSuite) TestStatus() {
 	status, err := client.Status(ctx, &api.HealthCheck{})
 	require.NoError(err)
 	require.Equal(api.ServiceState_HEALTHY, status.Status)
+
+	// Timestamps should be close to expected.
+	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)
+	require.NoError(err)
+	require.True(notBefore.Sub(expectedNotBefore) < time.Minute)
+	notAfer, err := time.Parse(time.RFC3339, status.NotAfter)
+	require.NoError(err)
+	require.True(notAfer.Sub(expectedNotAfter) < time.Minute)
+}
+
+// TestStatus tests that the Status RPC returns the correct status response when in
+// maintenance mode.
+func (s *gdsTestSuite) TestStatusMaintenance() {
+	conf := gds.MockConfig()
+	conf.Maintenance = true
+	s.SetConfig(conf)
+	s.LoadEmptyFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Health check in maintenance mode.
+	expectedNotBefore := time.Now().Add(30 * time.Minute)
+	expectedNotAfter := time.Now().Add(60 * time.Minute)
+	status, err := client.Status(ctx, &api.HealthCheck{})
+	require.NoError(err)
+	require.Equal(api.ServiceState_MAINTENANCE, status.Status)
 
 	// Timestamps should be close to expected.
 	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)

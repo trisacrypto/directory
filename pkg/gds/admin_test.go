@@ -104,14 +104,7 @@ func (s *gdsTestSuite) createAccessString(creds map[string]interface{}) string {
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
-	// We're not directly running the admin server so we need to manually set it to
-	// healthy.
-	s.svc.GetAdmin().SetHealth(true)
-	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
-	defer serv.Close()
-
-	// Endpoints that are authenticated or CSRF protected
-	for _, endpoint := range []struct {
+	endpoints := []struct {
 		name      string
 		method    string
 		path      string
@@ -134,7 +127,25 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"createReviewNote", http.MethodPost, "/v2/vasps/42/notes", true, true},
 		{"updateReviewNote", http.MethodPut, "/v2/vasps/42/notes/1", true, true},
 		{"deleteReviewNote", http.MethodDelete, "/v2/vasps/42/notes/1", true, true},
-	} {
+	}
+	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
+	defer serv.Close()
+
+	// Endpoints should return unavailable when in maintenance mode/unhealthy
+	s.svc.GetAdmin().SetHealth(false)
+	for _, endpoint := range endpoints {
+		s.T().Run(endpoint.name, func(t *testing.T) {
+			r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+			require.NoError(t, err)
+			res, err := http.DefaultClient.Do(r)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+		})
+	}
+
+	// Endpoints that are authenticated or CSRF protected
+	s.svc.GetAdmin().SetHealth(true)
+	for _, endpoint := range endpoints {
 		switch {
 		case endpoint.authorize && endpoint.csrf:
 			s.T().Run(endpoint.name, func(t *testing.T) {
