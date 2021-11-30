@@ -1,70 +1,13 @@
-// @flow
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Select, { components } from 'react-select';
+import { useDispatch, useSelector } from 'react-redux';
+import useSafeDispatch from 'hooks/useSafeDispatch';
+import { fetchAutocomplete } from 'redux/actions';
+import { fetchAllAutocomplete } from 'redux/selectors';
+import { useHistory } from 'react-router-dom';
 import classNames from 'classnames';
 
-/*
- * get options
- */
-const optionGetter = (option) => {
-    switch (option.type) {
-        case 'report':
-            return (
-                <Link to="/" className={classNames('dropdown-item', 'notify-item', 'p-0')}>
-                    <i className={classNames(option.icon, 'font-16', 'me-1')}></i>
-                    <span>{option.label}</span>
-                </Link>
-            );
-        case 'help':
-            return (
-                <Link to="/" className={classNames('dropdown-item', 'notify-item', 'p-0')}>
-                    <i className={classNames(option.icon, 'font-16', 'me-1')}></i>
-                    <span>{option.label}</span>
-                </Link>
-            );
-        case 'settings':
-            return (
-                <Link to="/" className={classNames('dropdown-item', 'notify-item', 'p-0')}>
-                    <i className={classNames(option.icon, 'font-16', 'me-1')}></i>
-                    <span>{option.label}</span>
-                </Link>
-            );
-        case 'title':
-            return (
-                <div className="noti-title">
-                    <h6 className="text-overflow mb-2 text-uppercase">Users</h6>
-                </div>
-            );
-        case 'users':
-            return (
-                <>
-                    <Link to="/" className="dropdown-item notify-item p-0">
-                        <div className="d-flex">
-                            <img
-                                src={option.userDetails.avatar}
-                                alt=""
-                                className="d-flex me-2 rounded-circle"
-                                height="32"
-                            />
-                            <div className="w-100">
-                                <h5 className="m-0 font-14">
-                                    {option.userDetails.firstname} {option.userDetails.lastname}
-                                </h5>
-                                <span className="font-12 mb-0">{option.userDetails.position}</span>
-                            </div>
-                        </div>
-                    </Link>
-                </>
-            );
-
-        default:
-            return;
-    }
-};
-
-
-/* custon control */
 const Control = ({ children, ...props }) => {
     const { handleClick } = props.selectProps;
     return (
@@ -75,21 +18,6 @@ const Control = ({ children, ...props }) => {
     );
 };
 
-/* custon indicator */
-const IndicatorsContainer = (props) => {
-    const { handleClick } = props.selectProps;
-    return (
-        <div style={{ }}>
-            <components.IndicatorsContainer {...props}>
-                <button className="btn btn-primary" onMouseDown={handleClick}>
-                    Search
-                </button>
-            </components.IndicatorsContainer>
-        </div>
-    );
-};
-
-/* custom menu list */
 const MenuList = (props) => {
     const { options } = props.selectProps;
 
@@ -106,40 +34,90 @@ const MenuList = (props) => {
     );
 };
 
-/* fomates the option label */
-const handleFormatOptionLabel = (option) => {
-    const formattedOption = optionGetter(option);
-    return <div>{formattedOption}</div>;
-};
 
-type SearchResultItem = {
-    id: number,
-    title: string,
-    redirectTo: string,
-    icon: string,
-};
 
-type TopbarSearchProps = {
-    items: Array<SearchResultItem>,
-};
 
-const TopbarSearch = (props: TopbarSearchProps): React$Element<any> => {
+function formateOptions(options) {
+    return Object.entries(options).map(([k, v]) => ({ label: k, value: v }))
+}
 
-    const onClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+
+const TopbarSearch = (props) => {
+    const [options, setOptions] = React.useState([])
+    const [inputValue, setInputValue] = React.useState('')
+    const dispatch = useDispatch()
+    const safeDispatch = useSafeDispatch(dispatch)
+    const autocomplete = useSelector(fetchAllAutocomplete)
+    const [isLoading, setIsLoading] = React.useState(false)
+    const [menuIsOpen, setMenuIsOpen] = React.useState(false)
+    const history = useHistory()
+
+    React.useEffect(() => {
+        safeDispatch(fetchAutocomplete())
+    }, [safeDispatch])
+
+    const handleFormatOptionLabel = (option) => {
+
+        return <Link to={`/vasps/${option.value}`} className={classNames('dropdown-item', 'notify-item', 'p-0')}>
+            <span>{option.label}</span>
+        </Link>
     };
+
+    const filteredOptions = (input = '') => {
+        const f = formateOptions(autocomplete)
+        return f.filter((option) => option.value.toLowerCase().includes(input.toLowerCase()) || option.label.toLowerCase().includes(input.toLowerCase()))
+    }
+
+    const loadOptions = input => {
+        return new Promise((resolve, reject) => {
+            if (input.length < 2) {
+                return resolve([])
+            }
+
+            setTimeout(() => {
+                return resolve(filteredOptions(input))
+            }, 500)
+        })
+    }
+    const handleInputChange = async (input = '') => {
+        setIsLoading(true)
+        setInputValue(input)
+        if (input.length < 2) {
+            setMenuIsOpen(false)
+            setOptions([])
+            setIsLoading(false)
+        } else {
+            setMenuIsOpen(true)
+            const options = await loadOptions(input)
+            setOptions(options)
+            setIsLoading(false)
+        }
+    }
+
+    const handleChange = (option, { action }) => {
+        if (action === 'select-option') {
+            history.push(`/vasps/${option?.value}`)
+        }
+    }
+
 
     return (
         <>
             <Select
                 {...props}
-                components={{ Control, IndicatorsContainer, MenuList }}
+                onBlurResetsInput
+                components={{ Control, MenuList, DropdownIndicator: () => null }}
                 placeholder={'Search...'}
                 formatOptionLabel={handleFormatOptionLabel}
-                isOptionDisabled={(option) => option.type === 'title'}
+                options={options}
+                value={""}
+                inputValue={inputValue}
+                onInputChange={handleInputChange}
+                onChange={handleChange}
+                menuIsOpen={menuIsOpen}
+                getOptionLabel={(e) => e.label}
                 maxMenuHeight="350px"
-                handleClick={onClick}
+                isLoading={isLoading}
                 isSearchable
                 name="search-app"
                 className="app-search dropdown"
