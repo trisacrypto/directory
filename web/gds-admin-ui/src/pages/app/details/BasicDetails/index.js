@@ -63,10 +63,13 @@ function BasicDetails({ data }) {
         if (data && data.vasp && data.vasp.entity) {
             const filename = `${dayjs().format("YYYY-MM-DD")}-trisa.json`
             const mime = `data:text/json;charset=utf-8`
+
             const trisaData = {
                 id: data?.vasp?.id,
                 common_name: data?.vasp?.common_name,
-                trisa_endpoint: data?.vasp?.trisa_endpoint
+                trisa_endpoint: data?.vasp?.trisa_endpoint,
+                verified_on: data?.vasp?.verified_on,
+                registered_directory: data?.vasp?.registered_directory
             }
             const file = JSON.stringify(trisaData)
 

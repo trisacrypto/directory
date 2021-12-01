@@ -87,7 +87,6 @@ function CertificateDetails({ data }) {
             return 'expiring soon'
         }
 
-
         return 'valid'
     }
 
