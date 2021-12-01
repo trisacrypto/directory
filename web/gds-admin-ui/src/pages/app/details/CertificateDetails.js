@@ -14,17 +14,17 @@ export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCo
     return (
         <Dropdown className="float-end" align="end">
             <Dropdown.Toggle
-                data-testid="dripicons-dots-3"
+                data-testid="certificate-details-3-dots"
                 variant="link"
                 tag="a"
                 className="card-drop arrow-none cursor-pointer p-0 shadow-none">
                 <i className="dripicons-dots-3"></i>
             </Dropdown.Toggle>
             <Dropdown.Menu>
-                <Dropdown.Item onClick={handleCopySignatureClick}>
+                <Dropdown.Item data-testid="copy-signature" onClick={handleCopySignatureClick}>
                     <i className="mdi mdi-content-copy me-1"></i>Copy signature
                 </Dropdown.Item>
-                <Dropdown.Item onClick={handleCopySerialNumberClick}>
+                <Dropdown.Item data-testid="copy-serial-number" onClick={handleCopySerialNumberClick}>
                     <i className="mdi mdi-content-copy me-1"></i>Copy serial number
                 </Dropdown.Item>
                 <Dropdown.Item onClick={handleViewDetailsClick}>
@@ -38,7 +38,6 @@ export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCo
 IdentityCertificateDropDown.propTypes = {
     handleCopySignatureClick: PropTypes.func.isRequired,
     handleCopySerialNumberClick: PropTypes.func.isRequired,
-    handleViewDetailsClick: PropTypes.func.isRequired
 }
 
 function CertificateDetails({ data }) {
@@ -80,12 +79,12 @@ function CertificateDetails({ data }) {
             return 'revoked'
         }
 
-        if (_notAfter < threeMonthsFromNow) {
-            return 'expiring soon'
-        }
-
         if (dayjs().unix() > _notAfter) {
             return 'expired'
+        }
+
+        if (_notAfter < threeMonthsFromNow) {
+            return 'expiring soon'
         }
 
         return 'valid'
@@ -110,17 +109,17 @@ function CertificateDetails({ data }) {
                             handleCopySignatureClick={() => handleCopySignatureClick(data?.signature)}
                         />
                         <h4 className="m-0 text-black">Identity Certificate</h4>
-                        <span className={`badge rounded-pill px-1 ${getBadgeClassName()}`}>{getBadgeLabel()}</span>
+                        <span data-testid="certificate-state" className={`badge rounded-pill px-1 ${getBadgeClassName()}`}>{getBadgeLabel()}</span>
 
                         <p className="fw-bold mb-1 mt-3">Serial number: <span className="fw-normal">{formatDisplayedData(data?.serial_number)}</span></p>
-                        <p className={`mb-1 ${getExpireColorStyle(data?.not_after)}`}><span className='fw-bold'>Expires:</span>  {new Date(data?.not_after).toUTCString()}</p>
+                        <p data-testid="certificate-expiration-date" className={`mb-1 ${getExpireColorStyle(data?.not_after)}`}><span className='fw-bold'>Expires:</span>  {new Date(data?.not_after).toUTCString()}</p>
                         <p className='mb-1'><span className='fw-bold'>Issuer: </span>{data?.issuer?.common_name}</p>
                         <p className='mb-1'><span className='fw-bold'>Subject: </span>{data?.subject?.common_name}</p>
 
                         <Row>
                             <Col>
-                                <FileInformationCard name="Public identity key" ext="Base64" />
-                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" />
+                                <FileInformationCard file={data?.data} name="Public identity key" ext=".PEM" />
+                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" ext=".GZ" />
                             </Col>
                         </Row>
                     </Card.Body>

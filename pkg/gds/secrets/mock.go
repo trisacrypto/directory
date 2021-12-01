@@ -68,20 +68,25 @@ func (c *mockSecretManagerClient) CreateSecret(ctx context.Context, req *smpb.Cr
 	}
 
 	// Handle the expiration
-	switch expires := req.Secret.Expiration.(type) {
-	case *smpb.Secret_ExpireTime:
-		secret.Expires = expires.ExpireTime.AsTime()
-		if secret.Expires.IsZero() {
-			return nil, status.Error(codes.InvalidArgument, "invalid expiration time")
+	if req.Secret.Expiration != nil {
+		switch expires := req.Secret.Expiration.(type) {
+		case *smpb.Secret_ExpireTime:
+			secret.Expires = expires.ExpireTime.AsTime()
+			if secret.Expires.IsZero() {
+				return nil, status.Error(codes.InvalidArgument, "invalid expiration time")
+			}
+		case *smpb.Secret_Ttl:
+			ttl := expires.Ttl.AsDuration()
+			if ttl < 1 {
+				return nil, status.Error(codes.InvalidArgument, "invalid time to live")
+			}
+			secret.Expires = secret.Created.Add(ttl)
+		default:
+			return nil, status.Error(codes.InvalidArgument, "unknown expiration type")
 		}
-	case *smpb.Secret_Ttl:
-		ttl := expires.Ttl.AsDuration()
-		if ttl < 1 {
-			return nil, status.Error(codes.InvalidArgument, "invalid time to live")
-		}
-		secret.Expires = secret.Created.Add(ttl)
-	default:
-		return nil, status.Error(codes.InvalidArgument, "unknown expiration type")
+	} else {
+		// Default to 1 hour expiration
+		secret.Expires = secret.Created.Add(time.Hour)
 	}
 
 	// Check if secret already exists

@@ -37,7 +37,9 @@ function FileInformationCard({ name, file, ext }) {
 }
 
 FileInformationCard.propTypes = {
-    file: PropTypes.string
+    file: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    ext: PropTypes.oneOf(['.PEM', '.GZ']).isRequired
 }
 
 export default FileInformationCard
