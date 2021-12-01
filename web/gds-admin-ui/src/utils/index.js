@@ -5,6 +5,7 @@ import TrisatestLogo from 'assets/images/gds-trisatest-logo.png';
 import VaspDirectoryLogo from 'assets/images/gds-vaspdirectory-logo.png';
 import dayjs from 'dayjs';
 import crypto from 'crypto'
+import toast from 'react-hot-toast';
 
 export * from './array';
 
@@ -150,4 +151,35 @@ function currencyFormatter({ style = 'currency', currency = "USD" }) {
     })
 }
 
-export { currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+function getBase64Size(str) {
+    const buffer = Buffer.from(`${str}`, 'base64');
+    return buffer.length
+}
+
+/**
+ * Copy an element to the clipboard
+ * @param {string} target item to copy to clipboard
+ * @returns Promise<void>
+ */
+async function copyToClipboard(target = '') {
+    try {
+        await navigator.clipboard.writeText(target);
+        toast.success('Copied to clipboard')
+    } catch (err) {
+        throw err
+    }
+}
+
+export { copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
