@@ -6,6 +6,7 @@ import VaspDirectoryLogo from 'assets/images/gds-vaspdirectory-logo.png';
 import dayjs from 'dayjs';
 import crypto from 'crypto'
 import toast from 'react-hot-toast';
+import { downloadFile, generateCSV } from 'helpers/api/utils';
 
 export * from './array';
 
@@ -182,4 +183,23 @@ async function copyToClipboard(target = '') {
     }
 }
 
-export { copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+function exportToCsv(rows) {
+    const { verified_contacts, ...rest } = rows[0]
+
+    let rowHeader = Object.keys(rest)
+
+    const _rows = rows.map(row => {
+        const { verified_contacts, ...rest } = row
+        return Object.values(rest)
+    })
+    _rows.unshift(rowHeader)
+
+    let csvFile = '';
+    for (let i = 0; i < _rows.length; i++) {
+        csvFile += generateCSV(_rows[i]);
+    }
+    const filename = `${dayjs().format("YYYY-MM-DD")}-directory.csv`
+    downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
+}
+
+export { exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

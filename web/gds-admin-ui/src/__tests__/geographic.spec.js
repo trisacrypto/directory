@@ -4,10 +4,6 @@ import { AddressTypeHeaders } from '../constants';
 import Geographic, { renderField, renderLines } from '../pages/app/details/BasicDetails/components/Geographic';
 
 describe('defaultEndpointPrefix', () => {
-    it('should render component', () => {
-        render(<Geographic />);
-    });
-
     describe('RenderLine', () => {
         const addresses = [
             {
@@ -48,12 +44,12 @@ describe('defaultEndpointPrefix', () => {
                   >
                     <div>
                       215 Alynn Way
-
+                       
                     </div>
-
+                    
                     <div>
                       Queenstown, MD 21658
-
+                       
                     </div>
                     <div>
                       US
@@ -95,24 +91,24 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Shoes
-
+                    Home
+                     
                     <br />
-                    Sports
-
+                    Health
+                     
                     <br />
                     23
-
-                    Runolfsdottir Village
+                     
+                    Streich Radial
                     <br />
-                    Rochester Hills
-
-
-
+                    Oxnard
+                     
+                    
+                     
                     MA
-
-                    35731
-
+                     
+                    57511-5888
+                      
                     <br />
                     US
                   </address>

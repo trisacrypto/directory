@@ -3,14 +3,15 @@ import userEvent from '@testing-library/user-event'
 import BasicDetails from "../pages/app/details/BasicDetails"
 import faker from "faker"
 import { Status } from "../constants"
+import { ModalProvider } from "contexts/modal"
 
 describe("BasicDetailsDropDown", () => {
 
     it("should render", () => {
-        render(<BasicDetails />)
+        render(<BasicDetails />, { wrapper: ModalProvider })
     })
 
-    it("Should not be disable when status is different to pending", () => {
+    it("Should not be disable when status is different to pending", async () => {
 
         const mockVaspData = {
             "name": "Opalcliff, Inc.",
@@ -123,16 +124,16 @@ describe("BasicDetailsDropDown", () => {
             },
             "traveler": false
         }
-        render(<BasicDetails data={mockVaspData} />)
+        render(<BasicDetails data={mockVaspData} />, { wrapper: ModalProvider })
         const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-        waitFor(() => userEvent.click(dropdownDots))
+        await waitFor(() => userEvent.click(dropdownDots))
         const dropdown = screen.getByTestId(/reviewItem/i)
 
         expect(dropdown).not.toHaveClass('disabled')
     })
 
-    it("Should be disabled when status is pending", () => {
+    it("Should be disabled when status is pending", async () => {
         const mockVaspData = {
             "name": "Opalcliff, Inc.",
             "vasp": {
@@ -245,10 +246,10 @@ describe("BasicDetailsDropDown", () => {
             "traveler": false
         }
 
-        render(<BasicDetails data={mockVaspData} />)
+        render(<BasicDetails data={mockVaspData} />, { wrapper: ModalProvider })
         const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-        waitFor(() => userEvent.click(dropdownDots))
+        await waitFor(() => userEvent.click(dropdownDots))
         const dropdown = screen.getByTestId(/reviewItem/i)
 
         expect(dropdown).toHaveClass('disabled')

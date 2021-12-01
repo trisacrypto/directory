@@ -12,12 +12,6 @@ describe("AuditLogo", () => {
         expect(container.childElementCount).toEqual(1);
     })
 
-    it('should not render when data does not exist', () => {
-        auditLogMock = null
-        const { container } = render(<AuditLog data={auditLogMock} />)
-        expect(container.childElementCount).toEqual(0)
-    })
-
     it('Should show audit log description', () => {
         auditLogMock = [
             {
@@ -48,7 +42,7 @@ describe("AuditLogo", () => {
 
         render(<AuditLog data={auditLogMock} />)
         const auditLogState = screen.getByTestId('audit-log-state')
-        const textContent = `source from Pending Review - No Verification`
+        const textContent = `source from Pending Review → No Verification`
         expect(auditLogState).toBeInTheDocument()
         expect(auditLogState.textContent).toBe(textContent)
     })
