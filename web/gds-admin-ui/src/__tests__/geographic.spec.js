@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Home
+                    Shoes
                      
                     <br />
-                    Health
+                    Books
                      
                     <br />
                     23
                      
-                    Streich Radial
+                    Moore Mountains
                     <br />
-                    Oxnard
+                    Yuma
                      
                     
                      
                     MA
                      
-                    57511-5888
+                    40048-9654
                       
                     <br />
                     US

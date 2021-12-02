@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { screen, waitFor } from "@testing-library/react"
 import userEvent from '@testing-library/user-event'
 import BasicDetails from "../pages/app/details/BasicDetails"
 import faker from "faker"
 import { Status } from "../constants"
 import { ModalProvider } from "contexts/modal"
+import { render } from "utils/test-utils"
 
 describe("BasicDetailsDropDown", () => {
 

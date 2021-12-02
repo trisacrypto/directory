@@ -12,10 +12,26 @@ import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
 import { actionType, useModal } from 'contexts/modal';
+import { useSelector } from 'react-redux';
+import { getAllReviewNotes } from 'redux/selectors';
+import VaspDocument from '../VaspDocument';
+import { pdf } from '@react-pdf/renderer';
 
 export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
+    const reviewNotes = useSelector(getAllReviewNotes)
     const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
+
+    const generatePdfDocument = async (filename) => {
+        try {
+            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
+            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
+        } catch (error) {
+            console.error('Unable to export as PDF', error)
+        }
+
+    };
+
 
     return (
         <Dropdown className="float-end" align="end">
@@ -33,7 +49,7 @@ export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <Dropdown.Item>
                     <i className="mdi mdi-square-edit-outline me-1"></i>Edit
                 </Dropdown.Item>
-                <Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
                     <i className="mdi mdi-printer me-1"></i>Print
                 </Dropdown.Item>
                 <Dropdown.Item onClick={handleClose}>
