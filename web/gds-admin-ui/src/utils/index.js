@@ -5,6 +5,8 @@ import TrisatestLogo from 'assets/images/gds-trisatest-logo.png';
 import VaspDirectoryLogo from 'assets/images/gds-vaspdirectory-logo.png';
 import dayjs from 'dayjs';
 import crypto from 'crypto'
+import toast from 'react-hot-toast';
+import { downloadFile, generateCSV } from 'helpers/api/utils';
 
 export * from './array';
 
@@ -150,4 +152,89 @@ function currencyFormatter({ style = 'currency', currency = "USD" }) {
     })
 }
 
-export { currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+function getBase64Size(str) {
+    const buffer = Buffer.from(`${str}`, 'base64');
+    return buffer.length
+}
+
+/**
+ * Copy an element to the clipboard
+ * @param {string} target item to copy to clipboard
+ * @returns Promise<void>
+ */
+async function copyToClipboard(target = '') {
+    try {
+        await navigator.clipboard.writeText(target);
+        toast.success('Copied to clipboard')
+    } catch (err) {
+        throw err
+    }
+}
+
+function exportToCsv(rows) {
+    const { verified_contacts, ...rest } = rows[0]
+
+    let rowHeader = Object.keys(rest)
+
+    const _rows = rows.map(row => {
+        const { verified_contacts, ...rest } = row
+        return Object.values(rest)
+    })
+    _rows.unshift(rowHeader)
+
+    let csvFile = '';
+    for (let i = 0; i < _rows.length; i++) {
+        csvFile += generateCSV(_rows[i]);
+    }
+    const filename = `${dayjs().format("YYYY-MM-DD")}-directory.csv`
+    downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
+}
+
+function isValidIvmsAddress(address) {
+    if (address) {
+        return !!(address.country && address.address_type)
+    }
+    return false;
+}
+
+function hasAddressField(address) {
+    if (isValidIvmsAddress(address) && !hasAddressLine(address)) {
+        return !!(address.street_name && (address.building_number || address.building_name))
+    }
+    return false
+}
+
+function hasAddressLine(address) {
+    if (isValidIvmsAddress(address)) {
+        return Array.isArray(address.address_line) && address.address_line.length > 0
+    }
+    return false;
+}
+
+function hasAddressFieldAndLine(address) {
+    if (hasAddressField(address) && hasAddressLine(address)) {
+        console.warn("cannot render address")
+        return true
+    }
+    return false
+}
+
+const getMustComplyRegulations = (status) => status ? "must" : "must not"
+const getConductsCustomerKYC = (status) => status ? "does" : "does not"
+const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
+const getSafeguardPii = (status) => status ? "does" : "does not"
+
+
+export { getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

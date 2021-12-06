@@ -347,8 +347,8 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 	return out, nil
 }
 
-// Status returns the status of a VASP including its verification and service status if
-// the directory service is performing health check monitoring.
+// Verification returns the status of a VASP including its verification and service
+// status if the directory service is performing health check monitoring.
 func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
 	var vasp *pb.VASP
 	switch {
@@ -372,7 +372,7 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 
 		vasp = vasps[0]
 	default:
-		log.Warn().Str("rpc", "lookup").Msg("no arguments supplied")
+		log.Warn().Str("rpc", "verification").Msg("no arguments supplied")
 		return nil, status.Error(codes.InvalidArgument, "please supply ID and registered directory or common name for verification")
 	}
 

@@ -260,6 +260,59 @@ func (s *gdsTestSuite) TestSearch() {
 	require.Len(reply.Results, 0)
 }
 
+// TestVerification tests that the Verification RPC returns the correct status
+// information for a VASP.
+func (s *gdsTestSuite) TestVerification() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+
+	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
+	// real VASP object here for comparison purposes.
+	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	require.NoError(err)
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Supplied VASP ID does not exist
+	request := &api.VerificationRequest{
+		Id: "abc12345-41aa-11ec-9d29-acde48001122",
+	}
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+
+	expected := &api.VerificationReply{
+		VerificationStatus: vasp.VerificationStatus,
+		ServiceStatus:      vasp.ServiceStatus,
+		VerifiedOn:         vasp.VerifiedOn,
+		FirstListed:        vasp.FirstListed,
+		LastUpdated:        vasp.LastUpdated,
+	}
+
+	// VASP exists in the database
+	request.Id = id
+	reply, err := client.Verification(ctx, request)
+	require.NoError(err)
+	require.True(proto.Equal(expected, reply))
+
+	// Supplied Common Name does not exist
+	request.Id = ""
+	request.CommonName = "invalid.name"
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+
+	// No VASP ID or Common Name supplied
+	request.Id = ""
+	request.CommonName = ""
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+}
+
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
 	require := s.Require()

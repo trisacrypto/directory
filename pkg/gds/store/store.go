@@ -42,7 +42,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -93,7 +92,6 @@ type Store interface {
 	Close() error
 	DirectoryStore
 	CertificateStore
-	ReplicaStore
 }
 
 // DirectoryStore describes how the service interacts with VASP identity records.
@@ -113,14 +111,6 @@ type CertificateStore interface {
 	RetrieveCertReq(id string) (*models.CertificateRequest, error)
 	UpdateCertReq(r *models.CertificateRequest) error
 	DeleteCertReq(id string) error
-}
-
-// ReplicaStore describes how the service interacts with and manages Peers.
-type ReplicaStore interface {
-	ListPeers() iterator.ReplicaIterator
-	CreatePeer(p *peers.Peer) (string, error)
-	RetrievePeer(id string) (*peers.Peer, error)
-	DeletePeer(id string) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

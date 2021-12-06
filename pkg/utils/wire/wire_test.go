@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
-	. "github.com/trisacrypto/directory/pkg/gds/store/wire"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	. "github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
