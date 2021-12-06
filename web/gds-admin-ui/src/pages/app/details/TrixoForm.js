@@ -2,16 +2,21 @@
 import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from 'constants/trixo';
 import React from 'react'
 import { Card, Col, Row } from 'react-bootstrap';
-import { intlFormatter } from "utils"
+import { getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, intlFormatter } from "utils"
 import countryCodeEmoji, { isoCountries } from 'utils/country';
 
 
 
 function TrixoForm({ data }) {
-    const getMustComplyRegulations = (status) => status ? "must" : "must not"
-    const getConductsCustomerKYC = (status) => status ? "does" : "does not"
-    const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
-    const getSafeguardPii = (status) => status ? "does" : "does not"
+    const validateIsoCode = (cc = '') => {
+        if (typeof cc === 'string' && cc.length !== 2) {
+            const matches = cc.match(/\b(\w)/g);
+            const acronym = matches?.join('')
+            return acronym?.length === 2 ? acronym : ''
+        }
+
+        return cc
+    }
 
     return (
         <Card>
@@ -23,7 +28,7 @@ function TrixoForm({ data }) {
 
                         <h5 className='text-black'>Jurisdictions</h5>
                         <hr className='mt-1' />
-                        <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(data?.primary_national_jurisdiction)} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
+                        <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(validateIsoCode(data?.primary_national_jurisdiction))} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
                         <p>
                             {
                                 Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map(juridiction => {
@@ -49,7 +54,7 @@ function TrixoForm({ data }) {
                         <h5 className='text-black'>CDD & Travel Rule Policies</h5>
                         <hr className='mt-1' />
                         <p className='lh-lg'>
-                            Organization <span className='fw-bold'>{hasRequiredRegulatoryProgram[data?.has_required_regulatory_program]}</span> program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.
+                            Organization <span className='fw-bold'>{hasRequiredRegulatoryProgram[data?.has_required_regulatory_program]}</span> programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.
                         </p>
                         <p className='lh-lg'>
                             Organization <span className='fw-bold'>{getConductsCustomerKYC(data?.conducts_customer_kyc)}</span> conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers.

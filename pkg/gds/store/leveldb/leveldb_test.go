@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -220,84 +219,6 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	iter := s.db.ListCertReqs()
 	for iter.Next() {
 		s.NotEmpty(iter.CertReq())
-		niters++
-	}
-	s.NoError(iter.Error())
-	iter.Release()
-	s.Equal(10, niters)
-}
-
-func (s *leveldbTestSuite) TestReplicaStore() {
-	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/peer.json")
-	s.NoError(err)
-
-	peer := &peers.Peer{}
-	err = protojson.Unmarshal(data, peer)
-	s.NoError(err)
-
-	// Verify the peer is loaded correctly
-	s.NotEmpty(peer.Id)
-	s.NotEmpty(peer.Addr)
-	s.NotEmpty(peer.Name)
-	s.Empty(peer.Created)
-	s.Empty(peer.Modified)
-
-	// Attempt to Create the Peer
-	id, err := s.db.CreatePeer(peer)
-	s.NoError(err)
-
-	// Attempt to Retrieve the Peer
-	peerr, err := s.db.RetrievePeer(id)
-	s.NoError(err)
-	s.Equal(id, peerr.Key())
-	s.NotEmpty(peerr.Created)
-	s.Equal(peerr.Modified, peerr.Created)
-	s.Equal(peer.Name, peerr.Name)
-	s.Equal(peer.Addr, peerr.Addr)
-
-	// Attempt to save a peer without an ID on it
-	ipeer := &peers.Peer{
-		Id:     0,
-		Name:   "foo",
-		Addr:   "localhost:3324",
-		Region: "local",
-	}
-	_, err = s.db.CreatePeer(ipeer)
-	s.ErrorIs(err, ErrIncompleteRecord)
-
-	// Sleep for a second to roll over the clock for the modified time stamp
-	time.Sleep(1 * time.Second)
-
-	// Delete the Peer
-	err = s.db.DeletePeer(id)
-	s.NoError(err)
-	peerr, err = s.db.RetrievePeer(id)
-	s.ErrorIs(err, ErrEntityNotFound)
-	s.Empty(peerr)
-
-	// Add a few more peers
-	for i := 0; i < 10; i++ {
-		crr := &peers.Peer{
-			Id:     uint64(i + 1),
-			Addr:   fmt.Sprintf("localhost:%d", 4434+i),
-			Name:   fmt.Sprintf("Local Replica %d", i+1),
-			Region: "local",
-		}
-		_, err := s.db.CreatePeer(crr)
-		s.NoError(err)
-	}
-
-	// Test listing all of the peers
-	reqs, err := s.db.ListPeers().All()
-	s.NoError(err)
-	s.Len(reqs, 10)
-
-	// Test iterating over all the peers
-	var niters int
-	iter := s.db.ListPeers()
-	for iter.Next() {
-		s.NotEmpty(iter.Peer())
 		niters++
 	}
 	s.NoError(iter.Error())

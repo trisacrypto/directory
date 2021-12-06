@@ -119,6 +119,12 @@ const Table = (props) => {
         }
     );
 
+    React.useEffect(() => {
+        props.onSelectedRows(dataTable.selectedFlatRows);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dataTable.selectedFlatRows])
+
     let rows = pagination ? dataTable.page : dataTable.rows;
 
     return (
