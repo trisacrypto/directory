@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -30,12 +31,13 @@ var (
 const (
 	NamespaceVASPs    = "vasps"
 	NamespaceCertReqs = "certreqs"
+	NamespaceReplicas = "peers"
 	NamespaceIndices  = "index"
 	NamespaceSequence = "sequence"
 )
 
 // Namespaces defines all possible namespaces that GDS manages
-var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs}
+var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas}
 
 // UnmarshalProto expects protocol buffer data and unmarshals it to the correct type
 // based on the namespace. This is a utility function for dealing with the various
@@ -54,6 +56,12 @@ func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) 
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, certreq, err)
 		}
 		return certreq, nil
+	case NamespaceReplicas:
+		peer := &peers.Peer{}
+		if err = proto.Unmarshal(data, peer); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, peer, err)
+		}
+		return peer, nil
 	default:
 		return nil, fmt.Errorf("unknown namespaces %q", namespace)
 	}
@@ -109,6 +117,12 @@ func RemarshalJSON(namespace string, in []byte) (out []byte, err error) {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, certreq, err)
 		}
 		return proto.Marshal(certreq)
+	case NamespaceReplicas:
+		peer := &peers.Peer{}
+		if err = jsonpb.Unmarshal(in, peer); err != nil {
+			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, peer, err)
+		}
+		return proto.Marshal(peer)
 	case NamespaceIndices:
 		// For now, we're just compressing the JSON data, not checking if it is the correct type for the index
 		// TODO: should we handle indices better?

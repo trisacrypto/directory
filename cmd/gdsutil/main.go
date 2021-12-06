@@ -35,7 +35,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store/wire"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
@@ -408,7 +408,7 @@ func ldbGet(c *cli.Context) (err error) {
 
 		prefix := strings.Split(keys, "::")[0]
 		switch prefix {
-		case wire.NamespaceVASPs, wire.NamespaceCertReqs:
+		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
 				return cli.Exit(err, 1)
 			}
