@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -14,6 +15,7 @@ import (
 func (s *gdsTestSuite) TestRegister() {
 	s.LoadEmptyFixtures()
 	defer s.ResetEmptyFixtures()
+	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
 	refVASP := s.fixtures[vasps]["d9da630e-41aa-11ec-9d29-acde48001122"].(*pb.VASP)
@@ -106,6 +108,57 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Error(err)
 }
 
+// TestVerifyContact tests that the VerifyContact RPC correctly verifies the VASP
+// against the token and sends verification emails to the admins.
+func (s *gdsTestSuite) TestVerifyContact() {
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
+	defer emails.PurgeMockEmails()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// VASP does not exist in the database
+	request := &api.VerifyContactRequest{
+		Id:    "abc12345-41aa-11ec-9d29-acde48001122",
+		Token: "",
+	}
+	_, err := client.VerifyContact(ctx, request)
+	require.Error(err)
+
+	// Incorrect token - no verified contacts
+	request.Id = "d9da630e-41aa-11ec-9d29-acde48001122"
+	request.Token = "invalid"
+	_, err = client.VerifyContact(ctx, request)
+	require.Error(err)
+
+	// TODO: Test previously verified contact - requires modifying the fixtures to
+	// include a non-empty verification token
+
+	// Successful verification
+	request.Token = ""
+	reply, err := client.VerifyContact(ctx, request)
+	require.NoError(err)
+	require.Nil(reply.Error)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
+	require.Contains(reply.Message, "successfully verified")
+
+	// VASP on the database should be updated
+	vasp, err := s.svc.GetStore().RetrieveVASP(request.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
+	token, err := models.GetAdminVerificationToken(vasp)
+	require.NoError(err)
+	require.NotEmpty(token)
+
+	// Email should be sent to the admins
+	require.Len(emails.MockEmails, 1)
+}
+
 // TestVerification tests that the Verification RPC returns the correct status
 // information for a VASP.
 func (s *gdsTestSuite) TestVerification() {
@@ -115,15 +168,15 @@ func (s *gdsTestSuite) TestVerification() {
 
 	id := "d9da630e-41aa-11ec-9d29-acde48001122"
 
-	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
-	// real VASP object here for comparison purposes.
-	vasp, err := s.svc.GetStore().RetrieveVASP(id)
-	require.NoError(err)
-
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect())
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
+	// real VASP object here for comparison purposes.
+	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	require.NoError(err)
 
 	// Supplied VASP ID does not exist
 	request := &api.VerificationRequest{
