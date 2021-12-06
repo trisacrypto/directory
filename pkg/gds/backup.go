@@ -20,7 +20,7 @@ import (
 //
 // TODO: allow storage to cloud storage rather than to disk
 // TODO: encrypt the backup storage file
-func (s *Service) BackupManager() {
+func (s *Service) BackupManager(stop chan bool) {
 	if !s.conf.Backup.Enabled {
 		log.Warn().Msg("backup manager is not enabled")
 		return
@@ -76,6 +76,15 @@ backups:
 					}
 				}
 				log.Debug().Int("kept", s.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
+			}
+		}
+
+		if stop != nil {
+			// Stop if someone wrote to the stop channel
+			select {
+			case <-stop:
+				log.Info().Msg("backup manager received stop signal")
+				return
 			}
 		}
 	}
