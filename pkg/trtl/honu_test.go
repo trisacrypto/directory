@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"strconv"
 
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
@@ -175,24 +174,20 @@ func (s *trtlTestSuite) TestPut() {
 	require.Empty((reply.Meta))
 
 	// Put a value with return_meta=true.
-	// TODO update os.Getenv to use test fixtures in sc-2098
-	expectedPID, err := strconv.Atoi((os.Getenv("TRTL_REPLICA_PID")))
-	require.NoError(err)
-	expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
 	expectedMeta := &pb.Meta{
 		Key:       []byte(alice.Key),
 		Namespace: alice.Namespace,
 		Region:    metaRegion,
 		Owner:     metaOwner,
 		Version: &pb.Version{
-			Pid:     uint64(expectedPID),
+			Pid:     metaPID,
 			Version: 4,
-			Region:  expectedRegion,
+			Region:  metaRegion,
 		},
 		Parent: &pb.Version{
-			Pid:     uint64(expectedPID),
+			Pid:     metaPID,
 			Version: 3,
-			Region:  expectedRegion,
+			Region:  metaRegion,
 		},
 	}
 	// TODO this test modifies the DB state so could cause subsequent tests to have unexpected results
@@ -269,26 +264,21 @@ func (s *trtlTestSuite) TestDelete() {
 		},
 	})
 	require.NoError(err)
-	// TODO update os.Getenv to use test fixtures in sc-2098
-	pid := os.Getenv("TRTL_REPLICA_PID")
-	expectedPID, err := strconv.Atoi(pid)
-	require.NoError(err)
-	expectedRegion := os.Getenv("TRTL_REPLICA_REGION")
-	owner := bytes.Join([][]byte{[]byte(pid), []byte(expectedRegion)}, []byte(":"))
+	owner := bytes.Join([][]byte{[]byte(strconv.Itoa(metaPID)), []byte(metaRegion)}, []byte(":"))
 	expectedMeta := &pb.Meta{
 		Key:       tempKey,
 		Namespace: tempNS,
-		Region:    expectedRegion,
+		Region:    metaRegion,
 		Owner:     string(owner),
 		Version: &pb.Version{
-			Pid:     uint64(expectedPID),
+			Pid:     metaPID,
 			Version: 4,
-			Region:  expectedRegion,
+			Region:  metaRegion,
 		},
 		Parent: &pb.Version{
-			Pid:     uint64(expectedPID),
+			Pid:     metaPID,
 			Version: 3,
-			Region:  expectedRegion,
+			Region:  metaRegion,
 		},
 	}
 	require.NoError(err)
