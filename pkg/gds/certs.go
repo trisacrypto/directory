@@ -176,9 +176,17 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		return fmt.Errorf("could not fetch batch info for id %d: %s", r.BatchId, err)
 	}
 
-	// Step 1b: update  certificate request with fetched info
+	// Step 1b: update certificate request with fetched info
 	r.BatchStatus = info.Status
 	r.RejectReason = info.RejectReason
+
+	// Step 1c: check if the batch is in an unhandled state, and if so, refresh batch status
+	if info.Status == sectigo.BatchStatusCollected || info.Status == "" {
+		log.Warn().Int64("batch_id", r.BatchId).Str("batch_status", info.Status).Msg("unknown batch info status, refreshing batch status directly")
+		if r.BatchStatus, err = s.certs.BatchStatus(int(r.BatchId)); err != nil {
+			return fmt.Errorf("could not fetch batch status for id %d: %s", r.BatchId, err)
+		}
+	}
 
 	// Step 2: get the processing info for the batch
 	var proc *sectigo.ProcessingInfoResponse
@@ -186,7 +194,6 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		return fmt.Errorf("could not fetch batch processing info for id %d: %s", r.BatchId, err)
 	}
 
-	// TODO: make a debug message rather than an info message
 	log.Info().
 		Str("status", r.BatchStatus).
 		Str("reject", r.RejectReason).
@@ -245,12 +252,12 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	}
 
 	// Step 5: Check to make sure we can download certificates
-	if proc.Success == 0 || info.Status != sectigo.BatchStatusReadyForDownload {
-		// We should not be in this state, it should have been handled in Step 4
+	if proc.Success == 0 || r.BatchStatus != sectigo.BatchStatusReadyForDownload {
+		// We should not be in this state, it should have been handled in Step 1c or 4
 		// so this is a developer error on our part, or a change in the Sectigo API
 		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 		// this ensures that we issue a CRITICAL severity without stopping the server.
-		log.WithLevel(zerolog.FatalLevel).Str("status", info.Status).Msg("unhandled sectigo state")
+		log.WithLevel(zerolog.FatalLevel).Int64("batch_id", r.BatchId).Int("success", proc.Success).Str("batch_status", r.BatchStatus).Msg("unhandled sectigo state")
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "unhandled sectigo state", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
