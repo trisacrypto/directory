@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
@@ -264,7 +264,7 @@ func (s *trtlTestSuite) TestDelete() {
 		},
 	})
 	require.NoError(err)
-	owner := bytes.Join([][]byte{[]byte(fmt.Sprint(metaPID)), []byte(metaRegion)}, []byte(":"))
+	owner := bytes.Join([][]byte{[]byte(strconv.Itoa(metaPID)), []byte(metaRegion)}, []byte(":"))
 	expectedMeta := &pb.Meta{
 		Key:       tempKey,
 		Namespace: tempNS,
