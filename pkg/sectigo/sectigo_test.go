@@ -71,6 +71,7 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		{name: CreateSingleCertBatchEP, f: s.createSingleCertBatch},
 		{name: UploadCSREP, f: s.uploadCSRBatch},
 		{name: BatchDetailEP, f: s.batchDetail},
+		{name: BatchStatusEP, f: s.batchStatus},
 		{name: BatchProcessingInfoEP, f: s.processingInfo},
 		{name: DownloadEP, f: s.download},
 		{name: DevicesEP, f: s.licensesUsed},
@@ -118,6 +119,13 @@ func (s *SectigoTestSuite) batchDetail(t *testing.T) {
 	rep, err := s.api.BatchDetail(42)
 	require.NoError(t, err)
 	require.NotNil(t, rep)
+}
+
+func (s *SectigoTestSuite) batchStatus(t *testing.T) {
+	rep, err := s.api.BatchStatus(42)
+	require.NoError(t, err)
+	require.NotEmpty(t, rep)
+	require.Equal(t, "READY_FOR_DOWNLOAD", rep)
 }
 
 func (s *SectigoTestSuite) processingInfo(t *testing.T) {

@@ -119,8 +119,12 @@ func main() {
 					Usage: "if specified get detail for batch with id",
 				},
 				cli.BoolFlag{
+					Name:  "I, info",
+					Usage: "get batch processing info",
+				},
+				cli.BoolFlag{
 					Name:  "s, status",
-					Usage: "get batch processing status",
+					Usage: "get batch processing status (text description)",
 				},
 			},
 		},
@@ -346,13 +350,23 @@ func batches(c *cli.Context) (err error) {
 	id := c.Int("id")
 	if id != 0 {
 		// Perform batch detail lookup
-		if c.Bool("status") {
+		if c.Bool("info") {
 			var rep *sectigo.ProcessingInfoResponse
 			if rep, err = api.ProcessingInfo(id); err != nil {
 				return cli.NewExitError(err, 1)
 			}
 
 			printJSON(rep)
+			return nil
+		}
+
+		// Perform text status lookup
+		if c.Bool("status") {
+			var status string
+			if status, err = api.BatchStatus(id); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			fmt.Println(status)
 			return nil
 		}
 
