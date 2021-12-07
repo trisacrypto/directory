@@ -199,7 +199,6 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 
 	// Set the new state on the CertificateRequest.
 	request.Status = state
-
 	return nil
 }
 

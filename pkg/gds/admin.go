@@ -919,8 +919,44 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		}
 
 		// Make changes to both the VASP and the CertificateRequest
+		updated = true
 		vasp.CommonName = in.CommonName
-		// updated = true
+
+		var certreqs []string
+		if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
+			log.Error().Err(err).Str("id", vaspID).Msg("could not get certificate requests for VASP")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
+			return
+		}
+
+		ncertreqs := 0
+		for _, certreqID := range certreqs {
+			var certreq *models.CertificateRequest
+			if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
+				log.Error().Err(err).Str("id", certreqID).Str("vasp", vaspID).Msg("could not fetch certificate request for VASP")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
+				return
+			}
+
+			if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
+				log.Debug().Str("status", certreq.Status.String()).Str("id", certreqID).Str("vasp", vaspID).Msg("could not update certificate request")
+				continue
+			}
+
+			// TODO: update audit log with the change
+			certreq.CommonName = in.CommonName
+			if err = s.db.UpdateCertReq(certreq); err != nil {
+				log.Error().Err(err).Str("id", certreqID).Str("vasp", vaspID).Msg("could not update certificate request for VASP")
+				continue
+			}
+			ncertreqs++
+		}
+
+		if ncertreqs == 0 {
+			log.Error().Str("vasp", vaspID).Msg("no certificate requests updated with common name")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
+			return
+		}
 	}
 
 	// Check if we've updated anything, if not return an error
