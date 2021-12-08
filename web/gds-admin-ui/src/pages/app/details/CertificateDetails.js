@@ -1,4 +1,3 @@
-
 import React from 'react'
 import FileInformationCard from 'components/FileInformationCard';
 import PropTypes from 'prop-types'
