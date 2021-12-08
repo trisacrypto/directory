@@ -117,10 +117,6 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		VerificationStatus:  pb.VerificationState_NO_VERIFICATION,
 		Version:             &pb.Version{Version: 1},
 	}
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request recevied", "automated"); err != nil {
-		log.Warn().Err(err).Msg("could not update VASP verification status")
-		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
-	}
 
 	// Compute the common name from the TRISA endpoint if not specified
 	if vasp.CommonName == "" && vasp.TrisaEndpoint != "" {
@@ -138,6 +134,19 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 			return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
 		}
 		log.Warn().Err(err).Msg("ignoring validation error")
+	}
+
+	// Retrieve email address from one of the supplied contacts.
+	var email string
+	if email = getContactEmail(vasp); email == "" {
+		log.Warn().Msg("no contact email address found")
+		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
+	}
+
+	// Set verification status to SUBMITTED.
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request recevied", email); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
@@ -201,7 +210,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		Vasp:       vasp.Id,
 		CommonName: vasp.CommonName,
 	}
-	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", "automated"); err != nil {
+	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", email); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
@@ -402,6 +411,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	// Search through the contacts to determine the contacts verified by the supplied token.
 	prevVerified := 0
 	found := false
+	contactEmail := ""
 	contacts := []*pb.Contact{
 		vasp.Contacts.Technical,
 		vasp.Contacts.Administrative,
@@ -429,7 +439,13 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 				log.Error().Err(err).Msg("could not set verification on contact extra data field")
 				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
+			contactEmail = contact.Email
 
+			// Record the contact as verified in the audit log
+			if err := models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "contact verified", contactEmail); err != nil {
+				log.Warn().Err(err).Msg("could not append contact verification to VASP audit log")
+				return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+			}
 		} else if verified {
 			// Determine the total number of contacts previously verified, not including
 			// the current contact that was just verified. This will help prevent
@@ -463,7 +479,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	// Since we have one successful email verification at this point, begin the
 	// registration review process by sending an email to the TRISA admins.
 	// Step 1: mark the VASP as email verified and create an admin token.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", "automated"); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", contactEmail); err != nil {
 		log.Warn().Err(err).Msg("could not update VASP verification status")
 		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
@@ -493,7 +509,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	}
 
 	// Step 3: if the review email has been successfully sent, mark as pending review.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_PENDING_REVIEW, "review email sent", "automated"); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_PENDING_REVIEW, "review email sent", contactEmail); err != nil {
 		log.Warn().Err(err).Msg("could not update VASP verification status")
 		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
@@ -532,4 +548,21 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 	}
 
 	return out, nil
+}
+
+// Helper function to get a valid email address from the contacts on a VASP.
+func getContactEmail(vasp *pb.VASP) string {
+	contacts := []*pb.Contact{
+		vasp.Contacts.Technical,
+		vasp.Contacts.Administrative,
+		vasp.Contacts.Billing,
+		vasp.Contacts.Legal,
+	}
+
+	for _, contact := range contacts {
+		if contact != nil && contact.Email != "" {
+			return contact.Email
+		}
+	}
+	return ""
 }
