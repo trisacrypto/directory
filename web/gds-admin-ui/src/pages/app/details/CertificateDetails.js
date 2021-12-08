@@ -6,6 +6,7 @@ import { Card, Col, Dropdown, Row } from 'react-bootstrap';
 import { copyToClipboard, formatDisplayedData } from 'utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { downloadFile } from 'helpers/api/utils';
 dayjs.extend(relativeTime)
 
 
@@ -99,6 +100,22 @@ function CertificateDetails({ data }) {
         await copyToClipboard(serial)
     }
 
+    const handlePublicIdentityKeyDownloadClick = (data) => {
+        const filename = 'public-identity-key.pem'
+        const mimetype = 'application/x-pem-file'
+        if (data) {
+            downloadFile(data, filename, mimetype)
+        }
+    }
+
+    const handleTrustChainDownloadClick = (chain) => {
+        const filename = 'trust-chain-certificate.gz'
+        const mimetype = 'application/x-x509-ca-cert'
+        if (chain) {
+            downloadFile(chain, filename, mimetype)
+        }
+    }
+
     return (
         <Card>
             {
@@ -118,8 +135,8 @@ function CertificateDetails({ data }) {
 
                         <Row>
                             <Col>
-                                <FileInformationCard file={data?.data} name="Public identity key" ext=".PEM" />
-                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" ext=".GZ" />
+                                <FileInformationCard file={data?.data} name="Public identity key" ext=".PEM" onDownload={() => handlePublicIdentityKeyDownloadClick(data?.data)} />
+                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" ext=".GZ" onDownload={() => handleTrustChainDownloadClick(data?.chain)} />
                             </Col>
                         </Row>
                     </Card.Body>
