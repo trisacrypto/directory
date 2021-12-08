@@ -20,6 +20,7 @@ const ProjectDashboardPage = () => {
         isVaspsLoading: state.Vasps.loading
     }))
 
+
     React.useEffect(() => {
         dispatch(fetchCertificates());
         dispatch(fetchPendingVasps());

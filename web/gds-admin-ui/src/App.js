@@ -1,3 +1,4 @@
+import AuthProvider from 'contexts/auth/auth-provider';
 import { Toaster } from 'react-hot-toast';
 import './App.css';
 import './assets/scss/Creative.scss';
@@ -21,7 +22,9 @@ const toastOptions = {
 function App() {
   return (
     <div className="App">
-      <Routes></Routes>
+      <AuthProvider>
+        <Routes></Routes>
+      </AuthProvider>
       <Toaster position='top-right' toastOptions={toastOptions} />
     </div>
   );
