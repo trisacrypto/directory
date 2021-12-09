@@ -53,7 +53,7 @@ func (s *gdsTestSuite) TestBackupManager() {
 	stop := make(chan bool)
 	go s.svc.BackupManager(stop)
 
-	// Wait for a the backup interval to elapse
+	// Wait for at least one backup interval to elapse
 	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
 
 	// Backup should be created
