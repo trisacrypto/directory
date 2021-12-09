@@ -11,8 +11,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
+	status "google.golang.org/grpc/status"
 )
 
 type ContextKey string
@@ -28,6 +30,12 @@ type PeerInfo struct {
 func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (out interface{}, err error) {
 	// Track how long the method takes to execute.
 	start := time.Now()
+
+	// Check if we're in maintenance mode
+	// TODO: update to consider the Status endpoint once that has been added
+	if t.conf.Maintenance {
+		return nil, status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
+	}
 
 	// Fetch peer information from the TLS info.
 	var peer *PeerInfo
