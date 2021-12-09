@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strconv"
 
@@ -508,12 +507,6 @@ func (s *trtlTestSuite) TestIter() {
 
 		pages++
 		people += len(rep.Values)
-
-		data := make(map[string]interface{})
-		for i, value := range rep.Values {
-			require.NoError(json.Unmarshal(value.Value, &data))
-			fmt.Println(pages, i, data["name"])
-		}
 
 		pageToken = rep.NextPageToken
 		if rep.NextPageToken == "" {
