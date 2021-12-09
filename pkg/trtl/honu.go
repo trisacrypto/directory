@@ -12,7 +12,6 @@ import (
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
@@ -53,14 +52,9 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
 
 		// Check if we have a namespace
+		// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 		var object *object.Object
-		if in.Namespace != "" {
-			object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace))
-		} else {
-			object, err = h.db.Object(in.Key)
-		}
-
-		if err != nil {
+		if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 			// TODO: Check for the honu not found error instead.
 			if err == engine.ErrNotFound {
 				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
@@ -79,15 +73,10 @@ func (h *HonuService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
 
 	// But we do have to check if we have a namespace
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var value []byte
-	if in.Namespace != "" {
-		value, err = h.db.Get(in.Key, options.WithNamespace(in.Namespace))
-	} else {
-		value, err = h.db.Get(in.Key)
-	}
-
-	// TODO: Check for the honu not found error instead.
-	if err != nil {
+	if value, err = h.db.Get(in.Key, options.WithNamespace(in.Namespace)); err != nil {
+		// TODO: Check for the honu not found error instead.
 		if err == leveldb.ErrNotFound {
 			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -124,14 +113,9 @@ func (h *HonuService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	}
 
 	// Check if we have a namespace
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
-	if in.Namespace != "" {
-		object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace))
-	} else {
-		object, err = h.db.Put(in.Key, in.Value)
-	}
-
-	if err != nil {
+	if object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to put object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -165,14 +149,9 @@ func (h *HonuService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	}
 
 	// Check if we have a namespace
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
-	if in.Namespace != "" {
-		object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace))
-	} else {
-		object, err = h.db.Delete(in.Key)
-	}
-
-	if err != nil {
+	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -261,50 +240,34 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		Values: make([]*pb.KVPair, 0, cursor.PageSize),
 	}
 
-	// TODO: in order to support more complex iteration such as jumping to the next key
-	// in the page, honu needs to offer better support for leveldb iteration options.
-	// Until this is implemented, we just iterate over the prefix until we get to the
-	// start of the next page, which is extremely inefficient, especially for large
-	// datasets. [Create a story for implementing iter.Seek() in Honu]
+	// Create the honu iterator to begin collecting data with the specified prefix.
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var iter iterator.Iterator
-
-	// TODO Prefix can be nil - do we need to consider?
-	if in.Namespace != "" {
-		iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace))
-	} else {
-		iter, err = h.db.Iter(in.Prefix)
-	}
-	if err != nil {
+	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
 
-	for iter.Next() {
-		// Determine if we need to seek to the next page or not
-		key := iter.Key()
-		if len(cursor.NextKey) > 0 {
-			// We need to seek since there is a page token
-			// If the current key is lexicographically before the next key, then we need
-			// to continue seeking. Note that we cannot use equality here because the
-			// next key may have been deleted between requests, which means we'd seek to
-			// the end of the iteration without returning the page. Unfortunately, the
-			// lexicographic ordering that we're computing is heavily dependent on the
-			// underlying representation, so I'm just guessing with leveldb for now.
-			// TODO: this needs to be replaced with honu Seek!
-			if comparer.DefaultComparer.Compare(key, cursor.NextKey) < 0 {
-				continue
-			} else {
-				// We've reached the end of the seek, we need to reset the cursor so
-				// that we can capture the next key or stop if there are no more results
-				cursor.NextKey = nil
-			}
-		}
+	// If necessary seek to the next key specified by the cursor.
+	if len(cursor.NextKey) > 0 {
+		// If iter.Seek returns false (e.g. seek did not find the specified key) then
+		// iter.Next() should also return false, so it isn't necessary to check the return.
+		// NOTE: next key must be set to nil after it's used for seeking so that the last
+		// page doesn't retain the old key and loop forever.
+		iter.Seek(cursor.NextKey)
+		cursor.NextKey = nil
 
+		// Because we're going to be calling Next, we need to back up one key to ensure
+		// that we start on the right key in the for loop.
+		iter.Prev()
+	}
+
+	for iter.Next() {
 		// Check if we're done iterating (e.g. at the end of the page with a next page)
 		if len(out.Values) == int(cursor.PageSize) {
 			// The current key is the next key for the next page, stop iteration
-			cursor.NextKey = key
+			cursor.NextKey = iter.Key()
 			break
 		}
 
@@ -312,7 +275,7 @@ func (h *HonuService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(key)).Msg("could not fetch object metadata")
+			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
@@ -477,18 +440,12 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 	// Check to see if there is a namespace
 	// TODO: should we support more complex iteration such as seeks in the cursor request?
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var iter iterator.Iterator
-
-	if in.Namespace != "" {
-		iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace))
-	} else {
-		iter, err = h.db.Iter(in.Prefix)
-	}
-	if err != nil {
+	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
-
 	defer iter.Release()
 
 	var nMessages uint64
@@ -560,7 +517,7 @@ func (h *HonuService) Sync(stream pb.Trtl_SyncServer) (err error) {
 
 // returnMeta is a helper function for returning the metadata on an object
 func returnMeta(object object.Object) *pb.Meta {
-	return &pb.Meta{
+	meta := &pb.Meta{
 		Key:       object.Key,
 		Namespace: object.Namespace,
 		Region:    object.Region,
@@ -570,10 +527,15 @@ func returnMeta(object object.Object) *pb.Meta {
 			Version: object.Version.Version,
 			Region:  object.Version.Region,
 		},
-		Parent: &pb.Version{
+	}
+
+	// If it is the first version, the parent will be nil.
+	if object.Version.Parent != nil {
+		meta.Parent = &pb.Version{
 			Pid:     object.Version.Parent.Pid,
 			Version: object.Version.Parent.Version,
 			Region:  object.Version.Parent.Region,
-		},
+		}
 	}
+	return meta
 }

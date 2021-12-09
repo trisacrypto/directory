@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -289,6 +290,66 @@ func (s *trtlTestSuite) TestDelete() {
 	require.True(proto.Equal(expectedMeta, withMeta.Meta))
 }
 
+// Test Unary operations: Get, Put, Get, Delete, Get, Put, Get sequence
+func (s *trtlTestSuite) TestUnaryOperationsInNamespaces() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
+
+	key := []byte("one-niner")
+	value := []byte("victor tango whiskey")
+
+	for _, namespace := range []string{"", "nato"} {
+		// Get should return not found (otherwise follow on tests will not work)
+		_, err := client.Get(ctx, &pb.GetRequest{Namespace: namespace, Key: key})
+		s.StatusError(err, codes.NotFound, "not found")
+
+		// Put the value
+		_, err = client.Put(ctx, &pb.PutRequest{Namespace: namespace, Key: key, Value: value})
+		require.NoError(err, "could not put key to namespace %q", namespace)
+
+		// Get the value with the metadata
+		rep, err := client.Get(ctx, &pb.GetRequest{Namespace: namespace, Key: key, Options: &pb.Options{ReturnMeta: true}})
+		require.NoError(err, "could not get key from namespace %q", namespace)
+		require.Equal(value, rep.Value)
+		require.Equal(key, rep.Meta.Key)
+
+		// Sanity check the default namespace
+		expectedNS := namespace
+		if namespace == "" {
+			expectedNS = "default"
+		}
+		require.Equal(expectedNS, rep.Meta.Namespace)
+
+		// Get the version for tombstone check downstream
+		version := rep.Meta.Version
+
+		// Delete the key
+		_, err = client.Delete(ctx, &pb.DeleteRequest{Namespace: namespace, Key: key})
+		require.NoError(err, "could not get delete from namespace %q", namespace)
+
+		// Get should return not found (we expect a tombstone)
+		_, err = client.Get(ctx, &pb.GetRequest{Namespace: namespace, Key: key})
+		s.StatusError(err, codes.NotFound, "not found")
+
+		// Put the value again
+		_, err = client.Put(ctx, &pb.PutRequest{Namespace: namespace, Key: key, Value: value})
+		require.NoError(err, "could not put key to namespace %q", namespace)
+
+		// Get the value with the metadata again
+		rep, err = client.Get(ctx, &pb.GetRequest{Namespace: namespace, Key: key, Options: &pb.Options{ReturnMeta: true}})
+		require.NoError(err, "could not get key from namespace %q", namespace)
+		require.Equal(value, rep.Value)
+		require.Equal(key, rep.Meta.Key)
+		require.Equal(expectedNS, rep.Meta.Namespace)
+		require.Greater(rep.Meta.Version.Version, version.Version)
+	}
+}
+
 // Test that we can call the Batch RPC and get the correct response.
 func (s *trtlTestSuite) TestBatch() {
 	require := s.Require()
@@ -447,6 +508,12 @@ func (s *trtlTestSuite) TestIter() {
 
 		pages++
 		people += len(rep.Values)
+
+		data := make(map[string]interface{})
+		for i, value := range rep.Values {
+			require.NoError(json.Unmarshal(value.Value, &data))
+			fmt.Println(pages, i, data["name"])
+		}
 
 		pageToken = rep.NextPageToken
 		if rep.NextPageToken == "" {
