@@ -3,6 +3,7 @@ package trtl_test
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ import (
 const (
 	metaRegion = "us-east-1"
 	metaOwner  = "foo"
+	metaPID    = 1
 	bufSize    = 1024 * 1024
 )
 
@@ -39,7 +41,7 @@ var (
 
 	// the version of all objects in the fixtures
 	metaVersion = &object.Version{
-		Pid:     1,
+		Pid:     metaPID,
 		Version: 2,
 		Region:  metaRegion,
 		Parent: &object.Version{
@@ -146,8 +148,8 @@ func (s *trtlTestSuite) SetupSuite() {
 
 	// Load default config and add database path.
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
-	os.Setenv("TRTL_REPLICA_PID", "8")
-	os.Setenv("TRTL_REPLICA_REGION", "minneapolis")
+	os.Setenv("TRTL_REPLICA_PID", fmt.Sprint(metaPID))
+	os.Setenv("TRTL_REPLICA_REGION", metaRegion)
 	s.conf, err = config.New()
 	require.NoError(err)
 

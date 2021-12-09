@@ -4,15 +4,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/gds"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
 // TestRegister tests that the Register RPC correcty registers a new VASP with GDS.
 func (s *gdsTestSuite) TestRegister() {
 	s.LoadEmptyFixtures()
 	defer s.ResetEmptyFixtures()
+	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
 	refVASP := s.fixtures[vasps]["d9da630e-41aa-11ec-9d29-acde48001122"].(*pb.VASP)
@@ -99,14 +103,293 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Equal(v.Id, certReq.Vasp)
 	require.Equal(v.CommonName, certReq.CommonName)
 	require.Equal(models.CertificateRequestState_INITIALIZED, certReq.Status)
-
+	// Audit log should contain SUBMITTED entry
+	log, err := models.GetAuditLog(v)
+	require.NoError(err)
+	require.Len(log, 1)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	// Audit log prioritizes Technical contact as the source
+	require.Equal(v.Contacts.Technical.Email, log[0].Source)
 	// Should not be able to register an identical VASP
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 }
 
+// TestLookup test that the Lookup RPC correctly returns details for a VASP.
+func (s *gdsTestSuite) TestLookup() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+	vasp := s.fixtures[vasps][id].(*pb.VASP)
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Supplied VASP ID does not exist
+	request := &api.LookupRequest{
+		Id: "abc12345-41aa-11ec-9d29-acde48001122",
+	}
+	_, err := client.Lookup(ctx, request)
+	require.Error(err)
+
+	expected := &api.LookupReply{
+		Id:                  id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		IdentityCertificate: vasp.IdentityCertificate,
+		Country:             vasp.Entity.CountryOfRegistration,
+		VerifiedOn:          vasp.VerifiedOn,
+		Name:                "CharlieBank",
+	}
+
+	// VASP exists in the database
+	request.Id = id
+	reply, err := client.Lookup(ctx, request)
+	require.NoError(err)
+	require.True(proto.Equal(expected, reply))
+	// TODO: Check that a signing certificate is returned
+
+	// Supplied Common Name does not exist
+	request.Id = ""
+	request.CommonName = "invalid.name"
+	_, err = client.Lookup(ctx, request)
+	require.Error(err)
+}
+
+// TestSearch tests that the Search RPC returns the correct search results.
+func (s *gdsTestSuite) TestSearch() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// No search criteria - should not return anything
+	request := &api.SearchRequest{}
+	reply, err := client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Search by name
+	request.Name = []string{"CharlieBank"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+	vasp := s.fixtures[vasps][id].(*pb.VASP)
+	require.Equal(id, reply.Results[0].Id)
+	require.Equal(vasp.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
+	require.Equal(vasp.CommonName, reply.Results[0].CommonName)
+	require.Equal(vasp.TrisaEndpoint, reply.Results[0].Endpoint)
+
+	// Multiple results
+	request.Name = []string{"CharlieBank", "Delta Assets"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 2)
+
+	// Search by website
+	request = &api.SearchRequest{
+		Website: []string{"https://trisa.charliebank.io"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by country
+	request = &api.SearchRequest{
+		Name:    []string{"CharlieBank"},
+		Country: []string{vasp.Entity.CountryOfRegistration},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by country - no results
+	request = &api.SearchRequest{
+		Name:    []string{"CharlieBank"},
+		Country: []string{"US"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Filter by category
+	request = &api.SearchRequest{
+		Name:             []string{"CharlieBank"},
+		BusinessCategory: []pb.BusinessCategory{vasp.BusinessCategory},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by business category - no results
+	request = &api.SearchRequest{
+		Name:             []string{"CharlieBank"},
+		BusinessCategory: []pb.BusinessCategory{pb.BusinessCategory_GOVERNMENT_ENTITY},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
+	// Filter by VASP category
+	request = &api.SearchRequest{
+		Name:         []string{"CharlieBank"},
+		VaspCategory: []string{"Miner"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+
+	// Filter by VASP category - no results
+	request = &api.SearchRequest{
+		Name:         []string{"CharlieBank"},
+		VaspCategory: []string{"Project"},
+	}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+}
+
+// TestVerifyContact tests that the VerifyContact RPC correctly verifies the VASP
+// against the token and sends verification emails to the admins.
+func (s *gdsTestSuite) TestVerifyContact() {
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
+	defer emails.PurgeMockEmails()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// VASP does not exist in the database
+	request := &api.VerifyContactRequest{
+		Id:    "abc12345-41aa-11ec-9d29-acde48001122",
+		Token: "",
+	}
+	_, err := client.VerifyContact(ctx, request)
+	require.Error(err)
+
+	// Incorrect token - no verified contacts
+	request.Id = "d9da630e-41aa-11ec-9d29-acde48001122"
+	request.Token = "invalid"
+	_, err = client.VerifyContact(ctx, request)
+	require.Error(err)
+
+	// TODO: Test previously verified contact - requires modifying the fixtures to
+	// include a non-empty verification token
+
+	// Successful verification
+	request.Token = ""
+	reply, err := client.VerifyContact(ctx, request)
+	require.NoError(err)
+	require.Nil(reply.Error)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
+	require.Contains(reply.Message, "successfully verified")
+
+	// VASP on the database should be updated
+	vasp, err := s.svc.GetStore().RetrieveVASP(request.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
+	token, err := models.GetAdminVerificationToken(vasp)
+	require.NoError(err)
+	require.NotEmpty(token)
+
+	// Email should be sent to the admins
+	require.Len(emails.MockEmails, 1)
+
+	// Audit log should contain new entries for contact verifications, EMAIL_VERIFIED,
+	// PENDING_REVIEW, along with the intitial SUBMITTED.
+	log, err := models.GetAuditLog(vasp)
+	require.NoError(err)
+	// Currently verifies all contacts because the fixtures all have the empty token.
+	require.Len(log, 7)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	require.Equal(pb.VerificationState_SUBMITTED, log[1].CurrentState)
+	require.Equal(vasp.Contacts.Technical.Email, log[1].Source)
+	require.Equal(pb.VerificationState_SUBMITTED, log[2].CurrentState)
+	require.Equal(vasp.Contacts.Administrative.Email, log[2].Source)
+	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[5].CurrentState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[6].CurrentState)
+}
+
+// TestVerification tests that the Verification RPC returns the correct status
+// information for a VASP.
+func (s *gdsTestSuite) TestVerification() {
+	s.LoadFullFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
+	// real VASP object here for comparison purposes.
+	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	require.NoError(err)
+
+	// Supplied VASP ID does not exist
+	request := &api.VerificationRequest{
+		Id: "abc12345-41aa-11ec-9d29-acde48001122",
+	}
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+
+	expected := &api.VerificationReply{
+		VerificationStatus: vasp.VerificationStatus,
+		ServiceStatus:      vasp.ServiceStatus,
+		VerifiedOn:         vasp.VerifiedOn,
+		FirstListed:        vasp.FirstListed,
+		LastUpdated:        vasp.LastUpdated,
+	}
+
+	// VASP exists in the database
+	request.Id = id
+	reply, err := client.Verification(ctx, request)
+	require.NoError(err)
+	require.True(proto.Equal(expected, reply))
+
+	// Supplied Common Name does not exist
+	request.Id = ""
+	request.CommonName = "invalid.name"
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+
+	// No VASP ID or Common Name supplied
+	request.Id = ""
+	request.CommonName = ""
+	_, err = client.Verification(ctx, request)
+	require.Error(err)
+}
+
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
+	s.LoadEmptyFixtures()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -129,4 +412,36 @@ func (s *gdsTestSuite) TestStatus() {
 	notAfer, err := time.Parse(time.RFC3339, status.NotAfter)
 	require.NoError(err)
 	require.True(notAfer.Sub(expectedNotAfter) < time.Minute)
+}
+
+// TestStatus tests that the Status RPC returns the correct status response when in
+// maintenance mode.
+func (s *gdsTestSuite) TestStatusMaintenance() {
+	conf := gds.MockConfig()
+	conf.Maintenance = true
+	s.SetConfig(conf)
+	defer s.ResetConfig()
+	s.LoadEmptyFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Health check in maintenance mode.
+	expectedNotBefore := time.Now().Add(30 * time.Minute)
+	expectedNotAfter := time.Now().Add(60 * time.Minute)
+	status, err := client.Status(ctx, &api.HealthCheck{})
+	require.NoError(err)
+	require.Equal(api.ServiceState_MAINTENANCE, status.Status)
+
+	// Timestamps should be close to expected.
+	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)
+	require.NoError(err)
+	require.True(notBefore.Sub(expectedNotBefore) < time.Minute)
+	notAfter, err := time.Parse(time.RFC3339, status.NotAfter)
+	require.NoError(err)
+	require.True(notAfter.Sub(expectedNotAfter) < time.Minute)
 }

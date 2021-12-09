@@ -331,7 +331,8 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 }
 
 func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
-	// If we're already at the specified fixture type, do nothing
+	// If we're already at the specified fixture type and no custom config is provided,
+	// do nothing
 	if s.ftype == ftype && s.conf == nil {
 		log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("CACHED FIXTURE")
 		return
