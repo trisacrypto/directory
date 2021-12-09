@@ -9,12 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.
@@ -328,6 +330,43 @@ func (s *Sectigo) BatchDetail(id int) (batch *BatchResponse, err error) {
 		return nil, err
 	}
 	return batch, nil
+}
+
+// BatchStatus views batch status by batchId.
+// User must be authenticated with role 'USER' and has permission to read this batch.
+// Statuses can be: "Ready for download", "Processing", "Failed" or "Not Acceptable. Status: ".
+func (s *Sectigo) BatchStatus(batch int) (status string, err error) {
+	// perform preflight check for authenticated endpoint
+	if err = s.preflight(); err != nil {
+		return "", err
+	}
+
+	// create request
+	var req *http.Request
+	if req, err = s.newRequest(http.MethodGet, urlFor(BatchStatusEP, batch), nil); err != nil {
+		return "", err
+	}
+
+	var rep *http.Response
+	if rep, err = s.client.Do(req); err != nil {
+		return "", err
+	}
+	defer rep.Body.Close()
+
+	if err = s.checkStatus(rep); err != nil {
+		return "", err
+	}
+
+	var data []byte
+	if data, err = ioutil.ReadAll(rep.Body); err != nil {
+		return "", err
+	}
+
+	// Ensure the status appears as though it is one of our status constants
+	status = strings.TrimSpace(string(data))
+	status = strings.ToUpper(status)
+	status = strings.Replace(status, " ", "_", -1)
+	return status, nil
 }
 
 // ProcessingInfo returns batch processing status by batch id.

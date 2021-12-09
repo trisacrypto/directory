@@ -99,3 +99,7 @@
 .mw-25{
     min-width: 25%;
 }
+a[disabled] {
+    pointer-events: none;
+    cursor: default;
+  }

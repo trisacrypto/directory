@@ -19,7 +19,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
-	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -68,7 +67,6 @@ var (
 	keyCategoryIndex = []byte("index::categories")
 	preVASPs         = []byte("vasps::")
 	preCertReqs      = []byte("certreqs::")
-	preReplicas      = []byte("peers::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -451,80 +449,6 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 }
 
 //===========================================================================
-// ReplicaStore Implementation
-//===========================================================================
-
-// ListPeers returns all peers currently in the store.
-func (s *Store) ListPeers() iterator.ReplicaIterator {
-	return &peerIterator{
-		iterWrapper{
-			iter: s.db.NewIterator(util.BytesPrefix(preReplicas), nil),
-		},
-	}
-}
-
-// CreatePeer using its PID (can't be nil) to create the LDB key and return the version.
-func (s *Store) CreatePeer(p *peers.Peer) (id string, err error) {
-	if p.Key() == "" {
-		return "", ErrIncompleteRecord
-	}
-
-	// The ID on a Peer is a uint64 representing the PID
-	// convert to string for a consistent interface across Create and Retrieve methods
-	key := s.peerKey(p.Key())
-
-	p.Modified = time.Now().Format(time.RFC3339)
-	if p.Created == "" {
-		p.Created = p.Modified
-	}
-
-	// Marshall the Peer to store in the database
-	var data []byte
-	if data, err = proto.Marshal(p); err != nil {
-		return "", err
-	}
-
-	// Put back to the database
-	if err = s.db.Put(key, data, nil); err != nil {
-		return "", err
-	}
-
-	return p.Key(), nil
-}
-
-// RetrievePeer returns a peer by it's stringified PID.
-func (s *Store) RetrievePeer(id string) (p *peers.Peer, err error) {
-	if id == "" {
-		return nil, ErrEntityNotFound
-	}
-
-	var val []byte
-	if val, err = s.db.Get(s.peerKey(id), nil); err != nil {
-		if err == leveldb.ErrNotFound {
-			return nil, ErrEntityNotFound
-		}
-		return nil, err
-	}
-
-	p = new(peers.Peer)
-	if err = proto.Unmarshal(val, p); err != nil {
-		return nil, err
-	}
-
-	return p, nil
-}
-
-// DeletePeer removes a peer from the store.
-func (s *Store) DeletePeer(id string) error {
-	// LevelDB will not return an error if the entity does not exist
-	key := s.peerKey(id)
-	if err := s.db.Delete(key, nil); err != nil {
-		return err
-	}
-	return nil
-}
-
-//===========================================================================
 // Key Handlers
 //===========================================================================
 
@@ -545,11 +469,6 @@ func (s *Store) vaspKey(id string) (key []byte) {
 // creates a []byte key from the cert request id using a prefix to act as a leveldb bucket
 func (s *Store) careqKey(id string) (key []byte) {
 	return s.makeKey(preCertReqs, id)
-}
-
-// creates a []byte key from the peer id using a prefix to act as a leveldb bucket
-func (s *Store) peerKey(id string) (key []byte) {
-	return s.makeKey(preReplicas, id)
 }
 
 //===========================================================================
