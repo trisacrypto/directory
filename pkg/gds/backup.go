@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -20,7 +21,11 @@ import (
 //
 // TODO: allow storage to cloud storage rather than to disk
 // TODO: encrypt the backup storage file
-func (s *Service) BackupManager(stop chan bool) {
+func (s *Service) BackupManager(stop chan bool, wg *sync.WaitGroup) {
+	if wg != nil {
+		defer wg.Done()
+	}
+
 	if !s.conf.Backup.Enabled {
 		log.Warn().Msg("backup manager is not enabled")
 		return
@@ -81,8 +86,7 @@ backups:
 
 		if stop != nil {
 			// Stop if someone wrote to the stop channel
-			select {
-			case <-stop:
+			for range stop {
 				log.Info().Msg("backup manager received stop signal")
 				return
 			}

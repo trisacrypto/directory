@@ -3,6 +3,7 @@ package gds_test
 import (
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/gds"
@@ -24,7 +25,9 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 	require := s.Require()
 
 	// Start the backup manager
-	go s.svc.BackupManager(nil)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go s.svc.BackupManager(nil, &wg)
 
 	// Wait for the backup interval to elapse
 	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
@@ -32,6 +35,9 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 	// Backup should not be created
 	backupDir := s.svc.GetConf().Backup.Storage
 	require.NoDirExists(backupDir)
+
+	// Make sure the backup manager is stopped before we exit
+	wg.Wait()
 }
 
 // Test that the backup manager periodically creates backups.
@@ -51,7 +57,9 @@ func (s *gdsTestSuite) TestBackupManager() {
 
 	// Start the backup manager
 	stop := make(chan bool)
-	go s.svc.BackupManager(stop)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go s.svc.BackupManager(stop, &wg)
 
 	// Wait for at least one backup interval to elapse
 	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
@@ -68,5 +76,8 @@ func (s *gdsTestSuite) TestBackupManager() {
 		}
 	}
 	require.Equal(1, numBackups, "wrong number of backups created")
+
+	// Make sure that the backup manager is stopped before we exit
 	stop <- true
+	wg.Wait()
 }
