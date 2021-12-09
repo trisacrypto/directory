@@ -21,7 +21,7 @@ msgstr "A component of the <0>TRISA</0> architecture for Cryptocurrency Travel R
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "A phonetic representation of the name by which the legal person is known."
 
-#: src/components/TopNav.js:40
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr "About TRISA"
 
@@ -233,7 +233,7 @@ msgstr "Directory"
 msgid "Directory Home"
 msgstr "Directory Home"
 
-#: src/components/TopNav.js:41
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -642,10 +642,13 @@ msgstr "Submitting Registration …"
 msgid "Summary"
 msgstr "Summary"
 
-#: src/components/TopNav.js:17
-#: src/components/TopNav.js:24
+#: src/components/TopNav.js:18
 msgid "Switch to Production"
 msgstr "Switch to Production"
+
+#: src/components/TopNav.js:25
+msgid "Switch to TestNet"
+msgstr "Switch to TestNet"
 
 #: src/components/Registration.js:525
 msgid "TRISA Endpoint"
@@ -817,11 +820,11 @@ msgstr "When you are verified you will be issued PKCS12 encrypted identity certi
 msgid "Yes"
 msgstr "Yes"
 
-#: src/components/TopNav.js:25
+#: src/components/TopNav.js:26
 msgid "You're currently on the Production Directory"
 msgstr "You're currently on the Production Directory"
 
-#: src/components/TopNav.js:18
+#: src/components/TopNav.js:19
 msgid "You're currently on the TestNet Directory"
 msgstr "You're currently on the TestNet Directory"
 

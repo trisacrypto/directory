@@ -6,6 +6,7 @@ import { isTestNet } from '../lib/testnet';
 import { Trans } from "@lingui/macro";
 import LanguageSelect from './select/LanguageSelect';
 import { t } from "@lingui/macro";
+import { i18n } from "@lingui/core"
 
 
 const testNet = isTestNet();
@@ -21,7 +22,7 @@ const getDirectoryURL = () => {
 
   return [
           "https://trisatest.net",
-          t`Switch to Production`,
+          t`Switch to TestNet`,
           t`You're currently on the Production Directory`,
       ]
 };
