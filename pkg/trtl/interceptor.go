@@ -32,7 +32,7 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	start := time.Now()
 
 	// Check if we're in maintenance mode
-	// TODO: update to consider the Status endpoint once that has been added
+	// TODO: update to consider the Status endpoint, once it has been added
 	if t.conf.Maintenance {
 		return nil, status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
 	}
