@@ -441,7 +441,7 @@ func (s *gdsTestSuite) TestStatusMaintenance() {
 	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)
 	require.NoError(err)
 	require.True(notBefore.Sub(expectedNotBefore) < time.Minute)
-	notAfer, err := time.Parse(time.RFC3339, status.NotAfter)
+	notAfter, err := time.Parse(time.RFC3339, status.NotAfter)
 	require.NoError(err)
-	require.True(notAfer.Sub(expectedNotAfter) < time.Minute)
+	require.True(notAfter.Sub(expectedNotAfter) < time.Minute)
 }
