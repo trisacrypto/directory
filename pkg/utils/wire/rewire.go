@@ -1,4 +1,4 @@
-package utils
+package wire
 
 import (
 	"encoding/json"
@@ -31,4 +31,26 @@ func Rewire(m protoreflect.ProtoMessage) (out map[string]interface{}, err error)
 	}
 
 	return out, nil
+}
+
+// Unwire a generic map[string]interface{} into a protocol buffer message as an
+// intermediate step to parsing a JSON or YAML request instead of protocol buffers. Like
+// Rewire, this is a workaround for multi-protocol systems.
+func Unwire(entry map[string]interface{}, msg protoreflect.ProtoMessage) (err error) {
+	// Serialize the data into JSON format
+	var data []byte
+	if data, err = json.Marshal(entry); err != nil {
+		return err
+	}
+
+	// Remarshal the JSON into a protocol buffer via protojson
+	jsonpb := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+
+	if err = jsonpb.Unmarshal(data, msg); err != nil {
+		return err
+	}
+	return nil
 }

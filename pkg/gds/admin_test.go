@@ -102,6 +102,20 @@ func (s *gdsTestSuite) createAccessString(creds map[string]interface{}) string {
 	return access
 }
 
+// APIError is a helper function for asserting that an expected API error is returned.
+func (s *gdsTestSuite) APIError(expectedCode int, expectedMessage string, rep *http.Response) {
+	require := s.Require()
+	require.NotNil(rep, "no HTTP response returned")
+	require.Equal(expectedCode, rep.StatusCode, "expected status code does not match response")
+
+	defer rep.Body.Close()
+	data := &admin.Reply{}
+	require.NoError(json.NewDecoder(rep.Body).Decode(data), "could not decode admin.Reply JSON")
+	require.NotNil(data, "no data was returned")
+	require.False(data.Success, "API returned a success response")
+	require.Equal(expectedMessage, data.Error, "error message mismatch")
+}
+
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
@@ -697,7 +711,7 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	}
 	c, w := s.makeRequest(request)
 	rep := s.doRequest(a.UpdateVASP, c, w, nil)
-	require.Equal(http.StatusNotFound, rep.StatusCode)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
 	request.path = "/v2/vasps/" + "d9da630e-41aa-11ec-9d29-acde48001122"
@@ -708,18 +722,27 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	s.APIError(http.StatusBadRequest, "the request ID does not match the URL endpoint", rep)
 
 	// Test an update with no changes returns a 400 error
 	request.in = &admin.UpdateVASPRequest{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	s.APIError(http.StatusBadRequest, "no updates made to VASP record", rep)
 
-	// Test an update to common name for reviewd VASP returns a 400 error
-	request.in = &admin.UpdateVASPRequest{CommonName: "string"}
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.UpdateVASP, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	// TODO: Test bad business category (not parseable) returns 400 error
+	// TODO: Test updating website, business category, vasp categories, and established on
+	// TODO: Test invalid IVMS 101 returns 400 error
+	// TODO: Test update VASP entity
+	// TODO: Test update TRIXO form
+	// TODO: Test compute common name from endpoint retuns an error if endpoint is "foo"
+	// TODO: Test endpoint-only change with no change to common name is successful
+	// TODO: Test an update to common name for reviewed VASP returns a 400 error
+	// TODO: Test no certificate requests updated returns an error
+	// TODO: Test common name change with incorrect endpoint returns an error
+	// TODO: Test common name-only change with correct endpoint is successful
+	// TODO: Test endpoint-only change with change to common name is successful
+	// TODO: Test common name and endpoint change is successful
 }
 
 // Test the CreateReviewNote endpoint.

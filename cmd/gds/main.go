@@ -919,7 +919,7 @@ func adminRetrieveVASP(c *cli.Context) (err error) {
 }
 
 func adminUpdateVASP(c *cli.Context) (err error) {
-	var req *admin.UpdateVASPRequest
+	req := &admin.UpdateVASPRequest{}
 	if path := c.String("data"); path != "" {
 		var data []byte
 		if data, err = ioutil.ReadFile(path); err != nil {

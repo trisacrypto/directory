@@ -105,7 +105,7 @@ func (s *gdsTestSuite) TearDownSuite() {
 	s.grpc.Release()
 }
 
-func TestGds(t *testing.T) {
+func TestGDS(t *testing.T) {
 	suite.Run(t, new(gdsTestSuite))
 }
 

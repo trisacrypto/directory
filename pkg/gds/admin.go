@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
 
@@ -25,6 +27,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -804,16 +808,31 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 		vasp   *pb.VASP
 		out    *admin.RetrieveVASPReply
 	)
+
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
+	logctx := log.With().Str("id", vaspID).Logger()
 
 	// Attempt to fetch the VASP from the database
 	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		logctx.Warn().Err(err).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
 	}
 
+	// Prepare VASP detail response (both retrieve and update use this method)
+	// NOTE: VASP is modified in this step, must not save VASP after this!
+	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+		// NOTE: logging occurs in prepareVASPDetail
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
+		return
+	}
+
+	// Successful request, return the VASP detail JSON data
+	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
 		VerifiedContacts: models.VerifiedContacts(vasp),
@@ -829,14 +848,14 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Add the audit log to the response, on error, create empty audit log response
 	if auditLog, err := models.GetAuditLog(vasp); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could not get audit log for VASP detail")
+		log.Warn().Err(err).Msg("could not get audit log for VASP detail")
 	} else {
 		out.AuditLog = make([]map[string]interface{}, 0, len(auditLog))
 		for i, entry := range auditLog {
-			if rewiredEntry, err := utils.Rewire(entry); err != nil {
+			if rewiredEntry, err := wire.Rewire(entry); err != nil {
 				// If we cannot rewire an audit log entry, do not serialize any audit
 				// log entries to prevent confusion about what has happened in the log.
-				log.Warn().Err(err).Str("id", vaspID).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
+				log.Warn().Err(err).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
 				out.AuditLog = nil
 				break
 			} else {
@@ -847,7 +866,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Remove extra data from the VASP
 	// Must be done after verified contacts is computed
-	// This is safe because nothing is saved back to the database
+	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
 	if vasp.Contacts.Administrative != nil {
 		vasp.Contacts.Administrative.Extra = nil
@@ -863,23 +882,29 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
-	if out.VASP, err = utils.Rewire(vasp); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could rewire vasp json")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
-		return
+	if out.VASP, err = wire.Rewire(vasp); err != nil {
+		log.Warn().Err(err).Msg("could rewire vasp json")
+		return nil, err
 	}
-
-	// Successful request, return the VASP detail JSON data
-	c.JSON(http.StatusOK, out)
+	return out, nil
 }
 
+// UpdateVASP is a single entry point to a variety of different patches that can be made
+// to the VASP object. In particular, the user may update the business details (website,
+// categories, and established on), update the IVMS 101 Legal Person entity, change
+// their responses to the TRIXO form, update the common name or endpoint, or manage
+// contact details. Although technically, this endpoint would allow all those changes to
+// be made simultaneously, the idea is that the PATCH only happens inside of those
+// collections or groups of fields. Individual update methods define the logic for how
+// each of those groups is updated together.
 func (s *Admin) UpdateVASP(c *gin.Context) {
 	var (
 		err    error
 		vaspID string
 		vasp   *pb.VASP
 		in     *admin.UpdateVASPRequest
-		out    *admin.UpdateVASPReply
+		out    *admin.RetrieveVASPReply
+		claims *tokens.Claims
 	)
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
@@ -899,87 +924,276 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	}
 
+	// Create a log context for downstream logging
+	logctx := log.With().Str("id", vaspID).Logger()
+
 	// Attempt to fetch the VASP from the database
 	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		logctx.Debug().Err(err).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
 	}
 
+	// Get user claims for audit log tracing
+	if claims, err = s.getClaims(c); err != nil {
+		logctx.Error().Err(err).Msg("could not get user claims for audit log")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record audit log"))
+		return
+	}
+
 	// Apply changes and record if anything has changed
-	updated := false
+	var (
+		code     int
+		updated  bool
+		nUpdates uint8
+	)
 
-	// Handle common name
-	if in.CommonName != "" {
-		if vasp.VerificationStatus >= pb.VerificationState_REVIEWED {
-			// Cannot change common name after certificates have been issued
-			log.Warn().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Str("common_name", in.CommonName).Msg("could not update VASP common name")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse("cannot update common name in current state"))
-			return
-		}
+	// Update business information
+	if updated, code, err = s.updateVASPBusinessInfo(vasp, in, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		log.Info().Msg("VASP business information updated ")
+		nUpdates++
+	}
 
-		// Make changes to both the VASP and the CertificateRequest
-		updated = true
-		vasp.CommonName = in.CommonName
+	// Update VASP entity information
+	if updated, code, err = s.updateVASPEntity(vasp, in.Entity, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		log.Info().Msg("VASP IVMS101 record updated")
+		nUpdates++
+	}
 
-		var certreqs []string
-		if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
-			log.Error().Err(err).Str("id", vaspID).Msg("could not get certificate requests for VASP")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
-			return
-		}
+	// Update VASP TRIXO form
+	if updated, code, err = s.updateVASPTRIXO(vasp, in.TRIXO, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		log.Info().Msg("VASP TRIXO form updated")
+		nUpdates++
+	}
 
-		ncertreqs := 0
-		for _, certreqID := range certreqs {
-			var certreq *models.CertificateRequest
-			if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
-				log.Error().Err(err).Str("id", certreqID).Str("vasp", vaspID).Msg("could not fetch certificate request for VASP")
-				c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
-				return
-			}
+	// TODO: update VASP contact information
 
-			if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
-				log.Debug().Str("status", certreq.Status.String()).Str("id", certreqID).Str("vasp", vaspID).Msg("could not update certificate request")
-				continue
-			}
-
-			// TODO: update audit log with the change
-			certreq.CommonName = in.CommonName
-			if err = s.db.UpdateCertReq(certreq); err != nil {
-				log.Error().Err(err).Str("id", certreqID).Str("vasp", vaspID).Msg("could not update certificate request for VASP")
-				continue
-			}
-			ncertreqs++
-		}
-
-		if ncertreqs == 0 {
-			log.Error().Str("vasp", vaspID).Msg("no certificate requests updated with common name")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update certificate request with common name"))
-			return
-		}
+	// Update common name and trisa endpoint - this will also update any certificate requests.
+	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
+	// will be in an inconsistent state. Transactions would be very nice here, but instead this
+	// function is performed as late as possible to minimize the chance of other errors.
+	if updated, code, err = s.updateVASPEndpoint(vasp, in.CommonName, in.TRISAEndpoint, claims.Email, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		log.Info().Msg("trisa endpoint and common name updated")
+		nUpdates++
 	}
 
 	// Check if we've updated anything, if not return an error
-	if !updated {
-		log.Debug().Str("id", vaspID).Msg("no updates on VASP occurred")
+	if nUpdates == 0 {
+		logctx.Debug().Msg("no updates on VASP occurred")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("no updates made to VASP record"))
 		return
 	}
 
+	// Validate that the VASP record is still correct after the changes
+	if err = vasp.Validate(true); err != nil {
+		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
+		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
+			log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+			return
+		}
+		log.Warn().Err(err).Msg("ignoring validation error")
+	}
+
 	// Add a record to the audit log
+	if err = models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "VASP record updated by admin", claims.Email); err != nil {
+		logctx.Error().Err(err).Msg("could not add audit log entry by updating the verification status")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP audit log"))
+		return
+	}
 
 	// Since updates have occurred, save the changes
+	// TODO: transactions would be super nice here so we could rollback any certificate request changes
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Error().Err(err).Msg("could not save VASP after update")
+		logctx.Error().Err(err).Msg("could not save VASP after update")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP"))
 		return
 	}
 
 	// Create the response to send back, ensuring extra fields are removed.
-	out = &admin.UpdateVASPReply{}
+	// Prepare VASP detail response (both retrieve and update use this method)
+	// NOTE: VASP is modified in this step, must not save VASP after this!
+	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+		// NOTE: logging occurs in prepareVASPDetail
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
+		return
+	}
 
 	// Successful request, return the VASP detail JSON data
-	c.JSON(http.StatusOK, out)
+	logctx.Info().Bool("updated", updated).Msg("update VASP completed")
+	c.JSON(http.StatusOK, admin.UpdateVASPReply(*out))
+}
+
+// Update the VASP business information such as website, business and VASP categories,
+// and established on date. This information can be modified at anytime but cannot be
+// set to an empty value, otherwise the PATCH update will not take place.
+func (s *Admin) updateVASPBusinessInfo(vasp *pb.VASP, in *admin.UpdateVASPRequest, log zerolog.Logger) (updated bool, _ int, err error) {
+	if in.Website != "" {
+		vasp.Website = in.Website
+		updated = true
+	}
+
+	if in.BusinessCategory != "" {
+		category, ok := pb.BusinessCategory_value[in.BusinessCategory]
+		if !ok {
+			return false, http.StatusBadRequest, errors.New("could not parse business category")
+		}
+
+		vasp.BusinessCategory = pb.BusinessCategory(category)
+		updated = true
+	}
+
+	if len(in.VASPCategories) > 0 {
+		vasp.VaspCategories = in.VASPCategories
+		updated = true
+	}
+
+	if in.EstablishedOn != "" {
+		vasp.EstablishedOn = in.EstablishedOn
+		updated = true
+	}
+
+	return updated, http.StatusOK, nil
+}
+
+// Update the VASP IVMS101 Legal Person entity; the LegalPerson entity must be valid.
+// This method completely overwrites the previous LegalPerson entity, no field-level
+// patching is available.
+func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	// Check if entity data has been supplied, otherwise do not update.
+	if len(data) == 0 {
+		return false, http.StatusOK, nil
+	}
+
+	// Remarshal the JSON IVMS 101 entity
+	entity := &ivms101.LegalPerson{}
+	if err = wire.Unwire(data, entity); err != nil {
+		log.Warn().Err(err).Msg("could not unwire JSON data into an IVMS 101 LegalPerson")
+		return false, http.StatusBadRequest, errors.New("could not parse IVMS 101 LegalPerson entity")
+	}
+
+	if err = entity.Validate(); err != nil {
+		log.Debug().Err(err).Msg("invalid IVMS 101 LegalPerson struct")
+		return false, http.StatusBadRequest, err
+	}
+
+	vasp.Entity = entity
+	return true, http.StatusOK, nil
+}
+
+// Update the VASP TRIXO form; the TRIXO form really has no internal validation.
+// This method completely overwrites the previous LegalPerson entity, no field-level
+// patching is available.
+func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	// Check if trixo data has been supplied, otherwise do not update.
+	if len(data) == 0 {
+		return false, http.StatusOK, nil
+	}
+
+	// Remarshal the JSON TRIXO questionnaire
+	trixo := &pb.TRIXOQuestionnaire{}
+	if err = wire.Unwire(data, trixo); err != nil {
+		log.Warn().Err(err).Msg("could not unwire JSON data into an valid TRIXO Questionnaire")
+		return false, http.StatusBadRequest, errors.New("could not parse TRIXO questionnaire")
+	}
+
+	vasp.Trixo = trixo
+	return true, http.StatusOK, nil
+}
+
+func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source string, log zerolog.Logger) (_ bool, _ int, err error) {
+	if commonName == "" && endpoint == "" {
+		return false, http.StatusOK, nil
+	}
+
+	// Compute the common name from the TRISA endpoint if not specified
+	if commonName == "" && endpoint != "" {
+		if commonName, _, err = net.SplitHostPort(endpoint); err != nil {
+			log.Warn().Err(err).Str("endpoint", endpoint).Msg("could not parse common name from endpoint")
+			return false, http.StatusBadRequest, errors.New("no common name supplied, could not parse common name from endpoint")
+		}
+	}
+
+	// Check if any changes are required
+	if vasp.CommonName == commonName && vasp.TrisaEndpoint == endpoint {
+		return false, http.StatusOK, nil
+	}
+
+	// Check if this is just an endpoint change
+	if vasp.CommonName == commonName {
+		vasp.TrisaEndpoint = endpoint
+		log.Info().Msg("trisa endpoint updated without change to common name")
+		return true, http.StatusOK, nil
+	}
+
+	if vasp.VerificationStatus >= pb.VerificationState_REVIEWED {
+		// Cannot change common name after certificates have been issued
+		log.Warn().Str("status", vasp.VerificationStatus.String()).Str("common_name", commonName).Msg("could not update VASP common name")
+		return false, http.StatusBadRequest, errors.New("cannot update common name in current state")
+	}
+
+	// Make changes to both the VASP and the CertificateRequest
+	vasp.CommonName = commonName
+	vasp.TrisaEndpoint = endpoint
+
+	// Get the Certificate Request IDs from the VASP model
+	var certreqs []string
+	if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
+		log.Error().Err(err).Msg("could not get certificate requests for VASP")
+		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+	}
+
+	// Loop through all of the certificate requests and check if they can be updated
+	ncertreqs := 0
+	for _, certreqID := range certreqs {
+		var certreq *models.CertificateRequest
+		if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
+			log.Error().Err(err).Str("id", certreqID).Msg("could not fetch certificate request for VASP")
+			return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+		}
+
+		// If the certificate request has already been submitted, we cannot change its common name
+		if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
+			log.Debug().Str("status", certreq.Status.String()).Str("id", certreqID).Msg("could not update certificate request")
+			continue
+		}
+
+		// Update certificate request and add an audit log entry
+		certreq.CommonName = commonName
+		if err = models.UpdateCertificateRequestStatus(certreq, certreq.Status, "common name changed", source); err != nil {
+			log.Error().Err(err).Str("id", certreqID).Msg("could not update certificate request status to add audit log entry")
+			continue
+		}
+
+		// Store the certificate request back to disk
+		if err = s.db.UpdateCertReq(certreq); err != nil {
+			log.Error().Err(err).Str("id", certreqID).Msg("could not update certificate request for VASP")
+			continue
+		}
+		ncertreqs++
+	}
+
+	if ncertreqs == 0 {
+		log.Error().Msg("no certificate requests updated with common name")
+		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+	}
+	return true, http.StatusOK, nil
 }
 
 // CreateReviewNote creates a new review note given the vaspID param and a CreateReviewNoteRequest.
