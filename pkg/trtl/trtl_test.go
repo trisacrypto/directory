@@ -177,3 +177,18 @@ func (s *trtlTestSuite) TearDownSuite() {
 func TestTrtl(t *testing.T) {
 	suite.Run(t, new(trtlTestSuite))
 }
+
+func (s *trtlTestSuite) TestMaintenance() {
+	require := s.Require()
+
+	var conf config.Config
+	conf.Maintenance = true
+	conf.Database.URL = "test"
+	conf.Replica.Region = "tauceti"
+
+	var server *trtl.Server
+	server, err := trtl.New(conf)
+	require.Nil(server)
+	require.Error(err)
+	require.Equal(err.Error(), "honu error: resource temporarily unavailable")
+}
