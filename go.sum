@@ -496,8 +496,6 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
-github.com/rotationalio/honu v0.2.4 h1:oC3oLSTrmTCUug03WoUK3d/1iLKdSq4h1HSESNgrqB0=
-github.com/rotationalio/honu v0.2.4/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
 github.com/rotationalio/honu v0.2.5-0.20211209153613-4aa259a30af1 h1:HRYb+PJF44DJVPqYBkfcein8BxWRa5hAKepXvTN7pJI=
 github.com/rotationalio/honu v0.2.5-0.20211209153613-4aa259a30af1/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
