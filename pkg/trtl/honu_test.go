@@ -666,4 +666,19 @@ func (s *trtlTestSuite) TestCursor() {
 		require.NotEmpty(pair.Value, "value not returned")
 		require.NotEmpty(pair.Meta, "meta not returned on request")
 	}
+
+	// Test seek to key within the same prefix
+	stream, err = client.Cursor(ctx, &pb.CursorRequest{Namespace: "people", Prefix: []byte("215"), SeekKey: []byte("215jLPDqQmihZn9LRKR3dDOIRLe"), Options: &pb.Options{IterNoValues: true}})
+	require.NoError(err, "could not create cursor stream")
+
+	i = 0
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(err, "received non-EOF error from recv")
+		i++
+	}
+	require.Equal(2, i, "expected 3 results returned after seek, have fixtures changed?")
 }

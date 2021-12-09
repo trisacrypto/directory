@@ -438,8 +438,6 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		log.Debug().Msg("Trtl Batch")
 	}
 
-	// Check to see if there is a namespace
-	// TODO: should we support more complex iteration such as seeks in the cursor request?
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var iter iterator.Iterator
 	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace)); err != nil {
@@ -447,6 +445,14 @@ func (h *HonuService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
+
+	// If a seek key is provided, seek to that key before iteration
+	// NOTE: that because we'll be calling iter.Next to start the loop, we need set the
+	// iterator to the key previous to the seek key.
+	if len(in.SeekKey) > 0 {
+		iter.Seek(in.SeekKey)
+		iter.Prev()
+	}
 
 	var nMessages uint64
 	for iter.Next() {
