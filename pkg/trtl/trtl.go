@@ -66,6 +66,12 @@ func New(conf config.Config) (s *Server, err error) {
 		srv:   grpc.NewServer(grpc.UnaryInterceptor(s.interceptor)),
 	}
 
+	// Everything that follows this comment assumes we're not in maintenance mode
+	// Open a connection to the Honu wrapped database
+	if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
+		return nil, fmt.Errorf("honu error: %v", err)
+	}
+
 	// Initialize the Honu service
 	if s.honu, err = NewHonuService(s); err != nil {
 		return nil, err
@@ -79,17 +85,6 @@ func New(conf config.Config) (s *Server, err error) {
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
 	// TODO: initialize the Replica service
-
-	// Stop configuration at this point for maintenance mode (no error)
-	if s.conf.Maintenance {
-		return s, nil
-	}
-
-	// Everything that follows this comment assumes we're not in maintenance mode
-	// Open a connection to the Honu wrapped database
-	if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
-		return nil, fmt.Errorf("honu error: %v", err)
-	}
 
 	return s, nil
 }

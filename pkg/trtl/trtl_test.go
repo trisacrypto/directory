@@ -150,6 +150,8 @@ func (s *trtlTestSuite) SetupSuite() {
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
 	os.Setenv("TRTL_REPLICA_PID", fmt.Sprint(metaPID))
 	os.Setenv("TRTL_REPLICA_REGION", metaRegion)
+	os.Setenv("TRTL_MAINTENANCE", "false")
+
 	s.conf, err = config.New()
 	require.NoError(err)
 
