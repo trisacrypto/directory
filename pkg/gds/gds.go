@@ -139,7 +139,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	// Retrieve email address from one of the supplied contacts.
 	var email string
 	if email = getContactEmail(vasp); email == "" {
-		log.Warn().Msg("no contact email address found")
+		log.Error().Err(errors.New("no contact email address found")).Msg("incorrect access on validated VASP")
 		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
 	}
 
