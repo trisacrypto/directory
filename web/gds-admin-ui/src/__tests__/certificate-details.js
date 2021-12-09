@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import CertificateDetails, { IdentityCertificateDropDown } from "pages/app/details/CertificateDetails"
+import CertificateDetails from "pages/app/details/CertificateDetails"
 
 
 describe('CertificateDetails', () => {
