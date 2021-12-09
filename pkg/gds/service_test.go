@@ -64,6 +64,18 @@ type gdsTestSuite struct {
 	svc      *gds.Service
 	dbPaths  map[fixtureType]string
 	grpc     *bufconn.GRPCListener
+	conf     *config.Config
+}
+
+// SetConfig allows a custom config to be specified by the tests.
+// Note that loadFixtures() needs to be called in order for the config to be used.
+func (s *gdsTestSuite) SetConfig(conf config.Config) {
+	s.conf = &conf
+}
+
+// ResetConfig back to the default.
+func (s *gdsTestSuite) ResetConfig() {
+	s.conf = nil
 }
 
 func (s *gdsTestSuite) SetupSuite() {
@@ -319,8 +331,9 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 }
 
 func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
-	// If we're already at the specified fixture type, do nothing
-	if s.ftype == ftype {
+	// If we're already at the specified fixture type and no custom config is provided,
+	// do nothing
+	if s.ftype == ftype && s.conf == nil {
 		log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("CACHED FIXTURE")
 		return
 	}
@@ -354,8 +367,15 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 		s.grpc.Release()
 	}
 
+	// Use the custom config if specified
+	var conf config.Config
+	if s.conf != nil {
+		conf = *s.conf
+	} else {
+		conf = gds.MockConfig()
+	}
+
 	// Create the new service with a database to the specified path
-	conf := gds.MockConfig()
 	conf.Database.URL = "leveldb:///" + s.dbPaths[ftype]
 	s.svc, err = gds.NewMock(conf)
 	require.NoError(err, "could not create mock GDS service")
