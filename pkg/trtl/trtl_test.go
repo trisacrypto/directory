@@ -82,7 +82,8 @@ func (s *trtlTestSuite) loadFixtures() {
 func (s *trtlTestSuite) generateDB() {
 	require := s.Require()
 
-	conf, _ := config.New()
+	conf, err := config.New()
+	require.NoError(err)
 	db, err := honu.Open(s.db, conf.GetHonuConfig())
 	require.NoError(err)
 	defer db.Close()
