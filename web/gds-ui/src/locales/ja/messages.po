@@ -846,6 +846,10 @@ msgstr "データをダウンロード"
 msgid "field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
 
+#: src/components/TopNav.js:41
+msgid "https://trisa.dev/"
+msgstr "https://trisa.dev/ja"
+
 #: src/api/gds.js:81
 msgid "repeated field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
