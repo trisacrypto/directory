@@ -27,8 +27,9 @@ const getDirectoryURL = () => {
       ]
 };
 
-const [ directoryURL, directoryURLText, directoryURLTitle ] = getDirectoryURL();
+
 const TopNav = () => {
+  const [ directoryURL, directoryURLText, directoryURLTitle ] = getDirectoryURL();
   return (
     <Navbar variant="white" >
       <Container>
