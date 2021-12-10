@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/rotationalio/honu"
-	hconf "github.com/rotationalio/honu/config"
 	"github.com/rotationalio/honu/object"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
@@ -83,13 +82,8 @@ func (s *trtlTestSuite) loadFixtures() {
 func (s *trtlTestSuite) generateDB() {
 	require := s.Require()
 
-	// Note: honu's ReplicaConfig and trtl's ReplicaConfig are currently slightly different
-	conf := hconf.ReplicaConfig{
-		Enabled: true,
-		PID:     metaPID,
-		Region:  metaRegion,
-	}
-	db, err := honu.Open(s.db, conf)
+	conf, _ := config.New()
+	db, err := honu.Open(s.db, conf.GetHonuConfig())
 	require.NoError(err)
 	defer db.Close()
 
