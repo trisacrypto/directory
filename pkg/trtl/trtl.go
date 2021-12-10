@@ -162,3 +162,12 @@ func (t *Server) Shutdown() (err error) {
 	log.Debug().Msg("successful shutdown of trtl server")
 	return nil
 }
+
+//===========================================================================
+// Accessors - used primarily for testing
+//===========================================================================
+
+// GetDB returns the underlying Honu database used by all sub-services.
+func (t *Server) GetDB() *honu.DB {
+	return t.db
+}

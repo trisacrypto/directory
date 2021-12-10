@@ -169,6 +169,7 @@ func (s *trtlTestSuite) SetupSuite() {
 
 func (s *trtlTestSuite) TearDownSuite() {
 	require := s.Require()
+	require.NoError(s.trtl.GetDB().Close())
 	err := os.RemoveAll(s.db)
 	require.NoError(err)
 	s.grpc.Release()
@@ -181,14 +182,13 @@ func TestTrtl(t *testing.T) {
 func (s *trtlTestSuite) TestMaintenance() {
 	require := s.Require()
 
-	var conf config.Config
+	conf, _ := config.New()
 	conf.Maintenance = true
 	conf.Database.URL = "test"
 	conf.Replica.Region = "tauceti"
 
-	var server *trtl.Server
 	server, err := trtl.New(conf)
-	require.Nil(server)
-	require.Error(err)
-	require.Equal(err.Error(), "honu error: resource temporarily unavailable")
+	require.NotEmpty(server, "no maintenance mode server was returned")
+	require.NoError(err, "starting the server in maintenance mode caused an error")
+	require.Nil(server.GetDB(), "maintenance mode database was not nil")
 }
