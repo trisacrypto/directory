@@ -12,6 +12,7 @@ const (
 	BatchStatusProcessing       = "PROCESSING"
 	BatchStatusNotAcceptable    = "NOT_ACCEPTABLE"
 	BatchStatusReadyForDownload = "READY_FOR_DOWNLOAD"
+	BatchStatusCollected        = "COLLECTED"
 )
 
 // AuthenticationRequest to POST data to the authenticateEP

@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { updateReviewNoteApiResponseSuccess } from 'redux/review-notes';
 import { updateReviewNote } from 'services/review-notes';
+import PropTypes from 'prop-types';
 
 function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable }) {
     const { register, handleSubmit, watch } = useForm({
@@ -51,6 +52,13 @@ function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable 
             </div>
         </form>
     )
+}
+
+EditReviewNote.propTypes = {
+    note: PropTypes.object.isRequired,
+    handleCancelEditingClick: PropTypes.func.isRequired,
+    vaspId: PropTypes.string.isRequired,
+    setIsEditable: PropTypes.func.isRequired
 }
 
 export default EditReviewNote

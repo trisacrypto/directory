@@ -14,8 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchVasps } from '../../../redux/dashboard/actions';
 import { StatusLabel } from '../../../constants';
-import { downloadFile, generateCSV } from '../../../helpers/api/utils';
-import { getStatusClassName } from '../../../utils';
+import { exportToCsv, getStatusClassName } from '../../../utils';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { getAllVasps, getVaspsLoadingState } from 'redux/selectors/vasps';
 dayjs.extend(relativeTime)
@@ -120,6 +119,7 @@ const VaspsList = () => {
     const data = useSelector(getAllVasps)
     const isLoading = useSelector(getVaspsLoadingState)
     const history = useHistory()
+    const [selectedRows, setSelectedData] = React.useState([]);
 
     const sizePerPageList = [
         {
@@ -144,26 +144,6 @@ const VaspsList = () => {
         safeDispatch(fetchVasps({ queryParams }))
     }, [safeDispatch, queryParams])
 
-
-    function exportToCsv(rows) {
-        const { verified_contacts, ...rest } = rows[0]
-
-        let rowHeader = Object.keys(rest)
-
-        const _rows = rows.map(row => {
-            const { verified_contacts, ...rest } = row
-            return Object.values(rest)
-        })
-        _rows.unshift(rowHeader)
-
-        let csvFile = '';
-        for (let i = 0; i < _rows.length; i++) {
-            csvFile += generateCSV(_rows[i]);
-        }
-        const filename = `${dayjs().format("YYYY-MM-DD")}-directory.csv`
-        downloadFile(csvFile, filename, 'text/csv;charset=utf-8;')
-    }
-
     const getQueryString = (arr) => {
         const queries = arr && Array.isArray(arr) ? arr.map(v => v.value.toLowerCase()) : ''
         return qs.stringify({ status: queries })
@@ -176,6 +156,20 @@ const VaspsList = () => {
             pathname: '/vasps',
             search: params
         })
+    }
+
+    const handleCsvExportClick = (rows) => selectedRows.length ? exportToCsv(selectedRows) : exportToCsv(rows)
+
+    const onSelectedRows = rows => {
+        const mappedRows = rows.map(r => r.original);
+        setSelectedData([...mappedRows]);
+    };
+
+    const getExportButtonLabel = () => {
+        if (selectedRows.length === 1) {
+            return 'Export 1 row'
+        }
+        return selectedRows.length > 1 ? `Export ${selectedRows.length} rows` : `Export`
     }
 
     return (
@@ -211,7 +205,7 @@ const VaspsList = () => {
                                                 }
                                             })}
                                         />
-                                        <Button onClick={() => exportToCsv(data?.vasps)} className="btn btn-light mb-2">Export</Button>
+                                        <Button onClick={() => handleCsvExportClick(data?.vasps)} className="btn btn-light mb-2">{getExportButtonLabel()}</Button>
                                     </div>
                                 </Col>
                             </Row>
@@ -224,10 +218,12 @@ const VaspsList = () => {
                                     pageSize={data?.page_size || 100}
                                     sizePerPageList={sizePerPageList}
                                     isSortable={true}
+                                    isSelectable={true}
                                     pagination={true}
                                     isSearchable={true}
                                     theadClass="table-light"
                                     searchBoxClass="mt-2 mb-3"
+                                    onSelectedRows={onSelectedRows}
                                 />
                             }
                         </Card.Body>

@@ -132,6 +132,7 @@ func (s *Server) setupHandlers() {
 	s.handle(sectigo.CreateSingleCertBatchEP, http.MethodPut, s.createSingleCertBatch)
 	s.handle(sectigo.UploadCSREP, http.MethodPost, s.uploadCSR)
 	s.handle(sectigo.BatchDetailEP, http.MethodGet, s.batchDetail)
+	s.handle(sectigo.BatchStatusEP, http.MethodGet, s.batchStatus)
 	s.handle(sectigo.BatchProcessingInfoEP, http.MethodGet, s.batchProcessingInfo)
 	s.handle(sectigo.DownloadEP, http.MethodGet, s.download)
 	s.handle(sectigo.DevicesEP, http.MethodGet, s.devices)
@@ -271,6 +272,17 @@ func (s *Server) batchDetail(c *gin.Context) {
 		Status:       "completed",
 		Active:       false,
 	})
+}
+
+func (s *Server) batchStatus(c *gin.Context) {
+	s.calls[sectigo.BatchStatusEP]++
+	id := c.Param("param0")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, "missing batch id")
+		return
+	}
+
+	c.String(http.StatusOK, "Ready for download")
 }
 
 func (s *Server) batchProcessingInfo(c *gin.Context) {

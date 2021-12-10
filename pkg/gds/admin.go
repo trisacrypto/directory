@@ -247,7 +247,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	}
 
 	// Validate the credential with Google
-	if claims, err = idtoken.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
+	if claims, err = s.tokens.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
 		log.Warn().Err(err).Msg("invalid credentials used for authentication")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
@@ -1097,27 +1097,38 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 	// Mark any initialized certificate requests for this VASP as ready to submit
 	// NOTE: there should only be one certificate request per VASP, but no errors occur
 	// if there are more than one (other than a logged warning).
-	var ncertreqs int
-	careqs := s.db.ListCertReqs()
+	var (
+		ncertreqs int
+		careqs    []string
+	)
 
-	for careqs.Next() {
-		req := careqs.CertReq()
-		if req != nil && req.Vasp == vasp.Id && req.Status == models.CertificateRequestState_INITIALIZED {
-			if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", claims.Email); err != nil {
+	if careqs, err = models.GetCertReqIDs(vasp); err != nil {
+		return "", err
+	}
+
+	for _, careqID := range careqs {
+		var careq *models.CertificateRequest
+		if careq, err = s.db.RetrieveCertReq(careqID); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careqID).Msg("could not retrieve certificate request for VASP")
+			continue
+		}
+
+		// Sanity check
+		if careq.Vasp != vasp.Id {
+			log.Warn().Str("vasp", vasp.Id).Str("certreq", careqID).Msg("vasp associated with unrelated certificate request")
+			continue
+		}
+
+		if careq.Status == models.CertificateRequestState_INITIALIZED {
+			if err = models.UpdateCertificateRequestStatus(careq, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", claims.Email); err != nil {
 				return "", err
 			}
-			if err = s.db.UpdateCertReq(req); err != nil {
+			if err = s.db.UpdateCertReq(careq); err != nil {
 				return "", err
 			}
 			ncertreqs++
 		}
 	}
-
-	if err = careqs.Error(); err != nil {
-		careqs.Release()
-		return "", err
-	}
-	careqs.Release()
 
 	switch ncertreqs {
 	case 0:
@@ -1150,24 +1161,33 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 	}
 
 	// Delete all pending certificate requests
-	var ncertreqs int
-	careqs := s.db.ListCertReqs()
+	var (
+		ncertreqs int
+		careqs    []string
+	)
 
-	for careqs.Next() {
-		req := careqs.CertReq()
-		if req != nil && req.Vasp == vasp.Id {
-			if err = s.db.DeleteCertReq(req.Id); err != nil {
-				log.Error().Err(err).Str("id", req.Id).Msg("could not delete certificate request")
-			}
-			ncertreqs++
-		}
-	}
-
-	if err = careqs.Error(); err != nil {
-		careqs.Release()
+	if careqs, err = models.GetCertReqIDs(vasp); err != nil {
 		return "", err
 	}
-	careqs.Release()
+
+	for _, careqID := range careqs {
+		var careq *models.CertificateRequest
+		if careq, err = s.db.RetrieveCertReq(careqID); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careqID).Msg("could not retrieve certificate request for VASP")
+			continue
+		}
+
+		// Sanity check
+		if careq.Vasp != vasp.Id {
+			log.Warn().Str("vasp", vasp.Id).Str("certreq", careqID).Msg("vasp associated with unrelated certificate request")
+			continue
+		}
+
+		if err = s.db.DeleteCertReq(careq.Id); err != nil {
+			log.Error().Err(err).Str("id", careq.Id).Msg("could not delete certificate request")
+		}
+		ncertreqs++
+	}
 
 	// Log deletion of certificate requests
 	switch ncertreqs {

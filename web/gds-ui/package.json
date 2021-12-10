@@ -1,6 +1,6 @@
 {
   "name": "gds-ui",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "private": true,
   "description": "User interface for TRISA's global directory service",
   "author": "TRISA & Rotational Labs",
@@ -19,6 +19,7 @@
     "ga-4-react": "^0.1.281",
     "google-protobuf": "^3.17.0-rc.1",
     "grpc-web": "^1.2.1",
+    "i18n-iso-countries": "^7.1.0",
     "immutability-helper": "^3.1.1",
     "lodash": "^4.17.21",
     "node-sass": "^6.0.1",

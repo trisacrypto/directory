@@ -76,6 +76,7 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		{name: sectigo.UploadCSREP, f: s.uploadCSRBatch},
 		{name: sectigo.BatchDetailEP, f: s.batchDetail},
 		{name: sectigo.BatchProcessingInfoEP, f: s.processingInfo},
+		{name: sectigo.BatchStatusEP, f: s.batchStatus},
 		{name: sectigo.DownloadEP, f: s.download},
 		{name: sectigo.DevicesEP, f: s.licensesUsed},
 		{name: sectigo.UserAuthoritiesEP, f: s.userAuthorities},
@@ -122,6 +123,13 @@ func (s *SectigoTestSuite) batchDetail(t *testing.T) {
 	rep, err := s.api.BatchDetail(42)
 	require.NoError(t, err)
 	require.NotNil(t, rep)
+}
+
+func (s *SectigoTestSuite) batchStatus(t *testing.T) {
+	rep, err := s.api.BatchStatus(42)
+	require.NoError(t, err)
+	require.NotEmpty(t, rep)
+	require.Equal(t, "READY_FOR_DOWNLOAD", rep)
 }
 
 func (s *SectigoTestSuite) processingInfo(t *testing.T) {

@@ -21,7 +21,7 @@ msgstr "Eine Komponente der <0>TRISA</0>-Architektur zur Einhaltung der Cryptocu
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "Eine phonetische Darstellung des Namens, unter dem die juristische Person bekannt ist."
 
-#: src/components/TopNav.js:40
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr "Über TRISA"
 
@@ -233,7 +233,7 @@ msgstr ""
 msgid "Directory Home"
 msgstr ""
 
-#: src/components/TopNav.js:41
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr "Dokumentation"
 
@@ -642,9 +642,12 @@ msgstr "Absendung der Registrierung ..."
 msgid "Summary"
 msgstr "Zusammenfassung"
 
-#: src/components/TopNav.js:17
-#: src/components/TopNav.js:24
+#: src/components/TopNav.js:18
 msgid "Switch to Production"
+msgstr ""
+
+#: src/components/TopNav.js:25
+msgid "Switch to TestNet"
 msgstr ""
 
 #: src/components/Registration.js:525
@@ -817,11 +820,11 @@ msgstr "Wenn Sie verifiziert sind, werden Ihnen PKCS12-verschlüsselte Identitä
 msgid "Yes"
 msgstr "Ja"
 
-#: src/components/TopNav.js:25
+#: src/components/TopNav.js:26
 msgid "You're currently on the Production Directory"
 msgstr ""
 
-#: src/components/TopNav.js:18
+#: src/components/TopNav.js:19
 msgid "You're currently on the TestNet Directory"
 msgstr ""
 
@@ -845,6 +848,10 @@ msgstr "Daten herunterladen"
 #: src/api/gds.js:92
 msgid "field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
+
+#: src/components/TopNav.js:41
+msgid "https://trisa.dev/"
+msgstr "https://trisa.dev/de"
 
 #: src/api/gds.js:81
 msgid "repeated field {field} with setter {setter} does not exist on {ProtoClass}"

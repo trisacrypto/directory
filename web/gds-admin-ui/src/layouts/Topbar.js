@@ -19,15 +19,8 @@ import useAuth from 'contexts/auth/use-auth';
 // dummy search results
 const SearchResults = [];
 
-type TopbarProps = {
-    hideLogo?: boolean,
-    navCssClasses?: string,
-    openLeftMenuCallBack?: () => void,
-    topbarDark?: boolean,
-};
 
-
-const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }: TopbarProps): React$Element<any> => {
+const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }) => {
     const [isopen, setIsopen] = useState(false);
     const { user } = useAuth();
 

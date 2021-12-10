@@ -35,7 +35,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store/wire"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"

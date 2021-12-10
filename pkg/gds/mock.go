@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/sectigo"
@@ -36,6 +37,9 @@ func NewMock(conf config.Config) (s *Service, err error) {
 		conf: conf,
 	}
 	if svc.email, err = emails.New(conf.Email); err != nil {
+		return nil, err
+	}
+	if svc.secret, err = secrets.NewMock(conf.Secrets); err != nil {
 		return nil, err
 	}
 	if svc.db, err = store.Open(conf.Database); err != nil {
@@ -101,7 +105,7 @@ func MockConfig() config.Config {
 			CookieDomain: "admin.gds.dev",
 			Audience:     "http://api.admin.gds.dev",
 			Oauth: config.OauthConfig{
-				GoogleAudience:         "4284607864536-notarealgoogleaudience.apps.googleusercontent.com",
+				GoogleAudience:         "http://localhost",
 				AuthorizedEmailDomains: []string{"gds.dev"},
 			},
 			TokenKeys: nil,

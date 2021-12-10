@@ -9,9 +9,9 @@ import "fmt"
 const (
 	VersionMajor         = 1
 	VersionMinor         = 1
-	VersionPatch         = 4
+	VersionPatch         = 5
 	VersionReleaseLevel  = ""
-	VersionReleaseNumber = 13
+	VersionReleaseNumber = 14
 )
 
 // Version returns the semantic version for the current build.

@@ -6,6 +6,7 @@ import useSafeDispatch from 'hooks/useSafeDispatch'
 import { deleteReviewNoteApiResponse } from 'redux/review-notes'
 import { generateMd5 } from 'utils'
 import EditReviewNote from './EditReviewNote'
+import PropTypes from 'prop-types';
 
 function ReviewNote({ note, vaspId }) {
     const [isEditable, setIsEditable] = React.useState(false);
@@ -50,6 +51,11 @@ function ReviewNote({ note, vaspId }) {
             </div>
         </div>
     )
+}
+
+ReviewNote.propTypes = {
+    note: PropTypes.object.isRequired,
+    vaspId: PropTypes.string.isRequired
 }
 
 export default ReviewNote

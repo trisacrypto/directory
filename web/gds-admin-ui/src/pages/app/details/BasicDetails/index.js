@@ -11,8 +11,27 @@ import Geographic from './components/Geographic';
 import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
+import { actionType, useModal } from 'contexts/modal';
+import { useSelector } from 'react-redux';
+import { getAllReviewNotes } from 'redux/selectors';
+import VaspDocument from '../VaspDocument';
+import { pdf } from '@react-pdf/renderer';
 
-export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
+export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
+    const { dispatch } = useModal()
+    const reviewNotes = useSelector(getAllReviewNotes)
+    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
+
+    const generatePdfDocument = async (filename) => {
+        try {
+            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
+            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
+        } catch (error) {
+            console.error('Unable to export as PDF', error)
+        }
+
+    };
+
 
     return (
         <Dropdown className="float-end" align="end">
@@ -30,10 +49,10 @@ export const BasicDetailsDropDown = ({ isNotPendingReview }) => {
                 <Dropdown.Item>
                     <i className="mdi mdi-square-edit-outline me-1"></i>Edit
                 </Dropdown.Item>
-                <Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
                     <i className="mdi mdi-printer me-1"></i>Print
                 </Dropdown.Item>
-                <Dropdown.Item>
+                <Dropdown.Item onClick={handleClose}>
                     <i className="mdi mdi-email me-1"></i>Resend
                 </Dropdown.Item>
             </Dropdown.Menu>
@@ -60,10 +79,13 @@ function BasicDetails({ data }) {
         if (data && data.vasp && data.vasp.entity) {
             const filename = `${dayjs().format("YYYY-MM-DD")}-trisa.json`
             const mime = `data:text/json;charset=utf-8`
+
             const trisaData = {
                 id: data?.vasp?.id,
                 common_name: data?.vasp?.common_name,
-                trisa_endpoint: data?.vasp?.trisa_endpoint
+                trisa_endpoint: data?.vasp?.trisa_endpoint,
+                verified_on: data?.vasp?.verified_on,
+                registered_directory: data?.vasp?.registered_directory
             }
             const file = JSON.stringify(trisaData)
 
@@ -75,7 +97,7 @@ function BasicDetails({ data }) {
         <>
             <Card className="d-block">
                 <Card.Body>
-                    <BasicDetailsDropDown isNotPendingReview={isNotPendingReview} />
+                    <BasicDetailsDropDown isNotPendingReview={isNotPendingReview} vasp={data} />
                     <div>
                         <div>
                             <h3 className="m-0 d-inline-block text-dark">{data?.name}</h3>
@@ -105,7 +127,7 @@ function BasicDetails({ data }) {
                                     <p className="mb-2 mt-md-3 mt-lg-3 fw-bold">Established on: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>
                                     <h5 className='mt-3'>Address(es):</h5>
                                     <hr className='m-0 mb-1' />
-                                    <Geographic data={data?.vasp?.entity?.geographic_addresses} />
+                                    <Geographic data={data?.vasp?.entity?.geographic_addresses || []} />
                                 </Col>
                             </Row>
                             <Col>

@@ -78,6 +78,9 @@ message GDSExtraData {
 
     // Record of all the review notes associated with this VASP
     map<string, ReviewNote> review_notes = 3;
+
+    // Certificate requests associated with this VASP
+    repeated string certificate_requests = 4;
 }
 
 // AuditLogEntry contains information about an event relevant to a VASP
