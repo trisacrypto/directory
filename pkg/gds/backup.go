@@ -81,11 +81,12 @@ backups:
 
 		select {
 		case done := <-stop:
-			// Should we check if someone sent false on the stop channel? Probably isn't necessary
+			// The value of the signal doesn't matter, but we check it here for completeness
 			if done {
 				log.Warn().Msg("backup manager received stop signal")
 				return
 			}
+		default:
 		}
 	}
 }
