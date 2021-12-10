@@ -27,10 +27,10 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 	// Start the backup manager
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go s.svc.BackupManager(nil, &wg)
-
-	// Wait for the backup interval to elapse
-	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
+	go func() {
+		defer wg.Done()
+		s.svc.BackupManager(nil)
+	}()
 
 	// Backup should not be created
 	backupDir := s.svc.GetConf().Backup.Storage
@@ -59,25 +59,22 @@ func (s *gdsTestSuite) TestBackupManager() {
 	stop := make(chan bool)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go s.svc.BackupManager(stop, &wg)
+	go func() {
+		defer wg.Done()
+		s.svc.BackupManager(stop)
+	}()
 
 	// Wait for at least one backup interval to elapse
-	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
+	time.Sleep(s.svc.GetConf().Backup.Interval * 1)
+
+	// Make sure that the backup manager is stopped before we proceed
+	stop <- true
+	wg.Wait()
 
 	// Backup should be created
 	backupDir := s.svc.GetConf().Backup.Storage
 	require.DirExists(backupDir)
 	files, err := ioutil.ReadDir(backupDir)
 	require.NoError(err)
-	numBackups := 0
-	for f := range files {
-		if files[f].IsDir() {
-			numBackups++
-		}
-	}
-	require.Equal(1, numBackups, "wrong number of backups created")
-
-	// Make sure that the backup manager is stopped before we exit
-	stop <- true
-	wg.Wait()
+	require.Len(files, 1, "wrong number of backups created")
 }
