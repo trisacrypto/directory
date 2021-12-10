@@ -24,7 +24,7 @@ require (
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
-	github.com/rotationalio/honu v0.2.5-0.20211209153613-4aa259a30af1
+	github.com/rotationalio/honu v0.2.5
 	github.com/rs/zerolog v1.21.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.4+incompatible
@@ -32,7 +32,7 @@ require (
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/trisa v0.3.0
+	github.com/trisacrypto/trisa v0.3.1
 	github.com/urfave/cli v1.22.5
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/exp v0.0.0-20211207001050-4f2595aad9e7 // indirect
