@@ -21,7 +21,7 @@ msgstr " Cryptocurrency Travel Ruleコンプライアンスのための<0>TRISA<
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "法人が知られている名前の発音表記。"
 
-#: src/components/TopNav.js:40
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr "TRISAについて"
 
@@ -233,7 +233,7 @@ msgstr ""
 msgid "Directory Home"
 msgstr ""
 
-#: src/components/TopNav.js:41
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr "文書化"
 
@@ -642,9 +642,12 @@ msgstr "登録書を提出しています"
 msgid "Summary"
 msgstr "サマリ"
 
-#: src/components/TopNav.js:17
-#: src/components/TopNav.js:24
+#: src/components/TopNav.js:18
 msgid "Switch to Production"
+msgstr ""
+
+#: src/components/TopNav.js:25
+msgid "Switch to TestNet"
 msgstr ""
 
 #: src/components/Registration.js:525
@@ -817,11 +820,11 @@ msgstr "認証されると、TRISAメンバー間のmTLS認証で使用するた
 msgid "Yes"
 msgstr "はい"
 
-#: src/components/TopNav.js:25
+#: src/components/TopNav.js:26
 msgid "You're currently on the Production Directory"
 msgstr ""
 
-#: src/components/TopNav.js:18
+#: src/components/TopNav.js:19
 msgid "You're currently on the TestNet Directory"
 msgstr ""
 
