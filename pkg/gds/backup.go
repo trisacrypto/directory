@@ -86,8 +86,6 @@ backups:
 				log.Warn().Msg("backup manager received stop signal")
 				return
 			}
-		default:
-			break
 		}
 	}
 }
