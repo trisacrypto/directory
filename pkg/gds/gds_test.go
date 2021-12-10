@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -102,7 +103,13 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Equal(v.Id, certReq.Vasp)
 	require.Equal(v.CommonName, certReq.CommonName)
 	require.Equal(models.CertificateRequestState_INITIALIZED, certReq.Status)
-
+	// Audit log should contain SUBMITTED entry
+	log, err := models.GetAuditLog(v)
+	require.NoError(err)
+	require.Len(log, 1)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	// Audit log prioritizes Technical contact as the source
+	require.Equal(v.Contacts.Technical.Email, log[0].Source)
 	// Should not be able to register an identical VASP
 	_, err = client.Register(ctx, request)
 	require.Error(err)
@@ -311,6 +318,20 @@ func (s *gdsTestSuite) TestVerifyContact() {
 
 	// Email should be sent to the admins
 	require.Len(emails.MockEmails, 1)
+
+	// Audit log should contain new entries for contact verifications, EMAIL_VERIFIED,
+	// PENDING_REVIEW, along with the intitial SUBMITTED.
+	log, err := models.GetAuditLog(vasp)
+	require.NoError(err)
+	// Currently verifies all contacts because the fixtures all have the empty token.
+	require.Len(log, 7)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	require.Equal(pb.VerificationState_SUBMITTED, log[1].CurrentState)
+	require.Equal(vasp.Contacts.Technical.Email, log[1].Source)
+	require.Equal(pb.VerificationState_SUBMITTED, log[2].CurrentState)
+	require.Equal(vasp.Contacts.Administrative.Email, log[2].Source)
+	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[5].CurrentState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[6].CurrentState)
 }
 
 // TestVerification tests that the Verification RPC returns the correct status
@@ -368,6 +389,7 @@ func (s *gdsTestSuite) TestVerification() {
 
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
+	s.LoadEmptyFixtures()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -390,4 +412,36 @@ func (s *gdsTestSuite) TestStatus() {
 	notAfer, err := time.Parse(time.RFC3339, status.NotAfter)
 	require.NoError(err)
 	require.True(notAfer.Sub(expectedNotAfter) < time.Minute)
+}
+
+// TestStatus tests that the Status RPC returns the correct status response when in
+// maintenance mode.
+func (s *gdsTestSuite) TestStatusMaintenance() {
+	conf := gds.MockConfig()
+	conf.Maintenance = true
+	s.SetConfig(conf)
+	defer s.ResetConfig()
+	s.LoadEmptyFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := api.NewTRISADirectoryClient(s.grpc.Conn)
+
+	// Health check in maintenance mode.
+	expectedNotBefore := time.Now().Add(30 * time.Minute)
+	expectedNotAfter := time.Now().Add(60 * time.Minute)
+	status, err := client.Status(ctx, &api.HealthCheck{})
+	require.NoError(err)
+	require.Equal(api.ServiceState_MAINTENANCE, status.Status)
+
+	// Timestamps should be close to expected.
+	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)
+	require.NoError(err)
+	require.True(notBefore.Sub(expectedNotBefore) < time.Minute)
+	notAfter, err := time.Parse(time.RFC3339, status.NotAfter)
+	require.NoError(err)
+	require.True(notAfter.Sub(expectedNotAfter) < time.Minute)
 }
