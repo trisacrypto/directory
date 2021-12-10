@@ -972,16 +972,6 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
-	// Email audit log should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
-	require.NoError(err)
-	emails, err := models.GetEmailLog(v.Contacts.Billing)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err := time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("verify_contact", emails[0].Reason)
 
 	// ResendReview email
 	request.in = &admin.ResendRequest{
@@ -1016,23 +1006,45 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
-	// Email audit logs should be updated
-	v, err = s.svc.GetStore().RetrieveVASP(vaspRejected)
+
+	// Verify that all emails were sent
+	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
 	require.NoError(err)
-	emails, err = models.GetEmailLog(v.Contacts.Administrative)
+	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
-	emails, err = models.GetEmailLog(v.Contacts.Legal)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
+	messages := []*emailMeta{
+		{
+			contact:   errored.Contacts.Billing,
+			to:        errored.Contacts.Billing.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			to:        s.svc.GetConf().Email.AdminEmail,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.ReviewRequestRE,
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Administrative,
+			to:        rejected.Contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Legal,
+			to:        rejected.Contacts.Legal.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
 
 // Test the ReviewTimeline endpoint.
