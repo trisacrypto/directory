@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/trisacrypto/directory/pkg/sectigo/profiles"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -24,7 +24,7 @@ type Config struct {
 	GDS         GDSConfig
 	Admin       AdminConfig
 	Database    DatabaseConfig
-	Sectigo     SectigoConfig
+	Sectigo     sectigo.Config
 	Email       EmailConfig
 	CertMan     CertManConfig
 	Backup      BackupConfig
@@ -61,13 +61,6 @@ type OauthConfig struct {
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
-}
-
-type SectigoConfig struct {
-	Username string `envconfig:"SECTIGO_USERNAME" required:"false"`
-	Password string `envconfig:"SECTIGO_PASSWORD" required:"false"`
-	Profile  string `envconfig:"SECTIGO_PROFILE" default:"CipherTrace EE"`
-	Testing  bool   `split_words:"true" default:"false"`
 }
 
 type EmailConfig struct {
@@ -180,22 +173,6 @@ func (c OauthConfig) Validate() error {
 		return errors.New("invalid configuration: authorized email domains required for enabled admin")
 	}
 
-	return nil
-}
-
-func (c SectigoConfig) Validate() error {
-	// Check valid certificate profiles
-	validProfile := false
-	for _, profile := range profiles.AllProfiles {
-		if profile == c.Profile {
-			validProfile = true
-			break
-		}
-	}
-
-	if !validProfile {
-		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(profiles.AllProfiles[:], ", "))
-	}
 	return nil
 }
 

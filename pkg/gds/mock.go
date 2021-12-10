@@ -66,14 +66,14 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	}
 	svc.admin = admin
 
-	if svc.certs, err = sectigo.New(conf.Sectigo); err != nil {
-		return nil, err
-	}
-
 	if conf.Sectigo.Testing {
-		if svc.mock, err = mock.New(); err != nil {
+		if err = mock.Start(); err != nil {
 			return nil, err
 		}
+	}
+
+	if svc.certs, err = sectigo.New(conf.Sectigo); err != nil {
+		return nil, err
 	}
 
 	return svc, nil
@@ -110,7 +110,7 @@ func MockConfig() config.Config {
 			URL:           "leveldb:///testdata/testdb",
 			ReindexOnBoot: false,
 		},
-		Sectigo: config.SectigoConfig{
+		Sectigo: sectigo.Config{
 			Username: "foo",
 			Password: "supersecretsquirrel",
 			Profile:  "CipherTrace EE",

@@ -12,7 +12,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
-	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -75,13 +74,6 @@ func New(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
-	// Start mocked Sectigo server if testing is enabled
-	if conf.Sectigo.Testing {
-		if s.mock, err = mock.New(); err != nil {
-			return nil, err
-		}
-	}
-
 	// Ensure the certificate storage can be reached
 	if _, err = s.getCertStorage(); err != nil {
 		return nil, err
@@ -120,7 +112,6 @@ type Service struct {
 	admin  *Admin
 	conf   config.Config
 	certs  *sectigo.Sectigo
-	mock   *mock.Server
 	email  *emails.EmailManager
 	secret *secrets.SecretManager
 	echan  chan error
@@ -177,11 +168,6 @@ func (s *Service) Shutdown() (err error) {
 	// Shutdown the DirectoryAdministration service gracefully
 	if err = s.admin.Shutdown(); err != nil {
 		log.Error().Err(err).Msg("could not shutdown DirectoryAdministration service")
-	}
-
-	// Shutdown the Sectigo mock server
-	if s.mock != nil {
-		s.mock.Close()
 	}
 
 	if !s.conf.Maintenance {
