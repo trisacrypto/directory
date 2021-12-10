@@ -429,6 +429,10 @@ func (s *trtlTestSuite) TestIter() {
 	s.StatusError(err, codes.InvalidArgument, "invalid page token")
 	_, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Options: &pb.Options{PageToken: token, PageSize: 27}})
 	s.StatusError(err, codes.InvalidArgument, "page size cannot change between requests")
+	_, err = client.Iter(ctx, &pb.IterRequest{Namespace: "things", Options: &pb.Options{PageToken: token, PageSize: 2}})
+	s.StatusError(err, codes.InvalidArgument, "namespace cannot change between requests")
+	_, err = client.Iter(ctx, &pb.IterRequest{Prefix: []byte("zed"), Namespace: "people", Options: &pb.Options{PageToken: token, PageSize: 2}})
+	s.StatusError(err, codes.InvalidArgument, "prefix cannot change between requests")
 
 	// Test ordered non-paginated request with prefix
 	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people", Prefix: []byte("215")})
@@ -487,6 +491,7 @@ func (s *trtlTestSuite) TestIter() {
 	}
 
 	// Test paginated request with odd numbers of pages
+	// Also tests complete paginated iterate over namespace, default options, with no prefix
 	var (
 		pages, people int
 		pageToken     string

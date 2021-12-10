@@ -1,6 +1,7 @@
 package trtl
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"io"
@@ -65,7 +66,7 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		}
 		return &pb.GetReply{
 			Value: object.Data,
-			Meta:  returnMeta(*object),
+			Meta:  returnMeta(object),
 		}, nil
 	}
 
@@ -123,7 +124,7 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	out = &pb.PutReply{Success: true}
 
 	if in.Options != nil && in.Options.ReturnMeta {
-		out.Meta = returnMeta(*object)
+		out.Meta = returnMeta(object)
 	}
 
 	return out, nil
@@ -159,7 +160,7 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	out = &pb.DeleteReply{Success: true}
 
 	if in.Options != nil && in.Options.ReturnMeta {
-		out.Meta = returnMeta(*object)
+		out.Meta = returnMeta(object)
 	}
 
 	return out, nil
@@ -230,6 +231,12 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
 		}
 
+		// Note - prefix check happens on next key, but namespace check must match Honu iterator
+		if !bytes.HasPrefix(cursor.NextKey, in.Prefix) {
+			log.Debug().Msg("invalid iter request: mismatched prefix")
+			return nil, status.Error(codes.InvalidArgument, "prefix cannot change between requests")
+		}
+
 	} else {
 		// Create a new cursor
 		cursor.PageSize = opts.PageSize
@@ -249,6 +256,16 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	}
 	defer iter.Release()
 
+	// Perform namespace check to ensure that the page cursor matches the iterator namespace
+	// NOTE: this section must come after the iterator is created, though it would be preferable
+	// if it was in the section where the page cursor is created. This is because we want to
+	// check the namespace that the iterator is operating on rather than the one specified by
+	// the user in the first request (e.g. because a default namespace may be used).
+	if opts.PageToken != "" && cursor.Namespace != iter.Namespace() {
+		log.Debug().Msg("invalid iter request: mismatched namespace")
+		return nil, status.Error(codes.InvalidArgument, "namespace cannot change between requests")
+	}
+
 	// If necessary seek to the next key specified by the cursor.
 	if len(cursor.NextKey) > 0 {
 		// If iter.Seek returns false (e.g. seek did not find the specified key) then
@@ -266,8 +283,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	for iter.Next() {
 		// Check if we're done iterating (e.g. at the end of the page with a next page)
 		if len(out.Values) == int(cursor.PageSize) {
-			// The current key is the next key for the next page, stop iteration
+			// The current key is the next key for the next page, stop iteration and
+			// prepare the page cursor to be returned.
 			cursor.NextKey = iter.Key()
+			cursor.Namespace = iter.Namespace()
 			break
 		}
 
@@ -291,7 +310,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		}
 
 		if opts.ReturnMeta {
-			pair.Meta = returnMeta(*object)
+			pair.Meta = returnMeta(object)
 		}
 
 		out.Values = append(out.Values, pair)
@@ -435,7 +454,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			Msg("cursor request would return no data")
 		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	} else {
-		log.Debug().Msg("Trtl Batch")
+		log.Debug().Msg("Trtl Cursor")
 	}
 
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
@@ -491,7 +510,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		}
 
 		if opts.ReturnMeta {
-			msg.Meta = returnMeta(*object)
+			msg.Meta = returnMeta(object)
 		}
 
 		// Send the message on the stream
@@ -522,7 +541,7 @@ func (h *TrtlService) Sync(stream pb.Trtl_SyncServer) (err error) {
 }
 
 // returnMeta is a helper function for returning the metadata on an object
-func returnMeta(object object.Object) *pb.Meta {
+func returnMeta(object *object.Object) *pb.Meta {
 	meta := &pb.Meta{
 		Key:       object.Key,
 		Namespace: object.Namespace,
