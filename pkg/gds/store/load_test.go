@@ -36,6 +36,7 @@ func TestLoadInvalid(t *testing.T) {
 // Test that the Load function correctly loads VASPs from a valid CSV file.
 func TestLoad(t *testing.T) {
 	db := mockdb.GetStore()
+	defer mockdb.ResetState()
 
 	// Load a valid CSV file
 	require.Nil(t, store.Load(db, filepath.Join("testdata", "vasps.csv")))
