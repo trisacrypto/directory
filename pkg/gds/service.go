@@ -138,7 +138,7 @@ func (s *Service) Serve() (err error) {
 		go s.CertManager()
 
 		// Start the backup manager go routine process
-		go s.BackupManager()
+		go s.BackupManager(nil)
 	}
 
 	// The TRISADirectoryService service can run in maintenance mode

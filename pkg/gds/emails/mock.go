@@ -169,3 +169,13 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 
 	return &rest.Response{StatusCode: http.StatusOK}, nil
 }
+
+func GetRecipient(msg *sgmail.SGMailV3) (recipient string, err error) {
+	for _, p := range msg.Personalizations {
+		for _, t := range p.To {
+			recipient = t.Address
+			return recipient, nil
+		}
+	}
+	return "", errors.New("no recipient found for email")
+}

@@ -150,6 +150,8 @@ func (s *trtlTestSuite) SetupSuite() {
 	os.Setenv("TRTL_DATABASE_URL", "leveldb:///"+s.db)
 	os.Setenv("TRTL_REPLICA_PID", fmt.Sprint(metaPID))
 	os.Setenv("TRTL_REPLICA_REGION", metaRegion)
+	os.Setenv("TRTL_MAINTENANCE", "false")
+
 	s.conf, err = config.New()
 	require.NoError(err)
 
@@ -167,6 +169,7 @@ func (s *trtlTestSuite) SetupSuite() {
 
 func (s *trtlTestSuite) TearDownSuite() {
 	require := s.Require()
+	require.NoError(s.trtl.GetDB().Close())
 	err := os.RemoveAll(s.db)
 	require.NoError(err)
 	s.grpc.Release()
@@ -174,4 +177,18 @@ func (s *trtlTestSuite) TearDownSuite() {
 
 func TestTrtl(t *testing.T) {
 	suite.Run(t, new(trtlTestSuite))
+}
+
+func (s *trtlTestSuite) TestMaintenance() {
+	require := s.Require()
+
+	conf, _ := config.New()
+	conf.Maintenance = true
+	conf.Database.URL = "test"
+	conf.Replica.Region = "tauceti"
+
+	server, err := trtl.New(conf)
+	require.NotEmpty(server, "no maintenance mode server was returned")
+	require.NoError(err, "starting the server in maintenance mode caused an error")
+	require.Nil(server.GetDB(), "maintenance mode database was not nil")
 }

@@ -119,14 +119,7 @@ func (s *gdsTestSuite) APIError(expectedCode int, expectedMessage string, rep *h
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
-	// We're not directly running the admin server so we need to manually set it to
-	// healthy.
-	s.svc.GetAdmin().SetHealth(true)
-	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
-	defer serv.Close()
-
-	// Endpoints that are authenticated or CSRF protected
-	for _, endpoint := range []struct {
+	endpoints := []struct {
 		name      string
 		method    string
 		path      string
@@ -149,7 +142,25 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"createReviewNote", http.MethodPost, "/v2/vasps/42/notes", true, true},
 		{"updateReviewNote", http.MethodPut, "/v2/vasps/42/notes/1", true, true},
 		{"deleteReviewNote", http.MethodDelete, "/v2/vasps/42/notes/1", true, true},
-	} {
+	}
+	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
+	defer serv.Close()
+
+	// Endpoints should return unavailable when in maintenance mode/unhealthy
+	s.svc.GetAdmin().SetHealth(false)
+	for _, endpoint := range endpoints {
+		s.T().Run(endpoint.name, func(t *testing.T) {
+			r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+			require.NoError(t, err)
+			res, err := http.DefaultClient.Do(r)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+		})
+	}
+
+	// Endpoints that are authenticated or CSRF protected
+	s.svc.GetAdmin().SetHealth(true)
+	for _, endpoint := range endpoints {
 		switch {
 		case endpoint.authorize && endpoint.csrf:
 			s.T().Run(endpoint.name, func(t *testing.T) {
@@ -1108,16 +1119,6 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
-	// Email audit log should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
-	require.NoError(err)
-	emails, err := models.GetEmailLog(v.Contacts.Billing)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err := time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("verify_contact", emails[0].Reason)
 
 	// ResendReview email
 	request.in = &admin.ResendRequest{
@@ -1152,21 +1153,43 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
-	// Email audit logs should be updated
-	v, err = s.svc.GetStore().RetrieveVASP(vaspRejected)
+
+	// Verify that all emails were sent
+	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
 	require.NoError(err)
-	emails, err = models.GetEmailLog(v.Contacts.Administrative)
+	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
-	emails, err = models.GetEmailLog(v.Contacts.Legal)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
+	messages := []*emailMeta{
+		{
+			contact:   errored.Contacts.Billing,
+			to:        errored.Contacts.Billing.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			to:        s.svc.GetConf().Email.AdminEmail,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.ReviewRequestRE,
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Administrative,
+			to:        rejected.Contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Legal,
+			to:        rejected.Contacts.Legal.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
