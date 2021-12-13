@@ -63,15 +63,22 @@ func New(conf config.Config) (s *Server, err error) {
 	s = &Server{
 		conf:  conf,
 		echan: make(chan error, 1),
-		srv:   grpc.NewServer(grpc.UnaryInterceptor(s.interceptor)),
 	}
 
-	// TODO: check for maintenance mode
+	// NOTE: It appears this must happen outside the struct initialization of the Server
+	// or else the UnaryInterceptor doesn't capture conf when it when it creates the closure
+	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.interceptor))
 
-	// Everything that follows this comment assumes we're not in maintenance mode
-	// Open a connection to the Honu wrapped database
-	if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
-		return nil, fmt.Errorf("honu error: %v", err)
+	// NOTE: if we are *not* in maintenance mode, we must open the database before we
+	// initialize the Honu and Peer mgmt services, else we'll get panics on nil dbs
+	// This is not the case for maintenance mode; which can proceed by initializing the
+	// the services, allowing them to respond "unavailable", but which will prevent the
+	// dbs in question from being engaged.
+	if !s.conf.Maintenance {
+		// Open a connection to the Honu wrapped database
+		if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
+			return nil, fmt.Errorf("honu error: %v", err)
+		}
 	}
 
 	// Initialize the Honu service
@@ -133,6 +140,7 @@ func (t *Server) Serve() (err error) {
 // be run in its own go routine and to allow tests to Run a bufconn server without
 // starting a live server with all of the various go routines and channels running.
 func (t *Server) Run(sock net.Listener) {
+
 	defer sock.Close()
 	if err := t.srv.Serve(sock); err != nil {
 		t.echan <- err
@@ -153,4 +161,13 @@ func (t *Server) Shutdown() (err error) {
 
 	log.Debug().Msg("successful shutdown of trtl server")
 	return nil
+}
+
+//===========================================================================
+// Accessors - used primarily for testing
+//===========================================================================
+
+// GetDB returns the underlying Honu database used by all sub-services.
+func (t *Server) GetDB() *honu.DB {
+	return t.db
 }

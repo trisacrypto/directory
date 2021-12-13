@@ -21,7 +21,7 @@ msgstr "用于Cryptocurrency Travel Rule合规的<0>TRISA</0>架构的一个组�
 msgid "A phonetic representation of the name by which the legal person is known."
 msgstr "法人名称的语音表达。"
 
-#: src/components/TopNav.js:40
+#: src/components/TopNav.js:41
 msgid "About TRISA"
 msgstr "关于TRISA"
 
@@ -120,7 +120,7 @@ msgstr "基本信息"
 
 #: src/components/hero/MainNet.js:12
 msgid "Become a TRISA certified Virtual Asset Service Provider."
-msgstr ""
+msgstr "成为一个TRISA认证的虚拟资产服务提供者"
 
 #: src/components/Registration.js:492
 msgid "Billing Contact"
@@ -227,13 +227,13 @@ msgstr "梵文和相关印度语"
 
 #: src/App.js:64
 msgid "Directory"
-msgstr ""
+msgstr "目录"
 
 #: src/components/NotFound.js:17
 msgid "Directory Home"
-msgstr ""
+msgstr "目录主页"
 
-#: src/components/TopNav.js:41
+#: src/components/TopNav.js:42
 msgid "Documentation"
 msgstr "文档"
 
@@ -287,7 +287,7 @@ msgstr "格鲁吉亚"
 
 #: src/components/hero/TestNet.js:12
 msgid "Get started with the TRISA TestNet to implement your Travel Rule compliance service."
-msgstr ""
+msgstr "从TRISA TestNet开始实现你的Travel Rule合规服务"
 
 #: src/components/LookupResults.js:17
 msgid "Global TRISA Directory Record"
@@ -397,11 +397,11 @@ msgstr "本地名称识别编码"
 
 #: src/components/hero/TestNet.js:15
 msgid "Looking for the <0>Production Directory Service</0>?"
-msgstr ""
+msgstr "想要查看<0>运营中目录服务</0>？"
 
 #: src/components/hero/MainNet.js:15
 msgid "Looking for the <0>TestNet Directory Service</0>?"
-msgstr ""
+msgstr "想要查看<0>TestNet 目录服务</0>?"
 
 #: src/components/select/NaturalPersonNameTypeCode.js:11
 msgid "Maiden Name"
@@ -575,7 +575,7 @@ msgstr "私营组织"
 
 #: src/App.js:67
 msgid "Register"
-msgstr ""
+msgstr "注册"
 
 #: src/components/LookupResults.js:21
 msgid "Registered Directory"
@@ -642,10 +642,13 @@ msgstr "提交注册……"
 msgid "Summary"
 msgstr "小结"
 
-#: src/components/TopNav.js:17
-#: src/components/TopNav.js:24
+#: src/components/TopNav.js:18
 msgid "Switch to Production"
-msgstr ""
+msgstr "跳转至运营中页面"
+
+#: src/components/TopNav.js:25
+msgid "Switch to TestNet"
+msgstr "跳转至TestNet"
 
 #: src/components/Registration.js:525
 msgid "TRISA Endpoint"
@@ -653,7 +656,7 @@ msgstr "TRISA端点"
 
 #: src/components/hero/MainNet.js:10
 msgid "TRISA Global Directory Service"
-msgstr ""
+msgstr "TRISA 全球目录服务"
 
 #: src/components/LookupResults.js:46
 msgid "TRISA Identity Signature"
@@ -678,7 +681,7 @@ msgstr "TRISA服务端点"
 
 #: src/components/hero/TestNet.js:10
 msgid "TRISA TestNet Directory"
-msgstr ""
+msgstr "TRISA TestNet 目录"
 
 #: src/components/LookupResults.js:39
 msgid "TRISA Verification"
@@ -817,13 +820,13 @@ msgstr "当您通过验证，您将获得PKCS12加密身份证书，用于TRISA�
 msgid "Yes"
 msgstr "是"
 
-#: src/components/TopNav.js:25
+#: src/components/TopNav.js:26
 msgid "You're currently on the Production Directory"
-msgstr ""
+msgstr "你现在处于运营中目录"
 
-#: src/components/TopNav.js:18
+#: src/components/TopNav.js:19
 msgid "You're currently on the TestNet Directory"
-msgstr ""
+msgstr "你现在处于TestNet目录"
 
 #: src/components/Registration.js:615
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
@@ -845,6 +848,10 @@ msgstr "下载数据"
 #: src/api/gds.js:92
 msgid "field {field} with setter {setter} does not exist on {ProtoClass}"
 msgstr ""
+
+#: src/components/TopNav.js:41
+msgid "https://trisa.dev/"
+msgstr "https://trisa.dev/zh"
 
 #: src/api/gds.js:81
 msgid "repeated field {field} with setter {setter} does not exist on {ProtoClass}"

@@ -309,6 +309,66 @@ func TestAutocomplete(t *testing.T) {
 	require.Equal(t, fixture.Names, out.Names)
 }
 
+func TestReviewTimeline(t *testing.T) {
+	fixture_params := &admin.ReviewTimelineParams{
+		Start: "2020-12-28",
+		End:   "2021-01-04",
+	}
+	fixture_reply := &admin.ReviewTimelineReply{
+		Weeks: []admin.ReviewTimelineRecord{
+			{
+				Week:         "2020-12-28",
+				VASPsUpdated: 20,
+				Registrations: map[string]int{
+					"SUBMITTED":           0,
+					"EMAIL_VERIFIED":      7,
+					"PENDING_REVIEW":      11,
+					"REVIEWED":            24,
+					"ISSUING_CERTIFICATE": 13,
+					"VERIFIED":            2,
+					"REJECTED":            15,
+					"APPEALED":            19,
+					"ERRORED":             14,
+				},
+			},
+			{
+				Week:         "2021-01-04",
+				VASPsUpdated: 25,
+				Registrations: map[string]int{
+					"SUBMITTED":           7,
+					"EMAIL_VERIFIED":      25,
+					"PENDING_REVIEW":      10,
+					"REVIEWED":            22,
+					"ISSUING_CERTIFICATE": 0,
+					"VERIFIED":            12,
+					"REJECTED":            21,
+					"APPEALED":            12,
+					"ERRORED":             5,
+				},
+			},
+		},
+	}
+
+	// Create test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/reviews", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture_reply)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	out, err := client.ReviewTimeline(context.TODO(), fixture_params)
+	require.NoError(t, err)
+	require.Equal(t, fixture_reply.Weeks, out.Weeks)
+}
+
 func TestListVASPs(t *testing.T) {
 	fixture := &admin.ListVASPsReply{
 		VASPs: []admin.VASPSnippet{
@@ -434,6 +494,69 @@ func TestRetrieveVASP(t *testing.T) {
 	require.Equal(t, fixture.VASP, out.VASP)
 	require.Equal(t, fixture.VerifiedContacts, out.VerifiedContacts)
 	require.Equal(t, fixture.Traveler, out.Traveler)
+}
+
+func TestUpdateVASP(t *testing.T) {
+	req := &admin.UpdateVASPRequest{
+		VASP:           "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+		Website:        "https://example.com",
+		VASPCategories: []string{"ATM", "Exchange"},
+	}
+	fixture := &admin.UpdateVASPReply{
+		Name: "Alice VASP",
+		VASP: map[string]interface{}{
+			"id":              "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5",
+			"common_name":     "trisa.alice.us",
+			"endpoint":        "trisa.alice.us:443",
+			"website":         "https://example.com",
+			"vasp_categories": []interface{}{"ATM", "Exchange"},
+		},
+		VerifiedContacts: map[string]string{
+			"legal":     "legal@alice.us",
+			"technical": "technical@alice.us",
+		},
+		Traveler: false,
+		AuditLog: []map[string]interface{}{
+			{
+				"timestamp":      "2021-03-31T15:32:29Z",
+				"previous_state": "SUBMITTED",
+				"current_state":  "PENDING_REVIEW",
+				"description":    "at least one contact verified",
+				"source":         "jdoe@example.com",
+			},
+		},
+	}
+
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPatch, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5", r.URL.Path)
+
+		// Must be able to deserialize the reuqest
+		in := &admin.UpdateVASPRequest{}
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err)
+		require.Equal(t, req, in)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to create a note
+	_, err = client.UpdateVASP(context.TODO(), &admin.UpdateVASPRequest{})
+	require.EqualError(t, err, "request requires a valid ID to determine endpoint")
+
+	// Correctly formatted request
+	out, err := client.UpdateVASP(context.TODO(), req)
+	require.NoError(t, err)
+	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
 }
 
 func TestCreateReviewNote(t *testing.T) {
@@ -715,64 +838,4 @@ func TestResend(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, fixture.Sent, out.Sent)
 	require.Equal(t, fixture.Message, out.Message)
-}
-
-func TestReviewTimeline(t *testing.T) {
-	fixture_params := &admin.ReviewTimelineParams{
-		Start: "2020-12-28",
-		End:   "2021-01-04",
-	}
-	fixture_reply := &admin.ReviewTimelineReply{
-		Weeks: []admin.ReviewTimelineRecord{
-			{
-				Week:         "2020-12-28",
-				VASPsUpdated: 20,
-				Registrations: map[string]int{
-					"SUBMITTED":           0,
-					"EMAIL_VERIFIED":      7,
-					"PENDING_REVIEW":      11,
-					"REVIEWED":            24,
-					"ISSUING_CERTIFICATE": 13,
-					"VERIFIED":            2,
-					"REJECTED":            15,
-					"APPEALED":            19,
-					"ERRORED":             14,
-				},
-			},
-			{
-				Week:         "2021-01-04",
-				VASPsUpdated: 25,
-				Registrations: map[string]int{
-					"SUBMITTED":           7,
-					"EMAIL_VERIFIED":      25,
-					"PENDING_REVIEW":      10,
-					"REVIEWED":            22,
-					"ISSUING_CERTIFICATE": 0,
-					"VERIFIED":            12,
-					"REJECTED":            21,
-					"APPEALED":            12,
-					"ERRORED":             5,
-				},
-			},
-		},
-	}
-
-	// Create test server
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v2/reviews", r.URL.Path)
-
-		w.Header().Add("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(fixture_reply)
-	}))
-	defer ts.Close()
-
-	// Create a Client that makes requests to the test server
-	client, err := admin.New(ts.URL, nil)
-	require.NoError(t, err)
-
-	out, err := client.ReviewTimeline(context.TODO(), fixture_params)
-	require.NoError(t, err)
-	require.Equal(t, fixture_reply.Weeks, out.Weeks)
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
+// Config defines the struct that is expected to initialize the trtl server
+// Note: because we need to validate the configuration, `config.New()`
+// must be called to ensure that the `processed` is correctly set
 type Config struct {
 	Maintenance bool                `split_words:"true" default:"false"`
 	BindAddr    string              `split_words:"true" default:":4435"`
