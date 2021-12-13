@@ -400,7 +400,7 @@ func (s *gdsTestSuite) TestSummary() {
 	expected := &admin.SummaryReply{
 		VASPsCount:           14,
 		PendingRegistrations: 5,
-		ContactsCount:        40,
+		ContactsCount:        39,
 		VerifiedContacts:     28,
 		CertificatesIssued:   4,
 		Statuses: map[string]int{
@@ -437,92 +437,16 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Construct the expected response
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	deltaID := s.fixtures[vasps]["delta"].(*pb.VASP).Id
 	expected := &admin.AutocompleteReply{
 		Names: map[string]string{
-			"trisa.charliebank.io":         "d9da630e-41aa-11ec-9d29-acde48001122",
+			"trisa.charliebank.io":         charlieID,
 			"https://trisa.charliebank.io": "https://trisa.charliebank.io",
-			"CharlieBank":                  "d9da630e-41aa-11ec-9d29-acde48001122",
-			"trisa.delta.io":               "d9efca14-41aa-11ec-9d29-acde48001122",
+			"CharlieBank":                  charlieID,
+			"trisa.delta.io":               deltaID,
 			"https://trisa.delta.io":       "https://trisa.delta.io",
-			"Delta Assets":                 "d9efca14-41aa-11ec-9d29-acde48001122",
-		},
-	}
-	require.Equal(expected, actual)
-}
-
-// Test the ReviewTimeline endpoint.
-func (s *gdsTestSuite) TestReviewTimeline() {
-	s.LoadSmallFixtures()
-	require := s.Require()
-	a := s.svc.GetAdmin()
-
-	// Invalid start date
-	request := &httpRequest{
-		method: http.MethodGet,
-		path:   "/v2/reviews?start=09-01-2021",
-	}
-	c, w := s.makeRequest(request)
-	rep := s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Start date is before epoch
-	request.path = "/v2/reviews?start=1968-01-01"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Invalid end date
-	request.path = "/v2/reviews?end=09-01-2021"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Start date is after end date
-	request.path = "/v2/reviews?start=2021-01-01&end=2020-01-01"
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
-
-	// Successful retrieval of review timeline
-	request.path = "/v2/reviews?start=2021-09-20&end=2021-09-30"
-	actual := &admin.ReviewTimelineReply{}
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.ReviewTimeline, c, w, actual)
-	require.Equal(http.StatusOK, rep.StatusCode)
-	expected := &admin.ReviewTimelineReply{
-		Weeks: []admin.ReviewTimelineRecord{
-			{
-				Week:         "2021-09-20",
-				VASPsUpdated: 0,
-				Registrations: map[string]int{
-					pb.VerificationState_NO_VERIFICATION.String():     0,
-					pb.VerificationState_SUBMITTED.String():           0,
-					pb.VerificationState_EMAIL_VERIFIED.String():      0,
-					pb.VerificationState_PENDING_REVIEW.String():      0,
-					pb.VerificationState_REVIEWED.String():            0,
-					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
-					pb.VerificationState_VERIFIED.String():            0,
-					pb.VerificationState_REJECTED.String():            0,
-					pb.VerificationState_APPEALED.String():            0,
-					pb.VerificationState_ERRORED.String():             0,
-				},
-			},
-			{
-				Week:         "2021-09-27",
-				VASPsUpdated: 1,
-				Registrations: map[string]int{
-					pb.VerificationState_NO_VERIFICATION.String():     0,
-					pb.VerificationState_SUBMITTED.String():           1,
-					pb.VerificationState_EMAIL_VERIFIED.String():      0,
-					pb.VerificationState_PENDING_REVIEW.String():      0,
-					pb.VerificationState_REVIEWED.String():            0,
-					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
-					pb.VerificationState_VERIFIED.String():            0,
-					pb.VerificationState_REJECTED.String():            0,
-					pb.VerificationState_APPEALED.String():            0,
-					pb.VerificationState_ERRORED.String():             0,
-				},
-			},
+			"Delta Assets":                 deltaID,
 		},
 	}
 	require.Equal(expected, actual)
@@ -534,22 +458,29 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
+	// Impose an ordering so we can verify the results.
+	sortByName := func(s []admin.VASPSnippet) {
+		sort.Slice(s, func(i, j int) bool {
+			return s[i].Name < s[j].Name
+		})
+	}
+
 	snippets := []admin.VASPSnippet{
 		{
-			ID:                  "d9da630e-41aa-11ec-9d29-acde48001122",
+			ID:                  s.fixtures[vasps]["charliebank"].(*pb.VASP).Id,
 			Name:                "CharlieBank",
 			CommonName:          "trisa.charliebank.io",
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_SUBMITTED.String(),
 			VerifiedContacts: map[string]bool{
-				"administrative": false,
-				"billing":        true,
+				"administrative": true,
+				"billing":        false,
 				"legal":          true,
 				"technical":      false,
 			},
 		},
 		{
-			ID:                  "d9efca14-41aa-11ec-9d29-acde48001122",
+			ID:                  s.fixtures[vasps]["delta"].(*pb.VASP).Id,
 			Name:                "Delta Assets",
 			CommonName:          "trisa.delta.io",
 			RegisteredDirectory: "trisatest.net",
@@ -576,9 +507,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
 	require.Len(actual.VASPs, len(snippets))
-	sort.Slice(actual.VASPs, func(i, j int) bool {
-		return actual.VASPs[i].ID < actual.VASPs[j].ID
-	})
+	sortByName(actual.VASPs)
 
 	// Make sure the last modified timestamps are the same since the fixture will be
 	// updated when it is inserted into the database.
@@ -614,8 +543,8 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
 	require.Len(actual.VASPs, 2)
-	require.Equal(snippets[0], actual.VASPs[0])
-	require.Equal(snippets[1], actual.VASPs[1])
+	sortByName(actual.VASPs)
+	require.Equal(snippets, actual.VASPs)
 
 	// List VASPs on multiple pages
 	request.path = "/v2/vasps?page=1&page_size=1"
@@ -626,7 +555,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(1, actual.Page)
 	require.Equal(1, actual.PageSize)
 	require.Len(actual.VASPs, 1)
-	require.Equal(snippets[0], actual.VASPs[0])
+	pageResults := []admin.VASPSnippet{snippets[0]}
 
 	request.path = "/v2/vasps?page=2&page_size=1"
 	c, w = s.makeRequest(request)
@@ -636,7 +565,9 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(2, actual.Page)
 	require.Equal(1, actual.PageSize)
 	require.Len(actual.VASPs, 1)
-	require.Equal(snippets[1], actual.VASPs[0])
+	pageResults = append(pageResults, snippets[1])
+	sortByName(pageResults)
+	require.Equal(snippets, pageResults)
 
 	request.path = "/v2/vasps?page=3&page_size=1"
 	c, w = s.makeRequest(request)
@@ -663,21 +594,19 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	rep := s.doRequest(a.RetrieveVASP, c, w, nil)
 	require.Equal(http.StatusNotFound, rep.StatusCode)
 
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+
 	// Retrieve a VASP that exists
-	request.path = "/v2/vasps/" + "d9da630e-41aa-11ec-9d29-acde48001122"
+	request.path = "/v2/vasps/" + charlieID
 	request.params = map[string]string{
-		"vaspID": "d9da630e-41aa-11ec-9d29-acde48001122",
+		"vaspID": charlieID,
 	}
 	actual := &admin.RetrieveVASPReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.RetrieveVASP, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	expected := &admin.RetrieveVASPReply{
-		Name: "CharlieBank",
-		VerifiedContacts: map[string]string{
-			"billing": "anthony@charliebank.net",
-			"legal":   "sonia@charliebank.com",
-		},
+		Name:     "CharlieBank",
 		Traveler: false,
 		AuditLog: []map[string]interface{}{
 			{
@@ -685,7 +614,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 				"description":    "register request received",
 				"previous_state": pb.VerificationState_NO_VERIFICATION.String(),
 				"source":         "automated",
-				"timestamp":      "2021-09-27T04:12:23Z",
+				"timestamp":      "2021-08-31T12:36:27Z",
 			},
 		},
 	}
@@ -694,10 +623,18 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	require.NoError(err, "could not remarshall actual VASP")
 
 	// RetrieveVASP removes the extra data from the VASP before returning it
-	s.CompareFixture(vasps, "d9da630e-41aa-11ec-9d29-acde48001122", actualVASP, true)
+	s.CompareFixture(vasps, charlieID, actualVASP, true)
 
-	// Compare non-vasp results
+	// Check the verified contacts
+	require.NotNil(actual.VerifiedContacts)
+	require.Contains(actual.VerifiedContacts, "administrative")
+	require.NotEmpty(actual.VerifiedContacts["administrative"])
+	require.Contains(actual.VerifiedContacts, "legal")
+	require.NotEmpty(actual.VerifiedContacts["legal"])
+
+	// Compare the rest of the non-vasp results
 	actual.VASP = nil
+	actual.VerifiedContacts = nil
 	require.Equal(expected, actual)
 }
 
@@ -725,8 +662,9 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
-	request.path = "/v2/vasps/" + "d9da630e-41aa-11ec-9d29-acde48001122"
-	request.params["vaspID"] = "d9da630e-41aa-11ec-9d29-acde48001122"
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	request.path = "/v2/vasps/" + charlieID
+	request.params["vaspID"] = charlieID
 
 	// Test request VASP and URL do not match returns a 400 error
 	request.in = &admin.UpdateVASPRequest{VASP: "bce77e90-82e0-4685-8139-6ec5d4b83615"}
@@ -764,14 +702,12 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vasps := []string{
-		"d9da630e-41aa-11ec-9d29-acde48001122",
-	}
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodPost,
-		path:   "/v2/vasps/" + vasps[0] + "/notes",
+		path:   "/v2/vasps/" + charlieID + "/notes",
 		in: &admin.ModifyReviewNoteRequest{
 			NoteID: "invalid slug",
 		},
@@ -796,12 +732,12 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 
 	// Successfully creating a review note
 	request.in = &admin.ModifyReviewNoteRequest{
-		VASP:   vasps[0],
+		VASP:   charlieID,
 		NoteID: "89bceb0e-41aa-11ec-9d29-acde48001122",
 		Text:   "foo",
 	}
 	request.params = map[string]string{
-		"vaspID": vasps[0],
+		"vaspID": charlieID,
 	}
 	actual := &admin.ReviewNote{}
 	created := time.Now()
@@ -818,7 +754,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(actual.Editor)
 	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -843,9 +779,7 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vasps := []string{
-		"d9da630e-41aa-11ec-9d29-acde48001122",
-	}
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -861,25 +795,19 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 
 	// Successfully listing review notes
 	request.params = map[string]string{
-		"vaspID": vasps[0],
+		"vaspID": charlieID,
 	}
 	actual := &admin.ListReviewNotesReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListReviewNotes, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	expected := &admin.ListReviewNotesReply{
-		Notes: []admin.ReviewNote{
-			{
-				Author:   "admin@trisa.io",
-				Created:  "2021-07-26T11:25:44Z",
-				Editor:   "juanreyes@example.net",
-				ID:       "d9ebcfa4-41aa-11ec-9d29-acde48001122",
-				Modified: "2021-08-30T22:40:24Z",
-				Text:     "Porro magnam amet ut.",
-			},
-		},
-	}
-	require.Equal(expected, actual)
+	require.Len(actual.Notes, 1)
+	require.Equal("admin@trisa.io", actual.Notes[0].Author)
+	require.NotEmpty(actual.Notes[0].Created)
+	require.NotEmpty(actual.Notes[0].Editor)
+	require.NotEmpty(actual.Notes[0].ID)
+	require.NotEmpty(actual.Notes[0].Modified)
+	require.NotEmpty(actual.Notes[0].Text)
 }
 
 // Test the UpdateReviewNote endpoint.
@@ -890,22 +818,19 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vasps := []string{
-		"d9da630e-41aa-11ec-9d29-acde48001122",
-	}
-
-	noteID := "d9ebcfa4-41aa-11ec-9d29-acde48001122"
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodPut,
-		path:   "/v2/vasps/" + vasps[0] + "/notes/invalid",
+		path:   "/v2/vasps/" + charlieID + "/notes/invalid",
 		in: &admin.ModifyReviewNoteRequest{
-			VASP:   vasps[0],
+			VASP:   charlieID,
 			NoteID: "invalid slug",
 		},
 		params: map[string]string{
-			"vaspID": vasps[0],
+			"vaspID": charlieID,
 			"noteID": "invalid slug",
 		},
 		claims: &tokens.Claims{
@@ -931,12 +856,12 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 
 	// Successfully updating a review note
 	request.in = &admin.ModifyReviewNoteRequest{
-		VASP:   vasps[0],
+		VASP:   charlieID,
 		NoteID: noteID,
 		Text:   "bar",
 	}
 	request.params = map[string]string{
-		"vaspID": vasps[0],
+		"vaspID": charlieID,
 		"noteID": noteID,
 	}
 	actual := &admin.ReviewNote{}
@@ -946,7 +871,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	// Validate returned note
 	require.Equal(noteID, actual.ID)
-	require.Equal("2021-07-26T11:25:44Z", actual.Created)
+	require.Equal("2021-07-12T20:12:02Z", actual.Created)
 	ts, err := time.Parse(time.RFC3339, actual.Modified)
 	require.NoError(err)
 	require.True(ts.Sub(modified) < time.Minute)
@@ -954,7 +879,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -976,18 +901,15 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vasps := []string{
-		"d9da630e-41aa-11ec-9d29-acde48001122",
-	}
-
-	noteID := "d9ebcfa4-41aa-11ec-9d29-acde48001122"
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodDelete,
-		path:   "/v2/vasps/" + vasps[0] + "/notes/invalid",
+		path:   "/v2/vasps/" + charlieID + "/notes/invalid",
 		params: map[string]string{
-			"vaspID": vasps[0],
+			"vaspID": charlieID,
 			"noteID": "invalid slug",
 		},
 	}
@@ -1006,14 +928,15 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 
 	// Successfully deleting a review note
 	request.params = map[string]string{
-		"vaspID": vasps[0],
+		"vaspID": charlieID,
 		"noteID": noteID,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteReviewNote, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
+
 	// Record on the database should be deleted
-	v, err := s.svc.GetStore().RetrieveVASP(vasps[0])
+	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1028,9 +951,7 @@ func (s *gdsTestSuite) TestReview() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vasps := []string{
-		"d9da630e-41aa-11ec-9d29-acde48001122",
-	}
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1051,11 +972,11 @@ func (s *gdsTestSuite) TestReview() {
 
 	// No verification token supplied
 	request.in = &admin.ReviewRequest{
-		ID:     vasps[0],
+		ID:     charlieID,
 		Accept: true,
 	}
 	request.params = map[string]string{
-		"vaspID": vasps[0],
+		"vaspID": charlieID,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
@@ -1063,7 +984,7 @@ func (s *gdsTestSuite) TestReview() {
 
 	// No rejection reason supplied
 	request.in = &admin.ReviewRequest{
-		ID:                     vasps[0],
+		ID:                     charlieID,
 		AdminVerificationToken: "foo",
 		Accept:                 false,
 	}
@@ -1084,8 +1005,8 @@ func (s *gdsTestSuite) TestResend() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vaspErrored := "da2b165a-41aa-11ec-9d29-acde48001122"
-	vaspRejected := "da8bd0e4-41aa-11ec-9d29-acde48001122"
+	vaspErrored := s.fixtures[vasps]["golfbucks"].(*pb.VASP).Id
+	vaspRejected := s.fixtures[vasps]["lima"].(*pb.VASP).Id
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1159,6 +1080,7 @@ func (s *gdsTestSuite) TestResend() {
 	require.NoError(err)
 	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
+
 	messages := []*emailMeta{
 		{
 			contact:   errored.Contacts.Billing,
@@ -1192,4 +1114,82 @@ func (s *gdsTestSuite) TestResend() {
 		},
 	}
 	s.CheckEmails(messages)
+}
+
+// Test the ReviewTimeline endpoint.
+func (s *gdsTestSuite) TestReviewTimeline() {
+	s.LoadSmallFixtures()
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// Invalid start date
+	request := &httpRequest{
+		method: http.MethodGet,
+		path:   "/v2/reviews?start=09-01-2021",
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Start date is before epoch
+	request.path = "/v2/reviews?start=1968-01-01"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Invalid end date
+	request.path = "/v2/reviews?end=09-01-2021"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Start date is after end date
+	request.path = "/v2/reviews?start=2021-01-01&end=2020-01-01"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Successful retrieval of review timeline
+	request.path = "/v2/reviews?start=2021-08-23&end=2021-09-01"
+	actual := &admin.ReviewTimelineReply{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReviewTimeline, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	expected := &admin.ReviewTimelineReply{
+		Weeks: []admin.ReviewTimelineRecord{
+			{
+				Week:         "2021-08-23",
+				VASPsUpdated: 1,
+				Registrations: map[string]int{
+					pb.VerificationState_NO_VERIFICATION.String():     0,
+					pb.VerificationState_SUBMITTED.String():           0,
+					pb.VerificationState_EMAIL_VERIFIED.String():      0,
+					pb.VerificationState_PENDING_REVIEW.String():      1,
+					pb.VerificationState_REVIEWED.String():            0,
+					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
+					pb.VerificationState_VERIFIED.String():            0,
+					pb.VerificationState_REJECTED.String():            0,
+					pb.VerificationState_APPEALED.String():            0,
+					pb.VerificationState_ERRORED.String():             0,
+				},
+			},
+			{
+				Week:         "2021-08-30",
+				VASPsUpdated: 2,
+				Registrations: map[string]int{
+					pb.VerificationState_NO_VERIFICATION.String():     0,
+					pb.VerificationState_SUBMITTED.String():           1,
+					pb.VerificationState_EMAIL_VERIFIED.String():      0,
+					pb.VerificationState_PENDING_REVIEW.String():      0,
+					pb.VerificationState_REVIEWED.String():            0,
+					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
+					pb.VerificationState_VERIFIED.String():            0,
+					pb.VerificationState_REJECTED.String():            1,
+					pb.VerificationState_APPEALED.String():            0,
+					pb.VerificationState_ERRORED.String():             0,
+				},
+			},
+		},
+	}
+	require.Equal(expected, actual)
 }
