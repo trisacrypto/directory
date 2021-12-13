@@ -247,7 +247,7 @@ describe("BasicDetailsDropDown", () => {
             "traveler": false
         }
 
-        render(<BasicDetails data={mockVaspData} />, { wrapper: ModalProvider })
+        render(<BasicDetails data={mockVaspData} />)
         const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
         await waitFor(() => userEvent.click(dropdownDots))
