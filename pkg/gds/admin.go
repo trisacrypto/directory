@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
 
@@ -25,6 +27,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -170,6 +174,7 @@ func (s *Admin) setupRoutes() (err error) {
 		{
 			vasps.GET("", s.ListVASPs)
 			vasps.GET("/:vaspID", s.RetrieveVASP)
+			vasps.PATCH("/:vaspID", s.UpdateVASP)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
 
@@ -547,6 +552,147 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// ReviewTimeline returns a list of time series records containing registration state counts by week.
+func (s *Admin) ReviewTimeline(c *gin.Context) {
+	// Go needs this constant to determine the time format
+	const timeFormat = "2006-01-02"
+	var (
+		err        error
+		in         *admin.ReviewTimelineParams
+		out        *admin.ReviewTimelineReply
+		week       *utils.Week
+		weekIter   *utils.WeekIterator
+		startTime  time.Time
+		endTime    time.Time
+		vaspCounts []map[string]bool
+	)
+
+	// Get request parameters
+	in = new(admin.ReviewTimelineParams)
+	if err = c.ShouldBindQuery(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	if in.Start != "" {
+		// Parse start date
+		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
+			log.Warn().Err(err).Msg("could not parse start date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
+			return
+		}
+		// If the request is before the epoch then it's probably an error
+		epoch := time.Unix(0, 0)
+		if startTime.Before(epoch) {
+			log.Warn().Err(err).Msg("start date is before epoch")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date can't be before %s", epoch.Format(timeFormat))))
+			return
+		}
+	} else {
+		// Default to 1 year ago
+		startTime = time.Now().AddDate(-1, 0, 0)
+	}
+
+	if in.End != "" {
+		// Parse end date
+		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
+			log.Warn().Err(err).Msg("could not parse end date")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
+			return
+		}
+	} else {
+		// Default value for end date
+		endTime = time.Now()
+	}
+
+	if weekIter, err = utils.GetWeekIterator(startTime, endTime); err != nil {
+		log.Warn().Err(err).Msg("invalid timeline request: start date can't be after current date")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
+		return
+	}
+
+	// Initialize required counting structs
+	vaspCounts = make([]map[string]bool, 0, 1)
+	out = &admin.ReviewTimelineReply{
+		Weeks: make([]admin.ReviewTimelineRecord, 0, 1),
+	}
+
+	// Iterate over the weeks and record the week start dates
+	for {
+		var ok bool
+		if week, ok = weekIter.Next(); !ok {
+			break
+		}
+
+		record := admin.ReviewTimelineRecord{
+			Week:          week.Date.Format(timeFormat),
+			VASPsUpdated:  0,
+			Registrations: make(map[string]int),
+		}
+
+		// Need to intialize the map entries so that all verification states show up in
+		// the JSON output, even if the count is 0
+		var s int32
+		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
+			record.Registrations[pb.VerificationState_name[s]] = 0
+		}
+		out.Weeks = append(out.Weeks, record)
+		vaspCounts = append(vaspCounts, make(map[string]bool))
+	}
+
+	// Iterate over the VASPs and count registrations
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+	for iter.Next() {
+		// Fetch VASP from the database
+		var vasp *pb.VASP
+		if vasp = iter.VASP(); vasp == nil {
+			// VASP could not be parsed; error logged in VASP() method continue iteration
+			continue
+		}
+
+		// Get VASP audit log
+		var auditLog []*models.AuditLogEntry
+		if auditLog, err = models.GetAuditLog(vasp); err != nil {
+			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
+			continue
+		}
+
+		// Iterate over VASP audit log and count registrations
+		for _, entry := range auditLog {
+			var timestamp time.Time
+			if timestamp, err = time.Parse(time.RFC3339, entry.Timestamp); err != nil {
+				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
+				continue
+			}
+
+			// Determine which week number the recorded date falls under
+			weekNum := utils.NewWeek(timestamp).Sub(weekIter.Start)
+			if weekNum >= 0 && weekNum < len(out.Weeks) {
+				// Count VASP if we haven't seen it before
+				if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
+					vaspCounts[weekNum][vasp.Id] = true
+					out.Weeks[weekNum].VASPsUpdated++
+				}
+
+				// Count registration state if it changed
+				if entry.PreviousState != entry.CurrentState {
+					out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
+				}
+			}
+		}
+	}
+
+	if err := iter.Error(); err != nil {
+		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
 // ListVASPs returns a paginated, summary data structure of all VASPs managed by the
 // directory service. This is an authenticated endpoint that is used to support the
 // Admin UI and facilitate the review and registration process.
@@ -662,16 +808,31 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 		vasp   *pb.VASP
 		out    *admin.RetrieveVASPReply
 	)
+
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
+	logctx := log.With().Str("id", vaspID).Logger()
 
 	// Attempt to fetch the VASP from the database
 	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		logctx.Warn().Err(err).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
 	}
 
+	// Prepare VASP detail response (both retrieve and update use this method)
+	// NOTE: VASP is modified in this step, must not save VASP after this!
+	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+		// NOTE: logging occurs in prepareVASPDetail
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
+		return
+	}
+
+	// Successful request, return the VASP detail JSON data
+	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
 		VerifiedContacts: models.VerifiedContacts(vasp),
@@ -687,14 +848,14 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Add the audit log to the response, on error, create empty audit log response
 	if auditLog, err := models.GetAuditLog(vasp); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could not get audit log for VASP detail")
+		log.Warn().Err(err).Msg("could not get audit log for VASP detail")
 	} else {
 		out.AuditLog = make([]map[string]interface{}, 0, len(auditLog))
 		for i, entry := range auditLog {
-			if rewiredEntry, err := utils.Rewire(entry); err != nil {
+			if rewiredEntry, err := wire.Rewire(entry); err != nil {
 				// If we cannot rewire an audit log entry, do not serialize any audit
 				// log entries to prevent confusion about what has happened in the log.
-				log.Warn().Err(err).Str("id", vaspID).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
+				log.Warn().Err(err).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
 				out.AuditLog = nil
 				break
 			} else {
@@ -705,7 +866,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Remove extra data from the VASP
 	// Must be done after verified contacts is computed
-	// This is safe because nothing is saved back to the database
+	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
 	if vasp.Contacts.Administrative != nil {
 		vasp.Contacts.Administrative.Extra = nil
@@ -721,14 +882,347 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
-	if out.VASP, err = utils.Rewire(vasp); err != nil {
-		log.Warn().Err(err).Str("id", vaspID).Msg("could rewire vasp json")
+	if out.VASP, err = wire.Rewire(vasp); err != nil {
+		log.Warn().Err(err).Msg("could rewire vasp json")
+		return nil, err
+	}
+	return out, nil
+}
+
+// UpdateVASP is a single entry point to a variety of different patches that can be made
+// to the VASP object. In particular, the user may update the business details (website,
+// categories, and established on), update the IVMS 101 Legal Person entity, change
+// their responses to the TRIXO form, update the common name or endpoint, or manage
+// contact details. Although technically, this endpoint would allow all those changes to
+// be made simultaneously, the idea is that the PATCH only happens inside of those
+// collections or groups of fields. Individual update methods define the logic for how
+// each of those groups is updated together.
+func (s *Admin) UpdateVASP(c *gin.Context) {
+	var (
+		err    error
+		vaspID string
+		vasp   *pb.VASP
+		in     *admin.UpdateVASPRequest
+		out    *admin.RetrieveVASPReply
+		claims *tokens.Claims
+	)
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.UpdateVASPRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Sanity Check: Validate VASP ID
+	if in.VASP != "" && in.VASP != vaspID {
+		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
+		return
+	}
+
+	// Create a log context for downstream logging
+	logctx := log.With().Str("id", vaspID).Logger()
+
+	// Attempt to fetch the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		logctx.Debug().Err(err).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Get user claims for audit log tracing
+	if claims, err = s.getClaims(c); err != nil {
+		logctx.Error().Err(err).Msg("could not get user claims for audit log")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record audit log"))
+		return
+	}
+
+	// Apply changes and record if anything has changed. Note that all update methods
+	// may change the VASP and must return if they created a modification requiring the
+	// VASP to be saved back to the database.
+	var (
+		code     int
+		updated  bool
+		nChanges uint8
+	)
+
+	// Update business information
+	if updated, code, err = s.updateVASPBusinessInfo(vasp, in, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("business_info", "VASP business information updated").Logger()
+		nChanges++
+	}
+
+	// Update VASP entity information
+	if updated, code, err = s.updateVASPEntity(vasp, in.Entity, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("vasp_entity", "VASP IVMS101 record updated").Logger()
+		nChanges++
+	}
+
+	// Update VASP TRIXO form
+	if updated, code, err = s.updateVASPTRIXO(vasp, in.TRIXO, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("vasp_trixo", "VASP TRIXO form updated").Logger()
+		nChanges++
+	}
+
+	// TODO: update VASP contact information
+
+	// Update common name and trisa endpoint - this will also update any certificate requests.
+	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
+	// will be in an inconsistent state. Transactions would be very nice here, but instead this
+	// function is performed as late as possible to minimize the chance of other errors.
+	// The log messages that follow this line of code may be at a higher level than we might
+	// expect so that we can debug the case where the database moves to an inconsistent state.
+	if updated, code, err = s.updateVASPEndpoint(vasp, in.CommonName, in.TRISAEndpoint, claims.Email, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("trisa_endpoint", "trisa endpoint and common name updated").Logger()
+		nChanges++
+	}
+
+	// Check if we've updated anything, if not return an error to indicate to the front
+	// end that no work was performed.
+	if nChanges == 0 {
+		logctx.Debug().Msg("no updates on VASP occurred")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("no updates made to VASP record"))
+		return
+	}
+
+	// Validate that the VASP record is still correct after the changes.
+	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
+	// ensure that certificate requests are not saved when the VASP record is not valid.
+	if err = vasp.Validate(true); err != nil {
+		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
+		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
+			log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+			return
+		}
+
+		// If certificate requests were updated in updateVASPEndpoint it is possible that
+		// this warning indicates an inconsistent state has occurred, but this is unlikely
+		// so we're keeping the log level at warning state.
+		log.Warn().Err(err).Msg("ignoring validation error")
+	}
+
+	// Add a record to the audit log
+	// NOTE: if validation, adding a record to the audit log, or saving the VASP back to
+	// disk errors, we could end up in an inconsistent state where we have changes to
+	// the certificate request that do not appear in the VASP audit log.
+	if err = models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "VASP record updated by admin", claims.Email); err != nil {
+		logctx.Error().Err(err).Msg("could not add audit log entry by updating the verification status")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP audit log"))
+		return
+	}
+
+	// Since updates have occurred, save the changes
+	// TODO: transactions would be super nice here so we could rollback any certificate request changes
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		logctx.Error().Err(err).Msg("could not save VASP after update")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP"))
+		return
+	}
+
+	// Create the response to send back, ensuring extra fields are removed.
+	// Prepare VASP detail response (both retrieve and update use this method)
+	// NOTE: VASP is modified in this step, must not save VASP after this!
+	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+		// NOTE: logging occurs in prepareVASPDetail
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
 		return
 	}
 
 	// Successful request, return the VASP detail JSON data
-	c.JSON(http.StatusOK, out)
+	logctx.Info().Uint8("n_changes", nChanges).Msg("update VASP completed")
+	c.JSON(http.StatusOK, admin.UpdateVASPReply(*out))
+}
+
+// Update the VASP business information such as website, business and VASP categories,
+// and established on date. This information can be modified at anytime but cannot be
+// set to an empty value, otherwise the PATCH update will not take place.
+func (s *Admin) updateVASPBusinessInfo(vasp *pb.VASP, in *admin.UpdateVASPRequest, log zerolog.Logger) (updated bool, _ int, err error) {
+	if in.Website != "" {
+		vasp.Website = in.Website
+		updated = true
+	}
+
+	if in.BusinessCategory != "" {
+		category, ok := pb.BusinessCategory_value[in.BusinessCategory]
+		if !ok {
+			return false, http.StatusBadRequest, errors.New("could not parse business category")
+		}
+
+		vasp.BusinessCategory = pb.BusinessCategory(category)
+		updated = true
+	}
+
+	if len(in.VASPCategories) > 0 {
+		vasp.VaspCategories = in.VASPCategories
+		updated = true
+	}
+
+	if in.EstablishedOn != "" {
+		vasp.EstablishedOn = in.EstablishedOn
+		updated = true
+	}
+
+	return updated, http.StatusOK, nil
+}
+
+// Update the VASP IVMS101 Legal Person entity; the LegalPerson entity must be valid.
+// This method completely overwrites the previous LegalPerson entity, no field-level
+// patching is available.
+func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	// Check if entity data has been supplied, otherwise do not update.
+	if len(data) == 0 {
+		return false, http.StatusOK, nil
+	}
+
+	// Remarshal the JSON IVMS 101 entity
+	entity := &ivms101.LegalPerson{}
+	if err = wire.Unwire(data, entity); err != nil {
+		log.Warn().Err(err).Msg("could not unwire JSON data into an IVMS 101 LegalPerson")
+		return false, http.StatusBadRequest, errors.New("could not parse IVMS 101 LegalPerson entity")
+	}
+
+	// Validation here is an extra guard, even though validate is also called in the
+	// primary RPC function. This is to ensure that an invalid VASP doesn't have
+	// certificate requests updated inappropriately.
+	// NOTE: other methods ignore ErrCompleteNationalIdentifierLegalPerson, but it is not
+	// ignored here, requiring the admin to determine how best to accurately update the entity.
+	if err = entity.Validate(); err != nil {
+		log.Debug().Err(err).Msg("invalid IVMS 101 LegalPerson struct")
+		return false, http.StatusBadRequest, err
+	}
+
+	vasp.Entity = entity
+	return true, http.StatusOK, nil
+}
+
+// Update the VASP TRIXO form; the TRIXO form really has no internal validation.
+// This method completely overwrites the previous LegalPerson entity, no field-level
+// patching is available.
+func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	// Check if trixo data has been supplied, otherwise do not update.
+	if len(data) == 0 {
+		return false, http.StatusOK, nil
+	}
+
+	// Remarshal the JSON TRIXO questionnaire
+	trixo := &pb.TRIXOQuestionnaire{}
+	if err = wire.Unwire(data, trixo); err != nil {
+		log.Warn().Err(err).Msg("could not unwire JSON data into an valid TRIXO Questionnaire")
+		return false, http.StatusBadRequest, errors.New("could not parse TRIXO questionnaire")
+	}
+
+	vasp.Trixo = trixo
+	return true, http.StatusOK, nil
+}
+
+func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source string, log zerolog.Logger) (_ bool, _ int, err error) {
+	if commonName == "" && endpoint == "" {
+		return false, http.StatusOK, nil
+	}
+
+	// Compute the common name from the TRISA endpoint if not specified
+	if commonName == "" && endpoint != "" {
+		if commonName, _, err = net.SplitHostPort(endpoint); err != nil {
+			log.Warn().Err(err).Str("endpoint", endpoint).Msg("could not parse common name from endpoint")
+			return false, http.StatusBadRequest, errors.New("no common name supplied, could not parse common name from endpoint")
+		}
+	}
+
+	// Check if any changes are required
+	if vasp.CommonName == commonName && vasp.TrisaEndpoint == endpoint {
+		return false, http.StatusOK, nil
+	}
+
+	// Check if this is just an endpoint change
+	if vasp.CommonName == commonName {
+		vasp.TrisaEndpoint = endpoint
+		log.Info().Msg("trisa endpoint updated without change to common name")
+		return true, http.StatusOK, nil
+	}
+
+	if vasp.VerificationStatus >= pb.VerificationState_REVIEWED {
+		// Cannot change common name after certificates have been issued
+		log.Warn().Str("status", vasp.VerificationStatus.String()).Str("common_name", commonName).Msg("could not update VASP common name")
+		return false, http.StatusBadRequest, errors.New("cannot update common name in current state")
+	}
+
+	// Make changes to both the VASP and the CertificateRequest
+	vasp.CommonName = commonName
+	vasp.TrisaEndpoint = endpoint
+
+	// Get the Certificate Request IDs from the VASP model
+	var certreqs []string
+	if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
+		log.Error().Err(err).Msg("could not get certificate requests for VASP")
+		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+	}
+
+	// Loop through all of the certificate requests and check if they can be updated
+	ncertreqs := 0
+	for _, certreqID := range certreqs {
+		var certreq *models.CertificateRequest
+		if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not fetch certificate request for VASP")
+			return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+		}
+
+		// If the certificate request has already been submitted, we cannot change its common name
+		if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
+			log.Debug().Str("status", certreq.Status.String()).Str("certreq_id", certreqID).Msg("could not update certificate request")
+			continue
+		}
+
+		// Update certificate request and add an audit log entry
+		certreq.CommonName = commonName
+		if err = models.UpdateCertificateRequestStatus(certreq, certreq.Status, "common name changed", source); err != nil {
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request status to add audit log entry")
+			continue
+		}
+
+		// Store the certificate request back to disk
+		if err = s.db.UpdateCertReq(certreq); err != nil {
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request for VASP")
+			continue
+		}
+
+		log.Info().Str("certreq_id", certreqID).Msg("certificate request updated")
+		ncertreqs++
+	}
+
+	if ncertreqs == 0 {
+		log.Error().Msg("no certificate requests updated with common name")
+		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
+	}
+
+	// NOTE: from this point on it's possible that we have an unsaved VASP that has had
+	// modifications to its certificate requests. If the VASP is not saved after this
+	// method, it could lead to an inconsistency that needs to be repaired manually.
+	return true, http.StatusOK, nil
 }
 
 // CreateReviewNote creates a new review note given the vaspID param and a CreateReviewNoteRequest.
@@ -1309,147 +1803,6 @@ func (s *Admin) Resend(c *gin.Context) {
 	}
 
 	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
-	c.JSON(http.StatusOK, out)
-}
-
-// ReviewTimeline returns a list of time series records containing registration state counts by week.
-func (s *Admin) ReviewTimeline(c *gin.Context) {
-	// Go needs this constant to determine the time format
-	const timeFormat = "2006-01-02"
-	var (
-		err        error
-		in         *admin.ReviewTimelineParams
-		out        *admin.ReviewTimelineReply
-		week       *utils.Week
-		weekIter   *utils.WeekIterator
-		startTime  time.Time
-		endTime    time.Time
-		vaspCounts []map[string]bool
-	)
-
-	// Get request parameters
-	in = new(admin.ReviewTimelineParams)
-	if err = c.ShouldBindQuery(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
-		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
-		return
-	}
-
-	if in.Start != "" {
-		// Parse start date
-		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
-			log.Warn().Err(err).Msg("could not parse start date")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
-			return
-		}
-		// If the request is before the epoch then it's probably an error
-		epoch := time.Unix(0, 0)
-		if startTime.Before(epoch) {
-			log.Warn().Err(err).Msg("start date is before epoch")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date can't be before %s", epoch.Format(timeFormat))))
-			return
-		}
-	} else {
-		// Default to 1 year ago
-		startTime = time.Now().AddDate(-1, 0, 0)
-	}
-
-	if in.End != "" {
-		// Parse end date
-		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
-			log.Warn().Err(err).Msg("could not parse end date")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
-			return
-		}
-	} else {
-		// Default value for end date
-		endTime = time.Now()
-	}
-
-	if weekIter, err = utils.GetWeekIterator(startTime, endTime); err != nil {
-		log.Warn().Err(err).Msg("invalid timeline request: start date can't be after current date")
-		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
-		return
-	}
-
-	// Initialize required counting structs
-	vaspCounts = make([]map[string]bool, 0, 1)
-	out = &admin.ReviewTimelineReply{
-		Weeks: make([]admin.ReviewTimelineRecord, 0, 1),
-	}
-
-	// Iterate over the weeks and record the week start dates
-	for {
-		var ok bool
-		if week, ok = weekIter.Next(); !ok {
-			break
-		}
-
-		record := admin.ReviewTimelineRecord{
-			Week:          week.Date.Format(timeFormat),
-			VASPsUpdated:  0,
-			Registrations: make(map[string]int),
-		}
-
-		// Need to intialize the map entries so that all verification states show up in
-		// the JSON output, even if the count is 0
-		var s int32
-		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
-			record.Registrations[pb.VerificationState_name[s]] = 0
-		}
-		out.Weeks = append(out.Weeks, record)
-		vaspCounts = append(vaspCounts, make(map[string]bool))
-	}
-
-	// Iterate over the VASPs and count registrations
-	iter := s.db.ListVASPs()
-	defer iter.Release()
-	for iter.Next() {
-		// Fetch VASP from the database
-		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
-			continue
-		}
-
-		// Get VASP audit log
-		var auditLog []*models.AuditLogEntry
-		if auditLog, err = models.GetAuditLog(vasp); err != nil {
-			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
-			continue
-		}
-
-		// Iterate over VASP audit log and count registrations
-		for _, entry := range auditLog {
-			var timestamp time.Time
-			if timestamp, err = time.Parse(time.RFC3339, entry.Timestamp); err != nil {
-				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
-				continue
-			}
-
-			// Determine which week number the recorded date falls under
-			weekNum := utils.NewWeek(timestamp).Sub(weekIter.Start)
-			if weekNum >= 0 && weekNum < len(out.Weeks) {
-				// Count VASP if we haven't seen it before
-				if _, exists := vaspCounts[weekNum][vasp.Id]; !exists {
-					vaspCounts[weekNum][vasp.Id] = true
-					out.Weeks[weekNum].VASPsUpdated++
-				}
-
-				// Count registration state if it changed
-				if entry.PreviousState != entry.CurrentState {
-					out.Weeks[weekNum].Registrations[entry.CurrentState.String()]++
-				}
-			}
-		}
-	}
-
-	if err := iter.Error(); err != nil {
-		log.Warn().Err(err).Msg("could not iterate over vasps in store")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
-		return
-	}
-
 	c.JSON(http.StatusOK, out)
 }
 

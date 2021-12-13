@@ -128,7 +128,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	// Validate partial VASP record to ensure that it can be registered.
 	if err = vasp.Validate(true); err != nil {
-		// TODO: Ignore ErrCompleteNationalIdentifierLegalPErson until validation See #34
+		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
 		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
 			log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
 			return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
