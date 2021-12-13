@@ -941,11 +941,13 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	}
 
-	// Apply changes and record if anything has changed
+	// Apply changes and record if anything has changed. Note that all update methods
+	// may change the VASP and must return if they created a modification requiring the
+	// VASP to be saved back to the database.
 	var (
 		code     int
 		updated  bool
-		nUpdates uint8
+		nChanges uint8
 	)
 
 	// Update business information
@@ -954,8 +956,9 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		c.JSON(code, admin.ErrorResponse(err))
 		return
 	} else if updated {
-		log.Info().Msg("VASP business information updated ")
-		nUpdates++
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("business_info", "VASP business information updated").Logger()
+		nChanges++
 	}
 
 	// Update VASP entity information
@@ -964,8 +967,9 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		c.JSON(code, admin.ErrorResponse(err))
 		return
 	} else if updated {
-		log.Info().Msg("VASP IVMS101 record updated")
-		nUpdates++
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("vasp_entity", "VASP IVMS101 record updated").Logger()
+		nChanges++
 	}
 
 	// Update VASP TRIXO form
@@ -974,8 +978,9 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		c.JSON(code, admin.ErrorResponse(err))
 		return
 	} else if updated {
-		log.Info().Msg("VASP TRIXO form updated")
-		nUpdates++
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("vasp_trixo", "VASP TRIXO form updated").Logger()
+		nChanges++
 	}
 
 	// TODO: update VASP contact information
@@ -984,23 +989,29 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
 	// will be in an inconsistent state. Transactions would be very nice here, but instead this
 	// function is performed as late as possible to minimize the chance of other errors.
+	// The log messages that follow this line of code may be at a higher level than we might
+	// expect so that we can debug the case where the database moves to an inconsistent state.
 	if updated, code, err = s.updateVASPEndpoint(vasp, in.CommonName, in.TRISAEndpoint, claims.Email, logctx); err != nil {
 		// NOTE: logging happens in the update helper function
 		c.JSON(code, admin.ErrorResponse(err))
 		return
 	} else if updated {
-		log.Info().Msg("trisa endpoint and common name updated")
-		nUpdates++
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("trisa_endpoint", "trisa endpoint and common name updated").Logger()
+		nChanges++
 	}
 
-	// Check if we've updated anything, if not return an error
-	if nUpdates == 0 {
+	// Check if we've updated anything, if not return an error to indicate to the front
+	// end that no work was performed.
+	if nChanges == 0 {
 		logctx.Debug().Msg("no updates on VASP occurred")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("no updates made to VASP record"))
 		return
 	}
 
-	// Validate that the VASP record is still correct after the changes
+	// Validate that the VASP record is still correct after the changes.
+	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
+	// ensure that certificate requests are not saved when the VASP record is not valid.
 	if err = vasp.Validate(true); err != nil {
 		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
 		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
@@ -1008,10 +1019,17 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
 			return
 		}
+
+		// If certificate requests were updated in updateVASPEndpoint it is possible that
+		// this warning indicates an inconsistent state has occurred, but this is unlikely
+		// so we're keeping the log level at warning state.
 		log.Warn().Err(err).Msg("ignoring validation error")
 	}
 
 	// Add a record to the audit log
+	// NOTE: if validation, adding a record to the audit log, or saving the VASP back to
+	// disk errors, we could end up in an inconsistent state where we have changes to
+	// the certificate request that do not appear in the VASP audit log.
 	if err = models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "VASP record updated by admin", claims.Email); err != nil {
 		logctx.Error().Err(err).Msg("could not add audit log entry by updating the verification status")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP audit log"))
@@ -1036,7 +1054,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	}
 
 	// Successful request, return the VASP detail JSON data
-	logctx.Info().Bool("updated", updated).Msg("update VASP completed")
+	logctx.Info().Uint8("n_changes", nChanges).Msg("update VASP completed")
 	c.JSON(http.StatusOK, admin.UpdateVASPReply(*out))
 }
 
@@ -1088,6 +1106,11 @@ func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log
 		return false, http.StatusBadRequest, errors.New("could not parse IVMS 101 LegalPerson entity")
 	}
 
+	// Validation here is an extra guard, even though validate is also called in the
+	// primary RPC function. This is to ensure that an invalid VASP doesn't have
+	// certificate requests updated inappropriately.
+	// NOTE: other methods ignore ErrCompleteNationalIdentifierLegalPerson, but it is not
+	// ignored here, requiring the admin to determine how best to accurately update the entity.
 	if err = entity.Validate(); err != nil {
 		log.Debug().Err(err).Msg("invalid IVMS 101 LegalPerson struct")
 		return false, http.StatusBadRequest, err
@@ -1164,28 +1187,30 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	for _, certreqID := range certreqs {
 		var certreq *models.CertificateRequest
 		if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
-			log.Error().Err(err).Str("id", certreqID).Msg("could not fetch certificate request for VASP")
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not fetch certificate request for VASP")
 			return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 		}
 
 		// If the certificate request has already been submitted, we cannot change its common name
 		if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
-			log.Debug().Str("status", certreq.Status.String()).Str("id", certreqID).Msg("could not update certificate request")
+			log.Debug().Str("status", certreq.Status.String()).Str("certreq_id", certreqID).Msg("could not update certificate request")
 			continue
 		}
 
 		// Update certificate request and add an audit log entry
 		certreq.CommonName = commonName
 		if err = models.UpdateCertificateRequestStatus(certreq, certreq.Status, "common name changed", source); err != nil {
-			log.Error().Err(err).Str("id", certreqID).Msg("could not update certificate request status to add audit log entry")
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request status to add audit log entry")
 			continue
 		}
 
 		// Store the certificate request back to disk
 		if err = s.db.UpdateCertReq(certreq); err != nil {
-			log.Error().Err(err).Str("id", certreqID).Msg("could not update certificate request for VASP")
+			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request for VASP")
 			continue
 		}
+
+		log.Info().Str("certreq_id", certreqID).Msg("certificate request updated")
 		ncertreqs++
 	}
 
@@ -1193,6 +1218,10 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 		log.Error().Msg("no certificate requests updated with common name")
 		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 	}
+
+	// NOTE: from this point on it's possible that we have an unsaved VASP that has had
+	// modifications to its certificate requests. If the VASP is not saved after this
+	// method, it could lead to an inconsistency that needs to be repaired manually.
 	return true, http.StatusOK, nil
 }
 

@@ -10,6 +10,8 @@ import (
 // Rewire a protocol buffer message into a generic map[string]interface{} as an
 // intermediate step before JSON or YAML marshalling. This is typically unnecessary work
 // and is used as a workaround for multi-protocol systems.
+// This method is primarily being used by the Admin API to convert protocol buffer
+// messages into JSON generics for serialization by Gin.
 func Rewire(m protoreflect.ProtoMessage) (out map[string]interface{}, err error) {
 	// Serialize the VASP from protojson
 	jsonpb := protojson.MarshalOptions{
@@ -36,6 +38,8 @@ func Rewire(m protoreflect.ProtoMessage) (out map[string]interface{}, err error)
 // Unwire a generic map[string]interface{} into a protocol buffer message as an
 // intermediate step to parsing a JSON or YAML request instead of protocol buffers. Like
 // Rewire, this is a workaround for multi-protocol systems.
+// This method is primarily being used by the Admin API to convert JSON generics
+// unmarshaled by Gin into protocol buffers for interacting with the data store.
 func Unwire(entry map[string]interface{}, msg protoreflect.ProtoMessage) (err error) {
 	// Serialize the data into JSON format
 	var data []byte
