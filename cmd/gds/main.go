@@ -375,13 +375,32 @@ func main() {
 				Name:     "admin:detail",
 				Usage:    "retrieve a VASP detail record by id",
 				Category: "admin",
-				Action:   adminRetrieveVASPs,
+				Action:   adminRetrieveVASP,
 				Before:   initAdminClient,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "id",
 						Aliases: []string{"i"},
 						Usage:   "the uuid of the VASP to retrieve",
+					},
+				},
+			},
+			{
+				Name:     "admin:update",
+				Usage:    "update a VASP detail record by id",
+				Category: "admin",
+				Action:   adminUpdateVASP,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "data",
+						Aliases: []string{"d"},
+						Usage:   "path to JSON data to PATCH VASP detail",
 					},
 				},
 			},
@@ -887,12 +906,42 @@ func adminListVASPs(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
-func adminRetrieveVASPs(c *cli.Context) (err error) {
+func adminRetrieveVASP(c *cli.Context) (err error) {
 	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.RetrieveVASPReply
 	if rep, err = adminClient.RetrieveVASP(ctx, c.String("id")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminUpdateVASP(c *cli.Context) (err error) {
+	req := &admin.UpdateVASPRequest{}
+	if path := c.String("data"); path != "" {
+		var data []byte
+		if data, err = ioutil.ReadFile(path); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = json.Unmarshal(data, req); err != nil {
+			return cli.Exit(fmt.Errorf("could not unmarshal UpdateVASPRequest: %s", err), 1)
+		}
+	} else {
+		return cli.Exit("specify path to JSON data with update vasp request", 1)
+	}
+
+	if vaspID := c.String("id"); vaspID != "" {
+		req.VASP = vaspID
+	}
+
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *admin.UpdateVASPReply
+	if rep, err = adminClient.UpdateVASP(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 

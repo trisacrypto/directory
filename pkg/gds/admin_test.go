@@ -102,6 +102,20 @@ func (s *gdsTestSuite) createAccessString(creds map[string]interface{}) string {
 	return access
 }
 
+// APIError is a helper function for asserting that an expected API error is returned.
+func (s *gdsTestSuite) APIError(expectedCode int, expectedMessage string, rep *http.Response) {
+	require := s.Require()
+	require.NotNil(rep, "no HTTP response returned")
+	require.Equal(expectedCode, rep.StatusCode, "expected status code does not match response")
+
+	defer rep.Body.Close()
+	data := &admin.Reply{}
+	require.NoError(json.NewDecoder(rep.Body).Decode(data), "could not decode admin.Reply JSON")
+	require.NotNil(data, "no data was returned")
+	require.False(data.Success, "API returned a success response")
+	require.Equal(expectedMessage, data.Error, "error message mismatch")
+}
+
 // Test that the middleware returns the corect error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
@@ -624,6 +638,62 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	require.Equal(expected, actual)
 }
 
+func (s *gdsTestSuite) TestUpdateVASP() {
+	s.LoadSmallFixtures()
+	defer s.ResetSmallFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// Attempt to update a VASP that doesn't exist
+	request := &httpRequest{
+		method: http.MethodPatch,
+		path:   "/v2/vasps/invalid",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
+		in: &admin.UpdateVASPRequest{},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.UpdateVASP, c, w, nil)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
+
+	// Update a VASP that exists
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	request.path = "/v2/vasps/" + charlieID
+	request.params["vaspID"] = charlieID
+
+	// Test request VASP and URL do not match returns a 400 error
+	request.in = &admin.UpdateVASPRequest{VASP: "bce77e90-82e0-4685-8139-6ec5d4b83615"}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	s.APIError(http.StatusBadRequest, "the request ID does not match the URL endpoint", rep)
+
+	// Test an update with no changes returns a 400 error
+	request.in = &admin.UpdateVASPRequest{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	s.APIError(http.StatusBadRequest, "no updates made to VASP record", rep)
+
+	// TODO: Test bad business category (not parseable) returns 400 error
+	// TODO: Test updating website, business category, vasp categories, and established on
+	// TODO: Test invalid IVMS 101 returns 400 error
+	// TODO: Test update VASP entity
+	// TODO: Test update TRIXO form
+	// TODO: Test compute common name from endpoint retuns an error if endpoint is "foo"
+	// TODO: Test endpoint-only change with no change to common name is successful
+	// TODO: Test an update to common name for reviewed VASP returns a 400 error
+	// TODO: Test no certificate requests updated returns an error
+	// TODO: Test common name change with incorrect endpoint returns an error
+	// TODO: Test common name-only change with correct endpoint is successful
+	// TODO: Test endpoint-only change with change to common name is successful
+	// TODO: Test common name and endpoint change is successful
+}
+
 // Test the CreateReviewNote endpoint.
 func (s *gdsTestSuite) TestCreateReviewNote() {
 	s.LoadFullFixtures()
@@ -970,16 +1040,6 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
 	require.Contains(actual.Message, "contact verification emails resent")
-	// Email audit log should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
-	require.NoError(err)
-	emails, err := models.GetEmailLog(v.Contacts.Billing)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err := time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("verify_contact", emails[0].Reason)
 
 	// ResendReview email
 	request.in = &admin.ResendRequest{
@@ -1014,23 +1074,46 @@ func (s *gdsTestSuite) TestResend() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(2, actual.Sent)
 	require.Contains(actual.Message, "rejection emails resent")
-	// Email audit logs should be updated
-	v, err = s.svc.GetStore().RetrieveVASP(vaspRejected)
+
+	// Verify that all emails were sent
+	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
 	require.NoError(err)
-	emails, err = models.GetEmailLog(v.Contacts.Administrative)
+	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
-	emails, err = models.GetEmailLog(v.Contacts.Legal)
-	require.NoError(err)
-	require.Len(emails, 1)
-	ts, err = time.Parse(time.RFC3339, emails[0].Timestamp)
-	require.NoError(err)
-	require.True(ts.Sub(sent) < time.Minute)
-	require.Equal("rejection", emails[0].Reason)
+
+	messages := []*emailMeta{
+		{
+			contact:   errored.Contacts.Billing,
+			to:        errored.Contacts.Billing.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			to:        s.svc.GetConf().Email.AdminEmail,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.ReviewRequestRE,
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Administrative,
+			to:        rejected.Contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+		{
+			contact:   rejected.Contacts.Legal,
+			to:        rejected.Contacts.Legal.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "rejection",
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
 
 // Test the ReviewTimeline endpoint.

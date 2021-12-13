@@ -24,3 +24,13 @@ func CreateToken(length int) string {
 	}
 	return b.String()
 }
+
+// ValidateToken checks if a token contains any invalid characters.
+func ValidateToken(token string) bool {
+	for _, c := range token {
+		if !strings.ContainsRune(string(chars), c) && !strings.ContainsRune(string(specialChars), c) {
+			return false
+		}
+	}
+	return true
+}

@@ -56,7 +56,21 @@
 }
 .react-select__single-value  {
   color: $gray-600 !important;
+  // width: 100%;
 }
+.react-select__single-value + div, .react-select__placeholder + div{
+  width: 100%;
+  > .react-select__input{
+    width: 100% !important;
+  
+    > input{
+      color: aqua;
+      width: 100% !important;
+    }
+  }
+}
+
+
 .react-select__multi-value {
   background-color: rgba($primary, 0.2) !important;
   color: $primary !important;

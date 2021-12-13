@@ -10,6 +10,7 @@ option go_package = "github.com/trisacrypto/directory/pkg/trtl/internal";
 // size in the cursor matches the page size in the request.
 // See https://cloud.google.com/apis/design/design_patterns#list_pagination for more.
 message PageCursor {
-    int32 page_size = 1; // the number of results returned on each iteration.
-    bytes next_key = 2;  // the key to start the iteration from
+    int32 page_size = 1;  // the number of results returned on each iteration.
+    bytes next_key = 2;   // the key to start the iteration from
+    string namespace = 3; // the namespace the cursor is iterating on
 }
