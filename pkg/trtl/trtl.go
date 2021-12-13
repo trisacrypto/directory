@@ -30,6 +30,10 @@ func NewTrtlService(s *Server) (*TrtlService, error) {
 	return &TrtlService{parent: s, db: s.db}, nil
 }
 
+const (
+	defaultPageSize = 100
+)
+
 // Get is a unary request to retrieve a value for a key.
 // If metadata is requested in the GetRequest, the request will use honu.Object() to
 // retrieve the entire object, including the metadata. If no metadata is requested, the
@@ -201,7 +205,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Load defaults into options
 	if opts.PageSize == 0 {
-		opts.PageSize = 100
+		opts.PageSize = defaultPageSize
 	}
 
 	// Test valid options
