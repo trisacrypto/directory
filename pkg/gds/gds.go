@@ -51,7 +51,7 @@ type GDS struct {
 	db   store.Store       // Database connection for loading objects (helper alias to s.svc.db)
 }
 
-// Serve GRPC requests on the specified address.
+// Serve gRPC requests on the specified address.
 func (s *GDS) Serve() (err error) {
 	if !s.conf.Enabled {
 		log.Warn().Msg("trisa directory service is not enabled")

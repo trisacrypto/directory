@@ -23,7 +23,7 @@ service TRISAMembers {
 // modified (e.g. any filters or pagination parameters).
 // See https://cloud.google.com/apis/design/design_patterns#list_pagination for more.
 message ListRequest {
-    string page_size = 1;          // specify the number of results per page, cannot change between page requests (default 100)
+    int32 page_size = 1;           // specify the number of results per page, cannot change between page requests (default 100)
     string page_token = 2;         // specify the page token to fetch the next page of results
 }
 
