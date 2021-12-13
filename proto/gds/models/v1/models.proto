@@ -148,5 +148,5 @@ message EmailLogEntry {
 // See https://cloud.google.com/apis/design/design_patterns#list_pagination for more.
 message PageCursor {
     int32 page_size = 1;  // the number of results returned on each iteration.
-    bytes next_key = 2;   // the key to start the iteration from
+    string next_vasp = 2; // the VASP id to start the iteration from
 }

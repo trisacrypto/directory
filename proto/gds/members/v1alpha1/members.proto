@@ -51,4 +51,5 @@ message VASPMember {
     string country = 7;
     trisa.gds.models.v1beta1.BusinessCategory business_category = 8;
     repeated string vasp_categories = 9;
+    string verified_on = 10;
 }
