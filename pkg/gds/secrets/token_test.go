@@ -22,3 +22,19 @@ func TestCreateToken(t *testing.T) {
 	require.True(t, secrets.ValidateToken(nextToken), "token %s contains invalid characters", nextToken)
 	require.NotEqual(t, token, nextToken, "CreateToken returned the same token twice: %s", token)
 }
+
+// Test that the ValidateToken function can determine if a token contains invalid
+// characters.
+func TestValidateToken(t *testing.T) {
+	// Valid tokens
+	require.True(t, secrets.ValidateToken(""))
+	require.True(t, secrets.ValidateToken("abcABC12345"))
+	require.True(t, secrets.ValidateToken("abc123#+-{}"))
+	require.True(t, secrets.ValidateToken("()&*[]#"))
+	require.False(t, secrets.ValidateToken("abc12345!"))
+
+	// Invalid tokens
+	require.False(t, secrets.ValidateToken("abc12345\n"))
+	require.False(t, secrets.ValidateToken("`~\t"))
+	require.False(t, secrets.ValidateToken(",."))
+}
