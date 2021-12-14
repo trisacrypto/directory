@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	pmPuts       *prometheus.CounterVec   // count of trtl Puts per namespace
-	pmGets       *prometheus.CounterVec   // count of trtl Gets per namespace
-	pmDels       *prometheus.CounterVec   // count of trtl Deletes per namespace
-	pmIters      *prometheus.CounterVec   // count of trtl Iters per namespace
-	pmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
-	pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
-	pmLatency    *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
+	pmPuts  *prometheus.CounterVec // count of trtl Puts per namespace
+	pmGets  *prometheus.CounterVec // count of trtl Gets per namespace
+	pmDels  *prometheus.CounterVec // count of trtl Deletes per namespace
+	pmIters *prometheus.CounterVec // count of trtl Iters per namespace
+	// pmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
+	// pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
+	pmLatency *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
 )
 
 const (
@@ -48,17 +48,17 @@ func initMetrics() {
 		Help:      "the count of iters, labeled by namespace",
 	}, []string{"namespace"})
 
-	pmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
-		Name:      "objects",
-		Help:      "the count of trtl objects, labeled by namespace",
-	}, []string{"namespace"})
+	// pmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 	Namespace: pmNamespace,
+	// 	Name:      "objects",
+	// 	Help:      "the count of trtl objects, labeled by namespace",
+	// }, []string{"namespace"})
 
-	pmTombstones = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
-		Name:      "tombstones",
-		Help:      "the count of tombstones, labeled by namespace",
-	}, []string{"namespace"})
+	// pmTombstones = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 	Namespace: pmNamespace,
+	// 	Name:      "tombstones",
+	// 	Help:      "the count of tombstones, labeled by namespace",
+	// }, []string{"namespace"})
 
 	pmLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: pmNamespace,
@@ -92,14 +92,14 @@ func registerMetrics() error {
 		log.Debug().Err(err).Msg("unable to register pmIters")
 		return err
 	}
-	if err := prometheus.Register(pmObjects); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmObjects")
-		return err
-	}
-	if err := prometheus.Register(pmTombstones); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmTombstones")
-		return err
-	}
+	// if err := prometheus.Register(pmObjects); err != nil {
+	// 	log.Debug().Err(err).Msg("unable to register pmObjects")
+	// 	return err
+	// }
+	// if err := prometheus.Register(pmTombstones); err != nil {
+	// 	log.Debug().Err(err).Msg("unable to register pmTombstones")
+	// 	return err
+	// }
 	if err := prometheus.Register(pmLatency); err != nil {
 		log.Debug().Err(err).Msg("unable to register pmLatency")
 		return err
