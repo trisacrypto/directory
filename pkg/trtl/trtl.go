@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"time"
 
 	"github.com/rotationalio/honu"
 	engine "github.com/rotationalio/honu/engines"
@@ -44,6 +45,9 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	var err error
 	var ns string
 
+	// Start a timer to track latency
+	start := time.Now()
+
 	if in.Namespace == "" {
 		ns = "default"
 	} else {
@@ -79,6 +83,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		// Update prometheus metrics with Get
 		pmGets.WithLabelValues(ns).Inc()
 
+		// Compute Get latency in milliseconds
+		latency := float64(time.Since(start)/1000) / 1000.0
+		pmLatency.WithLabelValues("Get").Observe(latency)
+
 		return &pb.GetReply{
 			Value: object.Data,
 			Meta:  returnMeta(object),
@@ -104,6 +112,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	// Increment prometheus Get count
 	pmGets.WithLabelValues(ns).Inc()
 
+	// Compute Get latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Get").Observe(latency)
+
 	return &pb.GetReply{
 		Value: value,
 	}, nil
@@ -114,11 +126,15 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
 	var ns string
+
 	if in.Namespace == "" {
 		ns = "default"
 	} else {
 		ns = in.Namespace
 	}
+
+	// Start a timer to track latency
+	start := time.Now()
 
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -153,6 +169,10 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		out.Meta = returnMeta(object)
 	}
 
+	// Compute Put latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Put").Observe(latency)
+
 	// Increment prometheus Put counter
 	pmPuts.WithLabelValues(ns).Inc()
 
@@ -175,6 +195,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	} else {
 		ns = in.Namespace
 	}
+
+	// Start a timer to track latency
+	start := time.Now()
 
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -204,6 +227,10 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	if in.Options != nil && in.Options.ReturnMeta {
 		out.Meta = returnMeta(object)
 	}
+
+	// Compute Delete latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
 	pmDels.WithLabelValues(ns).Inc()
@@ -240,6 +267,9 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	} else {
 		ns = in.Namespace
 	}
+
+	// Start a timer to track latency
+	start := time.Now()
 
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
@@ -385,6 +415,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
 		}
 	}
+
+	// Compute Iter latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
 	pmIters.WithLabelValues(ns).Inc()

@@ -16,7 +16,7 @@ var (
 	pmIters      *prometheus.CounterVec   // count of trtl Iters per namespace
 	pmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
 	pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
-	pmLatency    *prometheus.HistogramVec // the time it is taking for RPC calls to complete, labeled by RPC type, success, and failure
+	pmLatency    *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
 )
 
 const (
