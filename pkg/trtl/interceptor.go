@@ -52,7 +52,7 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	out, err = handler(ctx, in)
 
 	// Log with zerolog - checkout grpclog.LoggerV2 for default logging.
-	log.Debug().Str("method", info.FullMethod).Str("latency", time.Since(start).String()).Err(err)
+	log.Debug().Str("method", info.FullMethod).Str("latency", time.Since(start).String()).Err(err).Msg("gRPC request complete")
 	return out, err
 }
 

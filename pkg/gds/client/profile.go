@@ -14,6 +14,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
+	"github.com/trisacrypto/trisa/pkg/trust"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -49,7 +51,9 @@ type ReplicaProfile struct {
 
 type MembersProfile struct {
 	Endpoint string `yaml:"endpoint"`           // the members endpoint to connect to the anti-entropy service
-	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the members endpoint with TLS
+	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the members endpoint with mTLS
+	Certs    string `yaml:"certs,omitempty"`    // path to client certificates for mTLS
+	CertPool string `yaml:"certpool,omitempty"` // path to client trusted certpool for mTLS
 }
 
 func New() *Profile {
@@ -90,6 +94,13 @@ func (p *Profile) Update(c *cli.Context) error {
 		p.DatabaseURL = dburl
 	}
 
+	if certs := c.String("certs"); certs != "" {
+		p.Members.Certs = certs
+	}
+
+	if trust := c.String("certpool"); trust != "" {
+		p.Members.CertPool = trust
+	}
 	return nil
 }
 
@@ -188,8 +199,35 @@ func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
 	if p.Insecure {
 		opts = append(opts, grpc.WithInsecure())
 	} else {
-		config := &tls.Config{}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+		if p.Certs == "" || p.CertPool == "" {
+			return nil, errors.New("certs and certpool are required for mTLS connections")
+		}
+
+		var (
+			sz    *trust.Serializer
+			certs *trust.Provider
+			pool  trust.ProviderPool
+			creds grpc.DialOption
+		)
+
+		if sz, err = trust.NewSerializer(false); err != nil {
+			return nil, err
+		}
+
+		if certs, err = sz.ReadFile(p.Certs); err != nil {
+			return nil, err
+		}
+
+		if pool, err = sz.ReadPoolFile(p.CertPool); err != nil {
+			return nil, err
+		}
+
+		if creds, err = mtls.ClientCreds(p.Endpoint, certs, pool); err != nil {
+			return nil, err
+		}
+
+		// Append the mTLS configuration to the dial options
+		opts = append(opts, creds)
 	}
 
 	// Connect the directory client

@@ -29,6 +29,9 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.trisatest.net",
 	"GDS_MEMBERS_ENABLED":                      "true",
 	"GDS_MEMBERS_BIND_ADDR":                    ":445",
+	"GDS_MEMBERS_INSECURE":                     "true",
+	"GDS_MEMBERS_CERTS":                        "fixtures/creds/gds.gz",
+	"GDS_MEMBERS_CERT_POOL":                    "fixtures/creds/pool.gz",
 	"GDS_DATABASE_URL":                         "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
 	"SECTIGO_USERNAME":                         "foo",
@@ -87,6 +90,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
 	require.True(t, conf.Members.Enabled)
 	require.Equal(t, testEnv["GDS_MEMBERS_BIND_ADDR"], conf.Members.BindAddr)
+	require.True(t, conf.Members.Insecure)
+	require.Equal(t, testEnv["GDS_MEMBERS_CERTS"], conf.Members.Certs)
+	require.Equal(t, testEnv["GDS_MEMBERS_CERT_POOL"], conf.Members.CertPool)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
@@ -144,6 +150,8 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE",
 		"GDS_ADMIN_TOKEN_KEYS",
 		"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS",
+		"GDS_MEMBERS_CERTS",
+		"GDS_MEMBERS_CERT_POOL",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -188,7 +196,6 @@ func TestRequiredConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE"], conf.Admin.Oauth.GoogleAudience)
 	require.Len(t, conf.Admin.TokenKeys, 2)
 	require.Len(t, conf.Admin.Oauth.AuthorizedEmailDomains, 3)
-
 }
 
 func TestEmailConfigValidation(t *testing.T) {
@@ -203,6 +210,23 @@ func TestEmailConfigValidation(t *testing.T) {
 	conf.AdminReviewBaseURL += "/"
 	err = conf.Validate()
 	require.NoError(t, err)
+}
+
+func TestMembersConfigValidation(t *testing.T) {
+	conf := config.MembersConfig{
+		Insecure: true,
+		Certs:    "",
+		CertPool: "",
+	}
+
+	// If Insecure is set to true, certs and cert pool are not required.
+	err := conf.Validate()
+	require.NoError(t, err)
+
+	// If Insecure is false, then the certs and cert pool are required.
+	conf.Insecure = false
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: serving mTLS requires the path to certs and the cert pool")
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
