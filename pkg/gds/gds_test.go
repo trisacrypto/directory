@@ -216,7 +216,7 @@ func (s *gdsTestSuite) TestSearch() {
 	require.Equal(charlieVASP.TrisaEndpoint, reply.Results[0].Endpoint)
 
 	// Fuzzy search by case-insensitive prefix
-	request.Name = []string{"nov"}
+	request.Name = []string{"NOV"}
 	reply, err = client.Search(ctx, request)
 	require.NoError(err)
 	require.Empty(reply.Error)
@@ -225,7 +225,7 @@ func (s *gdsTestSuite) TestSearch() {
 	require.Equal(bobVASP.Id, reply.Results[0].Id)
 
 	// Prefix search must have at least three characters
-	request.Name = []string{"Ch"}
+	request.Name = []string{"ch"}
 	reply, err = client.Search(ctx, request)
 	require.NoError(err)
 	require.Empty(reply.Error)
