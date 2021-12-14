@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/object"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
@@ -81,7 +81,9 @@ func (s *trtlTestSuite) loadFixtures() {
 // should clean up.
 func (s *trtlTestSuite) generateDB() {
 	require := s.Require()
-	db, err := leveldb.OpenFile(s.db, nil)
+	conf, err := config.New()
+	require.NoError(err)
+	db, err := honu.Open(s.db, conf.GetHonuConfig())
 	require.NoError(err)
 	defer db.Close()
 
@@ -101,7 +103,7 @@ func (s *trtlTestSuite) generateDB() {
 		require.NoError(err)
 		data, err := proto.Marshal(meta)
 		require.NoError(err)
-		err = db.Put([]byte(fixture.Namespace+"::"+fixture.Key), data, nil)
+		_, err = db.Put([]byte(fixture.Namespace+"::"+fixture.Key), data, nil)
 		require.NoError(err)
 	}
 
