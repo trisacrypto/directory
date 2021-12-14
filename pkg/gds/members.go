@@ -13,6 +13,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
+	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,8 +32,40 @@ func NewMembers(svc *Service) (members *Members, err error) {
 		db:   svc.db,
 	}
 
+	// Attempt to load and parse the TRISA certificates for server-size mTLS
+	var sz *trust.Serializer
+	if sz, err = trust.NewSerializer(false); err != nil {
+		return nil, err
+	}
+
+	// Initialize mTLS for the server if configured
+	opts := make([]grpc.ServerOption, 0, 2)
+	if !members.conf.Insecure {
+		// Read the certificates issued by the directory service to run the directory service
+		if members.mtlsCerts, err = sz.ReadFile(members.conf.Certs); err != nil {
+			return nil, fmt.Errorf("could not load members certs and private key: %s", err)
+		}
+
+		// Read the trust pool that was issued by the directory service (public CA keys)
+		if members.trustPool, err = sz.ReadPoolFile(members.conf.CertPool); err != nil {
+			return nil, fmt.Errorf("could not load members public cert pool: %s", err)
+		}
+
+		// Create TLS credentials for the server
+		var creds grpc.ServerOption
+		if creds, err = mtls.ServerCreds(members.mtlsCerts, members.trustPool); err != nil {
+			return nil, fmt.Errorf("could not create mTLS creds: %s", err)
+		}
+		opts = append(opts, creds)
+	} else {
+		log.Warn().Msg("creating insecure trisa members server")
+	}
+
+	// Add the unary interceptor to the gRPC server
+	opts = append(opts, grpc.UnaryInterceptor(svc.serverInterceptor))
+
 	// Initialize the gRPC server
-	members.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
+	members.srv = grpc.NewServer(opts...)
 	api.RegisterTRISAMembersServer(members.srv, members)
 	return members, nil
 }
@@ -45,10 +79,12 @@ func NewMembers(svc *Service) (members *Members, err error) {
 // specification in trisacrypto/trisa.
 type Members struct {
 	api.UnimplementedTRISAMembersServer
-	svc  *Service              // The parent Service GDS uses to interact with other components
-	srv  *grpc.Server          // The gRPC server that listens on its own independent port
-	conf *config.MembersConfig // The GDS service specific configuration (helper alias to s.svc.conf.Members)
-	db   store.Store           // Database connection for loading objects (helper alias to s.svc.db)
+	svc       *Service              // The parent Service GDS uses to interact with other components
+	srv       *grpc.Server          // The gRPC server that listens on its own independent port
+	conf      *config.MembersConfig // The GDS service specific configuration (helper alias to s.svc.conf.Members)
+	db        store.Store           // Database connection for loading objects (helper alias to s.svc.db)
+	mtlsCerts *trust.Provider       // Server certificate and private keys for server-auth
+	trustPool trust.ProviderPool    // Cert pool for client-side authentication
 }
 
 // Serve gRPC requests on the specified address.

@@ -57,6 +57,9 @@ type AdminConfig struct {
 type MembersConfig struct {
 	Enabled  bool   `split_words:"true" default:"true"`
 	BindAddr string `split_words:"true" default:":4435"`
+	Insecure bool   `split_words:"true" default:"false"`
+	Certs    string `split_words:"true"`
+	CertPool string `split_words:"true"`
 }
 
 type OauthConfig struct {
@@ -146,6 +149,10 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
+	if err = c.Members.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Sectigo.Validate(); err != nil {
 		return err
 	}
@@ -185,6 +192,16 @@ func (c OauthConfig) Validate() error {
 		return errors.New("invalid configuration: authorized email domains required for enabled admin")
 	}
 
+	return nil
+}
+
+func (c MembersConfig) Validate() error {
+	// If the insecure flag isn't set then we must have certs.
+	if !c.Insecure {
+		if c.Certs == "" || c.CertPool == "" {
+			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
+		}
+	}
 	return nil
 }
 
