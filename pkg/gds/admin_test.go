@@ -401,7 +401,7 @@ func (s *gdsTestSuite) TestSummary() {
 		VASPsCount:           14,
 		PendingRegistrations: 5,
 		ContactsCount:        39,
-		VerifiedContacts:     28,
+		VerifiedContacts:     24,
 		CertificatesIssued:   4,
 		Statuses: map[string]int{
 			pb.VerificationState_APPEALED.String():       1,
@@ -473,9 +473,9 @@ func (s *gdsTestSuite) TestListVASPs() {
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_SUBMITTED.String(),
 			VerifiedContacts: map[string]bool{
-				"administrative": true,
+				"administrative": false,
 				"billing":        false,
-				"legal":          true,
+				"legal":          false,
 				"technical":      false,
 			},
 		},
@@ -626,11 +626,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	s.CompareFixture(vasps, charlieID, actualVASP, true)
 
 	// Check the verified contacts
-	require.NotNil(actual.VerifiedContacts)
-	require.Contains(actual.VerifiedContacts, "administrative")
-	require.NotEmpty(actual.VerifiedContacts["administrative"])
-	require.Contains(actual.VerifiedContacts, "legal")
-	require.NotEmpty(actual.VerifiedContacts["legal"])
+	require.Len(actual.VerifiedContacts, 0)
 
 	// Compare the rest of the non-vasp results
 	actual.VASP = nil

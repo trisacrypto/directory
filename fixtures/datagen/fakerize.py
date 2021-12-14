@@ -256,7 +256,7 @@ def make_uuid(rng):
     """
     return str(uuid.UUID(bytes=bytes(rng.getrandbits(8) for _ in range(16)), version=4))
 
-def make_person(vasp, rng=random.Random()):
+def make_person(vasp, verified=True, token="", rng=random.Random()):
     """
     Given a string representing a VASP's name, return a valid
     dictionary for a representative of that VASP including faked name
@@ -272,8 +272,8 @@ def make_person(vasp, rng=random.Random()):
         "phone": fake.phone_number(),
         "extra": {
             "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-            "verified": True,
-            "token": "",
+            "verified": verified,
+            "token": token,
             "email_log": [],
         },
     }
@@ -418,12 +418,12 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     record["entity"]["national_identification"]["country_of_issue"] = country
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
-    record["contacts"]["legal"] = make_person(vasp, rng=rng_person)
+    record["contacts"]["legal"] = make_person(vasp, token="legal_token", rng=rng_person)
     rng_contact = random.Random(vasp+"contact")
     other = rng_contact.choice(
         ["administrative", "technical"]
     )  # billing always unverified for demo purposes
-    record["contacts"][other] = make_person(vasp, rng=rng_person)
+    record["contacts"][other] = make_person(vasp, token=other+"_token", rng=rng_person)
     record = synthesize_secrets(record)
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
@@ -455,6 +455,9 @@ def make_unverified(
     with open(template, "r") as f:
         record = json.load(f)
 
+    # A VASP that is not at least EMAIL_VERIFIED cannot have verified contacts
+    email_verified = (state != "SUBMITTED")
+
     rng_country = random.Random(vasp)
     country = rng_country.choice(COUNTRIES)
 
@@ -467,10 +470,10 @@ def make_unverified(
     record["entity"]["national_identification"]["country_of_issue"] = country
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
-    record["contacts"]["legal"] = make_person(vasp, rng=rng_person)
+    record["contacts"]["legal"] = make_person(vasp, verified=email_verified, token="legal_token", rng=rng_person)
     rng_contact = random.Random(vasp+"contact")
     other = rng_contact.choice(["billing", "administrative", "technical"])
-    record["contacts"][other] = make_person(vasp, rng=rng_person)
+    record["contacts"][other] = make_person(vasp, verified=email_verified, token=other+"_token", rng=rng_person)
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"

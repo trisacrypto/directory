@@ -322,32 +322,37 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	// VASP does not exist in the database
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+
+	// Cannot verify contact without a token
 	request := &api.VerifyContactRequest{
-		Id:    "abc12345-41aa-11ec-9d29-acde48001122",
-		Token: "",
+		Id: charlieID,
 	}
 	_, err := client.VerifyContact(ctx, request)
 	require.Error(err)
 
+	// VASP does not exist in the database
+	request = &api.VerifyContactRequest{
+		Id:    "abc12345-41aa-11ec-9d29-acde48001122",
+		Token: "administrative_token",
+	}
+	_, err = client.VerifyContact(ctx, request)
+	require.Error(err)
+
 	// Incorrect token - no verified contacts
-	request.Id = s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	request.Id = charlieID
 	request.Token = "invalid"
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
-	// TODO: Test previously verified contact - requires modifying the fixtures to
-	// include a non-empty verification token
-
 	// Successful verification
-	request.Token = ""
+	request.Token = "administrative_token"
 	sent := time.Now()
 	reply, err := client.VerifyContact(ctx, request)
 	require.NoError(err)
 	require.Nil(reply.Error)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
 	require.Contains(reply.Message, "successfully verified")
-
 	// VASP on the database should be updated
 	vasp, err := s.svc.GetStore().RetrieveVASP(request.Id)
 	require.NoError(err)
@@ -355,22 +360,48 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	token, err := models.GetAdminVerificationToken(vasp)
 	require.NoError(err)
 	require.NotEmpty(token)
+	token, verified, err := models.GetContactVerification(vasp.Contacts.Administrative)
+	require.NoError(err)
+	require.Empty(token)
+	require.True(verified)
 
-	// Audit log should contain new entries for contact verifications, EMAIL_VERIFIED,
-	// PENDING_REVIEW, along with the intitial SUBMITTED.
+	// Verify a different contact
+	request.Token = "legal_token"
+	reply, err = client.VerifyContact(ctx, request)
+	require.NoError(err)
+	require.Nil(reply.Error)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
+	// Should only change the fields on the contact
+	vasp, err = s.svc.GetStore().RetrieveVASP(request.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Legal)
+	require.NoError(err)
+	require.Empty(token)
+	require.True(verified)
+
+	// Attempt to verify an already verified contact - should fail
+	request.Token = "legal_token"
+	reply, err = client.VerifyContact(ctx, request)
+	require.Error(err)
+
+	// Check audit log entries
 	log, err := models.GetAuditLog(vasp)
 	require.NoError(err)
-	// Currently verifies all contacts because the fixtures all have the empty token.
-	require.Len(log, 7)
+	require.Len(log, 5)
+	// Pre-existing entry for SUBMITTED
 	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	// Administrative contact verified
 	require.Equal(pb.VerificationState_SUBMITTED, log[1].CurrentState)
-	require.Equal(vasp.Contacts.Technical.Email, log[1].Source)
-	require.Equal(pb.VerificationState_SUBMITTED, log[2].CurrentState)
-	require.Equal(vasp.Contacts.Administrative.Email, log[2].Source)
-	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[5].CurrentState)
-	require.Equal(pb.VerificationState_PENDING_REVIEW, log[6].CurrentState)
+	require.Equal(vasp.Contacts.Administrative.Email, log[1].Source)
+	// State of the VASP changes to EMAIL_VERIFIED then PENDING_REVIEW
+	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[2].CurrentState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[3].CurrentState)
+	// Legal contact verified
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[4].CurrentState)
+	require.Equal(vasp.Contacts.Legal.Email, log[4].Source)
 
-	// Email should be sent to the admins
+	// Only one email should be sent to the admins
 	messages := []*emailMeta{
 		{
 			to:        s.svc.GetConf().Email.AdminEmail,
