@@ -274,7 +274,11 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		}
 
 		if len(vasps) != 1 {
-			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			// Don't warn when common name is not found, just when multiple results are returned
+			if len(vasps) > 1 {
+				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
+			}
+			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
@@ -374,7 +378,11 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 		}
 
 		if len(vasps) != 1 {
-			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			if len(vasps) > 1 {
+				// Don't warn when common name is not found, just when multiple results are returned
+				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
+			}
+			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 

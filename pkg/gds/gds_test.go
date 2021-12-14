@@ -215,6 +215,22 @@ func (s *gdsTestSuite) TestSearch() {
 	require.Equal(charlieVASP.CommonName, reply.Results[0].CommonName)
 	require.Equal(charlieVASP.TrisaEndpoint, reply.Results[0].Endpoint)
 
+	// Fuzzy search by case-insensitive prefix
+	request.Name = []string{"nov"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+	bobVASP := s.fixtures[vasps]["novembercash"].(*pb.VASP)
+	require.Equal(bobVASP.Id, reply.Results[0].Id)
+
+	// Prefix search must have at least three characters
+	request.Name = []string{"Ch"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
+
 	// Multiple results
 	request.Name = []string{"CharlieBank", "Delta Assets"}
 	reply, err = client.Search(ctx, request)
