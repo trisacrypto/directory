@@ -156,6 +156,11 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	// Increment prometheus Put counter
 	pmPuts.WithLabelValues(ns).Inc()
 
+	// TODO: prometheus
+	// If in.Options.ReturnMeta is true, we will get metadata from honu
+	// Unfortunately, we currently we don't get tombstone information, but if we did,
+	// we could use it to decrement our `pmTombstone` counter here
+
 	return out, nil
 }
 
@@ -201,7 +206,11 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	}
 
 	// Increment Prometheus Delete counter
-	pmDels.WithLabelValue(ns).Inc()
+	pmDels.WithLabelValues(ns).Inc()
+
+	// TODO: Increment Prometheus Tombstone counter
+	// Unfortunately we can't decrement yet! (see note in `Put`)
+	// pmTombstones.WithLabelValues(ns).Inc()
 
 	return out, nil
 }
@@ -572,6 +581,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 		// Count the number of messages successfully sent
 		nMessages++
+
+		// TODO: Prometheus
+		// If in.Prefix is nil, nMessages will be all the objects in in.Namespace so we
+		// could use this opportunity to update our Prometheus counter if we can find
+		// out how to call something like update on the counter rather than increment
 	}
 
 	if err = iter.Error(); err != nil {
