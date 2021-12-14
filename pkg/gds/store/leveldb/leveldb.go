@@ -69,6 +69,8 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
+const searchPrefixMinLength = 3
+
 // Store implements store.Store for some basic LevelDB operations and simple protocol
 // buffer storage in a key/value database.
 type Store struct {
@@ -286,7 +288,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 			if id := s.names[name]; id != "" {
 				// exact match
 				records[id] = struct{}{}
-			} else if len(name) > 2 {
+			} else if len(name) >= searchPrefixMinLength {
 				// prefix match
 				for vasp, id := range s.names {
 					if strings.HasPrefix(vasp, name) {
