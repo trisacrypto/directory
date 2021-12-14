@@ -19,7 +19,7 @@ func (s *gdsTestSuite) TestRegister() {
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
-	refVASP := s.fixtures[vasps]["d9da630e-41aa-11ec-9d29-acde48001122"].(*pb.VASP)
+	refVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect())
@@ -67,6 +67,7 @@ func (s *gdsTestSuite) TestRegister() {
 
 	// Successful VASP registration
 	request.Entity = refVASP.Entity
+	sent := time.Now()
 	reply, err := client.Register(ctx, request)
 	require.NoError(err)
 	require.NotNil(reply)
@@ -81,19 +82,6 @@ func (s *gdsTestSuite) TestRegister() {
 	require.NoError(err)
 	require.Equal(reply.Id, v.Id)
 	require.Equal(pb.VerificationState_SUBMITTED, v.VerificationStatus)
-	// Emails should be sent to the contacts
-	emails, err := models.GetEmailLog(v.Contacts.Administrative)
-	require.NoError(err)
-	require.Len(emails, 1)
-	emails, err = models.GetEmailLog(v.Contacts.Billing)
-	require.NoError(err)
-	require.Len(emails, 1)
-	emails, err = models.GetEmailLog(v.Contacts.Legal)
-	require.NoError(err)
-	require.Len(emails, 1)
-	emails, err = models.GetEmailLog(v.Contacts.Technical)
-	require.NoError(err)
-	require.Len(emails, 1)
 	// Certificate request should be created
 	ids, err := models.GetCertReqIDs(v)
 	require.NoError(err)
@@ -113,6 +101,43 @@ func (s *gdsTestSuite) TestRegister() {
 	// Should not be able to register an identical VASP
 	_, err = client.Register(ctx, request)
 	require.Error(err)
+
+	// Emails should be sent to the contacts
+	messages := []*emailMeta{
+		{
+			contact:   v.Contacts.Administrative,
+			to:        v.Contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			contact:   v.Contacts.Billing,
+			to:        v.Contacts.Billing.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			contact:   v.Contacts.Legal,
+			to:        v.Contacts.Legal.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+		{
+			contact:   v.Contacts.Technical,
+			to:        v.Contacts.Technical.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
 
 // TestLookup test that the Lookup RPC correctly returns details for a VASP.
@@ -121,8 +146,7 @@ func (s *gdsTestSuite) TestLookup() {
 	require := s.Require()
 	ctx := context.Background()
 
-	id := "d9da630e-41aa-11ec-9d29-acde48001122"
-	vasp := s.fixtures[vasps][id].(*pb.VASP)
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect())
@@ -137,18 +161,18 @@ func (s *gdsTestSuite) TestLookup() {
 	require.Error(err)
 
 	expected := &api.LookupReply{
-		Id:                  id,
-		RegisteredDirectory: vasp.RegisteredDirectory,
-		CommonName:          vasp.CommonName,
-		Endpoint:            vasp.TrisaEndpoint,
-		IdentityCertificate: vasp.IdentityCertificate,
-		Country:             vasp.Entity.CountryOfRegistration,
-		VerifiedOn:          vasp.VerifiedOn,
+		Id:                  charlieVASP.Id,
+		RegisteredDirectory: charlieVASP.RegisteredDirectory,
+		CommonName:          charlieVASP.CommonName,
+		Endpoint:            charlieVASP.TrisaEndpoint,
+		IdentityCertificate: charlieVASP.IdentityCertificate,
+		Country:             charlieVASP.Entity.CountryOfRegistration,
+		VerifiedOn:          charlieVASP.VerifiedOn,
 		Name:                "CharlieBank",
 	}
 
 	// VASP exists in the database
-	request.Id = id
+	request.Id = charlieVASP.Id
 	reply, err := client.Lookup(ctx, request)
 	require.NoError(err)
 	require.True(proto.Equal(expected, reply))
@@ -185,12 +209,27 @@ func (s *gdsTestSuite) TestSearch() {
 	require.NoError(err)
 	require.Empty(reply.Error)
 	require.Len(reply.Results, 1)
-	id := "d9da630e-41aa-11ec-9d29-acde48001122"
-	vasp := s.fixtures[vasps][id].(*pb.VASP)
-	require.Equal(id, reply.Results[0].Id)
-	require.Equal(vasp.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
-	require.Equal(vasp.CommonName, reply.Results[0].CommonName)
-	require.Equal(vasp.TrisaEndpoint, reply.Results[0].Endpoint)
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	require.Equal(charlieVASP.Id, reply.Results[0].Id)
+	require.Equal(charlieVASP.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
+	require.Equal(charlieVASP.CommonName, reply.Results[0].CommonName)
+	require.Equal(charlieVASP.TrisaEndpoint, reply.Results[0].Endpoint)
+
+	// Fuzzy search by case-insensitive prefix
+	request.Name = []string{"NOV"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 1)
+	bobVASP := s.fixtures[vasps]["novembercash"].(*pb.VASP)
+	require.Equal(bobVASP.Id, reply.Results[0].Id)
+
+	// Prefix search must have at least three characters
+	request.Name = []string{"ch"}
+	reply, err = client.Search(ctx, request)
+	require.NoError(err)
+	require.Empty(reply.Error)
+	require.Len(reply.Results, 0)
 
 	// Multiple results
 	request.Name = []string{"CharlieBank", "Delta Assets"}
@@ -211,7 +250,7 @@ func (s *gdsTestSuite) TestSearch() {
 	// Filter by country
 	request = &api.SearchRequest{
 		Name:    []string{"CharlieBank"},
-		Country: []string{vasp.Entity.CountryOfRegistration},
+		Country: []string{charlieVASP.Entity.CountryOfRegistration},
 	}
 	reply, err = client.Search(ctx, request)
 	require.NoError(err)
@@ -231,7 +270,7 @@ func (s *gdsTestSuite) TestSearch() {
 	// Filter by category
 	request = &api.SearchRequest{
 		Name:             []string{"CharlieBank"},
-		BusinessCategory: []pb.BusinessCategory{vasp.BusinessCategory},
+		BusinessCategory: []pb.BusinessCategory{charlieVASP.BusinessCategory},
 	}
 	reply, err = client.Search(ctx, request)
 	require.NoError(err)
@@ -251,7 +290,7 @@ func (s *gdsTestSuite) TestSearch() {
 	// Filter by VASP category
 	request = &api.SearchRequest{
 		Name:         []string{"CharlieBank"},
-		VaspCategory: []string{"Miner"},
+		VaspCategory: []string{"P2P"},
 	}
 	reply, err = client.Search(ctx, request)
 	require.NoError(err)
@@ -292,7 +331,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Error(err)
 
 	// Incorrect token - no verified contacts
-	request.Id = "d9da630e-41aa-11ec-9d29-acde48001122"
+	request.Id = s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 	request.Token = "invalid"
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
@@ -302,6 +341,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 
 	// Successful verification
 	request.Token = ""
+	sent := time.Now()
 	reply, err := client.VerifyContact(ctx, request)
 	require.NoError(err)
 	require.Nil(reply.Error)
@@ -316,9 +356,6 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.NoError(err)
 	require.NotEmpty(token)
 
-	// Email should be sent to the admins
-	require.Len(emails.MockEmails, 1)
-
 	// Audit log should contain new entries for contact verifications, EMAIL_VERIFIED,
 	// PENDING_REVIEW, along with the intitial SUBMITTED.
 	log, err := models.GetAuditLog(vasp)
@@ -332,6 +369,17 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Equal(vasp.Contacts.Administrative.Email, log[2].Source)
 	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[5].CurrentState)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[6].CurrentState)
+
+	// Email should be sent to the admins
+	messages := []*emailMeta{
+		{
+			to:        s.svc.GetConf().Email.AdminEmail,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.ReviewRequestRE,
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
 
 // TestVerification tests that the Verification RPC returns the correct status
@@ -341,7 +389,7 @@ func (s *gdsTestSuite) TestVerification() {
 	require := s.Require()
 	ctx := context.Background()
 
-	id := "d9da630e-41aa-11ec-9d29-acde48001122"
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect())
@@ -350,7 +398,7 @@ func (s *gdsTestSuite) TestVerification() {
 
 	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
 	// real VASP object here for comparison purposes.
-	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
 	require.NoError(err)
 
 	// Supplied VASP ID does not exist
@@ -369,7 +417,7 @@ func (s *gdsTestSuite) TestVerification() {
 	}
 
 	// VASP exists in the database
-	request.Id = id
+	request.Id = charlieID
 	reply, err := client.Verification(ctx, request)
 	require.NoError(err)
 	require.True(proto.Equal(expected, reply))

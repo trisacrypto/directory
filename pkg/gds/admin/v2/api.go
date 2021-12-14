@@ -19,15 +19,16 @@ type DirectoryAdministrationClient interface {
 	Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthReply, err error)
 	Summary(ctx context.Context) (out *SummaryReply, err error)
 	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
+	ReviewTimeline(ctx context.Context, params *ReviewTimelineParams) (out *ReviewTimelineReply, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
+	UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error)
 	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
 	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
-	ReviewTimeline(ctx context.Context, params *ReviewTimelineParams) (out *ReviewTimelineReply, err error)
 }
 
 //===========================================================================
@@ -84,6 +85,22 @@ type AutocompleteReply struct {
 	Names map[string]string `json:"names"`
 }
 
+// ReviewTimelineRecord contains counts of VASP registration states over a single week.
+type ReviewTimelineRecord struct {
+	Week          string         `json:"week"`
+	VASPsUpdated  int            `json:"vasps_updated"`
+	Registrations map[string]int `json:"registrations"`
+}
+
+// ReviewTimelineReply returns a list of time series records containing registration counts.
+type ReviewTimelineReply struct {
+	Weeks []ReviewTimelineRecord `json:"weeks"`
+}
+
+//===========================================================================
+// VASP CRUD Methods
+//===========================================================================
+
 // ListVASPsParams is a request-like struct that passes query params to the ListVASPs
 // GET request. All query params are optional and modify how and what data is retrieved.
 type ListVASPsParams struct {
@@ -131,6 +148,48 @@ type RetrieveVASPReply struct {
 	AuditLog         []map[string]interface{} `json:"audit_log"`
 }
 
+// UpdateVASPRequest allows the admin to PATCH a VASP record depending on the state
+// that the VASP is in. For example, if the state is PENDING_REVIEW, the common name of
+// the record can be edited, but once certificates have been issued, it can't be edited.
+// The PATCH method requires fields to be present, e.g. the VASP is only updated if the
+// fields below are non-zero. It is therefore impossible to set any of the fields
+// described in the request to nil or an empty value.
+type UpdateVASPRequest struct {
+	// The ID of the VASP (optional - is part of the URL).
+	VASP string `json:"vasp,omitempty"`
+
+	// The legal entity IVMS 101 data - this field completely replaces the VASP entity
+	// if it is supplied and valid (no partial fields). The JSON data must be marshaled
+	// into an ivms101.LegalPerson protocol buffer.
+	Entity map[string]interface{} `json:"entity,omitempty"`
+
+	// TODO: allow admin to update contacts, which may require contact reverification.
+
+	// Common name can be updated only if the certificate has not been issued. It also
+	// updates the certificate request to ensure the correct certs are issued. The TRISA
+	// endpoint can be changed at any time, but should match the common name.
+	CommonName    string `json:"common_name,omitempty"`
+	TRISAEndpoint string `json:"trisa_endpoint,omitempty"`
+
+	// Business information can be modified at any time
+	Website          string   `json:"website,omitempty"`
+	BusinessCategory string   `json:"business_category,omitempty"`
+	VASPCategories   []string `json:"vasp_categories,omitempty"`
+	EstablishedOn    string   `json:"established_on,omitempty"`
+
+	// TRIXO questionnaire - this field completely replaces the VASP trixo if it is
+	// supplied and valid (no partial fields). The JSON data must be marshaled into an
+	// gds.models.v1beta1.TRIXQuestionnaire protocol buffer.
+	TRIXO map[string]interface{} `json:"trixo,omitempty"`
+}
+
+// UpdateVASPReply is identical to RetrieveVASPReply, simply renamed for clarity.
+type UpdateVASPReply RetrieveVASPReply
+
+//===========================================================================
+// Review Notes RPCs
+//===========================================================================
+
 // ModifyReviewNoteRequest is a request-like struct for creating or updating notes.
 type ModifyReviewNoteRequest struct {
 	// The ID of the VASP (optional - is part of the URL).
@@ -170,18 +229,6 @@ type ReviewNote struct {
 type ReviewTimelineParams struct {
 	Start string `url:"start,omitempty" form:"start"`
 	End   string `url:"end,omitempty" form:"end"`
-}
-
-// ReviewTimelineRecord contains counts of VASP registration states over a single week.
-type ReviewTimelineRecord struct {
-	Week          string         `json:"week"`
-	VASPsUpdated  int            `json:"vasps_updated"`
-	Registrations map[string]int `json:"registrations"`
-}
-
-// ReviewTimelineReply returns a list of time series records containing registration counts.
-type ReviewTimelineReply struct {
-	Weeks []ReviewTimelineRecord `json:"weeks"`
 }
 
 //===========================================================================

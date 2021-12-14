@@ -5,17 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/suite"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/utils"
@@ -40,8 +44,8 @@ var (
 	smallDBFixturePath = filepath.Join("testdata", "smalldb.tgz")
 	smallDBSubset      = map[string]map[string]struct{}{
 		vasps: {
-			"d9da630e-41aa-11ec-9d29-acde48001122": {},
-			"d9efca14-41aa-11ec-9d29-acde48001122": {},
+			"charliebank": {},
+			"delta":       {},
 		},
 	}
 )
@@ -117,7 +121,7 @@ func (s *gdsTestSuite) TearDownSuite() {
 	s.grpc.Release()
 }
 
-func TestGds(t *testing.T) {
+func TestGDS(t *testing.T) {
 	suite.Run(t, new(gdsTestSuite))
 }
 
@@ -186,8 +190,7 @@ func (s *gdsTestSuite) TestFixtures() {
 				require.Fail("unrecognized object for namespace %q", prefix)
 			}
 
-			// Ensure our reference fixtures contain the key and count it
-			require.Contains(s.fixtures[key[0]], key[1], "reference fixtures do not contain ID in namespace %s", key[0])
+			// Count occurrence of the key
 			counts[key[0]]++
 
 			// Test that the database fixture matches our reference
@@ -209,8 +212,7 @@ func (s *gdsTestSuite) TestFixtures() {
 
 func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra bool) {
 	var (
-		ok      bool
-		fixture interface{}
+		ok bool
 	)
 
 	require := s.Require()
@@ -218,14 +220,18 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 	_, ok = s.fixtures[namespace]
 	require.True(ok, "unknown namespace %s", namespace)
 
-	fixture, ok = s.fixtures[namespace][key]
-	require.True(ok, "unknown %s fixture %s", namespace, key)
-
 	// Reset any time fields for the comparison and compare directly
 	switch namespace {
 	case vasps:
-		a, ok := fixture.(*pb.VASP)
-		require.True(ok, "fixture is not a VASP object")
+		var a *pb.VASP
+		for _, f := range s.fixtures[namespace] {
+			ref := f.(*pb.VASP)
+			if ref.Id == key {
+				a = ref
+				break
+			}
+		}
+		require.NotNil(a, "unknown VASP fixture %s", key)
 
 		b, ok := obj.(*pb.VASP)
 		require.True(ok, "obj is not a VASP object")
@@ -244,8 +250,15 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 		require.True(proto.Equal(a, b), "vasps are not the same")
 
 	case certreqs:
-		a, ok := fixture.(*models.CertificateRequest)
-		require.True(ok, "fixture is not a CertificateRequest object")
+		var a *models.CertificateRequest
+		for _, f := range s.fixtures[namespace] {
+			ref := f.(*models.CertificateRequest)
+			if ref.Id == key {
+				a = ref
+				break
+			}
+		}
+		require.NotNil(a, "unknown CertificateRequest fixture %s", key)
 
 		b, ok := obj.(*models.CertificateRequest)
 		require.True(ok, "obj is not a CertificateRequest object")
@@ -259,6 +272,65 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 		require.Fail("unhandled namespace %s", namespace)
 	}
 
+}
+
+type emailMeta struct {
+	contact   *pb.Contact
+	to        string
+	from      string
+	subject   string
+	reason    string
+	timestamp time.Time
+}
+
+// CheckEmails verifies that the provided email messages exist in both the email mock
+// and the audit log on the contact, if the email was sent to a contact.
+func (s *gdsTestSuite) CheckEmails(messages []*emailMeta) {
+	require := s.Require()
+
+	var sentEmails []*sgmail.SGMailV3
+
+	// Check total number of emails sent
+	require.Len(emails.MockEmails, len(messages))
+
+	// Get emails from the mock
+	for _, data := range emails.MockEmails {
+		msg := &sgmail.SGMailV3{}
+		require.NoError(json.Unmarshal(data, msg))
+		sentEmails = append(sentEmails, msg)
+	}
+
+	for _, msg := range messages {
+		// If the email was sent to a contact, check the audit log
+		if msg.contact != nil {
+			log, err := models.GetEmailLog(msg.contact)
+			require.NoError(err)
+			require.Len(log, 1, "contact %s has unexpected number of email logs", msg.contact.Email)
+			require.Equal(msg.reason, log[0].Reason)
+			ts, err := time.Parse(time.RFC3339, log[0].Timestamp)
+			require.NoError(err)
+			require.True(ts.Sub(msg.timestamp) < time.Minute, "timestamp in email log is too old")
+		}
+
+		expectedRecipient, err := mail.ParseAddress(msg.to)
+		require.NoError(err)
+
+		// Search for the sent email in the mock and check the metadata
+		found := false
+		for _, sent := range sentEmails {
+			recipient, err := emails.GetRecipient(sent)
+			require.NoError(err)
+			if recipient == expectedRecipient.Address {
+				found = true
+				sender, err := mail.ParseAddress(msg.from)
+				require.NoError(err)
+				require.Equal(sender.Address, sent.From.Address)
+				require.Equal(msg.subject, sent.Subject)
+				break
+			}
+		}
+		require.True(found, "email not sent for recipient %s", msg.to)
+	}
 }
 
 //===========================================================================
@@ -466,9 +538,10 @@ func (s *gdsTestSuite) generateDB() {
 				// Add the fixture to the database, updating indices
 				switch namespace {
 				case vasps:
-					id, err := store.CreateVASP(item.(*pb.VASP))
+					vasp := item.(*pb.VASP)
+					id, err := store.CreateVASP(vasp)
 					require.NoError(err, "could not insert VASP into store")
-					require.Equal(key, id)
+					require.Equal(vasp.Id, id)
 				case certreqs:
 					err = store.UpdateCertReq(item.(*models.CertificateRequest))
 					require.NoError(err, "could not insert CertificateRequest into store")

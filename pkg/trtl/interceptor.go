@@ -11,8 +11,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
+	status "google.golang.org/grpc/status"
 )
 
 type ContextKey string
@@ -29,6 +31,12 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	// Track how long the method takes to execute.
 	start := time.Now()
 
+	// Check if we're in maintenance mode
+	// TODO: update to consider the Status endpoint, once it has been added
+	if t.conf.Maintenance {
+		return nil, status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
+	}
+
 	// Fetch peer information from the TLS info.
 	var peer *PeerInfo
 	if peer, err = peerFromTLS(ctx); err != nil {
@@ -44,7 +52,7 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	out, err = handler(ctx, in)
 
 	// Log with zerolog - checkout grpclog.LoggerV2 for default logging.
-	log.Debug().Str("method", info.FullMethod).Str("latency", time.Since(start).String()).Err(err)
+	log.Debug().Str("method", info.FullMethod).Str("latency", time.Since(start).String()).Err(err).Msg("gRPC request complete")
 	return out, err
 }
 

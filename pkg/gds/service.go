@@ -100,6 +100,10 @@ func New(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
+	if s.members, err = NewMembers(s); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }
 
@@ -109,14 +113,15 @@ func New(conf config.Config) (s *Service, err error) {
 // backups, and certificates.
 // E.g. this is the parent service that coordinates all subservices.
 type Service struct {
-	db     store.Store
-	gds    *GDS
-	admin  *Admin
-	conf   config.Config
-	certs  *sectigo.Sectigo
-	email  *emails.EmailManager
-	secret *secrets.SecretManager
-	echan  chan error
+	db      store.Store
+	gds     *GDS
+	admin   *Admin
+	members *Members
+	conf    config.Config
+	certs   *sectigo.Sectigo
+	email   *emails.EmailManager
+	secret  *secrets.SecretManager
+	echan   chan error
 }
 
 // Serve GRPC requests on the specified addresses and all internal servers.
@@ -133,12 +138,17 @@ func (s *Service) Serve() (err error) {
 	if s.conf.Maintenance {
 		log.Warn().Msg("starting server in maintenance mode")
 	} else {
+		// Start the TRISA Members service (does not have unavailable status)
+		if err = s.members.Serve(); err != nil {
+			return err
+		}
+
 		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
 		go s.CertManager()
 
 		// Start the backup manager go routine process
-		go s.BackupManager()
+		go s.BackupManager(nil)
 	}
 
 	// The TRISADirectoryService service can run in maintenance mode
@@ -173,6 +183,11 @@ func (s *Service) Shutdown() (err error) {
 	}
 
 	if !s.conf.Maintenance {
+		// Shutdown the TRISA members service gracefully
+		if err = s.members.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown TRISAMembers service")
+		}
+
 		// Close the database correctly
 		if err = s.db.Close(); err != nil {
 			log.Error().Err(err).Msg("could not shutdown database")

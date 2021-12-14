@@ -25,6 +25,10 @@ func (i *iterWrapper) Next() bool {
 	return i.iter.Next()
 }
 
+func (i *iterWrapper) Prev() bool {
+	return i.iter.Prev()
+}
+
 func (i *iterWrapper) Error() error {
 	return i.iter.Error()
 }
@@ -58,6 +62,17 @@ func (i *vaspIterator) All() (vasps []*pb.VASP, err error) {
 		return nil, err
 	}
 	return vasps, nil
+}
+
+func (i *vaspIterator) Id() string {
+	// The VASP ID is prefix + uuid so strip off the prefix and return the string
+	key := i.iter.Key()
+	return string(key[len(preVASPs):])
+}
+
+func (i *vaspIterator) Seek(vaspID string) bool {
+	key := vaspKey(vaspID)
+	return i.iter.Seek(key)
 }
 
 func (i *certReqIterator) CertReq() *models.CertificateRequest {

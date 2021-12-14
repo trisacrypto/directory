@@ -16,6 +16,7 @@ import (
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -26,9 +27,10 @@ import (
 )
 
 var (
-	profile     *profiles.Profile
-	client      api.TRISADirectoryClient
-	adminClient admin.DirectoryAdministrationClient
+	profile       *profiles.Profile
+	client        api.TRISADirectoryClient
+	adminClient   admin.DirectoryAdministrationClient
+	membersClient members.TRISAMembersClient
 )
 
 // Format for YYYY-MM-DD time representation
@@ -62,6 +64,12 @@ func main() {
 				Aliases: []string{"a"},
 				Usage:   "the url to connect the directory administration client",
 				EnvVars: []string{"TRISA_DIRECTORY_ADMIN_URL", "GDS_ADMIN_URL"},
+			},
+			&cli.StringFlag{
+				Name:    "members-endpoint",
+				Aliases: []string{"m"},
+				Usage:   "the url to connect the trisa members client",
+				EnvVars: []string{"TRISA_MEMBERS_URL", "GDS_MEMBERS_URL"},
 			},
 			&cli.BoolFlag{
 				Name:    "no-secure",
@@ -375,13 +383,32 @@ func main() {
 				Name:     "admin:detail",
 				Usage:    "retrieve a VASP detail record by id",
 				Category: "admin",
-				Action:   adminRetrieveVASPs,
+				Action:   adminRetrieveVASP,
 				Before:   initAdminClient,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "id",
 						Aliases: []string{"i"},
 						Usage:   "the uuid of the VASP to retrieve",
+					},
+				},
+			},
+			{
+				Name:     "admin:update",
+				Usage:    "update a VASP detail record by id",
+				Category: "admin",
+				Action:   adminUpdateVASP,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "data",
+						Aliases: []string{"d"},
+						Usage:   "path to JSON data to PATCH VASP detail",
 					},
 				},
 			},
@@ -473,6 +500,30 @@ func main() {
 						Name:    "name",
 						Aliases: []string{"n"},
 						Usage:   "the name of the note to delete",
+					},
+				},
+			},
+			{
+				Name:     "members:list",
+				Usage:    "list all currently verified VASPs in the directory",
+				Category: "members",
+				Action:   membersList,
+				Before:   initMembersClient,
+				Flags: []cli.Flag{
+					&cli.Int64Flag{
+						Name:    "page-size",
+						Aliases: []string{"s", "size"},
+						Usage:   "the number of results per page",
+					},
+					&cli.StringFlag{
+						Name:    "page-token",
+						Aliases: []string{"t", "token"},
+						Usage:   "next page token for follow-on requests",
+					},
+					&cli.BoolFlag{
+						Name:    "fetc-all",
+						Aliases: []string{"a", "all"},
+						Usage:   "keep fetching results as long as a next page token is returned",
 					},
 				},
 			},
@@ -887,12 +938,42 @@ func adminListVASPs(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
-func adminRetrieveVASPs(c *cli.Context) (err error) {
+func adminRetrieveVASP(c *cli.Context) (err error) {
 	ctx, cancel := profile.Context()
 	defer cancel()
 
 	var rep *admin.RetrieveVASPReply
 	if rep, err = adminClient.RetrieveVASP(ctx, c.String("id")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminUpdateVASP(c *cli.Context) (err error) {
+	req := &admin.UpdateVASPRequest{}
+	if path := c.String("data"); path != "" {
+		var data []byte
+		if data, err = ioutil.ReadFile(path); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = json.Unmarshal(data, req); err != nil {
+			return cli.Exit(fmt.Errorf("could not unmarshal UpdateVASPRequest: %s", err), 1)
+		}
+	} else {
+		return cli.Exit("specify path to JSON data with update vasp request", 1)
+	}
+
+	if vaspID := c.String("id"); vaspID != "" {
+		req.VASP = vaspID
+	}
+
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *admin.UpdateVASPReply
+	if rep, err = adminClient.UpdateVASP(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1030,6 +1111,52 @@ func adminDeleteNote(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
+func membersList(c *cli.Context) (err error) {
+	// Only fetch a single request if not fetching all
+	if !c.Bool("fetch-all") {
+		ctx, cancel := profile.Context()
+		defer cancel()
+
+		req := &members.ListRequest{
+			PageSize:  int32(c.Int64("page-size")),
+			PageToken: c.String("page-token"),
+		}
+
+		var rep *members.ListReply
+		if rep, err = membersClient.List(ctx, req); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return printJSON(rep)
+	}
+
+	// Otherwise, keep fetching results until the server has no more
+	req := &members.ListRequest{
+		PageSize: int32(c.Int64("page-size")),
+	}
+
+	for {
+		var rep *members.ListReply
+		ctx, cancel := profile.Context()
+		rep, err = membersClient.List(ctx, req)
+		cancel()
+
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		for _, member := range rep.Vasps {
+			if err = printJSON(member); err != nil {
+				return cli.Exit(err, 1)
+			}
+		}
+
+		if rep.NextPageToken == "" {
+			return nil
+		}
+		req.PageToken = rep.NextPageToken
+	}
+}
+
 func manageProfiles(c *cli.Context) (err error) {
 	// Handle list and then exit
 	if c.Bool("list") {
@@ -1140,6 +1267,13 @@ func initClient(c *cli.Context) (err error) {
 
 func initAdminClient(c *cli.Context) (err error) {
 	if adminClient, err = profile.Admin.Connect(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func initMembersClient(c *cli.Context) (err error) {
+	if membersClient, err = profile.Members.Connect(); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
