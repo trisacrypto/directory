@@ -42,6 +42,13 @@ const (
 // to look in that namespace only.
 func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
+	var ns string
+
+	if in.Namespace == "" {
+		ns = "default"
+	} else {
+		ns = in.Namespace
+	}
 
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -68,6 +75,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 			log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
 			return nil, status.Error(codes.Internal, err.Error())
 		}
+
+		// Update prometheus metrics with Get
+		pmGets.WithLabelValues(ns).Inc()
+
 		return &pb.GetReply{
 			Value: object.Data,
 			Meta:  returnMeta(object),
@@ -89,6 +100,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve value")
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
+
+	// Increment prometheus Get count
+	pmGets.WithLabelValues(ns).Inc()
+
 	return &pb.GetReply{
 		Value: value,
 	}, nil
@@ -98,6 +113,13 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
+	var ns string
+	if in.Namespace == "" {
+		ns = "default"
+	} else {
+		ns = in.Namespace
+	}
+
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -131,6 +153,9 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		out.Meta = returnMeta(object)
 	}
 
+	// Increment prometheus Put counter
+	pmPuts.WithLabelValues(ns).Inc()
+
 	return out, nil
 }
 
@@ -138,6 +163,14 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
+	var ns string
+
+	if in.Namespace == "" {
+		ns = "default"
+	} else {
+		ns = in.Namespace
+	}
+
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -167,6 +200,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		out.Meta = returnMeta(object)
 	}
 
+	// Increment Prometheus Delete counter
+	pmDels.WithLabelValue(ns).Inc()
+
 	return out, nil
 }
 
@@ -188,6 +224,14 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
+	var ns string
+
+	if in.Namespace == "" {
+		ns = "default"
+	} else {
+		ns = in.Namespace
+	}
+
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -332,6 +376,9 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
 		}
 	}
+
+	// Increment Prometheus Iter counter
+	pmIters.WithLabelValues(ns).Inc()
 
 	// Request complete
 	log.Info().
