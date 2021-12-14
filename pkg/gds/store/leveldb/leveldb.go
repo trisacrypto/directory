@@ -266,11 +266,13 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 	}
 }
 
-// SearchVASPs uses the names and countries index to find VASPS that match the specified
+// SearchVASPs uses the names and countries index to find VASPs that match the specified
 // query. This is a very simple search and is not intended for robust usage. To find a
 // VASP by name, a case insensitive search is performed if the query exists in
-// any of the VASP entity names. Alternatively a list of names can be given or a country
-// or list of countries for case-insensitive exact matches.
+// any of the VASP entity names. If there is not an exact match a prefix lookup is used
+// so long as the prefix > 3 characters. The search also looks up website matches by
+// parsing urls to match hostnames rather than scheme or path. Finally the query is
+// filtered by country and category.
 func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
@@ -282,7 +284,15 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 		log.Debug().Strs("name", names).Msg("search name query")
 		for _, name := range names {
 			if id := s.names[name]; id != "" {
+				// exact match
 				records[id] = struct{}{}
+			} else if len(name) > 2 {
+				// prefix match
+				for vasp, id := range s.names {
+					if strings.HasPrefix(vasp, name) {
+						records[id] = struct{}{}
+					}
+				}
 			}
 		}
 	}

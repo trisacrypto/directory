@@ -352,7 +352,6 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 		Strs("categories", categories).
 		Int("results", len(out.Results)).
 		Msg("search succeeded")
-
 	return out, nil
 }
 
