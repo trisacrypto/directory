@@ -382,7 +382,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 
 	// Attempt to verify an already verified contact - should fail
 	request.Token = "legal_token"
-	reply, err = client.VerifyContact(ctx, request)
+	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
 	// Check audit log entries
