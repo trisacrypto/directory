@@ -45,14 +45,14 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 	var err error
 	var ns string
 
-	// Start a timer to track latency
-	start := time.Now()
-
 	if in.Namespace == "" {
 		ns = "default"
 	} else {
 		ns = in.Namespace
 	}
+
+	// Start a timer to track latency
+	start := time.Now()
 
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -109,12 +109,12 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	// Increment prometheus Get count
-	pmGets.WithLabelValues(ns).Inc()
-
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
 	pmLatency.WithLabelValues("Get").Observe(latency)
+
+	// Increment prometheus Get count
+	pmGets.WithLabelValues(ns).Inc()
 
 	return &pb.GetReply{
 		Value: value,
