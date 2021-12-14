@@ -9,10 +9,13 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
+	"github.com/trisacrypto/trisa/pkg/trust"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -25,6 +28,7 @@ type Profile struct {
 	Directory   *DirectoryProfile `yaml:"directory"`              // directory configuration
 	Admin       *AdminProfile     `yaml:"admin"`                  // admin api configuration
 	Replica     *ReplicaProfile   `yaml:"replica"`                // replica configuration
+	Members     *MembersProfile   `yaml:"members"`                // members configuration
 	DatabaseURL string            `yaml:"database_url,omitempty"` // localhost only: the dsn to the leveldb database, usually $GDS_DATABASE_URL
 	Timeout     time.Duration     `yaml:"timeout,omitempty"`      // default timeout to create contexts for API connections, if not specified defaults to 30 seconds
 }
@@ -45,11 +49,19 @@ type ReplicaProfile struct {
 	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the replica endpoint with TLS
 }
 
+type MembersProfile struct {
+	Endpoint string `yaml:"endpoint"`           // the members endpoint to connect to the anti-entropy service
+	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the members endpoint with mTLS
+	Certs    string `yaml:"certs,omitempty"`    // path to client certificates for mTLS
+	CertPool string `yaml:"certpool,omitempty"` // path to client trusted certpool for mTLS
+}
+
 func New() *Profile {
 	return &Profile{
 		Directory: &DirectoryProfile{},
 		Admin:     &AdminProfile{},
 		Replica:   &ReplicaProfile{},
+		Members:   &MembersProfile{},
 		Timeout:   30 * time.Second,
 	}
 }
@@ -68,15 +80,27 @@ func (p *Profile) Update(c *cli.Context) error {
 		p.Replica.Endpoint = endpoint
 	}
 
+	if endpoint := c.String("members-endpoint"); endpoint != "" {
+		p.Members.Endpoint = endpoint
+	}
+
 	if insecure := c.Bool("no-secure"); insecure {
 		p.Directory.Insecure = insecure
 		p.Replica.Insecure = insecure
+		p.Members.Insecure = insecure
 	}
 
 	if dburl := c.String("db"); dburl != "" {
 		p.DatabaseURL = dburl
 	}
 
+	if certs := c.String("certs"); certs != "" {
+		p.Members.Certs = certs
+	}
+
+	if trust := c.String("certpool"); trust != "" {
+		p.Members.CertPool = trust
+	}
 	return nil
 }
 
@@ -167,4 +191,49 @@ func (p *ReplicaProfile) ConnectPeers() (_ peers.PeerManagementClient, err error
 		return nil, err
 	}
 	return peers.NewPeerManagementClient(cc), nil
+}
+
+// Connect to the TRISA Members Service and return a gRPC client
+func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
+	var opts []grpc.DialOption
+	if p.Insecure {
+		opts = append(opts, grpc.WithInsecure())
+	} else {
+		if p.Certs == "" || p.CertPool == "" {
+			return nil, errors.New("certs and certpool are required for mTLS connections")
+		}
+
+		var (
+			sz    *trust.Serializer
+			certs *trust.Provider
+			pool  trust.ProviderPool
+			creds grpc.DialOption
+		)
+
+		if sz, err = trust.NewSerializer(false); err != nil {
+			return nil, err
+		}
+
+		if certs, err = sz.ReadFile(p.Certs); err != nil {
+			return nil, err
+		}
+
+		if pool, err = sz.ReadPoolFile(p.CertPool); err != nil {
+			return nil, err
+		}
+
+		if creds, err = mtls.ClientCreds(p.Endpoint, certs, pool); err != nil {
+			return nil, err
+		}
+
+		// Append the mTLS configuration to the dial options
+		opts = append(opts, creds)
+	}
+
+	// Connect the directory client
+	var cc *grpc.ClientConn
+	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+		return nil, err
+	}
+	return members.NewTRISAMembersClient(cc), nil
 }

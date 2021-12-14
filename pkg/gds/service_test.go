@@ -44,8 +44,8 @@ var (
 	smallDBFixturePath = filepath.Join("testdata", "smalldb.tgz")
 	smallDBSubset      = map[string]map[string]struct{}{
 		vasps: {
-			"d9da630e-41aa-11ec-9d29-acde48001122": {},
-			"d9efca14-41aa-11ec-9d29-acde48001122": {},
+			"charliebank": {},
+			"delta":       {},
 		},
 	}
 )
@@ -190,8 +190,7 @@ func (s *gdsTestSuite) TestFixtures() {
 				require.Fail("unrecognized object for namespace %q", prefix)
 			}
 
-			// Ensure our reference fixtures contain the key and count it
-			require.Contains(s.fixtures[key[0]], key[1], "reference fixtures do not contain ID in namespace %s", key[0])
+			// Count occurrence of the key
 			counts[key[0]]++
 
 			// Test that the database fixture matches our reference
@@ -213,8 +212,7 @@ func (s *gdsTestSuite) TestFixtures() {
 
 func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra bool) {
 	var (
-		ok      bool
-		fixture interface{}
+		ok bool
 	)
 
 	require := s.Require()
@@ -222,14 +220,18 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 	_, ok = s.fixtures[namespace]
 	require.True(ok, "unknown namespace %s", namespace)
 
-	fixture, ok = s.fixtures[namespace][key]
-	require.True(ok, "unknown %s fixture %s", namespace, key)
-
 	// Reset any time fields for the comparison and compare directly
 	switch namespace {
 	case vasps:
-		a, ok := fixture.(*pb.VASP)
-		require.True(ok, "fixture is not a VASP object")
+		var a *pb.VASP
+		for _, f := range s.fixtures[namespace] {
+			ref := f.(*pb.VASP)
+			if ref.Id == key {
+				a = ref
+				break
+			}
+		}
+		require.NotNil(a, "unknown VASP fixture %s", key)
 
 		b, ok := obj.(*pb.VASP)
 		require.True(ok, "obj is not a VASP object")
@@ -248,8 +250,15 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 		require.True(proto.Equal(a, b), "vasps are not the same")
 
 	case certreqs:
-		a, ok := fixture.(*models.CertificateRequest)
-		require.True(ok, "fixture is not a CertificateRequest object")
+		var a *models.CertificateRequest
+		for _, f := range s.fixtures[namespace] {
+			ref := f.(*models.CertificateRequest)
+			if ref.Id == key {
+				a = ref
+				break
+			}
+		}
+		require.NotNil(a, "unknown CertificateRequest fixture %s", key)
 
 		b, ok := obj.(*models.CertificateRequest)
 		require.True(ok, "obj is not a CertificateRequest object")
@@ -529,9 +538,10 @@ func (s *gdsTestSuite) generateDB() {
 				// Add the fixture to the database, updating indices
 				switch namespace {
 				case vasps:
-					id, err := store.CreateVASP(item.(*pb.VASP))
+					vasp := item.(*pb.VASP)
+					id, err := store.CreateVASP(vasp)
 					require.NoError(err, "could not insert VASP into store")
-					require.Equal(key, id)
+					require.Equal(vasp.Id, id)
 				case certreqs:
 					err = store.UpdateCertReq(item.(*models.CertificateRequest))
 					require.NoError(err, "could not insert CertificateRequest into store")

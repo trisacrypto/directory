@@ -459,12 +459,12 @@ class Registration extends React.Component {
                           <Card.Body>
                             <p>
                               <Trans>Compliance officer or legal contact for requests about the compliance
-                              requirements and legal status of your organization. (Strongly recommended).</Trans>
+                              requirements and legal status of your organization. (Required).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.legal}
                               onChange={this.createChangeHandler("legal", "contacts")}
-                              required={false}
+                              required={true}
                             />
                           </Card.Body>
                         </Accordion.Collapse>
@@ -477,12 +477,12 @@ class Registration extends React.Component {
                           <Card.Body>
                             <p>
                               <Trans>Administrative or executive contact for your organization to field
-                              high-level requests or queries. (Required).</Trans>
+                              high-level requests or queries. (Strongly recommended).</Trans>
                             </p>
                             <Contact
                               contact={this.state.formData.contacts.administrative}
                               onChange={this.createChangeHandler("administrative", "contacts")}
-                              required={true}
+                              required={false}
                             />
                           </Card.Body>
                         </Accordion.Collapse>

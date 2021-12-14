@@ -1,0 +1,55 @@
+syntax="proto3";
+
+package gds.members.v1alpha1;
+option go_package = "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1;members";
+
+import "trisa/gds/models/v1beta1/models.proto";
+
+// The TRISAMembers service is an experimental service that provides extra access to the
+// directory service for verified TRISA members. Access to this service requires mTLS
+// authentication via the TRISA issued identity certificates similar to the peer to peer
+// TRISANetwork service. Once validated, this service will be moved into the official
+// TRISA specification. It is added here to facilitate the development of TRISA nodes
+// against the directory service and promote the expansion of the TRISA network.
+service TRISAMembers {
+    // List all verified VASP members in the Directory Service.
+    rpc List(ListRequest) returns (ListReply) {};
+}
+
+
+// ListRequest manages paginating the VASP listing. If there are more results than the
+// specified page size, then the ListReply will return a page token; that token can be
+// used to fetch the next page so long as the parameters of the original request are not
+// modified (e.g. any filters or pagination parameters).
+// See https://cloud.google.com/apis/design/design_patterns#list_pagination for more.
+message ListRequest {
+    int32 page_size = 1;           // specify the number of results per page, cannot change between page requests (default 100)
+    string page_token = 2;         // specify the page token to fetch the next page of results
+}
+
+// ListReply returns an abbreviated listing of VASP details intended to facilitate p2p
+// key exchanges or more detailed lookups against the Directory Service.
+message ListReply {
+    repeated VASPMember vasps = 1; // a list of VASP information for the requested page
+    string next_page_token = 2;    // if specified, another page of results exists
+}
+
+// VASPMember is a lightweight data structure containing enough information to
+// facilitate p2p exchanges or more detailed lookups against the Directory Service.
+message VASPMember {
+    // The uniquely identifying components of the VASP in the directory service
+    string id = 1;
+    string registered_directory = 2;
+    string common_name = 3;
+
+    // Address to connect to the remote VASP on to perform a TRISA request
+    string endpoint = 4;
+
+    // Extra details used to faciliate searches and matching
+    string name = 5;
+    string website = 6;
+    string country = 7;
+    trisa.gds.models.v1beta1.BusinessCategory business_category = 8;
+    repeated string vasp_categories = 9;
+    string verified_on = 10;
+}

@@ -11,10 +11,13 @@
 ##########################################################################
 
 import os
+import sys
 import json
 import uuid
 import random
+import shutil
 import secrets
+import tarfile
 import datetime
 
 import lorem
@@ -24,6 +27,7 @@ from faker import Faker
 # Global Variables
 ##########################################################################
 
+OUTPUT_DIRECTORY = os.path.join("fixtures", "datagen", "synthetic")
 COUNTRIES = ["US", "CA", "CN", "CI", "GR", "GY", "MG", "MA", "DE", "SG"]
 DOMAINS = [".com", ".net", ".io", ".ai", ".org"]
 VASP_CATEGORIES = [
@@ -206,7 +210,6 @@ CERT_STATE_CHANGES = {
 # Helper Methods - Used by subsequent functions to synthesize VASP records
 ##########################################################################
 
-
 def fake_legal_name(vasp):
     """
     Given a string representing a VASP's name, return a valid
@@ -247,8 +250,13 @@ def fake_address(country):
         "country": country,
     }
 
+def make_uuid(rng):
+    """
+    Generate a random UUID using the given random generator.
+    """
+    return str(uuid.UUID(bytes=bytes(rng.getrandbits(8) for _ in range(16)), version=4))
 
-def make_person(vasp):
+def make_person(vasp, rng=random.Random()):
     """
     Given a string representing a VASP's name, return a valid
     dictionary for a representative of that VASP including faked name
@@ -256,7 +264,7 @@ def make_person(vasp):
     """
     fake = Faker()
     name = fake.name()
-    domain = random.choice(DOMAINS)
+    domain = rng.choice(DOMAINS)
     email = name.lower().split()[0] + "@" + vasp.replace(" ", "").lower() + domain
     return {
         "name": name,
@@ -271,7 +279,7 @@ def make_person(vasp):
     }
 
 
-def make_dates(first="2021-06-15T05:11:13Z", last="2021-10-25T17:15:43Z", count=3):
+def make_dates(first="2021-06-15T05:11:13Z", last="2021-10-25T17:15:43Z", count=3, rng=random.Random()):
     """
     Make `count` number of sequential dates between `first` and `last`,
     return the dates as a list.
@@ -279,11 +287,11 @@ def make_dates(first="2021-06-15T05:11:13Z", last="2021-10-25T17:15:43Z", count=
     format = "%Y-%m-%dT%H:%M:%SZ"
     start = datetime.datetime.strptime(first, format)
     end = datetime.datetime.strptime(last, format)
-    dates = [random.random() * (end - start) + start for _ in range(count)]
+    dates = [rng.random() * (end - start) + start for _ in range(count)]
     return [datetime.datetime.strftime(date, format) for date in sorted(dates)]
 
 
-def make_vasp_log(state="VERIFIED"):
+def make_vasp_log(state="VERIFIED", rng=random.Random()):
     """
     Create a fake audit log depending on the dates provided
     and the setting of `state`.
@@ -300,7 +308,7 @@ def make_vasp_log(state="VERIFIED"):
         current_state = prior_state
 
     # skip the first data and state, since it's NO_VERIFICATION and doesn't get a log
-    dates = make_dates(count=(len(states) - 1))
+    dates = make_dates(count=(len(states) - 1), rng=rng)
 
     for st, dt in zip(states[1:], dates):
         log = dict()
@@ -311,13 +319,13 @@ def make_vasp_log(state="VERIFIED"):
     return logs
 
 
-def make_notes():
+def make_notes(rng=random.Random()):
     """
     Make fake review notes. Returns a nested dictionary, since notes are a dict
     not a list.
     """
-    idx = str(uuid.uuid1())
-    created, modified = make_dates(count=2)
+    idx = make_uuid(rng)
+    created, modified = make_dates(count=2, rng=rng)
     return {
         idx: {
             "id": idx,
@@ -354,8 +362,13 @@ def synthesize_secrets(record):
 
     return record
 
+def shorten(name):
+    """
+    Return a shortened version of a name so it can be used in a file path.
+    """
+    return name.split(" ")[0].lower()
 
-def store(fakes, kind="vasps", directory="fixtures/datagen/synthetic"):
+def store(fakes, kind="vasps", directory=OUTPUT_DIRECTORY):
     """
     Save `fakes` dictionary to a new directory (create if not exists)
     Each file should be the name of the fakerized uuid
@@ -365,17 +378,24 @@ def store(fakes, kind="vasps", directory="fixtures/datagen/synthetic"):
         os.makedirs(directory)
 
     for idx, fake in fakes.items():
-        fname = os.path.join(directory, kind + "::" + idx + ".json")
+        fname = os.path.join(directory, kind + "::" + shorten(idx) + ".json")
         with open(fname, "w") as outfile:
             json.dump(fake, outfile, indent=4, sort_keys=True)
 
     return directory
 
+def replace_fixtures():
+    """
+    Creates a new fakes.tgz file containing the generated fixtures and replaces the
+    existing fakes.tgz in the pkg/gds/testdata directory with the new one.
+    """
+    with tarfile.open("fakes.tgz", "w:gz") as tar:
+        tar.add(OUTPUT_DIRECTORY, arcname="synthetic")
+    shutil.move("fakes.tgz", os.path.join("pkg", "gds", "testdata", "fakes.tgz"))
 
 ##########################################################################
 # VASP Creation Functions
 ##########################################################################
-
 
 def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"):
     """
@@ -386,7 +406,8 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
         record = json.load(f)
 
     state = "VERIFIED"
-    country = random.choice(COUNTRIES)
+    rng_country = random.Random(vasp+"country")
+    country = rng_country.choice(COUNTRIES)
 
     record["id"] = idx
     record["entity"]["name"] = fake_legal_name(vasp)
@@ -396,33 +417,37 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     ] = secrets.token_urlsafe(24)
     record["entity"]["national_identification"]["country_of_issue"] = country
     record["entity"]["country_of_registration"] = country
-    record["contacts"]["legal"] = make_person(vasp)
-    other = random.choice(
+    rng_person = random.Random(vasp+"person")
+    record["contacts"]["legal"] = make_person(vasp, rng=rng_person)
+    rng_contact = random.Random(vasp+"contact")
+    other = rng_contact.choice(
         ["administrative", "technical"]
     )  # billing always unverified for demo purposes
-    record["contacts"][other] = make_person(vasp)
+    record["contacts"][other] = make_person(vasp, rng=rng_person)
     record = synthesize_secrets(record)
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["identity_certificate"]["subject"]["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"
     record["website"] = "https://" + common_name + ".io"
-    record["vasp_categories"] = random.sample(VASP_CATEGORIES, random.randint(1, 4))
+    rng_cat = random.Random(vasp+"cat")
+    record["vasp_categories"] = rng_cat.sample(VASP_CATEGORIES, rng_cat.randint(1, 4))
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state
-    record["extra"]["audit_log"] = make_vasp_log(state=state)
+    rng_audit = random.Random(vasp+"audit")
+    record["extra"]["audit_log"] = make_vasp_log(state=state, rng=rng_audit)
     record["first_listed"] = record["extra"]["audit_log"][0]["timestamp"]
     record["verified_on"] = record["extra"]["audit_log"][-1]["timestamp"]
     record["last_updated"] = record["extra"]["audit_log"][-1]["timestamp"]
-    record["extra"]["review_notes"] = make_notes()
+    rng_notes = random.Random(vasp+"notes")
+    record["extra"]["review_notes"] = make_notes(rng=rng_notes)
 
     return record
 
 
 def make_unverified(
-    vasp, idx, state="ERRORED", template="fixtures/datagen/templates/no_cert.json"
-):
+    vasp, idx, state="ERRORED", template="fixtures/datagen/templates/no_cert.json"):
     """
     Make an unverified record according to the `state`;
     this will be used to create synthetic records for all states other than VERIFIED
@@ -430,7 +455,8 @@ def make_unverified(
     with open(template, "r") as f:
         record = json.load(f)
 
-    country = random.choice(COUNTRIES)
+    rng_country = random.Random(vasp)
+    country = rng_country.choice(COUNTRIES)
 
     record["id"] = idx
     record["entity"]["name"] = fake_legal_name(vasp)
@@ -440,21 +466,26 @@ def make_unverified(
     ] = secrets.token_urlsafe(24)
     record["entity"]["national_identification"]["country_of_issue"] = country
     record["entity"]["country_of_registration"] = country
-    record["contacts"]["legal"] = make_person(vasp)
-    other = random.choice(["billing", "administrative", "technical"])
-    record["contacts"][other] = make_person(vasp)
+    rng_person = random.Random(vasp+"person")
+    record["contacts"]["legal"] = make_person(vasp, rng=rng_person)
+    rng_contact = random.Random(vasp+"contact")
+    other = rng_contact.choice(["billing", "administrative", "technical"])
+    record["contacts"][other] = make_person(vasp, rng=rng_person)
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"
     record["website"] = "https://" + common_name + ".io"
-    record["vasp_categories"] = random.sample(VASP_CATEGORIES, random.randint(1, 4))
+    rng_cat = random.Random(vasp+"cat")
+    record["vasp_categories"] = rng_cat.sample(VASP_CATEGORIES, rng_cat.randint(1, 4))
     record["established_on"] = Faker().date()
     record["trixo"]["primary_national_jurisdiction"] = country
     record["verification_status"] = state
-    record["extra"]["audit_log"] = make_vasp_log(state=state)
+    rng_audit = random.Random(vasp+"audit")
+    record["extra"]["audit_log"] = make_vasp_log(state=state, rng=rng_audit)
     record["first_listed"] = record["extra"]["audit_log"][0]["timestamp"]
     record["last_updated"] = record["extra"]["audit_log"][-1]["timestamp"]
-    record["extra"]["review_notes"] = make_notes()
+    rng_notes = random.Random(vasp+"notes")
+    record["extra"]["review_notes"] = make_notes(rng=rng_notes)
 
     return record
 
@@ -505,22 +536,23 @@ def augment_vasps(fake_names=FAKE_VASPS):
     The remaining data is random. Add review comments to each record
     Returns synthetic records as a single dictionary
     """
+    rng = random.Random("vasps")
     synthetic_vasps = dict()
 
     for vasp, state in fake_names.items():
-        idx = str(uuid.uuid1())
+        idx = make_uuid(rng)
         if state == "VERIFIED":
-            synthetic_vasps[idx] = make_verified(vasp, idx)
+            synthetic_vasps[vasp] = make_verified(vasp, idx)
         elif state == "ERRORED":
-            synthetic_vasps[idx] = make_errored(vasp, idx)
+            synthetic_vasps[vasp] = make_errored(vasp, idx)
         elif state == "PENDING_REVIEW":
-            synthetic_vasps[idx] = make_pending(vasp, idx)
+            synthetic_vasps[vasp] = make_pending(vasp, idx)
         elif state == "APPEALED":
-            synthetic_vasps[idx] = make_appealed(vasp, idx)
+            synthetic_vasps[vasp] = make_appealed(vasp, idx)
         elif state == "REJECTED":
-            synthetic_vasps[idx] = make_rejected(vasp, idx)
+            synthetic_vasps[vasp] = make_rejected(vasp, idx)
         elif state == "SUBMITTED":
-            synthetic_vasps[idx] = make_submitted(vasp, idx)
+            synthetic_vasps[vasp] = make_submitted(vasp, idx)
         else:
             print("Skipping unrecognized state: %s", state)
 
@@ -532,14 +564,14 @@ def augment_vasps(fake_names=FAKE_VASPS):
 ##########################################################################
 
 
-def make_common_name(cert):
+def make_common_name(cert, rng=random.Random()):
     """
     Make a synthetic but well-structured common name
     """
-    return cert + "." + random.choice(URLWORDS) + random.choice(DOMAINS)
+    return cert + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS)
 
 
-def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
     Make a cert req in the COMPLETED state
     """
@@ -547,13 +579,13 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
         record = json.load(f)
 
     record["id"] = idx
-    record["vasp"] = str(uuid.uuid1())
+    record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "COMPLETED"
-    batch = str(random.randint(100000, 999999))
+    batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
-    network = random.choice(NETWORKS)
+    network = rng.choice(NETWORKS)
     record[
         "batch_name"
     ] = f"{network} certificate request for {common_name} (id: {idx})"
@@ -567,7 +599,7 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
     return record
 
 
-def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
     Make a cert req in the INITIALIZED state
     """
@@ -575,7 +607,7 @@ def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.js
         record = json.load(f)
 
     record["id"] = idx
-    record["vasp"] = str(uuid.uuid1())
+    record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "INITIALIZED"
@@ -586,7 +618,7 @@ def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.js
     return record
 
 
-def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
     Make a cert req in the CR_ERRORED state
     """
@@ -594,13 +626,13 @@ def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.jso
         record = json.load(f)
 
     record["id"] = idx
-    record["vasp"] = str(uuid.uuid1())
+    record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "CR_ERRORED"
-    batch = str(random.randint(100000, 999999))
+    batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
-    network = random.choice(NETWORKS)
+    network = rng.choice(NETWORKS)
     record[
         "batch_name"
     ] = f"{network} certificate request for {common_name} (id: {idx})"
@@ -613,7 +645,7 @@ def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.jso
     return record
 
 
-def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.json"):
+def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
     Make a cert req in the CR_REJECTED state
     """
@@ -621,13 +653,13 @@ def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.js
         record = json.load(f)
 
     record["id"] = idx
-    record["vasp"] = str(uuid.uuid1())
+    record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
     record["status"] = "CR_REJECTED"
-    batch = str(random.randint(100000, 999999))
+    batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
-    network = random.choice(NETWORKS)
+    network = rng.choice(NETWORKS)
     record[
         "batch_name"
     ] = f"{network} certificate request for {common_name} (id: {idx})"
@@ -675,28 +707,48 @@ def augment_certs(fake_names=FAKE_CERTS):
     The remaining data is random. Add audit logs to each record
     Returns synthetic records as a single dictionary
     """
+    rng = random.Random("certs")
     synthetic_certs = dict()
 
     for cert, state in fake_names.items():
-        idx = str(uuid.uuid1())
+        idx = make_uuid(rng)
         cert = cert.lower()
         if state == "INITIALIZED":
-            synthetic_certs[idx] = make_initialized(cert, idx)
+            synthetic_certs[cert] = make_initialized(cert, idx)
         elif state == "COMPLETED":
-            synthetic_certs[idx] = make_completed(cert, idx)
+            synthetic_certs[cert] = make_completed(cert, idx)
         elif state == "CR_ERRORED":
-            synthetic_certs[idx] = make_cr_errored(cert, idx)
+            synthetic_certs[cert] = make_cr_errored(cert, idx)
         elif state == "CR_REJECTED":
-            synthetic_certs[idx] = make_cr_rejected(cert, idx)
+            synthetic_certs[cert] = make_cr_rejected(cert, idx)
         else:
             print("Skipping unrecognized state: %s", state)
 
     return synthetic_certs
 
-
 if __name__ == "__main__":
+    replace = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--help":
+            print("Usage: python fixtures/datagen/fakerize.py [--help|--replace]")
+            print("  --help: print this message")
+            print("  --replace: generate and replace existing fixtures in pkg/gds/testdata")
+            sys.exit(0)
+        elif sys.argv[1] == "--replace":
+            replace = True
+        else:
+            print("Unknown argument: %s", sys.argv[1])
+            sys.exit(1)
+
+    if os.path.exists(OUTPUT_DIRECTORY):
+        shutil.rmtree(OUTPUT_DIRECTORY)
+        
     fakes = augment_vasps()
     store(fakes, kind="vasps")
 
     fakes = augment_certs()
     store(fakes, kind="certreqs")
+
+    if replace:
+        replace_fixtures()
+        print("Successfully replaced pkg/gds/testdata/fakes.tgz")
