@@ -23,6 +23,7 @@ type Config struct {
 	ConsoleLog  bool                `split_words:"true" default:"false"`
 	GDS         GDSConfig
 	Admin       AdminConfig
+	Members     MembersConfig
 	Database    DatabaseConfig
 	Sectigo     SectigoConfig
 	Email       EmailConfig
@@ -51,6 +52,11 @@ type AdminConfig struct {
 	// Multiple keys are used in order to rotate keys regularly; keyids therefore must
 	// be sortable; in general we prefer to use ksuid for key ids.
 	TokenKeys map[string]string `split_words:"true"`
+}
+
+type MembersConfig struct {
+	Enabled  bool   `split_words:"true" default:"true"`
+	BindAddr string `split_words:"true" default:":4435"`
 }
 
 type OauthConfig struct {

@@ -8,6 +8,7 @@ import (
 // Iterators allow memory safe list operations from the Store.
 type Iterator interface {
 	Next() bool
+	Prev() bool
 	Error() error
 	Release()
 }
@@ -15,8 +16,10 @@ type Iterator interface {
 // DirectoryIterator allows access to DirectoryStore models
 type DirectoryIterator interface {
 	Iterator
+	Id() string
 	VASP() *pb.VASP
 	All() ([]*pb.VASP, error)
+	Seek(vaspID string) bool
 }
 
 // CertificateIterator allows access to CertificateStore models

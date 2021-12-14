@@ -59,6 +59,9 @@ func DefaultProfiles() *Profiles {
 				Admin: &AdminProfile{
 					Endpoint: "https://api.admin.vaspdirectory.net",
 				},
+				Members: &MembersProfile{
+					Endpoint: "members.vaspdirectory.net:443",
+				},
 			},
 			"testnet": {
 				Directory: &DirectoryProfile{
@@ -66,6 +69,9 @@ func DefaultProfiles() *Profiles {
 				},
 				Admin: &AdminProfile{
 					Endpoint: "https://api.admin.trisatest.net",
+				},
+				Members: &MembersProfile{
+					Endpoint: "members.trisatest.net:443",
 				},
 			},
 			"localhost": {
@@ -77,6 +83,10 @@ func DefaultProfiles() *Profiles {
 					Endpoint: "http://localhost:4434",
 				},
 				DatabaseURL: os.Getenv("GDS_DATABASE_URL"),
+				Members: &MembersProfile{
+					Endpoint: "localhost:4435",
+					Insecure: true,
+				},
 			},
 		},
 	}

@@ -27,6 +27,8 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_ALLOW_ORIGINS":                  "https://admin.trisatest.net",
 	"GDS_ADMIN_COOKIE_DOMAIN":                  "admin.trisatest.net",
 	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.trisatest.net",
+	"GDS_MEMBERS_ENABLED":                      "true",
+	"GDS_MEMBERS_BIND_ADDR":                    ":445",
 	"GDS_DATABASE_URL":                         "fixtures/db",
 	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
 	"SECTIGO_USERNAME":                         "foo",
@@ -83,6 +85,8 @@ func TestConfig(t *testing.T) {
 	require.Len(t, conf.Admin.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_ADMIN_COOKIE_DOMAIN"], conf.Admin.CookieDomain)
 	require.Equal(t, testEnv["GDS_ADMIN_AUDIENCE"], conf.Admin.Audience)
+	require.True(t, conf.Members.Enabled)
+	require.Equal(t, testEnv["GDS_MEMBERS_BIND_ADDR"], conf.Members.BindAddr)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
