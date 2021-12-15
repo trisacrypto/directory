@@ -136,7 +136,7 @@ function CertificateDetails({ data }) {
                         <Row>
                             <Col>
                                 <FileInformationCard file={data?.data} name="Public Identity Key" ext=".PEM" onDownload={() => handlePublicIdentityKeyDownloadClick(data?.data)} />
-                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" ext=".GZ" onDownload={() => handleTrustChainDownloadClick(data?.chain)} />
+                                <FileInformationCard file={data?.chain} name="TRISA Trust Chain (CA)" ext=".GZ" onDownload={() => handleTrustChainDownloadClick(data?.chain)} />
                             </Col>
                         </Row>
                     </Card.Body>
