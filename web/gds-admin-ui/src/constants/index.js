@@ -29,3 +29,5 @@ export const VERIFIED_CONTACT_STATUS_LABEL = {
     ALTERNATE_VERIFIED: 'Alternate verified',
     UNVERIFIED: ''
 }
+
+export const AUTH_SESSION_KEY = '__SESSION_TOKEN__'

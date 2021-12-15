@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Shoes
+                    Music
                      
                     <br />
-                    Books
+                    Movies
                      
                     <br />
                     23
                      
-                    Moore Mountains
+                    Ziemann Circle
                     <br />
-                    Yuma
+                    Cerritos
                      
                     
                      
                     MA
                      
-                    40048-9654
+                    41819
                       
                     <br />
                     US
