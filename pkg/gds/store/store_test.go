@@ -13,9 +13,7 @@ func TestDSNParsing(t *testing.T) {
 		dsn *store.DSN
 	}{
 		{"leveldb:///fixtures/db", &store.DSN{"leveldb", "fixtures/db"}},
-		{"sqlite3:///fixtures/db", &store.DSN{"sqlite3", "fixtures/db"}},
 		{"leveldb:////data/db", &store.DSN{"leveldb", "/data/db"}},
-		{"sqlite3:////data/db", &store.DSN{"sqlite3", "/data/db"}},
 	}
 
 	for _, tc := range cases {
