@@ -107,3 +107,12 @@ a[disabled] {
 .cursor-pointer{
     cursor: pointer;
 }
+
+.accordion-flush .accordion-item .accordion-button{
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.accordion-flush .accordion-item .accordion-button[aria-expanded=false]{
+    border-radius: 5px;
+}
