@@ -418,7 +418,7 @@ func (s *gdsTestSuite) TestSummary() {
 			models.CertificateRequestState_INITIALIZED.String(): 3,
 		},
 	}
-	require.Equal(expected, actual)
+	require.Equal(expected, actual, "unexpected summary reply, have the fixtures changed?")
 }
 
 // Test that the Autocomplete endpoint returns the correct response.
