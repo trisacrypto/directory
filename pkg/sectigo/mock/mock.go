@@ -24,6 +24,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 )
 
+var mockServer *Server
+
 // Server helps verify that the success paths of the Sectigo API calls are working,
 // while also providing a way for tests to inject handlers to test the errors that
 // might be returned from the Sectigo API.
@@ -34,29 +36,36 @@ type Server struct {
 	calls    map[string]int
 }
 
-// New initializes a new server which mocks the Sectigo REST API. By default, it sets up
+// Get returns the current mock server.
+func Get() *Server {
+	return mockServer
+}
+
+// Start initializes a new server which mocks the Sectigo REST API. By default, it sets up
 // HTTP handlers which return 200 OK responses with mocked data, but custom handlers can
 // be passed in by tests to test specific error paths. Note that this function modifies
-// the externally used baseURL for the Sectigo endpoint, and the caller must close the
-// server when done.
-func New() (s *Server, err error) {
+// the externally used baseURL for the Sectigo endpoint, and the caller must call Stop()
+// to close the server and undo the mock when done.
+func Start() error {
 	gin.SetMode(gin.TestMode)
 
-	s = &Server{
+	mockServer = &Server{
 		handlers: make(map[string]gin.HandlerFunc),
 		router:   gin.New(),
 		calls:    make(map[string]int),
 	}
 
-	s.setupHandlers()
-	s.server = httptest.NewServer(s.router)
-	sectigo.SetBaseURL(s.URL())
-	return s, nil
+	mockServer.setupHandlers()
+	mockServer.server = httptest.NewServer(mockServer.router)
+	sectigo.SetBaseURL(mockServer.URL())
+	return nil
 }
 
-// Close the test server to complete the tests and cleanup.
-func (s *Server) Close() {
-	s.server.Close()
+// Stop the test server and reset the Sectigo server URL to complete the tests and cleanup.
+func Stop() {
+	if mockServer != nil {
+		mockServer.server.Close()
+	}
 	sectigo.ResetBaseURL()
 }
 
@@ -76,11 +85,11 @@ func (s *Server) GetCalls() map[string]int {
 
 // Handle is a helper function that adds a handler to the mock server's handlers map and
 // returns that handler function when the endpoint is called.
-func (s *Server) Handle(endpoint string, handler gin.HandlerFunc) error {
-	if _, ok := s.handlers[endpoint]; !ok {
+func Handle(endpoint string, handler gin.HandlerFunc) error {
+	if _, ok := mockServer.handlers[endpoint]; !ok {
 		return fmt.Errorf("unhandled endpoint %s", endpoint)
 	}
-	s.handlers[endpoint] = handler
+	mockServer.handlers[endpoint] = handler
 	return nil
 }
 
