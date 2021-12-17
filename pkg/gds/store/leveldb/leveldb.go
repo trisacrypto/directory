@@ -69,6 +69,8 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
+const searchPrefixMinLength = 3
+
 // Store implements store.Store for some basic LevelDB operations and simple protocol
 // buffer storage in a key/value database.
 type Store struct {
@@ -106,7 +108,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	if v.Id == "" {
 		v.Id = uuid.New().String()
 	}
-	key := s.vaspKey(v.Id)
+	key := vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
@@ -155,7 +157,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 // RetrieveVASP record by id; returns an error if the record does not exist.
 func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 	var val []byte
-	key := s.vaspKey(id)
+	key := vaspKey(id)
 	if val, err = s.db.Get(key, nil); err != nil {
 		if err == leveldb.ErrNotFound {
 			return nil, ErrEntityNotFound
@@ -177,7 +179,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	if v.Id == "" {
 		return ErrIncompleteRecord
 	}
-	key := s.vaspKey(v.Id)
+	key := vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
@@ -229,7 +231,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 
 // DeleteVASP record, removing it completely from the database and indices.
 func (s *Store) DeleteVASP(id string) (err error) {
-	key := s.vaspKey(id)
+	key := vaspKey(id)
 
 	// Critical section (optimizing for safety rather than speed)
 	s.Lock()
@@ -266,11 +268,13 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 	}
 }
 
-// SearchVASPs uses the names and countries index to find VASPS that match the specified
+// SearchVASPs uses the names and countries index to find VASPs that match the specified
 // query. This is a very simple search and is not intended for robust usage. To find a
 // VASP by name, a case insensitive search is performed if the query exists in
-// any of the VASP entity names. Alternatively a list of names can be given or a country
-// or list of countries for case-insensitive exact matches.
+// any of the VASP entity names. If there is not an exact match a prefix lookup is used
+// so long as the prefix > 3 characters. The search also looks up website matches by
+// parsing urls to match hostnames rather than scheme or path. Finally the query is
+// filtered by country and category.
 func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
@@ -282,7 +286,15 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 		log.Debug().Strs("name", names).Msg("search name query")
 		for _, name := range names {
 			if id := s.names[name]; id != "" {
+				// exact match
 				records[id] = struct{}{}
+			} else if len(name) >= searchPrefixMinLength {
+				// prefix match
+				for vasp, id := range s.names {
+					if strings.HasPrefix(vasp, name) {
+						records[id] = struct{}{}
+					}
+				}
 			}
 		}
 	}
@@ -378,7 +390,7 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 	}
 
 	var data []byte
-	key := s.careqKey(r.Id)
+	key := careqKey(r.Id)
 	if data, err = proto.Marshal(r); err != nil {
 		return "", err
 	}
@@ -397,7 +409,7 @@ func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err er
 	}
 
 	var val []byte
-	if val, err = s.db.Get(s.careqKey(id), nil); err != nil {
+	if val, err = s.db.Get(careqKey(id), nil); err != nil {
 		if err == leveldb.ErrNotFound {
 			return nil, ErrEntityNotFound
 		}
@@ -426,7 +438,7 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 	}
 
 	var data []byte
-	key := s.careqKey(r.Id)
+	key := careqKey(r.Id)
 	if data, err = proto.Marshal(r); err != nil {
 		return err
 	}
@@ -441,7 +453,7 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 // DeleteCertReq removes a certificate request from the store.
 func (s *Store) DeleteCertReq(id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
-	key := s.careqKey(id)
+	key := careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
@@ -453,7 +465,7 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 //===========================================================================
 
 // creates a []byte key from the vasp id using a prefix to act as a leveldb bucket
-func (s *Store) makeKey(prefix []byte, id string) (key []byte) {
+func makeKey(prefix []byte, id string) (key []byte) {
 	buf := []byte(id)
 	key = make([]byte, 0, len(prefix)+len(buf))
 	key = append(key, prefix...)
@@ -462,13 +474,13 @@ func (s *Store) makeKey(prefix []byte, id string) (key []byte) {
 }
 
 // creates a []byte key from the vasp id using a prefix to act as a leveldb bucket
-func (s *Store) vaspKey(id string) (key []byte) {
-	return s.makeKey(preVASPs, id)
+func vaspKey(id string) (key []byte) {
+	return makeKey(preVASPs, id)
 }
 
 // creates a []byte key from the cert request id using a prefix to act as a leveldb bucket
-func (s *Store) careqKey(id string) (key []byte) {
-	return s.makeKey(preCertReqs, id)
+func careqKey(id string) (key []byte) {
+	return makeKey(preCertReqs, id)
 }
 
 //===========================================================================

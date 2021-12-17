@@ -240,6 +240,32 @@ func (s *APIv2) Autocomplete(ctx context.Context) (out *AutocompleteReply, err e
 	return out, nil
 }
 
+func (s *APIv2) ReviewTimeline(ctx context.Context, in *ReviewTimelineParams) (out *ReviewTimelineReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/reviews", nil, &params); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ReviewTimelineReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s *APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVASPsReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -287,6 +313,35 @@ func (s *APIv2) RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPR
 
 	// Execute the request and get a response
 	out = &RetrieveVASPReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error) {
+	// vaspID is required for the endpoint
+	if in.VASP == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s", in.VASP)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPatch, path, in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &UpdateVASPReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}
@@ -465,32 +520,6 @@ func (s *APIv2) Resend(ctx context.Context, in *ResendRequest) (out *ResendReply
 		return nil, err
 	}
 
-	return out, nil
-}
-
-func (s *APIv2) ReviewTimeline(ctx context.Context, in *ReviewTimelineParams) (out *ReviewTimelineReply, err error) {
-	// Create the query params from the input
-	var params url.Values
-	if params, err = query.Values(in); err != nil {
-		return nil, fmt.Errorf("could not encode query params: %s", err)
-	}
-
-	// Must be authenticated
-	if err = s.checkAuthentication(ctx); err != nil {
-		return nil, err
-	}
-
-	// Make the HTTP request
-	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/reviews", nil, &params); err != nil {
-		return nil, err
-	}
-
-	// Execute the request and get a response
-	out = &ReviewTimelineReply{}
-	if _, err = s.Do(req, out, true); err != nil {
-		return nil, err
-	}
 	return out, nil
 }
 

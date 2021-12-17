@@ -94,8 +94,9 @@ message BatchReply {
 
 message CursorRequest {
     bytes prefix = 1;       // the prefix to range over, if nil all objects are returned
-    string namespace = 2;
-    Options options = 3;
+    bytes seek_key = 2;     // a key to seekto within the prefix (optional)
+    string namespace = 3;
+    Options options = 4;
 }
 
 message SyncRequest {

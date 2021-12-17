@@ -110,6 +110,10 @@ func MockConfig() config.Config {
 			},
 			TokenKeys: nil,
 		},
+		Members: config.MembersConfig{
+			Enabled:  false,
+			Insecure: true,
+		},
 		Database: config.DatabaseConfig{
 			URL:           "leveldb:///testdata/testdb",
 			ReindexOnBoot: false,

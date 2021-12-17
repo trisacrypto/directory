@@ -51,7 +51,7 @@ type GDS struct {
 	db   store.Store       // Database connection for loading objects (helper alias to s.svc.db)
 }
 
-// Serve GRPC requests on the specified address.
+// Serve gRPC requests on the specified address.
 func (s *GDS) Serve() (err error) {
 	if !s.conf.Enabled {
 		log.Warn().Msg("trisa directory service is not enabled")
@@ -128,7 +128,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	// Validate partial VASP record to ensure that it can be registered.
 	if err = vasp.Validate(true); err != nil {
-		// TODO: Ignore ErrCompleteNationalIdentifierLegalPErson until validation See #34
+		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
 		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
 			log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
 			return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
@@ -274,7 +274,11 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		}
 
 		if len(vasps) != 1 {
-			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			// Don't warn when common name is not found, just when multiple results are returned
+			if len(vasps) > 1 {
+				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
+			}
+			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
@@ -352,7 +356,6 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 		Strs("categories", categories).
 		Int("results", len(out.Results)).
 		Msg("search succeeded")
-
 	return out, nil
 }
 
@@ -375,7 +378,11 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 		}
 
 		if len(vasps) != 1 {
-			log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("wrong number of VASPs returned from search")
+			if len(vasps) > 1 {
+				// Don't warn when common name is not found, just when multiple results are returned
+				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
+			}
+			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
@@ -401,6 +408,11 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 // contact email verification. If successful, this method then sends the verification
 // request to the TRISA Admins for review.
 func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
+	if in.Token == "" {
+		log.Warn().Msg("no verification token supplied")
+		return nil, status.Error(codes.InvalidArgument, "could not verify contact: verification token missing from request")
+	}
+
 	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
 	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {

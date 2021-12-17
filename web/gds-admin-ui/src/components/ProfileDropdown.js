@@ -1,30 +1,20 @@
-// @flow
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
-import { APICore } from '../helpers/api/apiCore';
-type ProfileDropdownProps = {
-    profilePic?: any,
-    username: string,
-    userTitle?: string,
-};
+import useAuth from 'contexts/auth/use-auth';
 
-type ProfileDropdownState = {
-    dropdownOpen?: boolean,
-};
 
-const api = new APICore()
-
-const ProfileDropdown = (props: ProfileDropdownProps, state: ProfileDropdownState): React$Element<any> => {
+const ProfileDropdown = (props, state) => {
     const profilePic = props.profilePic || null;
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const { logout } = useAuth()
 
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
 
-    const handleLogoutClick = () => {
-        api.deleteUserSession()
+    const handleLogoutClick = async () => {
+        await logout()
     }
 
     return (

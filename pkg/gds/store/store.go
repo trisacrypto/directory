@@ -41,7 +41,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
-	"github.com/trisacrypto/directory/pkg/gds/store/sqlite"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -58,10 +57,6 @@ func Open(conf config.DatabaseConfig) (s Store, err error) {
 	switch dsn.Scheme {
 	case "leveldb":
 		if s, err = leveldb.Open(dsn.Path); err != nil {
-			return nil, err
-		}
-	case "sqlite", "sqlite3":
-		if s, err = sqlite.Open(dsn.Path); err != nil {
 			return nil, err
 		}
 	default:

@@ -53,7 +53,7 @@ func SetAdminVerificationToken(vasp *pb.VASP, token string) (err error) {
 
 // UpdateVerificationStatus changes the verification state of a VASP and appends a new
 // entry to the audit log on the extra.
-func UpdateVerificationStatus(vasp *pb.VASP, state pb.VerificationState, description string, source string) (err error) {
+func UpdateVerificationStatus(vasp *pb.VASP, state pb.VerificationState, description string, source string) error {
 	// Append a new entry to the audit log.
 	entry := &AuditLogEntry{
 		Timestamp:     time.Now().Format(time.RFC3339),
@@ -68,7 +68,6 @@ func UpdateVerificationStatus(vasp *pb.VASP, state pb.VerificationState, descrip
 
 	// Set the new state on the VASP.
 	vasp.VerificationStatus = state
-
 	return nil
 }
 
@@ -199,7 +198,6 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 
 	// Set the new state on the CertificateRequest.
 	request.Status = state
-
 	return nil
 }
 
