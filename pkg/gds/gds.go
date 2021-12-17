@@ -98,6 +98,10 @@ func (s *GDS) Shutdown() (err error) {
 	return nil
 }
 
+//===========================================================================
+// GDS Server Methods
+//===========================================================================
+
 // Register a new VASP entity with the directory service. After registration, the new
 // entity must go through the verification process to get issued a certificate. The
 // status of verification can be obtained by using the lookup RPC call.
@@ -125,25 +129,9 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		return nil, status.Error(codes.InvalidArgument, "no endpoint supplied")
 	}
 
-	var host, port string
-	if host, port, err = net.SplitHostPort(in.TrisaEndpoint); err != nil {
-		log.Warn().Err(err).Msg("invalid endpoint in request")
-		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
-	}
-
-	if host == "" {
-		log.Warn().Err(err).Msg("missing host in endpoint")
-		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
-	}
-
-	if port == "" {
-		log.Warn().Err(err).Str("endpoint", in.TrisaEndpoint).Msg("missing port in endpoint")
-		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
-	}
-
-	if _, err = strconv.Atoi(port); err != nil {
-		log.Warn().Err(err).Str("endpoint", in.TrisaEndpoint).Msg("invalid port in endpoint")
-		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
+	if err = validateEndpoint(in.TrisaEndpoint); err != nil {
+		log.Warn().Err(err).Str("endpoint", in.TrisaEndpoint).Msg("invalid endpoint")
+		return nil, status.Error(codes.InvalidArgument, "invalid endpoint supplied")
 	}
 
 	// Compute the common name from the TRISA endpoint if not specified
@@ -153,20 +141,10 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 			return nil, status.Error(codes.InvalidArgument, "no common name supplied, could not parse common name from endpoint")
 		}
 	} else {
-		// Common name must have hostname only
-		if host, port, err = net.SplitHostPort(vasp.CommonName); err != nil {
-			log.Warn().Err(err).Msg("invalid common name in request")
-			return nil, status.Error(codes.InvalidArgument, "invalid common name")
-		}
-
-		if host == "" {
-			log.Warn().Err(err).Msg("missing host in common name")
-			return nil, status.Error(codes.InvalidArgument, "invalid common name")
-		}
-
-		if port != "" {
-			log.Warn().Err(err).Msg("common name must have hostname only")
-			return nil, status.Error(codes.InvalidArgument, "invalid common name")
+		// Validate common name if supplied
+		if err = validateCommonName(vasp.CommonName); err != nil {
+			log.Warn().Err(err).Str("common_name", vasp.CommonName).Msg("invalid common name")
+			return nil, status.Error(codes.InvalidArgument, "invalid common name supplied")
 		}
 	}
 
@@ -606,7 +584,11 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 	return out, nil
 }
 
-// Helper function to get a valid email address from the contacts on a VASP.
+//===========================================================================
+// Helper Functions
+//===========================================================================
+
+// Get a valid email address from the contacts on a VASP.
 func getContactEmail(vasp *pb.VASP) string {
 	contacts := []*pb.Contact{
 		vasp.Contacts.Technical,
@@ -621,4 +603,42 @@ func getContactEmail(vasp *pb.VASP) string {
 		}
 	}
 	return ""
+}
+
+// Validate a gRPC endpoint string.
+func validateEndpoint(endpoint string) (err error) {
+	var host, port string
+	if host, port, err = net.SplitHostPort(endpoint); err != nil {
+		return errors.New("unable to parse endpoint string")
+	}
+
+	if host == "" {
+		return errors.New("missing host in endpoint string")
+	}
+
+	if port == "" {
+		return errors.New("missing port in endpoint string")
+	}
+
+	if _, err = strconv.Atoi(port); err != nil {
+		return errors.New("endpoint port is not an integer")
+	}
+	return nil
+}
+
+// Validate a common name.
+func validateCommonName(name string) (err error) {
+	var host, port string
+	if host, port, err = net.SplitHostPort(name); err != nil {
+		return errors.New("unable to parse common name")
+	}
+
+	if host == "" {
+		return errors.New("missing host in common name")
+	}
+
+	if port != "" {
+		return errors.New("common name contains a port number")
+	}
+	return nil
 }

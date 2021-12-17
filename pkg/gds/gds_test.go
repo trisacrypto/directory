@@ -66,6 +66,9 @@ func (s *gdsTestSuite) TestRegister() {
 	request.TrisaEndpoint = "trisatest.net"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
+	request.TrisaEndpoint = "trisatest.net:443/"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
 	request.TrisaEndpoint = "trisatest.net:443/path"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
