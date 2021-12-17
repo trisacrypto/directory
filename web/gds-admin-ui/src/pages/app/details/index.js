@@ -14,6 +14,7 @@ import AuditLog from './AuditLog';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { fetchReviewNotesApiResponse } from 'redux/review-notes';
+import NProgress from 'nprogress'
 
 const ReviewNotes = React.lazy(() => import('./ReviewNotes'))
 
@@ -26,14 +27,17 @@ const VaspDetails = () => {
     const safeDispatch = useSafeDispatch(dispatch)
 
     React.useEffect(() => {
+        NProgress.start()
         if (params && params.id) {
             safeDispatch(fetchReviewNotesApiResponse(params.id))
 
             getVasp(params.id).then(response => {
                 setVasp(response.data)
+                NProgress.done()
             }).catch(error => {
                 history.push('/not-found', { error: "Could not retrieve VASP record by ID" })
                 console.error("[BasicDetails] getVasp", error.message)
+                NProgress.done()
             })
 
         }

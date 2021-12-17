@@ -3,6 +3,7 @@ import { Bar } from 'react-chartjs-2';
 import { Card } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { Status, StatusLabel } from 'constants/dashboard';
+import OvalLoader from 'components/OvalLoader';
 
 
 const barChartOpts = {
@@ -156,22 +157,24 @@ const TasksChart = () => {
         ],
     };
 
-
     return (
         <Card>
             <Card.Body>
                 <h4 className="header-title mb-4">REVIEWS TIMELINE</h4>
-
-                <div dir="ltr">
-                    <div style={{ height: '320px' }} className="mt-3 chartjs-chart">
-                        {
-                            !isLoading && <Bar data={barChartData} options={barChartOpts} />
-                        }
-                    </div>
-                </div>
-                <small>
-                    ⋆ click on the elements of the legend to filter accordingly
-                </small>
+                {
+                    isLoading ? <div><OvalLoader /></div> : (
+                        <>
+                            <div dir="ltr">
+                                <div style={{ height: '320px' }} className="mt-3 chartjs-chart">
+                                    <Bar data={barChartData} options={barChartOpts} />
+                                </div>
+                            </div>
+                            <small>
+                                ⋆ click on the elements of the legend to filter accordingly
+                            </small>
+                        </>
+                    )
+                }
             </Card.Body >
         </Card >
     );

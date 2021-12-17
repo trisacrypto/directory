@@ -4,8 +4,11 @@ import { DeleteReviewNotesActionTypes } from "."
 import { getReviewNotes, deleteReviewNote as deleteNote } from "services/review-notes"
 import { fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess } from "./actions"
 import { FetchReviewNotesActionTypes } from "./constants"
+import NProgress from 'nprogress'
+
 
 function* fetchReviewNotes({ payload: { id } }) {
+    NProgress.start()
     try {
         const response = yield call(getReviewNotes, id)
         const { notes } = response?.data
@@ -17,9 +20,11 @@ function* fetchReviewNotes({ payload: { id } }) {
         }) : []
 
         yield put(fetchReviewNotesApiResponseSuccess(sortedData))
+        NProgress.done()
     } catch (error) {
         toast.error(error)
         yield put(fetchReviewNotesApiResponseError(error.message))
+        NProgress.done()
     }
 }
 
@@ -27,10 +32,10 @@ function* deleteReviewNote({ payload: { noteId, vaspId } }) {
     try {
         const response = yield call(deleteNote, noteId, vaspId)
         if (response) {
-            toast.success('The note has been deleted successfully')
+            NProgress.done()
         }
     } catch (error) {
-        toast.error(error.message)
+        console.error(error)
     }
 }
 

@@ -10,7 +10,7 @@ const INITIAL_STATE = {
 }
 
 const SUMMARY_INITIAL_STATE = {
-    data: {},
+    data: null,
     loading: false
 }
 
