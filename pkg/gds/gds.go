@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -118,11 +119,54 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		Version:             &pb.Version{Version: 1},
 	}
 
+	// Validate TRISA endpoint
+	if in.TrisaEndpoint == "" {
+		log.Warn().Err(err).Msg("missing endpoint in request")
+		return nil, status.Error(codes.InvalidArgument, "no endpoint supplied")
+	}
+
+	var host, port string
+	if host, port, err = net.SplitHostPort(in.TrisaEndpoint); err != nil {
+		log.Warn().Err(err).Msg("invalid endpoint in request")
+		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
+	}
+
+	if host == "" {
+		log.Warn().Err(err).Msg("missing host in endpoint")
+		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
+	}
+
+	if port == "" {
+		log.Warn().Err(err).Str("endpoint", in.TrisaEndpoint).Msg("missing port in endpoint")
+		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
+	}
+
+	if _, err = strconv.Atoi(port); err != nil {
+		log.Warn().Err(err).Str("endpoint", in.TrisaEndpoint).Msg("invalid port in endpoint")
+		return nil, status.Error(codes.InvalidArgument, "invalid endpoint")
+	}
+
 	// Compute the common name from the TRISA endpoint if not specified
-	if vasp.CommonName == "" && vasp.TrisaEndpoint != "" {
+	if vasp.CommonName == "" {
 		if vasp.CommonName, _, err = net.SplitHostPort(in.TrisaEndpoint); err != nil {
 			log.Warn().Err(err).Msg("could not parse common name from endpoint")
 			return nil, status.Error(codes.InvalidArgument, "no common name supplied, could not parse common name from endpoint")
+		}
+	} else {
+		// Common name must have hostname only
+		if host, port, err = net.SplitHostPort(vasp.CommonName); err != nil {
+			log.Warn().Err(err).Msg("invalid common name in request")
+			return nil, status.Error(codes.InvalidArgument, "invalid common name")
+		}
+
+		if host == "" {
+			log.Warn().Err(err).Msg("missing host in common name")
+			return nil, status.Error(codes.InvalidArgument, "invalid common name")
+		}
+
+		if port != "" {
+			log.Warn().Err(err).Msg("common name must have hostname only")
+			return nil, status.Error(codes.InvalidArgument, "invalid common name")
 		}
 	}
 

@@ -42,7 +42,7 @@ func (s *gdsTestSuite) TestRegister() {
 	contacts.Technical = &technical
 	contacts.Technical.Email = "technical@example.com"
 
-	// Common name is not parseable from the endpoint
+	// Request contains an invalid endpoint
 	request := &api.RegisterRequest{
 		Entity:           refVASP.Entity,
 		Contacts:         &contacts,
@@ -51,16 +51,42 @@ func (s *gdsTestSuite) TestRegister() {
 		VaspCategories:   refVASP.VaspCategories,
 		EstablishedOn:    refVASP.EstablishedOn,
 		Trixo:            refVASP.Trixo,
-		TrisaEndpoint:    ":3000",
 	}
 	_, err := client.Register(ctx, request)
+	require.Error(err)
+	request.TrisaEndpoint = "http://trisatest.net:443"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+	request.TrisaEndpoint = "grpc://:443"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+	request.TrisaEndpoint = ":443"
+	_, err = client.Register(ctx, request)
 	require.Error(err)
 	request.TrisaEndpoint = "trisatest.net"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
+	request.TrisaEndpoint = "trisatest.net:443/path"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
 
-	// VASP request is incomplete
-	request.TrisaEndpoint = "trisatest.net:3000"
+	// Request contains an invalid common name
+	request.TrisaEndpoint = "trisatest.net:443"
+	request.CommonName = "http://trisatest.net"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+	request.CommonName = ":443"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+	request.CommonName = "trisatest.net:443"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+	request.CommonName = "trisatest.net/path"
+	_, err = client.Register(ctx, request)
+	require.Error(err)
+
+	// Request contains no entity
+	request.CommonName = ""
 	request.Entity = nil
 	_, err = client.Register(ctx, request)
 	require.Error(err)
