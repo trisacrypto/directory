@@ -1,6 +1,7 @@
 package trtl
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -18,6 +19,35 @@ var (
 	// pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
 	pmLatency *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
 )
+
+// A MetricsService manages Prometheus metrics
+type MetricsService struct {
+	srv *http.Server
+}
+
+func NewMetricsService() (*MetricsService, error) {
+	return &MetricsService{}, nil
+}
+
+// Serve serves the Prometheus metrics
+func (m *MetricsService) Serve(addr string) error {
+	if err := registerMetrics(); err != nil {
+		return err
+	}
+	m.srv = serveMetrics(addr)
+
+	return nil
+}
+
+// Gracefully shutdown the Prometheus metrics service
+func (m *MetricsService) Shutdown() error {
+	// Might want to share context from Trtl more globally?
+	ctx := context.Background()
+	if err := m.srv.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("unable to gracefully shutdown prometheus metrics")
+	}
+	return nil
+}
 
 const (
 	pmNamespace = "trtl"
@@ -67,12 +97,14 @@ func initMetrics() {
 	}, []string{"call"})
 }
 
-func serveMetrics(metricsAddr string) {
+func serveMetrics(metricsAddr string) *http.Server {
+	srv := &http.Server{Addr: metricsAddr}
 	log.Info().Msg(fmt.Sprintf("serving prometheus metrics at http://%s/metrics", metricsAddr))
 	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(metricsAddr, nil); err != nil {
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Error().Err(err).Str("metricsAddr", metricsAddr).Msg("unable to serve prometheus metrics")
 	}
+	return srv
 }
 
 func registerMetrics() error {

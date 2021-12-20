@@ -42,7 +42,7 @@ func main() {
 					Name:    "db",
 					Aliases: []string{"d"},
 					Usage:   "dsn to start the trtl database on",
-					EnvVars: []string{"GDS_DATABASE_URL"},
+					EnvVars: []string{"TRTL_DATABASE_URL"},
 				},
 				&cli.StringFlag{
 					Name:    "bindaddr",

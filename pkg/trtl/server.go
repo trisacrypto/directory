@@ -39,6 +39,7 @@ type Server struct {
 	trtl    *TrtlService    // Service for interacting with a Honu database
 	peers   *PeerService    // Service for managing remote peers
 	replica *ReplicaService // Service that handles anti-entropy replication
+	metrics *MetricsService // Service for Prometheus metrics
 	echan   chan error      // Channel for receiving errors from the gRPC server
 }
 
@@ -93,6 +94,11 @@ func New(conf config.Config) (s *Server, err error) {
 	}
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
+	// Initialize Metrics service for Prometheus
+	if s.metrics, err = NewMetricsService(); err != nil {
+		return nil, err
+	}
+
 	// TODO: initialize the Replica service
 
 	return s, nil
@@ -115,6 +121,14 @@ func (t *Server) Serve() (err error) {
 		// These services should not run in maintenance mode
 		// Run the Gossip background routine
 		go t.replica.AntiEntropy()
+	}
+
+	// If metrics are enabled, start Prometheus metrics server as separate go routine
+	if t.conf.MetricsEnabled {
+		log.Info().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics server started")
+		go t.metrics.Serve(t.conf.MetricsAddr)
+	} else {
+		log.Info().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics disabled")
 	}
 
 	// Listen for TCP requests
@@ -151,6 +165,9 @@ func (t *Server) Shutdown() (err error) {
 	// TODO: collect multi errors to return after shutdown
 	log.Info().Msg("gracefully shutting down trtl server")
 	t.srv.GracefulStop()
+
+	// Shutdown the Prometheus metrics server
+	t.metrics.Shutdown()
 
 	// TODO: Stop the anti-entropy routine.
 

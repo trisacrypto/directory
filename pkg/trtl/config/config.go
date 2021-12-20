@@ -14,13 +14,15 @@ import (
 // Note: because we need to validate the configuration, `config.New()`
 // must be called to ensure that the `processed` is correctly set
 type Config struct {
-	Maintenance bool                `split_words:"true" default:"false"`
-	BindAddr    string              `split_words:"true" default:":4435"`
-	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
-	ConsoleLog  bool                `split_words:"true" default:"false"`
-	Database    DatabaseConfig
-	Replica     ReplicaConfig
-	processed   bool
+	Maintenance    bool                `split_words:"true" default:"false"`
+	BindAddr       string              `split_words:"true" default:":4435"`
+	MetricsAddr    string              `split_words:"true" default:":7777"`
+	MetricsEnabled bool                `split_words:"true" default:"true"`
+	LogLevel       logger.LevelDecoder `split_words:"true" default:"info"`
+	ConsoleLog     bool                `split_words:"true" default:"false"`
+	Database       DatabaseConfig
+	Replica        ReplicaConfig
+	processed      bool
 }
 
 type DatabaseConfig struct {
