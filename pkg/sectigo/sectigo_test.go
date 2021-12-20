@@ -145,7 +145,7 @@ func (s *SectigoTestSuite) download(t *testing.T) {
 
 	rep, err := s.api.Download(42, dir)
 	require.NoError(t, err)
-	require.Equal(t, filepath.Join(dir, "42.zip"), rep)
+	require.Equal(t, filepath.Join(dir, "certificate.zip"), rep)
 	require.FileExists(t, rep)
 }
 

@@ -16,6 +16,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -220,9 +223,11 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 	c.JSON(http.StatusOK, &sectigo.BatchResponse{
 		BatchID:      42,
 		CreationDate: time.Now().Format(time.RFC3339),
-		Status:       "completed",
+		Status:       sectigo.BatchStatusReadyForDownload,
 		Active:       false,
 		BatchName:    in.BatchName,
+		OrderNumber:  23,
+		Profile:      "profile",
 	})
 }
 
@@ -269,7 +274,7 @@ func (s *Server) batchDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, &sectigo.BatchResponse{
 		BatchID:      42,
 		CreationDate: time.Now().Format(time.RFC3339),
-		Status:       "completed",
+		Status:       sectigo.BatchStatusReadyForDownload,
 		Active:       false,
 	})
 }
@@ -308,13 +313,28 @@ func (s *Server) download(c *gin.Context) {
 		return
 	}
 
-	someJSON := struct {
-		Field string `json:"field"`
-	}{
-		Field: "foo",
+	// Using runtime.Caller allows us to load the fixture using a path relative to this
+	// file, since the mock can be invoked from a few different packages.
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, fmt.Errorf("could not get caller context"))
+		return
+	}
+	f, err := os.Open(filepath.Join(filepath.Dir(thisFile), "testdata", "certificate.zip"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
 
-	c.JSON(http.StatusOK, someJSON)
+	c.Header("Content-Disposition", "attachment; filename=certificate.zip")
+	c.DataFromReader(http.StatusOK, info.Size(), "application/zip", f, nil)
 }
 
 func (s *Server) devices(c *gin.Context) {

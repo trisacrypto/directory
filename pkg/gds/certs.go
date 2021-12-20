@@ -32,7 +32,7 @@ import (
 // isn't continuously handling a growing number of requests over time.
 //
 // TODO: notify admins if cert-manager errors since this will block integration.
-func (s *Service) CertManager() {
+func (s *Service) CertManager(stop <-chan struct{}) {
 	// Check certificate download directory
 	certDir, err := s.getCertStorage()
 	if err != nil {
@@ -93,6 +93,13 @@ func (s *Service) CertManager() {
 			return
 		}
 		log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
+
+		select {
+		case <-stop:
+			log.Info().Msg("certificate manager received stop signal")
+			return
+		default:
+		}
 	}
 }
 
