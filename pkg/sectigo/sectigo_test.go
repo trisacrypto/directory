@@ -21,16 +21,20 @@ func TestSectigo(t *testing.T) {
 
 type SectigoTestSuite struct {
 	suite.Suite
-	api    *Sectigo
-	server *mock.Server
+	api *Sectigo
 }
 
 func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	var err error
 	require := s.Require()
-	s.api, err = New("foo", "supersecret", "CipherTrace EE")
-	require.NoError(err)
-	s.server, err = mock.New()
+	conf := Config{
+		Username: "foo",
+		Password: "supersecret",
+		Profile:  "CipherTrace EE",
+		Testing:  true,
+	}
+	require.NoError(mock.Start())
+	s.api, err = New(conf)
 	require.NoError(err)
 }
 
@@ -39,7 +43,7 @@ func (s *SectigoTestSuite) AfterTest(suiteName, testName string) {
 	if path := creds.CacheFile(); path != "" {
 		os.RemoveAll(path)
 	}
-	s.server.Close()
+	mock.Stop()
 }
 
 func (s *SectigoTestSuite) TestCredsCopy() {
@@ -71,8 +75,8 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		{name: CreateSingleCertBatchEP, f: s.createSingleCertBatch},
 		{name: UploadCSREP, f: s.uploadCSRBatch},
 		{name: BatchDetailEP, f: s.batchDetail},
-		{name: BatchStatusEP, f: s.batchStatus},
 		{name: BatchProcessingInfoEP, f: s.processingInfo},
+		{name: BatchStatusEP, f: s.batchStatus},
 		{name: DownloadEP, f: s.download},
 		{name: DevicesEP, f: s.licensesUsed},
 		{name: UserAuthoritiesEP, f: s.userAuthorities},
@@ -87,7 +91,7 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 	for _, t := range tests {
 		s.T().Run(t.name, t.f)
 	}
-	calls := s.server.GetCalls()
+	calls := mock.Get().GetCalls()
 	for endpoint, count := range calls {
 		require.Equal(1, count, fmt.Errorf("wrong number of calls to endpoint %s", endpoint))
 	}
@@ -206,11 +210,8 @@ func (s *SectigoTestSuite) revokeCertificate(t *testing.T) {
 
 func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 	require := s.Require()
-	m, err := mock.New()
-	require.NoError(err)
-	defer m.Close()
 
-	m.Handle(AuthenticateEP, func(c *gin.Context) {
+	mock.Handle(AuthenticateEP, func(c *gin.Context) {
 		var (
 			in *AuthenticationRequest
 		)
@@ -226,8 +227,13 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 		c.JSON(http.StatusInternalServerError, "how did we get here?")
 	})
 
-	s.api, err = New("invalid", "invalid", "CipherTrace EE")
+	conf := Config{
+		Username: "invalid",
+		Password: "invalid",
+		Testing:  true,
+	}
+	var err error
+	s.api, err = New(conf)
 	require.NoError(err)
-	err = s.api.Authenticate()
-	require.EqualError(err, ErrInvalidCredentials.Error())
+	require.EqualError(s.api.Authenticate(), ErrInvalidCredentials.Error())
 }

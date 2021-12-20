@@ -221,7 +221,12 @@ func main() {
 }
 
 func initAPI(c *cli.Context) (err error) {
-	if api, err = sectigo.New(c.String("username"), c.String("password"), c.String("profile")); err != nil {
+	conf := sectigo.Config{
+		Username: c.String("username"),
+		Password: c.String("password"),
+		Profile:  c.String("profile"),
+	}
+	if api, err = sectigo.New(conf); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 

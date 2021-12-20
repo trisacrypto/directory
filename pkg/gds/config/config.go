@@ -25,7 +25,7 @@ type Config struct {
 	Admin       AdminConfig
 	Members     MembersConfig
 	Database    DatabaseConfig
-	Sectigo     SectigoConfig
+	Sectigo     sectigo.Config
 	Email       EmailConfig
 	CertMan     CertManConfig
 	Backup      BackupConfig
@@ -70,12 +70,6 @@ type OauthConfig struct {
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
-}
-
-type SectigoConfig struct {
-	Username string `envconfig:"SECTIGO_USERNAME" required:"false"`
-	Password string `envconfig:"SECTIGO_PASSWORD" required:"false"`
-	Profile  string `envconfig:"SECTIGO_PROFILE" default:"CipherTrace EE"`
 }
 
 type EmailConfig struct {
@@ -201,22 +195,6 @@ func (c MembersConfig) Validate() error {
 		if c.Certs == "" || c.CertPool == "" {
 			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
 		}
-	}
-	return nil
-}
-
-func (c SectigoConfig) Validate() error {
-	// Check valid certificate profiles
-	validProfile := false
-	for _, profile := range sectigo.AllProfiles {
-		if profile == c.Profile {
-			validProfile = true
-			break
-		}
-	}
-
-	if !validProfile {
-		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(sectigo.AllProfiles[:], ", "))
 	}
 	return nil
 }

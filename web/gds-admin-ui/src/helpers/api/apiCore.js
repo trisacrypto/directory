@@ -1,40 +1,87 @@
 import axios from 'axios';
 import { defaultEndpointPrefix, getCookie } from 'utils';
-import jwtDecode from 'jwt-decode'
-import toast from 'react-hot-toast';
 
-axios.defaults.headers.post['Content-Type'] = 'application/json';
-axios.defaults.baseURL = defaultEndpointPrefix();
+const instance = axios.create({
+    baseURL: defaultEndpointPrefix(),
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
 
 // withCredentials ensures that axios fetch includes `HttpOnly` cookies in the request for CSRF protectioin
-axios.defaults.withCredentials = true
+instance.defaults.withCredentials = true
 
 const AUTH_SESSION_KEY = '__SESSION_TOKEN__';
 
-axios.interceptors.response.use(
+function reauthenticate() {
+    const csrfToken = getCookie('csrf_token')
+    const refreshToken = getRefreshToken()
+    const payload = {
+        credential: refreshToken
+    }
+
+    return instance.post('/reauthenticate', payload, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+let isRefreshing = false;
+let subscribers = [];
+
+function subscribeTokenRefresh(cb) {
+    subscribers.push(cb);
+}
+
+function onRrefreshed(token) {
+    subscribers.map((cb) => cb(token));
+}
+
+instance.interceptors.response.use(
     (response) => {
         return response;
     },
-    (error) => {
+    async (error) => {
         let message;
+        const originalRequest = error.config
 
         if (error && !error.response) {
             return Promise.reject('Network connection error')
         }
 
+        if (error && error.response && error.response.status === 401) {
+            if (!isRefreshing) {
+                isRefreshing = true
+                reauthenticate().then(response => {
+                    isRefreshing = false
+
+                    onRrefreshed(response.data)
+                    subscribers = [];
+                })
+
+            }
+
+            return new Promise((resolve) => {
+                subscribeTokenRefresh(token => {
+                    originalRequest.headers['Authorization'] = 'Bearer ' + token.access_token;
+                    setAuthorization(token.access_token)
+                    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(token))
+
+                    resolve(instance(originalRequest));
+                })
+            })
+        }
+
         if (error && error.response && error.response.status === 404) {
             // window.location.href = '/not-found';
-        } else if (error && error.response && error.response.status === 403) {
-            sessionStorage.removeItem(AUTH_SESSION_KEY)
-            window.location.href = '/login';
         } else {
             switch (error.response.status) {
-                case 401:
-                    message = 'Invalid credentials';
-                    window.location.href = '/login'
-                    break;
                 case 403:
-                    message = 'Access Forbidden';
+                    message = 'Session expired';
+                    sessionStorage.removeItem(AUTH_SESSION_KEY)
+                    setAuthorization(null)
+                    window.location.href = '/login'
                     break;
                 case 404:
                     message = 'Sorry! the data you are looking for could not be found';
@@ -57,25 +104,14 @@ axios.interceptors.response.use(
  * @param {*} token
  */
 const setAuthorization = (token) => {
-    if (token) axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    else delete axios.defaults.headers.common['Authorization'];
+    if (token) instance.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+    else delete instance.defaults.headers.common['Authorization'];
 };
 
 const setCookie = (cookie) => {
     if (cookie) {
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = `${cookie}`
+        instance.defaults.headers.common['X-CSRF-TOKEN'] = `${cookie}`
     }
-}
-
-const isValidRefreshToken = (token) => {
-    if (token) {
-        const decoded = jwtDecode(token)
-        const currentTime = Date.now() / 1000
-        return currentTime > decoded.nbf && currentTime < decoded.exp
-
-    }
-
-    return false;
 }
 
 
@@ -83,6 +119,11 @@ const getUserFromSession = () => {
     const user = sessionStorage.getItem(AUTH_SESSION_KEY);
     return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
 };
+
+const getRefreshToken = () => {
+    const user = getUserFromSession()
+    return user?.refresh_token
+}
 class APICore {
     /**
      * Fetches data from given url
@@ -91,9 +132,9 @@ class APICore {
         let response;
         if (params) {
             var queryString = params ? params : ''
-            response = axios.get(`${url}?${queryString}`);
+            response = instance.get(`${url}?${queryString}`);
         } else {
-            response = axios.get(`${url}`, params)
+            response = instance.get(`${url}`, params)
         }
         return response;
     };
@@ -134,28 +175,21 @@ class APICore {
      * post given data to url
      */
     create = (url, data, config) => {
-        return axios.post(url, data, config);
-    };
-
-    /**
-     * Updates patch data
-     */
-    updatePatch = (url, data) => {
-        return axios.patch(url, data);
+        return instance.post(url, data, config);
     };
 
     /**
      * Updates data
      */
     update = (url, data) => {
-        return axios.put(url, data);
+        return instance.put(url, data);
     };
 
     /**
      * Deletes data
      */
     delete = (url, params) => {
-        return axios.delete(url, params);
+        return instance.delete(url, params);
     };
 
     /**
@@ -194,60 +228,6 @@ class APICore {
         return axios.patch(url, formData, config);
     };
 
-    reauthenticate = (payload) => {
-        const cookie = getCookie('csrf_token')
-
-        axios.post('/reauthenticate', payload, {
-            headers: {
-                'X-CSRF-TOKEN': cookie
-            }
-        }).then(res => {
-            this.setLoggedInUser(res.data)
-            setAuthorization(res.data.access_token)
-            return true
-        }).catch((err) => {
-            console.error('[ERROR]', err)
-            toast.error("Something wrong happen while refreshing the token")
-            this.setLoggedInUser(null)
-            setAuthorization(null)
-            return false
-        })
-
-        return null
-    }
-
-    isUserAuthenticated = () => {
-        const user = this.getLoggedInUser();
-        if (!user) {
-            return false;
-        }
-
-        const decodedAccessToken = jwtDecode(user.access_token);
-        const currentTime = Date.now() / 1000;
-
-        const payload = {
-            credential: user.refresh_token
-        }
-
-        if (currentTime < decodedAccessToken.exp && currentTime > decodedAccessToken.nbf) {
-            // The access token is valid -- we could just return true here
-            // Alternatively, we could check if we're in that small window of time where we can reauthenticate when the access token is valid:
-            if (isValidRefreshToken(user.refresh_token)) {
-                this.reauthenticate(payload)
-            }
-            return true;
-        } else {
-            // access token is invalid, check if we can reauthenticate
-            if (isValidRefreshToken(user.refresh_token)) {
-                this.reauthenticate(payload)
-            }
-            // neither the access nor the refresh token is valid any longer
-            this.setLoggedInUser(null)
-            setAuthorization(null)
-            return false;
-        }
-    };
-
     setLoggedInUser = (session) => {
         if (session) sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
         else {
@@ -262,18 +242,14 @@ class APICore {
         return getUserFromSession();
     };
 
-    setUserInSession = (modifiedUser) => {
-        let userInfo = sessionStorage.getItem(AUTH_SESSION_KEY);
-        if (userInfo) {
-            const { token, user } = JSON.parse(userInfo);
-            this.setLoggedInUser({ token, ...user, ...modifiedUser });
-        }
-    };
-
     deleteUserSession = () => {
         this.setLoggedInUser(null)
         setAuthorization(null)
         window.location.href = '/login'
+    }
+
+    getRefreshSessionToken = () => {
+        return getRefreshToken()
     }
 }
 

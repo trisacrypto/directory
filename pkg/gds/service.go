@@ -70,10 +70,8 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Create the Sectigo API client
-	if s.certs, err = sectigo.New(conf.Sectigo.Username, conf.Sectigo.Password, conf.Sectigo.Profile); err != nil {
-		log.Error().Err(err).Msg("could not initialize sectigo client")
-		// HACK: to get local testing going we're just ignoring this error - we should instead mock the Sectigo client.
-		// return nil, err
+	if s.certs, err = sectigo.New(conf.Sectigo); err != nil {
+		return nil, err
 	}
 
 	// Ensure the certificate storage can be reached

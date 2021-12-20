@@ -408,6 +408,11 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 // contact email verification. If successful, this method then sends the verification
 // request to the TRISA Admins for review.
 func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (out *api.VerifyContactReply, err error) {
+	if in.Token == "" {
+		log.Warn().Msg("no verification token supplied")
+		return nil, status.Error(codes.InvalidArgument, "could not verify contact: verification token missing from request")
+	}
+
 	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
 	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {

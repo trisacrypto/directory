@@ -2,43 +2,87 @@ import React from "react";
 import jwtDecode from "jwt-decode";
 import { AUTH_SESSION_KEY } from "./constants";
 import AuthContext from './auth-context';
-import useSessionStorageState from "hooks/useSessionStorage";
-import { APICore, setAuthorization, setCookie } from "helpers/api/apiCore";
-import { getCookie } from "utils";
+import { APICore, setAuthorization } from "helpers/api/apiCore";
+import useSafeDispatch from "hooks/useSafeDispatch";
+import { postCredentials } from "helpers/api/auth";
+import dayjs from "dayjs";
 
 const api = new APICore()
+const user = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY))
+
+const initialState = user ? {
+    user: jwtDecode(user.access_token),
+    isLoggedIn: true
+} : {
+    user: null,
+    isLoggedIn: false
+}
+
+const reducer = (state = initialState, action) => {
+    switch (action.type) {
+        case 'LOGIN_SUCCESS':
+            return {
+                ...state,
+                user: action.payload.user,
+                isLoggedIn: true
+            }
+        case 'LOGOUT':
+            return {
+                ...state,
+                user: null,
+                isLoggedIn: false
+            }
+        default:
+            break;
+    }
+}
+
 
 const AuthProvider = ({ children }) => {
-    const [token] = useSessionStorageState(AUTH_SESSION_KEY, '');
-    const [authState, setAuthState] = React.useState(() => {
-        if (token) {
-            const tokenDecoded = jwtDecode(token.access_token);
-            return {
-                user: tokenDecoded,
-                token: token
-            }
-        } else {
-            return {}
+    const [state, _dispatch] = React.useReducer(reducer, initialState)
+    const dispatch = useSafeDispatch(_dispatch)
+
+    const isUserAuthenticated = () => {
+        const { user } = state
+        if (!user) {
+            return false;
         }
-    });
 
-    const setAuthInfo = (token) => {
-        const tokenDecoded = jwtDecode(token.access_token)
-        const csrfToken = getCookie('csrf_token')
-        api.setLoggedInUser(token)
-        setAuthorization(token.access_token)
-        setCookie(csrfToken)
-        setAuthState({
-            user: tokenDecoded
-        })
+        return dayjs().diff(dayjs(user.exp)) > 0
+    }
 
+    const login = async (user) => {
+        try {
+            const response = await postCredentials(user)
+            const { access_token } = response.data
 
+            setAuthorization(access_token)
+            api.setLoggedInUser(response.data)
+
+            dispatch({
+                type: 'LOGIN_SUCCESS',
+                payload: { user: jwtDecode(access_token) }
+            })
+
+        } catch (error) {
+            console.error('[LOGIN]', error)
+        }
+
+    }
+
+    const logout = () => {
+        dispatch({ type: 'LOGOUT' })
+        api.deleteUserSession()
+        api.setLoggedInUser(null)
     }
 
 
     const value = {
-        ...authState,
-        setAuthInfo,
+        ...state,
+        dispatch,
+        isUserAuthenticated,
+        logout,
+        login
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

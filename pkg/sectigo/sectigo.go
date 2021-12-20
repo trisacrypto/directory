@@ -19,6 +19,20 @@ import (
 	"strings"
 )
 
+// Valid Sectigo Certificate Profile Names and IDs
+// TODO: do not hardcode this, but get programatically from Sectigo API
+const (
+	ProfileCipherTraceEE                     = "CipherTrace EE"
+	ProfileIDCipherTraceEE                   = "17"
+	ProfileCipherTraceEndEntityCertificate   = "CipherTrace End Entity Certificate"
+	ProfileIDCipherTraceEndEntityCertificate = "85"
+)
+
+var AllProfiles = [4]string{
+	ProfileCipherTraceEE, ProfileIDCipherTraceEE,
+	ProfileCipherTraceEndEntityCertificate, ProfileIDCipherTraceEndEntityCertificate,
+}
+
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.
 // See documentation at: https://support.sectigo.com/Com_KnowledgeDetailPage?Id=kA01N000000bvCJ
 //
@@ -42,16 +56,23 @@ type Sectigo struct {
 // $SECTIGO_USERNAME and $SECTIGO_PASSWORD respectively; alternatively if not given and
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
-func New(username, password, profile string) (client *Sectigo, err error) {
+func New(conf Config) (client *Sectigo, err error) {
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
-		profile: profile,
+		profile: conf.Profile,
 	}
 
-	if err = client.creds.Load(username, password); err != nil {
+	if conf.Testing {
+		host := baseURL.Hostname()
+		if host != "localhost" && host != "127.0.0.1" {
+			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
+		}
+	}
+
+	if err = client.creds.Load(conf.Username, conf.Password); err != nil {
 		return nil, err
 	}
 
@@ -853,4 +874,8 @@ func certificateAuthRedirectPolicy(req *http.Request, via []*http.Request) error
 		return http.ErrUseLastResponse
 	}
 	return nil
+}
+
+func (s *Sectigo) Profile() string {
+	return s.profile
 }

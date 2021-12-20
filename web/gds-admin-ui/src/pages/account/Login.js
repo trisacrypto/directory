@@ -6,9 +6,8 @@ import config from "config";
 import { APICore, setCookie } from 'helpers/api/apiCore';
 import { getCookie } from 'utils';
 import toast from 'react-hot-toast';
-import useAuth from 'contexts/auth/use-auth';
-import { postCredentials } from 'helpers/api/auth';
 import { Alert } from 'react-bootstrap';
+import useAuth from 'contexts/auth/use-auth';
 
 
 const api = new APICore()
@@ -16,16 +15,14 @@ const api = new APICore()
 const Login = () => {
 
     const [csrfProtected, setCsrfProtected] = React.useState(false)
-    const { setAuthInfo } = useAuth()
-    const [redirectOnLogin, setRedirectOnLogin] = React.useState(
-        false
-    );
-    const [loginError, setLogginError] = React.useState('');
+    const [loginError] = React.useState('');
     const isMounted = React.useRef(true)
     const { state } = useLocation()
+    const { login } = useAuth()
+    const [redirectOnLogin, setRedirectOnLogin] = React.useState(false)
 
     React.useEffect(() => {
-        if (isMounted) {
+        if (isMounted.current) {
             window.onload = () => {
 
                 api.get('/authenticate').then(response => {
@@ -46,17 +43,13 @@ const Login = () => {
     }, [])
 
     const handleCredentialResponse = (response) => {
-        if (response.credential) {
+        if (response?.credential) {
             const data = {
                 credential
-                    : response.credential
+                    : response?.credential
             }
-            postCredentials(data).then(res => {
-                setAuthInfo(res.data)
+            login(data).then(res => {
                 setRedirectOnLogin(true)
-            }).catch(error => {
-                setLogginError(error)
-                console.error('[LOGIN] handleCredentialResponse', error)
             })
         }
 
@@ -64,7 +57,7 @@ const Login = () => {
 
     return (
         <>
-            {redirectOnLogin ? <Redirect to={state ? state.from : '/'}></Redirect> : null}
+            {redirectOnLogin ? <Redirect to={state ? state.from : '/'} /> : null}
             <AccountLayout >
                 {loginError && (
                     <Alert variant="danger" className="my-2">

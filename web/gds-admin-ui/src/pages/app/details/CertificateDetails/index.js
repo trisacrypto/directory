@@ -1,4 +1,3 @@
-
 import React from 'react'
 import FileInformationCard from 'components/FileInformationCard';
 import PropTypes from 'prop-types'
@@ -6,10 +5,12 @@ import { Card, Col, Dropdown, Row } from 'react-bootstrap';
 import { copyToClipboard, formatDisplayedData } from 'utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { downloadFile } from 'helpers/api/utils';
+import Details from './Details';
 dayjs.extend(relativeTime)
 
 
-export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCopySerialNumberClick, handleViewDetailsClick }) => {
+export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCopySerialNumberClick }) => {
 
     return (
         <Dropdown className="float-end" align="end">
@@ -26,9 +27,6 @@ export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCo
                 </Dropdown.Item>
                 <Dropdown.Item data-testid="copy-serial-number" onClick={handleCopySerialNumberClick}>
                     <i className="mdi mdi-content-copy me-1"></i>Copy serial number
-                </Dropdown.Item>
-                <Dropdown.Item onClick={handleViewDetailsClick}>
-                    <i className="mdi mdi-information-outline me-1"></i>View details
                 </Dropdown.Item>
             </Dropdown.Menu>
         </Dropdown>
@@ -99,6 +97,22 @@ function CertificateDetails({ data }) {
         await copyToClipboard(serial)
     }
 
+    const handlePublicIdentityKeyDownloadClick = (data) => {
+        const filename = 'public-identity-key.pem'
+        const mimetype = 'application/x-pem-file'
+        if (data) {
+            downloadFile(data, filename, mimetype)
+        }
+    }
+
+    const handleTrustChainDownloadClick = (chain) => {
+        const filename = 'trust-chain-certificate.gz'
+        const mimetype = 'application/x-x509-ca-cert'
+        if (chain) {
+            downloadFile(chain, filename, mimetype)
+        }
+    }
+
     return (
         <Card>
             {
@@ -117,9 +131,12 @@ function CertificateDetails({ data }) {
                         <p className='mb-1'><span className='fw-bold'>Subject: </span>{data?.subject?.common_name}</p>
 
                         <Row>
+                            <Col sm={12}>
+                                <FileInformationCard file={data?.data} name="Public Identity Key" ext=".PEM" onDownload={() => handlePublicIdentityKeyDownloadClick(data?.data)} />
+                                <FileInformationCard file={data?.chain} name="TRISA Trust Chain (CA)" ext=".GZ" onDownload={() => handleTrustChainDownloadClick(data?.chain)} />
+                            </Col>
                             <Col>
-                                <FileInformationCard file={data?.data} name="Public identity key" ext=".PEM" />
-                                <FileInformationCard file={data?.chain} name="TRISA trust chain (CA)" ext=".GZ" />
+                                <Details data={data} />
                             </Col>
                         </Row>
                     </Card.Body>

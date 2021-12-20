@@ -10,7 +10,7 @@ import { FetchPendingVaspsActionTypes, FetchRegistrationsReviewsActionTypes, Fet
 function* fetchSummary() {
     try {
         const response = yield call(getSummary)
-        const data = response.data
+        const data = response?.data
         yield put(fetchSummaryApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
         toast.error(error)
@@ -22,7 +22,7 @@ function* fetchSummary() {
 function* fetchPendingVasps() {
     try {
         const response = yield call(getVasps, "status=pending+review")
-        const data = response.data
+        const data = response?.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {
         toast.error(error)
@@ -45,7 +45,7 @@ function* fetchVasps({ payload }) {
 function* fecthRegistrationsReviews() {
     try {
         const response = yield call(getRegistrationReviews)
-        const data = response.data
+        const data = response?.data
 
         yield put(fetchRegistrationsReviewsSuccess(FetchRegistrationsReviewsActionTypes.API_RESPONSE_SUCCESS, data))
     } catch (error) {

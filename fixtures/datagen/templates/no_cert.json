@@ -67,7 +67,7 @@
             "extra": {
                 "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
                 "verified": false,
-                "token": "",
+                "token": "administrative_token",
                 "email_log": []
             }
         },
@@ -79,7 +79,7 @@
             "extra": {
                 "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
                 "verified": false,
-                "token": "",
+                "token": "legal_token",
                 "email_log": []
             }
         },
@@ -91,7 +91,7 @@
             "extra": {
                 "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
                 "verified": false,
-                "token": "",
+                "token": "billing_token",
                 "email_log": []
             }
         }
