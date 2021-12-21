@@ -71,9 +71,6 @@ func (s *gdsTestSuite) TestCertManager() {
 	sent := time.Now()
 	s.runCertManager(s.svc.GetConf().CertMan.Interval)
 
-	// Wait for the download routine to finish
-	time.Sleep(time.Second)
-
 	// Secret manager should contain the certificate
 	secret, err := sm.GetLatestVersion(ctx, "cert")
 	require.NoError(err)

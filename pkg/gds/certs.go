@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -52,6 +53,7 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 		var (
 			err       error
 			nrequests int
+			wg        sync.WaitGroup
 		)
 
 		careqs := s.db.ListCertReqs()
@@ -68,21 +70,29 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 
 			switch req.Status {
 			case models.CertificateRequestState_READY_TO_SUBMIT:
-				if err = s.submitCertificateRequest(req); err != nil {
-					// If certificate submission requests fail we want immediate notification
-					// so this is a CRITICAL severity that should alert us immediately.
-					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
-					// this ensures that we issue a CRITICAL severity without stopping the server.
-					log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
-				} else {
-					logctx.Info().Msg("certificate request submitted")
-				}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if err = s.submitCertificateRequest(req); err != nil {
+						// If certificate submission requests fail we want immediate notification
+						// so this is a CRITICAL severity that should alert us immediately.
+						// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+						// this ensures that we issue a CRITICAL severity without stopping the server.
+						log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
+					} else {
+						logctx.Info().Msg("certificate request submitted")
+					}
+				}()
 			case models.CertificateRequestState_PROCESSING:
-				if err = s.checkCertificateRequest(req); err != nil {
-					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
-				} else {
-					logctx.Debug().Msg("processing certificate request check complete")
-				}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if err = s.checkCertificateRequest(req); err != nil {
+						logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
+					} else {
+						logctx.Info().Msg("processing certificate request check complete")
+					}
+				}()
 			}
 
 			nrequests++
@@ -92,6 +102,9 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 			log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
 			return
 		}
+
+		// Wait for all the certificate request processing to complete
+		wg.Wait()
 		log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
 
 		select {
@@ -283,7 +296,7 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	}
 
 	// Send off downloader go routine to fetch the certs and notify the user
-	go s.downloadCertificateRequest(r)
+	s.downloadCertificateRequest(r)
 	return nil
 }
 
