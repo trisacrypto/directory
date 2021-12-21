@@ -55,7 +55,13 @@ func New(conf config.Config) (s *Service, err error) {
 			return nil, err
 		}
 
-		// Ensure that the Admin API is created even in maintenace mode, so that
+		// Ensure that the Members API is created even in maintenance mode, so that
+		// maintenance status replies are sent.
+		if s.members, err = NewMembers(s); err != nil {
+			return nil, err
+		}
+
+		// Ensure that the Admin API is created even in maintenance mode, so that
 		// maintenance status replies are sent.
 		if s.admin, err = NewAdmin(s); err != nil {
 			return nil, err
@@ -207,6 +213,11 @@ func (s *Service) GetStore() store.Store {
 // GetGDS returns the GDS gRPC server
 func (s *Service) GetGDS() *GDS {
 	return s.gds
+}
+
+// GetMembers returns the Members gRPC server
+func (s *Service) GetMembers() *Members {
+	return s.members
 }
 
 // GetAdmin returns the Admin server
