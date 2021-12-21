@@ -31,6 +31,9 @@ services:
       - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:4433
+      - GDS_MEMBERS_ENABLED=true
+      - GDS_MEMBERS_BIND_ADDR=:4435
+      - GDS_MEMBERS_INSECURE=true
       - GDS_REPLICA_ENABLED=false
       - GDS_REPLICA_BIND_ADDR=:4435
       - GDS_REPLICA_PID=8
