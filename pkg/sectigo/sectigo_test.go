@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	. "github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 )
@@ -27,11 +28,12 @@ type SectigoTestSuite struct {
 func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	var err error
 	require := s.Require()
+
+	// Note: the username and password will be set to sectigo.MockUsername and
+	// sectigo.MockPassword because config.Testing==true.
 	conf := Config{
-		Username: "foo",
-		Password: "supersecret",
-		Profile:  "CipherTrace EE",
-		Testing:  true,
+		Profile: "CipherTrace EE",
+		Testing: true,
 	}
 	require.NoError(mock.Start())
 	s.api, err = New(conf)
@@ -51,8 +53,8 @@ func (s *SectigoTestSuite) TestCredsCopy() {
 
 	// Test the internal Sectigo credentials
 	creds := s.api.Creds()
-	require.Equal("foo", creds.Username)
-	require.Equal("supersecret", creds.Password)
+	require.Equal(sectigo.MockUsername, creds.Username)
+	require.Equal(sectigo.MockPassword, creds.Password)
 
 	// Ensure that creds are copied and are not the same object
 	creds.Username = "superbunny"
@@ -219,7 +221,7 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
-		if in.Username != "foo" || in.Password != "supersecret" {
+		if in.Username != sectigo.MockUsername || in.Password != sectigo.MockPassword {
 			c.JSON(http.StatusUnauthorized, "invalid credentials")
 			return
 		}
