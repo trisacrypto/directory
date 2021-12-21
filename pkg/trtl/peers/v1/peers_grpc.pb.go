@@ -33,7 +33,7 @@ func NewPeerManagementClient(cc grpc.ClientConnInterface) PeerManagementClient {
 
 func (c *peerManagementClient) GetPeers(ctx context.Context, in *PeersFilter, opts ...grpc.CallOption) (*PeersList, error) {
 	out := new(PeersList)
-	err := c.cc.Invoke(ctx, "/gds.peers.v1.PeerManagement/GetPeers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.peers.v1.PeerManagement/GetPeers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c *peerManagementClient) GetPeers(ctx context.Context, in *PeersFilter, op
 
 func (c *peerManagementClient) AddPeers(ctx context.Context, in *Peer, opts ...grpc.CallOption) (*PeersStatus, error) {
 	out := new(PeersStatus)
-	err := c.cc.Invoke(ctx, "/gds.peers.v1.PeerManagement/AddPeers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.peers.v1.PeerManagement/AddPeers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *peerManagementClient) AddPeers(ctx context.Context, in *Peer, opts ...g
 
 func (c *peerManagementClient) RmPeers(ctx context.Context, in *Peer, opts ...grpc.CallOption) (*PeersStatus, error) {
 	out := new(PeersStatus)
-	err := c.cc.Invoke(ctx, "/gds.peers.v1.PeerManagement/RmPeers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trtl.peers.v1.PeerManagement/RmPeers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func _PeerManagement_GetPeers_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gds.peers.v1.PeerManagement/GetPeers",
+		FullMethod: "/trtl.peers.v1.PeerManagement/GetPeers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PeerManagementServer).GetPeers(ctx, req.(*PeersFilter))
@@ -122,7 +122,7 @@ func _PeerManagement_AddPeers_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gds.peers.v1.PeerManagement/AddPeers",
+		FullMethod: "/trtl.peers.v1.PeerManagement/AddPeers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PeerManagementServer).AddPeers(ctx, req.(*Peer))
@@ -140,7 +140,7 @@ func _PeerManagement_RmPeers_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gds.peers.v1.PeerManagement/RmPeers",
+		FullMethod: "/trtl.peers.v1.PeerManagement/RmPeers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PeerManagementServer).RmPeers(ctx, req.(*Peer))
@@ -152,7 +152,7 @@ func _PeerManagement_RmPeers_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var PeerManagement_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "gds.peers.v1.PeerManagement",
+	ServiceName: "trtl.peers.v1.PeerManagement",
 	HandlerType: (*PeerManagementServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -169,5 +169,5 @@ var PeerManagement_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "gds/peers/v1/peers.proto",
+	Metadata: "trtl/peers/v1/peers.proto",
 }

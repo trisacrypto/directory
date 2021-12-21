@@ -4,35 +4,27 @@ import (
 	"context"
 	"math/rand"
 
+	"github.com/rotationalio/honu"
+	"github.com/rotationalio/honu/options"
 	"github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-)
-
-const (
-	vaspPrefix    = "vasps::"
-	certreqPrefix = "certreqs::"
-	peerPrefix    = "peers::"
-)
-
-var (
-	// All of the namespaces that are allowed for replication.
-	AllNamespaces = []string{vaspPrefix, certreqPrefix, peerPrefix}
+	"google.golang.org/protobuf/proto"
 )
 
 // A ReplicaService manages anti-entropy replication between peers.
 type ReplicaService struct {
 	conf   config.Config
 	parent *Server
-	store  TemporaryPeerStore
+	db     *honu.DB
 }
 
 func NewReplicaService(s *Server) (*ReplicaService, error) {
 	return &ReplicaService{
-		parent: s, store: &notImplementedStore{},
+		parent: s, db: s.db,
 	}, nil
 }
 
@@ -49,22 +41,47 @@ func (*ReplicaService) AntiEntropy() {
 // cannot be selected, then nil is returned.
 func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 	// Select a random peer that is not self to perform anti entropy with.
-	peers, err := r.store.AllPeers()
+	keys := make([][]byte, 0)
+	iter, err := r.db.Iter(nil, options.WithNamespace(NamespacePeers))
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch peers from database")
+		return nil
+	}
+	defer iter.Release()
+
+	for iter.Next() {
+		keys = append(keys, iter.Key())
 	}
 
-	if len(peers) > 1 {
+	if err = iter.Error(); err != nil {
+		log.Error().Err(err).Msg("could not iterate over peers in the database")
+		return nil
+	}
+
+	if len(keys) > 1 {
 		// 10 attempts to select a random peer that is not self.
 		for i := 0; i < 10; i++ {
-			peer = peers[rand.Intn(len(peers))]
+			var key, data []byte
+			key = keys[rand.Intn(len(keys))]
+			if data, err = r.db.Get(key, options.WithNamespace(NamespacePeers)); err != nil {
+				log.Warn().Str("key", string(key)).Err(err).Msg("could not fetch peer from the database")
+				continue
+			}
+
+			peer = new(peers.Peer)
+			if err = proto.Unmarshal(data, peer); err != nil {
+				log.Warn().Str("key", string(key)).Err(err).Msg("could not unmarshal peer from database")
+			}
+
 			if peer.Id != r.conf.Replica.PID {
 				return peer
 			}
 		}
-		log.Warn().Int("nPeers", len(peers)).Msg("could not select peer after 10 attempts")
+		log.Warn().Int("nPeers", len(keys)).Msg("could not select peer after 10 attempts")
+		return nil
 	}
 
+	log.Warn().Msg("could not select peer from the database")
 	return nil
 }
 
