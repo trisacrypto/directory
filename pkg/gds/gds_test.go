@@ -9,10 +9,24 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
-// TestRegister tests that the Register RPC correcty registers a new VASP with GDS.
+// StatusError is a helper assertion function that checks a gRPC status error
+func (s *gdsTestSuite) StatusError(err error, code codes.Code, theError string) {
+	require := s.Require()
+	require.Error(err, "no status error returned")
+
+	var serr *status.Status
+	serr, ok := status.FromError(err)
+	require.True(ok, "error is not a grpc status error")
+	require.Equal(code, serr.Code(), "status code does not match")
+	require.Equal(theError, serr.Message(), "status error message does not match")
+}
+
+// TestRegister tests that the Register RPC correctly registers a new VASP with GDS.
 func (s *gdsTestSuite) TestRegister() {
 	s.LoadEmptyFixtures()
 	defer s.ResetEmptyFixtures()
