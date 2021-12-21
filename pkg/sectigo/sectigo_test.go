@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/trisacrypto/directory/pkg/sectigo"
 	. "github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 )
@@ -53,8 +52,8 @@ func (s *SectigoTestSuite) TestCredsCopy() {
 
 	// Test the internal Sectigo credentials
 	creds := s.api.Creds()
-	require.Equal(sectigo.MockUsername, creds.Username)
-	require.Equal(sectigo.MockPassword, creds.Password)
+	require.Equal(MockUsername, creds.Username)
+	require.Equal(MockPassword, creds.Password)
 
 	// Ensure that creds are copied and are not the same object
 	creds.Username = "superbunny"
@@ -221,7 +220,7 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
-		if in.Username != sectigo.MockUsername || in.Password != sectigo.MockPassword {
+		if in.Username != MockUsername || in.Password != MockPassword {
 			c.JSON(http.StatusUnauthorized, "invalid credentials")
 			return
 		}
