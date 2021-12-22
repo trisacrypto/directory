@@ -138,7 +138,6 @@ func (s *gdsTestSuite) shutdownServers() {
 	if s.grpc != nil {
 		s.grpc.Release()
 	}
-	s.grpc = nil
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
