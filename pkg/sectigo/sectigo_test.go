@@ -92,9 +92,12 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		s.T().Run(t.name, t.f)
 	}
 	calls := mock.Get().GetCalls()
-	for endpoint, count := range calls {
-		require.Equal(1, count, fmt.Errorf("wrong number of calls to endpoint %s", endpoint))
-	}
+	calls.Range(func(endpoint, count interface{}) bool {
+		num, ok := count.(int)
+		require.True(ok, "unexpected type in call map, expected int")
+		require.Equal(1, num, fmt.Errorf("wrong number of calls to endpoint %s", endpoint))
+		return true
+	})
 }
 
 func (s *SectigoTestSuite) authenticate(t *testing.T) {
@@ -145,7 +148,7 @@ func (s *SectigoTestSuite) download(t *testing.T) {
 
 	rep, err := s.api.Download(42, dir)
 	require.NoError(t, err)
-	require.Equal(t, filepath.Join(dir, "42.zip"), rep)
+	require.Equal(t, filepath.Join(dir, "certificate.zip"), rep)
 	require.FileExists(t, rep)
 }
 
