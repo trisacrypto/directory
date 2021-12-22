@@ -68,9 +68,19 @@ func New(conf Config) (client *Sectigo, err error) {
 	}
 
 	if conf.Testing {
+		// Ensure that we're connecting to a test server
 		host := baseURL.Hostname()
 		if host != "localhost" && host != "127.0.0.1" {
 			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
+		}
+
+		// Add mock credentials to the client if we're in testing mode
+		if conf.Username == "" {
+			conf.Username = MockUsername
+		}
+
+		if conf.Password == "" {
+			conf.Password = MockPassword
 		}
 	}
 

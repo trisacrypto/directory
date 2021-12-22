@@ -374,14 +374,12 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 			return nil
 		}
 
+		prefix := filepath.Base(filepath.Dir(path))     // prefix is the directory in the fixture
+		key := strings.TrimSuffix(info.Name(), ".json") // key is the name of the file in the fixture
+
 		// Unmarshal the JSON into the global fixtures map.
 		data, err := os.ReadFile(path)
 		require.NoError(err)
-		parts := strings.Split(strings.TrimSuffix(info.Name(), ".json"), "::")
-		require.Len(parts, 2)
-
-		prefix := parts[0]
-		key := parts[1]
 
 		switch prefix {
 		case vasps:
