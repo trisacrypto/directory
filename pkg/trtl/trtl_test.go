@@ -1,15 +1,12 @@
 package trtl_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io"
-	"strconv"
 
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/proto"
 )
 
 // Test that we can call the Get RPC and get the correct response.
@@ -87,21 +84,10 @@ func (s *trtlTestSuite) TestGet() {
 	require.Equal(alice.Value, actual)
 
 	// Retrieve a value with return_meta=true.
-	expectedMeta := &pb.Meta{
-		Key:       []byte(alice.Key),
-		Namespace: alice.Namespace,
-		Region:    metaRegion,
-		Owner:     metaOwner,
-		Version: &pb.Version{
-			Pid:     metaVersion.Pid,
-			Version: metaVersion.Version,
-			Region:  metaVersion.Region,
-		},
-		Parent: &pb.Version{
-			Pid:     metaVersion.Parent.Pid,
-			Version: metaVersion.Parent.Version,
-			Region:  metaVersion.Parent.Region,
-		},
+	expectedVersion := &pb.Version{
+		Pid:     metaPID,
+		Version: 1,
+		Region:  metaRegion,
 	}
 	reply, err = client.Get(ctx, &pb.GetRequest{
 		Namespace: alice.Namespace,
@@ -111,10 +97,7 @@ func (s *trtlTestSuite) TestGet() {
 		},
 	})
 	require.NoError(err)
-	require.NotNil(reply.Meta)
-	require.Equal([]byte(alice.Key), reply.Meta.Key)
-	require.Equal(alice.Namespace, reply.Meta.Namespace)
-	require.True(proto.Equal(expectedMeta, reply.Meta))
+	s.EqualMeta([]byte(alice.Key), alice.Namespace, expectedVersion, nil, reply.Meta)
 }
 
 // Test that we can call the Put RPC and get the correct response.
@@ -174,21 +157,15 @@ func (s *trtlTestSuite) TestPut() {
 	require.Empty((reply.Meta))
 
 	// Put a value with return_meta=true.
-	expectedMeta := &pb.Meta{
-		Key:       []byte(alice.Key),
-		Namespace: alice.Namespace,
-		Region:    metaRegion,
-		Owner:     metaOwner,
-		Version: &pb.Version{
-			Pid:     metaPID,
-			Version: 4,
-			Region:  metaRegion,
-		},
-		Parent: &pb.Version{
-			Pid:     metaPID,
-			Version: 3,
-			Region:  metaRegion,
-		},
+	expectedVersion := &pb.Version{
+		Pid:     metaPID,
+		Version: 3,
+		Region:  metaRegion,
+	}
+	expectedParent := &pb.Version{
+		Pid:     metaPID,
+		Version: 2,
+		Region:  metaRegion,
 	}
 	// TODO this test modifies the DB state so could cause subsequent tests to have unexpected results
 	reply, err = client.Put(ctx, &pb.PutRequest{
@@ -201,10 +178,7 @@ func (s *trtlTestSuite) TestPut() {
 	})
 	require.NoError(err)
 	require.True(reply.Success)
-	require.NotNil(reply.Meta)
-	require.Equal([]byte(alice.Key), reply.Meta.Key)
-	require.Equal(alice.Namespace, reply.Meta.Namespace)
-	require.True(proto.Equal(expectedMeta, reply.Meta))
+	s.EqualMeta([]byte(alice.Key), alice.Namespace, expectedVersion, expectedParent, reply.Meta)
 }
 
 // Test that we can call the Delete RPC and get the correct response.
@@ -264,29 +238,19 @@ func (s *trtlTestSuite) TestDelete() {
 		},
 	})
 	require.NoError(err)
-	owner := bytes.Join([][]byte{[]byte(strconv.Itoa(metaPID)), []byte(metaRegion)}, []byte(":"))
-	expectedMeta := &pb.Meta{
-		Key:       tempKey,
-		Namespace: tempNS,
-		Region:    metaRegion,
-		Owner:     string(owner),
-		Version: &pb.Version{
-			Pid:     metaPID,
-			Version: 4,
-			Region:  metaRegion,
-		},
-		Parent: &pb.Version{
-			Pid:     metaPID,
-			Version: 3,
-			Region:  metaRegion,
-		},
-	}
-	require.NoError(err)
 	require.True(withMeta.Success)
-	require.NotNil(withMeta.Meta)
-	require.Equal(tempKey, withMeta.Meta.Key)
-	require.Equal(tempNS, withMeta.Meta.Namespace)
-	require.True(proto.Equal(expectedMeta, withMeta.Meta))
+
+	expectedVersion := &pb.Version{
+		Pid:     metaPID,
+		Version: 4,
+		Region:  metaRegion,
+	}
+	expectedParent := &pb.Version{
+		Pid:     metaPID,
+		Version: 3,
+		Region:  metaRegion,
+	}
+	s.EqualMeta(tempKey, tempNS, expectedVersion, expectedParent, withMeta.Meta)
 }
 
 // Test Unary operations: Get, Put, Get, Delete, Get, Put, Get sequence
