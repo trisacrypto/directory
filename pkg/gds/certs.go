@@ -71,9 +71,9 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 			switch req.Status {
 			case models.CertificateRequestState_READY_TO_SUBMIT:
 				wg.Add(1)
-				go func() {
+				go func(logctx zerolog.Logger) {
 					defer wg.Done()
-					if err = s.submitCertificateRequest(req); err != nil {
+					if err := s.submitCertificateRequest(req); err != nil {
 						// If certificate submission requests fail we want immediate notification
 						// so this is a CRITICAL severity that should alert us immediately.
 						// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
@@ -82,17 +82,17 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 					} else {
 						logctx.Info().Msg("certificate request submitted")
 					}
-				}()
+				}(logctx)
 			case models.CertificateRequestState_PROCESSING:
 				wg.Add(1)
-				go func() {
+				go func(logctx zerolog.Logger) {
 					defer wg.Done()
-					if err = s.checkCertificateRequest(req); err != nil {
+					if err := s.checkCertificateRequest(req); err != nil {
 						logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
 					} else {
 						logctx.Info().Msg("processing certificate request check complete")
 					}
-				}()
+				}(logctx)
 			}
 
 			nrequests++
