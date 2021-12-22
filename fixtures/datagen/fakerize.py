@@ -379,11 +379,12 @@ def store(fakes, kind="vasps", directory=OUTPUT_DIRECTORY):
     Each file should be the name of the fakerized uuid
     Return the path
     """
+    directory = os.path.join(directory, kind)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     for idx, fake in fakes.items():
-        fname = os.path.join(directory, kind + "::" + shorten(idx) + ".json")
+        fname = os.path.join(directory, shorten(idx) + ".json")
         with open(fname, "w") as outfile:
             json.dump(fake, outfile, indent=4, sort_keys=True)
 
@@ -821,7 +822,7 @@ if __name__ == "__main__":
 
     if os.path.exists(OUTPUT_DIRECTORY):
         shutil.rmtree(OUTPUT_DIRECTORY)
-        
+
     fake_vasps = augment_vasps()
     fake_certs = augment_certs()
     add_vasp_cert_relationships(fake_vasps, fake_certs)

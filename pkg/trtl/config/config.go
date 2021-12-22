@@ -15,7 +15,7 @@ import (
 // must be called to ensure that the `processed` is correctly set
 type Config struct {
 	Maintenance bool                `split_words:"true" default:"false"`
-	BindAddr    string              `split_words:"true" default:":4435"`
+	BindAddr    string              `split_words:"true" default:":4436"`
 	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool                `split_words:"true" default:"false"`
 	Database    DatabaseConfig
