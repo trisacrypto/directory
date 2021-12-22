@@ -100,8 +100,6 @@ func (c *mockSecretManagerClient) CreateSecret(ctx context.Context, req *smpb.Cr
 		return nil, status.Error(codes.AlreadyExists, "secret already exists")
 	}
 
-	fmt.Println("secret created: ", secret.Name)
-
 	// Add secret to the "database"
 	c.secrets[secret.Name] = secret
 
@@ -157,7 +155,6 @@ func (c *mockSecretManagerClient) AccessSecretVersion(ctx context.Context, req *
 	defer c.Unlock()
 	secret, ok := c.secrets[parent]
 	if !ok {
-		fmt.Println("secret not found: ", parent)
 		return nil, status.Error(codes.NotFound, "secret not found")
 	}
 
