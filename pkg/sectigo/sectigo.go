@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // Valid Sectigo Certificate Profile Names and IDs
@@ -46,6 +47,7 @@ var AllProfiles = [4]string{
 // request, and if not either refreshes the token or reauthenticates using its
 // credentials.
 type Sectigo struct {
+	mu      sync.Mutex
 	client  http.Client
 	creds   *Credentials
 	profile string
@@ -770,6 +772,8 @@ func (s *Sectigo) Creds() Credentials {
 // Returns a request with default headers set along with the authentication header.
 // If the client has not been authenticated, then an error is returned.
 func (s *Sectigo) newRequest(method, url string, data interface{}) (req *http.Request, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if !s.creds.Valid() {
 		return nil, ErrNotAuthenticated
 	}
@@ -803,6 +807,8 @@ func (s *Sectigo) newRequest(method, url string, data interface{}) (req *http.Re
 // Preflight prepares to send a request that needs to be authenticated by checking the
 // credentials and sending any authentication or refresh requests required.
 func (s *Sectigo) preflight() (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if !s.creds.Valid() {
 		if s.creds.Refreshable() {
 			// Attempt to refresh the credentials, if there is no error, then continue.
