@@ -943,15 +943,14 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require.Len(notes, 0)
 }
 
-// Test the Review endpoint.
-func (s *gdsTestSuite) TestReview() {
+// Test the Review endpoint with invalid parameters.
+func (s *gdsTestSuite) TestReviewInvalid() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -965,6 +964,9 @@ func (s *gdsTestSuite) TestReview() {
 		params: map[string]string{
 			"vaspID": "invalid",
 		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
 	}
 	c, w := s.makeRequest(request)
 	rep := s.doRequest(a.Review, c, w, nil)
@@ -972,28 +974,199 @@ func (s *gdsTestSuite) TestReview() {
 
 	// No verification token supplied
 	request.in = &admin.ReviewRequest{
-		ID:     charlieID,
+		ID:     julietVASP.Id,
 		Accept: true,
 	}
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": julietVASP.Id,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
+	// Wrong verification token supplied
+	request.in = &admin.ReviewRequest{
+		ID:                     julietVASP.Id,
+		AdminVerificationToken: "invalid",
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.Review, c, w, nil)
+	require.Equal(http.StatusUnauthorized, rep.StatusCode)
+}
+
+// Test the Review endpoint for the accept case.
+func (s *gdsTestSuite) TestReviewAccept() {
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
+	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
+
+	// No matching certificate request for the VASP
+	request := &httpRequest{
+		method: http.MethodPost,
+		path:   "/v2/vasps/invalid/review",
+		in: &admin.ReviewRequest{
+			ID:                     charlieID,
+			AdminVerificationToken: "foo",
+			Accept:                 true,
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.Review, c, w, nil)
+	require.Equal(http.StatusInternalServerError, rep.StatusCode)
+
+	// Successfully accepting a registration request
+	request.in = &admin.ReviewRequest{
+		ID:                     julietVASP.Id,
+		AdminVerificationToken: "foo",
+		Accept:                 true,
+	}
+	actual := &admin.ReviewReply{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.Review, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	require.Equal(pb.VerificationState_REVIEWED, actual.Status)
+	require.Contains(actual.Message, "has been approved")
+
+	// VASP state should be changed to REVIEWED
+	v, err := s.svc.GetStore().RetrieveVASP(julietVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_REVIEWED, v.VerificationStatus)
+
+	// VASP audit log should contain the new entry
+	log, err := models.GetAuditLog(v)
+	require.NoError(err)
+	require.Len(log, 4)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[1].CurrentState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[2].CurrentState)
+	require.Equal(pb.VerificationState_REVIEWED, log[3].PreviousState)
+	require.Equal(pb.VerificationState_REVIEWED, log[3].CurrentState)
+	require.Equal(request.claims.Email, log[3].Source)
+
+	// Certificate request should be changed to READY_TO_SUBMIT
+	cert, err := s.svc.GetStore().RetrieveCertReq(xrayID)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
+
+	// Certificate request audit log should contain the new entry
+	require.Len(cert.AuditLog, 2)
+	require.Equal(models.CertificateRequestState_INITIALIZED, cert.AuditLog[0].CurrentState)
+	require.Equal(models.CertificateRequestState_INITIALIZED, cert.AuditLog[1].PreviousState)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.AuditLog[1].CurrentState)
+	require.Equal(request.claims.Email, cert.AuditLog[1].Source)
+}
+
+// Test the Review endpoint for the reject case.
+func (s *gdsTestSuite) TestReviewReject() {
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
+	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
+
 	// No rejection reason supplied
+	request := &httpRequest{
+		method: http.MethodPost,
+		path:   "/v2/vasps/invalid/review",
+		in: &admin.ReviewRequest{
+			ID:                     julietVASP.Id,
+			AdminVerificationToken: "foo",
+			Accept:                 false,
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.Review, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// No matching certificate request for the VASP
 	request.in = &admin.ReviewRequest{
 		ID:                     charlieID,
 		AdminVerificationToken: "foo",
 		Accept:                 false,
+		RejectReason:           "some reason",
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	require.Equal(http.StatusInternalServerError, rep.StatusCode)
 
-	// TODO: Add tests for accept and reject paths. This requires VASP fixtures with
-	// a non-empty adminVerificationToken.
+	// Successfully rejecting a registration request
+	request.in = &admin.ReviewRequest{
+		ID:                     julietVASP.Id,
+		AdminVerificationToken: "foo",
+		Accept:                 false,
+		RejectReason:           "some reason",
+	}
+	actual := &admin.ReviewReply{}
+	c, w = s.makeRequest(request)
+	sent := time.Now()
+	rep = s.doRequest(a.Review, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	require.Equal(pb.VerificationState_REJECTED, actual.Status)
+	require.Contains(actual.Message, "has been rejected")
+
+	// VASP state should be changed to REJECTED
+	v, err := s.svc.GetStore().RetrieveVASP(julietVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_REJECTED, v.VerificationStatus)
+
+	// VASP audit log should contain the new entry
+	log, err := models.GetAuditLog(v)
+	require.NoError(err)
+	require.Len(log, 4)
+	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[1].CurrentState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[2].CurrentState)
+	require.Equal(pb.VerificationState_REJECTED, log[3].PreviousState)
+	require.Equal(pb.VerificationState_REJECTED, log[3].CurrentState)
+
+	// Certificate request should be deleted
+	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
+	require.Error(err)
+
+	// Rejection emails should be sent to the contacts
+	messages := []*emailMeta{
+		{
+			contact:   julietVASP.Contacts.Administrative,
+			to:        julietVASP.Contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "some reason",
+			timestamp: sent,
+		},
+		{
+			contact:   julietVASP.Contacts.Billing,
+			to:        julietVASP.Contacts.Billing.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "some reason",
+			timestamp: sent,
+		},
+		{
+			contact:   julietVASP.Contacts.Legal,
+			to:        julietVASP.Contacts.Legal.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.RejectRegistrationRE,
+			reason:    "some reason",
+			timestamp: sent,
+		},
+	}
+	s.CheckEmails(messages)
 }
 
 // Test the Resend endpoint.
