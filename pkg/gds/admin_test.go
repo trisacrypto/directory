@@ -950,7 +950,7 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
+	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -958,7 +958,7 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 		path:   "/v2/vasps/invalid/review",
 		in: &admin.ReviewRequest{
 			ID:                     "invalid",
-			AdminVerificationToken: "foo",
+			AdminVerificationToken: "supersecrettoken",
 			Accept:                 true,
 		},
 		params: map[string]string{
@@ -988,6 +988,7 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
 		AdminVerificationToken: "invalid",
+		Accept:                 true,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
@@ -1003,7 +1004,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	a := s.svc.GetAdmin()
 
 	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
-	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
+	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
 	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
 
 	// No matching certificate request for the VASP
@@ -1012,8 +1013,11 @@ func (s *gdsTestSuite) TestReviewAccept() {
 		path:   "/v2/vasps/invalid/review",
 		in: &admin.ReviewRequest{
 			ID:                     charlieID,
-			AdminVerificationToken: "foo",
+			AdminVerificationToken: "supersecrettoken",
 			Accept:                 true,
+		},
+		params: map[string]string{
+			"vaspID": charlieID,
 		},
 		claims: &tokens.Claims{
 			Email: "admin@example.com",
@@ -1026,14 +1030,17 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	// Successfully accepting a registration request
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
-		AdminVerificationToken: "foo",
+		AdminVerificationToken: "supersecrettoken",
 		Accept:                 true,
+	}
+	request.params = map[string]string{
+		"vaspID": julietVASP.Id,
 	}
 	actual := &admin.ReviewReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	require.Equal(pb.VerificationState_REVIEWED, actual.Status)
+	require.Equal(pb.VerificationState_REVIEWED.String(), actual.Status)
 	require.Contains(actual.Message, "has been approved")
 
 	// VASP state should be changed to REVIEWED
@@ -1048,7 +1055,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
 	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[1].CurrentState)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[2].CurrentState)
-	require.Equal(pb.VerificationState_REVIEWED, log[3].PreviousState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[3].PreviousState)
 	require.Equal(pb.VerificationState_REVIEWED, log[3].CurrentState)
 	require.Equal(request.claims.Email, log[3].Source)
 
@@ -1069,22 +1076,27 @@ func (s *gdsTestSuite) TestReviewAccept() {
 func (s *gdsTestSuite) TestReviewReject() {
 	s.LoadFullFixtures()
 	defer s.ResetFullFixtures()
+	defer emails.PurgeMockEmails()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
 	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
-	julietVASP := s.fixtures[vasps]["julietvasp"].(*pb.VASP)
+	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
 	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
 
-	// No rejection reason supplied
+	// No matching certificate request for the VASP
 	request := &httpRequest{
 		method: http.MethodPost,
 		path:   "/v2/vasps/invalid/review",
 		in: &admin.ReviewRequest{
-			ID:                     julietVASP.Id,
-			AdminVerificationToken: "foo",
+			ID:                     charlieID,
+			AdminVerificationToken: "supersecrettoken",
 			Accept:                 false,
+			RejectReason:           "some reason",
+		},
+		params: map[string]string{
+			"vaspID": charlieID,
 		},
 		claims: &tokens.Claims{
 			Email: "admin@example.com",
@@ -1092,23 +1104,25 @@ func (s *gdsTestSuite) TestReviewReject() {
 	}
 	c, w := s.makeRequest(request)
 	rep := s.doRequest(a.Review, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
+	require.Equal(http.StatusInternalServerError, rep.StatusCode)
 
-	// No matching certificate request for the VASP
+	// No rejection reason supplied
 	request.in = &admin.ReviewRequest{
-		ID:                     charlieID,
-		AdminVerificationToken: "foo",
+		ID:                     julietVASP.Id,
+		AdminVerificationToken: "supersecrettoken",
 		Accept:                 false,
-		RejectReason:           "some reason",
+	}
+	request.params = map[string]string{
+		"vaspID": julietVASP.Id,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
-	require.Equal(http.StatusInternalServerError, rep.StatusCode)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Successfully rejecting a registration request
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
-		AdminVerificationToken: "foo",
+		AdminVerificationToken: "supersecrettoken",
 		Accept:                 false,
 		RejectReason:           "some reason",
 	}
@@ -1117,7 +1131,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	sent := time.Now()
 	rep = s.doRequest(a.Review, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	require.Equal(pb.VerificationState_REJECTED, actual.Status)
+	require.Equal(pb.VerificationState_REJECTED.String(), actual.Status)
 	require.Contains(actual.Message, "has been rejected")
 
 	// VASP state should be changed to REJECTED
@@ -1132,37 +1146,34 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
 	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[1].CurrentState)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[2].CurrentState)
-	require.Equal(pb.VerificationState_REJECTED, log[3].PreviousState)
+	require.Equal(pb.VerificationState_PENDING_REVIEW, log[3].PreviousState)
 	require.Equal(pb.VerificationState_REJECTED, log[3].CurrentState)
+	require.Equal(request.claims.Email, log[3].Source)
 
 	// Certificate request should be deleted
 	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
 	require.Error(err)
 
-	// Rejection emails should be sent to the contacts
+	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
+	require.NoError(err)
+	require.Len(emailLog, 1)
+
+	// Rejection emails should be sent to the verified contacts
 	messages := []*emailMeta{
 		{
-			contact:   julietVASP.Contacts.Administrative,
-			to:        julietVASP.Contacts.Administrative.Email,
+			contact:   v.Contacts.Administrative,
+			to:        v.Contacts.Administrative.Email,
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.RejectRegistrationRE,
-			reason:    "some reason",
+			reason:    string(admin.ResendRejection),
 			timestamp: sent,
 		},
 		{
-			contact:   julietVASP.Contacts.Billing,
-			to:        julietVASP.Contacts.Billing.Email,
+			contact:   v.Contacts.Legal,
+			to:        v.Contacts.Legal.Email,
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.RejectRegistrationRE,
-			reason:    "some reason",
-			timestamp: sent,
-		},
-		{
-			contact:   julietVASP.Contacts.Legal,
-			to:        julietVASP.Contacts.Legal.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.RejectRegistrationRE,
-			reason:    "some reason",
+			reason:    string(admin.ResendRejection),
 			timestamp: sent,
 		},
 	}

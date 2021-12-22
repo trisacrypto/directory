@@ -209,6 +209,7 @@ CERT_STATE_CHANGES = {
 VASP_CERT_RELATIONSHIPS = {
     "Echo Funds": ["Quebec"],
     "Foxtrot LLC": ["Sierra"],
+    "Juliet Capulet LLC": ["XRay"],
 }
 
 ##########################################################################
@@ -745,13 +746,15 @@ def make_cert_log(state, start, end):
     states = [state]
     current_state = state
     prior_state = None
-    while current_state in CERT_STATE_CHANGES:
-        prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
-        states.insert(0, prior_state)
-        if prior_state == "INITIALIZED":
-            current_state = "STOP"
-        else:
-            current_state = prior_state
+    if state != "INITIALIZED":
+        while current_state in CERT_STATE_CHANGES:
+            prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
+            states.insert(0, prior_state)
+            if prior_state == "INITIALIZED":
+                current_state = "STOP"
+            else:
+                current_state = prior_state
+
 
     dates = make_dates(first=start, last=end, count=len(states))
 
