@@ -1,10 +1,12 @@
 package config_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/config"
@@ -210,6 +212,40 @@ func TestEmailConfigValidation(t *testing.T) {
 	conf.AdminReviewBaseURL += "/"
 	err = conf.Validate()
 	require.NoError(t, err)
+}
+
+func TestAdminConfigValidation(t *testing.T) {
+	conf := config.AdminConfig{
+		Mode: "invalid",
+	}
+	require.EqualError(t, conf.Validate(), fmt.Sprintf("%q is not a valid gin mode", conf.Mode))
+
+	conf = config.AdminConfig{
+		Mode:    gin.ReleaseMode,
+		Enabled: true,
+		Oauth: config.OauthConfig{
+			GoogleAudience:         "http://localhost",
+			AuthorizedEmailDomains: []string{"example.com"},
+		},
+	}
+	require.EqualError(t, conf.Validate(), "invalid configuration: token keys required for enabled admin")
+
+	conf.TokenKeys = map[string]string{"keyid": "path/to/key.pem"}
+	require.NoError(t, conf.Validate())
+}
+
+func TestOauthConfigValidation(t *testing.T) {
+	conf := config.OauthConfig{
+		AuthorizedEmailDomains: []string{"example.com"},
+	}
+	require.EqualError(t, conf.Validate(), "invalid configuration: oauth audience required for enabled admin")
+
+	conf.GoogleAudience = "http://localhost"
+	conf.AuthorizedEmailDomains = make([]string, 0)
+	require.EqualError(t, conf.Validate(), "invalid configuration: authorized email domains required for enabled admin")
+
+	conf.AuthorizedEmailDomains = []string{"example.com"}
+	require.NoError(t, conf.Validate())
 }
 
 func TestMembersConfigValidation(t *testing.T) {
