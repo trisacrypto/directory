@@ -149,7 +149,7 @@ func (s *Service) Serve() (err error) {
 
 		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
-		go s.CertManager()
+		go s.CertManager(nil)
 
 		// Start the backup manager go routine process
 		go s.BackupManager(nil)
@@ -228,4 +228,9 @@ func (s *Service) GetAdmin() *Admin {
 // GetConf returns a copy of the current configuration
 func (s *Service) GetConf() config.Config {
 	return s.conf
+}
+
+// GetSecretManager returns the secret manager
+func (s *Service) GetSecretManager() *secrets.SecretManager {
+	return s.secret
 }

@@ -322,7 +322,7 @@ func (s *gdsTestSuite) CheckEmails(messages []*emailMeta) {
 	var sentEmails []*sgmail.SGMailV3
 
 	// Check total number of emails sent
-	require.Len(emails.MockEmails, len(messages))
+	require.Len(emails.MockEmails, len(messages), "incorrect number of emails sent")
 
 	// Get emails from the mock
 	for _, data := range emails.MockEmails {
