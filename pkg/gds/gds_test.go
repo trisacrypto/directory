@@ -30,7 +30,7 @@ func (s *gdsTestSuite) StatusError(err error, code codes.Code, theError string) 
 func (s *gdsTestSuite) TestRegister() {
 	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	defer s.ResetEmptyFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
@@ -207,7 +207,7 @@ func (s *gdsTestSuite) TestLookup() {
 func (s *gdsTestSuite) TestSearch() {
 	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -333,7 +333,7 @@ func (s *gdsTestSuite) TestSearch() {
 func (s *gdsTestSuite) TestVerifyContact() {
 	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	defer s.ResetFullFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
@@ -440,7 +440,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 func (s *gdsTestSuite) TestVerification() {
 	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -494,7 +494,7 @@ func (s *gdsTestSuite) TestVerification() {
 func (s *gdsTestSuite) TestStatus() {
 	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -529,7 +529,7 @@ func (s *gdsTestSuite) TestStatusMaintenance() {
 
 	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
-	s.SetupGDS()
+	// s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 

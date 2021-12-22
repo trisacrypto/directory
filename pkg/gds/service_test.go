@@ -109,7 +109,6 @@ func (s *gdsTestSuite) SetupSuite() {
 // SetupGDS starts the GDS server
 // Run this inside the test methods after loading the appropriate fixtures
 func (s *gdsTestSuite) SetupGDS() {
-	s.shutdownServers()
 
 	// Using a bufconn listener allows us to avoid network requests
 	s.grpc = bufconn.New(bufSize)
@@ -119,7 +118,6 @@ func (s *gdsTestSuite) SetupGDS() {
 // SetupMembers starts the Members server
 // Run this inside the test methods after loading the appropriate fixtures
 func (s *gdsTestSuite) SetupMembers() {
-	s.shutdownServers()
 
 	// Using a bufconn listener allows us to avoid network requests
 	s.grpc = bufconn.New(bufSize)
@@ -137,6 +135,10 @@ func (s *gdsTestSuite) shutdownServers() {
 			log.Warn().Err(err).Msg("could not shutdown Members server to start new one")
 		}
 	}
+	if s.grpc != nil {
+		s.grpc.Release()
+	}
+	s.grpc = nil
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -458,6 +460,8 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 			log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Str("dbpath", s.dbPaths[ftype]).Msg("FIXTURE EXTRACTED")
 		}
 	}
+
+	s.shutdownServers()
 
 	// Use the custom config if specified
 	var conf config.Config
