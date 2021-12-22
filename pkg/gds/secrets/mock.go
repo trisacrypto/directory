@@ -32,7 +32,7 @@ func NewMock(conf config.SecretsConfig) (*SecretManager, error) {
 }
 
 type mockSecretManagerClient struct {
-	mu      sync.Mutex
+	sync.RWMutex
 	secrets map[string]*mockSecret
 }
 
@@ -45,8 +45,8 @@ type mockSecret struct {
 
 func (c *mockSecretManagerClient) GetSecret(ctx context.Context, req *smpb.GetSecretRequest, opts ...gax.CallOption) (*smpb.Secret, error) {
 	log.Warn().Str("method", "GetSecret").Msg("mock secret manager called")
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.RLock()
+	defer c.RUnlock()
 	// Check if secret is in the mock database
 	if secret, ok := c.secrets[req.Name]; ok && secret.Expires.After(time.Now()) {
 		return &smpb.Secret{
@@ -93,8 +93,8 @@ func (c *mockSecretManagerClient) CreateSecret(ctx context.Context, req *smpb.Cr
 		secret.Expires = secret.Created.Add(time.Hour)
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	// Check if secret already exists
 	if _, ok := c.secrets[secret.Name]; ok {
 		return nil, status.Error(codes.AlreadyExists, "secret already exists")
@@ -121,8 +121,8 @@ func (c *mockSecretManagerClient) AddSecretVersion(ctx context.Context, req *smp
 		return nil, status.Error(codes.InvalidArgument, "payload too large")
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	secret, ok := c.secrets[req.Parent]
 	if !ok {
 		return nil, status.Error(codes.NotFound, "secret not found")
@@ -153,8 +153,8 @@ func (c *mockSecretManagerClient) AccessSecretVersion(ctx context.Context, req *
 	}
 	parent := strings.Join(parts[:len(parts)-2], "/")
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	secret, ok := c.secrets[parent]
 	if !ok {
 		fmt.Println("secret not found: ", parent)
@@ -194,8 +194,8 @@ func (c *mockSecretManagerClient) DeleteSecret(ctx context.Context, req *smpb.De
 		return status.Error(codes.InvalidArgument, "missing secret name")
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	secret, ok := c.secrets[req.Name]
 	if !ok {
 		return status.Error(codes.NotFound, "secret not found")
