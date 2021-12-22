@@ -23,6 +23,8 @@ const (
 	VendorName       = "trisa"
 	ApplicationName  = "sectigo"
 	CredentialsCache = "credentials.yaml"
+	MockUsername     = "tester"
+	MockPassword     = "supersecretsquirrel"
 )
 
 // Credentials stores login and authentication information to connect to the Sectigo API.

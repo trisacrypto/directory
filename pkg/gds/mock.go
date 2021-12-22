@@ -15,8 +15,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
-	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	"google.golang.org/grpc"
 )
 
 // NewMock creates and returns a mocked Service for testing, using values provided in
@@ -46,15 +44,15 @@ func NewMock(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
-	gds := &GDS{
-		svc:  svc,
-		conf: &svc.conf.GDS,
-		db:   svc.db,
+	if svc.gds, err = NewGDS(svc); err != nil {
+		return nil, err
 	}
-	gds.srv = grpc.NewServer(grpc.UnaryInterceptor(svc.serverInterceptor))
-	api.RegisterTRISADirectoryServer(gds.srv, gds)
-	svc.gds = gds
 
+	if svc.members, err = NewMembers(svc); err != nil {
+		return nil, err
+	}
+
+	// TODO: Should we be using NewAdmin() here?
 	admin := &Admin{
 		svc:  svc,
 		conf: &svc.conf.Admin,
@@ -111,7 +109,7 @@ func MockConfig() config.Config {
 			TokenKeys: nil,
 		},
 		Members: config.MembersConfig{
-			Enabled:  false,
+			Enabled:  true,
 			Insecure: true,
 		},
 		Database: config.DatabaseConfig{
