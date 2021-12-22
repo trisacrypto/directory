@@ -7,6 +7,7 @@ import (
 
 	"github.com/rotationalio/honu"
 	engine "github.com/rotationalio/honu/engines"
+	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
@@ -50,6 +51,11 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 
 	// Check if the peer is in the database; if it is unmarshal it and update it
 	if data, err := p.db.Get([]byte(key), options.WithNamespace(NamespacePeers)); err != nil {
+		if !errors.Is(err, engine.ErrNotFound) {
+			log.Error().Err(err).Msg("could not access database for peers lookup")
+			return nil, status.Error(codes.FailedPrecondition, "could not get peer from database")
+		}
+
 		current := new(peers.Peer)
 		if err = proto.Unmarshal(data, current); err != nil {
 			log.Error().Err(err).Str("key", key).Msg("could not unmarshal peer from database")
@@ -60,9 +66,6 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 		// TODO: merge empty fields from current peer into incoming peer then validate.
 		in.Created = current.Created
 
-	} else if !errors.Is(err, engine.ErrNotFound) {
-		log.Error().Err(err).Msg("could not access database for peers lookup")
-		return nil, status.Error(codes.FailedPrecondition, "could not get peer from database")
 	}
 
 	// TODO: validate other Peer fields
@@ -114,8 +117,10 @@ func (p *PeerService) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.P
 func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (out *peers.PeersList, err error) {
 	// Create the response
 	out = &peers.PeersList{
-		Peers:  make([]*peers.Peer, 0),
-		Status: &peers.PeersStatus{},
+		Peers: make([]*peers.Peer, 0),
+		Status: &peers.PeersStatus{
+			Regions: make(map[string]int64),
+		},
 	}
 
 	// Iterate over all the peers (necessary for both list and status-only)
@@ -127,9 +132,20 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 	defer ps.Release()
 
 	for ps.Next() {
-		value := ps.Value()
+		// Skip tombstones
+		// TODO: why is Honu returning tombstones in iter?
+		var obj *object.Object
+		if obj, err = ps.Object(); err != nil {
+			log.Error().Err(err).Str("key", string(ps.Key())).Msg("could not retrieve object from db")
+			continue
+		}
+
+		if obj.Tombstone() {
+			continue
+		}
+
 		peer := new(peers.Peer)
-		if err = proto.Unmarshal(value, peer); err != nil {
+		if err = proto.Unmarshal(obj.Data, peer); err != nil {
 			log.Warn().Err(err).Str("key", string(ps.Key())).Msg("could not unmarshal peer")
 			continue
 		}
