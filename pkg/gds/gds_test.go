@@ -9,12 +9,28 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
-// TestRegister tests that the Register RPC correcty registers a new VASP with GDS.
+// StatusError is a helper assertion function that checks a gRPC status error
+func (s *gdsTestSuite) StatusError(err error, code codes.Code, theError string) {
+	require := s.Require()
+	require.Error(err, "no status error returned")
+
+	var serr *status.Status
+	serr, ok := status.FromError(err)
+	require.True(ok, "error is not a grpc status error")
+	require.Equal(code, serr.Code(), "status code does not match")
+	require.Equal(theError, serr.Message(), "status error message does not match")
+}
+
+// TestRegister tests that the Register RPC correctly registers a new VASP with GDS.
 func (s *gdsTestSuite) TestRegister() {
+	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
+	s.SetupGDS()
 	defer s.ResetEmptyFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
@@ -142,7 +158,9 @@ func (s *gdsTestSuite) TestRegister() {
 
 // TestLookup test that the Lookup RPC correctly returns details for a VASP.
 func (s *gdsTestSuite) TestLookup() {
+	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
+	s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -187,7 +205,9 @@ func (s *gdsTestSuite) TestLookup() {
 
 // TestSearch tests that the Search RPC returns the correct search results.
 func (s *gdsTestSuite) TestSearch() {
+	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
+	s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -311,7 +331,9 @@ func (s *gdsTestSuite) TestSearch() {
 // TestVerifyContact tests that the VerifyContact RPC correctly verifies the VASP
 // against the token and sends verification emails to the admins.
 func (s *gdsTestSuite) TestVerifyContact() {
+	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
+	s.SetupGDS()
 	defer s.ResetFullFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
@@ -416,7 +438,9 @@ func (s *gdsTestSuite) TestVerifyContact() {
 // TestVerification tests that the Verification RPC returns the correct status
 // information for a VASP.
 func (s *gdsTestSuite) TestVerification() {
+	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
+	s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -468,7 +492,9 @@ func (s *gdsTestSuite) TestVerification() {
 
 // TestStatus tests that the Status RPC returns the correct status response.
 func (s *gdsTestSuite) TestStatus() {
+	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
+	s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
@@ -500,7 +526,10 @@ func (s *gdsTestSuite) TestStatusMaintenance() {
 	conf.Maintenance = true
 	s.SetConfig(conf)
 	defer s.ResetConfig()
+
+	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
+	s.SetupGDS()
 	require := s.Require()
 	ctx := context.Background()
 
