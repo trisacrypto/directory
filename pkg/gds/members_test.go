@@ -20,10 +20,10 @@ func (s *gdsTestSuite) TestList() {
 	client := pb.NewTRISAMembersClient(s.grpc.Conn)
 	require.NotNil(client)
 
-	// Test defaults, expecting 6 results
+	// Test defaults, expecting 5 results
 	out, err := client.List(ctx, &pb.ListRequest{})
 	require.NoError(err, "default list request failed")
-	require.Len(out.Vasps, 6, "unexpected vasp count from List; have the fixtures changed?")
+	require.Len(out.Vasps, 5, "unexpected vasp count from List; have the fixtures changed?")
 	require.Empty(out.NextPageToken, "a next page token was returned for a one page response")
 
 	// Test with a page size, expecting 1 result and a next page token
