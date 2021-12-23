@@ -1568,6 +1568,12 @@ func (s *Admin) Review(c *gin.Context) {
 		}
 	}
 
+	// Persist the VASP record to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("error updating VASP record")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+	}
+
 	name, _ := vasp.Name()
 	out.Status = vasp.VerificationStatus.String()
 	log.Info().Str("vasp", vasp.Id).Str("name", name).Bool("accepted", in.Accept).Msg("registration reviewed")
