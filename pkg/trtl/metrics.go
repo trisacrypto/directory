@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -26,7 +27,8 @@ type MetricsService struct {
 }
 
 func NewMetricsService() (*MetricsService, error) {
-	return &MetricsService{}, nil
+	initMetrics()
+	return &MetricsService{srv: &http.Server{}}, nil
 }
 
 // Serve serves the Prometheus metrics
@@ -34,15 +36,22 @@ func (m *MetricsService) Serve(addr string) error {
 	if err := registerMetrics(); err != nil {
 		return err
 	}
-	m.srv = serveMetrics(addr)
-
+	m.srv.Addr = addr
+	log.Info().Msg(fmt.Sprintf("serving prometheus metrics at http://%s/metrics", addr))
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		if err := m.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Err(err).Msg("metrics server shutdown prematurely")
+		}
+	}()
 	return nil
 }
 
 // Gracefully shutdown the Prometheus metrics service
 func (m *MetricsService) Shutdown() error {
 	// Might want to share context from Trtl more globally?
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if err := m.srv.Shutdown(ctx); err != nil {
 		log.Error().Err(err).Msg("unable to gracefully shutdown prometheus metrics")
 	}
@@ -95,16 +104,6 @@ func initMetrics() {
 		Name:      "latency",
 		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
 	}, []string{"call"})
-}
-
-func serveMetrics(metricsAddr string) *http.Server {
-	srv := &http.Server{Addr: metricsAddr}
-	log.Info().Msg(fmt.Sprintf("serving prometheus metrics at http://%s/metrics", metricsAddr))
-	http.Handle("/metrics", promhttp.Handler())
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Error().Err(err).Str("metricsAddr", metricsAddr).Msg("unable to serve prometheus metrics")
-	}
-	return srv
 }
 
 func registerMetrics() error {

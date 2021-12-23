@@ -13,7 +13,6 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
@@ -43,13 +42,6 @@ const (
 // to look in that namespace only.
 func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
-	var ns string
-
-	if in.Namespace == "" {
-		ns = "default"
-	} else {
-		ns = in.Namespace
-	}
 
 	// Start a timer to track latency
 	start := time.Now()
@@ -63,29 +55,35 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 
-	if in.Options != nil && in.Options.ReturnMeta {
-		// Retrieve and return the metadata (uses honu.Object())
-		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
-
-		// Check if we have a namespace
-		// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
-		var object *object.Object
-		if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-			// TODO: Check for the honu not found error instead.
-			if err == engine.ErrNotFound {
-				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
-				return nil, status.Error(codes.NotFound, err.Error())
-			}
-			log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
-			return nil, status.Error(codes.Internal, err.Error())
+	// NOTE: we are using `honu.Object` instead of `honu.Get` because we need the metadata for
+	// prometheus even if the user doesn't want us to return any metadata to them.
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
+	var object *object.Object
+	if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
+		// TODO: Check for the honu not found error instead.
+		if err == engine.ErrNotFound {
+			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 
-		// Update prometheus metrics with Get
-		pmGets.WithLabelValues(ns).Inc()
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if object.Version.Tombstone == true {
+		log.Debug().Err(engine.ErrNotFound).Str("key", string(in.Key)).Msg("specified key not found")
+		return nil, status.Error(codes.NotFound, engine.ErrNotFound.Error())
+	}
 
-		// Compute Get latency in milliseconds
+	if in.Options != nil && in.Options.ReturnMeta {
+		// User wants metadata
+		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
+
+		// Compute latency in milliseconds
 		latency := float64(time.Since(start)/1000) / 1000.0
 		pmLatency.WithLabelValues("Get").Observe(latency)
+
+		// Update prometheus metrics
+		pmGets.WithLabelValues(object.Namespace).Inc()
 
 		return &pb.GetReply{
 			Value: object.Data,
@@ -93,31 +91,18 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		}, nil
 	}
 
-	// No metadata requested; just return the value for the given key (uses honu.Get())
+	// No metadata requested; just return the value for the given key
 	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
-
-	// But we do have to check if we have a namespace
-	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
-	var value []byte
-	if value, err = h.db.Get(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-		// TODO: Check for the honu not found error instead.
-		if err == leveldb.ErrNotFound {
-			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
-			return nil, status.Error(codes.NotFound, err.Error())
-		}
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve value")
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
 
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
 	pmLatency.WithLabelValues("Get").Observe(latency)
 
 	// Increment prometheus Get count
-	pmGets.WithLabelValues(ns).Inc()
+	pmGets.WithLabelValues(object.Namespace).Inc()
 
 	return &pb.GetReply{
-		Value: value,
+		Value: object.Data,
 	}, nil
 }
 
@@ -125,14 +110,6 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
-	var ns string
-
-	if in.Namespace == "" {
-		ns = "default"
-	} else {
-		ns = in.Namespace
-	}
-
 	// Start a timer to track latency
 	start := time.Now()
 
@@ -174,9 +151,9 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	pmLatency.WithLabelValues("Put").Observe(latency)
 
 	// Increment prometheus Put counter
-	pmPuts.WithLabelValues(ns).Inc()
+	pmPuts.WithLabelValues(object.Namespace).Inc()
 
-	// TODO: prometheus
+	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
 	// Unfortunately, we currently we don't get tombstone information, but if we did,
 	// we could use it to decrement our `pmTombstone` counter here
@@ -188,14 +165,6 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
-	var ns string
-
-	if in.Namespace == "" {
-		ns = "default"
-	} else {
-		ns = in.Namespace
-	}
-
 	// Start a timer to track latency
 	start := time.Now()
 
@@ -233,11 +202,11 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	pmLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
-	pmDels.WithLabelValues(ns).Inc()
+	pmDels.WithLabelValues(object.Namespace).Inc()
 
-	// TODO: Increment Prometheus Tombstone counter
+	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
-	// pmTombstones.WithLabelValues(ns).Inc()
+	// pmTombstones.WithLabelValues(object.Namespace).Inc()
 
 	return out, nil
 }
@@ -261,12 +230,6 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
 	var ns string
-
-	if in.Namespace == "" {
-		ns = "default"
-	} else {
-		ns = in.Namespace
-	}
 
 	// Start a timer to track latency
 	start := time.Now()
@@ -384,6 +347,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
+		ns = object.Namespace
 
 		// Create the key value pair
 		pair := &pb.KVPair{}
@@ -616,7 +580,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		// Count the number of messages successfully sent
 		nMessages++
 
-		// TODO: Prometheus
+		// TODO: Prometheus; see sc-2575
 		// If in.Prefix is nil, nMessages will be all the objects in in.Namespace so we
 		// could use this opportunity to update our Prometheus counter if we can find
 		// out how to call something like update on the counter rather than increment

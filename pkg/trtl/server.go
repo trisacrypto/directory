@@ -125,10 +125,9 @@ func (t *Server) Serve() (err error) {
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
 	if t.conf.MetricsEnabled {
-		log.Info().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics server started")
-		go t.metrics.Serve(t.conf.MetricsAddr)
+		t.metrics.Serve(t.conf.MetricsAddr)
 	} else {
-		log.Info().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics disabled")
+		log.Warn().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics disabled")
 	}
 
 	// Listen for TCP requests
@@ -177,14 +176,6 @@ func (t *Server) Shutdown() (err error) {
 
 	log.Debug().Msg("successful shutdown of trtl server")
 	return nil
-}
-
-//===========================================================================
-// Initialize Prometheus metrics
-//===========================================================================
-
-func init() {
-	initMetrics()
 }
 
 //===========================================================================

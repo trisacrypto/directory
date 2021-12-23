@@ -329,7 +329,7 @@ func (s *trtlTestSuite) TestUnaryOperationsInNamespaces() {
 
 		// Delete the key
 		_, err = client.Delete(ctx, &pb.DeleteRequest{Namespace: namespace, Key: key})
-		require.NoError(err, "could not get delete from namespace %q", namespace)
+		require.NoError(err, "could not delete from namespace %q", namespace)
 
 		// Get should return not found (we expect a tombstone)
 		_, err = client.Get(ctx, &pb.GetRequest{Namespace: namespace, Key: key})
