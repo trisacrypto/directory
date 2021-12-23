@@ -69,7 +69,7 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	if object.Version.Tombstone == true {
+	if object.Version.Tombstone {
 		log.Debug().Err(engine.ErrNotFound).Str("key", string(in.Key)).Msg("specified key not found")
 		return nil, status.Error(codes.NotFound, engine.ErrNotFound.Error())
 	}
