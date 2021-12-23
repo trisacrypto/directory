@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"time"
 
 	"github.com/rotationalio/honu"
 	engine "github.com/rotationalio/honu/engines"
@@ -12,7 +13,6 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
@@ -43,6 +43,9 @@ const (
 func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
 	var err error
 
+	// Start a timer to track latency
+	start := time.Now()
+
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -52,45 +55,54 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 
+	// NOTE: we are using `honu.Object` instead of `honu.Get` because we need the metadata for
+	// prometheus even if the user doesn't want us to return any metadata to them.
+	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
+	var object *object.Object
+	if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
+		// TODO: Check for the honu not found error instead.
+		if err == engine.ErrNotFound {
+			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if object.Version.Tombstone {
+		log.Debug().Err(engine.ErrNotFound).Str("key", string(in.Key)).Msg("specified key not found")
+		return nil, status.Error(codes.NotFound, engine.ErrNotFound.Error())
+	}
+
 	if in.Options != nil && in.Options.ReturnMeta {
-		// Retrieve and return the metadata (uses honu.Object())
+		// User wants metadata
 		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
 
-		// Check if we have a namespace
-		// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
-		var object *object.Object
-		if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-			// TODO: Check for the honu not found error instead.
-			if err == engine.ErrNotFound {
-				log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
-				return nil, status.Error(codes.NotFound, err.Error())
-			}
-			log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+		// Compute latency in milliseconds
+		latency := float64(time.Since(start)/1000) / 1000.0
+		pmLatency.WithLabelValues("Get").Observe(latency)
+
+		// Update prometheus metrics
+		pmGets.WithLabelValues(object.Namespace).Inc()
+
 		return &pb.GetReply{
 			Value: object.Data,
 			Meta:  returnMeta(object),
 		}, nil
 	}
 
-	// No metadata requested; just return the value for the given key (uses honu.Get())
+	// No metadata requested; just return the value for the given key
 	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
 
-	// But we do have to check if we have a namespace
-	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
-	var value []byte
-	if value, err = h.db.Get(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-		// TODO: Check for the honu not found error instead.
-		if err == leveldb.ErrNotFound {
-			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
-			return nil, status.Error(codes.NotFound, err.Error())
-		}
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve value")
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
+	// Compute Get latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Get").Observe(latency)
+
+	// Increment prometheus Get count
+	pmGets.WithLabelValues(object.Namespace).Inc()
+
 	return &pb.GetReply{
-		Value: value,
+		Value: object.Data,
 	}, nil
 }
 
@@ -98,6 +110,9 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -131,6 +146,18 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		out.Meta = returnMeta(object)
 	}
 
+	// Compute Put latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Put").Observe(latency)
+
+	// Increment prometheus Put counter
+	pmPuts.WithLabelValues(object.Namespace).Inc()
+
+	// TODO: prometheus; see sc-2576
+	// If in.Options.ReturnMeta is true, we will get metadata from honu
+	// Unfortunately, we currently we don't get tombstone information, but if we did,
+	// we could use it to decrement our `pmTombstone` counter here
+
 	return out, nil
 }
 
@@ -138,6 +165,9 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -167,6 +197,17 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		out.Meta = returnMeta(object)
 	}
 
+	// Compute Delete latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Delete").Observe(latency)
+
+	// Increment Prometheus Delete counter
+	pmDels.WithLabelValues(object.Namespace).Inc()
+
+	// TODO: Increment Prometheus Tombstone counter; see sc-2576
+	// Unfortunately we can't decrement yet! (see note in `Put`)
+	// pmTombstones.WithLabelValues(object.Namespace).Inc()
+
 	return out, nil
 }
 
@@ -188,6 +229,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -332,6 +376,13 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
 		}
 	}
+
+	// Compute Iter latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmLatency.WithLabelValues("Iter").Observe(latency)
+
+	// Increment Prometheus Iter counter
+	pmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
@@ -525,6 +576,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 		// Count the number of messages successfully sent
 		nMessages++
+
+		// TODO: Prometheus; see sc-2575
+		// If in.Prefix is nil, nMessages will be all the objects in in.Namespace so we
+		// could use this opportunity to update our Prometheus counter if we can find
+		// out how to call something like update on the counter rather than increment
 	}
 
 	if err = iter.Error(); err != nil {

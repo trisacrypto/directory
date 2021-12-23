@@ -23,6 +23,8 @@ var testEnv = map[string]string{
 	"TRTL_REPLICA_REGION":           "us-east-1c",
 	"TRTL_REPLICA_GOSSIP_INTERVAL":  "30m",
 	"TRTL_REPLICA_GOSSIP_SIGMA":     "3m",
+	"TRTL_METRICS_ADDR":             ":7777",
+	"TRTL_METRICS_ENABLED":          "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -56,6 +58,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Replica.Region)
 	require.Equal(t, 30*time.Minute, conf.Replica.GossipInterval)
 	require.Equal(t, 3*time.Minute, conf.Replica.GossipSigma)
+	require.Equal(t, testEnv["TRTL_METRICS_ADDR"], conf.MetricsAddr)
+	require.True(t, conf.MetricsEnabled)
 }
 
 func TestRequiredConfig(t *testing.T) {
