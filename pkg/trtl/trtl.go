@@ -229,8 +229,6 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
-	var ns string
-
 	// Start a timer to track latency
 	start := time.Now()
 
@@ -347,7 +345,6 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
-		ns = object.Namespace
 
 		// Create the key value pair
 		pair := &pb.KVPair{}
@@ -385,7 +382,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	pmLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
-	pmIters.WithLabelValues(ns).Inc()
+	pmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
