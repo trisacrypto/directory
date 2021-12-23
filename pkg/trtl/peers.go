@@ -74,7 +74,7 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 	// Insert the peer into the database
 	var value []byte
 	if value, err = proto.Marshal(in); err != nil {
-		log.Error().Err(err).Msg("could not marshal peers protocol buffers")
+		log.Error().Err(err).Msg("could not marshal peer protocol buffers")
 		return nil, status.Error(codes.FailedPrecondition, "could not marshal peer protocol buffers")
 	}
 
