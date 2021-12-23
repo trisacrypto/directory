@@ -55,7 +55,13 @@ func New(conf config.Config) (s *Service, err error) {
 			return nil, err
 		}
 
-		// Ensure that the Admin API is created even in maintenace mode, so that
+		// Ensure that the Members API is created even in maintenance mode, so that
+		// maintenance status replies are sent.
+		if s.members, err = NewMembers(s); err != nil {
+			return nil, err
+		}
+
+		// Ensure that the Admin API is created even in maintenance mode, so that
 		// maintenance status replies are sent.
 		if s.admin, err = NewAdmin(s); err != nil {
 			return nil, err
@@ -143,7 +149,7 @@ func (s *Service) Serve() (err error) {
 
 		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
-		go s.CertManager()
+		go s.CertManager(nil)
 
 		// Start the backup manager go routine process
 		go s.BackupManager(nil)
@@ -209,6 +215,11 @@ func (s *Service) GetGDS() *GDS {
 	return s.gds
 }
 
+// GetMembers returns the Members gRPC server
+func (s *Service) GetMembers() *Members {
+	return s.members
+}
+
 // GetAdmin returns the Admin server
 func (s *Service) GetAdmin() *Admin {
 	return s.admin
@@ -217,4 +228,9 @@ func (s *Service) GetAdmin() *Admin {
 // GetConf returns a copy of the current configuration
 func (s *Service) GetConf() config.Config {
 	return s.conf
+}
+
+// GetSecretManager returns the secret manager
+func (s *Service) GetSecretManager() *secrets.SecretManager {
+	return s.secret
 }

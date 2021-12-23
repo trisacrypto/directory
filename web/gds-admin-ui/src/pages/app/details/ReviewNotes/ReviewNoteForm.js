@@ -1,41 +1,21 @@
 import React from 'react'
 import { useForm } from "react-hook-form";
-import toast from 'react-hot-toast';
-import { useDispatch } from 'react-redux';
-import useSafeDispatch from '../../../../hooks/useSafeDispatch';
-import { createReviewNoteApiResponseSuccess } from '../../../../redux/review-notes';
-import { postReviewNote } from '../../../../services/review-notes';
 import PropTypes from 'prop-types';
 
 
-function ReviewNoteForm({ vaspId }) {
+function ReviewNoteForm({ handleReviewNoteSubmit, isSubmitting }) {
     const { register, handleSubmit, watch, reset } = useForm({
         defaultValues: {
             note: ''
         }
     });
-    const [isSubmitting, setIsSubmiting] = React.useState(false)
     const watchedNote = watch('note').trim()
-    const dispatch = useDispatch()
-    const safeDispatch = useSafeDispatch(dispatch)
 
-
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         const { note } = data
-        setIsSubmiting(true)
+        await handleReviewNoteSubmit(note)
+        reset({ note: '' })
 
-        postReviewNote(note, vaspId).then(response => {
-            const data = response?.data
-            if (data) {
-                safeDispatch(createReviewNoteApiResponseSuccess(data))
-                toast.success('Review note added successfully')
-            }
-            setIsSubmiting(false)
-            reset({ note: '' })
-        }).catch(error => {
-            console.error('[ReviewNoteForm] onSubmit', error)
-            setIsSubmiting(false)
-        })
     }
 
     return (
@@ -58,7 +38,7 @@ function ReviewNoteForm({ vaspId }) {
 }
 
 ReviewNoteForm.propTypes = {
-    vaspId: PropTypes.string.isRequired
+    handleReviewNoteSubmit: PropTypes.func
 }
 
 export default ReviewNoteForm

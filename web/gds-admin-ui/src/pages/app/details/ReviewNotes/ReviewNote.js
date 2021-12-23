@@ -33,7 +33,7 @@ function ReviewNote({ note, vaspId }) {
             <div className="w-100 overflow-hidden">
                 <div className='d-flex justify-content-between pt-1'>
                     <div className='d-flex flex-column'>
-                        <h5 className="m-0">{note.author}</h5>
+                        <h5 className="m-0" data-testid="author">{note.author}</h5>
                         {
                             note?.modified ?
                                 <small className='text-muted d-block fst-italic mb-1'>edited {dayjs(note.updated).fromNow()}</small> :
@@ -42,11 +42,11 @@ function ReviewNote({ note, vaspId }) {
                     </div>
                     <div hidden={isEditable}>
                         <button onClick={handleEditClick} className='py-0 px-1 btn btn-success me-sm-1 me-xl-1'><i className='mdi mdi-square-edit-outline'></i> <small className='d-xs-none d-sm-none d-md-none d-lg-none d-xl-inline'>Edit</small></button>
-                        <button onClick={handleDeleteClick} className='py-0 px-1 btn btn-danger'><i className='mdi mdi-trash-can-outline'></i> <small className='d-xs-none d-sm-none d-md-none d-lg-none d-xl-inline'>Delete</small></button>
+                        <button data-testid="delete-btn" onClick={handleDeleteClick} className='py-0 px-1 btn btn-danger'><i className='mdi mdi-trash-can-outline'></i> <small className='d-xs-none d-sm-none d-md-none d-lg-none d-xl-inline'>Delete</small></button>
                     </div>
                 </div>
                 <div>
-                    {isEditable ? <EditReviewNote note={note} vaspId={vaspId} setIsEditable={setIsEditable} handleCancelEditingClick={handleCancelEditingClick} /> : <>{note.text}</>}
+                    {isEditable ? <EditReviewNote note={note} vaspId={vaspId} setIsEditable={setIsEditable} handleCancelEditingClick={handleCancelEditingClick} /> : <p className='m-0' data-testid="note">{note.text}</p>}
                 </div>
             </div>
         </div>

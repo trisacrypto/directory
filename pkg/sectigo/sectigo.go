@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // Valid Sectigo Certificate Profile Names and IDs
@@ -46,6 +47,7 @@ var AllProfiles = [4]string{
 // request, and if not either refreshes the token or reauthenticates using its
 // credentials.
 type Sectigo struct {
+	sync.RWMutex
 	client  http.Client
 	creds   *Credentials
 	profile string
@@ -66,9 +68,19 @@ func New(conf Config) (client *Sectigo, err error) {
 	}
 
 	if conf.Testing {
+		// Ensure that we're connecting to a test server
 		host := baseURL.Hostname()
 		if host != "localhost" && host != "127.0.0.1" {
 			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
+		}
+
+		// Add mock credentials to the client if we're in testing mode
+		if conf.Username == "" {
+			conf.Username = MockUsername
+		}
+
+		if conf.Password == "" {
+			conf.Password = MockPassword
 		}
 	}
 
@@ -770,6 +782,8 @@ func (s *Sectigo) Creds() Credentials {
 // Returns a request with default headers set along with the authentication header.
 // If the client has not been authenticated, then an error is returned.
 func (s *Sectigo) newRequest(method, url string, data interface{}) (req *http.Request, err error) {
+	s.RLock()
+	defer s.RUnlock()
 	if !s.creds.Valid() {
 		return nil, ErrNotAuthenticated
 	}
@@ -803,6 +817,8 @@ func (s *Sectigo) newRequest(method, url string, data interface{}) (req *http.Re
 // Preflight prepares to send a request that needs to be authenticated by checking the
 // credentials and sending any authentication or refresh requests required.
 func (s *Sectigo) preflight() (err error) {
+	s.Lock()
+	defer s.Unlock()
 	if !s.creds.Valid() {
 		if s.creds.Refreshable() {
 			// Attempt to refresh the credentials, if there is no error, then continue.

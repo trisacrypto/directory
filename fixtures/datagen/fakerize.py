@@ -48,8 +48,8 @@ VASP_CATEGORIES = [
 FAKE_VASPS = {
     "CharlieBank": "SUBMITTED",
     "Delta Assets": "APPEALED",
-    "Echo Funds": "SUBMITTED",
-    "Foxtrot LLC": "VERIFIED",
+    "Echo Funds": "REVIEWED",
+    "Foxtrot LLC": "ISSUING_CERTIFICATE",
     "GolfBucks": "ERRORED",
     "Hotel Corp": "VERIFIED",
     "IndiaCoin": "VERIFIED",
@@ -144,8 +144,8 @@ URLWORDS = [
 ]
 FAKE_CERTS = {
     "Papa": "INITIALIZED",
-    "Quebec": "COMPLETED",
-    "Sierra": "CR_REJECTED",
+    "Quebec": "READY_TO_SUBMIT",
+    "Sierra": "PROCESSING",
     "Tango": "CR_ERRORED",
     "Uniform": "COMPLETED",
     "Victor": "COMPLETED",
@@ -204,6 +204,12 @@ CERT_STATE_CHANGES = {
         "description": "certificate request complete",
         "source": "automated",
     },
+}
+
+VASP_CERT_RELATIONSHIPS = {
+    "Echo Funds": ["Quebec"],
+    "Foxtrot LLC": ["Sierra"],
+    "Juliet Capulet LLC": ["XRay"],
 }
 
 ##########################################################################
@@ -374,11 +380,12 @@ def store(fakes, kind="vasps", directory=OUTPUT_DIRECTORY):
     Each file should be the name of the fakerized uuid
     Return the path
     """
+    directory = os.path.join(directory, kind)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     for idx, fake in fakes.items():
-        fname = os.path.join(directory, kind + "::" + shorten(idx) + ".json")
+        fname = os.path.join(directory, shorten(idx) + ".json")
         with open(fname, "w") as outfile:
             json.dump(fake, outfile, indent=4, sort_keys=True)
 
@@ -532,6 +539,19 @@ def make_pending(vasp, idx):
     """
     return make_unverified(vasp, idx, state="PENDING_REVIEW")
 
+def make_reviewed(vasp, idx):
+    """
+    Populate variable fields in a reviewed record
+    uses `fixtures/datagen/templates/no_cert.json` as template
+    """
+    return make_unverified(vasp, idx, state="REVIEWED")
+
+def make_issuing(vasp, idx):
+    """
+    Populate variable fields in a certificate issued record
+    uses `fixtures/datagen/templates/no_cert.json` as template
+    """
+    return make_unverified(vasp, idx, state="ISSUING_CERTIFICATE")
 
 def augment_vasps(fake_names=FAKE_VASPS):
     """
@@ -550,6 +570,10 @@ def augment_vasps(fake_names=FAKE_VASPS):
             synthetic_vasps[vasp] = make_errored(vasp, idx)
         elif state == "PENDING_REVIEW":
             synthetic_vasps[vasp] = make_pending(vasp, idx)
+        elif state == "REVIEWED":
+            synthetic_vasps[vasp] = make_reviewed(vasp, idx)
+        elif state == "ISSUING_CERTIFICATE":
+            synthetic_vasps[vasp] = make_issuing(vasp, idx)
         elif state == "APPEALED":
             synthetic_vasps[vasp] = make_appealed(vasp, idx)
         elif state == "REJECTED":
@@ -620,6 +644,43 @@ def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.js
     record["audit_log"] = make_cert_log("INITIALIZED", start, start)
     return record
 
+def make_ready_to_submit(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
+    """
+    Make a cert req in the READY_TO_SUBMIT state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = make_uuid(rng)
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "READY_TO_SUBMIT"
+    start, end = make_dates(count=2)
+    record["created"] = start
+    record["modified"] = end
+    record["audit_log"] = make_cert_log("READY_TO_SUBMIT", start, end)
+    return record
+
+def make_processing(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
+    """
+    Make a cert req in the PROCESSING state
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    record["id"] = idx
+    record["vasp"] = make_uuid(rng)
+    common_name = make_common_name(cert)
+    record["common_name"] = common_name
+    record["status"] = "PROCESSING"
+    batch = str(rng.randint(100000, 999999))
+    record["batch_id"] = batch
+    start, end = make_dates(count=2)
+    record["created"] = start
+    record["modified"] = end
+    record["audit_log"] = make_cert_log("PROCESSING", start, end)
+    return record
 
 def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -685,13 +746,15 @@ def make_cert_log(state, start, end):
     states = [state]
     current_state = state
     prior_state = None
-    while current_state in CERT_STATE_CHANGES:
-        prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
-        states.insert(0, prior_state)
-        if prior_state == "INITIALIZED":
-            current_state = "STOP"
-        else:
-            current_state = prior_state
+    if state != "INITIALIZED":
+        while current_state in CERT_STATE_CHANGES:
+            prior_state = CERT_STATE_CHANGES[current_state]["previous_state"]
+            states.insert(0, prior_state)
+            if prior_state == "INITIALIZED":
+                current_state = "STOP"
+            else:
+                current_state = prior_state
+
 
     dates = make_dates(first=start, last=end, count=len(states))
 
@@ -718,6 +781,10 @@ def augment_certs(fake_names=FAKE_CERTS):
         cert = cert.lower()
         if state == "INITIALIZED":
             synthetic_certs[cert] = make_initialized(cert, idx)
+        elif state == "READY_TO_SUBMIT":
+            synthetic_certs[cert] = make_ready_to_submit(cert, idx)
+        elif state == "PROCESSING":
+            synthetic_certs[cert] = make_processing(cert, idx)
         elif state == "COMPLETED":
             synthetic_certs[cert] = make_completed(cert, idx)
         elif state == "CR_ERRORED":
@@ -728,6 +795,19 @@ def augment_certs(fake_names=FAKE_CERTS):
             print("Skipping unrecognized state: %s", state)
 
     return synthetic_certs
+
+def add_vasp_cert_relationships(vasps, certs):
+    """
+    Add predefined relationships between VASPs and certificate requests.
+    """
+    for vasp_name, cert_names in VASP_CERT_RELATIONSHIPS.items():
+        cert_ids = []
+        for c in cert_names:
+            name = c.lower()
+            cert_ids.append(certs[name]["id"])
+            certs[name]["vasp"] = vasps[vasp_name]["id"]
+            certs[name]["common_name"] = vasps[vasp_name]["common_name"]
+        vasps[vasp_name]["extra"]["certificate_requests"] = cert_ids
 
 if __name__ == "__main__":
     replace = False
@@ -745,12 +825,13 @@ if __name__ == "__main__":
 
     if os.path.exists(OUTPUT_DIRECTORY):
         shutil.rmtree(OUTPUT_DIRECTORY)
-        
-    fakes = augment_vasps()
-    store(fakes, kind="vasps")
 
-    fakes = augment_certs()
-    store(fakes, kind="certreqs")
+    fake_vasps = augment_vasps()
+    fake_certs = augment_certs()
+    add_vasp_cert_relationships(fake_vasps, fake_certs)
+
+    store(fake_vasps, kind="vasps")
+    store(fake_certs, kind="certreqs")
 
     if replace:
         replace_fixtures()

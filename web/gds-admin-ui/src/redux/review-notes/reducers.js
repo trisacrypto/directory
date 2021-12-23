@@ -27,7 +27,7 @@ const reviewNotesReducers = (state = INITIAL_STATE, action) => {
                 error: action.payload.error
             }
         case DeleteReviewNotesActionTypes.DELETE_REVIEW_NOTES:
-            const filteredData = state.data.filter(note => note && note.id !== action.payload.noteId)
+            const filteredData = state?.data?.filter(note => note && note.id !== action.payload.noteId)
             return {
                 ...state,
                 data: filteredData

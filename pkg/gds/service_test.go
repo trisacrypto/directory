@@ -87,9 +87,6 @@ func (s *gdsTestSuite) SetupSuite() {
 	require := s.Require()
 	gin.SetMode(gin.TestMode)
 
-	// Create a bufconn listener to use for gRPC requests
-	s.grpc = bufconn.New(bufSize)
-
 	// Create database paths to unpack fixtures to
 	s.dbPaths = make(map[fixtureType]string)
 	for _, ftype := range []fixtureType{empty, small, full} {
@@ -107,6 +104,40 @@ func (s *gdsTestSuite) SetupSuite() {
 
 	// Start with an empty fixtures service
 	s.LoadEmptyFixtures()
+}
+
+// SetupGDS starts the GDS server
+// Run this inside the test methods after loading the appropriate fixtures
+func (s *gdsTestSuite) SetupGDS() {
+
+	// Using a bufconn listener allows us to avoid network requests
+	s.grpc = bufconn.New(bufSize)
+	go s.svc.GetGDS().Run(s.grpc.Listener)
+}
+
+// SetupMembers starts the Members server
+// Run this inside the test methods after loading the appropriate fixtures
+func (s *gdsTestSuite) SetupMembers() {
+
+	// Using a bufconn listener allows us to avoid network requests
+	s.grpc = bufconn.New(bufSize)
+	go s.svc.GetMembers().Run(s.grpc.Listener)
+}
+
+// Helper function to shutdown any previously running GDS or Members servers and release the gRPC connection
+func (s *gdsTestSuite) shutdownServers() {
+	// Shutdown old GDS and Members servers, if they exist
+	if s.svc != nil {
+		if err := s.svc.GetGDS().Shutdown(); err != nil {
+			log.Warn().Err(err).Msg("could not shutdown GDS server to start new one")
+		}
+		if err := s.svc.GetMembers().Shutdown(); err != nil {
+			log.Warn().Err(err).Msg("could not shutdown Members server to start new one")
+		}
+	}
+	if s.grpc != nil {
+		s.grpc.Release()
+	}
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -291,7 +322,7 @@ func (s *gdsTestSuite) CheckEmails(messages []*emailMeta) {
 	var sentEmails []*sgmail.SGMailV3
 
 	// Check total number of emails sent
-	require.Len(emails.MockEmails, len(messages))
+	require.Len(emails.MockEmails, len(messages), "incorrect number of emails sent")
 
 	// Get emails from the mock
 	for _, data := range emails.MockEmails {
@@ -374,14 +405,12 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 			return nil
 		}
 
+		prefix := filepath.Base(filepath.Dir(path))     // prefix is the directory in the fixture
+		key := strings.TrimSuffix(info.Name(), ".json") // key is the name of the file in the fixture
+
 		// Unmarshal the JSON into the global fixtures map.
 		data, err := os.ReadFile(path)
 		require.NoError(err)
-		parts := strings.Split(strings.TrimSuffix(info.Name(), ".json"), "::")
-		require.Len(parts, 2)
-
-		prefix := parts[0]
-		key := parts[1]
 
 		switch prefix {
 		case vasps:
@@ -429,15 +458,7 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 		}
 	}
 
-	// Shutdown old GDS server
-	if s.svc != nil {
-		if err := s.svc.GetGDS().Shutdown(); err != nil {
-			log.Warn().Err(err).Msg("could not shutdown GDS server to start new one")
-		}
-	}
-	if s.grpc != nil {
-		s.grpc.Release()
-	}
+	s.shutdownServers()
 
 	// Use the custom config if specified
 	var conf config.Config
@@ -451,10 +472,6 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 	conf.Database.URL = "leveldb:///" + s.dbPaths[ftype]
 	s.svc, err = gds.NewMock(conf)
 	require.NoError(err, "could not create mock GDS service")
-
-	// Start the new GDS server using a bufconn listener to avoid network requests
-	s.grpc = bufconn.New(bufSize)
-	go s.svc.GetGDS().Run(s.grpc.Listener)
 
 	s.ftype = ftype
 	log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("FIXTURE LOADED")

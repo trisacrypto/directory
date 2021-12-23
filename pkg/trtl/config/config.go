@@ -15,7 +15,7 @@ import (
 // must be called to ensure that the `processed` is correctly set
 type Config struct {
 	Maintenance    bool                `split_words:"true" default:"false"`
-	BindAddr       string              `split_words:"true" default:":4435"`
+	BindAddr       string              `split_words:"true" default:":4436"`
 	MetricsAddr    string              `split_words:"true" default:":7777"`
 	MetricsEnabled bool                `split_words:"true" default:"true"`
 	LogLevel       logger.LevelDecoder `split_words:"true" default:"info"`

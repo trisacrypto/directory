@@ -27,11 +27,12 @@ type SectigoTestSuite struct {
 func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	var err error
 	require := s.Require()
+
+	// Note: the username and password will be set to sectigo.MockUsername and
+	// sectigo.MockPassword because config.Testing==true.
 	conf := Config{
-		Username: "foo",
-		Password: "supersecret",
-		Profile:  "CipherTrace EE",
-		Testing:  true,
+		Profile: "CipherTrace EE",
+		Testing: true,
 	}
 	require.NoError(mock.Start())
 	s.api, err = New(conf)
@@ -51,8 +52,8 @@ func (s *SectigoTestSuite) TestCredsCopy() {
 
 	// Test the internal Sectigo credentials
 	creds := s.api.Creds()
-	require.Equal("foo", creds.Username)
-	require.Equal("supersecret", creds.Password)
+	require.Equal(MockUsername, creds.Username)
+	require.Equal(MockPassword, creds.Password)
 
 	// Ensure that creds are copied and are not the same object
 	creds.Username = "superbunny"
@@ -92,9 +93,12 @@ func (s *SectigoTestSuite) TestSuccessfulCalls() {
 		s.T().Run(t.name, t.f)
 	}
 	calls := mock.Get().GetCalls()
-	for endpoint, count := range calls {
-		require.Equal(1, count, fmt.Errorf("wrong number of calls to endpoint %s", endpoint))
-	}
+	calls.Range(func(endpoint, count interface{}) bool {
+		num, ok := count.(int)
+		require.True(ok, "unexpected type in call map, expected int")
+		require.Equal(1, num, fmt.Errorf("wrong number of calls to endpoint %s", endpoint))
+		return true
+	})
 }
 
 func (s *SectigoTestSuite) authenticate(t *testing.T) {
@@ -145,7 +149,7 @@ func (s *SectigoTestSuite) download(t *testing.T) {
 
 	rep, err := s.api.Download(42, dir)
 	require.NoError(t, err)
-	require.Equal(t, filepath.Join(dir, "42.zip"), rep)
+	require.Equal(t, filepath.Join(dir, "certificate.zip"), rep)
 	require.FileExists(t, rep)
 }
 
@@ -219,7 +223,7 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
-		if in.Username != "foo" || in.Password != "supersecret" {
+		if in.Username != MockUsername || in.Password != MockPassword {
 			c.JSON(http.StatusUnauthorized, "invalid credentials")
 			return
 		}

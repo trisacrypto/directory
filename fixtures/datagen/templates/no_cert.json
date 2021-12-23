@@ -134,7 +134,7 @@
     },
     "extra": {
         "@type": "type.googleapis.com/gds.models.v1.GDSExtraData",
-        "admin_verification_token": "",
+        "admin_verification_token": "supersecrettoken",
         "audit_log": [],
         "review_notes": {}
     }
