@@ -47,7 +47,7 @@ func New() (_ Config, err error) {
 	}
 
 	// Validate config-specific constraints
-	if err = conf.Replica.Validate(); err != nil {
+	if err = conf.Validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -63,6 +63,15 @@ func (c Config) IsZero() bool {
 	return !c.processed
 }
 
+// Mark a manually constructed as processed as long as it is validated.
+func (c Config) Mark() (Config, error) {
+	if err := c.Validate(); err != nil {
+		return c, err
+	}
+	c.processed = true
+	return c, nil
+}
+
 // GetHonuConfig converts ReplicaConfig into honu's struct of the same name.
 func (c Config) GetHonuConfig() honuconfig.ReplicaConfig {
 	return honuconfig.ReplicaConfig{
@@ -74,6 +83,14 @@ func (c Config) GetHonuConfig() honuconfig.ReplicaConfig {
 		GossipInterval: c.Replica.GossipInterval,
 		GossipSigma:    c.Replica.GossipSigma,
 	}
+}
+
+func (c Config) Validate() (err error) {
+	// Validate config-specific constraints
+	if err = c.Replica.Validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c ReplicaConfig) Validate() error {
