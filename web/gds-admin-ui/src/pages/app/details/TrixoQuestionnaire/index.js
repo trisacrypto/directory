@@ -1,11 +1,9 @@
-
-import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from 'constants/trixo';
 import React from 'react'
+import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from 'constants/trixo';
 import { Card, Col, Row } from 'react-bootstrap';
 import { getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, intlFormatter } from "utils"
 import countryCodeEmoji, { isoCountries } from 'utils/country';
-
-
+import TrixoDropdown from './TrixoDropdown';
 
 function TrixoForm({ data }) {
     const validateIsoCode = (cc = '') => {
@@ -21,6 +19,7 @@ function TrixoForm({ data }) {
     return (
         <Card>
             <Card.Body>
+                <TrixoDropdown data={data} />
                 <h4 className="mt-0 text-black">TRIXO Questionnaire</h4>
                 <p className='lh-lg'>Organization <span className='fw-bold'>{financialTransfersPermitted[data?.financial_transfers_permitted]}</span> permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates</p>
                 <Row>
@@ -28,17 +27,22 @@ function TrixoForm({ data }) {
 
                         <h5 className='text-black'>Jurisdictions</h5>
                         <hr className='mt-1' />
-                        <p><span className='badge bg-primary rounded-pill px-1 rounded-pill'>Primary</span> {countryCodeEmoji(validateIsoCode(data?.primary_national_jurisdiction))} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}</p>
-                        <p>
-                            {
-                                Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map(juridiction => {
-                                    return (
-                                        <p>{isoCountries[juridiction?.country]} regulated by {juridiction?.regulator_name}</p>
-                                    )
-                                })
-                            }
-                        </p>
-                        <p className='lh-lg'>Organization <span className='fw-bold'>{getMustComplyRegulations(data?.must_comply_regulations)}</span> comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered.</p>
+                        <ul className='list-unstyled d-flex'>
+                            <li>
+                                <span className='badge bg-primary rounded-pill px-1 rounded-pill me-1'>Primary</span>
+                            </li>
+                            <li>
+                                {countryCodeEmoji(validateIsoCode(data?.primary_national_jurisdiction))} {isoCountries[data?.primary_national_jurisdiction]} regulated by {data?.primary_regulator}
+                                {
+                                    Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map((juridiction, index) => {
+                                        return (
+                                            <li key={index}>{countryCodeEmoji(validateIsoCode(juridiction?.country))}  {isoCountries[juridiction?.country]} regulated by {juridiction?.regulator_name}</li>
+                                        )
+                                    })
+                                }
+                            </li>
+                        </ul>
+                        <p className='lh-lg'>Organization <span className='fw-bold'>{getMustComplyRegulations(data?.must_comply_travel_rule)}</span> comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered.</p>
                     </Col>
                     <Col xs={12} md={6}>
                         <h5 className='text-black'>Applicable Regulations</h5>
@@ -66,7 +70,7 @@ function TrixoForm({ data }) {
                         <hr className='mt-1' />
 
                         <p className='lh-lg'>Organization <span className='fw-bold'>{getMustSafeguardPii(data?.must_safeguard_pii)}</span> safeguard PII by law.</p>
-                        <p className='lh-lg'>Organization <span className='fw-bold'>{getSafeguardPii(data?.safeguard_pii)}</span> secure and protect PII, including PII received from other VASPs under the Travel Rule.</p>
+                        <p className='lh-lg'>Organization <span className='fw-bold'>{getSafeguardPii(data?.safeguards_pii)}</span> secure and protect PII, including PII received from other VASPs under the Travel Rule.</p>
                     </Col>
                 </Row>
             </Card.Body>

@@ -185,6 +185,10 @@ class APICore {
         return instance.put(url, data);
     };
 
+    patch = (url, data) => {
+        return instance.patch(url, data)
+    }
+
     /**
      * Deletes data
      */

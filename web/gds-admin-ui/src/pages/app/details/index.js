@@ -8,13 +8,13 @@ import Contact from './contact';
 import BasicDetails from './BasicDetails';
 import CertificateDetails from './CertificateDetails';
 import { getVasp } from "services/vasps"
-import TrixoForm from './TrixoForm';
 import { useHistory } from 'react-router-dom'
 import AuditLog from './AuditLog';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { fetchReviewNotesApiResponse } from 'redux/review-notes';
 import NProgress from 'nprogress'
+import TrixoQuestionnaire from './TrixoQuestionnaire';
 
 const ReviewNotes = React.lazy(() => import('./ReviewNotes'))
 
@@ -59,7 +59,7 @@ const VaspDetails = () => {
                 <Row>
                     <Col md={6} xl={8} xxl={8}>
                         <BasicDetails data={vasp} />
-                        <TrixoForm data={vasp?.vasp?.trixo} />
+                        <TrixoQuestionnaire data={vasp?.vasp?.trixo} />
                         <ReviewNotes />
                     </Col>
                     <Col md={6} xl={4} xxl={4}>
