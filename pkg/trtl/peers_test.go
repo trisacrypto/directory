@@ -50,7 +50,7 @@ func (s *trtlTestSuite) TestPeers() {
 			Id:     4,
 			Addr:   "wolf.trtl.dev:443",
 			Name:   "delta",
-			Region: "wolf579",
+			Region: "wolf359",
 		},
 	}
 
@@ -78,9 +78,17 @@ func (s *trtlTestSuite) TestPeers() {
 
 	// GetPeers should filter by multiple regions
 	// Note: filters apply to peers list only
-	rep, err = client.GetPeers(ctx, &peers.PeersFilter{Region: []string{"tauceti", "wolf579"}})
+	rep, err = client.GetPeers(ctx, &peers.PeersFilter{Region: []string{"tauceti", "wolf359"}})
 	require.NoError(err, "could not get multiple filtered network of peers")
 	require.Len(rep.Peers, 3, "peers list not filtered correctly")
+	require.Equal(int64(4), rep.Status.NetworkSize, "unexpected network size returned")
+	require.Len(rep.Status.Regions, 3, "unexpected regions mapping returned")
+
+	// GetPeers should filter by multiple duplicate regions
+	// Note: filters apply to peers list only
+	rep, err = client.GetPeers(ctx, &peers.PeersFilter{Region: []string{"wolf359", "wolf359", "wolf359"}})
+	require.NoError(err, "could not get multiple duplicates filtered network of peers")
+	require.Len(rep.Peers, 1, "peers list not filtered correctly")
 	require.Equal(int64(4), rep.Status.NetworkSize, "unexpected network size returned")
 	require.Len(rep.Status.Regions, 3, "unexpected regions mapping returned")
 
@@ -106,7 +114,7 @@ func (s *trtlTestSuite) TestPeers() {
 	require.NoError(err, "could not update peer")
 
 	// Get peers to check the update
-	rep, err = client.GetPeers(ctx, &peers.PeersFilter{Region: []string{"wolf579"}})
+	rep, err = client.GetPeers(ctx, &peers.PeersFilter{Region: []string{"wolf359"}})
 	require.NoError(err, "could not get filtered network of updated peers")
 	require.Len(rep.Peers, 1, "peers list not filtered correctly")
 

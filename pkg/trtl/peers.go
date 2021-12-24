@@ -159,7 +159,10 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 			if len(in.Region) > 0 {
 				for _, region := range in.Region {
 					if peer.Region == region {
+						// Append peer to peers then break out of the regions loop in
+						// case the user has specified multiple duplicate regions.
 						out.Peers = append(out.Peers, peer)
+						break
 					}
 				}
 			} else {
