@@ -152,6 +152,7 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		// Default to TRISA Production locality since none has been provided.
 		// TODO: make this part of the certificate request.
+		params["organizationName"] = "TRISA Production"
 		params["localityName"] = "Menlo Park"
 		params["stateOrProvinceName"] = "California"
 		params["countryName"] = "US"
@@ -160,7 +161,7 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
 
-	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
+	batchName := fmt.Sprintf("%s-certreq-%s-%s)", s.conf.DirectoryID, r.CommonName, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.
