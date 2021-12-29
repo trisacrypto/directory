@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -161,6 +162,21 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 
 	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
+		// Although the error may be logged again by the calling function, log the error
+		// here as well to provide debugging information about why the Sectigo request failed.
+		dict := zerolog.Dict()
+		for key, value := range params {
+			if key == "pkcs12Password" {
+				value = strings.Repeat("*", len(value))
+			}
+			dict.Str(key, value)
+		}
+		log.Error().Err(err).
+			Int("authority", authority).
+			Str("batch_name", batchName).
+			Dict("params", dict).
+			Str("profile", profile).
+			Msg("create single cert batch failed")
 		return fmt.Errorf("could not create single certificate batch: %s", err)
 	}
 
