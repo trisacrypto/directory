@@ -1,6 +1,6 @@
 {
   "name": "gds-ui",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "private": true,
   "description": "User interface for TRISA's global directory service",
   "author": "TRISA & Rotational Labs",

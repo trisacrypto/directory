@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -150,7 +151,8 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	profile := s.certs.Profile()
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		// Default to TRISA Production locality since none has been provided.
-		// TODO: make this part of the certificate request.
+		// TODO: make this part of the certificate request (See SC-2606).
+		params["organizationName"] = "TRISA Production"
 		params["localityName"] = "Menlo Park"
 		params["stateOrProvinceName"] = "California"
 		params["countryName"] = "US"
@@ -159,8 +161,24 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
 
-	batchName := fmt.Sprintf("%s certificate request for %s (id: %s)", s.conf.DirectoryID, r.CommonName, r.Id)
+	batchName := fmt.Sprintf("%s-certreq-%s)", s.conf.DirectoryID, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
+		// Although the error may be logged again by the calling function, log the error
+		// here as well to provide debugging information about why the Sectigo request failed.
+		dict := zerolog.Dict()
+		for key, value := range params {
+			// NOTE: Do not log any passwords or secrets!
+			if key == "pkcs12Password" {
+				value = strings.Repeat("*", len(value))
+			}
+			dict.Str(key, value)
+		}
+		log.Error().Err(err).
+			Int("authority", authority).
+			Str("batch_name", batchName).
+			Dict("params", dict).
+			Str("profile", profile).
+			Msg("create single cert batch failed")
 		return fmt.Errorf("could not create single certificate batch: %s", err)
 	}
 
