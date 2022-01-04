@@ -3,8 +3,8 @@ import { Doughnut } from 'react-chartjs-2';
 import { Card, Row, Col } from 'react-bootstrap';
 import { capitalizeFirstLetter, getRatios } from 'utils';
 import { Status as STATUS } from 'constants/index';
-import Loader from 'components/Loader'
 import PropTypes from 'prop-types';
+import OvalLoader from 'components/OvalLoader';
 
 const Status = ({ statuses }) => {
     const colors = ['#0d6efd', '#dc3545', '#ffc107'];
@@ -82,7 +82,7 @@ const Status = ({ statuses }) => {
                 <h4 className="header-title mb-4">Registration Statuses</h4>
 
                 {
-                    !statuses ? <Loader width={50} /> : <>
+                    !statuses ? <OvalLoader /> : <>
                         <div className="my-4 chartjs-chart" style={{ height: '202px' }}>
                             <Doughnut data={donutChartData} options={donutChartOpts} />
                         </div>

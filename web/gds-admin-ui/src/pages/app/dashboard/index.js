@@ -44,7 +44,7 @@ const ProjectDashboardPage = () => {
                     <Status statuses={summary?.statuses} />
                 </Col>
                 <Col sm={12} lg={8} style={{ overflowY: "auto", height: "100%" }}>
-                    {!isVaspsLoading ? <Tasks data={vasps} /> : null}
+                    <Tasks data={vasps} isLoading={isVaspsLoading} />
                 </Col>
             </Row>
             <Row>

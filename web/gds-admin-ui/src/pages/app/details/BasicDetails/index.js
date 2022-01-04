@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { getAllReviewNotes } from 'redux/selectors';
 import VaspDocument from '../VaspDocument';
 import { pdf } from '@react-pdf/renderer';
+import NProgress from 'nprogress'
 
 export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
@@ -23,11 +24,14 @@ export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
 
     const generatePdfDocument = async (filename) => {
+        NProgress.start()
         try {
             const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
             downloadFile(blob, `${filename}.pdf`, 'application/pdf')
+            NProgress.done()
         } catch (error) {
             console.error('Unable to export as PDF', error)
+            NProgress.done()
         }
 
     };
