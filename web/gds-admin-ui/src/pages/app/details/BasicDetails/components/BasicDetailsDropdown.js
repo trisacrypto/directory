@@ -16,7 +16,6 @@ import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
     const reviewNotes = useSelector(getAllReviewNotes)
-
     const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
 
     const generatePdfDocument = async (filename) => {
@@ -87,8 +86,8 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <Dropdown.Item onClick={handleClose}>
                     <i className="mdi mdi-email me-1"></i>Resend
                 </Dropdown.Item>
-            </Dropdown.Menu >
-        </Dropdown >
+            </Dropdown.Menu>
+        </Dropdown>
     )
 }
 
