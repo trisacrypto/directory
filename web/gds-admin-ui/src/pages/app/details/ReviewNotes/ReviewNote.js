@@ -3,10 +3,10 @@ import React from 'react'
 import Gravatar from 'react-gravatar'
 import { useDispatch } from 'react-redux'
 import useSafeDispatch from 'hooks/useSafeDispatch'
-import { deleteReviewNoteApiResponse } from 'redux/review-notes'
 import { generateMd5 } from 'utils'
 import EditReviewNote from './EditReviewNote'
 import PropTypes from 'prop-types';
+import { deleteReviewNoteApiResponse } from 'redux/vasp-details'
 
 function ReviewNote({ note, vaspId }) {
     const [isEditable, setIsEditable] = React.useState(false);

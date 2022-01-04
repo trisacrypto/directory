@@ -5,9 +5,9 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
-import { createReviewNoteApiResponseSuccess } from 'redux/review-notes';
 import toast from 'react-hot-toast';
 import { postReviewNote } from 'services/review-notes';
+import { createReviewNoteApiResponseSuccess } from 'redux/vasp-details';
 dayjs.extend(relativeTime)
 
 const ReviewNotes = React.lazy(_ => import('./ReviewNotes'))

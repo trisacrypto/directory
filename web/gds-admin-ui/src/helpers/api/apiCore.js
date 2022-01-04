@@ -181,8 +181,8 @@ class APICore {
     /**
      * Updates data
      */
-    update = (url, data) => {
-        return instance.put(url, data);
+    update = (url, data, config) => {
+        return instance.put(url, data, config);
     };
 
     patch = (url, data) => {

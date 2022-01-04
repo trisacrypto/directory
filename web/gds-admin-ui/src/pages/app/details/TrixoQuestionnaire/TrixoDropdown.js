@@ -19,7 +19,7 @@ function TrixoDropdown({ data }) {
                 <Dropdown.Menu>
                     <Modal>
                         <ModalOpenButton>
-                            <Dropdown.Item>Edit</Dropdown.Item>
+                            <Dropdown.Item><i className="mdi mdi-square-edit-outline me-1"></i>Edit</Dropdown.Item>
                         </ModalOpenButton>
                         <ModalContent>
                             <Row className='p-4'>

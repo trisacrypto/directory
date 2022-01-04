@@ -1,4 +1,3 @@
-import axios from "axios";
 import { APICore } from "../helpers/api/apiCore";
 import { getCookie } from "../utils";
 
@@ -32,7 +31,7 @@ function updateReviewNote(note, noteID, vaspID) {
     const data = {
         text: note
     }
-    return axios.put(`/vasps/${vaspID}/notes/${noteID}`, data, {
+    return api.update(`/vasps/${vaspID}/notes/${noteID}`, data, {
         headers: {
             'X-CSRF-TOKEN': csrfToken
         }

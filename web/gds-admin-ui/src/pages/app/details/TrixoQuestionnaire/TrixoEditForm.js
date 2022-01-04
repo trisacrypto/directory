@@ -1,16 +1,19 @@
-
 import Currencies from 'components/Currencies'
 import Field from 'components/Field'
 import { ModalCloseButton } from 'components/Modal'
+import useSafeDispatch from 'hooks/useSafeDispatch'
 import React from 'react'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
+import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
-import updateTrixoForm from 'services/trixo'
+import { updateTrixoResponse } from 'redux/vasp-details'
 import { isoCountries } from 'utils/country'
 import { getTrixoFormInitialValues } from 'utils/form-references'
 import OtherJuridictions from './OtherJuridictions'
 import Regulations from './Regulations'
+import { ModalContext } from 'components/Modal'
+import { getVaspDetailsLoadingState } from 'redux/selectors'
 
 
 const flatArray = (data) => data && data.map(d => d.name)
@@ -20,7 +23,10 @@ function TrixoEditForm({ data }) {
     const { register, control, handleSubmit } = useForm({
         defaultValues: getTrixoFormInitialValues(data)
     })
-
+    const dispatch = useDispatch()
+    const safeDispatch = useSafeDispatch(dispatch)
+    const [, setIsOpen] = React.useContext(ModalContext)
+    const isLoading = useSelector(getVaspDetailsLoadingState)
     const onSubmit = async (data) => {
         const _data = {
             ...data,
@@ -29,15 +35,8 @@ function TrixoEditForm({ data }) {
             kyc_threshold: parseFloat(data.kyc_threshold)
         }
 
-        const payload = {
-            trixo: _data
-        }
-
         if (params && params.id) {
-            updateTrixoForm(params?.id, payload).then(res => {
-            }).catch(err => {
-                console.error('[onSubmit] error', err)
-            })
+            safeDispatch(updateTrixoResponse(params.id, _data, setIsOpen))
         }
     }
 
@@ -160,7 +159,7 @@ function TrixoEditForm({ data }) {
             </Form.Group>
 
             <h4>Data Protection Policies</h4>
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group as={Row} className="mb-3" controlId='must_safeguard_pii'>
                 <Form.Label column sm="12" className="fw-normal">
                     Is your organization required by law to safeguard PII?
                 </Form.Label>
@@ -174,7 +173,7 @@ function TrixoEditForm({ data }) {
                 </Col>
             </Form.Group>
 
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group as={Row} className="mb-3" controlId='safeguards_pii'>
                 <Form.Label column sm="12" className="fw-normal">
                     Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?
                 </Form.Label>
@@ -191,7 +190,7 @@ function TrixoEditForm({ data }) {
                 <ModalCloseButton>
                     <Button variant='danger' className="me-2">Cancel</Button>
                 </ModalCloseButton>
-                <Button type='submit'>Save</Button>
+                <Button type='submit' disabled={isLoading}>Save</Button>
             </div>
         </Form>
     )

@@ -1,3 +1,17 @@
+export const FetchVaspDetailsActionTypes = {
+    API_RESPONSE_SUCCESS: '@@vasp_details/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@vasp_details/API_RESPONSE_ERROR',
+
+    FETCH_VASP_DETAILS: '@@vasp_details/FETCH_VASP_DETAILS',
+};
+
+export const UpdateTrixoActionTypes = {
+    API_RESPONSE_SUCCESS: '@@update_trixo/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@update_trixo/API_RESPONSE_ERROR',
+
+    UPDATE_TRIXO: '@@update_trixo/UPDATE_TRIXO',
+}
+
 export const FetchReviewNotesActionTypes = {
     API_RESPONSE_SUCCESS: '@@review_notes/API_RESPONSE_SUCCESS',
     API_RESPONSE_ERROR: '@@review_notes/API_RESPONSE_ERROR',
