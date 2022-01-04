@@ -1,0 +1,64 @@
+
+import { pdf } from '@react-pdf/renderer'
+import { actionType, useModal } from 'contexts/modal'
+import { downloadFile } from 'helpers/api/utils'
+import nProgress from 'nprogress'
+import React from 'react'
+import { Dropdown } from 'react-bootstrap'
+import { useSelector } from 'react-redux'
+import { getAllReviewNotes } from 'redux/selectors'
+import VaspDocument from '../../VaspDocument'
+
+const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
+    const { dispatch } = useModal()
+    const reviewNotes = useSelector(getAllReviewNotes)
+    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
+
+    const generatePdfDocument = async (filename) => {
+        nProgress.start()
+        try {
+            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
+            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
+            nProgress.done()
+        } catch (error) {
+            console.error('Unable to export as PDF', error)
+            nProgress.done()
+        }
+
+    };
+
+    return (
+        <Dropdown className="float-end" align="end">
+            <Dropdown.Toggle
+                data-testid="dripicons-dots-3"
+                variant="link"
+                tag="a"
+                className="card-drop arrow-none cursor-pointer p-0 shadow-none">
+                <i className="dripicons-dots-3"></i>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+                <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
+                    <i className="mdi mdi-card-search me-1"></i>Review
+                </Dropdown.Item>
+                <Dropdown.Item>
+                    <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
+                </Dropdown.Item>
+                <Dropdown.Item>
+                    <i className="mdi mdi-briefcase-edit me-1"></i>Edit Business Info
+                </Dropdown.Item>
+                <Dropdown.Item>
+                    <i className="mdi mdi-network me-1"></i>Edit TRISA Details
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
+                    <i className="mdi mdi-printer me-1"></i>Print
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleClose}>
+                    <i className="mdi mdi-email me-1"></i>Resend
+                </Dropdown.Item>
+            </Dropdown.Menu>
+        </Dropdown>
+    )
+}
+
+
+export default BasicDetailsDropDown
