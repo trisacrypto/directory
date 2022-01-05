@@ -2,8 +2,8 @@ import NProgress from 'nprogress'
 import { call, put, takeEvery } from 'redux-saga/effects'
 import { getReviewNotes, deleteReviewNote as deleteNote } from 'services/review-notes'
 import updateTrixoForm from 'services/trixo'
-import { getVasp } from 'services/vasp'
-import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError } from '.'
+import { getVasp, updateVasp } from 'services/vasp'
+import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError, updateBusinessInfosResponseSuccess, updateBusinessInfosResponseError, UpdateBusinessInfosActionTypes } from '.'
 
 
 function* fetchVaspDetails({ payload: { id, history } }) {
@@ -28,6 +28,18 @@ function* updateTrixo({ payload: { trixo, id, setIsOpen } }) {
     } catch (error) {
         yield put(updateTrixoResponseError(error.message))
         console.error('[updateVaspDetails] error', error.message)
+    }
+}
+
+function* updateBusinessInfos({ payload: { businessInfos, id, setIsOpen } }) {
+    try {
+        const response = yield call(updateVasp, id, businessInfos)
+        yield put(updateBusinessInfosResponseSuccess(response.data))
+
+        setIsOpen(false)
+    } catch (error) {
+        yield put(updateBusinessInfosResponseError(error.message))
+        console.error('[updateBusinessInfos] error', error.message)
     }
 }
 
@@ -76,6 +88,10 @@ export function* deleteReviewNoteSaga() {
 
 export function* updateTrixoSaga() {
     yield takeEvery(UpdateTrixoActionTypes.UPDATE_TRIXO, updateTrixo)
+}
+
+export function* updateBusinessInfosSaga() {
+    yield takeEvery(UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS, updateBusinessInfos)
 }
 
 export { vaspDetailsSaga }

@@ -6,4 +6,8 @@ function getVasp(id, params) {
     return api.get(`/vasps/${id}`, params)
 }
 
-export { getVasp };
+function updateVasp(id, payload) {
+    return api.patch(`/vasps/${id}`, payload)
+}
+
+export { getVasp, updateVasp };
