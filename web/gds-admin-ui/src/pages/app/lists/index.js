@@ -17,6 +17,7 @@ import { StatusLabel } from '../../../constants';
 import { exportToCsv, getStatusClassName } from '../../../utils';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { getAllVasps, getVaspsLoadingState } from 'redux/selectors/vasps';
+import OvalLoader from 'components/OvalLoader';
 dayjs.extend(relativeTime)
 
 
@@ -211,20 +212,20 @@ const VaspsList = () => {
                             </Row>
 
                             {
-                                !isLoading && data &&
-                                <Table
-                                    columns={columns}
-                                    data={data?.vasps}
-                                    pageSize={data?.page_size || 100}
-                                    sizePerPageList={sizePerPageList}
-                                    isSortable={true}
-                                    isSelectable={true}
-                                    pagination={true}
-                                    isSearchable={true}
-                                    theadClass="table-light"
-                                    searchBoxClass="mt-2 mb-3"
-                                    onSelectedRows={onSelectedRows}
-                                />
+                                !isLoading && data ?
+                                    <Table
+                                        columns={columns}
+                                        data={data?.vasps}
+                                        pageSize={data?.page_size || 100}
+                                        sizePerPageList={sizePerPageList}
+                                        isSortable={true}
+                                        isSelectable={true}
+                                        pagination={true}
+                                        isSearchable={true}
+                                        theadClass="table-light"
+                                        searchBoxClass="mt-2 mb-3"
+                                        onSelectedRows={onSelectedRows}
+                                    /> : <OvalLoader />
                             }
                         </Card.Body>
                     </Card>
