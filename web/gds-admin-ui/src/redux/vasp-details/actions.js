@@ -1,4 +1,4 @@
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
@@ -83,6 +83,27 @@ export const updateBusinessInfosResponseError = (error) => ({
     type: UpdateBusinessInfosActionTypes.API_RESPONSE_ERROR,
     payload: { error }
 })
+
+export const updateTrisaImplementationDetailsResponse = (id, trisa, setIsOpen) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS,
+    payload: { id, trisa, setIsOpen }
+})
+
+export const updateTrisaImplementationDetailsResponseSuccess = (data) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_SUCCESS,
+    payload: { data }
+})
+
+export const updateTrisaImplementationDetailsResponseError = (error) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const clearTrisaImplementationDetailsErrorMessage = () => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.CLEAR_ERROR_MESSAGE,
+    payload: {}
+})
+
 
 
 export { updateTrixoResponse, updateTrixoResponseSuccess, updateTrixoResponseError, fetchVaspDetailsApiResponse, fetchVaspDetailsApiResponseError, fetchVaspDetailsApiResponseSuccess, createReviewNoteApiResponseSuccess, updateReviewNoteApiResponseSuccess, deleteReviewNoteApiResponse, fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }

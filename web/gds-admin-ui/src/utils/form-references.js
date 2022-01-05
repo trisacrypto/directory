@@ -39,3 +39,8 @@ export const getBusinessInfosFormInitialValues = (data) => ({
     vasp_categories: data.vasp.vasp_categories || [],
     business_category: data.vasp.business_category || ""
 })
+
+export const getTrisaImplementationDetailsInitialValue = (data) => ({
+    common_name: data.vasp.common_name,
+    trisa_endpoint: data.vasp.trisa_endpoint
+})

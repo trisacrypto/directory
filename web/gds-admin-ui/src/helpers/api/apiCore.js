@@ -86,8 +86,11 @@ instance.interceptors.response.use(
                 case 404:
                     message = 'Sorry! the data you are looking for could not be found';
                     break;
+                case 400:
+                    message = error
+                    break;
                 case 500:
-                    message = 'Something went wrong';
+                    message = error ?? 'Something went wrong';
                     break;
                 default: {
                     message =
@@ -185,8 +188,8 @@ class APICore {
         return instance.put(url, data, config);
     };
 
-    patch = (url, data) => {
-        return instance.patch(url, data)
+    patch = (url, data, config) => {
+        return instance.patch(url, data, config)
     }
 
     /**
