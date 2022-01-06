@@ -2,20 +2,23 @@ package trtl
 
 import (
 	"context"
-	"encoding/base64"
+	"fmt"
+	"io"
 	"math/rand"
+	"sync"
+	"sync/atomic"
 
 	"github.com/rotationalio/honu"
+	engine "github.com/rotationalio/honu/engines"
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rotationalio/honu/replica"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/jitter"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -70,43 +73,125 @@ bayou:
 		}
 
 		// Create a logctx with the peer information for future logging
-		logctx := log.With().Uint64("peer_id", peer.Id).Str("peer_addr", peer.Addr).Str("peer", peer.Name).Str("service", "anti-entropy").Logger()
+		logctx := log.With().
+			Dict("peer", zerolog.Dict().Uint64("id", peer.Id).Str("addr", peer.Addr).Str("name", peer.Name)).
+			Str("service", "anti-entropy").
+			Bool("initiator", true).
+			Logger()
 
-		// Ensure we can dial the client before we prepare the version vector.
-		// TODO: add mTLS to peer-to-peer connection
-		// TODO: better initialization of gossip client and connection management.
-		var (
-			cc  *grpc.ClientConn
-			err error
-		)
-
-		if cc, err = grpc.Dial(peer.Addr, grpc.WithInsecure(), grpc.WithBlock()); err != nil {
-			logctx.Warn().Err(err).Msg("could not dial remote peer")
-			continue bayou
+		// Perform the anti-entropy synchronization session with the remote peer.
+		if err := r.AntiEntropySync(peer, logctx); err != nil {
+			logctx.Warn().Err(err).Msg("anti-entropy synchronization was unsuccessful")
 		}
+	}
+}
 
-		client := replica.NewReplicationClient(cc)
-		logctx.Debug().Msg("dialed remote peer")
+// AntiEntropySync performs bilateral anti-entropy with the specified remote peer using
+// the streaming Gossip RPC. This method initiates the Gossip stream with the remote
+// peer, exiting if it cannot connect to the replica. In the pull phase, this method
+// sends check sync messages for all objects stored locally; the remote replica responds
+// with repairs. Then in the push phase, the method waits until all requested remote
+// repairs are complete before exiting.
+func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
+	// Create a context with a timeout of the gossip interval, so that anti-entropy
+	// gossip sessions do not span multiple anti-entropy intervals.
+	ctx, cancel := context.WithTimeout(context.Background(), r.conf.GossipInterval)
+	defer cancel()
 
-		// Prepare version vector to send to the remote peer.
-		// Note that this is a full request because the bilateral exchange is being initiated
-		versions := &replica.VersionVectors{
-			Objects:    make([]*object.Object, 0),
-			Partial:    false,
-			Namespaces: replicatedNamespaces,
+	// Dial the remote peer and establish a connection
+	// TODO: add client-side mTLS here.
+	var cc *grpc.ClientConn
+	if cc, err = grpc.DialContext(ctx, peer.Addr, grpc.WithInsecure(), grpc.WithBlock()); err != nil {
+		return err
+	}
+	defer cc.Close()
+
+	// Initiate the Gossip Stream
+	client := replica.NewReplicationClient(cc)
+	var stream replica.Replication_GossipClient
+	if stream, err = client.Gossip(ctx); err != nil {
+		return fmt.Errorf("could not connect gossip stream: %s", err)
+	}
+
+	// Report successful connection
+	log.Debug().Msg("dialed remote peer and connected to the gossip stream")
+
+	// Kick off two go routines - one to send messages on and one to recv them on, this
+	// is necessary because gRPC send and recv are blocking operations that can only be
+	// used by one go routine, e.g. they are not thread safe. These go routines place
+	// channels between the send and recv operations so that multiple go routines can
+	// send and recv concurrently.
+	// TODO: standardize the functionality in a utility package.
+	var stop uint32
+	var wg sync.WaitGroup
+	send := make(chan *replica.Sync, 8)
+	recv := make(chan *replica.Sync, 8)
+
+	// Kick off the stream sender: will continue to send messages until the send channel is closed
+	go func(msgs <-chan *replica.Sync) {
+		for msg := range msgs {
+			if err := stream.Send(msg); err != nil {
+				if err != io.EOF {
+					log.Error().Err(err).Msg("could not send gossip message to remote peer")
+				}
+
+				// Let external go routines know that they can no longer send on this channel.
+				atomic.AddUint32(&stop, 1)
+				return
+			}
 		}
+	}(send)
+
+	// Kick off the stream receiver: will continue to recv messages until the timeout or
+	// the grpc channel is closed. Note that this go routine closes the recv channel.
+	go func(msgs chan<- *replica.Sync) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			if msg, err := stream.Recv(); err != nil {
+				if err != io.EOF {
+					log.Error().Err(err).Msg("could not recv gossip message from remote peer")
+				}
+
+				// Stop any external go routines from recv on this channel
+				close(msgs)
+				return
+			} else {
+				msgs <- msg
+			}
+		}
+	}(recv)
+
+	// Pull sends check object sync requests to the remote server
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// Track how many namespaces and versions we attempt to synchronize for logging.
+		var namespaces, versions uint64
 
 		// Access the objects in the object-store by namespace
 	namespaces:
-		for _, namespace := range versions.Namespaces {
+		for _, namespace := range replicatedNamespaces {
 			iter, err := r.db.Iter(nil, options.WithNamespace(namespace))
 			if err != nil {
 				log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 				continue namespaces
 			}
 
-		namespace:
+		objects:
 			for iter.Next() {
+				// Check if the context is done, and if so, break
+				select {
+				case <-ctx.Done():
+					break namespaces
+				default:
+				}
+
 				// Load the object metadata without the data itself, otherwise anti-
 				// entropy would exchange way more data than required, putting pressure
 				// on pod memory and increasing our cloud bill.
@@ -116,58 +201,158 @@ bayou:
 						Str("namespace", namespace).
 						Str("key", b64e(iter.Key())).
 						Msg("could not unmarshal honu metadata")
-					continue namespace
+					continue objects
 				}
 
 				// Remove the data from the object
 				obj.Data = nil
-				versions.Objects = append(versions.Objects, obj)
+
+				// Ensure that we can send, otherwise stop.
+				// TODO: this is not fully safe, since there is no logical barrier
+				// between this check and the send on the chanel. This needs to be
+				// improved but is ok for now.
+				if atomic.LoadUint32(&stop) > 0 {
+					break objects
+				}
+
+				// Send the synchronization request
+				send <- &replica.Sync{
+					Status: replica.Sync_CHECK,
+					Object: obj,
+				}
+				versions++
 			}
 
 			if err = iter.Error(); err != nil {
 				log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 			}
+
 			iter.Release()
+			namespaces++
 		}
 
-		// Ensure we send the request even if we have no local versions to retrieve
-		// any versions that might be on the remote peer replica.
-		logctx.Debug().
-			Int("versions", len(versions.Objects)).
-			Int("namespaces", len(versions.Namespaces)).
-			Msg("sending version vector to remote peer")
-
-		// Perform the gossip request
-		var updates *replica.Updates
-		ctx, cancel := context.WithTimeout(context.Background(), r.conf.GossipInterval)
-		if updates, err = client.Gossip(ctx, versions); err != nil {
-			cancel()
-			logctx.Error().Err(err).Msg("could not gossip with remote peer")
-			continue bayou
+		// Send a sync complete message to let the remote know that the pull phase is
+		// complete and they can start the push phase.
+		if atomic.LoadUint32(&stop) == 0 {
+			send <- &replica.Sync{Status: replica.Sync_COMPLETE}
 		}
-		cancel()
 
-		// Repair local database as last step
-		var nUpdates uint64
-		for _, obj := range updates.Objects {
-			if err = r.db.Update(obj, options.WithNamespace(obj.Namespace)); err != nil {
-				logctx.Error().Err(err).Str("namespace", obj.Namespace).Str("key", b64e(obj.Key)).Msg("could not update object from remote peer")
-			} else {
-				nUpdates++
+		log.Debug().
+			Uint64("versions", versions).
+			Uint64("namespaces", namespaces).
+			Msg("sending version vectors to remote peer")
+	}()
+
+	// Push listens for sync requests from the remote server and makes any repairs necessary
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		var versions, updates, repairs uint64
+
+	gossip:
+		for sync := range recv {
+			switch sync.Status {
+			case replica.Sync_CHECK:
+				// Check to see if this replica's version is later than the remote's, if
+				// so, send our later version back to that replica.
+				versions++
+				var local *object.Object
+				if local, err = r.db.Object(sync.Object.Key, options.WithNamespace(sync.Object.Namespace)); err != nil {
+					log.Warn().Err(err).
+						Str("namespace", sync.Object.Namespace).
+						Str("key", b64e(sync.Object.Key)).
+						Msg("failed check sync on initiator: could not fetch object meta")
+
+					// Even if the error is not found, since this routine is the
+					// initiator, it will return an error for a check request because
+					// we do not want to bounce check requests back and forth. E.g.
+					// check requests only initiate from the Pull routine.
+					sync.Status = replica.Sync_ERROR
+					sync.Error = err.Error()
+					if atomic.LoadUint32(&stop) == 0 {
+						send <- sync
+					}
+
+					continue gossip
+				}
+
+				// Check if the local version is later; because this is the initiating
+				// routine, do nothing if the remote is a later version.
+				if local.Version.IsLater(sync.Object.Version) {
+					// Send the local object back to the remote
+					sync.Status = replica.Sync_REPAIR
+					sync.Object = local
+					sync.Error = ""
+					if atomic.LoadUint32(&stop) == 0 {
+						send <- sync
+					}
+
+					updates++
+				}
+
+			case replica.Sync_REPAIR:
+				// Receiving a repaired object, check if it's still later than our local
+				// replica's and if so, save it to disk with an update instead of a put.
+				// TODO: should we confirm that the incoming version is still later than
+				// our local version? E.g. is it possible that the local version has
+				// been updated since we sent the check request?
+				if err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
+					log.Error().Err(err).
+						Str("namespace", sync.Object.Namespace).
+						Str("key", b64e(sync.Object.Key)).
+						Msg("could not update object from remote peer")
+					continue gossip
+				}
+				repairs++
+
+			case replica.Sync_ERROR:
+				// Something went wrong on the remote, log and continue
+				if sync.Object != nil {
+					log.Warn().Str("error", sync.Error).
+						Str("key", b64e(sync.Object.Key)).
+						Str("namespace", sync.Object.Namespace).
+						Msg("a replication error occurred")
+				} else {
+					log.Warn().Str("error", sync.Error).Msg("a replication error occurred")
+				}
+
+			case replica.Sync_COMPLETE:
+				// The remote replica is done synchronizing and since we are the
+				// initiating replica, we can safely quit receiving.
+				log.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
+				if updates > 0 || repairs > 0 {
+					log.Info().
+						Uint64("local_repairs", repairs).
+						Uint64("remote_updates", updates).
+						Msg("anti-entropy synchronization complete")
+				} else {
+					log.Debug().Msg("anti-entropy complete with no synchronization")
+				}
+				return
+			default:
+				log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
 			}
 		}
+	}()
 
-		// Log success if any objects were synchronized
-		if nUpdates > 0 {
-			logctx.Info().
-				Int("versions", len(versions.Objects)).
-				Int("namespaces", len(versions.Namespaces)).
-				Uint64("updates", nUpdates).
-				Msg("anti-entropy synchronization complete")
-		} else {
-			logctx.Trace().Msg("anti-entropy complete with no synchronization")
-		}
+	// Wait for anti-entropy routines to complete.
+	wg.Wait()
+
+	// Close the send stream since we will no longer be sending messages
+	close(send)
+
+	// Cleanup the stream and stream connections
+	if err = stream.CloseSend(); err != nil {
+		return fmt.Errorf("could not close gossip stream gracefully: %s", err)
 	}
+
+	if err = cc.Close(); err != nil {
+		return fmt.Errorf("could not close the client connection correctly: %s", err)
+	}
+
+	// Anti-entropy session complete
+	return nil
 }
 
 // SelectPeer randomly that is not self to perform anti-entropy with. If a peer
@@ -218,15 +403,248 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 	return nil
 }
 
-// During gossip, the initiating replica sends a randomly selected remote peer the
-// version vectors of all objects it currently stores. The remote peer should
-// respond with updates that correspond to more recent versions of the objects. The
-// remote peer can than also make a reciprocal request for updates by sending the
-// set of versions requested that were more recent on the initiating replica, and
-// use a partial flag to indicate that it is requesting specific versions. This
-// mechanism implements bilateral anti-entropy: a push and pull gossip.
-func (r *ReplicaService) Gossip(ctx context.Context, in *replica.VersionVectors) (out *replica.Updates, err error) {
-	return nil, status.Error(codes.Unimplemented, "this replica does not yet implement gossip")
+// Gossip implements biltateral anti-entropy: during a Gossip session the initiating
+// replica pushes updates to the remote peer and pulls requested changes. Using
+// bidirectional streaming, the initiating peer sends data-less sync messages with
+// the versions of objects it stores locally. The remote replica then responds with
+// data if its local version is later or sends a sync message back requesting the
+// data from the initating replica if its local version is earlier (no exchange)
+// occurs if both replicas have the same version. At the end of a gossip session,
+// both replicas should have synchronized and have identical underlying data stores.
+func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err error) {
+	var once sync.Once
+	var wg sync.WaitGroup
+	ctx := stream.Context()
+
+	var versions, updates, repairs uint64
+
+	// Set up the log context for consistent logging
+	// TODO: get remote peer information from mTLS context and add to logging.
+	logctx := log.With().
+		Str("service", "gossip").
+		Bool("remote", true).
+		Logger()
+
+	// Create data structures for determining what objects are sync'd in phase 1
+	// TODO: replace this map with a bloom filter
+	var seen nsmap
+	phase1 := true
+
+	// Describe the phase 2 go routine
+	phase2 := func() {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			// Loop over all objects in all namespaces and determine what to push back
+		namespaces:
+			for _, namespace := range replicatedNamespaces {
+				iter, err := r.db.Iter(nil, options.WithNamespace(namespace))
+				if err != nil {
+					logctx.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
+					continue namespaces
+				}
+
+			objects:
+				for iter.Next() {
+					// Check if the context is done, and if so, break
+					select {
+					case <-ctx.Done():
+						break namespaces
+					default:
+					}
+
+					// Check if we've already handled this object
+					if seen.In(namespace, iter.Key()) {
+						// This was already sent to us, so keep going
+						continue objects
+					}
+
+					// If this key hasn't been seen then it is a new key local to this
+					// replica that needs to be pushed back to the client replica.
+					obj, err := iter.Object()
+					if err != nil {
+						logctx.Error().Err(err).
+							Str("namespace", namespace).
+							Str("key", b64e(iter.Key())).
+							Msg("could not unmarshal honu metadata")
+						continue objects
+					}
+
+					if err := stream.Send(&replica.Sync{Status: replica.Sync_REPAIR, Object: obj}); err != nil {
+						logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 2")
+						iter.Release()
+						return
+					}
+
+					atomic.AddUint64(&updates, 1)
+					atomic.AddUint64(&versions, 1)
+				}
+
+				if err = iter.Error(); err != nil {
+					logctx.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
+				}
+				iter.Release()
+			}
+
+			// Phase 2 is complete! Send a complete message and return
+			if err := stream.Send(&replica.Sync{Status: replica.Sync_COMPLETE}); err != nil {
+				logctx.Error().Err(err).Msg("could not send gossip complete message")
+				return
+			}
+		}()
+	}
+
+	// Kick off a go routine to handle all incoming messages from the client.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+	gossip:
+		for {
+			// Check to make sure the deadline isn't over
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			// Read the next message from the initiating replica
+			var sync *replica.Sync
+			if sync, err = stream.Recv(); err != nil {
+				if err != io.EOF {
+					// If the error is not EOF then something has gone wrong. Otherwise
+					// it means that the client closed the stream gracefully and is done
+					// sending messages to the server.
+					logctx.Error().Err(err).Msg("gossip aborted early with error")
+				}
+				return
+			}
+
+			// Handle the messages coming from the initiating replica
+			switch sync.Status {
+			case replica.Sync_CHECK:
+				// If we're out of phase 1 - meaning that the client sent a complete
+				// message, then we ignore check messages to prevent checks bouncing
+				// back and forth from poorly behaved clients. This also ensures that
+				// both phase1 and phase2 go routines are not sending messages on the
+				// stream, which causes a grpc error.
+				// TODO: should we create a send go routine anyway for even more safety?
+				if !phase1 {
+					logctx.Warn().Msg("received check message after phase 1 complete from client")
+					continue gossip
+				}
+
+				// If we're in phase 1 - that means we're receiving version vectors from
+				// the initiating replica, we should compare the incoming version to the
+				// local version on this replica.
+				var local *object.Object
+				if local, err = r.db.Object(sync.Object.Key, options.WithNamespace(sync.Object.Namespace)); err != nil {
+					if err == engine.ErrNotFound {
+						// If this is a not found error, then this object exists on the
+						// initiating replica, but not locally, so request a repair.
+						if err = stream.Send(sync); err != nil {
+							logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
+							return
+						}
+					} else {
+						// This is an unhandled error, log and return error information.
+						logctx.Warn().Err(err).
+							Str("namespace", sync.Object.Namespace).
+							Str("key", b64e(sync.Object.Key)).
+							Msg("failed check sync on initiator: could not fetch object meta")
+
+						// Even if the error is not found, since this routine is the
+						// initiator, it will return an error for a check request because
+						// we do not want to bounce check requests back and forth. E.g.
+						// check requests only initiate from the Pull routine.
+						sync.Status = replica.Sync_ERROR
+						sync.Error = err.Error()
+						if err = stream.Send(sync); err != nil {
+							logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
+							return
+						}
+					}
+					continue gossip
+				}
+
+				// Check which version is later, local or remote
+				switch {
+				case local.Version.IsLater(sync.Object.Version):
+					// Send the local object back to the initiating replica as a repair
+					sync.Status = replica.Sync_REPAIR
+					sync.Object = local
+					sync.Error = ""
+					if err = stream.Send(sync); err != nil {
+						logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
+						return
+					}
+					atomic.AddUint64(&updates, 1)
+				case sync.Object.Version.IsLater(local.Version):
+					// Send a check request back to the initiating replica to fetch its version
+					if err = stream.Send(sync); err != nil {
+						logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
+						return
+					}
+				default:
+					// The versions are equal, do nothing
+				}
+
+				// Mark the object as seen if we're in phase 1 to prevent duplication in phase 2
+				seen.Add(sync.Object)
+
+				// Increment the number of versions seen
+				atomic.AddUint64(&versions, 1)
+			case replica.Sync_REPAIR:
+				// Receiving a repaired object, check if it's still later than our local
+				// replica's and if so, save it to disk with an update instead of a put.
+				// TODO: should we confirm that the incoming version is still later than
+				// our local version? E.g. is it possible that the local version has
+				// been updated since we sent the check request?
+				if err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
+					logctx.Error().Err(err).
+						Str("namespace", sync.Object.Namespace).
+						Str("key", b64e(sync.Object.Key)).
+						Msg("could not update object from client replica")
+					continue gossip
+				}
+				atomic.AddUint64(&repairs, 1)
+			case replica.Sync_ERROR:
+				// Something went wrong on the client-side, log and continue
+				if sync.Object != nil {
+					log.Warn().Str("error", sync.Error).
+						Str("key", b64e(sync.Object.Key)).
+						Str("namespace", sync.Object.Namespace).
+						Msg("a replication error occurred")
+				} else {
+					log.Warn().Str("error", sync.Error).Msg("a replication error occurred")
+				}
+
+			case replica.Sync_COMPLETE:
+				// Phase 1 is complete! Begin Phase 2!
+				// The phase1 bool causes this routine to stop saving seen messages and
+				// the once sync ensures that multiple COMPLETE messages from the client
+				// don't kick off more than one go routine.
+				phase1 = false
+				once.Do(phase2)
+			default:
+				logctx.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
+			}
+		}
+	}()
+
+	// Wait for all go routines to finish
+	wg.Wait()
+
+	// Log and complete gossip session
+	log.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
+	if updates > 0 || repairs > 0 {
+		log.Info().
+			Uint64("local_repairs", repairs).
+			Uint64("remote_updates", updates).
+			Msg("anti-entropy synchronization complete")
+	} else {
+		log.Debug().Msg("anti-entropy complete with no synchronization")
+	}
+	return nil
 }
 
 func (r *ReplicaService) Shutdown() error {
@@ -234,8 +652,4 @@ func (r *ReplicaService) Shutdown() error {
 		r.aestop <- struct{}{}
 	}
 	return nil
-}
-
-func b64e(src []byte) string {
-	return base64.RawURLEncoding.EncodeToString(src)
 }

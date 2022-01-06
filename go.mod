@@ -8,7 +8,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/errors v1.8.6 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20211222161641-06e42cfa82c0 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20220104202420-350954933e24 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
 	github.com/ghodss/yaml v1.0.0
@@ -25,7 +25,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
-	github.com/rotationalio/honu v0.2.6-0.20211224014939-17859381b1e2
+	github.com/rotationalio/honu v0.2.6-0.20220105174555-fa9fea293e5c
 	github.com/rs/zerolog v1.21.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.4+incompatible
@@ -36,7 +36,7 @@ require (
 	github.com/trisacrypto/trisa v0.3.1
 	github.com/urfave/cli v1.22.5
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/exp v0.0.0-20211221223016-e29036178569 // indirect
+	golang.org/x/exp v0.0.0-20220104160115-025e73f80486 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	google.golang.org/api v0.47.0
 	google.golang.org/genproto v0.0.0-20210624195500-8bfb893ecb84

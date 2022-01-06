@@ -3,7 +3,6 @@ package trtl
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"io"
 	"time"
 
@@ -342,7 +341,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
+			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
@@ -548,7 +547,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", base64.RawURLEncoding.EncodeToString(iter.Key())).Msg("could not fetch object metadata")
+			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
