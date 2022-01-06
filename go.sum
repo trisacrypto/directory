@@ -108,6 +108,8 @@ github.com/cockroachdb/pebble v0.0.0-20211222161641-06e42cfa82c0 h1:CqOusRmc8AX9
 github.com/cockroachdb/pebble v0.0.0-20211222161641-06e42cfa82c0/go.mod h1:buxOO9GBtOcq1DiXDpIPYrmxY020K2A8lOrwno5FetU=
 github.com/cockroachdb/pebble v0.0.0-20220104202420-350954933e24 h1:P+wspR6FbwsiTwD/u0EVoZhaHzzo/2SC3oRA2KBG9X8=
 github.com/cockroachdb/pebble v0.0.0-20220104202420-350954933e24/go.mod h1:buxOO9GBtOcq1DiXDpIPYrmxY020K2A8lOrwno5FetU=
+github.com/cockroachdb/pebble v0.0.0-20220105215928-90d9c97f8c62 h1:u4tGyIUi1G0vDBsPegQx8zKYLc9wlHgjRJ2pY/ZBe0U=
+github.com/cockroachdb/pebble v0.0.0-20220105215928-90d9c97f8c62/go.mod h1:buxOO9GBtOcq1DiXDpIPYrmxY020K2A8lOrwno5FetU=
 github.com/cockroachdb/redact v1.0.8/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/redact v1.1.1/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/redact v1.1.3 h1:AKZds10rFSIj7qADf0g46UixK8NNLwWTNdCIGS5wfSQ=
@@ -523,6 +525,8 @@ github.com/rotationalio/honu v0.2.6-0.20211224014939-17859381b1e2 h1:vbTKU8LTs/j
 github.com/rotationalio/honu v0.2.6-0.20211224014939-17859381b1e2/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
 github.com/rotationalio/honu v0.2.6-0.20220105174555-fa9fea293e5c h1:ClL2IWIKzTCtOToA3V3hpvoE4doePJCUnYFOdV7kZGQ=
 github.com/rotationalio/honu v0.2.6-0.20220105174555-fa9fea293e5c/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
+github.com/rotationalio/honu v0.2.6-0.20220106115304-e17a5febe6b2 h1:uaPuCNLdrtCJl3AZ2zdEMZqXtGj14qE2a4i5PlzGwH8=
+github.com/rotationalio/honu v0.2.6-0.20220106115304-e17a5febe6b2/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.21.0 h1:Q3vdXlfLNT+OftyBHsU0Y445MD+8m8axjKgf2si0QcM=
 github.com/rs/zerolog v1.21.0/go.mod h1:ZPhntP/xmq1nnND05hhpAh2QMhSsA4UN3MGZ6O2J3hM=

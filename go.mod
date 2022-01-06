@@ -8,7 +8,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/errors v1.8.6 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20220104202420-350954933e24 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20220105215928-90d9c97f8c62 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
 	github.com/ghodss/yaml v1.0.0
@@ -25,7 +25,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
-	github.com/rotationalio/honu v0.2.6-0.20220105174555-fa9fea293e5c
+	github.com/rotationalio/honu v0.2.6-0.20220106115304-e17a5febe6b2
 	github.com/rs/zerolog v1.21.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.4+incompatible

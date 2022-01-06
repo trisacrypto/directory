@@ -562,10 +562,10 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 					if err == engine.ErrNotFound {
 						// If this is a not found error, then this object exists on the
 						// initiating replica, but not locally, so request a repair.
-						// Note that we have to set the object version to nil to
+						// Note that we have to set the object version to zero to
 						// indicate that we don't have a version of it, so the client
 						// replica's version is later and it sends a repair message.
-						sync.Object.Version = &object.Version{}
+						sync.Object.Version = &object.VersionZero
 						if err = stream.Send(sync); err != nil {
 							logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
 							return
