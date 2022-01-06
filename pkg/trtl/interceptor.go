@@ -71,6 +71,10 @@ func peerFromTLS(ctx context.Context) (info *PeerInfo, err error) {
 	}
 
 	if tlsAuth, ok = gp.AuthInfo.(credentials.TLSInfo); !ok {
+		// If there is no mTLS information return nil peer info.
+		if gp.AuthInfo == nil {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("unexpected peer transport credentials type: %T", gp.AuthInfo)
 	}
 

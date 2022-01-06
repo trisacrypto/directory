@@ -53,7 +53,13 @@ func (r *ReplicaService) AntiEntropy(stop chan struct{}) {
 	ticker := jitter.New(r.conf.GossipInterval, r.conf.GossipSigma)
 	r.aestop = stop
 
-	// Run anti-entropy at a stochastic interval
+	// Log the start of the anti-entropy routine
+	log.Info().
+		Dur("interval", r.conf.GossipInterval).
+		Dur("sigma", r.conf.GossipSigma).
+		Msg("anti-entropy routine started")
+
+		// Run anti-entropy at a stochastic interval
 bayou:
 	for {
 		// Block until next tick or until stop signal is received
@@ -130,6 +136,7 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 	// Kick off the stream sender: will continue to send messages until the send channel is closed
 	go func(msgs <-chan *replica.Sync) {
 		for msg := range msgs {
+			log.Trace().Str("status", msg.Status.String()).Msg("sending sync")
 			if err := stream.Send(msg); err != nil {
 				if err != io.EOF {
 					log.Error().Err(err).Msg("could not send gossip message to remote peer")
@@ -286,9 +293,8 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 					sync.Error = ""
 					if atomic.LoadUint32(&stop) == 0 {
 						send <- sync
+						updates++
 					}
-
-					updates++
 				}
 
 			case replica.Sync_REPAIR:
@@ -341,6 +347,8 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 
 	// Close the send stream since we will no longer be sending messages
 	close(send)
+
+	// TODO: wait for all messages to finish sending
 
 	// Cleanup the stream and stream connections
 	if err = stream.CloseSend(); err != nil {
@@ -435,6 +443,8 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			logctx.Trace().Msg("starting phase 2")
+
 			// Loop over all objects in all namespaces and determine what to push back
 		namespaces:
 			for _, namespace := range replicatedNamespaces {
@@ -443,6 +453,7 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 					logctx.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 					continue namespaces
 				}
+				logctx.Trace().Str("namespace", namespace).Msg("sending namespace")
 
 			objects:
 				for iter.Next() {
@@ -491,6 +502,7 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 				logctx.Error().Err(err).Msg("could not send gossip complete message")
 				return
 			}
+			logctx.Trace().Msg("phase 2 complete")
 		}()
 	}
 
@@ -498,11 +510,14 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		logctx.Debug().Msg("starting phase 1")
+
 	gossip:
 		for {
 			// Check to make sure the deadline isn't over
 			select {
 			case <-ctx.Done():
+				logctx.Debug().Bool("phase1", phase1).Msg("context canceled during gossip recv")
 				return
 			default:
 			}
@@ -533,6 +548,12 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 					continue gossip
 				}
 
+				// Mark the object as seen if we're in phase 1 to prevent duplication in phase 2
+				seen.Add(sync.Object)
+
+				// Increment the number of versions seen
+				atomic.AddUint64(&versions, 1)
+
 				// If we're in phase 1 - that means we're receiving version vectors from
 				// the initiating replica, we should compare the incoming version to the
 				// local version on this replica.
@@ -541,6 +562,10 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 					if err == engine.ErrNotFound {
 						// If this is a not found error, then this object exists on the
 						// initiating replica, but not locally, so request a repair.
+						// Note that we have to set the object version to nil to
+						// indicate that we don't have a version of it, so the client
+						// replica's version is later and it sends a repair message.
+						sync.Object.Version = &object.Version{}
 						if err = stream.Send(sync); err != nil {
 							logctx.Error().Err(err).Msg("could not send gossip message, prematurely quitting phase 1")
 							return
@@ -587,12 +612,6 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 				default:
 					// The versions are equal, do nothing
 				}
-
-				// Mark the object as seen if we're in phase 1 to prevent duplication in phase 2
-				seen.Add(sync.Object)
-
-				// Increment the number of versions seen
-				atomic.AddUint64(&versions, 1)
 			case replica.Sync_REPAIR:
 				// Receiving a repaired object, check if it's still later than our local
 				// replica's and if so, save it to disk with an update instead of a put.
