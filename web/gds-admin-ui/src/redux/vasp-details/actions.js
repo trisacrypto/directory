@@ -135,18 +135,18 @@ export const clearIvms101ErrorMessage = () => ({
 })
 
 export {
-  reviewVaspApiResponse,
-  reviewVaspApiResponseSuccess,
-  updateTrixoResponse,
-  updateTrixoResponseSuccess,
-  updateTrixoResponseError,
-  fetchVaspDetailsApiResponse,
-  fetchVaspDetailsApiResponseError,
-  fetchVaspDetailsApiResponseSuccess,
-  createReviewNoteApiResponseSuccess,
-  updateReviewNoteApiResponseSuccess,
-  deleteReviewNoteApiResponse,
-  fetchReviewNotesApiResponse,
-  fetchReviewNotesApiResponseError,
-  fetchReviewNotesApiResponseSuccess
+    reviewVaspApiResponse,
+    reviewVaspApiResponseSuccess,
+    updateTrixoResponse,
+    updateTrixoResponseSuccess,
+    updateTrixoResponseError,
+    fetchVaspDetailsApiResponse,
+    fetchVaspDetailsApiResponseError,
+    fetchVaspDetailsApiResponseSuccess,
+    createReviewNoteApiResponseSuccess,
+    updateReviewNoteApiResponseSuccess,
+    deleteReviewNoteApiResponse,
+    fetchReviewNotesApiResponse,
+    fetchReviewNotesApiResponseError,
+    fetchReviewNotesApiResponseSuccess
 }
