@@ -11,6 +11,7 @@ import { getAllReviewNotes } from 'redux/selectors'
 import { isEditMenuAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
+import Ivms101RecordForm from './Ivms101RecordForm'
 import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
