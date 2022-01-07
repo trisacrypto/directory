@@ -1,4 +1,4 @@
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateIvms101ActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
@@ -103,6 +103,27 @@ export const clearTrisaImplementationDetailsErrorMessage = () => ({
     type: UpdateTrisaImplementationDetailsActionTypes.CLEAR_ERROR_MESSAGE,
     payload: {}
 })
+
+export const updateIvms101Response = (id, ivms, setIsOpen) => ({
+    type: UpdateIvms101ActionTypes.UPDATE_IVMS_101,
+    payload: { id, ivms, setIsOpen }
+})
+
+export const updateIvms101ResponseSuccess = (data) => ({
+    type: UpdateIvms101ActionTypes.API_RESPONSE_SUCCESS,
+    payload: { data }
+})
+
+export const updateIvms101ResponseError = (error) => ({
+    type: UpdateIvms101ActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const clearIvms101ErrorMessage = () => ({
+    type: UpdateIvms101ActionTypes.CLEAR_ERROR_MESSAGE,
+    payload: {}
+})
+
 
 
 

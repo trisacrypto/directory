@@ -1,11 +1,15 @@
-
 import CountryOptions from 'components/CountryOptions';
 import Field from 'components/Field';
-import { ModalCloseButton } from 'components/Modal';
+import { ModalCloseButton, ModalContext } from 'components/Modal';
 import NationalIdentifierOptions from 'components/NationalIdentifierOptions';
+import useSafeDispatch from 'hooks/useSafeDispatch';
 import React from 'react'
-import { Button, Form, FormGroup } from 'react-bootstrap'
+import { Alert, Button, Form, FormGroup } from 'react-bootstrap'
 import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import { getIvmsErrorState, getVaspDetailsLoadingState } from 'redux/selectors';
+import { clearIvms101ErrorMessage, updateIvms101Response } from 'redux/vasp-details';
 import { getIvms101RecordInitialValues } from 'utils/form-references';
 import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
@@ -14,12 +18,38 @@ function Ivms101RecordForm({ data }) {
     const { register, control, handleSubmit } = useForm({
         defaultValues: getIvms101RecordInitialValues(data)
     })
+    const params = useParams()
+    const [, setIsOpen] = React.useContext(ModalContext)
     const nameIdentifiersFieldArrayRef = React.useRef()
     const localNameIdentifiersFieldArrayRef = React.useRef()
     const phoneticNameIdentifiersFieldArrayRef = React.useRef()
+    const dispatch = useDispatch()
+    const safeDispatch = useSafeDispatch(dispatch)
+    const ivmsErrorState = useSelector(getIvmsErrorState)
+    const isLoading = useSelector(getVaspDetailsLoadingState)
+
+    React.useEffect(() => {
+        const timeout = setTimeout(() => {
+            safeDispatch(clearIvms101ErrorMessage())
+        }, 30000)
+
+        return () => {
+            clearTimeout(timeout)
+        }
+    })
 
     const onSubmit = async (data) => {
-        console.log('[onSubmit] data', data)
+        const payload = {
+            entity: data
+        }
+
+        if (params && params.id) {
+            safeDispatch(updateIvms101Response(params.id, payload, setIsOpen))
+        }
+    }
+
+    const handleAlertClose = () => {
+        dispatch(clearIvms101ErrorMessage())
     }
 
     const handleAddLegalNamesRow = () => {
@@ -38,6 +68,11 @@ function Ivms101RecordForm({ data }) {
         <div>
             <h3>Legal Person</h3>
             <p>Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.</p>
+
+            <Alert variant="danger" show={!!ivmsErrorState} className='col-sm-12' onClose={handleAlertClose} dismissible>
+                <Alert.Heading className='h5'>{ivmsErrorState?.status} {ivmsErrorState?.statusText}</Alert.Heading>
+                {ivmsErrorState?.message}
+            </Alert>
 
             <Form onSubmit={handleSubmit(onSubmit)}>
                 <NameIdentifiersFieldArray
@@ -121,7 +156,7 @@ function Ivms101RecordForm({ data }) {
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>
                     </ModalCloseButton>
-                    <Button type='submit'>Save</Button>
+                    <Button type='submit' disabled={isLoading}>Save</Button>
                 </div>
             </Form>
         </div>

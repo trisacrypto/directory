@@ -74,7 +74,7 @@ function BasicDetails({ data }) {
                             <Row>
                                 <Col>
                                     <Name data={data?.vasp?.entity?.name} />
-                                    <NationalIdentification data={data?.vasp?.entity?.national_identification} />
+                                    <NationalIdentification data={data?.vasp?.entity} />
                                 </Col>
                                 <Col>
                                     <p className="mb-2 mt-md-3 mt-lg-3 fw-bold">Established on: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>

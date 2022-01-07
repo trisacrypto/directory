@@ -1,5 +1,5 @@
 import produce from "immer";
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateIvms101ActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const INITIAL_STATE = {
@@ -47,6 +47,7 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
             }
         case UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS:
         case UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS:
+        case UpdateIvms101ActionTypes.UPDATE_IVMS_101:
             return {
                 ...state,
                 loading: true,
@@ -75,6 +76,23 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
                 ...state,
                 loading: false,
                 trisaError: null
+            }
+        case UpdateIvms101ActionTypes.API_RESPONSE_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                data: action.payload.data
+            }
+        case UpdateIvms101ActionTypes.API_RESPONSE_ERROR:
+            return {
+                ...state,
+                loading: false,
+                ivmsError: action.payload.error
+            }
+        case UpdateIvms101ActionTypes.CLEAR_ERROR_MESSAGE:
+            return {
+                ...state,
+                ivmsError: null
             }
         default:
             return state

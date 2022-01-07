@@ -1,6 +1,3 @@
-import { NAME_IDENTIFIER_TYPE_CODE } from "constants/basic-details"
-import { NATIONAL_IDENTIFIER_TYPE_CODE } from "constants/national-identification"
-
 const normalizeFlatArrays = (data) => data && data.map(d => ({ name: d }))
 
 export const getTrixoFormInitialValues = (data = []) => {
@@ -48,16 +45,6 @@ export const getTrisaImplementationDetailsInitialValue = (data) => ({
     trisa_endpoint: data.vasp.trisa_endpoint
 })
 
-function getLegalPersonNameIdentifierTypeCode(nameIdentifiers = []) {
-    return nameIdentifiers.map(name => {
-        const code = NAME_IDENTIFIER_TYPE_CODE[name.legal_person_name_identifier_type] || "0"
-        return {
-            ...name,
-            legal_person_name_identifier_type: code
-        }
-    })
-}
-
 export const getIvms101RecordInitialValues = (data) => {
     const defaultValues = {
         name: {
@@ -90,18 +77,8 @@ export const getIvms101RecordInitialValues = (data) => {
         },
         country_of_registration: ""
     }
-    const initialValues = Object.assign(defaultValues, data)
 
     return {
         ...Object.assign(defaultValues, data),
-        name: {
-            name_identifiers: getLegalPersonNameIdentifierTypeCode(initialValues.name.name_identifiers),
-            local_name_identifiers: getLegalPersonNameIdentifierTypeCode(initialValues.name.local_name_identifiers),
-            phonetic_name_identifiers: getLegalPersonNameIdentifierTypeCode(initialValues.name.phonetic_name_identifiers),
-        },
-        national_identification: {
-            ...initialValues.national_identification,
-            national_identifier_type: NATIONAL_IDENTIFIER_TYPE_CODE[initialValues.national_identification.national_identifier_type]
-        }
     }
 }

@@ -1,12 +1,12 @@
 
 import React from 'react'
-import { LEGAL_PERSON_NAME_IDENTIFIER_TYPE } from 'constants/index'
+import { NAME_IDENTIFIER_TYPE } from 'constants/basic-details'
 
 function LegalPersonNameIdentifierTypeOptions() {
     return (
         <>
             {
-                LEGAL_PERSON_NAME_IDENTIFIER_TYPE.map((type, idx) => <option key={type} value={idx}>{type}</option>)
+                Object.entries(NAME_IDENTIFIER_TYPE).map(([k, v]) => <option key={k} value={k}>{`${v} Name`}</option>)
             }
         </>
     )

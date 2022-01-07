@@ -1,13 +1,13 @@
 
 import React from 'react'
+import { AddressTypeHeaders } from 'constants/index'
 
 function AddressTypeOptions() {
     return (
         <>
-            <option value="1">Residential</option>
-            <option value="2">Business</option>
-            <option value="3">Geographic</option>
-            <option value="0">Unspecified</option>
+            {
+                Object.entries(AddressTypeHeaders).map(([k, v]) => <option key={k} value={k}>{v}</option>)
+            }
         </>
     )
 }
