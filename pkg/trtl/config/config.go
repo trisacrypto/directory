@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"time"
 
@@ -8,6 +10,7 @@ import (
 	honuconfig "github.com/rotationalio/honu/config"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
 // Config defines the struct that is expected to initialize the trtl server
@@ -22,7 +25,14 @@ type Config struct {
 	ConsoleLog     bool                `split_words:"true" default:"false"`
 	Database       DatabaseConfig
 	Replica        ReplicaConfig
+	MTLS           MTLSConfig
 	processed      bool
+}
+
+type MTLSConfig struct {
+	Insecure  bool   `envconfig:"TRTL_INSECURE" default:"false"`
+	ChainPath string `split_words:"true" required:"false"`
+	CertPath  string `split_words:"true" required:"false"`
 }
 
 type DatabaseConfig struct {
@@ -90,6 +100,9 @@ func (c Config) Validate() (err error) {
 	if err = c.Replica.Validate(); err != nil {
 		return err
 	}
+	if err = c.MTLS.Validate(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -108,4 +121,66 @@ func (c ReplicaConfig) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (c MTLSConfig) Validate() error {
+	if c.Insecure {
+		return nil
+	}
+
+	if c.ChainPath == "" || c.CertPath == "" {
+		return errors.New("invalid configuration: specify chain and cert paths")
+	}
+
+	return nil
+}
+
+func (c MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
+	if c.Insecure {
+		return nil, errors.New("cannot create TLS configuration in insecure mode")
+	}
+
+	var sz *trust.Serializer
+	if sz, err = trust.NewSerializer(false); err != nil {
+		return nil, err
+	}
+
+	var pool trust.ProviderPool
+	if pool, err = sz.ReadPoolFile(c.ChainPath); err != nil {
+		return nil, err
+	}
+
+	var provider *trust.Provider
+	if provider, err = sz.ReadFile(c.CertPath); err != nil {
+		return nil, err
+	}
+
+	var cert tls.Certificate
+	if cert, err = provider.GetKeyPair(); err != nil {
+		return nil, err
+	}
+
+	var certPool *x509.CertPool
+	if certPool, err = pool.GetCertPool(false); err != nil {
+		return nil, err
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+		CurvePreferences: []tls.CurveID{
+			tls.CurveP521,
+			tls.CurveP384,
+			tls.CurveP256,
+		},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+		},
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		ClientCAs:  certPool,
+	}, nil
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func init() {
@@ -66,9 +67,22 @@ func New(conf config.Config) (s *Server, err error) {
 		echan: make(chan error, 1),
 	}
 
+	opts := make([]grpc.ServerOption, 0, 2)
+	if !conf.MTLS.Insecure {
+		// Add mTLS configuration if enabled
+		tlsConf, err := conf.MTLS.ParseTLSConfig()
+		if err != nil {
+			return nil, fmt.Errorf("could not parse TLS config: %v", err)
+		}
+		opts = append(opts, grpc.Creds(credentials.NewTLS(tlsConf)))
+	} else {
+		log.Warn().Msg("trtl starting without mTLS enabled")
+	}
+
 	// NOTE: It appears this must happen outside the struct initialization of the Server
 	// or else the UnaryInterceptor doesn't capture conf when it when it creates the closure
-	s.srv = grpc.NewServer(grpc.UnaryInterceptor(s.interceptor))
+	opts = append(opts, grpc.UnaryInterceptor(s.interceptor))
+	s.srv = grpc.NewServer(opts...)
 
 	// NOTE: if we are *not* in maintenance mode, we must open the database before we
 	// initialize the Honu and Peer mgmt services, else we'll get panics on nil dbs
