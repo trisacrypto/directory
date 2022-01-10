@@ -203,6 +203,9 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 			GossipInterval: 1 * time.Second,
 			GossipSigma:    100 * time.Millisecond,
 		},
+		MTLS: config.MTLSConfig{
+			Insecure: true,
+		},
 	}
 
 	// Mark as processed since the config wasn't loaded from the environment

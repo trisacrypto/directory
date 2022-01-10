@@ -25,6 +25,8 @@ var testEnv = map[string]string{
 	"TRTL_REPLICA_GOSSIP_SIGMA":     "3m",
 	"TRTL_METRICS_ADDR":             ":7777",
 	"TRTL_METRICS_ENABLED":          "true",
+	"TRTL_MTLS_CHAIN_PATH":          "fixtures/certs/chain.pem",
+	"TRTL_MTLS_CERT_PATH":           "fixtures/certs/cert.pem",
 }
 
 func TestConfig(t *testing.T) {
@@ -67,6 +69,8 @@ func TestRequiredConfig(t *testing.T) {
 		"TRTL_DATABASE_URL",
 		"TRTL_REPLICA_PID",
 		"TRTL_REPLICA_REGION",
+		"TRTL_MTLS_CHAIN_PATH",
+		"TRTL_MTLS_CERT_PATH",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -134,6 +138,32 @@ func TestValidateReplicaConfig(t *testing.T) {
 
 	// Gossip Sigma should be required
 	conf.GossipSigma = time.Millisecond * 500
+	require.NoError(t, conf.Validate())
+}
+
+func TestValidateMTLSConfig(t *testing.T) {
+	// MTLS config should only be validated when insecure is false
+	conf := &config.MTLSConfig{
+		Insecure: true,
+	}
+	require.NoError(t, conf.Validate())
+
+	// Both ChainPath and CertPath are required
+	conf.Insecure = false
+	require.Error(t, conf.Validate())
+
+	conf.ChainPath = "/path/to/chain"
+	require.Error(t, conf.Validate())
+
+	conf = &config.MTLSConfig{
+		CertPath: "/path/to/cert",
+	}
+	require.Error(t, conf.Validate())
+
+	conf = &config.MTLSConfig{
+		ChainPath: "/path/to/chain",
+		CertPath:  "/path/to/cert",
+	}
 	require.NoError(t, conf.Validate())
 }
 

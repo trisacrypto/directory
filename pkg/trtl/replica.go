@@ -105,9 +105,11 @@ bayou:
 // with repairs. Then in the push phase, the method waits until all requested remote
 // repairs are complete before exiting.
 func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
-	// Create a context with a timeout of the gossip interval, so that anti-entropy
-	// gossip sessions do not span multiple anti-entropy intervals.
-	ctx, cancel := context.WithTimeout(context.Background(), r.conf.GossipInterval)
+	// Create a context with a timeout that is sooner than 95% of the timeouts selected
+	// by the normally distributed jittered interval, to ensure anti-entropy gossip
+	// sessions do not span multiple anti-entropy intervals.
+	timeout := r.conf.GossipInterval - (2 * r.conf.GossipSigma)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	// Dial the remote peer and establish a connection
@@ -150,8 +152,18 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 
 				// Let external go routines know that they can no longer send on this channel.
 				atomic.AddUint32(&stop, 1)
-				return
+				break
 			}
+		}
+
+		// Continue to consume messages until the msgs channel is closed to ensure that
+		// go routines that do not check if they can send messages don't get blocked if
+		// the message channel is filled up. This won't do anything with the messages.
+		// NOTE: ranging over a closed channel immediately returns so even if the msgs
+		// channel was closed in the first loop, this second loop will not execute nor
+		// will it panic.
+		for msg := range msgs {
+			log.Trace().Str("status", msg.Status.String()).Msg("dropped sync message (not sent)")
 		}
 	}(send)
 
@@ -256,7 +268,7 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 			Msg("sending version vectors to remote peer")
 	}()
 
-	// Push listens for sync requests from the remote server and makes any repairs necessary
+	// Push listens for sync requests from the remote server and makes any necessary repairs
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -424,7 +436,7 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 // bidirectional streaming, the initiating peer sends data-less sync messages with
 // the versions of objects it stores locally. The remote replica then responds with
 // data if its local version is later or sends a sync message back requesting the
-// data from the initating replica if its local version is earlier (no exchange)
+// data from the initiating replica if its local version is earlier. No exchange
 // occurs if both replicas have the same version. At the end of a gossip session,
 // both replicas should have synchronized and have identical underlying data stores.
 func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err error) {
