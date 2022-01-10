@@ -34,7 +34,7 @@ var namespaces = []string{"catchfireBarons", "falselightCutters", "fullCrowns", 
 var probabilities = map[string]uint{
 	"read":   60,
 	"write":  38,
-	"delete": 20,
+	"delete": 2,
 }
 
 func main() {
@@ -68,9 +68,7 @@ type Simulator struct {
 
 func new(endpoint string, insecure bool) *Simulator {
 	// initialize weighted probability selector
-	var selector *wr.Chooser
-
-	selector = initialize()
+	selector := initialize()
 	return &Simulator{
 		Endpoint: endpoint,
 		Insecure: insecure,
