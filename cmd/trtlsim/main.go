@@ -20,7 +20,7 @@ const (
 	sigma     = 100 * time.Millisecond // the amount of jitter, default to 100 ms
 	accesses  = 15                     // desired accesses per interval, default to 15
 	regions   = 7                      // number of regions simultaneously using the accessor
-	endpoint  = "localhost:831"        // the endpoint of the running trtl server
+	endpoint  = ":4436"                // the endpoint of the running trtl server
 	insecure  = true                   // connect without mTLS
 	certs     = ""                     // path to file on disk with certificates if using mTLS
 	keyspace  = 1000                   // the number of keys the simulator operates on
@@ -117,7 +117,7 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				},
 			}
 			if _, err := client.Get(context.TODO(), req); err != nil {
-				panic(err)
+				panic("could not read from database")
 			}
 
 		case "write":
@@ -134,7 +134,7 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				},
 			}
 			if _, err := client.Put(context.TODO(), req); err != nil {
-				panic(err)
+				panic("could not write to database")
 			}
 		case "delete":
 			// execute Delete
@@ -146,7 +146,7 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				},
 			}
 			if _, err := client.Delete(context.TODO(), req); err != nil {
-				panic(err)
+				panic("could not delete from database")
 			}
 		default:
 			panic(errors.New("unknown database operation"))
@@ -166,7 +166,7 @@ func initialize() *wr.Chooser {
 	}
 	chooser, err := wr.NewChooser(choices...)
 	if err != nil {
-		panic(err)
+		panic("error in chooser creation")
 	}
 	return chooser
 }
