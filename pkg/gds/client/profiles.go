@@ -62,6 +62,11 @@ func DefaultProfiles() *Profiles {
 				Members: &MembersProfile{
 					Endpoint: "members.vaspdirectory.net:443",
 				},
+				TrtlProfiles: []*TrtlProfile{
+					{
+						Endpoint: "trtl.us.vaspdirectory.net:443",
+					},
+				},
 			},
 			"testnet": {
 				Directory: &DirectoryProfile{
@@ -72,6 +77,11 @@ func DefaultProfiles() *Profiles {
 				},
 				Members: &MembersProfile{
 					Endpoint: "members.trisatest.net:443",
+				},
+				TrtlProfiles: []*TrtlProfile{
+					{
+						Endpoint: "trtl.us.trisatest.net:443",
+					},
 				},
 			},
 			"localhost": {
@@ -86,6 +96,12 @@ func DefaultProfiles() *Profiles {
 				Members: &MembersProfile{
 					Endpoint: "localhost:4435",
 					Insecure: true,
+				},
+				TrtlProfiles: []*TrtlProfile{
+					{
+						Endpoint: "localhost:4436",
+						Insecure: true,
+					},
 				},
 			},
 		},
