@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/syndtr/goleveldb/leveldb"
@@ -25,12 +27,12 @@ import (
 // Profiles are loaded first from the YAML configuration file and then can be overrided
 // by the CLI context if the user specifies a value via an environment variable or flag.
 type Profile struct {
-	Directory   *DirectoryProfile `yaml:"directory"`              // directory configuration
-	Admin       *AdminProfile     `yaml:"admin"`                  // admin api configuration
-	Replica     *ReplicaProfile   `yaml:"replica"`                // replica configuration
-	Members     *MembersProfile   `yaml:"members"`                // members configuration
-	DatabaseURL string            `yaml:"database_url,omitempty"` // localhost only: the dsn to the leveldb database, usually $GDS_DATABASE_URL
-	Timeout     time.Duration     `yaml:"timeout,omitempty"`      // default timeout to create contexts for API connections, if not specified defaults to 30 seconds
+	Directory    *DirectoryProfile `yaml:"directory"`              // directory configuration
+	Admin        *AdminProfile     `yaml:"admin"`                  // admin api configuration
+	TrtlProfiles []*TrtlProfile    `yaml:"trtl"`                   // replica configurations
+	Members      *MembersProfile   `yaml:"members"`                // members configuration
+	DatabaseURL  string            `yaml:"database_url,omitempty"` // localhost only: the dsn to the leveldb database, usually $GDS_DATABASE_URL
+	Timeout      time.Duration     `yaml:"timeout,omitempty"`      // default timeout to create contexts for API connections, if not specified defaults to 30 seconds
 }
 
 type DirectoryProfile struct {
@@ -44,30 +46,36 @@ type AdminProfile struct {
 	TokenKeys map[string]string `yaml:"token_keys,omitempty"` // the token keys identifier and paths for local token generation auth, usually $GDS_ADMIN_TOKEN_KEYS
 }
 
-type ReplicaProfile struct {
-	Endpoint string `yaml:"endpoint"`           // the replica endpoint to connect to the anti-entropy service
-	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the replica endpoint with TLS
+type TrtlProfile struct {
+	Endpoint string `yaml:"endpoint"`            // the replica endpoint to connect to the anti-entropy service
+	Insecure bool   `yaml:"insecure,omitempty"`  // do not connect to the replica endpoint with TLS
+	CertPath string `yaml:"cert_path,omitempty"` // the path to the client key-pair for client-side mTLS
+	PoolPath string `yaml:"pool_path,omitempty"` // the path to the trust chain for client-side mTLS
 }
 
 type MembersProfile struct {
-	Endpoint string `yaml:"endpoint"`           // the members endpoint to connect to the anti-entropy service
-	Insecure bool   `yaml:"insecure,omitempty"` // do not connect to the members endpoint with mTLS
-	Certs    string `yaml:"certs,omitempty"`    // path to client certificates for mTLS
-	CertPool string `yaml:"certpool,omitempty"` // path to client trusted certpool for mTLS
+	Endpoint string `yaml:"endpoint"`            // the members endpoint to connect to the anti-entropy service
+	Insecure bool   `yaml:"insecure,omitempty"`  // do not connect to the members endpoint with mTLS
+	CertPath string `yaml:"cert_path,omitempty"` // path to client certificates for mTLS
+	PoolPath string `yaml:"pool_path,omitempty"` // path to client trusted certpool for mTLS
 }
 
 func New() *Profile {
 	return &Profile{
-		Directory: &DirectoryProfile{},
-		Admin:     &AdminProfile{},
-		Replica:   &ReplicaProfile{},
-		Members:   &MembersProfile{},
-		Timeout:   30 * time.Second,
+		Directory:    &DirectoryProfile{},
+		Admin:        &AdminProfile{},
+		TrtlProfiles: make([]*TrtlProfile, 0),
+		Members:      &MembersProfile{},
+		Timeout:      30 * time.Second,
 	}
 }
 
 // Update the specified profile with the CLI context.
 func (p *Profile) Update(c *cli.Context) error {
+	if len(p.TrtlProfiles) == 0 {
+		p.TrtlProfiles = append(p.TrtlProfiles, &TrtlProfile{})
+	}
+
 	if endpoint := c.String("directory-endpoint"); endpoint != "" {
 		p.Directory.Endpoint = endpoint
 	}
@@ -76,8 +84,8 @@ func (p *Profile) Update(c *cli.Context) error {
 		p.Admin.Endpoint = endpoint
 	}
 
-	if endpoint := c.String("replica-endpoint"); endpoint != "" {
-		p.Replica.Endpoint = endpoint
+	if endpoint := c.String("trtl-endpoint"); endpoint != "" {
+		p.TrtlProfiles[0].Endpoint = endpoint
 	}
 
 	if endpoint := c.String("members-endpoint"); endpoint != "" {
@@ -86,7 +94,7 @@ func (p *Profile) Update(c *cli.Context) error {
 
 	if insecure := c.Bool("no-secure"); insecure {
 		p.Directory.Insecure = insecure
-		p.Replica.Insecure = insecure
+		p.TrtlProfiles[0].Insecure = insecure
 		p.Members.Insecure = insecure
 	}
 
@@ -95,11 +103,11 @@ func (p *Profile) Update(c *cli.Context) error {
 	}
 
 	if certs := c.String("certs"); certs != "" {
-		p.Members.Certs = certs
+		p.Members.CertPath = certs
 	}
 
 	if trust := c.String("certpool"); trust != "" {
-		p.Members.CertPool = trust
+		p.Members.PoolPath = trust
 	}
 	return nil
 }
@@ -157,37 +165,67 @@ func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, er
 	return client, nil
 }
 
-// Connect to the trtl database server and return a gRPC client
-func (p *ReplicaProfile) ConnectDB() (_ pb.TrtlClient, err error) {
+func (p *TrtlProfile) Connect() (conn *grpc.ClientConn, err error) {
 	var opts []grpc.DialOption
 	if p.Insecure {
 		opts = append(opts, grpc.WithInsecure())
 	} else {
-		config := &tls.Config{}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+		var sz *trust.Serializer
+		if sz, err = trust.NewSerializer(false); err != nil {
+			return nil, err
+		}
+
+		var pool trust.ProviderPool
+		if pool, err = sz.ReadPoolFile(p.PoolPath); err != nil {
+			return nil, err
+		}
+
+		var provider *trust.Provider
+		if provider, err = sz.ReadFile(p.CertPath); err != nil {
+			return nil, err
+		}
+
+		var cert tls.Certificate
+		if cert, err = provider.GetKeyPair(); err != nil {
+			return nil, err
+		}
+
+		var certPool *x509.CertPool
+		if certPool, err = pool.GetCertPool(false); err != nil {
+			return nil, err
+		}
+		var u *url.URL
+		if u, err = url.Parse(p.Endpoint); err != nil {
+			return nil, err
+		}
+		conf := &tls.Config{
+			ServerName:   u.Host,
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      certPool,
+		}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(conf)))
 	}
 
 	// Connect the replica client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+	if conn, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// Connect to the trtl database server and return a gRPC client
+func (p *TrtlProfile) ConnectDB() (_ pb.TrtlClient, err error) {
+	cc, err := p.Connect()
+	if err != nil {
 		return nil, err
 	}
 	return pb.NewTrtlClient(cc), nil
 }
 
 // Connect to the trtl database server and return a gRPC client
-func (p *ReplicaProfile) ConnectPeers() (_ peers.PeerManagementClient, err error) {
-	var opts []grpc.DialOption
-	if p.Insecure {
-		opts = append(opts, grpc.WithInsecure())
-	} else {
-		config := &tls.Config{}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
-	}
-
-	// Connect the replica client
-	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+func (p *TrtlProfile) ConnectPeers() (_ peers.PeerManagementClient, err error) {
+	cc, err := p.Connect()
+	if err != nil {
 		return nil, err
 	}
 	return peers.NewPeerManagementClient(cc), nil
@@ -199,7 +237,7 @@ func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
 	if p.Insecure {
 		opts = append(opts, grpc.WithInsecure())
 	} else {
-		if p.Certs == "" || p.CertPool == "" {
+		if p.CertPath == "" || p.PoolPath == "" {
 			return nil, errors.New("certs and certpool are required for mTLS connections")
 		}
 
@@ -214,11 +252,11 @@ func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
 			return nil, err
 		}
 
-		if certs, err = sz.ReadFile(p.Certs); err != nil {
+		if certs, err = sz.ReadFile(p.CertPath); err != nil {
 			return nil, err
 		}
 
-		if pool, err = sz.ReadPoolFile(p.CertPool); err != nil {
+		if pool, err = sz.ReadPoolFile(p.PoolPath); err != nil {
 			return nil, err
 		}
 

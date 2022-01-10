@@ -31,6 +31,24 @@ func main() {
 	app.Version = pkg.Version()
 	app.Usage = "a command line tool for interacting with the trtl data replication service"
 	app.Before = loadProfile
+	app.Flags = []cli.Flag{
+		&cli.StringFlag{
+			Name:    "trtl-endpoint",
+			Aliases: []string{"u"},
+			Usage:   "the url to connect to the trtl replication service",
+			EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL", "TRTL_ENDPOINT", "TRTL_URL"},
+		},
+		&cli.BoolFlag{
+			Name:    "no-secure",
+			Aliases: []string{"S"},
+			Usage:   "do not connect via TLS (e.g. for development)",
+		},
+		&cli.IntFlag{
+			Name:    "trtl-index",
+			Aliases: []string{"i"},
+			Usage:   "the index (starting from 0) of the desired trtl replica",
+		},
+	}
 	app.Commands = []*cli.Command{
 		{
 			Name:     "serve",
@@ -73,19 +91,6 @@ func main() {
 			Category: "client",
 			Before:   initDBClient,
 			Action:   status,
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect to the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
-				},
-			},
 		},
 		{
 			Name:      "db:get",
@@ -95,12 +100,6 @@ func main() {
 			Before:    initDBClient,
 			Action:    dbGet,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect to the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				&cli.BoolFlag{
 					Name:    "b64encode",
 					Aliases: []string{"b"},
@@ -110,11 +109,6 @@ func main() {
 					Name:    "meta",
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
-				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -126,12 +120,6 @@ func main() {
 			Before:   initDBClient,
 			Action:   dbPut,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect to the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				&cli.StringFlag{
 					Name:    "key",
 					Aliases: []string{"k"},
@@ -152,11 +140,6 @@ func main() {
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
 				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
-				},
 			},
 		},
 		{
@@ -166,12 +149,6 @@ func main() {
 			Before:   initDBClient,
 			Action:   dbDelete,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect to the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				&cli.StringFlag{
 					Name:    "key",
 					Aliases: []string{"k"},
@@ -187,11 +164,6 @@ func main() {
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
 				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
-				},
 			},
 		},
 		{
@@ -201,22 +173,11 @@ func main() {
 			Before:   initPeersClient,
 			Action:   addPeers,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect to the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				// TODO allow the user to add multiple peers at a time?
 				&cli.Uint64Flag{
 					Name:    "pid",
 					Aliases: []string{"p"},
 					Usage:   "specify the pid for the peer to add",
-				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -227,22 +188,11 @@ func main() {
 			Before:   initPeersClient,
 			Action:   delPeers,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				// TODO allow the user to rm multiple peers at a time?
 				&cli.Uint64Flag{
 					Name:    "pid",
 					Aliases: []string{"p"},
 					Usage:   "specify the pid for the peer to tombstone",
-				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -253,12 +203,6 @@ func main() {
 			Before:   initPeersClient,
 			Action:   listPeers,
 			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "replica-endpoint",
-					Aliases: []string{"u"},
-					Usage:   "the url to connect the trtl replication service",
-					EnvVars: []string{"TRISA_DIRECTORY_REPLICA_URL"},
-				},
 				// TODO: have we standardized on how to reference regions?
 				&cli.StringSliceFlag{
 					Name:    "region",
@@ -269,11 +213,6 @@ func main() {
 					Name:    "status",
 					Aliases: []string{"s"},
 					Usage:   "specify for status-only, will not return peer details",
-				},
-				&cli.BoolFlag{
-					Name:    "S",
-					Aliases: []string{"no-secure"},
-					Usage:   "do not connect via TLS (e.g. for development)",
 				},
 			},
 		},
@@ -445,11 +384,13 @@ var peersClient peers.PeerManagementClient
 
 // initDBClient starts a trtl client with a connection to a trtl database.
 func initDBClient(c *cli.Context) (err error) {
-	if profile.Replica == nil {
+	if profile.TrtlProfiles == nil {
 		return cli.Exit("replica not configured", 1)
 	}
-
-	if dbClient, err = profile.Replica.ConnectDB(); err != nil {
+	if len(profile.TrtlProfiles) <= c.Int("trtl-index") {
+		return cli.Exit("could not find trtl profile by index", 1)
+	}
+	if dbClient, err = profile.TrtlProfiles[c.Int("trtl-index")].ConnectDB(); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -457,11 +398,13 @@ func initDBClient(c *cli.Context) (err error) {
 
 // initPeersClient starts a trtl client with a connection to a trtl database.
 func initPeersClient(c *cli.Context) (err error) {
-	if profile.Replica == nil {
+	if profile.TrtlProfiles == nil {
 		return cli.Exit("replica not configured", 1)
 	}
-
-	if peersClient, err = profile.Replica.ConnectPeers(); err != nil {
+	if len(profile.TrtlProfiles) <= c.Int("trtl-index") {
+		return cli.Exit("could not find trtl profile by index", 1)
+	}
+	if peersClient, err = profile.TrtlProfiles[c.Int("trtl-index")].ConnectPeers(); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
