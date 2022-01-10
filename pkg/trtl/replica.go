@@ -49,6 +49,12 @@ func NewReplicaService(s *Server) (*ReplicaService, error) {
 // also used for graceful shutdown of the anti-entropy service.
 // TODO: this background routine is currently untested.
 func (r *ReplicaService) AntiEntropy(stop chan struct{}) {
+	// If Replica is not enabled, do not start the AntiEntropy routine
+	if !r.conf.Enabled {
+		log.Info().Msg("anti-entropy not enabled")
+		return
+	}
+
 	// Create the anti-entropy ticker and store the channel for shutdown
 	ticker := jitter.New(r.conf.GossipInterval, r.conf.GossipSigma)
 	r.aestop = stop
@@ -384,6 +390,8 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 		return nil
 	}
 
+	// TODO: it appears that the keys are not correctly being constructed and that
+	// there are duplicates in the slice.
 	if len(keys) > 1 {
 		// 10 attempts to select a random peer that is not self.
 		for i := 0; i < 10; i++ {
