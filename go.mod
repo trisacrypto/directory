@@ -23,6 +23,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/mroth/weightedrand v0.4.1 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rotationalio/honu v0.2.5
