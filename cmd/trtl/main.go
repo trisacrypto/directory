@@ -179,6 +179,21 @@ func main() {
 					Aliases: []string{"p"},
 					Usage:   "specify the pid for the peer to add",
 				},
+				&cli.StringFlag{
+					Name:    "addr",
+					Aliases: []string{"a"},
+					Usage:   "specify the addr to connect to the peer on",
+				},
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "specify the name to identify the peer with",
+				},
+				&cli.StringFlag{
+					Name:    "region",
+					Aliases: []string{"r"},
+					Usage:   "specify the region the peer is located in",
+				},
 			},
 		},
 		{
@@ -385,7 +400,7 @@ var peersClient peers.PeerManagementClient
 // initDBClient starts a trtl client with a connection to a trtl database.
 func initDBClient(c *cli.Context) (err error) {
 	if profile.TrtlProfiles == nil {
-		return cli.Exit("replica not configured", 1)
+		return cli.Exit("no trtl profile was loaded", 1)
 	}
 	if len(profile.TrtlProfiles) <= c.Int("trtl-index") {
 		return cli.Exit("could not find trtl profile by index", 1)
@@ -399,7 +414,7 @@ func initDBClient(c *cli.Context) (err error) {
 // initPeersClient starts a trtl client with a connection to a trtl database.
 func initPeersClient(c *cli.Context) (err error) {
 	if profile.TrtlProfiles == nil {
-		return cli.Exit("replica not configured", 1)
+		return cli.Exit("no trtl profile was loaded", 1)
 	}
 	if len(profile.TrtlProfiles) <= c.Int("trtl-index") {
 		return cli.Exit("could not find trtl profile by index", 1)
@@ -413,8 +428,7 @@ func initPeersClient(c *cli.Context) (err error) {
 // status prints the status of the trtl service.
 func status(c *cli.Context) (err error) {
 	// TODO: call the trtl status RPC once implemented
-	fmt.Println("trtl status: available")
-	return nil
+	return cli.Exit("trtl status not implemented", 1)
 }
 
 // dbGet prints values from the trtl database given a set of keys.
@@ -534,7 +548,14 @@ func addPeers(c *cli.Context) (err error) {
 	// Create the Peer with the specified PID
 	// TODO: how to add the other values for a Peer?
 	peer := &peers.Peer{
-		Id: c.Uint64("pid"),
+		Id:     c.Uint64("pid"),
+		Addr:   c.String("addr"),
+		Name:   c.String("name"),
+		Region: c.String("region"),
+	}
+
+	if peer.Id == 0 || peer.Addr == "" {
+		return cli.Exit("must specify ID and addr to add a peer", 1)
 	}
 
 	// create a new context and pass the parent context in

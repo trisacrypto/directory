@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rotationalio/honu"
+	"github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
@@ -108,12 +109,16 @@ func New(conf config.Config) (s *Server, err error) {
 	}
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
+	// Initialize the Replica service
+	if s.replica, err = NewReplicaService(s); err != nil {
+		return nil, err
+	}
+	replica.RegisterReplicationServer(s.srv, s.replica)
+
 	// Initialize Metrics service for Prometheus
 	if s.metrics, err = NewMetricsService(); err != nil {
 		return nil, err
 	}
-
-	// TODO: initialize the Replica service
 
 	return s, nil
 }
@@ -133,8 +138,10 @@ func (t *Server) Serve() (err error) {
 		log.Warn().Msg("starting trtl in maintenance mode")
 	} else {
 		// These services should not run in maintenance mode
-		// Run the Gossip background routine
-		go t.replica.AntiEntropy()
+		// Run the Gossip background routine - passing in the stop channel; it's a bit
+		// awkward to create this channel here, but it follows the pattern for our other
+		// background routines that need stop channels injected directly from tests.
+		go t.replica.AntiEntropy(make(chan struct{}, 1))
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
@@ -175,17 +182,30 @@ func (t *Server) Run(sock net.Listener) {
 
 // Shutdown the trtl server gracefully.
 func (t *Server) Shutdown() (err error) {
-	// TODO: collect multi errors to return after shutdown
+	errs := make([]error, 0)
 	log.Info().Msg("gracefully shutting down trtl server")
 	t.srv.GracefulStop()
 
 	// Shutdown the Prometheus metrics server
-	t.metrics.Shutdown()
+	if err = t.metrics.Shutdown(); err != nil {
+		log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
+		errs = append(errs, err)
+	}
 
-	// TODO: Stop the anti-entropy routine.
+	// Stop the anti-entropy routine.
+	if err = t.replica.Shutdown(); err != nil {
+		log.Error().Err(err).Msg("could not shutdown anti-entropy routine")
+		errs = append(errs, err)
+	}
 
 	if err = t.db.Close(); err != nil {
 		log.Error().Err(err).Msg("could not close database")
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		log.Debug().Msg("did not successfully shutdown trtl server")
+		return fmt.Errorf("%d shutdown errors occurred", len(errs))
 	}
 
 	log.Debug().Msg("successful shutdown of trtl server")
