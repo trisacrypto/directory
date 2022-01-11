@@ -83,16 +83,12 @@ func (c Config) Mark() (Config, error) {
 }
 
 // GetHonuConfig converts ReplicaConfig into honu's struct of the same name.
-func (c Config) GetHonuConfig() honuconfig.ReplicaConfig {
-	return honuconfig.ReplicaConfig{
-		Enabled:        true,
-		BindAddr:       "",
-		PID:            c.Replica.PID,
-		Region:         c.Replica.Region,
-		Name:           c.Replica.Name,
-		GossipInterval: c.Replica.GossipInterval,
-		GossipSigma:    c.Replica.GossipSigma,
-	}
+func (c Config) GetHonuConfig() honuconfig.Option {
+	return honuconfig.WithReplica(honuconfig.ReplicaConfig{
+		PID:    c.Replica.PID,
+		Region: c.Replica.Region,
+		Name:   c.Replica.Name,
+	})
 }
 
 func (c Config) Validate() (err error) {
