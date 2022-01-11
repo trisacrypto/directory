@@ -311,29 +311,34 @@ func main() {
 		},
 		{
 			Name:      "profile",
-			Aliases:   []string{"config"},
+			Aliases:   []string{"config", "profiles"},
 			Usage:     "view and manage profiles to configure trtl with",
-			UsageText: "trtl profile [name]\n   trtl profile --activate [name]\n   trtl profile --list\n   trtl profile --path\n   trtl profile --install",
+			UsageText: "trtl profile [name]\n   trtl profile --activate [name]\n   trtl profile --list\n   trtl profile --path\n   trtl profile --install\n   trtl profile --edit",
 			Action:    manageProfiles,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:    "l",
-					Aliases: []string{"list"},
+					Name:    "list",
+					Aliases: []string{"l"},
 					Usage:   "list the available profiles and exit",
 				},
 				&cli.BoolFlag{
-					Name:    "p",
-					Aliases: []string{"path"},
+					Name:    "path",
+					Aliases: []string{"p"},
 					Usage:   "show the path to the configuration and exit",
 				},
 				&cli.BoolFlag{
-					Name:    "i",
-					Aliases: []string{"install"},
+					Name:    "install",
+					Aliases: []string{"i"},
 					Usage:   "install the default profiles and exit",
 				},
+				&cli.BoolFlag{
+					Name:    "edit",
+					Aliases: []string{"e"},
+					Usage:   "edit the profiles YAML using $EDITOR",
+				},
 				&cli.StringFlag{
-					Name:    "a",
-					Aliases: []string{"activate"},
+					Name:    "activate",
+					Aliases: []string{"a"},
 					Usage:   "activate the profile with the specified name",
 				},
 			},
@@ -668,6 +673,14 @@ func manageProfiles(c *cli.Context) (err error) {
 	// Handle install and then exit
 	if c.Bool("install") {
 		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle edit and then exit
+	if c.Bool("edit") {
+		if err = profiles.EditProfiles(); err != nil {
 			return cli.Exit(err, 1)
 		}
 		return nil

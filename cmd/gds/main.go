@@ -534,9 +534,9 @@ func main() {
 			},
 			{
 				Name:      "profile",
-				Aliases:   []string{"config"},
+				Aliases:   []string{"config", "profiles"},
 				Usage:     "view and manage profiles to configure client with",
-				UsageText: "gds profile [name]\n   gds profile --activate [name]\n   gds profile --list\n   gds profile --path\n   gds profile --install",
+				UsageText: "gds profile [name]\n   gds profile --activate [name]\n   gds profile --list\n   gds profile --path\n   gds profile --install\n   gds profile --edit",
 				Action:    manageProfiles,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -553,6 +553,11 @@ func main() {
 						Name:    "install",
 						Aliases: []string{"i"},
 						Usage:   "install the default profiles and exit",
+					},
+					&cli.BoolFlag{
+						Name:    "edit",
+						Aliases: []string{"e"},
+						Usage:   "edit the profiles YAML using $EDITOR",
 					},
 					&cli.StringFlag{
 						Name:    "activate",
@@ -1214,6 +1219,14 @@ func manageProfiles(c *cli.Context) (err error) {
 	// Handle install and then exit
 	if c.Bool("install") {
 		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle edit and then exit
+	if c.Bool("edit") {
+		if err = profiles.EditProfiles(); err != nil {
 			return cli.Exit(err, 1)
 		}
 		return nil
