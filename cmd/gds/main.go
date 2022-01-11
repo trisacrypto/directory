@@ -255,6 +255,11 @@ func main() {
 						Usage:   "the administrative token sent in the review request email",
 					},
 					&cli.BoolFlag{
+						Name:    "fetch-token",
+						Aliases: []string{"T"},
+						Usage:   "attempt to fetch the admin verification token before review",
+					},
+					&cli.BoolFlag{
 						Name:    "reject",
 						Aliases: []string{"R"},
 						Usage:   "reject the registration request",
@@ -630,8 +635,8 @@ func review(c *cli.Context) (err error) {
 		RejectReason:           c.String("reason"),
 	}
 
-	if req.ID == "" || req.AdminVerificationToken == "" {
-		return cli.Exit("specify both id and token", 1)
+	if req.ID == "" {
+		return cli.Exit("must specify the id of the VASP", 1)
 	}
 
 	if !req.Accept && req.RejectReason == "" {
@@ -640,6 +645,19 @@ func review(c *cli.Context) (err error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	if c.Bool("fetch-token") {
+		rep, err := adminClient.ReviewToken(ctx, req.ID)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+		req.AdminVerificationToken = rep.AdminVerificationToken
+		fmt.Printf("admin verification token fetch: %q\n", rep.AdminVerificationToken)
+	}
+
+	if req.AdminVerificationToken == "" {
+		return cli.Exit("must specify fetch-token or the admin verification token", 1)
+	}
 
 	rep, err := adminClient.Review(ctx, req)
 	if err != nil {

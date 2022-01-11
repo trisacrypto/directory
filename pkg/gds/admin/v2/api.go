@@ -27,6 +27,7 @@ type DirectoryAdministrationClient interface {
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
 	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
+	ReviewToken(ctx context.Context, vaspID string) (out *ReviewTokenReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
 }
@@ -234,6 +235,14 @@ type ReviewTimelineParams struct {
 //===========================================================================
 // VASP Action RPCs
 //===========================================================================
+
+// ReviewToken requests are used to determine if the VASP is eligible to be reviewed.
+// If the admin verification token can be retrieved by an authenticated user, it can be
+// presented in the ReviewRequest to complete the review. If a 404 is returned, it means
+// that the VASP is not in a state where it can be reviewed.
+type ReviewTokenReply struct {
+	AdminVerificationToken string `json:"admin_verification_token"`
+}
 
 // Registration review requests are sent via email to the TRISA admin email address with
 // a lightweight token for review. This endpoint allows administrators to submit a review

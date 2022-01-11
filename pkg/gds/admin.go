@@ -174,7 +174,8 @@ func (s *Admin) setupRoutes() (err error) {
 		{
 			vasps.GET("", s.ListVASPs)
 			vasps.GET("/:vaspID", s.RetrieveVASP)
-			vasps.PATCH("/:vaspID", s.UpdateVASP)
+			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
+			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
 
@@ -1481,6 +1482,52 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 	c.JSON(http.StatusOK, &admin.Reply{Success: true})
 }
 
+// ReviewToken returns the admin verification token of the VASP if the VASP is in a
+// state that it can be reviewed in, e.g. PENDING_REVIEW, otherwise a 404 is returned.
+func (s *Admin) ReviewToken(c *gin.Context) {
+	var (
+		err    error
+		out    *admin.ReviewTokenReply
+		vasp   *pb.VASP
+		vaspID string
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Check if the VASP is in a state where it can be reviewed
+	if vasp.VerificationStatus != pb.VerificationState_PENDING_REVIEW {
+		log.Debug().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("could not retrieve admin verification token in current state")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("admin verification token not available if VASP is not pending review"))
+		return
+	}
+
+	// Construct the reply
+	out = &admin.ReviewTokenReply{}
+	if out.AdminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
+		log.Error().Err(err).Str("id", vaspID).Msg("could not retrieve admin verification token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin verification token"))
+		return
+	}
+
+	// Check that an admin verification token will be returned
+	if out.AdminVerificationToken == "" {
+		log.Error().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("admin verification token not available to review VASP")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve admin verification token"))
+		return
+	}
+
+	// Return the request with the admin verification token
+	c.JSON(http.StatusOK, out)
+}
+
 // Review a registration request and either accept or reject it. On accept, the
 // certificate request that was created on verify is used to send a Sectigo request and
 // the certificate manager process watches it until the certificate has been issued. On
@@ -1535,8 +1582,8 @@ func (s *Admin) Review(c *gin.Context) {
 	// Check that the administration verification token is correct
 	var adminVerificationToken string
 	if adminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
-		log.Error().Err(err).Msg("could not retrieve admin token from extra data field on VASP")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin token from data"))
+		log.Error().Err(err).Str("id", vaspID).Msg("could not retrieve admin verification token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin verification token"))
 		return
 	}
 	if in.AdminVerificationToken != adminVerificationToken {
