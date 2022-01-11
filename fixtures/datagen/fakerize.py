@@ -497,6 +497,14 @@ def make_unverified(
     rng_notes = random.Random(vasp+"notes")
     record["extra"]["review_notes"] = make_notes(rng=rng_notes)
 
+    # A VASP that has not been reviewed should have an admin verification token
+    # Otherwise the VASP should not have an admin verification token
+    if state in {"EMAIL_VERIFIED", "PENDING_REVIEW"}:
+        record["extra"]["admin_verification_token"] = secrets.token_urlsafe(48)
+    else:
+        record["extra"]["admin_verification_token"] = ""
+
+
     return record
 
 
