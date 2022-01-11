@@ -3,28 +3,35 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
+	"fmt"
 	"math/rand"
+	"net/url"
 	"strconv"
 	"time"
 
 	wr "github.com/mroth/weightedrand"
 	"github.com/trisacrypto/directory/pkg/trtl/jitter"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 const (
-	interval  = 5 * time.Second        // the ticker interval, default to 5 seconds
-	sigma     = 100 * time.Millisecond // the amount of jitter, default to 100 ms
-	accesses  = 15                     // desired accesses per interval, default to 15
-	regions   = 7                      // number of regions simultaneously using the accessor
-	endpoint  = ":4436"                // the endpoint of the running trtl server
-	insecure  = true                   // connect without mTLS
-	certs     = ""                     // path to file on disk with certificates if using mTLS
-	keyspace  = 1000                   // the number of keys the simulator operates on
-	chunkSize = 512                    // size of each write
+	interval  = 5 * time.Second                                        // the ticker interval, default to 5 seconds
+	sigma     = 100 * time.Millisecond                                 // the amount of jitter, default to 100 ms
+	accesses  = 15                                                     // desired accesses per interval, default to 15
+	regions   = 7                                                      // number of regions simultaneously using the accessor
+	endpoint  = "localhost:4436"                                       // the endpoint of the running trtl server
+	insecure  = true                                                   // connect without mTLS
+	certPath  = "fixtures/certs/mtls.client.dev/client.pem"            // path to file on disk with certificate key-pair if using mTLS
+	poolPath  = "fixtures/certs/mtls.client.dev/certificate.chain.pem" // path to file on disk with trust pool if using mTLS
+	keyspace  = 1000                                                   // the number of keys the simulator operates on
+	chunkSize = 512                                                    // size of each write
 )
 
 // dummy namespaces for simulation
@@ -64,6 +71,8 @@ type Simulator struct {
 	Endpoint string      `yaml:"endpoint"`           // the replica endpoint to connect to
 	Insecure bool        `yaml:"insecure,omitempty"` // do not connect with TLS
 	Selector *wr.Chooser `yaml:"chooser,omitempty"`  // random selection helper
+	CertPath string      `yaml:cert_path,omitempty"` // path to certificate key pair for client side mTLS
+	PoolPath string      `yaml:poo_path,omitempty"`  // path to certificate trust chain for client side mTLS
 }
 
 func new(endpoint string, insecure bool) *Simulator {
@@ -73,6 +82,8 @@ func new(endpoint string, insecure bool) *Simulator {
 		Endpoint: endpoint,
 		Insecure: insecure,
 		Selector: selector,
+		CertPath: certPath,
+		PoolPath: poolPath,
 	}
 }
 
@@ -82,8 +93,40 @@ func (s *Simulator) connect() (_ pb.TrtlClient, err error) {
 	if s.Insecure {
 		opts = append(opts, grpc.WithInsecure())
 	} else {
-		config := &tls.Config{}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
+		var sz *trust.Serializer
+		if sz, err = trust.NewSerializer(false); err != nil {
+			return nil, err
+		}
+
+		var pool trust.ProviderPool
+		if pool, err = sz.ReadPoolFile(s.PoolPath); err != nil {
+			return nil, err
+		}
+
+		var provider *trust.Provider
+		if provider, err = sz.ReadFile(s.CertPath); err != nil {
+			return nil, err
+		}
+
+		var cert tls.Certificate
+		if cert, err = provider.GetKeyPair(); err != nil {
+			return nil, err
+		}
+
+		var certPool *x509.CertPool
+		if certPool, err = pool.GetCertPool(false); err != nil {
+			return nil, err
+		}
+		var u *url.URL
+		if u, err = url.Parse(s.Endpoint); err != nil {
+			return nil, err
+		}
+		conf := &tls.Config{
+			ServerName:   u.Host,
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      certPool,
+		}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(conf)))
 	}
 
 	// Connect the replica client
@@ -117,7 +160,11 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				},
 			}
 			if _, err := client.Get(context.TODO(), req); err != nil {
-				panic("could not read from database")
+				// Skip if the object doesn't exist
+				if serr, ok := status.FromError(err); ok && serr.Code() == codes.NotFound {
+					continue
+				}
+				panic(fmt.Errorf("could not read from database: %v", err))
 			}
 
 		case "write":
@@ -134,19 +181,38 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				},
 			}
 			if _, err := client.Put(context.TODO(), req); err != nil {
+				fmt.Print(err)
 				panic("could not write to database")
 			}
 		case "delete":
-			// execute Delete
-			req := &pb.DeleteRequest{
+			// First check that the object exists
+			req := &pb.GetRequest{
 				Key:       key,
 				Namespace: ns,
 				Options: &pb.Options{
 					ReturnMeta: false,
 				},
 			}
-			if _, err := client.Delete(context.TODO(), req); err != nil {
-				panic("could not delete from database")
+			// Object doesn't exist so skip this one
+			if _, err := client.Get(context.TODO(), req); err != nil {
+				if serr, ok := status.FromError(err); ok && serr.Code() == codes.NotFound {
+					continue
+				}
+			} else {
+				// Object does exist so execute Delete
+				req := &pb.DeleteRequest{
+					Key:       key,
+					Namespace: ns,
+					Options: &pb.Options{
+						ReturnMeta: false,
+					},
+				}
+				if _, err := client.Delete(context.TODO(), req); err != nil {
+					if serr, ok := status.FromError(err); ok && serr.Code() == codes.NotFound {
+						continue
+					}
+					panic(fmt.Errorf("could not delete from database: %v", err))
+				}
 			}
 		default:
 			panic(errors.New("unknown database operation"))
