@@ -740,6 +740,33 @@ func TestDeleteReviewNote(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestReviewToken(t *testing.T) {
+	fixture := &admin.ReviewTokenReply{
+		AdminVerificationToken: "supersecretadminkey",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check the request is correct
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/vasps/1234/review", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	out, err := client.ReviewToken(context.TODO(), "1234")
+	require.NoError(t, err)
+	require.Equal(t, fixture.AdminVerificationToken, out.AdminVerificationToken)
+}
+
 func TestReview(t *testing.T) {
 	fixture := &admin.ReviewReply{
 		Status:  "reviewed",
@@ -755,7 +782,7 @@ func TestReview(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Double cookie protect GET request w/o middleware
-		// The client must a call to GET /v2/authenticate before authentication
+		// The client must call GET /v2/authenticate before authentication
 		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
 			w.Header().Add("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusNoContent)

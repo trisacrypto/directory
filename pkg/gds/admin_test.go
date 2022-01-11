@@ -943,6 +943,56 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require.Len(notes, 0)
 }
 
+// Test the Review Token endpoint
+func (s *gdsTestSuite) TestReviewToken() {
+	s.LoadFullFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	echo := s.fixtures[vasps]["echo"].(*pb.VASP)
+	juliet := s.fixtures[vasps]["juliet"].(*pb.VASP)
+
+	require.NotEqual(pb.VerificationState_PENDING_REVIEW, echo.VerificationStatus, "echo must not be in PENDING_REVIEW for this test to pass")
+	require.Equal(pb.VerificationState_PENDING_REVIEW, juliet.VerificationStatus, "juliet must be in PENDING_REVIEW for this test to pass")
+
+	// Test not found with invalid ID
+	request := &httpRequest{
+		method: http.MethodGet,
+		path:   "/v2/vasps/invalid/review",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ReviewToken, c, w, nil)
+	require.Equal(http.StatusNotFound, rep.StatusCode)
+
+	// Test not found with VASP not in a PENDING_REVIEW state
+	request.path = fmt.Sprintf("/v2/vasps/%s/review", echo.Id)
+	request.params["vaspID"] = echo.Id
+	c2, w2 := s.makeRequest(request)
+	rep2 := s.doRequest(a.ReviewToken, c2, w2, nil)
+	require.Equal(http.StatusNotFound, rep2.StatusCode)
+
+	// Ensure Juliet has an admin verification token
+	avt, err := models.GetAdminVerificationToken(juliet)
+	require.NoError(err, "could not get admin verification token from juliet")
+	require.NotEmpty(avt, "juliet fixture does not have an admin verification token")
+
+	// Test valid response returned when VASP is in a PENDING_REVIEW state
+	out := &admin.ReviewTokenReply{}
+	request.path = fmt.Sprintf("/v2/vasps/%s/review", juliet.Id)
+	request.params["vaspID"] = juliet.Id
+	c3, w3 := s.makeRequest(request)
+	rep3 := s.doRequest(a.ReviewToken, c3, w3, out)
+	require.Equal(http.StatusOK, rep3.StatusCode)
+	require.Equal(avt, out.AdminVerificationToken)
+}
+
 // Test the Review endpoint with invalid parameters.
 func (s *gdsTestSuite) TestReviewInvalid() {
 	s.LoadFullFixtures()
@@ -1003,11 +1053,12 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
+	var err error
 	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
 	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
 
-	// No matching certificate request for the VASP
+	// VASP does not have an admin verification token
 	request := &httpRequest{
 		method: http.MethodPost,
 		path:   "/v2/vasps/invalid/review",
@@ -1025,9 +1076,9 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	}
 	c, w := s.makeRequest(request)
 	rep := s.doRequest(a.Review, c, w, nil)
-	require.Equal(http.StatusInternalServerError, rep.StatusCode)
+	require.Equal(http.StatusUnauthorized, rep.StatusCode)
 
-	// Successfully accepting a registration request
+	// Test incorrect admin verification token
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
 		AdminVerificationToken: "supersecrettoken",
@@ -1037,6 +1088,20 @@ func (s *gdsTestSuite) TestReviewAccept() {
 		"vaspID": julietVASP.Id,
 	}
 	actual := &admin.ReviewReply{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.Review, c, w, actual)
+	require.Equal(http.StatusUnauthorized, rep.StatusCode)
+
+	// Successfully accepting a registration request
+	reviewRequest := &admin.ReviewRequest{
+		ID:     julietVASP.Id,
+		Accept: true,
+	}
+	reviewRequest.AdminVerificationToken, err = models.GetAdminVerificationToken(julietVASP)
+	require.NoError(err, "could not get required admin verification token for juliet")
+
+	request.in = reviewRequest
+	actual = &admin.ReviewReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -1085,7 +1150,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
 	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
 
-	// No matching certificate request for the VASP
+	// Test when VASP does not have admin verification token
 	request := &httpRequest{
 		method: http.MethodPost,
 		path:   "/v2/vasps/invalid/review",
@@ -1104,16 +1169,31 @@ func (s *gdsTestSuite) TestReviewReject() {
 	}
 	c, w := s.makeRequest(request)
 	rep := s.doRequest(a.Review, c, w, nil)
-	require.Equal(http.StatusInternalServerError, rep.StatusCode)
+	require.Equal(http.StatusUnauthorized, rep.StatusCode)
 
-	// No rejection reason supplied
+	// Incorrect admin verification token
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
 		AdminVerificationToken: "supersecrettoken",
 		Accept:                 false,
+		RejectReason:           "just joking around",
 	}
 	request.params = map[string]string{
 		"vaspID": julietVASP.Id,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.Review, c, w, nil)
+	require.Equal(http.StatusUnauthorized, rep.StatusCode)
+
+	avt, err := models.GetAdminVerificationToken(julietVASP)
+	require.NoError(err, "could not fetch admin verification token for juliet")
+	require.NotEmpty(avt, "juliet does not have an admin verification token")
+
+	// No rejection reason supplied
+	request.in = &admin.ReviewRequest{
+		ID:                     julietVASP.Id,
+		AdminVerificationToken: avt,
+		Accept:                 false,
 	}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Review, c, w, nil)
@@ -1122,7 +1202,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	// Successfully rejecting a registration request
 	request.in = &admin.ReviewRequest{
 		ID:                     julietVASP.Id,
-		AdminVerificationToken: "supersecrettoken",
+		AdminVerificationToken: avt,
 		Accept:                 false,
 		RejectReason:           "some reason",
 	}
