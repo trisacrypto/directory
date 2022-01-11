@@ -953,7 +953,7 @@ func (s *gdsTestSuite) TestReviewToken() {
 	echo := s.fixtures[vasps]["echo"].(*pb.VASP)
 	juliet := s.fixtures[vasps]["juliet"].(*pb.VASP)
 
-	require.NotEqual(pb.VerificationState_PENDING_REVIEW, echo.VerificationStatus, "charlie must not be in PENDING_REVIEW for this test to pass")
+	require.NotEqual(pb.VerificationState_PENDING_REVIEW, echo.VerificationStatus, "echo must not be in PENDING_REVIEW for this test to pass")
 	require.Equal(pb.VerificationState_PENDING_REVIEW, juliet.VerificationStatus, "juliet must be in PENDING_REVIEW for this test to pass")
 
 	// Test not found with invalid ID
