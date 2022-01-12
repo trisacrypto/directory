@@ -6,9 +6,12 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/url"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	wr "github.com/mroth/weightedrand"
@@ -52,7 +55,7 @@ func main() {
 	sim := new(endpoint, insecure)
 	simClient, err := sim.connect()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	ticker := jitter.New(interval, sigma)
@@ -78,13 +81,35 @@ type Simulator struct {
 func new(endpoint string, insecure bool) *Simulator {
 	// initialize weighted probability selector
 	selector := initialize()
-	return &Simulator{
+	sim := &Simulator{
 		Endpoint: endpoint,
 		Insecure: insecure,
 		Selector: selector,
 		CertPath: certPath,
 		PoolPath: poolPath,
 	}
+
+	// Configure from the environment if envvars are supplied, otherwise use the defaults
+	if endpoint := os.Getenv("TRTLSIM_ENDPOINT"); endpoint != "" {
+		sim.Endpoint = endpoint
+	}
+
+	if insecure := os.Getenv("TRTLSIM_INSECURE"); insecure != "" {
+		insecure = strings.ToLower(insecure)
+		if insecure == "f" || insecure == "false" || insecure == "0" {
+			sim.Insecure = false
+		}
+	}
+
+	if certPath := os.Getenv("TRTLSIM_CERT_PATH"); certPath != "" {
+		sim.CertPath = certPath
+	}
+
+	if poolPath := os.Getenv("TRTLSIM_POOL_PATH"); poolPath != "" {
+		sim.PoolPath = poolPath
+	}
+
+	return sim
 }
 
 // Connect to the trtl server and return a gRPC client
@@ -134,11 +159,16 @@ func (s *Simulator) connect() (_ pb.TrtlClient, err error) {
 	if cc, err = grpc.Dial(s.Endpoint, opts...); err != nil {
 		return nil, err
 	}
+	log.Printf("connected to trtl server at %s\n", s.Endpoint)
 	return pb.NewTrtlClient(cc), nil
 }
 
 // Create a fixed number of random accesses across the namespace and keyspace options
 func (s *Simulator) accessor(client pb.TrtlClient) {
+	var gets int
+	var puts int
+	var dels int
+
 	// Make as many accesses as directed by the global variable/config
 	for a := 1; a <= accesses; a++ {
 
@@ -166,7 +196,7 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				}
 				panic(fmt.Errorf("could not read from database: %v", err))
 			}
-
+			gets++
 		case "write":
 			// create random data
 			val := make([]byte, chunkSize)
@@ -184,6 +214,7 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 				fmt.Print(err)
 				panic("could not write to database")
 			}
+			puts++
 		case "delete":
 			// First check that the object exists
 			req := &pb.GetRequest{
@@ -214,10 +245,14 @@ func (s *Simulator) accessor(client pb.TrtlClient) {
 					panic(fmt.Errorf("could not delete from database: %v", err))
 				}
 			}
+			dels++
 		default:
 			panic(errors.New("unknown database operation"))
 		}
 	}
+	log.Printf("%v gets", gets)
+	log.Printf("%v puts", puts)
+	log.Printf("%v dels\n\n", dels)
 }
 
 //===========================================================================
