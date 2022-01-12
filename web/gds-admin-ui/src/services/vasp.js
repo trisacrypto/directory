@@ -16,4 +16,17 @@ function updateVasp(id, payload) {
     })
 }
 
-export { getVasp, updateVasp };
+function getAdminVerificationToken(id) {
+    return api.get(`/vasps/${id}/review`)
+}
+
+function reviewVasp(id, payload, params) {
+    const csrfToken = getCookie('csrf_token')
+    return api.create(`/vasps/${id}/review`, payload, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+export { getVasp, updateVasp, reviewVasp, getAdminVerificationToken };

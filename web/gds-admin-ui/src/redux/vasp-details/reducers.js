@@ -1,5 +1,5 @@
 import produce from "immer";
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateIvms101ActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateIvms101ActionTypes, ReviewVaspActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const INITIAL_STATE = {
@@ -48,6 +48,7 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
         case UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS:
         case UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS:
         case UpdateIvms101ActionTypes.UPDATE_IVMS_101:
+        case ReviewVaspActionTypes.REVIEW_VASP:
             return {
                 ...state,
                 loading: true,
@@ -94,6 +95,10 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
                 ...state,
                 ivmsError: null
             }
+        case ReviewVaspActionTypes.API_RESPONSE_SUCCESS:
+            return produce(state, draft => {
+                draft.data.vasp.verification_status = action.payload.status
+            })
         default:
             return state
     }
