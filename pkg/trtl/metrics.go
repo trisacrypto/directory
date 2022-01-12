@@ -18,7 +18,9 @@ var (
 	pmIters *prometheus.CounterVec // count of trtl Iters per namespace
 	// pmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
 	// pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
-	pmLatency *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
+	pmLatency     *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
+	pmSyncs       *prometheus.CounterVec   // count of anti entropy sessions per peer and per region
+	pmSyncLatency *prometheus.HistogramVec // the time it is taking for anti entropy sessions to complete, by peer
 )
 
 // A MetricsService manages Prometheus metrics
@@ -104,6 +106,18 @@ func initMetrics() {
 		Name:      "latency",
 		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
 	}, []string{"call"})
+
+	pmSyncs = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: pmNamespace,
+		Name:      "syncs",
+		Help:      "the count of anti-entropy sessions, labeled by peer and region",
+	}, []string{"peer", "region"})
+
+	pmSyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: pmNamespace,
+		Name:      "sync_latency",
+		Help:      "time to anti-entropy session completion, labeled by peer",
+	}, []string{"peer"})
 }
 
 func registerMetrics() error {
@@ -135,6 +149,11 @@ func registerMetrics() error {
 		log.Debug().Err(err).Msg("unable to register pmLatency")
 		return err
 	}
-
+	if err := prometheus.Register(pmSyncs); err != nil {
+		log.Debug().Err(err).Msg("unable to register pmSyncs")
+	}
+	if err := prometheus.Register(pmSyncLatency); err != nil {
+		log.Debug().Err(err).Msg("unable to register pmSyncLatency")
+	}
 	return nil
 }

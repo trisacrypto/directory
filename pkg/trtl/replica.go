@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/rotationalio/honu"
 	engine "github.com/rotationalio/honu/engines"
@@ -95,6 +96,9 @@ bayou:
 		if err := r.AntiEntropySync(peer, logctx); err != nil {
 			logctx.Warn().Err(err).Msg("anti-entropy synchronization was unsuccessful")
 		}
+
+		// Update prometheus metrics
+		pmSyncs.WithLabelValues(peer.Name, peer.Region).Inc()
 	}
 }
 
@@ -105,6 +109,9 @@ bayou:
 // with repairs. Then in the push phase, the method waits until all requested remote
 // repairs are complete before exiting.
 func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	// Create a context with a timeout that is sooner than 95% of the timeouts selected
 	// by the normally distributed jittered interval, to ensure anti-entropy gossip
 	// sessions do not span multiple anti-entropy intervals.
@@ -376,6 +383,11 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 	if err = cc.Close(); err != nil {
 		return fmt.Errorf("could not close the client connection correctly: %s", err)
 	}
+
+	// Compute latency in milliseconds
+	// NOTE: we're only tracking latency for successful AE sessions
+	latency := float64(time.Since(start)/1000) / 1000.0
+	pmSyncLatency.WithLabelValues(peer.Name).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil
