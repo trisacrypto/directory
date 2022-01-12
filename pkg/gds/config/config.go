@@ -54,17 +54,17 @@ type AdminConfig struct {
 	TokenKeys map[string]string `split_words:"true"`
 }
 
+type OauthConfig struct {
+	GoogleAudience         string   `split_words:"true"`
+	AuthorizedEmailDomains []string `split_words:"true"`
+}
+
 type MembersConfig struct {
 	Enabled  bool   `split_words:"true" default:"true"`
 	BindAddr string `split_words:"true" default:":4435"`
 	Insecure bool   `split_words:"true" default:"false"`
 	Certs    string `split_words:"true"`
 	CertPool string `split_words:"true"`
-}
-
-type OauthConfig struct {
-	GoogleAudience         string   `split_words:"true"`
-	AuthorizedEmailDomains []string `split_words:"true"`
 }
 
 type DatabaseConfig struct {
