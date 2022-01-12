@@ -1,5 +1,5 @@
 import produce from "immer";
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const INITIAL_STATE = {
@@ -40,6 +40,23 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
                 data: action.payload.data
             }
         case UpdateTrixoActionTypes.API_RESPONSE_ERROR:
+            return {
+                ...state,
+                loading: false,
+                error: action.payload.error
+            }
+        case UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS:
+            return {
+                ...state,
+                loading: true,
+            }
+        case UpdateBusinessInfosActionTypes.API_RESPONSE_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                data: action.payload.data
+            }
+        case UpdateBusinessInfosActionTypes.API_RESPONSE_ERROR:
             return {
                 ...state,
                 loading: false,

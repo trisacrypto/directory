@@ -1,4 +1,4 @@
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
@@ -66,6 +66,21 @@ const updateTrixoResponseSuccess = (data) => ({
 
 const updateTrixoResponseError = (error) => ({
     type: UpdateTrixoActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const updateBusinessInfosResponse = (id, businessInfos, setIsOpen) => ({
+    type: UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS,
+    payload: { id, businessInfos, setIsOpen }
+})
+
+export const updateBusinessInfosResponseSuccess = (data) => ({
+    type: UpdateBusinessInfosActionTypes.API_RESPONSE_SUCCESS,
+    payload: { data }
+})
+
+export const updateBusinessInfosResponseError = (error) => ({
+    type: UpdateBusinessInfosActionTypes.API_RESPONSE_ERROR,
     payload: { error }
 })
 

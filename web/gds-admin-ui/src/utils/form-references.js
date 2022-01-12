@@ -32,3 +32,10 @@ export const getTrixoFormInitialValues = (data = []) => {
 
     return result
 }
+
+export const getBusinessInfosFormInitialValues = (data) => ({
+    website: data.vasp.website || "",
+    established_on: data.vasp.established_on || "",
+    vasp_categories: data.vasp.vasp_categories || [],
+    business_category: data.vasp.business_category || ""
+})

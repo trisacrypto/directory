@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Card, Col, Dropdown, Row } from 'react-bootstrap';
+import { Card, Col, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from 'constants/index';
 import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
 import dayjs from 'dayjs';
@@ -11,58 +11,7 @@ import Geographic from './components/Geographic';
 import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
-import { actionType, useModal } from 'contexts/modal';
-import { useSelector } from 'react-redux';
-import { getAllReviewNotes } from 'redux/selectors';
-import VaspDocument from '../VaspDocument';
-import { pdf } from '@react-pdf/renderer';
-import NProgress from 'nprogress'
-
-export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
-    const { dispatch } = useModal()
-    const reviewNotes = useSelector(getAllReviewNotes)
-    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
-
-    const generatePdfDocument = async (filename) => {
-        NProgress.start()
-        try {
-            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
-            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
-            NProgress.done()
-        } catch (error) {
-            console.error('Unable to export as PDF', error)
-            NProgress.done()
-        }
-
-    };
-
-
-    return (
-        <Dropdown className="float-end" align="end">
-            <Dropdown.Toggle
-                data-testid="dripicons-dots-3"
-                variant="link"
-                tag="a"
-                className="card-drop arrow-none cursor-pointer p-0 shadow-none">
-                <i className="dripicons-dots-3"></i>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-                <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
-                    <i className="mdi mdi-card-search me-1"></i>Review
-                </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-square-edit-outline me-1"></i>Edit
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
-                    <i className="mdi mdi-printer me-1"></i>Print
-                </Dropdown.Item>
-                <Dropdown.Item onClick={handleClose}>
-                    <i className="mdi mdi-email me-1"></i>Resend
-                </Dropdown.Item>
-            </Dropdown.Menu>
-        </Dropdown>
-    )
-}
+import BasicDetailsDropDown from './components/BasicDetailsDropdown';
 
 
 function BasicDetails({ data }) {

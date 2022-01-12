@@ -12,6 +12,13 @@ export const UpdateTrixoActionTypes = {
     UPDATE_TRIXO: '@@update_trixo/UPDATE_TRIXO',
 }
 
+export const UpdateBusinessInfosActionTypes = {
+    API_RESPONSE_SUCCESS: '@@update_business_infos/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@update_business_infos/API_RESPONSE_ERROR',
+
+    UPDATE_BUSINESS_INFOS: '@@update_business_infos/UPDATE_BUSINESS_INFOS',
+}
+
 export const FetchReviewNotesActionTypes = {
     API_RESPONSE_SUCCESS: '@@review_notes/API_RESPONSE_SUCCESS',
     API_RESPONSE_ERROR: '@@review_notes/API_RESPONSE_ERROR',
