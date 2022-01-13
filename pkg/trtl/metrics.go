@@ -24,7 +24,7 @@ var (
 	pmAEPushes      *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region
 	pmAEPulls       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
 	pmAEPushVSPull  prometheus.Gauge         // a gauge of objects pushed vs pulled
-
+	pmAEStomps      *prometheus.CounterVec   // count of stomped versions, per peer and region
 )
 
 // A MetricsService manages Prometheus metrics
@@ -140,6 +140,13 @@ func initMetrics() {
 		Name:      "push_vs_pull",
 		Help:      "objects pushed vs pulled",
 	})
+
+	pmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: pmNamespace,
+		Name:      "stomps",
+		Help:      "count of stomped versions, labeled by peer and region",
+	}, []string{"peer", "region"})
+
 }
 
 func registerMetrics() error {
@@ -187,6 +194,10 @@ func registerMetrics() error {
 	}
 	if err := prometheus.Register(pmAEPushVSPull); err != nil {
 		log.Debug().Err(err).Msg("unable to register pmAEPushVSPull")
+		return err
+	}
+	if err := prometheus.Register(pmAEStomps); err != nil {
+		log.Debug().Err(err).Msg("unable to register pmAEStomps")
 		return err
 	}
 	return nil

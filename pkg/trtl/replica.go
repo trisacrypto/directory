@@ -320,6 +320,8 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 						send <- sync
 						updates++
 					}
+					// Update Prometheus metrics
+					pmAEStomps.WithLabelValues(r.conf.Name, r.conf.Region).Inc()
 				}
 
 			case replica.Sync_REPAIR:
