@@ -98,7 +98,7 @@ bayou:
 		}
 
 		// Update prometheus metrics
-		pmSyncs.WithLabelValues(peer.Name, peer.Region).Inc()
+		pmAESyncs.WithLabelValues(peer.Name, peer.Region).Inc()
 	}
 }
 
@@ -387,7 +387,7 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 	// Compute latency in milliseconds
 	// NOTE: we're only tracking latency for successful AE sessions
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmSyncLatency.WithLabelValues(peer.Name).Observe(latency)
+	pmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil
@@ -695,6 +695,13 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 	} else {
 		log.Debug().Msg("anti-entropy complete with no synchronization")
 	}
+
+	// Update Prometheus metrics
+	pmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
+	pmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+	pmAEPushVSPull.Add(float64(updates))
+	pmAEPushVSPull.Sub(float64(repairs))
+
 	return nil
 }
 
