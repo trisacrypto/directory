@@ -52,7 +52,7 @@ func main() {
 	// assumes trtl is already being served (e.g. from the trtl cli)
 	// sim needs the endpoint (e.g. localhost:port) + certs (just stubs for now)
 	// run trtl in insecure mode
-	sim := new(endpoint, insecure)
+	sim := New(endpoint, insecure)
 	simClient, err := sim.connect()
 	if err != nil {
 		log.Fatal(err)
@@ -78,7 +78,7 @@ type Simulator struct {
 	PoolPath string      `yaml:poo_path,omitempty"`  // path to certificate trust chain for client side mTLS
 }
 
-func new(endpoint string, insecure bool) *Simulator {
+func New(endpoint string, insecure bool) *Simulator {
 	// initialize weighted probability selector
 	selector := initialize()
 	sim := &Simulator{
