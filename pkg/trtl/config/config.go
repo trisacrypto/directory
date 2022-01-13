@@ -29,12 +29,6 @@ type Config struct {
 	processed      bool
 }
 
-type MTLSConfig struct {
-	Insecure  bool   `envconfig:"TRTL_INSECURE" default:"false"`
-	ChainPath string `split_words:"true" required:"false"`
-	CertPath  string `split_words:"true" required:"false"`
-}
-
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
@@ -47,6 +41,12 @@ type ReplicaConfig struct {
 	Name           string        `split_words:"true" required:"false"`
 	GossipInterval time.Duration `split_words:"true" default:"1m"`
 	GossipSigma    time.Duration `split_words:"true" default:"5s"`
+}
+
+type MTLSConfig struct {
+	Insecure  bool   `envconfig:"TRTL_INSECURE" default:"false"`
+	ChainPath string `split_words:"true" required:"false"`
+	CertPath  string `split_words:"true" required:"false"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
