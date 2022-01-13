@@ -2,9 +2,9 @@
 import React from 'react'
 import Oval from './Oval'
 
-function OvalLoader({ title }) {
+function OvalLoader({ title, ...rest }) {
     return (
-        <div className='text-center flex flex-column justify-content-center'>
+        <div className='text-center flex flex-column justify-content-center' {...rest}>
             <div>
                 <Oval width="40" height="40" stroke="#6b7280" />
             </div>
