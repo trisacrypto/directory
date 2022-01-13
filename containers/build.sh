@@ -43,7 +43,7 @@ else
     TAG=$1
 fi
 
-# Confirm that we're conitinuing with the tag
+# Confirm that we're continuing with the tag
 if ! ask "Continue with tag $TAG?" N; then
     exit 1
 fi
