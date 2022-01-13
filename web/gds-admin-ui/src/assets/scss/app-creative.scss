@@ -121,7 +121,12 @@ a[disabled] {
     font-weight: 400;
 }
 
-.table-responsive{
-    min-height: 250px;
-    // max-height: 300px;
+.no-pending{
+    position: absolute;
+    max-height: 350px;
+    width: 100%;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    
 }
