@@ -31,3 +31,5 @@ export const VERIFIED_CONTACT_STATUS_LABEL = {
 }
 
 export const AUTH_SESSION_KEY = '__SESSION_TOKEN__'
+
+export const LEGAL_PERSON_NAME_IDENTIFIER_TYPE = ['Unspecified', 'Legal Name', 'Short Name', 'Trading Name']

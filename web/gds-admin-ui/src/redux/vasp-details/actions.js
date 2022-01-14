@@ -1,4 +1,4 @@
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, ReviewVaspActionTypes, UpdateBusinessInfosActionTypes, UpdateIvms101ActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
@@ -15,6 +15,16 @@ const fetchVaspDetailsApiResponseError = (error) => ({
     type: FetchVaspDetailsActionTypes.API_RESPONSE_ERROR,
     payload: { error },
 });
+
+const reviewVaspApiResponse = () => ({
+    type: ReviewVaspActionTypes.REVIEW_VASP,
+    payload: {}
+})
+
+const reviewVaspApiResponseSuccess = (status) => ({
+    type: ReviewVaspActionTypes.API_RESPONSE_SUCCESS,
+    payload: { status }
+})
 
 
 const fetchReviewNotesApiResponse = (vaspId) => ({
@@ -84,5 +94,59 @@ export const updateBusinessInfosResponseError = (error) => ({
     payload: { error }
 })
 
+export const updateTrisaImplementationDetailsResponse = (id, trisa, setIsOpen) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS,
+    payload: { id, trisa, setIsOpen }
+})
 
-export { updateTrixoResponse, updateTrixoResponseSuccess, updateTrixoResponseError, fetchVaspDetailsApiResponse, fetchVaspDetailsApiResponseError, fetchVaspDetailsApiResponseSuccess, createReviewNoteApiResponseSuccess, updateReviewNoteApiResponseSuccess, deleteReviewNoteApiResponse, fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }
+export const updateTrisaImplementationDetailsResponseSuccess = (data) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_SUCCESS,
+    payload: { data }
+})
+
+export const updateTrisaImplementationDetailsResponseError = (error) => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const clearTrisaImplementationDetailsErrorMessage = () => ({
+    type: UpdateTrisaImplementationDetailsActionTypes.CLEAR_ERROR_MESSAGE,
+    payload: {}
+})
+
+export const updateIvms101Response = (id, ivms, setIsOpen) => ({
+    type: UpdateIvms101ActionTypes.UPDATE_IVMS_101,
+    payload: { id, ivms, setIsOpen }
+})
+
+export const updateIvms101ResponseSuccess = (data) => ({
+    type: UpdateIvms101ActionTypes.API_RESPONSE_SUCCESS,
+    payload: { data }
+})
+
+export const updateIvms101ResponseError = (error) => ({
+    type: UpdateIvms101ActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const clearIvms101ErrorMessage = () => ({
+    type: UpdateIvms101ActionTypes.CLEAR_ERROR_MESSAGE,
+    payload: {}
+})
+
+export {
+  reviewVaspApiResponse,
+  reviewVaspApiResponseSuccess,
+  updateTrixoResponse,
+  updateTrixoResponseSuccess,
+  updateTrixoResponseError,
+  fetchVaspDetailsApiResponse,
+  fetchVaspDetailsApiResponseError,
+  fetchVaspDetailsApiResponseSuccess,
+  createReviewNoteApiResponseSuccess,
+  updateReviewNoteApiResponseSuccess,
+  deleteReviewNoteApiResponse,
+  fetchReviewNotesApiResponse,
+  fetchReviewNotesApiResponseError,
+  fetchReviewNotesApiResponseSuccess
+}

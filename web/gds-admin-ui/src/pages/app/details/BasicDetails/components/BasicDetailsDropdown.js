@@ -8,8 +8,12 @@ import React from 'react'
 import { Dropdown, Row } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import { getAllReviewNotes } from 'redux/selectors'
+import { isEditMenuAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
+import Ivms101RecordForm from './Ivms101RecordForm'
+import ReviewForm from './ReviewForm'
+import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
@@ -27,7 +31,6 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
             console.error('Unable to export as PDF', error)
             nProgress.done()
         }
-
     };
 
     return (
@@ -40,27 +43,64 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <i className="dripicons-dots-3"></i>
             </Dropdown.Toggle>
             <Dropdown.Menu>
-                <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
-                    <i className="mdi mdi-card-search me-1"></i>Review
-                </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
-                </Dropdown.Item>
                 <Modal>
                     <ModalOpenButton>
-                        <Dropdown.Item>
-                            <i className="mdi mdi-briefcase-edit me-1"></i>Edit Business Info
+                        <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
+                            <i className="mdi mdi-card-search me-1"></i>Review
                         </Dropdown.Item>
                     </ModalOpenButton>
-                    <ModalContent size="lg">
+                    <ModalContent size="md">
                         <Row className='p-4'>
-                            <BusinessInfosForm data={vasp} />
+                            <ReviewForm />
                         </Row>
                     </ModalContent>
                 </Modal >
-                <Dropdown.Item>
-                    <i className="mdi mdi-network me-1"></i>Edit TRISA Details
-                </ Dropdown.Item>
+
+                {
+                    <>
+                        <Modal>
+                            <ModalOpenButton>
+                                <Dropdown.Item>
+                                    <i className="mdi mdi-briefcase-edit me-1"></i>Edit Business Info
+                                </Dropdown.Item>
+                            </ModalOpenButton>
+                            <ModalContent size="lg">
+                                <Row className='p-4'>
+                                    <BusinessInfosForm data={vasp} />
+                                </Row>
+                            </ModalContent>
+                        </Modal >
+                        {
+                            isEditMenuAvailable(vasp?.vasp?.verification_status) && (
+                                <Modal>
+                                    <ModalOpenButton>
+                                        <Dropdown.Item>
+                                            <i className="mdi mdi-network me-1"></i>Edit TRISA Details
+                                        </Dropdown.Item>
+                                    </ModalOpenButton>
+                                    <ModalContent size="lg">
+                                        <Row className='p-4'>
+                                            <TrisaImplementationDetailsForm data={vasp} />
+                                        </Row>
+                                    </ModalContent>
+                                </Modal >
+                            )
+                        }
+                        <Modal>
+                            <ModalOpenButton>
+                                <Dropdown.Item>
+                                    <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
+                                </Dropdown.Item>
+                            </ModalOpenButton>
+                            <ModalContent size="lg">
+                                <Row className='p-4'>
+                                    <Ivms101RecordForm data={vasp.vasp.entity} />
+                                </Row>
+                            </ModalContent>
+                        </Modal >
+                    </>
+                }
+
                 <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
                     <i className="mdi mdi-printer me-1"></i>Print
                 </Dropdown.Item>

@@ -36,18 +36,31 @@ ask() {
     done
 }
 
-
+# Get the tag as the first argument or from git if none is supplied
 if [ -z "$1" ]; then
     TAG=$(git rev-parse --short HEAD)
 else
     TAG=$1
 fi
 
-
+# Confirm that we're continuing with the tag
 if ! ask "Continue with tag $TAG?" N; then
     exit 1
 fi
 
+# Set some helpful variables
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+REPO=$(realpath "$DIR/..")
+DOTENV="$REPO/.env"
+
+# Load .env file from project root if it exists
+if [ -f $DOTENV ]; then
+    set -o allexport
+    source $DOTENV
+    set +o allexport
+fi
+
+# Check the environment variables
 if [ -z "$REACT_APP_VASPDIRECTORY_CLIENT_ID" ]; then
     echo "REACT_APP_VASPDIRECTORY_CLIENT_ID environment variable required"
     exit 1
@@ -67,12 +80,6 @@ if [ -z "$REACT_APP_TRISATEST_ANALYTICS_ID" ]; then
     echo "REACT_APP_TRISATEST_ANALYTICS_ID environment variable required"
     exit 1
 fi
-
-
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-REPO=$(realpath "$DIR/..")
-
 
 # Build the primary backend images
 docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile $REPO

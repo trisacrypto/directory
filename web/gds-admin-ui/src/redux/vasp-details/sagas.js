@@ -3,7 +3,7 @@ import { call, put, takeEvery } from 'redux-saga/effects'
 import { getReviewNotes, deleteReviewNote as deleteNote } from 'services/review-notes'
 import updateTrixoForm from 'services/trixo'
 import { getVasp, updateVasp } from 'services/vasp'
-import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError, updateBusinessInfosResponseSuccess, updateBusinessInfosResponseError, UpdateBusinessInfosActionTypes } from '.'
+import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError, updateBusinessInfosResponseSuccess, updateBusinessInfosResponseError, UpdateBusinessInfosActionTypes, updateTrisaImplementationDetailsResponseSuccess, updateTrisaImplementationDetailsResponseError, UpdateTrisaImplementationDetailsActionTypes, updateIvms101ResponseError, UpdateIvms101ActionTypes, updateIvms101ResponseSuccess } from '.'
 
 
 function* fetchVaspDetails({ payload: { id, history } }) {
@@ -40,6 +40,30 @@ function* updateBusinessInfos({ payload: { businessInfos, id, setIsOpen } }) {
     } catch (error) {
         yield put(updateBusinessInfosResponseError(error.message))
         console.error('[updateBusinessInfos] error', error.message)
+    }
+}
+
+function* updateTrisaDetails({ payload: { trisa, id, setIsOpen } }) {
+    try {
+        const response = yield call(updateVasp, id, trisa)
+        yield put(updateTrisaImplementationDetailsResponseSuccess(response.data))
+
+        setIsOpen(false)
+    } catch (error) {
+        const errorMessage = error.response && error.response.data ? { message: error.response.data['error'], errorStatus: error.response['status'], statusText: error.response['statusText'] } : 'Something went wrong'
+        yield put(updateTrisaImplementationDetailsResponseError(errorMessage))
+    }
+}
+
+function* updateIvms({ payload: { ivms, id, setIsOpen } }) {
+    try {
+        const response = yield call(updateVasp, id, ivms)
+        yield put(updateIvms101ResponseSuccess(response.data))
+
+        setIsOpen(false)
+    } catch (error) {
+        const errorMessage = error.response && error.response.data ? { message: error.response.data['error'], errorStatus: error.response['status'], statusText: error.response['statusText'] } : 'Something went wrong'
+        yield put(updateIvms101ResponseError(errorMessage))
     }
 }
 
@@ -92,6 +116,14 @@ export function* updateTrixoSaga() {
 
 export function* updateBusinessInfosSaga() {
     yield takeEvery(UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS, updateBusinessInfos)
+}
+
+export function* updateTrisaDetailsSaga() {
+    yield takeEvery(UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS, updateTrisaDetails)
+}
+
+export function* updateIvmsSaga() {
+    yield takeEvery(UpdateIvms101ActionTypes.UPDATE_IVMS_101, updateIvms)
 }
 
 export { vaspDetailsSaga }
