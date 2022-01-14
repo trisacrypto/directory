@@ -16,14 +16,16 @@ import * as yup from "yup";
 
 
 const schema = yup.object().shape({
-    website: yup.string().url("website should be a valid url").trim().required()
+    website: yup.string().url("website should be a valid url").trim().required(),
+    established_on: yup.date().typeError("Date of Incorporation/Establishment should be a valid date").required()
 })
 
 
 function BusinessInfosForm({ data }) {
     const { register, handleSubmit, formState: { errors, dirtyFields } } = useForm({
         defaultValues: getBusinessInfosFormInitialValues(data),
-        resolver: yupResolver(schema)
+        resolver: yupResolver(schema),
+        mode: 'onChange'
     })
     const params = useParams()
     const dispatch = useDispatch()
@@ -35,7 +37,6 @@ function BusinessInfosForm({ data }) {
             safeDispatch(updateBusinessInfosResponse(params.id, data, setIsOpen))
         }
     }
-
 
     return (
         <>
@@ -56,8 +57,9 @@ function BusinessInfosForm({ data }) {
                         Date of Incorporation/Establishment
                     </Form.Label>
                     <Col sm="12">
-                        <Field.Input type="date" register={register} name="established_on" />
+                        <Field.Input isInvalid={!!errors['established_on']} isValid={dirtyFields['established_on'] && !errors['established_on']} type="date" register={register} name="established_on" />
                     </Col>
+                    {errors['established_on'] && <Form.Control.Feedback type='invalid' className='d-block'>{errors['established_on'].message}</Form.Control.Feedback>}
                 </Form.Group>
                 <Form.Group as={Row} className="mb-2" controlId='business_category'>
                     <Form.Label column sm="12" className="fw-normal">
