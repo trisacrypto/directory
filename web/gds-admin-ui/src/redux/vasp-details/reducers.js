@@ -1,5 +1,5 @@
 import produce from "immer";
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const INITIAL_STATE = {
@@ -46,11 +46,13 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
                 error: action.payload.error
             }
         case UpdateBusinessInfosActionTypes.UPDATE_BUSINESS_INFOS:
+        case UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS:
             return {
                 ...state,
                 loading: true,
             }
         case UpdateBusinessInfosActionTypes.API_RESPONSE_SUCCESS:
+        case UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_SUCCESS:
             return {
                 ...state,
                 loading: false,
@@ -61,6 +63,18 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
                 ...state,
                 loading: false,
                 error: action.payload.error
+            }
+        case UpdateTrisaImplementationDetailsActionTypes.API_RESPONSE_ERROR:
+            return {
+                ...state,
+                loading: false,
+                trisaError: { message: action.payload.error.message, status: action.payload.error.errorStatus, statusText: action.payload.error.statusText }
+            }
+        case UpdateTrisaImplementationDetailsActionTypes.CLEAR_ERROR_MESSAGE:
+            return {
+                ...state,
+                loading: false,
+                trisaError: null
             }
         default:
             return state

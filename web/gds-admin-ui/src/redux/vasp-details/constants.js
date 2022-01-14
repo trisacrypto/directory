@@ -19,6 +19,14 @@ export const UpdateBusinessInfosActionTypes = {
     UPDATE_BUSINESS_INFOS: '@@update_business_infos/UPDATE_BUSINESS_INFOS',
 }
 
+export const UpdateTrisaImplementationDetailsActionTypes = {
+    API_RESPONSE_SUCCESS: '@@update_trisa_details/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@update_trisa_details/API_RESPONSE_ERROR',
+
+    UPDATE_TRISA_DETAILS: '@@update_trisa_details/UPDATE_TRISA_DETAILS',
+    CLEAR_ERROR_MESSAGE: '@@update_trisa_details/CLEAR_ERROR_MESSAGE'
+}
+
 export const FetchReviewNotesActionTypes = {
     API_RESPONSE_SUCCESS: '@@review_notes/API_RESPONSE_SUCCESS',
     API_RESPONSE_ERROR: '@@review_notes/API_RESPONSE_ERROR',

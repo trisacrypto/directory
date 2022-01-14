@@ -8,8 +8,10 @@ import React from 'react'
 import { Dropdown, Row } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import { getAllReviewNotes } from 'redux/selectors'
+import { isEditMenuAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
+import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
@@ -27,7 +29,6 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
             console.error('Unable to export as PDF', error)
             nProgress.done()
         }
-
     };
 
     return (
@@ -43,24 +44,43 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
                     <i className="mdi mdi-card-search me-1"></i>Review
                 </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
-                </Dropdown.Item>
-                <Modal>
-                    <ModalOpenButton>
+
+                {
+                    <>
+                        <Modal>
+                            <ModalOpenButton>
+                                <Dropdown.Item>
+                                    <i className="mdi mdi-briefcase-edit me-1"></i>Edit Business Info
+                                </Dropdown.Item>
+                            </ModalOpenButton>
+                            <ModalContent size="lg">
+                                <Row className='p-4'>
+                                    <BusinessInfosForm data={vasp} />
+                                </Row>
+                            </ModalContent>
+                        </Modal >
+                        {
+                            isEditMenuAvailable(vasp?.vasp?.verification_status) && (
+                                <Modal>
+                                    <ModalOpenButton>
+                                        <Dropdown.Item>
+                                            <i className="mdi mdi-network me-1"></i>Edit TRISA Details
+                                        </Dropdown.Item>
+                                    </ModalOpenButton>
+                                    <ModalContent size="lg">
+                                        <Row className='p-4'>
+                                            <TrisaImplementationDetailsForm data={vasp} />
+                                        </Row>
+                                    </ModalContent>
+                                </Modal >
+                            )
+                        }
                         <Dropdown.Item>
-                            <i className="mdi mdi-briefcase-edit me-1"></i>Edit Business Info
+                            <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
                         </Dropdown.Item>
-                    </ModalOpenButton>
-                    <ModalContent size="lg">
-                        <Row className='p-4'>
-                            <BusinessInfosForm data={vasp} />
-                        </Row>
-                    </ModalContent>
-                </Modal >
-                <Dropdown.Item>
-                    <i className="mdi mdi-network me-1"></i>Edit TRISA Details
-                </ Dropdown.Item>
+                    </>
+                }
+
                 <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
                     <i className="mdi mdi-printer me-1"></i>Print
                 </Dropdown.Item>
