@@ -11,6 +11,7 @@ import { getAllReviewNotes } from 'redux/selectors'
 import { isEditMenuAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
+import Ivms101RecordForm from './Ivms101RecordForm'
 import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
@@ -75,9 +76,18 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                                 </Modal >
                             )
                         }
-                        <Dropdown.Item>
-                            <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
-                        </Dropdown.Item>
+                        <Modal>
+                            <ModalOpenButton>
+                                <Dropdown.Item>
+                                    <i className="mdi mdi-office-building me-1"></i>Edit IVMS 101 Record
+                                </Dropdown.Item>
+                            </ModalOpenButton>
+                            <ModalContent size="lg">
+                                <Row className='p-4'>
+                                    <Ivms101RecordForm data={vasp.vasp.entity} />
+                                </Row>
+                            </ModalContent>
+                        </Modal >
                     </>
                 }
 

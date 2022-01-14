@@ -27,6 +27,14 @@ export const UpdateTrisaImplementationDetailsActionTypes = {
     CLEAR_ERROR_MESSAGE: '@@update_trisa_details/CLEAR_ERROR_MESSAGE'
 }
 
+export const UpdateIvms101ActionTypes = {
+    API_RESPONSE_SUCCESS: '@@update_ivms_101/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@update_ivms_101/API_RESPONSE_ERROR',
+
+    UPDATE_IVMS_101: '@@update_ivms_101/UPDATE_IVMS_101',
+    CLEAR_ERROR_MESSAGE: '@@update_ivms_101/CLEAR_ERROR_MESSAGE'
+}
+
 export const FetchReviewNotesActionTypes = {
     API_RESPONSE_SUCCESS: '@@review_notes/API_RESPONSE_SUCCESS',
     API_RESPONSE_ERROR: '@@review_notes/API_RESPONSE_ERROR',

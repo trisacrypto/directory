@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Health
+                    Movies
                      
                     <br />
-                    Industrial
+                    Automotive
                      
                     <br />
                     23
                      
-                    Steuber Knolls
+                    Dach Bypass
                     <br />
-                    Everett
+                    Shoreline
                      
                     
                      
                     MA
                      
-                    70945
+                    67323-0204
                       
                     <br />
                     US
