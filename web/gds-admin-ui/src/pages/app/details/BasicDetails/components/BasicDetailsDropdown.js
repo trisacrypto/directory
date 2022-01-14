@@ -12,6 +12,7 @@ import { isEditMenuAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
 import Ivms101RecordForm from './Ivms101RecordForm'
+import ReviewForm from './ReviewForm'
 import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
@@ -42,9 +43,18 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <i className="dripicons-dots-3"></i>
             </Dropdown.Toggle>
             <Dropdown.Menu>
-                <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
-                    <i className="mdi mdi-card-search me-1"></i>Review
-                </Dropdown.Item>
+                <Modal>
+                    <ModalOpenButton>
+                        <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
+                            <i className="mdi mdi-card-search me-1"></i>Review
+                        </Dropdown.Item>
+                    </ModalOpenButton>
+                    <ModalContent size="md">
+                        <Row className='p-4'>
+                            <ReviewForm />
+                        </Row>
+                    </ModalContent>
+                </Modal >
 
                 {
                     <>

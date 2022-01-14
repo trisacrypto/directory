@@ -1,4 +1,4 @@
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateBusinessInfosActionTypes, UpdateIvms101ActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
+import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, ReviewVaspActionTypes, UpdateBusinessInfosActionTypes, UpdateIvms101ActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
 import { FetchVaspDetailsActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
@@ -15,6 +15,16 @@ const fetchVaspDetailsApiResponseError = (error) => ({
     type: FetchVaspDetailsActionTypes.API_RESPONSE_ERROR,
     payload: { error },
 });
+
+const reviewVaspApiResponse = () => ({
+    type: ReviewVaspActionTypes.REVIEW_VASP,
+    payload: {}
+})
+
+const reviewVaspApiResponseSuccess = (status) => ({
+    type: ReviewVaspActionTypes.API_RESPONSE_SUCCESS,
+    payload: { status }
+})
 
 
 const fetchReviewNotesApiResponse = (vaspId) => ({
@@ -124,7 +134,19 @@ export const clearIvms101ErrorMessage = () => ({
     payload: {}
 })
 
-
-
-
-export { updateTrixoResponse, updateTrixoResponseSuccess, updateTrixoResponseError, fetchVaspDetailsApiResponse, fetchVaspDetailsApiResponseError, fetchVaspDetailsApiResponseSuccess, createReviewNoteApiResponseSuccess, updateReviewNoteApiResponseSuccess, deleteReviewNoteApiResponse, fetchReviewNotesApiResponse, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess }
+export {
+  reviewVaspApiResponse,
+  reviewVaspApiResponseSuccess,
+  updateTrixoResponse,
+  updateTrixoResponseSuccess,
+  updateTrixoResponseError,
+  fetchVaspDetailsApiResponse,
+  fetchVaspDetailsApiResponseError,
+  fetchVaspDetailsApiResponseSuccess,
+  createReviewNoteApiResponseSuccess,
+  updateReviewNoteApiResponseSuccess,
+  deleteReviewNoteApiResponse,
+  fetchReviewNotesApiResponse,
+  fetchReviewNotesApiResponseError,
+  fetchReviewNotesApiResponseSuccess
+}

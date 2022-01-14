@@ -56,3 +56,8 @@ export const UpdateReviewNotesActionTypes = {
 export const CreateReviewNoteActionTypes = {
     API_RESPONSE_SUCCESS: '@@create_review_notes/API_RESPONSE_SUCCESS',
 }
+
+export const ReviewVaspActionTypes = {
+    API_RESPONSE_SUCCESS: '@@review_vasp/API_RESPONSE_SUCCESS',
+    REVIEW_VASP: '@@review_vasp/REVIEW_VASP',
+}
