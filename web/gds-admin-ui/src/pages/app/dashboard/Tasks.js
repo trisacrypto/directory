@@ -5,25 +5,16 @@ import dayjs from 'dayjs';
 import { StatusLabel } from 'constants/index';
 import TrisaFavicon from 'assets/images/trisa_favicon.png'
 import CiphertraceFavicon from 'assets/images/ciphertrace.ico'
-import PropTypes from 'prop-types';
 import SimpleBar from 'simplebar-react';
-
+import PropTypes from 'prop-types';
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { actionType, useModal } from 'contexts/modal';
 import OvalLoader from 'components/OvalLoader';
+import NoData from 'components/NoData';
 dayjs.extend(relativeTime)
 
 
-const NoData = () => {
-    return (
-        <div className='text-center no-pending'>
-            <h5>No data</h5>
-            <p>
-                No available pending registrations
-            </p>
-        </div>
-    )
-}
+
 
 const PendingReviewsTable = ({ data }) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });
@@ -36,16 +27,16 @@ const PendingReviewsTable = ({ data }) => {
     }
 
     return (
-        <SimpleBar>
+        <SimpleBar style={{ maxHeight: 350 }}>
             <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                 <tbody>
                     {
                         data?.map(vasp => (
-                            <tr key={vasp.id} className=''>
+                            <tr key={vasp.id}>
                                 <td onClick={() => history.push(`/vasps/${vasp?.id}`)} className="d-flex gap-2 align-items-center" role="button">
                                     <div>
                                         {
-                                            vasp?.traveler ? <img src={CiphertraceFavicon} width="30" alt="Cyphertrace" /> : <img src={TrisaFavicon} width="30" className="img-fluid" alt="Trisa" />
+                                            vasp?.traveler ? <img src={CiphertraceFavicon} width="30" alt="CipherTrace" /> : <img src={TrisaFavicon} width="30" className="img-fluid" alt="TRISA" />
                                         }
                                     </div>
                                     <div>
@@ -90,7 +81,7 @@ const PendingReviewsTable = ({ data }) => {
     )
 }
 
-const Tasks = ({ data, error, isLoading }) => {
+const Tasks = ({ data, isLoading }) => {
 
     if (isLoading || !data) {
         return (
@@ -111,7 +102,7 @@ const Tasks = ({ data, error, isLoading }) => {
                     (isLoading || !data) && <OvalLoader />
                 }
                 {
-                    !data?.vasps?.length ? <NoData /> : <PendingReviewsTable data={data?.vasps} />
+                    !data?.vasps?.length ? <NoData title='No available pending registrations' /> : <PendingReviewsTable data={data?.vasps} />
                 }
             </Card.Body>
         </Card>
