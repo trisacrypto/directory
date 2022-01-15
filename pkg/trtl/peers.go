@@ -119,7 +119,8 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 	out = &peers.PeersList{
 		Peers: make([]*peers.Peer, 0),
 		Status: &peers.PeersStatus{
-			Regions: make(map[string]int64),
+			Regions:             make(map[string]int64),
+			LastSynchronization: p.parent.replica.lastSynchronization(),
 		},
 	}
 

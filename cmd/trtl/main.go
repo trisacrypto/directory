@@ -1,9 +1,10 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -163,6 +164,35 @@ func main() {
 					Name:    "meta",
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
+				},
+			},
+		},
+		{
+			Name:     "db:list",
+			Usage:    "list all of the keys in the trtl database",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   dbList,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "namespace",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespace as a string (optional)",
+				},
+				&cli.StringFlag{
+					Name:    "prefix",
+					Aliases: []string{"p"},
+					Usage:   "specify a prefix of keys to list (optional)",
+				},
+				&cli.StringFlag{
+					Name:    "seek-key",
+					Aliases: []string{"s", "seek"},
+					Usage:   "specify a key to seek to before iterating (optional)",
+				},
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the prefix/seek key as base64 encoded values which must be decoded",
 				},
 			},
 		},
@@ -385,13 +415,15 @@ func serve(c *cli.Context) (err error) {
 
 // validate checks the current trtl configuration and prints the status.
 func validate(c *cli.Context) (err error) {
-	// TODO: load and validate the trtl configuration
-	fmt.Println("trtl config is valid; ready to serve")
-	return nil
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(conf)
 }
 
 //===========================================================================
-// Client Functions
+// Initialization Functions
 //===========================================================================
 
 var dbClient pb.TrtlClient
@@ -425,21 +457,23 @@ func initPeersClient(c *cli.Context) (err error) {
 	return nil
 }
 
-// status prints the status of the trtl service.
-func status(c *cli.Context) (err error) {
-	// TODO: call the trtl status RPC once implemented
-	return cli.Exit("trtl status not implemented", 1)
-}
+//===========================================================================
+// Trtl (DB) Client Functions
+//===========================================================================
 
 // dbGet prints values from the trtl database given a set of keys.
 func dbGet(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
+	ctx, cancel := profile.Context()
+	defer cancel()
+
 	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
 			return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
 		}
 
+		// Execute the Get request
 		var resp *pb.GetReply
 		req := &pb.GetRequest{
 			Key: key,
@@ -447,29 +481,26 @@ func dbGet(c *cli.Context) (err error) {
 				ReturnMeta: c.Bool("meta"),
 			},
 		}
-		if resp, err = dbClient.Get(context.TODO(), req); err != nil {
+		if resp, err = dbClient.Get(ctx, req); err != nil {
 			return cli.Exit(err, 1)
 		}
 
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the response using the protojson printer and add a newline after.
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
+		fmt.Println("")
 	}
 	return nil
 }
 
 // dbPut puts a value to to a key in the trtl database
 func dbPut(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Execute the Put request
 	var resp *pb.PutReply
 	req := &pb.PutRequest{
 		Key:       []byte(c.String("key")),
@@ -479,35 +510,30 @@ func dbPut(c *cli.Context) (err error) {
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
-	if resp, err = dbClient.Put(context.TODO(), req); err != nil {
+	if resp, err = dbClient.Put(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 	if resp.Success {
-		fmt.Printf("successfully put value %s to key %s", req.Value, req.Key)
+		fmt.Printf("successfully put value %s to key %s\n", req.Value, req.Key)
 	} else {
-		fmt.Printf("could not put value %s to key %s", req.Value, req.Key)
+		fmt.Printf("could not put value %s to key %s\n", req.Value, req.Key)
 	}
 	if resp.Meta != nil {
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the response
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
 	}
-
 	return nil
 }
 
 // dbDelete deletes a key in the trtl database
 func dbDelete(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Execute the Put request
 	var resp *pb.DeleteReply
 	req := &pb.DeleteRequest{
 		Key:       []byte(c.String("key")),
@@ -516,32 +542,85 @@ func dbDelete(c *cli.Context) (err error) {
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
-	if resp, err = dbClient.Delete(context.TODO(), req); err != nil {
+	if resp, err = dbClient.Delete(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 	if resp.Success {
-		fmt.Printf("successfully deleted key %s", req.Key)
+		fmt.Printf("successfully deleted key %s\n", req.Key)
 	} else {
-		fmt.Printf("could not delete key %s", req.Key)
+		fmt.Printf("could not delete key %s\n", req.Key)
 	}
 	if resp.Meta != nil {
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the protocol buffer response as JSON
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
 	}
 
 	return nil
 }
+
+// dbList lists all the keys in the trtl database
+func dbList(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Create a cursor request that returns no values, just keys in the specified namespace
+	req := &pb.CursorRequest{
+		Namespace: c.String("namespace"),
+		Options: &pb.Options{
+			IterNoValues: true,
+		},
+	}
+
+	b64decode := c.Bool("b64decode")
+	if prefix := c.String("prefix"); prefix != "" {
+		if req.Prefix, err = wire.DecodeKey(prefix, b64decode); err != nil {
+			return cli.Exit(fmt.Errorf("could not decode prefix: %s", err), 1)
+		}
+	}
+
+	if seekKey := c.String("seek-key"); seekKey != "" {
+		if req.SeekKey, err = wire.DecodeKey(seekKey, b64decode); err != nil {
+			return cli.Exit(fmt.Errorf("could not decode seek-key: %s", err), 1)
+		}
+	}
+
+	var stream pb.Trtl_CursorClient
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err != io.EOF {
+				return cli.Exit(err, 1)
+			}
+			break
+		}
+
+		fmt.Println(wire.EncodeKey(rep.Key, b64decode))
+	}
+	return nil
+}
+
+// status prints the status of the trtl service.
+func status(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *pb.ServerStatus
+	if rep, err = dbClient.Status(ctx, &pb.HealthCheck{}); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(rep)
+}
+
+//===========================================================================
+// Peers (Replica) Client Functions
+//===========================================================================
 
 // addPeers creates a Peer and calls the peers management service to add it.
 func addPeers(c *cli.Context) (err error) {
@@ -616,6 +695,10 @@ func listPeers(c *cli.Context) (err error) {
 	printJSON(out)
 	return nil
 }
+
+//===========================================================================
+// Anti-Entropy (Replica) Admin Functions
+//===========================================================================
 
 func gossip(c *cli.Context) (err error) {
 	return errors.New("honu replication required")
@@ -730,19 +813,26 @@ func loadProfile(c *cli.Context) (err error) {
 }
 
 // helper function to print JSON response and exit
-func printJSON(m proto.Message) error {
-	opts := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
+func printJSON(m interface{}) (err error) {
+	var data []byte
 
-	data, err := opts.Marshal(m)
-	if err != nil {
-		return cli.Exit(err, 1)
+	switch msg := m.(type) {
+	case proto.Message:
+		opts := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		if data, err = opts.Marshal(msg); err != nil {
+			return cli.Exit(err, 1)
+		}
+	default:
+		if data, err = json.MarshalIndent(m, "", "  "); err != nil {
+			return cli.Exit(err, 1)
+		}
 	}
 
 	fmt.Println(string(data))

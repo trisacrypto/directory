@@ -42,6 +42,7 @@ type Server struct {
 	peers   *PeerService    // Service for managing remote peers
 	replica *ReplicaService // Service that handles anti-entropy replication
 	metrics *MetricsService // Service for Prometheus metrics
+	started time.Time       // The timestamp that the server was started (for uptime)
 	echan   chan error      // Channel for receiving errors from the gRPC server
 }
 
@@ -145,6 +146,7 @@ func (t *Server) Serve() (err error) {
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
+	// ? should metrics be enabled even if we're in maintenance mode?
 	if t.conf.MetricsEnabled {
 		t.metrics.Serve(t.conf.MetricsAddr)
 	} else {
@@ -161,6 +163,9 @@ func (t *Server) Serve() (err error) {
 	// Run the gRPC server
 	go t.Run(sock)
 	log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
+
+	// Set the timestamp that the server was started now that it is booted up
+	t.started = time.Now()
 
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
@@ -187,9 +192,11 @@ func (t *Server) Shutdown() (err error) {
 	t.srv.GracefulStop()
 
 	// Shutdown the Prometheus metrics server
-	if err = t.metrics.Shutdown(); err != nil {
-		log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
-		errs = append(errs, err)
+	if t.conf.MetricsEnabled {
+		if err = t.metrics.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
+			errs = append(errs, err)
+		}
 	}
 
 	// Stop the anti-entropy routine.
@@ -198,9 +205,12 @@ func (t *Server) Shutdown() (err error) {
 		errs = append(errs, err)
 	}
 
-	if err = t.db.Close(); err != nil {
-		log.Error().Err(err).Msg("could not close database")
-		errs = append(errs, err)
+	// If we're in maintenance mode db will be nil, so check if available to avoid panic
+	if t.db != nil {
+		if err = t.db.Close(); err != nil {
+			log.Error().Err(err).Msg("could not close database")
+			errs = append(errs, err)
+		}
 	}
 
 	if len(errs) > 0 {
