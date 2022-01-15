@@ -3,6 +3,7 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"time"
 
@@ -646,4 +647,9 @@ func (h *TrtlService) uptime() string {
 		return time.Since(h.parent.started).String()
 	}
 	return "unknown"
+}
+
+// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
+func b64e(src []byte) string {
+	return base64.RawURLEncoding.EncodeToString(src)
 }

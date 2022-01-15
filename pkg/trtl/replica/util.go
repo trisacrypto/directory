@@ -1,4 +1,4 @@
-package trtl
+package replica
 
 import (
 	"encoding/base64"
