@@ -24,6 +24,7 @@ type Service struct {
 	sync.RWMutex
 	replica.UnimplementedReplicationServer
 	conf                 config.ReplicaConfig
+	mtls                 config.MTLSConfig
 	db                   *honu.DB
 	aestop               chan struct{}
 	synchronized         time.Time
@@ -33,13 +34,14 @@ type Service struct {
 // New creates a new replica.Service that is completely decoupled from the trtl.Server.
 // This breaks the pattern of the PeersService, MetricsService, and TrtlService but
 // allows replication to be completely encapsulated in a single package.
-func New(conf config.ReplicaConfig, db *honu.DB, replicatedNamespaces []string) (*Service, error) {
+func New(conf config.Config, db *honu.DB, replicatedNamespaces []string) (*Service, error) {
 	if err := conf.Validate(); err != nil {
 		return nil, err
 	}
 
 	return &Service{
-		conf:                 conf,
+		conf:                 conf.Replica,
+		mtls:                 conf.MTLS,
 		db:                   db,
 		aestop:               make(chan struct{}),
 		replicatedNamespaces: replicatedNamespaces,
@@ -58,7 +60,7 @@ func (r *Service) Shutdown() error {
 // Gossip (server-side) Methods
 //===========================================================================
 
-// Gossip implements biltateral anti-entropy: during a Gossip session the initiating
+// Gossip implements bilateral anti-entropy: during a Gossip session the initiating
 // replica pushes updates to the remote peer and pulls requested changes. Using
 // bidirectional streaming, the initiating peer sends data-less sync messages with
 // the versions of objects it stores locally. The remote replica then responds with

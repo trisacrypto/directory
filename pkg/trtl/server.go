@@ -112,7 +112,7 @@ func New(conf config.Config) (s *Server, err error) {
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
 	// Initialize the Replica service
-	if s.replica, err = replica.New(s.conf.Replica, s.db, replicatedNamespaces); err != nil {
+	if s.replica, err = replica.New(s.conf, s.db, replicatedNamespaces); err != nil {
 		return nil, err
 	}
 	replication.RegisterReplicationServer(s.srv, s.replica)
