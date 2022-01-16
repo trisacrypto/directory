@@ -403,7 +403,8 @@ gossip:
 				// Even if the error is not found, since this routine is the
 				// initiator, it will return an error for a check request because
 				// we do not want to bounce check requests back and forth. E.g.
-				// check requests only initiate from the Pull routine.
+				// check requests only initiate from the "pull" routine (phase 1
+				// locally, and phase 2 on the remote).
 				sync.Status = replica.Sync_ERROR
 				sync.Error = err.Error()
 				sender.Send(sync)
@@ -430,7 +431,7 @@ gossip:
 			// concurrent Put (a stomp) or concurrent syncrhonization updated it.
 			// NOTE: honu.Update performs the version checking in a transaction.
 			if err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
-				log.Error().Err(err).
+				log.Warn().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
 					Msg("could not update object from remote peer")
@@ -463,7 +464,11 @@ gossip:
 				log.Debug().Msg("anti-entropy complete with no synchronization")
 			}
 
+			// When we receive the COMPLETE message from the remote replica, we're done:
+			// exit the for loop and close the sender (via the defer above). Once all
+			// messages are sent, we can close the stream and finish.
 			return
+
 		default:
 			log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
 		}
