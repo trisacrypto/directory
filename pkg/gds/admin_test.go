@@ -135,6 +135,8 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"reviews", http.MethodGet, "/v2/reviews", true, false},
 		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
+		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
+		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
 		// Authenticated and CSRF protected endpoints
 		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},
@@ -642,7 +644,6 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.LoadSmallFixtures()
 	defer s.ResetSmallFixtures()
 
-	require := s.Require()
 	a := s.svc.GetAdmin()
 
 	// Attempt to update a VASP that doesn't exist
@@ -670,7 +671,6 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	request.in = &admin.UpdateVASPRequest{VASP: "bce77e90-82e0-4685-8139-6ec5d4b83615"}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
-	require.Equal(http.StatusBadRequest, rep.StatusCode)
 	s.APIError(http.StatusBadRequest, "the request ID does not match the URL endpoint", rep)
 
 	// Test an update with no changes returns a 400 error
@@ -692,6 +692,61 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	// TODO: Test common name-only change with correct endpoint is successful
 	// TODO: Test endpoint-only change with change to common name is successful
 	// TODO: Test common name and endpoint change is successful
+}
+
+func (s *gdsTestSuite) TestDeleteVASP() {
+	s.LoadFullFixtures()
+	defer s.ResetFullFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	deltaID := s.fixtures[vasps]["delta"].(*pb.VASP).Id
+	julietID := s.fixtures[vasps]["juliet"].(*pb.VASP).Id
+	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
+	golfID := s.fixtures[vasps]["golfbucks"].(*pb.VASP).Id
+
+	// Attempt to delete a VASP that doesn't exist
+	request := &httpRequest{
+		method: http.MethodDelete,
+		path:   "/v2/vasps/invalid",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.DeleteVASP, c, w, nil)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
+
+	// VASP is in an invalid state for deletion
+	request.path = "/v2/vasps/" + deltaID
+	request.params["vaspID"] = deltaID
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteVASP, c, w, nil)
+	s.APIError(http.StatusBadRequest, "cannot delete VASP in its current state", rep)
+
+	// Successfully deleting a VASP and its certificate requests
+	request.path = "/v2/vasps/" + julietID
+	request.params["vaspID"] = julietID
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	_, err := s.svc.GetStore().RetrieveVASP(julietID)
+	require.Error(err)
+	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
+	require.Error(err)
+
+	// Make sure we can also delete a VASP in the ERRORED state
+	request.path = "/v2/vasps/" + golfID
+	request.params["vaspID"] = golfID
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	_, err = s.svc.GetStore().RetrieveVASP(golfID)
+	require.Error(err)
 }
 
 // Test the CreateReviewNote endpoint.

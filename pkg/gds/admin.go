@@ -175,6 +175,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("", s.ListVASPs)
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
+			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
@@ -1224,6 +1225,58 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	// modifications to its certificate requests. If the VASP is not saved after this
 	// method, it could lead to an inconsistency that needs to be repaired manually.
 	return true, http.StatusOK, nil
+}
+
+// DeleteVASP removes a VASP and its associated certificate requests if and only if the
+// VASP verification status is in PENDING_REVIEW or earlier or ERRORED.
+func (s *Admin) DeleteVASP(c *gin.Context) {
+	var (
+		vaspID     string
+		vasp       *pb.VASP
+		certReqIDs []string
+		err        error
+	)
+
+	vaspID = c.Param("vaspID")
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Only allow deletions if the VASP has not been reviewed yet
+	if vasp.VerificationStatus > pb.VerificationState_PENDING_REVIEW && vasp.VerificationStatus < pb.VerificationState_ERRORED {
+		log.Warn().Str("status", vasp.VerificationStatus.String()).Msg("VASP is in invalid state for deletion")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("cannot delete VASP in its current state"))
+		return
+	}
+
+	// Retrieve the associated certificate requests
+	if certReqIDs, err = models.GetCertReqIDs(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve certificate request IDs for VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate requests for VASP"))
+		return
+	}
+
+	// Delete the certificate requests
+	for _, id := range certReqIDs {
+		if err = s.db.DeleteCertReq(id); err != nil {
+			log.Warn().Err(err).Str("certreq_id", id).Msg("could not delete certificate request")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete associated certificate request"))
+			return
+		}
+	}
+
+	// Delete the VASP object to finalize the VASP deletion
+	if err = s.db.DeleteVASP(vaspID); err != nil {
+		log.Error().Err(err).Msg("could not delete VASP from database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
 }
 
 // CreateReviewNote creates a new review note given the vaspID param and a CreateReviewNoteRequest.
