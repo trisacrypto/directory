@@ -65,7 +65,7 @@ $ docker compose -f ./containers/docker-compose.yaml --profile=all up
 
 ## CLI Tools
 
-There are several CLI helper tools within the repository designed to make it easier to test out the RPCs and experiment locally. The code for these CLI tools is contained in the `cmd` folder. (*Note: CLI tools are not maintained to the same degree as the rest of the codebase; if you notice any odd behavior, don't hesitate to ask.)
+There are several CLI helper tools within the repository designed to make it easier to test out the RPCs and experiment locally. The code for these CLI tools is contained in the `cmd` folder. (*Note: CLI tools are not maintained to the same degree as the rest of the codebase; if you notice any odd behavior, don't hesitate to ask.*)
 
 ### GDS CLI
 
