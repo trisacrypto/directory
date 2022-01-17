@@ -62,3 +62,82 @@ Finally, to run the services:
 ```
 $ docker compose -f ./containers/docker-compose.yaml --profile=all up
 ```
+
+## CLI Tools
+
+There are several CLI helper tools within the repository designed to make it easier to test out the RPCs and experiment locally. The code for these CLI tools is contained in the `cmd` folder. (*Note: CLI tools are not maintained to the same degree as the rest of the codebase; if you notice any odd behavior, don't hesitate to ask.*)
+
+### GDS CLI
+
+This program will allow you to interact with the TRISA global directory service (GDS) and some GDS Admin RPCs experimentally (e.g. looking up a VASP, reviewing a certificate request).
+
+To install the GDS CLI, run this from the project root:
+
+```bash
+go install ./cmd/gds
+```
+
+### GDS Utils CLI
+
+This program provides utilities for operating the GDS service and database.
+
+To install the GDS Utils CLI, run this from the project root:
+
+```bash
+go install ./cmd/gdsutil
+```
+
+### Trtl CLI
+
+This program provides tools for interacting with the Trtl data replication service.
+
+To install the Trtl CLI, run this from the project root:
+
+```bash
+go install ./cmd/trtl
+```
+
+
+## Configuration
+
+Server side configuration is done with the environment. Please see the instructions in the .env.template file for creating a local .env file to get started with development.
+
+### Profiles
+
+Client-side configuration is setup using profiles. A profile is a set of related configurations for both development and production. For example, the default environments are "production" to connect to vaspdirectory.net, "testnet" to connect to trisatest.net, and "localhost" to connect to locally running development servers. The profiles are configured in a YAML file that is stored in an OS-specific configuration directory.
+
+You must first install the CLI Tools described in the section above. After that, install the profiles helper tools:
+
+
+```
+$ gds profiles --install
+$ gdsutil profiles --install
+$ trtl profiles --install
+```
+
+This will create YAML files in your OS-specific configuration directory. To view the path of the configuration files (e.g. for the GDS tool):
+
+```
+$ gds profiles --path
+```
+
+Basic usage is as follows:
+
+1. `gds profiles` - show the configuration of the currently active profile
+2. `gds profiles --list` - show a list of available profiles
+3. `gds profiles --activate [name]` - activate the specified profile and use it
+4. `gds profiles --edit` - edit the profiles using a command line editor
+
+The easiest way to edit the profiles is to use `gds profiles --edit`, which will use the editor specified in the environment variable `$EDITOR`, or search for an editor in your `PATH` if none is specified. You must use a command line editor, e.g. `vim`, `emacs`, or `nano` so that the profile editor can verify the contents of the profiles before saving it.
+
+If you would like to specify a different editor on the command line but do not want to set the `$EDITOR` environment variable, you can use a command-specific environment:
+
+```
+$ EDITOR=nano gds profiles --edit
+```
+
+If you would like to edit the profiles using VSCode or a GUI based editor, use the following command (note there will be no verification of correctness using this method):
+
+```
+$ code "$(gds profiles --path)"
+```
