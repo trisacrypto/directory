@@ -418,6 +418,20 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:delete",
+				Usage:    "delete a VASP detail record by id",
+				Category: "admin",
+				Action:   adminDeleteVASP,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+				},
+			},
+			{
 				Name:     "admin:notes",
 				Usage:    "list notes associated with a VASP",
 				Category: "admin",
@@ -992,6 +1006,23 @@ func adminUpdateVASP(c *cli.Context) (err error) {
 
 	var rep *admin.UpdateVASPReply
 	if rep, err = adminClient.UpdateVASP(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminDeleteVASP(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		cli.Exit("must specify VASP ID (--id)", 1)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.DeleteVASP(ctx, vaspID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
