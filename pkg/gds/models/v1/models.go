@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -177,6 +178,13 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 
 // NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
 func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
+	var (
+		organizationName    string
+		localityName        string
+		stateOrProvinceName string
+		countryName         string
+	)
+
 	if vasp == nil {
 		return nil, errors.New("must supply a VASP object for certificate request creation")
 	}
@@ -188,28 +196,41 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		Params:     make(map[string]string),
 	}
 
-	// Populate the other attributes with information from the VASP, if available.
+	// Populate the organization name, if available.
 	if vasp.Entity.Name != nil {
-		certRequest.Params["organizationName"] = vasp.Entity.Name.String()
+		for _, name := range vasp.Entity.Name.NameIdentifiers {
+			if name.LegalPersonNameIdentifierType == ivms101.LegalPersonLegal {
+				organizationName = name.LegalPersonName
+				break
+			}
+		}
+	}
+	if organizationName != "" {
+		certRequest.Params["organizationName"] = organizationName
 	} else {
 		log.Info().
 			Str("vasp_id", vasp.Id).
 			Str("certreq_id", certRequest.Id).
-			Msg("populating new certificate request with default organization name")
+			Msg("organization name not found, populating new certificate request with default value")
 		certRequest.Params["organizationName"] = "TRISA Production"
 	}
 
+	// Populate the location information, if available.
 	if len(vasp.Entity.GeographicAddresses) > 0 {
-		for _, address := range vasp.Entity.GeographicAddresses {
-			if address.TownLocationName != "" {
-				certRequest.Params["localityName"] = address.TownLocationName
-			}
-		}
+		address := vasp.Entity.GeographicAddresses[0]
+		localityName = address.TownLocationName
+		stateOrProvinceName = address.CountrySubDivision
+		countryName = address.Country
+	}
+	if localityName != "" && stateOrProvinceName != "" && countryName != "" {
+		certRequest.Params["localityName"] = localityName
+		certRequest.Params["stateOrProvinceName"] = stateOrProvinceName
+		certRequest.Params["countryName"] = countryName
 	} else {
 		log.Info().
 			Str("vasp_id", vasp.Id).
 			Str("certreq_id", certRequest.Id).
-			Msg("populating new certificate request with default location names")
+			Msg("localtion information not found or incomplete, populating new certificate request with default values")
 		certRequest.Params["localityName"] = "Menlo Park"
 		certRequest.Params["stateOrProvinceName"] = "California"
 		certRequest.Params["countryName"] = "US"
