@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -229,11 +228,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	// Create PKCS12 password along with certificate request.
 	password := secrets.CreateToken(16)
-	certRequest := &models.CertificateRequest{
-		Id:         uuid.New().String(),
-		Vasp:       vasp.Id,
-		CommonName: vasp.CommonName,
-	}
+	certRequest, err := models.NewCertificateRequest(vasp)
 	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", email); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
@@ -589,6 +584,8 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 //===========================================================================
 // Helper Functions
 //===========================================================================
+
+//
 
 // Get a valid email address from the contacts on a VASP.
 func getContactEmail(vasp *pb.VASP) string {

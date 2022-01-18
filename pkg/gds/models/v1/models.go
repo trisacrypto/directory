@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -171,6 +173,49 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 		return err
 	}
 	return nil
+}
+
+// NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
+func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
+	if vasp == nil {
+		return nil, errors.New("must supply a VASP object for certificate request creation")
+	}
+
+	certRequest = &CertificateRequest{
+		Id:         uuid.New().String(),
+		Vasp:       vasp.Id,
+		CommonName: vasp.CommonName,
+		Params:     make(map[string]string),
+	}
+
+	// Populate the other attributes with information from the VASP, if available.
+	if vasp.Entity.Name != nil {
+		certRequest.Params["organizationName"] = vasp.Entity.Name.String()
+	} else {
+		log.Info().
+			Str("vasp_id", vasp.Id).
+			Str("certreq_id", certRequest.Id).
+			Msg("populating new certificate request with default organization name")
+		certRequest.Params["organizationName"] = "TRISA Production"
+	}
+
+	if len(vasp.Entity.GeographicAddresses) > 0 {
+		for _, address := range vasp.Entity.GeographicAddresses {
+			if address.TownLocationName != "" {
+				certRequest.Params["localityName"] = address.TownLocationName
+			}
+		}
+	} else {
+		log.Info().
+			Str("vasp_id", vasp.Id).
+			Str("certreq_id", certRequest.Id).
+			Msg("populating new certificate request with default location names")
+		certRequest.Params["localityName"] = "Menlo Park"
+		certRequest.Params["stateOrProvinceName"] = "California"
+		certRequest.Params["countryName"] = "US"
+	}
+
+	return certRequest, nil
 }
 
 // UpdateCertificateRequestStatus changes the status of a CertificateRequest and appends

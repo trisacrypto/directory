@@ -21,22 +21,25 @@ message CertificateRequest {
     // Request pipeline status
     CertificateRequestState status = 4;
 
+    // Generic parameters used for making requests to certificate issuing services
+    map<string, string> params = 5;
+
     // Sectigo create single certificate batch metadata
-    int64 authority_id = 5;
-    int64 batch_id = 6;
-    string batch_name = 7;
-    string batch_status = 8;
-    int64 order_number = 9;
-    string creation_date = 10;
-    string profile = 11;
-    string reject_reason = 12;
+    int64 authority_id = 6;
+    int64 batch_id = 7;
+    string batch_name = 8;
+    string batch_status = 9;
+    int64 order_number = 10;
+    string creation_date = 11;
+    string profile = 12;
+    string reject_reason = 13;
 
     // Logging information timestamps
-    string created = 15;
-    string modified = 16;
+    string created = 14;
+    string modified = 15;
 
     // Log of historical request states
-    repeated CertificateRequestLogEntry audit_log = 17;
+    repeated CertificateRequestLogEntry audit_log = 16;
 }
 
 enum CertificateRequestState {
