@@ -623,3 +623,8 @@ func returnMeta(object *object.Object) *pb.Meta {
 	}
 	return meta
 }
+
+// Expose the database for testing
+func (h *TrtlService) GetDB() *honu.DB {
+	return h.db
+}

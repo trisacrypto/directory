@@ -402,6 +402,8 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 		return nil
 	}
 
+	fmt.Println(keys)
+
 	// TODO: it appears that the keys are not correctly being constructed and that
 	// there are duplicates in the slice.
 	if len(keys) > 1 {
@@ -409,6 +411,7 @@ func (r *ReplicaService) SelectPeer() (peer *peers.Peer) {
 		for i := 0; i < 10; i++ {
 			var key, data []byte
 			key = keys[rand.Intn(len(keys))]
+			fmt.Println(key)
 			if data, err = r.db.Get(key, options.WithNamespace(NamespacePeers)); err != nil {
 				log.Warn().Str("key", string(key)).Err(err).Msg("could not fetch peer from the database")
 				continue
