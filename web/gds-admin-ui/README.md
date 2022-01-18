@@ -7,7 +7,7 @@ The GDS Admin UI is a web application that allows TRISA reviewers to interact wi
 To develop the GDS Admin UI, create a `.env` file with the following:
 
 ```
-REACT_APP_API_URL=http://localhost:4434/v2
+REACT_APP_GDS_API_ENDPOINT=http://localhost:4434/v2
 REACT_APP_GOOGLE_CLIENT_ID=
 REACT_APP_GDS_IS_TESTNET=true
 ```
