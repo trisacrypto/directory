@@ -590,8 +590,6 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 // Helper Functions
 //===========================================================================
 
-//
-
 // Get a valid email address from the contacts on a VASP.
 func getContactEmail(vasp *pb.VASP) string {
 	contacts := []*pb.Contact{
