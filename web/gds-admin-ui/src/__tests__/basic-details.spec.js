@@ -8,10 +8,6 @@ import { render } from "utils/test-utils"
 
 describe("BasicDetailsDropDown", () => {
 
-    it("should render", () => {
-        render(<BasicDetails />, { wrapper: ModalProvider })
-    })
-
     it("Should not be disable when status is different to pending", async () => {
 
         const mockVaspData = {

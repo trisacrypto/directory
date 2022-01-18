@@ -92,7 +92,7 @@ function getStatusClassName(status = '') {
 }
 
 function isTestNet() {
-    return config.IS_TESNET
+    return config.IS_TESTNET
 }
 
 function getDirectoryName() {

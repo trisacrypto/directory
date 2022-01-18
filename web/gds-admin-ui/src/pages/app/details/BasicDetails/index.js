@@ -12,6 +12,7 @@ import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
 import BasicDetailsDropDown from './components/BasicDetailsDropdown';
+import PropTypes from 'prop-types'
 
 
 function BasicDetails({ data }) {
@@ -110,6 +111,10 @@ function BasicDetails({ data }) {
         </>
 
     )
+}
+
+BasicDetails.propTypes = {
+    data: PropTypes.object.isRequired
 }
 
 export default BasicDetails
