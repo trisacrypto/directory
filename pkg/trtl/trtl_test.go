@@ -651,3 +651,20 @@ func (s *trtlTestSuite) TestCursor() {
 	}
 	require.Equal(2, i, "expected 3 results returned after seek, have fixtures changed?")
 }
+
+func (s *trtlTestSuite) TestStatus() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
+
+	// Test sending a Status request
+	rep, err := client.Status(ctx, &pb.HealthCheck{})
+	require.NoError(err)
+	require.Equal("ok", rep.Status)
+	require.NotEmpty(rep.Version)
+	require.NotEmpty(rep.Uptime)
+}

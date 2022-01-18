@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/rotationalio/honu"
 	engine "github.com/rotationalio/honu/engines"
@@ -24,11 +25,13 @@ import (
 
 // A ReplicaService manages anti-entropy replication between peers.
 type ReplicaService struct {
+	sync.RWMutex
 	replica.UnimplementedReplicationServer
-	parent *Server
-	conf   config.ReplicaConfig
-	db     *honu.DB
-	aestop chan struct{}
+	parent       *Server
+	conf         config.ReplicaConfig
+	db           *honu.DB
+	aestop       chan struct{}
+	synchronized time.Time
 }
 
 func NewReplicaService(s *Server) (*ReplicaService, error) {
@@ -346,6 +349,7 @@ func (r *ReplicaService) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (
 				// initiating replica, we can safely quit receiving.
 				log.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
 				if updates > 0 || repairs > 0 {
+					r.synchronizedNow()
 					log.Info().
 						Uint64("local_repairs", repairs).
 						Uint64("remote_updates", updates).
@@ -676,6 +680,7 @@ func (r *ReplicaService) Gossip(stream replica.Replication_GossipServer) (err er
 	// Log and complete gossip session
 	log.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
 	if updates > 0 || repairs > 0 {
+		r.synchronizedNow()
 		log.Info().
 			Uint64("local_repairs", repairs).
 			Uint64("remote_updates", updates).
@@ -691,4 +696,21 @@ func (r *ReplicaService) Shutdown() error {
 		r.aestop <- struct{}{}
 	}
 	return nil
+}
+
+// Helper function to get the timestamp of last synchronization in a thread-safe manner
+func (r *ReplicaService) lastSynchronization() string {
+	r.RLock()
+	defer r.RUnlock()
+	if r.synchronized.IsZero() {
+		return "never"
+	}
+	return r.synchronized.Format(time.RFC3339)
+}
+
+// Helper function to set the synchronized timestamp to now in a thread-safe manner
+func (r *ReplicaService) synchronizedNow() {
+	r.Lock()
+	r.synchronized = time.Now()
+	r.Unlock()
 }

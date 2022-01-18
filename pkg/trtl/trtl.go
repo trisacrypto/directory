@@ -12,6 +12,7 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
@@ -599,6 +600,21 @@ func (h *TrtlService) Sync(stream pb.Trtl_SyncServer) (err error) {
 	return status.Error(codes.Unimplemented, "not implemented")
 }
 
+func (h *TrtlService) Status(ctx context.Context, in *pb.HealthCheck) (out *pb.ServerStatus, err error) {
+	// Create the default status
+	out = &pb.ServerStatus{
+		Status:  "ok",
+		Version: pkg.Version(),
+		Uptime:  h.uptime(),
+	}
+
+	// If we're in maintenance mode return a maintenance mode
+	if h.parent.conf.Maintenance {
+		out.Status = "maintenance"
+	}
+	return out, nil
+}
+
 // returnMeta is a helper function for returning the metadata on an object
 func returnMeta(object *object.Object) *pb.Meta {
 	meta := &pb.Meta{
@@ -622,4 +638,12 @@ func returnMeta(object *object.Object) *pb.Meta {
 		}
 	}
 	return meta
+}
+
+// uptime is a helper function that returns how long the server has been running, if known
+func (h *TrtlService) uptime() string {
+	if !h.parent.started.IsZero() {
+		return time.Since(h.parent.started).String()
+	}
+	return "unknown"
 }
