@@ -326,134 +326,38 @@ func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
 	return nil
 }
 
-// GetContactVerification token and verified status from the extra data field on the Contact.
-func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
-	// Return zero-valued defaults with no error if extra is nil.
-	if contact == nil || contact.Extra == nil {
-		return "", false, nil
-	}
-
-	// Unmarshal the extra data field on the Contact
-	extra := &GDSContactExtraData{}
-	if err = contact.Extra.UnmarshalTo(extra); err != nil {
-		return "", false, err
-	}
-	return extra.GetToken(), extra.GetVerified(), nil
-}
-
-// SetContactVerification token and verified status on the Contact record.
-func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
-	if contact == nil {
-		return errors.New("cannot set verification on nil contact")
-	}
-
-	// Unmarshal previous extra data.
-	extra := &GDSContactExtraData{}
-	if contact.Extra != nil {
-		if err = contact.Extra.UnmarshalTo(extra); err != nil {
-			return fmt.Errorf("could not deserialize previous extra: %s", err)
-		}
-	}
-
-	// Set contact verification.
-	extra.Verified = verified
-	extra.Token = token
-	if contact.Extra, err = anypb.New(extra); err != nil {
-		return err
-	}
-	return nil
-}
-
-// GetEmailLog from the extra data on the Contact record.
-func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
-	// If the extra data is nil, return nil (no email log).
-	if contact == nil || contact.Extra == nil {
-		return nil, nil
-	}
-
-	// Unmarshal the extra data field on the VASP.
-	extra := &GDSContactExtraData{}
-	if err = contact.Extra.UnmarshalTo(extra); err != nil {
-		return nil, err
-	}
-	return extra.GetEmailLog(), nil
-}
-
-// Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err error) {
-	// Contact must be non-nil.
-	if contact == nil {
-		return errors.New("cannot append entry to nil contact")
-	}
-
-	// Unmarshal previous extra data.
-	extra := &GDSContactExtraData{}
-	if contact.Extra != nil {
-		if err = contact.Extra.UnmarshalTo(extra); err != nil {
-			return fmt.Errorf("could not deserialize previous extra: %s", err)
-		}
-	} else {
-		extra.EmailLog = make([]*EmailLogEntry, 0, 1)
-	}
-
-	// Append entry to the previous log.
-	entry := &EmailLogEntry{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Reason:    reason,
-		Subject:   subject,
-	}
-	extra.EmailLog = append(extra.EmailLog, entry)
-
-	// Serialize the extra data back to the VASP.
-	if contact.Extra, err = anypb.New(extra); err != nil {
-		return err
-	}
-	return nil
-}
-
 // VerifiedContacts returns a map of contact type to email address for all verified
 // contacts, omitting any contacts that are not verified or do not exist.
-func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
+func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string, err error) {
 	contacts = make(map[string]string)
-	for key, verified := range ContactVerifications(vasp) {
-		if verified {
-			switch key {
-			case "technical":
-				contacts[key] = vasp.Contacts.Technical.Email
-			case "administrative":
-				contacts[key] = vasp.Contacts.Administrative.Email
-			case "billing":
-				contacts[key] = vasp.Contacts.Billing.Email
-			case "legal":
-				contacts[key] = vasp.Contacts.Legal.Email
-			default:
-				panic(fmt.Errorf("unknown contact type %q", key))
-			}
-		}
+	next := IterContacts(vasp.Contacts, true)
+	contact, kind, err := next()
+	for ; err == nil && contact != nil; contact, kind, err = next() {
+		contacts[kind] = contact.Email
 	}
-	return contacts
+	if err != nil {
+		return nil, err
+	}
+	return contacts, nil
 }
 
 // ContactVerifications returns a map of contact type to verified status, omitting any
 // contacts that do not exist.
-func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool) {
+func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, err error) {
 	contacts = make(map[string]bool)
-	pairs := []struct {
-		key     string
-		contact *pb.Contact
-	}{
-		{"technical", vasp.Contacts.Technical},
-		{"administrative", vasp.Contacts.Administrative},
-		{"billing", vasp.Contacts.Billing},
-		{"legal", vasp.Contacts.Legal},
-	}
-
-	for _, pair := range pairs {
-		if pair.contact != nil {
-			_, contacts[pair.key], _ = GetContactVerification(pair.contact)
+	next := IterContacts(vasp.Contacts, false)
+	contact, kind, err := next()
+	for ; err == nil && contact != nil; contact, kind, err = next() {
+		var verified bool
+		if verified, err = ContactVerified(contact); err != nil {
+			return nil, err
 		}
+		contacts[kind] = verified
 	}
-	return contacts
+	if err != nil {
+		return nil, err
+	}
+	return contacts, nil
 }
 
 // IsTraveler returns true if the VASP common name ends in traveler.ciphertrace.com

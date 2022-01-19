@@ -785,7 +785,10 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			snippet.VerifiedContacts = models.ContactVerifications(vasp)
+			if snippet.VerifiedContacts, err = models.ContactVerifications(vasp); err != nil {
+				log.Warn().Err(err).Msg("could not get contact verifications")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+			}
 
 			// Append to list in reply
 			out.VASPs = append(out.VASPs, snippet)
@@ -836,8 +839,11 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
-		VerifiedContacts: models.VerifiedContacts(vasp),
-		Traveler:         models.IsTraveler(vasp),
+		Traveler: models.IsTraveler(vasp),
+	}
+	if out.VerifiedContacts, err = models.VerifiedContacts(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not get verified contacts")
+		return nil, err
 	}
 
 	// Attempt to determine the VASP name from IVMS 101 data.
