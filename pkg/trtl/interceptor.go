@@ -32,27 +32,36 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	start := time.Now()
 
 	// Check if we're in maintenance mode
-	// TODO: update to consider the Status endpoint, once it has been added
 	if t.conf.Maintenance {
+		// The only RPC we allow in maintenance mode is Status
+		if info.FullMethod == "/trtl.v1.Trtl/Status" {
+			return handler(ctx, in)
+		}
+
+		// Otherwise we stop processing here and return unavailable
 		return nil, status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
 	}
 
-	// Fetch peer information from the TLS info.
-	var peer *PeerInfo
-	if peer, err = peerFromTLS(ctx); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve remote peer info")
-		// TODO: Uncomment when mTLS is added
-		//return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
-	}
+	// Fetch peer information from the TLS info if we're not in insecure mode.
+	if !t.conf.MTLS.Insecure {
+		var peer *PeerInfo
+		if peer, err = peerFromTLS(ctx); err != nil {
+			return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
+		}
 
-	// Add peer information to the context.
-	ctx = context.WithValue(ctx, ContextKey("peer"), peer)
+		// Add peer information to the context.
+		ctx = context.WithValue(ctx, ContextKey("peer"), peer)
+	}
 
 	// Call the handler to finalize the request and get the response.
 	out, err = handler(ctx, in)
 
 	// Log with zerolog - checkout grpclog.LoggerV2 for default logging.
-	log.Debug().Str("method", info.FullMethod).Str("latency", time.Since(start).String()).Err(err).Msg("gRPC request complete")
+	log.Debug().
+		Err(err).
+		Str("method", info.FullMethod).
+		Str("latency", time.Since(start).String()).
+		Msg("gRPC request complete")
 	return out, err
 }
 

@@ -32,6 +32,8 @@ type TrtlClient interface {
 	Cursor(ctx context.Context, in *CursorRequest, opts ...grpc.CallOption) (Trtl_CursorClient, error)
 	// Sync is a bi-directional streaming mechanism to issue access requests synchronously.
 	Sync(ctx context.Context, opts ...grpc.CallOption) (Trtl_SyncClient, error)
+	// This RPC servers as a health check for clients to make sure the server is online.
+	Status(ctx context.Context, in *HealthCheck, opts ...grpc.CallOption) (*ServerStatus, error)
 }
 
 type trtlClient struct {
@@ -175,6 +177,15 @@ func (x *trtlSyncClient) Recv() (*SyncReply, error) {
 	return m, nil
 }
 
+func (c *trtlClient) Status(ctx context.Context, in *HealthCheck, opts ...grpc.CallOption) (*ServerStatus, error) {
+	out := new(ServerStatus)
+	err := c.cc.Invoke(ctx, "/trtl.v1.Trtl/Status", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TrtlServer is the server API for Trtl service.
 // All implementations must embed UnimplementedTrtlServer
 // for forward compatibility
@@ -193,6 +204,8 @@ type TrtlServer interface {
 	Cursor(*CursorRequest, Trtl_CursorServer) error
 	// Sync is a bi-directional streaming mechanism to issue access requests synchronously.
 	Sync(Trtl_SyncServer) error
+	// This RPC servers as a health check for clients to make sure the server is online.
+	Status(context.Context, *HealthCheck) (*ServerStatus, error)
 	mustEmbedUnimplementedTrtlServer()
 }
 
@@ -220,6 +233,9 @@ func (UnimplementedTrtlServer) Cursor(*CursorRequest, Trtl_CursorServer) error {
 }
 func (UnimplementedTrtlServer) Sync(Trtl_SyncServer) error {
 	return status.Errorf(codes.Unimplemented, "method Sync not implemented")
+}
+func (UnimplementedTrtlServer) Status(context.Context, *HealthCheck) (*ServerStatus, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
 }
 func (UnimplementedTrtlServer) mustEmbedUnimplementedTrtlServer() {}
 
@@ -379,6 +395,24 @@ func (x *trtlSyncServer) Recv() (*SyncRequest, error) {
 	return m, nil
 }
 
+func _Trtl_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthCheck)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TrtlServer).Status(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/trtl.v1.Trtl/Status",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TrtlServer).Status(ctx, req.(*HealthCheck))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Trtl_ServiceDesc is the grpc.ServiceDesc for Trtl service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -401,6 +435,10 @@ var Trtl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Iter",
 			Handler:    _Trtl_Iter_Handler,
+		},
+		{
+			MethodName: "Status",
+			Handler:    _Trtl_Status_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
