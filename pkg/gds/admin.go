@@ -444,17 +444,11 @@ func (s *Admin) Summary(c *gin.Context) {
 		out.VASPsCount++
 
 		// Count contacts
-		contacts := []*pb.Contact{
-			vasp.Contacts.Administrative, vasp.Contacts.Legal,
-			vasp.Contacts.Technical, vasp.Contacts.Billing,
-		}
-
-		for _, contact := range contacts {
-			if contact != nil && contact.Email != "" {
-				out.ContactsCount++
-				if _, verified, _ := models.GetContactVerification(contact); verified {
-					out.VerifiedContacts++
-				}
+		next := models.IterContacts(vasp.Contacts, true)
+		for contact, _ := next(); contact != nil; contact, _ = next() {
+			out.ContactsCount++
+			if _, verified, _ := models.GetContactVerification(contact); verified {
+				out.VerifiedContacts++
 			}
 		}
 
@@ -875,17 +869,9 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	if vasp.Contacts.Administrative != nil {
-		vasp.Contacts.Administrative.Extra = nil
-	}
-	if vasp.Contacts.Legal != nil {
-		vasp.Contacts.Legal.Extra = nil
-	}
-	if vasp.Contacts.Technical != nil {
-		vasp.Contacts.Technical.Extra = nil
-	}
-	if vasp.Contacts.Billing != nil {
-		vasp.Contacts.Billing.Extra = nil
+	next := models.IterContacts(vasp.Contacts, false)
+	for contact, _ := next(); contact != nil; contact, _ = next() {
+		contact.Extra = nil
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context

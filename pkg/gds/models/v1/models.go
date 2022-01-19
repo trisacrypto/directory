@@ -326,40 +326,6 @@ func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
 	return nil
 }
 
-// VerifiedContacts returns a map of contact type to email address for all verified
-// contacts, omitting any contacts that are not verified or do not exist.
-func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string, err error) {
-	contacts = make(map[string]string)
-	next := IterContacts(vasp.Contacts, true)
-	contact, kind, err := next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
-		contacts[kind] = contact.Email
-	}
-	if err != nil {
-		return nil, err
-	}
-	return contacts, nil
-}
-
-// ContactVerifications returns a map of contact type to verified status, omitting any
-// contacts that do not exist.
-func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, err error) {
-	contacts = make(map[string]bool)
-	next := IterContacts(vasp.Contacts, false)
-	contact, kind, err := next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
-		var verified bool
-		if verified, err = ContactVerified(contact); err != nil {
-			return nil, err
-		}
-		contacts[kind] = verified
-	}
-	if err != nil {
-		return nil, err
-	}
-	return contacts, nil
-}
-
 // IsTraveler returns true if the VASP common name ends in traveler.ciphertrace.com
 func IsTraveler(vasp *pb.VASP) bool {
 	return strings.HasSuffix(vasp.CommonName, "traveler.ciphertrace.com")

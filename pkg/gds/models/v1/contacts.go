@@ -12,8 +12,8 @@ import (
 const (
 	TechnicalContact      = "technical"
 	AdministrativeContact = "administrative"
-	BillingContact        = "billing"
 	LegalContact          = "legal"
+	BillingContact        = "billing"
 )
 
 type contactType struct {
@@ -22,7 +22,7 @@ type contactType struct {
 }
 
 // Returns True if a Contact is not nil and has an email address.
-func ContactExists(contact *pb.Contact) bool {
+func ContactHasEmail(contact *pb.Contact) bool {
 	return contact != nil && contact.Email != ""
 }
 
@@ -34,31 +34,50 @@ func ContactVerified(contact *pb.Contact) (verified bool, err error) {
 	return verified, nil
 }
 
-// Returns a function which iterates over the contacts in a Contacts object.
-func IterContacts(contacts *pb.Contacts, onlyVerified bool) func() (*pb.Contact, string, error) {
-	all := []*contactType{
+// Returns a standardized order of iterating through contacts.
+func contactOrder(contacts *pb.Contacts) []*contactType {
+	return []*contactType{
 		{contact: contacts.Technical, kind: TechnicalContact},
 		{contact: contacts.Administrative, kind: AdministrativeContact},
-		{contact: contacts.Billing, kind: BillingContact},
 		{contact: contacts.Legal, kind: LegalContact},
+		{contact: contacts.Billing, kind: BillingContact},
 	}
+}
+
+// Returns a function which iterates over the verified contacts in a Contacts object.
+func IterContacts(contacts *pb.Contacts, requireEmail bool) func() (*pb.Contact, string) {
+	all := contactOrder(contacts)
 	i := 0
-	return func() (contact *pb.Contact, kind string, err error) {
-		// Return the next contact that exists or nil.
+	return func() (contact *pb.Contact, kind string) {
+		// Return the next contact that exists or nil to indicate end of iteration.
 		for i < len(all) {
 			contact = all[i].contact
 			kind = all[i].kind
 			i++
-			if ContactExists(contact) {
-				if onlyVerified {
-					var verified bool
-					if verified, err = ContactVerified(contact); err != nil {
-						return nil, "", err
-					}
-					if verified {
-						return contact, kind, nil
-					}
-				} else {
+			if contact != nil && (!requireEmail || ContactHasEmail(contact)) {
+				return contact, kind
+			}
+		}
+		return nil, ""
+	}
+}
+
+// Returns a function which iterates over the verified contacts in a Contacts object.
+func IterVerifiedContacts(contacts *pb.Contacts) func() (*pb.Contact, string, error) {
+	all := contactOrder(contacts)
+	i := 0
+	return func() (contact *pb.Contact, kind string, err error) {
+		// Return the next contact that exists or nil to indicate end of iteration.
+		for i < len(all) {
+			contact = all[i].contact
+			kind = all[i].kind
+			i++
+			if ContactHasEmail(contact) {
+				var verified bool
+				if verified, err = ContactVerified(contact); err != nil {
+					return nil, "", err
+				}
+				if verified {
 					return contact, kind, nil
 				}
 			}
@@ -103,6 +122,36 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 		return err
 	}
 	return nil
+}
+
+// VerifiedContacts returns a map of contact type to email address for all verified
+// contacts, omitting any contacts that are not verified or do not exist.
+func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string, err error) {
+	contacts = make(map[string]string)
+	next := IterVerifiedContacts(vasp.Contacts)
+	contact, kind, err := next()
+	for ; err == nil && contact != nil; contact, kind, err = next() {
+		contacts[kind] = contact.Email
+	}
+	if err != nil {
+		return nil, err
+	}
+	return contacts, nil
+}
+
+// ContactVerifications returns a map of contact type to verified status, omitting any
+// contacts that do not exist.
+func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, err error) {
+	contacts = make(map[string]bool)
+	next := IterContacts(vasp.Contacts, false)
+	for contact, kind := next(); contact != nil; contact, kind = next() {
+		var verified bool
+		if verified, err = ContactVerified(contact); err != nil {
+			return nil, err
+		}
+		contacts[kind] = verified
+	}
+	return contacts, nil
 }
 
 // GetEmailLog from the extra data on the Contact record.
