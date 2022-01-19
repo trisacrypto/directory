@@ -697,6 +697,7 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 func (s *gdsTestSuite) TestDeleteVASP() {
 	s.LoadFullFixtures()
 	defer s.ResetFullFixtures()
+	defer s.loadReferenceFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -704,7 +705,8 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	deltaID := s.fixtures[vasps]["delta"].(*pb.VASP).Id
 	julietID := s.fixtures[vasps]["juliet"].(*pb.VASP).Id
 	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
-	golfID := s.fixtures[vasps]["golfbucks"].(*pb.VASP).Id
+
+	golf := s.fixtures[vasps]["golfbucks"].(*pb.VASP)
 
 	// Attempt to delete a VASP that doesn't exist
 	request := &httpRequest{
@@ -724,11 +726,34 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	// VASP is in an invalid state for deletion
 	request.path = "/v2/vasps/" + deltaID
 	request.params["vaspID"] = deltaID
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.DeleteVASP, c, w, nil)
-	s.APIError(http.StatusBadRequest, "cannot delete VASP in its current state", rep)
+	msg := "cannot delete VASP in its current state"
+	for status := pb.VerificationState_REVIEWED; status < pb.VerificationState_ERRORED; status++ {
+		s.SetVerificationStatus(deltaID, status)
+		c, w = s.makeRequest(request)
+		rep = s.doRequest(a.DeleteVASP, c, w, nil)
+		s.APIError(http.StatusBadRequest, msg, rep)
+	}
 
 	// Successfully deleting a VASP and its certificate requests
+	id := golf.Id
+	for status := pb.VerificationState_NO_VERIFICATION; status < pb.VerificationState_REVIEWED; status++ {
+		s.SetVerificationStatus(id, status)
+		request.path = "/v2/vasps/" + id
+		request.params["vaspID"] = id
+		c, w = s.makeRequest(request)
+		rep = s.doRequest(a.DeleteVASP, c, w, nil)
+		require.Equal(http.StatusOK, rep.StatusCode)
+		_, err := s.svc.GetStore().RetrieveVASP(golf.Id)
+		require.Error(err)
+
+		// Recreate the VASP
+		golf.Id = ""
+		id, err = s.svc.GetStore().CreateVASP(golf)
+		require.NoError(err)
+	}
+
+	// Make sure we can also delete a VASP in the ERRORED state
+	s.SetVerificationStatus(julietID, pb.VerificationState_ERRORED)
 	request.path = "/v2/vasps/" + julietID
 	request.params["vaspID"] = julietID
 	c, w = s.makeRequest(request)
@@ -737,15 +762,6 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	_, err := s.svc.GetStore().RetrieveVASP(julietID)
 	require.Error(err)
 	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
-	require.Error(err)
-
-	// Make sure we can also delete a VASP in the ERRORED state
-	request.path = "/v2/vasps/" + golfID
-	request.params["vaspID"] = golfID
-	c, w = s.makeRequest(request)
-	rep = s.doRequest(a.DeleteVASP, c, w, nil)
-	require.Equal(http.StatusOK, rep.StatusCode)
-	_, err = s.svc.GetStore().RetrieveVASP(golfID)
 	require.Error(err)
 }
 

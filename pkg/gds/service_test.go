@@ -587,6 +587,21 @@ func (s *gdsTestSuite) generateDB() {
 	}
 }
 
+// SetVerificationStatus sets the verification status of a VASP fixture on the
+// database. This is useful for testing VerificationState checks without having to use
+// multiple fixtures.
+func (s *gdsTestSuite) SetVerificationStatus(id string, status pb.VerificationState) {
+	require := s.Require()
+
+	// Retrieve the VASP from the database
+	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	require.NoError(err, "VASP not found in database")
+
+	// Set the verification status and write back to the database
+	vasp.VerificationStatus = status
+	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
+}
+
 func pathExists(path string) bool {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return false
