@@ -465,7 +465,7 @@ func TestNewCertificateRequest(t *testing.T) {
 	require.Equal(t, vasp.Id, cr.Vasp)
 	require.Equal(t, vasp.CommonName, cr.CommonName)
 	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "TRISA Production", cr.Params["organizationName"])
+	require.Equal(t, "TRISA Member VASP", cr.Params["organizationName"])
 
 	vasp.Entity.Name = &ivms101.LegalPersonName{
 		NameIdentifiers: []*ivms101.LegalPersonNameId{
@@ -478,7 +478,7 @@ func TestNewCertificateRequest(t *testing.T) {
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
 	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "TRISA Production", cr.Params["organizationName"])
+	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
 
 	// Valid organization name, unspecified location info
 	vasp.Entity.Name.NameIdentifiers[0].LegalPersonNameIdentifierType = ivms101.LegalPersonLegal
@@ -493,10 +493,10 @@ func TestNewCertificateRequest(t *testing.T) {
 	require.Contains(t, cr.Params, "countryName")
 	require.Equal(t, "US", cr.Params["countryName"])
 
+	// Valid organization name, partial location info is overridden
 	vasp.Entity.GeographicAddresses = []*ivms101.Address{
 		{
-			TownLocationName:   "Toronto",
-			CountrySubDivision: "Ontario",
+			Country: "CA",
 		},
 	}
 	cr, err = NewCertificateRequest(vasp)
@@ -509,6 +509,8 @@ func TestNewCertificateRequest(t *testing.T) {
 	require.Equal(t, "US", cr.Params["countryName"])
 
 	// Complete organization name and location info
+	vasp.Entity.GeographicAddresses[0].TownLocationName = "Toronto"
+	vasp.Entity.GeographicAddresses[0].CountrySubDivision = "Ontario"
 	vasp.Entity.GeographicAddresses[0].Country = "CA"
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
