@@ -349,6 +349,35 @@ func (s *APIv2) UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *Upd
 	return out, nil
 }
 
+func (s *APIv2) DeleteVASP(ctx context.Context, id string) (out *Reply, err error) {
+	// vaspID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error) {
 	// vaspID is required for the endpoint
 	if in.VASP == "" {
