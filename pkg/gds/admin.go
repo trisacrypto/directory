@@ -534,7 +534,11 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 				if _, ok := out.Names[name]; !ok {
 					out.Names[name] = vasp.Id
 				} else {
-					log.Warn().Str("name", name).Msg("duplicate name detected")
+					// Since this is not a unique index and multiple certs have been
+					// issued to organizations in the past, we will encounter name
+					// collisions here. We want this to be at debug level instead of at
+					// warning level to avoid alert spam.
+					log.Debug().Str("name", name).Msg("duplicate name detected")
 				}
 			}
 		}
