@@ -9,7 +9,7 @@ type Config struct {
 	Username string `envconfig:"SECTIGO_USERNAME" required:"false"`
 	Password string `envconfig:"SECTIGO_PASSWORD" required:"false"`
 	Profile  string `envconfig:"SECTIGO_PROFILE" default:"CipherTrace EE"`
-	Testing  bool   `split_words:"true" default:"false"`
+	Testing  bool   `envconfig:"SECTIGO_TESTING" default:"false"`
 }
 
 func (c Config) Validate() error {
