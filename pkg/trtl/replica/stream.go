@@ -28,7 +28,7 @@ type streamSender struct {
 	sync.RWMutex
 	wg     *sync.WaitGroup    // A wait group so the caller knows when sending is complete
 	ok     bool               // If true, it is ok to send on the channel
-	log    zerolog.Logger     // A logger to report send erorrs on
+	log    zerolog.Logger     // A logger to report send errors on
 	msgs   chan *replica.Sync // The channel for go routines to send messages on
 	stream gossipStream       // The gossip stream to send messages on
 }
