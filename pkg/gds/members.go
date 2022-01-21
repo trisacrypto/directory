@@ -197,7 +197,11 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 		}
 
 		// Collect the VASP from the iterator
-		vasp := iter.VASP()
+		var vasp *pb.VASP
+		if vasp, err = iter.VASP(); err != nil {
+			log.Warn().Err(err).Msg("could not parse VASP from database")
+			continue
+		}
 
 		// Skip any VASPs that are not verified yet
 		if vasp.VerificationStatus != pb.VerificationState_VERIFIED {

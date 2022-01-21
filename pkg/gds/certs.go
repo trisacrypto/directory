@@ -62,8 +62,9 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 		log.Debug().Msg("cert-manager checking certificate request pipelines")
 
 		for careqs.Next() {
-			req := careqs.CertReq()
-			if req == nil {
+			var req *models.CertificateRequest
+			if req, err = careqs.CertReq(); err != nil {
+				log.Error().Err(err).Msg("could not parse certificate request from database")
 				continue
 			}
 
