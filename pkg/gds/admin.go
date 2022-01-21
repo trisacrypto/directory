@@ -1019,17 +1019,9 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
 	// ensure that certificate requests are not saved when the VASP record is not valid.
 	if err = vasp.Validate(true); err != nil {
-		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
-		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
-			log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
-			return
-		}
-
-		// If certificate requests were updated in updateVASPEndpoint it is possible that
-		// this warning indicates an inconsistent state has occurred, but this is unlikely
-		// so we're keeping the log level at warning state.
-		log.Warn().Err(err).Msg("ignoring validation error")
+		log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
 	}
 
 	// Add a record to the audit log
