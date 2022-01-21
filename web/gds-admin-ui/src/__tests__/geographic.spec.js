@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Movies
+                    Sports
                      
                     <br />
-                    Automotive
+                    Grocery
                      
                     <br />
                     23
                      
-                    Dach Bypass
+                    Lauryn Square
                     <br />
-                    Shoreline
+                    Fayetteville
                      
                     
                      
                     MA
                      
-                    67323-0204
+                    83686
                       
                     <br />
                     US
