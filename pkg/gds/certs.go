@@ -143,20 +143,17 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	params := make(map[string]string)
-	params["commonName"] = r.CommonName
-	params["dNSName"] = r.CommonName
-	params["pkcs12Password"] = string(pkcs12Password)
+	var params map[string]string
 
 	profile := s.certs.Profile()
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
-		// Default to TRISA Production locality since none has been provided.
-		// TODO: make this part of the certificate request (See SC-2606).
-		params["organizationName"] = "TRISA Production"
-		params["localityName"] = "Menlo Park"
-		params["stateOrProvinceName"] = "California"
-		params["countryName"] = "US"
+		params = r.Params
+	} else {
+		params = make(map[string]string)
 	}
+	params["commonName"] = r.CommonName
+	params["dNSName"] = r.CommonName
+	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
