@@ -54,7 +54,9 @@ func New(conf config.Config, db *honu.DB, replicatedNamespaces []string) (*Servi
 
 // Shutdown the replica server (stops the anti-entropy go-routine)
 func (r *Service) Shutdown() error {
-	if r.aestop != nil {
+	// If anti-entropy is enabled, send a stop signal to it. Do not send the signal if
+	// not enabled, otherwise Shutdown() will block forever and cause a deadlock.
+	if r.conf.Enabled && r.aestop != nil {
 		r.aestop <- struct{}{}
 	}
 	return nil
