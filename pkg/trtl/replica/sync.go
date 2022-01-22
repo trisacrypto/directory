@@ -285,6 +285,7 @@ func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.Clien
 func (r *Service) initiatorPhase1(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, sender *streamSender) {
 	// Ensure that this routine signals when it exits
 	defer wg.Done()
+	log.Trace().Msg("starting initiator phase 1")
 
 	// Track how many namespaces and versions we attempt to synchronize for logging.
 	var nNamespaces, nVersions uint64
@@ -297,6 +298,7 @@ namespaces:
 			log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 			continue namespaces
 		}
+		log.Trace().Str("namespace", namespace).Msg("sending namespace")
 
 	objects:
 		for iter.Next() {
@@ -331,6 +333,9 @@ namespaces:
 			// between this check and the send on the chanel, however the sender
 			// keeps consuming messages to prevent race conditions.
 			if ok := sender.Send(msg); !ok {
+				// NOTE: breaking objects loop not the namespaces loop or returning to
+				// ensure that all iters get released. This may cause some additional
+				// Send calls to happen, but the sender will simply ignore them.
 				break objects
 			}
 			nVersions++
@@ -349,16 +354,25 @@ namespaces:
 	// Send a sync complete message to let the remote know that the pull phase is
 	// complete and they can start the push phase.
 	sender.Send(&replica.Sync{Status: replica.Sync_COMPLETE})
+	log.Trace().Msg("initiator phase 1 complete")
 
 	log.Debug().
 		Uint64("versions", nVersions).
 		Uint64("namespaces", nNamespaces).
-		Msg("sent version vectors to remote peer")
+		Msg("version vectors sent to remote peer")
 }
 
+// initiatorPhase2 starts right after initiatorPhase1 and runs as long as messages will
+// be coming from the remote. This is the only initiator go routine that will receive
+// messages, so an intermediate read routine is not necessary. This phase is also
+// responsible for closing the sender go routine because the phase is finished when it
+// gets a COMPLETE message from the remote. This phase handles incoming messages from
+// the remote by responding to CHECK requests sending later versions to the remote (but
+// ignoring if local versions are equal or earlier), and handling REPAIR and error.
 func (r *Service) initiatorPhase2(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, sender *streamSender, stream gossipStream) {
 	// Ensure that this routine signals when it exits
 	defer wg.Done()
+	log.Trace().Msg("starting initiator phase 2")
 
 	// Ensure that we close the sending channel when this routine exits to prevent
 	// deadlocks if this phase ends prematurely (e.g. the timeout expires).
@@ -428,7 +442,7 @@ gossip:
 			// replica's and if so, save it to disk with an update instead of a put.
 			//
 			// NOTE: we must check if it's later than our local version in case a
-			// concurrent Put (a stomp) or concurrent syncrhonization updated it.
+			// concurrent Put (a stomp) or concurrent synchronization updated it.
 			// NOTE: honu.Update performs the version checking in a transaction.
 			if err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
 				log.Warn().Err(err).
@@ -467,6 +481,7 @@ gossip:
 			// When we receive the COMPLETE message from the remote replica, we're done:
 			// exit the for loop and close the sender (via the defer above). Once all
 			// messages are sent, we can close the stream and finish.
+			log.Trace().Msg("initiator phase 2 complete")
 			return
 
 		default:

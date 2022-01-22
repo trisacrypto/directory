@@ -106,7 +106,7 @@ func (c Config) Validate() (err error) {
 	return nil
 }
 
-func (c ReplicaConfig) Validate() error {
+func (c *ReplicaConfig) Validate() error {
 	if c.Enabled {
 		if c.PID == 0 {
 			return errors.New("invalid configuration: PID required for enabled replica")
@@ -123,7 +123,7 @@ func (c ReplicaConfig) Validate() error {
 	return nil
 }
 
-func (c MTLSConfig) Validate() error {
+func (c *MTLSConfig) Validate() error {
 	if c.Insecure {
 		return nil
 	}
@@ -135,7 +135,7 @@ func (c MTLSConfig) Validate() error {
 	return nil
 }
 
-func (c MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
+func (c *MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
 	if c.Insecure {
 		return nil, errors.New("cannot create TLS configuration in insecure mode")
 	}
@@ -170,7 +170,7 @@ func (c MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
 	}, nil
 }
 
-func (c MTLSConfig) GetCertPool() (_ *x509.CertPool, err error) {
+func (c *MTLSConfig) GetCertPool() (_ *x509.CertPool, err error) {
 	if c.pool == nil {
 		if err = c.load(); err != nil {
 			return nil, err
@@ -179,7 +179,7 @@ func (c MTLSConfig) GetCertPool() (_ *x509.CertPool, err error) {
 	return c.pool, nil
 }
 
-func (c MTLSConfig) GetCert() (_ tls.Certificate, err error) {
+func (c *MTLSConfig) GetCert() (_ tls.Certificate, err error) {
 	if len(c.cert.Certificate) == 0 {
 		if err = c.load(); err != nil {
 			return c.cert, err
@@ -188,7 +188,7 @@ func (c MTLSConfig) GetCert() (_ tls.Certificate, err error) {
 	return c.cert, nil
 }
 
-func (c MTLSConfig) load() (err error) {
+func (c *MTLSConfig) load() (err error) {
 	var sz *trust.Serializer
 	if sz, err = trust.NewSerializer(false); err != nil {
 		return err
