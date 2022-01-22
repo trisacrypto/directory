@@ -296,7 +296,7 @@ gossip:
 // REPAIR message, pushing the object back. At the end of this go routine the remote
 // sends a COMPLETE message, notifying the initiator that all phases of anti-entropy
 // gossip are complete which allows the initiator to close the stream when ready.
-// This go routine clsoes the sender channel when the phase is over because no more
+// This go routine closes the sender channel when the phase is over because no more
 // messages should be sent from the remote.
 func (r *Service) remotePhase2(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, seen *nsmap, sender *streamSender, updates *uint64) {
 	// Ensure that this routine signals when it exists
