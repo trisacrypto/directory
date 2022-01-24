@@ -51,6 +51,7 @@ type Sectigo struct {
 	client  http.Client
 	creds   *Credentials
 	profile string
+	testing bool
 }
 
 // New creates a Sectigo client ready to make HTTP requests, but unauthenticated. The
@@ -65,15 +66,10 @@ func New(conf Config) (client *Sectigo, err error) {
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
 		profile: conf.Profile,
+		testing: conf.Testing,
 	}
 
 	if conf.Testing {
-		// Ensure that we're connecting to a test server
-		host := baseURL.Hostname()
-		if host != "localhost" && host != "127.0.0.1" {
-			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
-		}
-
 		// Add mock credentials to the client if we're in testing mode
 		if conf.Username == "" {
 			conf.Username = MockUsername
@@ -115,7 +111,7 @@ func (s *Sectigo) Authenticate() (err error) {
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", contentType)
 
-	rep, err := s.client.Do(req)
+	rep, err := s.Do(req)
 	if err != nil {
 		return err
 	}
@@ -167,7 +163,7 @@ func (s *Sectigo) Refresh() (err error) {
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", contentType)
 
-	rep, err := s.client.Do(req)
+	rep, err := s.Do(req)
 	if err != nil {
 		return err
 	}
@@ -226,7 +222,7 @@ func (s *Sectigo) CreateSingleCertBatch(authority int, name string, params map[s
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -318,7 +314,7 @@ func (s *Sectigo) UploadCSRBatch(profileId int, filename string, csrData []byte,
 
 	// execute the request
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -350,7 +346,7 @@ func (s *Sectigo) BatchDetail(id int) (batch *BatchResponse, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -381,7 +377,7 @@ func (s *Sectigo) BatchStatus(batch int) (status string, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return "", err
 	}
 	defer rep.Body.Close()
@@ -417,7 +413,7 @@ func (s *Sectigo) ProcessingInfo(batch int) (status *ProcessingInfoResponse, err
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -461,7 +457,7 @@ func (s *Sectigo) Download(batch int, dir string) (path string, err error) {
 	req.Header.Set("Accept", downloadContentType)
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return "", err
 	}
 	defer rep.Body.Close()
@@ -510,7 +506,7 @@ func (s *Sectigo) LicensesUsed() (stats *LicensesUsedResponse, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -540,7 +536,7 @@ func (s *Sectigo) UserAuthorities() (authorities []*AuthorityResponse, err error
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -570,7 +566,7 @@ func (s *Sectigo) AuthorityAvailableBalance(id int) (balance int, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return 0, err
 	}
 	defer rep.Body.Close()
@@ -601,7 +597,7 @@ func (s *Sectigo) Profiles() (profiles []*ProfileResponse, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -631,7 +627,7 @@ func (s *Sectigo) ProfileParams(id int) (params []*ProfileParamsResponse, err er
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -661,7 +657,7 @@ func (s *Sectigo) ProfileDetail(id int) (profile *ProfileDetailResponse, err err
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -690,7 +686,7 @@ func (s *Sectigo) Organization() (org *OrganizationResponse, err error) {
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -724,7 +720,7 @@ func (s *Sectigo) FindCertificate(commonName, serialNumber string) (certs *FindC
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return nil, err
 	}
 	defer rep.Body.Close()
@@ -763,7 +759,7 @@ func (s *Sectigo) RevokeCertificate(profileID, reasonCode int, serialNumber stri
 	}
 
 	var rep *http.Response
-	if rep, err = s.client.Do(req); err != nil {
+	if rep, err = s.Do(req); err != nil {
 		return err
 	}
 	defer rep.Body.Close()
@@ -848,6 +844,18 @@ func (s *Sectigo) preflight() (err error) {
 
 	// Good to go!
 	return nil
+}
+
+// Do performs a sectigo client request and returns the response.
+func (s *Sectigo) Do(req *http.Request) (*http.Response, error) {
+	if s.testing {
+		// Ensure that we're sending the requests to a test server
+		host := baseURL.Hostname()
+		if host != "localhost" && host != "127.0.0.1" {
+			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
+		}
+	}
+	return s.client.Do(req)
 }
 
 // Helper function to convert a non-200 HTTP status into an error, reading JSON error
