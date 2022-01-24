@@ -7,7 +7,6 @@ import countryCodeEmoji, { isoCountries } from 'utils/country'
 import PropTypes from 'prop-types';
 
 function NationalIdentification({ data }) {
-    console.log(data)
     return (
         <Col>
             {

@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Sports
+                    Automotive
                      
                     <br />
-                    Grocery
+                    Movies
                      
                     <br />
                     23
                      
-                    Lauryn Square
+                    Bernadette Knoll
                     <br />
-                    Fayetteville
+                    Danville
                      
                     
                      
                     MA
                      
-                    83686
+                    15705
                       
                     <br />
                     US

@@ -6,8 +6,12 @@ import CertificateDetails from "pages/app/details/CertificateDetails"
 describe('CertificateDetails', () => {
 
     beforeEach(() => {
-        const now = new Date(1638305340000).toISOString()
-        Date.now = jest.fn(() => now)
+        // const now = new Date(1638305340000).toISOString()
+        // Date.now = jest.fn(() => now)
+
+        jest
+            .useFakeTimers("modern")
+            .setSystemTime(1638305340000);
 
     })
 
@@ -36,7 +40,6 @@ describe('CertificateDetails', () => {
         it('Shoud be badge with expiring soon label', () => {
             const data = { revoked: false, not_after: "2022-01-01T17:51:54Z" }
             render(<CertificateDetails data={data} />)
-
             const certificateState = screen.getByTestId('certificate-state')
 
             expect(certificateState).toHaveClass('bg-warning')

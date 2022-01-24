@@ -14,7 +14,16 @@ import NoData from 'components/NoData';
 dayjs.extend(relativeTime)
 
 
-
+const NoData = () => {
+    return (
+        <div className='text-center no-pending'>
+            <h5>No data</h5>
+            <p>
+                No available pending registrations
+            </p>
+        </div>
+    )
+}
 
 const PendingReviewsTable = ({ data }) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });
