@@ -26,6 +26,7 @@ type Config struct {
 	Database       DatabaseConfig
 	Replica        ReplicaConfig
 	MTLS           MTLSConfig
+	Backup         BackupConfig
 	processed      bool
 }
 
@@ -47,6 +48,13 @@ type MTLSConfig struct {
 	Insecure  bool   `envconfig:"TRTL_INSECURE" default:"false"`
 	ChainPath string `split_words:"true" required:"false"`
 	CertPath  string `split_words:"true" required:"false"`
+}
+
+type BackupConfig struct {
+	Enabled  bool          `split_words:"true" default:"false"`
+	Interval time.Duration `split_words:"true" default:"24h"`
+	Storage  string        `split_words:"true" required:"false"`
+	Keep     int           `split_words:"true" default:"1"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
