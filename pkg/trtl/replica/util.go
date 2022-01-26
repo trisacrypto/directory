@@ -8,9 +8,7 @@ import (
 )
 
 // b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
-func b64e(src []byte) string {
-	return base64.RawURLEncoding.EncodeToString(src)
-}
+var b64e = base64.RawURLEncoding.EncodeToString
 
 // nsmap is a lightweight tool for keeping track of what objects we've seen during
 // gossip. It is threadsafe and implements set methods. This should be replaced by a

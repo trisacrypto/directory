@@ -66,14 +66,13 @@ func (r *Service) Shutdown() error {
 // Gossip (server-side) Methods
 //===========================================================================
 
-// Gossip implements bilateral anti-entropy: during a Gossip session the initiating
-// replica pushes updates to the remote peer and pulls requested changes. Using
-// bidirectional streaming, the initiating peer sends data-less sync messages with
-// the versions of objects it stores locally. The remote replica then responds with
-// data if its local version is later or sends a sync message back requesting the
-// data from the initiating replica if its local version is earlier. No exchange
-// occurs if both replicas have the same version. At the end of a gossip session,
-// both replicas should have synchronized and have identical underlying data stores.
+// Gossip is a server method that responds to anti-entropy requests.
+// The initiating replica will engage `Gossip` to enable the remote/receiving
+// replica to receive incoming version vectors for all objects in the initiating
+// replica's Trtl store in phase one. The final step of phase one triggers phase
+// two, when the remote replica responds with data if its local version is later.
+// Concurrently with these phases, the remote sends a sync message back
+// requesting data from the initiating replica if its local version is earlier.
 func (r *Service) Gossip(stream replica.Replication_GossipServer) (err error) {
 	// Set up the log context for consistent logging
 	// TODO: get remote peer information from mTLS context and add to logging.

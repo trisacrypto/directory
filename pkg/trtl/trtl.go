@@ -35,6 +35,9 @@ const (
 	defaultPageSize = 100
 )
 
+// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
+var b64e = base64.RawURLEncoding.EncodeToString
+
 // Get is a unary request to retrieve a value for a key.
 // If metadata is requested in the GetRequest, the request will use honu.Object() to
 // retrieve the entire object, including the metadata. If no metadata is requested, the
@@ -647,9 +650,4 @@ func (h *TrtlService) uptime() string {
 		return time.Since(h.parent.started).String()
 	}
 	return "unknown"
-}
-
-// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
-func b64e(src []byte) string {
-	return base64.RawURLEncoding.EncodeToString(src)
 }
