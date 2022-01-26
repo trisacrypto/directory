@@ -441,10 +441,9 @@ gossip:
 			// Receiving a repaired object, check if it's still later than our local
 			// replica's and if so, save it to disk with an update instead of a put.
 			//
-			// NOTE: we must check if it's later than our local version in case a
-			// concurrent Put (a stomp) or concurrent synchronization updated it.
 			// NOTE: honu.Update performs the version checking in a transaction.
-			if err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
+			// TODO: record the update type in prometheus metrics.
+			if _, err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
 				log.Warn().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
