@@ -3,6 +3,7 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"time"
 
@@ -33,6 +34,9 @@ func NewTrtlService(s *Server) (*TrtlService, error) {
 const (
 	defaultPageSize = 100
 )
+
+// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
+var b64e = base64.RawURLEncoding.EncodeToString
 
 // Get is a unary request to retrieve a value for a key.
 // If metadata is requested in the GetRequest, the request will use honu.Object() to

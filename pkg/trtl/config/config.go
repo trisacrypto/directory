@@ -47,6 +47,10 @@ type MTLSConfig struct {
 	Insecure  bool   `envconfig:"TRTL_INSECURE" default:"false"`
 	ChainPath string `split_words:"true" required:"false"`
 	CertPath  string `split_words:"true" required:"false"`
+
+	// Cache loaded cert pool and certificate on config for reuse without reloading
+	pool *x509.CertPool
+	cert tls.Certificate
 }
 
 // New creates a new Config object, loading environment variables and defaults.
@@ -102,7 +106,7 @@ func (c Config) Validate() (err error) {
 	return nil
 }
 
-func (c ReplicaConfig) Validate() error {
+func (c *ReplicaConfig) Validate() error {
 	if c.Enabled {
 		if c.PID == 0 {
 			return errors.New("invalid configuration: PID required for enabled replica")
@@ -119,7 +123,7 @@ func (c ReplicaConfig) Validate() error {
 	return nil
 }
 
-func (c MTLSConfig) Validate() error {
+func (c *MTLSConfig) Validate() error {
 	if c.Insecure {
 		return nil
 	}
@@ -131,33 +135,18 @@ func (c MTLSConfig) Validate() error {
 	return nil
 }
 
-func (c MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
+func (c *MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
 	if c.Insecure {
 		return nil, errors.New("cannot create TLS configuration in insecure mode")
 	}
 
-	var sz *trust.Serializer
-	if sz, err = trust.NewSerializer(false); err != nil {
-		return nil, err
-	}
-
-	var pool trust.ProviderPool
-	if pool, err = sz.ReadPoolFile(c.ChainPath); err != nil {
-		return nil, err
-	}
-
-	var provider *trust.Provider
-	if provider, err = sz.ReadFile(c.CertPath); err != nil {
+	var certPool *x509.CertPool
+	if certPool, err = c.GetCertPool(); err != nil {
 		return nil, err
 	}
 
 	var cert tls.Certificate
-	if cert, err = provider.GetKeyPair(); err != nil {
-		return nil, err
-	}
-
-	var certPool *x509.CertPool
-	if certPool, err = pool.GetCertPool(false); err != nil {
+	if cert, err = c.GetCert(); err != nil {
 		return nil, err
 	}
 
@@ -179,4 +168,49 @@ func (c MTLSConfig) ParseTLSConfig() (_ *tls.Config, err error) {
 		ClientAuth: tls.RequireAndVerifyClientCert,
 		ClientCAs:  certPool,
 	}, nil
+}
+
+func (c *MTLSConfig) GetCertPool() (_ *x509.CertPool, err error) {
+	if c.pool == nil {
+		if err = c.load(); err != nil {
+			return nil, err
+		}
+	}
+	return c.pool, nil
+}
+
+func (c *MTLSConfig) GetCert() (_ tls.Certificate, err error) {
+	if len(c.cert.Certificate) == 0 {
+		if err = c.load(); err != nil {
+			return c.cert, err
+		}
+	}
+	return c.cert, nil
+}
+
+func (c *MTLSConfig) load() (err error) {
+	var sz *trust.Serializer
+	if sz, err = trust.NewSerializer(false); err != nil {
+		return err
+	}
+
+	var pool trust.ProviderPool
+	if pool, err = sz.ReadPoolFile(c.ChainPath); err != nil {
+		return err
+	}
+
+	var provider *trust.Provider
+	if provider, err = sz.ReadFile(c.CertPath); err != nil {
+		return err
+	}
+
+	if c.pool, err = pool.GetCertPool(false); err != nil {
+		return err
+	}
+
+	if c.cert, err = provider.GetKeyPair(); err != nil {
+		return err
+	}
+
+	return nil
 }

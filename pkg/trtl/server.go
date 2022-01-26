@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/rotationalio/honu"
-	"github.com/rotationalio/honu/replica"
+	replication "github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/trtl/replica"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -35,15 +36,15 @@ func init() {
 // 2. A peers management service for interacting with remote peers
 // 3. A replication service which implements auto-adapting anti-entropy replication.
 type Server struct {
-	srv     *grpc.Server    // The gRPC server that listens on its own independent port
-	conf    config.Config   // Configuration for the trtl server
-	db      *honu.DB        // Database connection for managing objects
-	trtl    *TrtlService    // Service for interacting with a Honu database
-	peers   *PeerService    // Service for managing remote peers
-	replica *ReplicaService // Service that handles anti-entropy replication
-	metrics *MetricsService // Service for Prometheus metrics
-	started time.Time       // The timestamp that the server was started (for uptime)
-	echan   chan error      // Channel for receiving errors from the gRPC server
+	srv     *grpc.Server     // The gRPC server that listens on its own independent port
+	conf    config.Config    // Configuration for the trtl server
+	db      *honu.DB         // Database connection for managing objects
+	trtl    *TrtlService     // Service for interacting with a Honu database
+	peers   *PeerService     // Service for managing remote peers
+	replica *replica.Service // Service that handles anti-entropy replication
+	metrics *MetricsService  // Service for Prometheus metrics
+	started time.Time        // The timestamp that the server was started (for uptime)
+	echan   chan error       // Channel for receiving errors from the gRPC server
 }
 
 // New creates a new trtl server given a configuration.
@@ -111,10 +112,10 @@ func New(conf config.Config) (s *Server, err error) {
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
 	// Initialize the Replica service
-	if s.replica, err = NewReplicaService(s); err != nil {
+	if s.replica, err = replica.New(s.conf, s.db, replicatedNamespaces); err != nil {
 		return nil, err
 	}
-	replica.RegisterReplicationServer(s.srv, s.replica)
+	replication.RegisterReplicationServer(s.srv, s.replica)
 
 	// Initialize Metrics service for Prometheus
 	if s.metrics, err = NewMetricsService(); err != nil {
