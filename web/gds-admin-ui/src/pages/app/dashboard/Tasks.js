@@ -25,7 +25,7 @@ const PendingReviewsTable = ({ data }) => {
     }
 
     return (
-        <SimpleBar style={{ maxHeight: 350 }}>
+        <SimpleBar style={{ maxHeight: 350 }} className="task">
             <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                 <tbody>
                     {

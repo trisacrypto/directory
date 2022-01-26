@@ -121,12 +121,6 @@ a[disabled] {
     font-weight: 400;
 }
 
-.no-pending{
-    position: absolute;
-    max-height: 350px;
-    width: 100%;
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
-    
+.task .table-responsive{
+    height: 350px;
 }
