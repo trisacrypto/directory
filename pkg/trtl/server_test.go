@@ -206,6 +206,9 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 		MTLS: config.MTLSConfig{
 			Insecure: true,
 		},
+		Backup: config.BackupConfig{
+			Enabled: false,
+		},
 	}
 
 	// Mark as processed since the config wasn't loaded from the environment

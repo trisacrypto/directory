@@ -1,0 +1,197 @@
+package trtl
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+
+	"github.com/rotationalio/honu"
+	"github.com/rotationalio/honu/iterator"
+	"github.com/rotationalio/honu/object"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/trtl/config"
+	"github.com/trisacrypto/directory/pkg/utils"
+)
+
+// BackupManager runs as an independent service which periodically copies the trtl
+// storage to a compressed backup location on disk.
+type BackupManager struct {
+	conf config.Config
+	db   *honu.DB
+	stop chan struct{}
+}
+
+func NewBackupManager(s *Server) (*BackupManager, error) {
+	return &BackupManager{
+		conf: s.conf,
+		db:   s.db,
+	}, nil
+}
+
+// Runs the main BackupManager routine which periodically wakes up and creates a backup
+// of the trtl database.
+func (m *BackupManager) Run(stop chan struct{}) {
+	backupDir, err := m.getBackupStorage()
+	if err != nil {
+		log.Fatal().Err(err).Msg("trtl backup manager cannot access backup directory")
+	}
+
+	m.stop = stop
+
+	ticker := time.NewTicker(m.conf.Backup.Interval)
+	log.Info().Dur("interval", m.conf.Backup.Interval).Str("store", backupDir).Msg("trtl backup manager started")
+
+backups:
+	for {
+		// Wait for next tick
+		<-ticker.C
+
+		// Begin the backup process
+		start := time.Now()
+		log.Debug().Msg("starting backup of trtl database")
+
+		// Perform the backup
+		if err = m.backup(backupDir); err != nil {
+			// Do not continue if there was a backup error; all code in the rest of the
+			// loop should expect that the backup was successful.
+			// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+			// this ensures that we issue a CRITICAL severity without stopping the server.
+			log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not backup database")
+			continue backups
+		} else {
+			log.Info().Dur("duration", time.Since(start)).Msg("trtl backup complete")
+		}
+
+		// Remove any previous backups that may be in the directory
+		// NOTE: this requires the backup to write filenames as trtldb-200601021504.*
+		var archives []string
+		if archives, err = listArchives(backupDir); err != nil {
+			log.Error().Err(err).Msg("could not list backup directory")
+		} else {
+			if len(archives) > m.conf.Backup.Keep {
+				var removed int
+				for _, archive := range archives[:len(archives)-m.conf.Backup.Keep] {
+					log.Debug().Str("archive", archive).Msg("deleting archive")
+					if err = os.Remove(archive); err == nil {
+						removed++
+					}
+				}
+				log.Debug().Int("kept", m.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
+			}
+		}
+
+		select {
+		case <-m.stop:
+			log.Warn().Msg("trtl backup manager received stop signal")
+			return
+		default:
+		}
+	}
+}
+
+func (m *BackupManager) Shutdown() error {
+	if m.stop != nil {
+		close(m.stop)
+	}
+	return nil
+}
+
+func (m *BackupManager) backup(path string) (err error) {
+	// Create the directory for the copied honu database
+	archive := filepath.Join(path, time.Now().UTC().Format("trtldb-200601021504"))
+	if err = os.Mkdir(archive, 0755); err != nil {
+		return fmt.Errorf("could not create archive directory: %s", err)
+	}
+
+	// Ensure the archive directory is cleaned up when the backup is complete
+	defer func() {
+		os.RemoveAll(archive)
+	}()
+
+	// Open a second honu database at the backup location
+	arcdb, err := honu.Open("leveldb:///"+archive, m.conf.GetHonuConfig())
+	if err != nil {
+		return fmt.Errorf("could not open archive database: %s", err)
+	}
+
+	// Copy all objects to the archive database
+	// TODO: Write objects in batches rather than one at a time
+	var narchived uint64
+	var iter iterator.Iterator
+	if iter, err = m.db.Iter(nil); err != nil {
+		return fmt.Errorf("could not create trtl iterator: %s", err)
+	}
+	for iter.Next() {
+		var object *object.Object
+		if object, err = iter.Object(); err != nil {
+			return fmt.Errorf("could not retrieve object from trtl database: %s", err)
+		}
+
+		// Write the object to the archive database
+		if err = arcdb.Update(object); err != nil {
+			return fmt.Errorf("could not write object to archive database: %s", err)
+		}
+		log.Debug().Str("namespace", object.Namespace).Str("key", string(object.Key)).Msg("archived object")
+		narchived++
+	}
+
+	// Release the iterator and check for errors
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return fmt.Errorf("could not iterate over trtl database: %s", err)
+	}
+	log.Info().Uint64("objects", narchived).Msg("trtl archive completed")
+
+	// Close the archive database
+	if err = arcdb.Close(); err != nil {
+		return fmt.Errorf("could not close archive database: %s", err)
+	}
+
+	// Create the compressed tar archive
+	if err = utils.WriteGzip(filepath.Dir(archive), archive+".tgz"); err != nil {
+		return fmt.Errorf("could not create compressed tar archive: %s", err)
+	}
+
+	return nil
+}
+
+// get the configured backup directory storage or return an error
+func (s *BackupManager) getBackupStorage() (path string, err error) {
+	if s.conf.Backup.Storage == "" {
+		return "", errors.New("incorrectly configured: backups enabled but no backup storage")
+	}
+
+	var stat os.FileInfo
+	path = s.conf.Backup.Storage
+	if stat, err = os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// Create the directory if it does not exist
+			if err = os.MkdirAll(path, 0755); err != nil {
+				return "", fmt.Errorf("could not create backup storage directory: %s", err)
+			}
+			return path, nil
+		}
+		return "", err
+	}
+
+	if !stat.IsDir() {
+		return "", errors.New("incorrectly configured: backup storage is not a directory")
+	}
+	return path, nil
+}
+
+// list all backup archives ordered by date ascending using string sorting that depends
+// on the backup archive format trtldb-YYYYmmddHHMM.
+func listArchives(path string) (paths []string, err error) {
+	if paths, err = filepath.Glob(filepath.Join(path, "trtldb-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].*")); err != nil {
+		return nil, err
+	}
+
+	// Sort the paths by timestamp ascending
+	sort.Strings(paths)
+	return paths, nil
+}
