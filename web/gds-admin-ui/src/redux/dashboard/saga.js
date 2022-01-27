@@ -26,12 +26,11 @@ function* fetchPendingVasps() {
     NProgress.start()
     try {
         const response = yield call(getVasps, "status=pending+review")
-        const data = response?.data
+        const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
         NProgress.done()
     } catch (error) {
-        toast.error(error)
-        yield put(fetchVaspsApiResponseError(FetchVaspsActionTypes.API_RESPONSE_ERROR, error.message))
+        yield put(fetchVaspsApiResponseError(error.message))
         NProgress.done()
     }
 }

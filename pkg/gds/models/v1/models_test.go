@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -446,6 +447,81 @@ func TestVeriedContacts(t *testing.T) {
 
 	contacts = VerifiedContacts(vasp)
 	require.Len(t, contacts, 2)
+}
+
+func TestNewCertificateRequest(t *testing.T) {
+	// Should not be able to create a certificate request with a nil vasp
+	_, err := NewCertificateRequest(nil)
+	require.Error(t, err)
+
+	// If the name does not exist, the default value should be populated
+	vasp := &pb.VASP{
+		Id:         "b5841869-105f-411c-8722-4045aad72717",
+		CommonName: "charlieVASP",
+		Entity:     &ivms101.LegalPerson{},
+	}
+	cr, err := NewCertificateRequest(vasp)
+	require.NoError(t, err)
+	require.Equal(t, vasp.Id, cr.Vasp)
+	require.Equal(t, vasp.CommonName, cr.CommonName)
+	require.Contains(t, cr.Params, "organizationName")
+	require.Equal(t, "TRISA Member VASP", cr.Params["organizationName"])
+
+	vasp.Entity.Name = &ivms101.LegalPersonName{
+		NameIdentifiers: []*ivms101.LegalPersonNameId{
+			{
+				LegalPersonName:               "Charlie Inc.",
+				LegalPersonNameIdentifierType: ivms101.LegalPersonShort,
+			},
+		},
+	}
+	cr, err = NewCertificateRequest(vasp)
+	require.NoError(t, err)
+	require.Contains(t, cr.Params, "organizationName")
+	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
+
+	// Valid organization name, unspecified location info
+	vasp.Entity.Name.NameIdentifiers[0].LegalPersonNameIdentifierType = ivms101.LegalPersonLegal
+	cr, err = NewCertificateRequest(vasp)
+	require.NoError(t, err)
+	require.Contains(t, cr.Params, "organizationName")
+	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
+	require.Contains(t, cr.Params, "localityName")
+	require.Equal(t, "Menlo Park", cr.Params["localityName"])
+	require.Contains(t, cr.Params, "stateOrProvinceName")
+	require.Equal(t, "California", cr.Params["stateOrProvinceName"])
+	require.Contains(t, cr.Params, "countryName")
+	require.Equal(t, "US", cr.Params["countryName"])
+
+	// Valid organization name, partial location info is overridden
+	vasp.Entity.GeographicAddresses = []*ivms101.Address{
+		{
+			Country: "CA",
+		},
+	}
+	cr, err = NewCertificateRequest(vasp)
+	require.NoError(t, err)
+	require.Contains(t, cr.Params, "localityName")
+	require.Equal(t, "Menlo Park", cr.Params["localityName"])
+	require.Contains(t, cr.Params, "stateOrProvinceName")
+	require.Equal(t, "California", cr.Params["stateOrProvinceName"])
+	require.Contains(t, cr.Params, "countryName")
+	require.Equal(t, "US", cr.Params["countryName"])
+
+	// Complete organization name and location info
+	vasp.Entity.GeographicAddresses[0].TownLocationName = "Toronto"
+	vasp.Entity.GeographicAddresses[0].CountrySubDivision = "Ontario"
+	vasp.Entity.GeographicAddresses[0].Country = "CA"
+	cr, err = NewCertificateRequest(vasp)
+	require.NoError(t, err)
+	require.Contains(t, cr.Params, "organizationName")
+	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
+	require.Contains(t, cr.Params, "localityName")
+	require.Equal(t, "Toronto", cr.Params["localityName"])
+	require.Contains(t, cr.Params, "stateOrProvinceName")
+	require.Equal(t, "Ontario", cr.Params["stateOrProvinceName"])
+	require.Contains(t, cr.Params, "countryName")
+	require.Equal(t, "CA", cr.Params["countryName"])
 }
 
 func TestUpdateCertificateRequestStatus(t *testing.T) {

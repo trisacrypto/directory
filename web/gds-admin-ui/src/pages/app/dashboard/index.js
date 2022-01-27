@@ -10,23 +10,24 @@ import Statistics from './Statistics';
 import Status from './Status';
 import Tasks from './Tasks';
 import TasksChart from './TasksChart';
+import { getPendingVaspsData, getPendingVaspsError, getPendingVaspsLoadingState, getSummaryData } from 'redux/selectors/dashboard';
+import useSafeDispatch from 'hooks/useSafeDispatch';
 
 
 const ProjectDashboardPage = () => {
-    const dispatch = useDispatch();
-    const { summary, vasps, isVaspsLoading } = useSelector(state => ({
-        summary: state.Summary.data,
-        vasps: state.Vasps.data,
-        isVaspsLoading: state.Vasps.loading
-    }))
-
+    const _dispatch = useDispatch();
+    const safeDispatch = useSafeDispatch(_dispatch)
+    const summary = useSelector(getSummaryData)
+    const vasps = useSelector(getPendingVaspsData)
+    const isVaspsLoading = useSelector(getPendingVaspsLoadingState)
+    const pendingVaspsError = useSelector(getPendingVaspsError)
 
     React.useEffect(() => {
-        dispatch(fetchCertificates());
-        dispatch(fetchPendingVasps());
-        dispatch(fetchSummary())
-        dispatch(fecthRegistrationsReviews())
-    }, [dispatch])
+        safeDispatch(fetchCertificates());
+        safeDispatch(fetchPendingVasps());
+        safeDispatch(fetchSummary())
+        safeDispatch(fecthRegistrationsReviews())
+    }, [safeDispatch])
 
     return (
         <React.Fragment>
@@ -43,8 +44,8 @@ const ProjectDashboardPage = () => {
                 <Col lg={4}>
                     <Status statuses={summary?.statuses} />
                 </Col>
-                <Col sm={12} lg={8} style={{ overflowY: "auto", height: "100%" }}>
-                    <Tasks data={vasps} isLoading={isVaspsLoading} />
+                <Col sm={12} lg={8} className='d-flex'>
+                    <Tasks data={vasps} isLoading={isVaspsLoading} error={pendingVaspsError} />
                 </Col>
             </Row>
             <Row>
@@ -57,4 +58,4 @@ const ProjectDashboardPage = () => {
     );
 };
 
-export default ProjectDashboardPage;
+export default React.memo(ProjectDashboardPage);

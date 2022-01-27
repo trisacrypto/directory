@@ -88,7 +88,7 @@ const Status = ({ statuses }) => {
                         </div>
 
                         <Row className="text-center mt-2 py-2">
-                            <Col lg={4}>
+                            <Col xs={4}>
                                 <i className="mdi mdi-progress-question text-warning mt-3 h4"></i>
                                 <h4 className="fw-normal">
                                     <span>{statusPercents()[STATUS.PENDING_REVIEW] + '%'}</span>
@@ -96,14 +96,14 @@ const Status = ({ statuses }) => {
                                 <p className="text-muted mb-0 fs-6">Pending</p>
                             </Col>
 
-                            <Col lg={4}>
+                            <Col xs={4}>
                                 <i className="mdi mdi-alert-octagram text-danger mt-3 h4"></i>
                                 <h4 className="fw-normal">
                                     <span>{statusPercents()[STATUS.REJECTED] + '%'}</span>
                                 </h4>
                                 <p className="text-muted mb-0 fs-6">Rejected</p>
                             </Col>
-                            <Col lg={4}>
+                            <Col xs={4}>
                                 <i className="mdi mdi-shield-check text-primary mt-3 h4"></i>
                                 <h4 className="fw-normal">
                                     <span>{statusPercents()[STATUS.VERIFIED] + '%'}</span>

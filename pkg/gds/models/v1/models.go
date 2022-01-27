@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -171,6 +173,70 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 		return err
 	}
 	return nil
+}
+
+// Defaults to use for the certificate request parameters if they can't be inferred.
+const (
+	crDefaultOrganization        = "TRISA Member VASP"
+	crDefaultLocality            = "Menlo Park"
+	crDefaultStateOrProvinceName = "California"
+	crDefaultCountry             = "US"
+)
+
+// NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
+func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
+	var (
+		organizationName    string
+		localityName        string
+		stateOrProvinceName string
+		countryName         string
+	)
+
+	if vasp == nil {
+		return nil, errors.New("must supply a VASP object for certificate request creation")
+	}
+
+	certRequest = &CertificateRequest{
+		Id:         uuid.New().String(),
+		Vasp:       vasp.Id,
+		CommonName: vasp.CommonName,
+		Params:     make(map[string]string),
+	}
+
+	// Populate the organization name, if available.
+	if organizationName, err = vasp.Name(); err == nil {
+		certRequest.Params["organizationName"] = organizationName
+	} else {
+		log.Warn().
+			Err(err).
+			Str("vasp_id", vasp.Id).
+			Str("certreq_id", certRequest.Id).
+			Msg("organization name not found, populating new certificate request with default value")
+		certRequest.Params["organizationName"] = crDefaultOrganization
+	}
+
+	// Populate the location information, if available.
+	if len(vasp.Entity.GeographicAddresses) > 0 {
+		address := vasp.Entity.GeographicAddresses[0]
+		localityName = address.TownLocationName
+		stateOrProvinceName = address.CountrySubDivision
+		countryName = address.Country
+	}
+	if localityName != "" && stateOrProvinceName != "" && countryName != "" {
+		certRequest.Params["localityName"] = localityName
+		certRequest.Params["stateOrProvinceName"] = stateOrProvinceName
+		certRequest.Params["countryName"] = countryName
+	} else {
+		log.Debug().
+			Str("vasp_id", vasp.Id).
+			Str("certreq_id", certRequest.Id).
+			Msg("location information not found or incomplete, populating new certificate request with default values")
+		certRequest.Params["localityName"] = crDefaultLocality
+		certRequest.Params["stateOrProvinceName"] = crDefaultStateOrProvinceName
+		certRequest.Params["countryName"] = crDefaultCountry
+	}
+
+	return certRequest, nil
 }
 
 // UpdateCertificateRequestStatus changes the status of a CertificateRequest and appends

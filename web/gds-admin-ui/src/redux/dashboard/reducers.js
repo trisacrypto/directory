@@ -38,7 +38,7 @@ const certificatesReducers = (state: State = INITIAL_STATE, action: Action) => {
     }
 }
 
-const vaspsReducers = (state: State = INITIAL_STATE, action: Action) => {
+const vaspsReducers = (state = INITIAL_STATE, action) => {
 
     switch (action.type) {
         case FetchVaspsActionTypes.FETCH_VASPS:
@@ -55,6 +55,7 @@ const vaspsReducers = (state: State = INITIAL_STATE, action: Action) => {
         case FetchVaspsActionTypes.API_RESPONSE_ERROR:
             return {
                 ...state,
+                loading: false,
                 error: action.payload.error
             }
         case FetchPendingVaspsActionTypes.FETCH_PENDING_VASPS:

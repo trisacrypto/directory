@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -228,12 +227,13 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Create PKCS12 password along with certificate request.
+	var certRequest *models.CertificateRequest
 	password := secrets.CreateToken(16)
-	certRequest := &models.CertificateRequest{
-		Id:         uuid.New().String(),
-		Vasp:       vasp.Id,
-		CommonName: vasp.CommonName,
+	if certRequest, err = models.NewCertificateRequest(vasp); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not create certificate request")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
+
 	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", email); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")

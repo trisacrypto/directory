@@ -65,11 +65,13 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 		// Update the incoming peer with data from the previous peer
 		// TODO: merge empty fields from current peer into incoming peer then validate.
 		in.Created = current.Created
-
 	}
 
 	// TODO: validate other Peer fields
 	in.Modified = time.Now().Format(time.RFC3339)
+	if in.Created == "" {
+		in.Created = in.Modified
+	}
 
 	// Insert the peer into the database
 	var value []byte
@@ -119,7 +121,8 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 	out = &peers.PeersList{
 		Peers: make([]*peers.Peer, 0),
 		Status: &peers.PeersStatus{
-			Regions: make(map[string]int64),
+			Regions:             make(map[string]int64),
+			LastSynchronization: p.parent.replica.LastSynchronization(),
 		},
 	}
 

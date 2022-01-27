@@ -29,4 +29,13 @@ function reviewVasp(id, payload, params) {
     })
 }
 
-export { getVasp, updateVasp, reviewVasp, getAdminVerificationToken };
+function deleteVasp(id) {
+    const csrfToken = getCookie('csrf_token')
+    return api.delete(`vasps/${id}`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+export { getVasp, updateVasp, reviewVasp, getAdminVerificationToken, deleteVasp };

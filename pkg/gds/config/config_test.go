@@ -39,6 +39,7 @@ var testEnv = map[string]string{
 	"SECTIGO_USERNAME":                         "foo",
 	"SECTIGO_PASSWORD":                         "supersecret",
 	"SECTIGO_PROFILE":                          "17",
+	"SECTIGO_TESTING":                          "true",
 	"GDS_SERVICE_EMAIL":                        "test@example.com",
 	"GDS_ADMIN_EMAIL":                          "admin@example.com",
 	"SENDGRID_API_KEY":                         "bar1234",
@@ -100,6 +101,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
 	require.Equal(t, testEnv["SECTIGO_PASSWORD"], conf.Sectigo.Password)
 	require.Equal(t, testEnv["SECTIGO_PROFILE"], conf.Sectigo.Profile)
+	require.True(t, conf.Sectigo.Testing)
 	require.Equal(t, testEnv["GDS_SERVICE_EMAIL"], conf.Email.ServiceEmail)
 	require.Equal(t, testEnv["GDS_ADMIN_EMAIL"], conf.Email.AdminEmail)
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)

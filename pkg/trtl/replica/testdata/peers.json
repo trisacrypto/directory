@@ -1,0 +1,26 @@
+[
+    {
+        "id": 10,
+        "addr": "localhost:9010",
+        "name": "raphael",
+        "region": "queens"
+    },
+    {
+        "id": 20,
+        "addr": "localhost:9020",
+        "name": "michelangelo",
+        "region": "brooklyn"
+    },
+    {
+        "id": 30,
+        "addr": "localhost:9030",
+        "name": "leonardo",
+        "region": "bronx"
+    },
+    {
+        "id": 40,
+        "addr": "localhost:9040",
+        "name": "donatello",
+        "region": "manhattan"
+    }
+]

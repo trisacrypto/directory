@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/rotationalio/honu"
-	"github.com/rotationalio/honu/replica"
+	replication "github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/trtl/replica"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -35,14 +36,15 @@ func init() {
 // 2. A peers management service for interacting with remote peers
 // 3. A replication service which implements auto-adapting anti-entropy replication.
 type Server struct {
-	srv     *grpc.Server    // The gRPC server that listens on its own independent port
-	conf    config.Config   // Configuration for the trtl server
-	db      *honu.DB        // Database connection for managing objects
-	trtl    *TrtlService    // Service for interacting with a Honu database
-	peers   *PeerService    // Service for managing remote peers
-	replica *ReplicaService // Service that handles anti-entropy replication
-	metrics *MetricsService // Service for Prometheus metrics
-	echan   chan error      // Channel for receiving errors from the gRPC server
+	srv     *grpc.Server     // The gRPC server that listens on its own independent port
+	conf    config.Config    // Configuration for the trtl server
+	db      *honu.DB         // Database connection for managing objects
+	trtl    *TrtlService     // Service for interacting with a Honu database
+	peers   *PeerService     // Service for managing remote peers
+	replica *replica.Service // Service that handles anti-entropy replication
+	metrics *MetricsService  // Service for Prometheus metrics
+	started time.Time        // The timestamp that the server was started (for uptime)
+	echan   chan error       // Channel for receiving errors from the gRPC server
 }
 
 // New creates a new trtl server given a configuration.
@@ -110,10 +112,10 @@ func New(conf config.Config) (s *Server, err error) {
 	peers.RegisterPeerManagementServer(s.srv, s.peers)
 
 	// Initialize the Replica service
-	if s.replica, err = NewReplicaService(s); err != nil {
+	if s.replica, err = replica.New(s.conf, s.db, replicatedNamespaces); err != nil {
 		return nil, err
 	}
-	replica.RegisterReplicationServer(s.srv, s.replica)
+	replication.RegisterReplicationServer(s.srv, s.replica)
 
 	// Initialize Metrics service for Prometheus
 	if s.metrics, err = NewMetricsService(); err != nil {
@@ -145,6 +147,7 @@ func (t *Server) Serve() (err error) {
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
+	// ? should metrics be enabled even if we're in maintenance mode?
 	if t.conf.MetricsEnabled {
 		t.metrics.Serve(t.conf.MetricsAddr)
 	} else {
@@ -161,6 +164,9 @@ func (t *Server) Serve() (err error) {
 	// Run the gRPC server
 	go t.Run(sock)
 	log.Info().Str("listen", t.conf.BindAddr).Msg("trtl server started")
+
+	// Set the timestamp that the server was started now that it is booted up
+	t.started = time.Now()
 
 	// The server go routine is started so return nil error (any server errors will be
 	// sent on the error channel).
@@ -187,9 +193,11 @@ func (t *Server) Shutdown() (err error) {
 	t.srv.GracefulStop()
 
 	// Shutdown the Prometheus metrics server
-	if err = t.metrics.Shutdown(); err != nil {
-		log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
-		errs = append(errs, err)
+	if t.conf.MetricsEnabled {
+		if err = t.metrics.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
+			errs = append(errs, err)
+		}
 	}
 
 	// Stop the anti-entropy routine.
@@ -198,9 +206,12 @@ func (t *Server) Shutdown() (err error) {
 		errs = append(errs, err)
 	}
 
-	if err = t.db.Close(); err != nil {
-		log.Error().Err(err).Msg("could not close database")
-		errs = append(errs, err)
+	// If we're in maintenance mode db will be nil, so check if available to avoid panic
+	if t.db != nil {
+		if err = t.db.Close(); err != nil {
+			log.Error().Err(err).Msg("could not close database")
+			errs = append(errs, err)
+		}
 	}
 
 	if len(errs) > 0 {

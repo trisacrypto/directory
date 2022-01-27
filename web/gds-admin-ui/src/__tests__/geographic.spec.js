@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Movies
+                    Automotive
                      
                     <br />
-                    Automotive
+                    Movies
                      
                     <br />
                     23
                      
-                    Dach Bypass
+                    Bernadette Knoll
                     <br />
-                    Shoreline
+                    Danville
                      
                     
                      
                     MA
                      
-                    67323-0204
+                    15705
                       
                     <br />
                     US

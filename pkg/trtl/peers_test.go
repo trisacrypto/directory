@@ -124,7 +124,6 @@ func (s *trtlTestSuite) TestPeers() {
 	require.Equal(network[3].Addr, rep.Peers[0].Addr)
 	require.Equal(network[3].Name, rep.Peers[0].Name)
 	require.Equal(network[3].Region, rep.Peers[0].Region)
-	require.NotEqual(rep.Peers[0].Created, rep.Peers[0].Modified)
 
 	// Should be able to delete peers
 	rmrep, err := client.RmPeers(ctx, network[0])
