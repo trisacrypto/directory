@@ -165,7 +165,10 @@ type UpdateVASPRequest struct {
 	// into an ivms101.LegalPerson protocol buffer.
 	Entity map[string]interface{} `json:"entity,omitempty"`
 
-	// TODO: allow admin to update contacts, which may require contact reverification.
+	// Contacts - this field completely replaces the VASP contacts if it is supplied.
+	// The JSON data must be marshaled into a gds.models.v1beta1.Contacts protocol
+	// buffer.
+	Contacts map[string]interface{} `json:"contacts,omitempty"`
 
 	// Common name can be updated only if the certificate has not been issued. It also
 	// updates the certificate request to ensure the correct certs are issued. The TRISA

@@ -994,7 +994,16 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		nChanges++
 	}
 
-	// TODO: update VASP contact information
+	// Update contact information
+	if updated, code, err = s.updateVASPContacts(vasp, in.Contacts, logctx); err != nil {
+		// NOTE: logging happens in the update helper function
+		c.JSON(code, admin.ErrorResponse(err))
+		return
+	} else if updated {
+		// Log all of the updates that were made in one log message.
+		logctx = logctx.With().Str("vasp_contacts", "VASP contact information updated").Logger()
+		nChanges++
+	}
 
 	// Update common name and trisa endpoint - this will also update any certificate requests.
 	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
@@ -1140,6 +1149,27 @@ func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log 
 	}
 
 	vasp.Trixo = trixo
+	return true, http.StatusOK, nil
+}
+
+// Update the VASP contacts; this completely overwrites the previous contact data.
+func (s *Admin) updateVASPContacts(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	// Check if contact data has been supplied, otherwise do not update.
+	if len(data) == 0 {
+		return false, http.StatusOK, nil
+	}
+
+	// Remarshal the JSON contact data
+	contacts := &pb.Contacts{}
+	if err = wire.Unwire(data, contacts); err != nil {
+		log.Warn().Err(err).Msg("could not unwire JSON data into a valid Contacts")
+		return false, http.StatusBadRequest, errors.New("could not parse Contacts")
+	}
+
+	// TODO: Iterate through the contacts and send email verification for updated
+	// email addresses.
+
+	vasp.Contacts = contacts
 	return true, http.StatusOK, nil
 }
 
