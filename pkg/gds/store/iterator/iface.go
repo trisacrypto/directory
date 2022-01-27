@@ -17,7 +17,7 @@ type Iterator interface {
 type DirectoryIterator interface {
 	Iterator
 	Id() string
-	VASP() *pb.VASP
+	VASP() (*pb.VASP, error)
 	All() ([]*pb.VASP, error)
 	Seek(vaspID string) bool
 }
@@ -25,6 +25,6 @@ type DirectoryIterator interface {
 // CertificateIterator allows access to CertificateStore models
 type CertificateIterator interface {
 	Iterator
-	CertReq() *models.CertificateRequest
+	CertReq() (*models.CertificateRequest, error)
 	All() ([]*models.CertificateRequest, error)
 }

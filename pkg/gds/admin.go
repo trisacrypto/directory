@@ -436,8 +436,9 @@ func (s *Admin) Summary(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -480,8 +481,9 @@ func (s *Admin) Summary(c *gin.Context) {
 	for iter2.Next() {
 		// Fetch CertificateRequest from the database
 		var certreq *models.CertificateRequest
-		if certreq = iter2.CertReq(); certreq == nil {
-			// CertificateRequest could not be parsed; error logged in CertReq() method continue iteration
+		var err error
+		if certreq, err = iter2.CertReq(); err != nil {
+			log.Error().Err(err).Msg("could not parse CertificateRequest from database")
 			continue
 		}
 
@@ -520,8 +522,9 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -653,8 +656,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -758,8 +762,9 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			// In the page range so add to the list reply
 			// Fetch VASP from the database
 			var vasp *pb.VASP
-			if vasp = iter.VASP(); vasp == nil {
-				// VASP could not be parsed; error logged in VASP() method continue iteration
+			var err error
+			if vasp, err = iter.VASP(); err != nil {
+				log.Error().Err(err).Msg("could not parse VASP from database")
 				out.Count--
 				continue
 			}
