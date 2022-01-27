@@ -644,11 +644,6 @@ func returnMeta(object *object.Object) *pb.Meta {
 	return meta
 }
 
-// Expose the database for testing
-func (h *TrtlService) GetDB() *honu.DB {
-	return h.db
-}
-
 // uptime is a helper function that returns how long the server has been running, if known
 func (h *TrtlService) uptime() string {
 	if !h.parent.started.IsZero() {

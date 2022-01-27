@@ -19,8 +19,6 @@ func (s *trtlTestSuite) TestPeers() {
 	defer s.grpc.Close()
 	client := peers.NewPeerManagementClient(s.grpc.Conn)
 
-	defer s.reset()
-
 	// GetPeers should return nothing
 	rep, err := client.GetPeers(ctx, &peers.PeersFilter{})
 	require.NoError(err, "could not get empty peers")
