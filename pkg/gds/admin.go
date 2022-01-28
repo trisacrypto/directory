@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
@@ -447,8 +448,10 @@ func (s *Admin) Summary(c *gin.Context) {
 		iter := models.NewContactIterator(vasp.Contacts, true, false)
 		for iter.Next() {
 			out.ContactsCount++
-			contact, _, _ := iter.Value()
-			if _, verified, _ := models.GetContactVerification(contact); verified {
+			contact, kind := iter.Value()
+			if verified, err := models.ContactIsVerified(contact); err != nil {
+				log.Warn().Str("contact", kind).Err(err).Msg("could not retrieve verification status")
+			} else if verified {
 				out.VerifiedContacts++
 			}
 		}
@@ -780,9 +783,11 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			if snippet.VerifiedContacts, err = models.ContactVerifications(vasp); err != nil {
-				log.Warn().Err(err).Msg("could not get contact verifications")
-				c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+			var errs *multierror.Error
+			if snippet.VerifiedContacts, errs = models.ContactVerifications(vasp); errs != nil {
+				for _, err := range errs.Errors {
+					log.Error().Err(err).Msg("could not get contact verifications")
+				}
 			}
 
 			// Append to list in reply
@@ -834,9 +839,9 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
-		Traveler: models.IsTraveler(vasp),
+		Traveler:         models.IsTraveler(vasp),
+		VerifiedContacts: models.VerifiedContacts(vasp),
 	}
-	out.VerifiedContacts = models.VerifiedContacts(vasp)
 
 	// Attempt to determine the VASP name from IVMS 101 data.
 	if out.Name, err = vasp.Name(); err != nil {
@@ -869,7 +874,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	vasp.Extra = nil
 	iter := models.NewContactIterator(vasp.Contacts, false, false)
 	for iter.Next() {
-		contact, _, _ := iter.Value()
+		contact, _ := iter.Value()
 		contact.Extra = nil
 	}
 

@@ -192,7 +192,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	// Create the verification tokens and save the VASP back to the database
 	iter := models.NewContactIterator(vasp.Contacts, true, false)
 	for iter.Next() {
-		contact, kind, _ := iter.Value()
+		contact, kind := iter.Value()
 		if err = models.SetContactVerification(contact, secrets.CreateToken(48), false); err != nil {
 			log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
 			return nil, status.Error(codes.Aborted, "could not send contact verification emails")
@@ -444,7 +444,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 	iter := models.NewContactIterator(vasp.Contacts, false, false)
 	for iter.Next() {
-		contact, kind, _ := iter.Value()
+		contact, kind := iter.Value()
 		// Get the verification status
 		token, verified, err := models.GetContactVerification(contact)
 		if err != nil {
@@ -579,7 +579,7 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 func getContactEmail(vasp *pb.VASP) string {
 	iter := models.NewContactIterator(vasp.Contacts, true, false)
 	for iter.Next() {
-		contact, _, _ := iter.Value()
+		contact, _ := iter.Value()
 		return contact.Email
 	}
 	return ""

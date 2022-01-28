@@ -42,11 +42,11 @@ func TestIterContacts(t *testing.T) {
 	// Should iterate over all contacts.
 	iter := models.NewContactIterator(contacts, false, false)
 	for iter.Next() {
-		contact, kind, err := iter.Value()
-		require.NoError(t, err)
+		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 
@@ -64,11 +64,11 @@ func TestIterContacts(t *testing.T) {
 	}
 	iter = models.NewContactIterator(contacts, true, false)
 	for iter.Next() {
-		contact, kind, err := iter.Value()
-		require.NoError(t, err)
+		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 
@@ -80,11 +80,11 @@ func TestIterContacts(t *testing.T) {
 	contacts.Billing = nil
 	iter = models.NewContactIterator(contacts, false, false)
 	for iter.Next() {
-		contact, kind, err := iter.Value()
-		require.NoError(t, err)
+		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 }
@@ -111,11 +111,11 @@ func TestIterVerfiiedContacts(t *testing.T) {
 	// No contacts are verified.
 	iter := models.NewContactIterator(contacts, false, true)
 	for iter.Next() {
-		contact, kind, err := iter.Value()
-		require.NoError(t, err)
+		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
 	require.Equal(t, []*pb.Contact{}, actualContacts)
 	require.Equal(t, []string{}, actualKinds)
 
@@ -135,11 +135,11 @@ func TestIterVerfiiedContacts(t *testing.T) {
 	}
 	iter = models.NewContactIterator(contacts, false, true)
 	for iter.Next() {
-		contact, kind, err := iter.Value()
-		require.NoError(t, err)
+		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 }

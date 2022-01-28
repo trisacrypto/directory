@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-multierror"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -49,7 +50,6 @@ type ContactIterator struct {
 	email    bool
 	verified bool
 	index    int
-	current  *contactType
 	contacts []*contactType
 }
 
@@ -59,6 +59,7 @@ func NewContactIterator(contacts *pb.Contacts, requireEmail bool, requireVerifie
 	return &ContactIterator{
 		email:    requireEmail,
 		verified: requireVerified,
+		index:    -1,
 		contacts: contactOrder(contacts),
 	}
 }
@@ -66,40 +67,58 @@ func NewContactIterator(contacts *pb.Contacts, requireEmail bool, requireVerifie
 // Moves the ContactIterator to the next existing contact and returns true if there is
 // one, false if the iteration is complete.
 func (i *ContactIterator) Next() bool {
-	for ; i.index < len(i.contacts); i.index++ {
-		i.current = i.contacts[i.index]
-		contact := i.current.contact
-		if contact != nil {
-			if i.email && !ContactHasEmail(contact) {
-				continue
+	// Advance the index (note, index must be initialized at -1)
+	i.index++
+
+	// Stopping condition
+	if i.index >= len(i.contacts) {
+		return false
+	}
+
+	// Filter checks - contact must exist
+	current := i.contacts[i.index]
+	if current.contact == nil {
+		return i.Next()
+	}
+
+	// Filter if email required
+	if i.email && !ContactHasEmail(current.contact) {
+		return i.Next()
+	}
+
+	// Filter if verified is required
+	if i.verified {
+		if verified, err := ContactIsVerified(current.contact); err != nil || !verified {
+			// Even in an error we're skipping the contact, errors have to be
+			// fetched as a multi-error after the iteration is complete.
+			if err != nil {
+				current.err = fmt.Errorf("error retrieving verification status for %s contact: %s", current.kind, err.Error())
 			}
-			if i.verified {
-				var verified bool
-				var err error
-				if verified, err = ContactIsVerified(contact); err != nil {
-					// If we can't retrieve the contact verification, let the caller
-					// handle the error on Value().
-					i.current.err = err
-					i.index++
-					return true
-				}
-				if !verified {
-					continue
-				}
-			}
-			i.index++
-			return true
+			return i.Next()
 		}
 	}
-	i.current = nil
-	return false
+
+	return true
 }
 
-func (i *ContactIterator) Value() (*pb.Contact, string, error) {
-	if i.current != nil {
-		return i.current.contact, i.current.kind, i.current.err
+func (i *ContactIterator) Value() (*pb.Contact, string) {
+	if i.index < len(i.contacts) {
+		// Note that no checking of the contact occurs here to allow
+		// us to allow iteration with different filtering mechanisms.
+		current := i.contacts[i.index]
+		return current.contact, current.kind
 	}
-	return nil, "", errors.New("no more contacts")
+	return nil, ""
+}
+
+// Error returns a multi-error that describes any errors that occurred during
+// iteration for any contact. This will allow us to log all errors once.
+func (i *ContactIterator) Error() (err error) {
+	var errs *multierror.Error
+	for _, contact := range i.contacts {
+		errs = multierror.Append(errs, contact.err)
+	}
+	return errs.ErrorOrNil()
 }
 
 // GetContactVerification token and verified status from the extra data field on the Contact.
@@ -146,26 +165,26 @@ func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
 	contacts = make(map[string]string)
 	iter := NewContactIterator(vasp.Contacts, false, true)
 	for iter.Next() {
-		if contact, kind, err := iter.Value(); err == nil {
-			contacts[kind] = contact.Email
-		}
+		contact, kind := iter.Value()
+		contacts[kind] = contact.Email
 	}
 	return contacts
 }
 
 // ContactVerifications returns a map of contact type to verified status, omitting any
 // contacts that do not exist.
-func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, err error) {
+func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, errs *multierror.Error) {
 	contacts = make(map[string]bool)
 	iter := NewContactIterator(vasp.Contacts, false, false)
 	for iter.Next() {
-		if contact, kind, err := iter.Value(); err == nil {
-			if verified, err := ContactIsVerified(contact); err == nil {
-				contacts[kind] = verified
-			}
+		contact, kind := iter.Value()
+		if verified, err := ContactIsVerified(contact); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error retrieving verification status for %s contact: %s", kind, err))
+		} else {
+			contacts[kind] = verified
 		}
 	}
-	return contacts, nil
+	return contacts, errs
 }
 
 // GetEmailLog from the extra data on the Contact record.

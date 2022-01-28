@@ -19,6 +19,7 @@ require (
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.2.0
 	github.com/googleapis/gax-go v1.0.3
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.13.6 // indirect

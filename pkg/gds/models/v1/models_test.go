@@ -436,7 +436,6 @@ func TestVeriedContacts(t *testing.T) {
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)
-	require.NoError(t, err)
 	require.Len(t, contacts, 1)
 
 	err = SetContactVerification(vasp.Contacts.Technical, "", true)
@@ -446,7 +445,6 @@ func TestVeriedContacts(t *testing.T) {
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)
-	require.NoError(t, err)
 	require.Len(t, contacts, 2)
 }
 
