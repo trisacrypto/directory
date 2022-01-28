@@ -7,6 +7,7 @@ import (
 	"net/mail"
 
 	"github.com/ghodss/yaml"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
@@ -79,21 +80,13 @@ func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
 // email address. Caller must update the VASP record on the data store after calling
 // this function.
 func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
-	var contacts = []*pb.Contact{
-		vasp.Contacts.Technical, vasp.Contacts.Administrative,
-		vasp.Contacts.Billing, vasp.Contacts.Legal,
-	}
-
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors int
-	for idx, contact := range contacts {
-		// Skip any null contacts or contacts without email addresses
-		if contact == nil || contact.Email == "" {
-			continue
-		}
-
+	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	for iter.Next() {
 		var verified bool
+		contact, kind := iter.Value()
 		ctx := VerifyContactData{
 			Name:    contact.Name,
 			VID:     vasp.Id,
@@ -112,13 +105,13 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 				ctx,
 			)
 			if err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create verify contact email")
+				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not create verify contact email")
 				nErrors++
 				continue
 			}
 
 			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send verify contact email")
+				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not send verify contact email")
 				nErrors++
 				continue
 			}
@@ -126,7 +119,7 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 			sent++
 
 			if err = models.AppendEmailLog(contact, string(admin.ResendVerifyContact), msg.Subject); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log verify contact email")
+				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not log verify contact email")
 				nErrors++
 				continue
 			}
@@ -157,16 +150,11 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	clone := proto.Clone(vasp).(*pb.VASP)
 	models.SetAdminVerificationToken(clone, "[REDACTED]")
 
-	var contacts = []*pb.Contact{
-		clone.Contacts.Technical, clone.Contacts.Administrative,
-		clone.Contacts.Billing, clone.Contacts.Legal,
-	}
-
-	for _, contact := range contacts {
-		if contact != nil {
-			_, verified, _ := models.GetContactVerification(contact)
-			models.SetContactVerification(contact, "[REDACTED]", verified)
-		}
+	iter := models.NewContactIterator(clone.Contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		_, verified, _ := models.GetContactVerification(contact)
+		models.SetContactVerification(contact, "[REDACTED]", verified)
 	}
 
 	// Marshal the VASP struct for review in the email.
@@ -213,65 +201,52 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 // registration status is rejected without certificate issuance and explains why.
 // Caller must update the VASP record on the data store after calling this function.
 func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sent int, err error) {
+	var errs *multierror.Error
 	ctx := RejectRegistrationData{
 		VID:    vasp.Id,
 		Reason: reason,
 	}
 
-	var contacts = []*pb.Contact{
-		vasp.Contacts.Technical, vasp.Contacts.Administrative,
-		vasp.Contacts.Billing, vasp.Contacts.Legal,
-	}
-
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
-	var nErrors uint8
-	for idx, contact := range contacts {
-		// Skip any contacts that we can't send emails to
-		if contact == nil || contact.Email == "" {
+	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	for iter.Next() {
+		var contact *pb.Contact
+		var kind string
+		contact, kind = iter.Value()
+		ctx.Name = contact.Name
+		msg, err := RejectRegistrationEmail(
+			m.serviceEmail.Name, m.serviceEmail.Address,
+			contact.Name, contact.Email,
+			ctx,
+		)
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not create reject registration email for %s contact: %s", kind, err))
 			continue
 		}
 
-		var verified bool
-		if _, verified, err = models.GetContactVerification(contact); err != nil {
-			// If we can't get the verification, this is a fatal error
-			return sent, err
+		if err = m.Send(msg); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not send reject registration email for %s contact: %s", kind, err))
+			continue
 		}
 
-		if verified {
-			ctx.Name = contact.Name
-			msg, err := RejectRegistrationEmail(
-				m.serviceEmail.Name, m.serviceEmail.Address,
-				contact.Name, contact.Email,
-				ctx,
-			)
-			if err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create reject registration email")
-				nErrors++
-				continue
-			}
+		sent++
 
-			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send reject registration email")
-				nErrors++
-				continue
-			}
-
-			sent++
-
-			if err = models.AppendEmailLog(contact, string(admin.ResendRejection), msg.Subject); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log reject registration email")
-				nErrors++
-				continue
-			}
+		if err = models.AppendEmailLog(contact, string(admin.ResendRejection), msg.Subject); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not log reject registration email for %s contact: %s", kind, err))
+			continue
 		}
 	}
 
-	// Return an error if no emails were delivered
+	if iterErrs := iter.Error(); iterErrs != nil {
+		errs = multierror.Append(errs, iterErrs)
+	}
+
 	if sent == 0 {
-		return sent, fmt.Errorf("no registration rejection emails were successfully sent (%d errors)", nErrors)
+		errs = multierror.Append(errs, fmt.Errorf("no reject registration emails were successfully sent"))
 	}
-	return sent, nil
+
+	return sent, errs.ErrorOrNil()
 }
 
 // SendDeliverCertificates sends the PKCS12 encrypted certificate files to the VASP
@@ -280,6 +255,7 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 // email), ranking the contact emails by priority. Caller must update the VASP record on
 // the data store after calling this function.
 func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent int, err error) {
+	var errs *multierror.Error
 	ctx := DeliverCertsData{
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
@@ -288,65 +264,49 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 		RegisteredDirectory: m.conf.DirectoryID,
 	}
 
-	// These contacts are ordered by priority, e.g. first try to send to the technical
-	// contact, then the administrative, etc.
-	var contacts = []*pb.Contact{
-		vasp.Contacts.Technical, vasp.Contacts.Administrative,
-		vasp.Contacts.Legal, vasp.Contacts.Billing,
-	}
-
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
-	var nErrors uint8
-	for idx, contact := range contacts {
-		// Skip any null contacts or contacts without email addresses
-		if contact == nil || contact.Email == "" {
+	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	for iter.Next() {
+		var contact *pb.Contact
+		var kind string
+		contact, kind = iter.Value()
+		ctx.Name = contact.Name
+		msg, err := DeliverCertsEmail(
+			m.serviceEmail.Name, m.serviceEmail.Address,
+			contact.Name, contact.Email,
+			path, ctx,
+		)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not create deliver certificates email for %s contact: %s", kind, err))
 			continue
 		}
 
-		var verified bool
-		if _, verified, err = models.GetContactVerification(contact); err != nil {
-			// If we can't get the verification this is a fatal error
-			return sent, err
+		if err = m.Send(msg); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not send deliver certificates email for %s contact: %s", kind, err))
+			continue
 		}
 
-		if verified {
-			ctx.Name = contact.Name
-			msg, err := DeliverCertsEmail(
-				m.serviceEmail.Name, m.serviceEmail.Address,
-				contact.Name, contact.Email,
-				path, ctx,
-			)
+		sent++
 
-			if err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not create deliver certs email")
-				nErrors++
-				continue
-			}
-
-			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not send deliver certs email")
-				nErrors++
-				continue
-			}
-
-			sent++
-
-			if err = models.AppendEmailLog(contact, string(admin.ResendDeliverCerts), msg.Subject); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Int("contact", idx).Msg("could not log deliver certs email")
-				nErrors++
-				continue
-			}
-
-			// If we've successfully sent one cert delivery message, then stop sending
-			// the message so that we only send it a single time.
-			break
+		if err = models.AppendEmailLog(contact, string(admin.ResendDeliverCerts), msg.Subject); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not log deliver certificates email for %s contact: %s", kind, err))
+			continue
 		}
+
+		// If we've successfully sent one cert delivery message, then stop sending
+		// the message so that we only send it a single time.
+		break
 	}
 
-	// Return an error if no emails were delivered
+	if iterErrs := iter.Error(); iterErrs != nil {
+		errs = multierror.Append(errs, iterErrs)
+	}
+
 	if sent == 0 {
-		return sent, fmt.Errorf("no certificate delivery emails were successfully sent (%d errors)", nErrors)
+		errs = multierror.Append(errs, fmt.Errorf("no deliver certificates emails were successfully sent"))
 	}
-	return sent, nil
+
+	return sent, errs.ErrorOrNil()
 }
