@@ -19,6 +19,7 @@ const (
 type contactType struct {
 	contact *pb.Contact
 	kind    string
+	err     error
 }
 
 // Returns True if a Contact is not nil and has an email address.
@@ -27,7 +28,7 @@ func ContactHasEmail(contact *pb.Contact) bool {
 }
 
 // Returns True if a Contact is verified.
-func ContactVerified(contact *pb.Contact) (verified bool, err error) {
+func ContactIsVerified(contact *pb.Contact) (verified bool, err error) {
 	if _, verified, err = GetContactVerification(contact); err != nil {
 		return false, err
 	}
@@ -44,46 +45,61 @@ func contactOrder(contacts *pb.Contacts) []*contactType {
 	}
 }
 
-// Returns a function which iterates over the verified contacts in a Contacts object.
-func IterContacts(contacts *pb.Contacts, requireEmail bool) func() (*pb.Contact, string) {
-	all := contactOrder(contacts)
-	i := 0
-	return func() (contact *pb.Contact, kind string) {
-		// Return the next contact that exists or nil to indicate end of iteration.
-		for i < len(all) {
-			contact = all[i].contact
-			kind = all[i].kind
-			i++
-			if contact != nil && (!requireEmail || ContactHasEmail(contact)) {
-				return contact, kind
-			}
-		}
-		return nil, ""
+type ContactIterator struct {
+	email    bool
+	verified bool
+	index    int
+	current  *contactType
+	contacts []*contactType
+}
+
+// Returns a new ContactIterator which has Next() and Value() methods that can be used
+// to iterate over contacts in a Contacts object.
+func NewContactIterator(contacts *pb.Contacts, requireEmail bool, requireVerified bool) *ContactIterator {
+	return &ContactIterator{
+		email:    requireEmail,
+		verified: requireVerified,
+		contacts: contactOrder(contacts),
 	}
 }
 
-// Returns a function which iterates over the verified contacts in a Contacts object.
-func IterVerifiedContacts(contacts *pb.Contacts) func() (*pb.Contact, string, error) {
-	all := contactOrder(contacts)
-	i := 0
-	return func() (contact *pb.Contact, kind string, err error) {
-		// Return the next contact that exists or nil to indicate end of iteration.
-		for i < len(all) {
-			contact = all[i].contact
-			kind = all[i].kind
-			i++
-			if ContactHasEmail(contact) {
+// Moves the ContactIterator to the next existing contact and returns true if there is
+// one, false if the iteration is complete.
+func (i *ContactIterator) Next() bool {
+	for ; i.index < len(i.contacts); i.index++ {
+		i.current = i.contacts[i.index]
+		contact := i.current.contact
+		if contact != nil {
+			if i.email && !ContactHasEmail(contact) {
+				continue
+			}
+			if i.verified {
 				var verified bool
-				if verified, err = ContactVerified(contact); err != nil {
-					return nil, "", err
+				var err error
+				if verified, err = ContactIsVerified(contact); err != nil {
+					// If we can't retrieve the contact verification, let the caller
+					// handle the error on Value().
+					i.current.err = err
+					i.index++
+					return true
 				}
-				if verified {
-					return contact, kind, nil
+				if !verified {
+					continue
 				}
 			}
+			i.index++
+			return true
 		}
-		return nil, "", nil
 	}
+	i.current = nil
+	return false
+}
+
+func (i *ContactIterator) Value() (*pb.Contact, string, error) {
+	if i.current != nil {
+		return i.current.contact, i.current.kind, i.current.err
+	}
+	return nil, "", errors.New("no more contacts")
 }
 
 // GetContactVerification token and verified status from the extra data field on the Contact.
@@ -126,30 +142,28 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 
 // VerifiedContacts returns a map of contact type to email address for all verified
 // contacts, omitting any contacts that are not verified or do not exist.
-func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string, err error) {
+func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
 	contacts = make(map[string]string)
-	next := IterVerifiedContacts(vasp.Contacts)
-	contact, kind, err := next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
-		contacts[kind] = contact.Email
+	iter := NewContactIterator(vasp.Contacts, false, true)
+	for iter.Next() {
+		if contact, kind, err := iter.Value(); err == nil {
+			contacts[kind] = contact.Email
+		}
 	}
-	if err != nil {
-		return nil, err
-	}
-	return contacts, nil
+	return contacts
 }
 
 // ContactVerifications returns a map of contact type to verified status, omitting any
 // contacts that do not exist.
 func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, err error) {
 	contacts = make(map[string]bool)
-	next := IterContacts(vasp.Contacts, false)
-	for contact, kind := next(); contact != nil; contact, kind = next() {
-		var verified bool
-		if verified, err = ContactVerified(contact); err != nil {
-			return nil, err
+	iter := NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		if contact, kind, err := iter.Value(); err == nil {
+			if verified, err := ContactIsVerified(contact); err == nil {
+				contacts[kind] = verified
+			}
 		}
-		contacts[kind] = verified
 	}
 	return contacts, nil
 }

@@ -444,9 +444,10 @@ func (s *Admin) Summary(c *gin.Context) {
 		out.VASPsCount++
 
 		// Count contacts
-		next := models.IterContacts(vasp.Contacts, true)
-		for contact, _ := next(); contact != nil; contact, _ = next() {
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		for iter.Next() {
 			out.ContactsCount++
+			contact, _, _ := iter.Value()
 			if _, verified, _ := models.GetContactVerification(contact); verified {
 				out.VerifiedContacts++
 			}
@@ -835,10 +836,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	out = &admin.RetrieveVASPReply{
 		Traveler: models.IsTraveler(vasp),
 	}
-	if out.VerifiedContacts, err = models.VerifiedContacts(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not get verified contacts")
-		return nil, err
-	}
+	out.VerifiedContacts = models.VerifiedContacts(vasp)
 
 	// Attempt to determine the VASP name from IVMS 101 data.
 	if out.Name, err = vasp.Name(); err != nil {
@@ -869,8 +867,9 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	next := models.IterContacts(vasp.Contacts, false)
-	for contact, _ := next(); contact != nil; contact, _ = next() {
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		contact, _, _ := iter.Value()
 		contact.Extra = nil
 	}
 

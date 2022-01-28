@@ -82,9 +82,10 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors int
-	next := models.IterContacts(vasp.Contacts, true)
-	for contact, kind := next(); contact != nil; contact, kind = next() {
+	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	for iter.Next() {
 		var verified bool
+		contact, kind, _ := iter.Value()
 		ctx := VerifyContactData{
 			Name:    contact.Name,
 			VID:     vasp.Id,
@@ -148,8 +149,9 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	clone := proto.Clone(vasp).(*pb.VASP)
 	models.SetAdminVerificationToken(clone, "[REDACTED]")
 
-	next := models.IterContacts(clone.Contacts, false)
-	for contact, _ := next(); contact != nil; contact, _ = next() {
+	iter := models.NewContactIterator(clone.Contacts, false, false)
+	for iter.Next() {
+		contact, _, _ := iter.Value()
 		_, verified, _ := models.GetContactVerification(contact)
 		models.SetContactVerification(contact, "[REDACTED]", verified)
 	}
@@ -206,9 +208,15 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors uint8
-	next := models.IterVerifiedContacts(vasp.Contacts)
-	contact, kind, err := next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
+	iter := models.NewContactIterator(vasp.Contacts, false, true)
+	for iter.Next() {
+		var contact *pb.Contact
+		var kind string
+		if contact, kind, err = iter.Value(); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not retrieve contact info")
+			nErrors++
+			continue
+		}
 		ctx.Name = contact.Name
 		msg, err := RejectRegistrationEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
@@ -264,9 +272,15 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors uint8
-	next := models.IterVerifiedContacts(vasp.Contacts)
-	contact, kind, iterErr := next()
-	for ; iterErr == nil && contact != nil; contact, kind, iterErr = next() {
+	iter := models.NewContactIterator(vasp.Contacts, false, true)
+	for iter.Next() {
+		var contact *pb.Contact
+		var kind string
+		if contact, kind, err = iter.Value(); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not retrieve contact info")
+			nErrors++
+			continue
+		}
 		ctx.Name = contact.Name
 		msg, err := DeliverCertsEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
@@ -297,10 +311,6 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 		// If we've successfully sent one cert delivery message, then stop sending
 		// the message so that we only send it a single time.
 		break
-	}
-
-	if iterErr != nil {
-		return sent, fmt.Errorf("error iterating over contacts: %s", iterErr)
 	}
 
 	// Return an error if no emails were delivered

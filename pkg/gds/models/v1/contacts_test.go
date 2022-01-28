@@ -40,8 +40,10 @@ func TestIterContacts(t *testing.T) {
 	actualKinds := []string{}
 
 	// Should iterate over all contacts.
-	next := models.IterContacts(contacts, false)
-	for contact, kind := next(); contact != nil; contact, kind = next() {
+	iter := models.NewContactIterator(contacts, false, false)
+	for iter.Next() {
+		contact, kind, err := iter.Value()
+		require.NoError(t, err)
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
@@ -60,8 +62,10 @@ func TestIterContacts(t *testing.T) {
 		models.AdministrativeContact,
 		models.LegalContact,
 	}
-	next = models.IterContacts(contacts, true)
-	for contact, kind := next(); contact != nil; contact, kind = next() {
+	iter = models.NewContactIterator(contacts, true, false)
+	for iter.Next() {
+		contact, kind, err := iter.Value()
+		require.NoError(t, err)
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
@@ -74,8 +78,10 @@ func TestIterContacts(t *testing.T) {
 	// Should skip nil contacts.
 	contacts.Technical = nil
 	contacts.Billing = nil
-	next = models.IterContacts(contacts, false)
-	for contact, kind := next(); contact != nil; contact, kind = next() {
+	iter = models.NewContactIterator(contacts, false, false)
+	for iter.Next() {
+		contact, kind, err := iter.Value()
+		require.NoError(t, err)
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
@@ -103,13 +109,13 @@ func TestIterVerfiiedContacts(t *testing.T) {
 	actualKinds := []string{}
 
 	// No contacts are verified.
-	next := models.IterVerifiedContacts(contacts)
-	contact, kind, err := next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
+	iter := models.NewContactIterator(contacts, false, true)
+	for iter.Next() {
+		contact, kind, err := iter.Value()
+		require.NoError(t, err)
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
-	require.NoError(t, err)
 	require.Equal(t, []*pb.Contact{}, actualContacts)
 	require.Equal(t, []string{}, actualKinds)
 
@@ -127,13 +133,13 @@ func TestIterVerfiiedContacts(t *testing.T) {
 		models.TechnicalContact,
 		models.LegalContact,
 	}
-	next = models.IterVerifiedContacts(contacts)
-	contact, kind, err = next()
-	for ; err == nil && contact != nil; contact, kind, err = next() {
+	iter = models.NewContactIterator(contacts, false, true)
+	for iter.Next() {
+		contact, kind, err := iter.Value()
+		require.NoError(t, err)
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
-	require.NoError(t, err)
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 }
