@@ -89,7 +89,7 @@ func TestIterContacts(t *testing.T) {
 	require.Equal(t, expectedKinds, actualKinds)
 }
 
-func TestIterVerfiiedContacts(t *testing.T) {
+func TestIterVerifiedContacts(t *testing.T) {
 	contacts := &pb.Contacts{
 		Technical: &pb.Contact{
 			Email: "technical@example.com",
