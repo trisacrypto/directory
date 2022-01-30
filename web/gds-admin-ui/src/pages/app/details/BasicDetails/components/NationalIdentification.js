@@ -6,26 +6,26 @@ import countryCodeEmoji, { isoCountries } from 'utils/country'
 import PropTypes from 'prop-types';
 
 
-  function getDataFormatted(data){
-      const issued_country_emoji = data?.national_identification?.country_of_issue ? formatDisplayedData(countryCodeEmoji(data.national_identification.country_of_issue)) : 'N/A';
-      const issued_country_code = formatDisplayedData(data?.national_identification?.country_of_issue);
-      const issued_authority =  formatDisplayedData(data?.national_identification?.registration_authority);
-      const nat_ident_type = data?.national_identification?.national_identifier_type ? formatDisplayedData(NATIONAL_IDENTIFIER_TYPE[data.national_identification.national_identifier_type]) : 'N/A';
-      const leix = formatDisplayedData(data?.national_identification?.national_identifier)
-      const country_of_issue = data?.national_identification?.country_of_issue ? formatDisplayedData(isoCountries[data.national_identification.country_of_issue]) : 'N/A';
-      const customer_number = formatDisplayedData(data?.customer_number);
-        return {
-            issued_country_emoji,
-            issued_country_code,
-            issued_authority,
-            nat_ident_type,
-            country_of_issue,
-            leix,
-            customer_number
-        };
+function getDataFormatted(data) {
+    const issued_country_emoji = data?.national_identification?.country_of_issue ? formatDisplayedData(countryCodeEmoji(data.national_identification.country_of_issue)) : 'N/A';
+    const issued_country_code = formatDisplayedData(data?.national_identification?.country_of_issue);
+    const issued_authority = formatDisplayedData(data?.national_identification?.registration_authority);
+    const nat_ident_type = data?.national_identification?.national_identifier_type ? formatDisplayedData(NATIONAL_IDENTIFIER_TYPE[data.national_identification.national_identifier_type]) : 'N/A';
+    const leix = formatDisplayedData(data?.national_identification?.national_identifier)
+    const country_of_issue = data?.national_identification?.country_of_issue ? formatDisplayedData(isoCountries[data.national_identification.country_of_issue]) : 'N/A';
+    const customer_number = formatDisplayedData(data?.customer_number);
+    return {
+        issued_country_emoji,
+        issued_country_code,
+        issued_authority,
+        nat_ident_type,
+        country_of_issue,
+        leix,
+        customer_number
     };
+};
 function NationalIdentification({ data }) {
- 
+
     return (
         <Col>
             {data ? (

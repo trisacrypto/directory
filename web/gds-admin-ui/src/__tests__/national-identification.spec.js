@@ -47,7 +47,7 @@ describe("<NationalIdentification/>", () => {
 
 
     it('should render N/A if national_identification property is null', () => {
-            const data = {
+        const data = {
             customer_number: "",
             national_identification: null
         }
@@ -58,5 +58,5 @@ describe("<NationalIdentification/>", () => {
         expect(screen.getByText(/national identification type:/i).firstElementChild.textContent).toBe("N/A")
         expect(screen.getByText(/country of registration:/i).firstElementChild.textContent).toBe("N/A")
         expect(screen.getByText(/customer number:/i).firstElementChild.textContent).toBe("N/A")  // this is the case when the data is not available')
-     })
+    })
 })
