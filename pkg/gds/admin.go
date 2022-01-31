@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
@@ -446,17 +447,14 @@ func (s *Admin) Summary(c *gin.Context) {
 		out.VASPsCount++
 
 		// Count contacts
-		contacts := []*pb.Contact{
-			vasp.Contacts.Administrative, vasp.Contacts.Legal,
-			vasp.Contacts.Technical, vasp.Contacts.Billing,
-		}
-
-		for _, contact := range contacts {
-			if contact != nil && contact.Email != "" {
-				out.ContactsCount++
-				if _, verified, _ := models.GetContactVerification(contact); verified {
-					out.VerifiedContacts++
-				}
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		for iter.Next() {
+			out.ContactsCount++
+			contact, kind := iter.Value()
+			if verified, err := models.ContactIsVerified(contact); err != nil {
+				log.Warn().Str("contact", kind).Err(err).Msg("could not retrieve verification status")
+			} else if verified {
+				out.VerifiedContacts++
 			}
 		}
 
@@ -795,7 +793,12 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			snippet.VerifiedContacts = models.ContactVerifications(vasp)
+			var errs *multierror.Error
+			if snippet.VerifiedContacts, errs = models.ContactVerifications(vasp); errs != nil {
+				for _, err := range errs.Errors {
+					log.Error().Err(err).Msg("could not get contact verifications")
+				}
+			}
 
 			// Append to list in reply
 			out.VASPs = append(out.VASPs, snippet)
@@ -846,8 +849,8 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
-		VerifiedContacts: models.VerifiedContacts(vasp),
 		Traveler:         models.IsTraveler(vasp),
+		VerifiedContacts: models.VerifiedContacts(vasp),
 	}
 
 	// Attempt to determine the VASP name from IVMS 101 data.
@@ -879,17 +882,10 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	if vasp.Contacts.Administrative != nil {
-		vasp.Contacts.Administrative.Extra = nil
-	}
-	if vasp.Contacts.Legal != nil {
-		vasp.Contacts.Legal.Extra = nil
-	}
-	if vasp.Contacts.Technical != nil {
-		vasp.Contacts.Technical.Extra = nil
-	}
-	if vasp.Contacts.Billing != nil {
-		vasp.Contacts.Billing.Extra = nil
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		contact.Extra = nil
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
