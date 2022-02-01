@@ -523,7 +523,6 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs with an invalid status
 	request.path = "/v2/vasps?status=invalid"
-	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
