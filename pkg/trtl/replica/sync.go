@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
@@ -16,6 +17,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/jitter"
+	"github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"google.golang.org/grpc"
@@ -83,6 +85,9 @@ bayou:
 		if err := r.AntiEntropySync(peer, logctx); err != nil {
 			logctx.Warn().Err(err).Msg("anti-entropy synchronization was unsuccessful")
 		}
+
+		// Update prometheus metrics
+		metrics.PmAESyncs.WithLabelValues(peer.Name, peer.Region).Inc()
 	}
 }
 
@@ -167,6 +172,9 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 // messages on its channel. Once all go routines are completed the initiator closes the
 // channel, ending the synchronization between the initiator and the remote.
 func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	// Create a context with a timeout that is sooner than 95% of the timeouts selected
 	// by the normally distributed jittered interval, to ensure anti-entropy gossip
 	// sessions do not span multiple anti-entropy intervals.
@@ -226,6 +234,11 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	if err = cc.Close(); err != nil {
 		return fmt.Errorf("could not close the client connection correctly: %s", err)
 	}
+
+	// Compute latency in milliseconds
+	// NOTE: we're only tracking latency for successful AE sessions
+	latency := float64(time.Since(start)/1000) / 1000.0
+	metrics.PmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil

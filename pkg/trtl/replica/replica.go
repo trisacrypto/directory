@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
+	"github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -103,6 +104,7 @@ func (r *Service) Gossip(stream replica.Replication_GossipServer) (err error) {
 
 	// Wait for all go routines to finish
 	wg.Wait()
+
 	return nil
 }
 
@@ -287,6 +289,12 @@ gossip:
 			log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
 		}
 	}
+
+	// Update Prometheus metrics
+	metrics.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
+	metrics.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+	metrics.PmAEPushVSPull.Add(float64(updates))
+	metrics.PmAEPushVSPull.Sub(float64(repairs))
 }
 
 // remotePhase2 is the counterpart to initiatorPhase1; the remote loops through all

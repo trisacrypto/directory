@@ -12,19 +12,19 @@ import (
 )
 
 var (
-	pmPuts  *prometheus.CounterVec // count of trtl Puts per namespace
-	pmGets  *prometheus.CounterVec // count of trtl Gets per namespace
-	pmDels  *prometheus.CounterVec // count of trtl Deletes per namespace
-	pmIters *prometheus.CounterVec // count of trtl Iters per namespace
-	// pmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
-	// pmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
-	pmLatency       *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
-	pmAESyncs       *prometheus.CounterVec   // count of anti entropy sessions per peer and per region
-	pmAESyncLatency *prometheus.HistogramVec // the time it is taking for anti entropy sessions to complete, by peer
-	pmAEPushes      *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region
-	pmAEPulls       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
-	pmAEPushVSPull  prometheus.Gauge         // a gauge of objects pushed vs pulled
-	pmAEStomps      *prometheus.CounterVec   // count of stomped versions, per peer and region
+	PmPuts  *prometheus.CounterVec // count of trtl Puts per namespace
+	PmGets  *prometheus.CounterVec // count of trtl Gets per namespace
+	PmDels  *prometheus.CounterVec // count of trtl Deletes per namespace
+	PmIters *prometheus.CounterVec // count of trtl Iters per namespace
+	// PmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
+	// PmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
+	PmLatency       *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
+	PmAESyncs       *prometheus.CounterVec   // count of anti entropy sessions per peer and per region
+	PmAESyncLatency *prometheus.HistogramVec // the time it is taking for anti entropy sessions to complete, by peer
+	PmAEPushes      *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region
+	PmAEPulls       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
+	PmAEPushVSPull  prometheus.Gauge         // a gauge of objects pushed vs pulled
+	PmAEStomps      *prometheus.CounterVec   // count of stomped versions, per peer and region
 )
 
 // A MetricsService manages Prometheus metrics
@@ -65,138 +65,138 @@ func (m *MetricsService) Shutdown() error {
 }
 
 const (
-	pmNamespace = "trtl"
+	PmNamespace = "trtl"
 )
 
 func initMetrics() {
-	pmPuts = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmPuts = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "puts",
 		Help:      "the count of puts, labeled by namespace",
 	}, []string{"namespace"})
 
-	pmGets = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmGets = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "gets",
 		Help:      "the count of gets, labeled by namespace",
 	}, []string{"namespace"})
 
-	pmDels = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmDels = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "deletes",
 		Help:      "the count of deletes, labeled by namespace",
 	}, []string{"namespace"})
 
-	pmIters = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmIters = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "iters",
 		Help:      "the count of iters, labeled by namespace",
 	}, []string{"namespace"})
 
-	// pmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
-	// 	Namespace: pmNamespace,
+	// PmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 	Namespace: PmNamespace,
 	// 	Name:      "objects",
 	// 	Help:      "the count of trtl objects, labeled by namespace",
 	// }, []string{"namespace"})
 
-	// pmTombstones = prometheus.NewCounterVec(prometheus.CounterOpts{
-	// 	Namespace: pmNamespace,
+	// PmTombstones = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 	Namespace: PmNamespace,
 	// 	Name:      "tombstones",
 	// 	Help:      "the count of tombstones, labeled by namespace",
 	// }, []string{"namespace"})
 
-	pmLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: pmNamespace,
+	PmLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
 		Name:      "latency",
 		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
 	}, []string{"call"})
 
-	pmAESyncs = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmAESyncs = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "syncs",
 		Help:      "the count of anti-entropy sessions, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	pmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: pmNamespace,
+	PmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
 		Name:      "sync_latency",
 		Help:      "time to anti-entropy session completion, labeled by peer",
 	}, []string{"peer"})
 
-	pmAEPulls = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: pmNamespace,
+	PmAEPulls = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
 		Name:      "pulls",
 		Help:      "pulled objects during anti entropy, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	pmAEPushes = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: pmNamespace,
+	PmAEPushes = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
 		Name:      "pushes",
 		Help:      "pushed objects during anti entropy, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	pmAEPushVSPull = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: pmNamespace,
+	PmAEPushVSPull = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: PmNamespace,
 		Name:      "push_vs_pull",
 		Help:      "objects pushed vs pulled",
 	})
 
-	pmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: pmNamespace,
+	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
 		Name:      "stomps",
 		Help:      "count of stomped versions, labeled by peer and region",
 	}, []string{"peer", "region"})
 }
 
 func registerMetrics() error {
-	if err := prometheus.Register(pmPuts); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmPuts")
+	if err := prometheus.Register(PmPuts); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmPuts")
 		return err
 	}
-	if err := prometheus.Register(pmGets); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmGets")
+	if err := prometheus.Register(PmGets); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmGets")
 		return err
 	}
-	if err := prometheus.Register(pmDels); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmDels")
+	if err := prometheus.Register(PmDels); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmDels")
 		return err
 	}
-	if err := prometheus.Register(pmIters); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmIters")
+	if err := prometheus.Register(PmIters); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmIters")
 		return err
 	}
-	// if err := prometheus.Register(pmObjects); err != nil {
-	// 	log.Debug().Err(err).Msg("unable to register pmObjects")
+	// if err := prometheus.Register(PmObjects); err != nil {
+	// 	log.Debug().Err(err).Msg("unable to register PmObjects")
 	// 	return err
 	// }
-	// if err := prometheus.Register(pmTombstones); err != nil {
-	// 	log.Debug().Err(err).Msg("unable to register pmTombstones")
+	// if err := prometheus.Register(PmTombstones); err != nil {
+	// 	log.Debug().Err(err).Msg("unable to register PmTombstones")
 	// 	return err
 	// }
-	if err := prometheus.Register(pmLatency); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmLatency")
+	if err := prometheus.Register(PmLatency); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmLatency")
 		return err
 	}
-	if err := prometheus.Register(pmAESyncs); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAESyncs")
+	if err := prometheus.Register(PmAESyncs); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAESyncs")
 	}
-	if err := prometheus.Register(pmAESyncLatency); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAESyncLatency")
+	if err := prometheus.Register(PmAESyncLatency); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAESyncLatency")
 	}
-	if err := prometheus.Register(pmAEPulls); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAEPulls")
+	if err := prometheus.Register(PmAEPulls); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEPulls")
 		return err
 	}
-	if err := prometheus.Register(pmAEPushes); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAEPushes")
+	if err := prometheus.Register(PmAEPushes); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEPushes")
 		return err
 	}
-	if err := prometheus.Register(pmAEPushVSPull); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAEPushVSPull")
+	if err := prometheus.Register(PmAEPushVSPull); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEPushVSPull")
 		return err
 	}
-	if err := prometheus.Register(pmAEStomps); err != nil {
-		log.Debug().Err(err).Msg("unable to register pmAEStomps")
+	if err := prometheus.Register(PmAEStomps); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEStomps")
 		return err
 	}
 	return nil

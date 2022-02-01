@@ -84,10 +84,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 		// Compute latency in milliseconds
 		latency := float64(time.Since(start)/1000) / 1000.0
-		pmLatency.WithLabelValues("Get").Observe(latency)
+		PmLatency.WithLabelValues("Get").Observe(latency)
 
 		// Update prometheus metrics
-		pmGets.WithLabelValues(object.Namespace).Inc()
+		PmGets.WithLabelValues(object.Namespace).Inc()
 
 		return &pb.GetReply{
 			Value: object.Data,
@@ -100,10 +100,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Get").Observe(latency)
+	PmLatency.WithLabelValues("Get").Observe(latency)
 
 	// Increment prometheus Get count
-	pmGets.WithLabelValues(object.Namespace).Inc()
+	PmGets.WithLabelValues(object.Namespace).Inc()
 
 	return &pb.GetReply{
 		Value: object.Data,
@@ -152,10 +152,10 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// Compute Put latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Put").Observe(latency)
+	PmLatency.WithLabelValues("Put").Observe(latency)
 
 	// Increment prometheus Put counter
-	pmPuts.WithLabelValues(object.Namespace).Inc()
+	PmPuts.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
@@ -203,10 +203,10 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 
 	// Compute Delete latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Delete").Observe(latency)
+	PmLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
-	pmDels.WithLabelValues(object.Namespace).Inc()
+	PmDels.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
@@ -383,10 +383,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Compute Iter latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Iter").Observe(latency)
+	PmLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
-	pmIters.WithLabelValues(iter.Namespace()).Inc()
+	PmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
