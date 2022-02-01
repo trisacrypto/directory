@@ -20,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -482,7 +483,6 @@ func (s *gdsTestSuite) TestListVASPs() {
 				"administrative": false,
 				"billing":        false,
 				"legal":          false,
-				"technical":      false,
 			},
 		},
 		{
@@ -492,10 +492,8 @@ func (s *gdsTestSuite) TestListVASPs() {
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_APPEALED.String(),
 			VerifiedContacts: map[string]bool{
-				"administrative": false,
-				"billing":        true,
-				"legal":          true,
-				"technical":      false,
+				"billing": true,
+				"legal":   true,
 			},
 		},
 	}
@@ -525,12 +523,14 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs with an invalid status
 	request.path = "/v2/vasps?status=invalid"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, nil)
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// List VASPs with the specified status
 	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -542,6 +542,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs with multiple status filters
 	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus + "&status=" + snippets[1].VerificationStatus
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -549,11 +550,13 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(1, actual.Page)
 	require.Equal(100, actual.PageSize)
 	require.Len(actual.VASPs, 2)
+	fmt.Println(actual.VASPs)
 	sortByName(actual.VASPs)
 	require.Equal(snippets, actual.VASPs)
 
 	// List VASPs on multiple pages
 	request.path = "/v2/vasps?page=1&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -564,6 +567,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	pageResults := []admin.VASPSnippet{snippets[0]}
 
 	request.path = "/v2/vasps?page=2&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -576,6 +580,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(snippets, pageResults)
 
 	request.path = "/v2/vasps?page=3&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -643,7 +648,9 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 func (s *gdsTestSuite) TestUpdateVASP() {
 	s.LoadSmallFixtures()
 	defer s.ResetSmallFixtures()
+	defer emails.PurgeMockEmails()
 
+	require := s.Require()
 	a := s.svc.GetAdmin()
 
 	// Attempt to update a VASP that doesn't exist
@@ -663,7 +670,8 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieID := charlieVASP.Id
 	request.path = "/v2/vasps/" + charlieID
 	request.params["vaspID"] = charlieID
 
@@ -678,6 +686,124 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
 	s.APIError(http.StatusBadRequest, "no updates made to VASP record", rep)
+
+	// Test updating a contact field
+	contacts := charlieVASP.Contacts
+	contacts.Administrative.Name = "Clark Kent"
+	contactRequest, err := wire.Rewire(contacts)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.UpdateVASPRequest{
+		Contacts: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Equal(contacts.Administrative.Name, vasp.Contacts.Administrative.Name)
+	require.Equal(contacts.Administrative.Email, vasp.Contacts.Administrative.Email)
+	require.Equal(contacts.Administrative.Phone, vasp.Contacts.Administrative.Phone)
+	require.Equal(contacts.Billing.Name, vasp.Contacts.Billing.Name)
+	require.Equal(contacts.Legal.Name, vasp.Contacts.Legal.Name)
+	require.Nil(vasp.Contacts.Technical)
+
+	// Test updating a contact with a different email address
+	contacts.Administrative.Email = "clark.kent@charliebank.com"
+	contactRequest, err = wire.Rewire(contacts)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.UpdateVASPRequest{
+		Contacts: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	adminSent := time.Now()
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Equal(contacts.Administrative.Name, vasp.Contacts.Administrative.Name)
+	require.Equal(contacts.Administrative.Email, vasp.Contacts.Administrative.Email)
+	require.Equal(contacts.Administrative.Phone, vasp.Contacts.Administrative.Phone)
+	// Should no longer be verified
+	token, verified, err := models.GetContactVerification(vasp.Contacts.Administrative)
+	require.NoError(err, "could not retrieve contact verification")
+	require.NotEmpty(token)
+	require.False(verified)
+
+	// Test adding a contact
+	contacts.Technical = &pb.Contact{
+		Name:  "Lois Lane",
+		Email: "lois.lane@charliebank.com",
+	}
+	contactRequest, err = wire.Rewire(contacts)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.UpdateVASPRequest{
+		Contacts: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	technicalSent := time.Now()
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.NotNil(vasp.Contacts.Technical)
+	require.Equal(contacts.Technical.Name, vasp.Contacts.Technical.Name)
+	require.Equal(contacts.Technical.Email, vasp.Contacts.Technical.Email)
+	require.Equal(contacts.Administrative.Name, vasp.Contacts.Administrative.Name)
+	require.Equal(contacts.Billing.Name, vasp.Contacts.Billing.Name)
+	require.Equal(contacts.Legal.Name, vasp.Contacts.Legal.Name)
+	// Should not be verified
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Technical)
+	require.NoError(err, "could not retrieve contact verification")
+	require.NotEmpty(token)
+	require.False(verified)
+
+	// Should send verification emails to the unverified contacts
+	messages := []*emailMeta{
+		{
+			contact:   vasp.Contacts.Administrative,
+			to:        contacts.Administrative.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: adminSent,
+		},
+		{
+			contact:   vasp.Contacts.Technical,
+			to:        contacts.Technical.Email,
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: technicalSent,
+		},
+	}
+	s.CheckEmails(messages)
+
+	// Test deleting a contact
+	contacts.Administrative = nil
+	contactRequest, err = wire.Rewire(contacts)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.UpdateVASPRequest{
+		Contacts: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Nil(vasp.Contacts.Administrative)
+	require.NotNil(vasp.Contacts.Billing)
+	require.NotNil(vasp.Contacts.Legal)
+
+	// Test deleting all contacts returns a 400 error
+	contacts = &pb.Contacts{}
+	contactRequest, err = wire.Rewire(contacts)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.UpdateVASPRequest{
+		Contacts: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.UpdateVASP, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// TODO: Test bad business category (not parseable) returns 400 error
 	// TODO: Test updating website, business category, vasp categories, and established on

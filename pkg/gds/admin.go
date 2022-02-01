@@ -25,6 +25,7 @@ import (
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
@@ -1148,25 +1149,87 @@ func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log 
 	return true, http.StatusOK, nil
 }
 
-// Update the VASP contacts; this completely overwrites the previous contact data.
+// Update the VASP contacts; this completely overwrites all of the previous contact data.
 func (s *Admin) updateVASPContacts(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+	var errs *multierror.Error
+
 	// Check if contact data has been supplied, otherwise do not update.
 	if len(data) == 0 {
 		return false, http.StatusOK, nil
 	}
 
-	// Remarshal the JSON contact data
+	// Remarshal the JSON contact data.
 	contacts := &pb.Contacts{}
 	if err = wire.Unwire(data, contacts); err != nil {
 		log.Warn().Err(err).Msg("could not unwire JSON data into a valid Contacts")
 		return false, http.StatusBadRequest, errors.New("could not parse Contacts")
 	}
 
-	// TODO: Iterate through the contacts and send email verification for updated
-	// email addresses.
+	// Iterate through the existing VASP contacts, copying the data fields from the
+	// provided contacts without overwriting the extra data.
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		old, kind := iter.Value()
+		new := models.ContactFromType(contacts, kind)
+		if new != nil {
+			old.Name = new.Name
+			old.Phone = new.Phone
+			old.Person = new.Person
 
-	vasp.Contacts = contacts
-	return true, http.StatusOK, nil
+			if new.Email != "" && new.Email != old.Email {
+				// The email address changed, so the contact needs to be verified.
+				old.Email = new.Email
+
+				if err := models.SetContactVerification(old, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
+					errs = multierror.Append(errs, err)
+					continue
+				}
+
+				// Only send an email to the updated contact.
+				if err := s.svc.email.SendVerifyContact(vasp, old); err != nil {
+					errs = multierror.Append(errs, err)
+					continue
+				}
+
+				// Write the updated email log to the database.
+				if err := s.db.UpdateVASP(vasp); err != nil {
+					errs = multierror.Append(errs, err)
+					continue
+				}
+			}
+		} else {
+			// Need to use the VASP pointer to remove the contact.
+			models.DeleteContact(vasp, kind)
+		}
+	}
+
+	// Iterate through the provided contacts, adding any new contacts that don't exist
+	// on the VASP.
+	iter = models.NewContactIterator(contacts, false, false)
+	for iter.Next() {
+		new, kind := iter.Value()
+		old := models.ContactFromType(vasp.Contacts, kind)
+		if old == nil {
+			// Need to use the VASP pointer to add the contact.
+			if err := models.AddContact(vasp, kind, new); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+
+			// Send a verification email to the new contact.
+			if err := s.svc.email.SendVerifyContact(vasp, new); err != nil {
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			// Write the updated email log to the database.
+			if err := s.db.UpdateVASP(vasp); err != nil {
+				errs = multierror.Append(errs, err)
+				continue
+			}
+		}
+	}
+
+	return true, http.StatusOK, errs.ErrorOrNil()
 }
 
 func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source string, log zerolog.Logger) (_ bool, _ int, err error) {
