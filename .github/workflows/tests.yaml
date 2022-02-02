@@ -55,6 +55,8 @@ jobs:
         uses: actions/checkout@main
         with:
           repository: trisacrypto/trisa
+          ref: main
+          path: ../
 
       - name: Code Generation
         run: go generate ./...
@@ -97,6 +99,8 @@ jobs:
         uses: actions/checkout@main
         with:
           repository: trisacrypto/trisa
+          ref: main
+          path: ../
 
       - name: Code Generation
         run: go generate ./...
