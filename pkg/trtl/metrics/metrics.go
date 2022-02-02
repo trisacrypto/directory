@@ -27,8 +27,8 @@ var (
 	PmAEPhase1Latency *prometheus.HistogramVec // time phase 1 of anti-entropy is taking from the perspective of the initiator, by peer
 	PmAEPhase2Latency *prometheus.HistogramVec // time phase 2 of anti-entropy is taking from the perspective of the remote, by peer
 	PmAEVersions      *prometheus.HistogramVec // count of all observed versions, per peer and region
-	PmAEPushes        *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region (aka "updates")
-	PmAEPulls         *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region (aka "repairs")
+	PmAEUpdates       *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region
+	PmAERepairs       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
 	PmAEStomps        *prometheus.CounterVec   // count of stomped versions, per peer and region
 	PmAESkips         *prometheus.CounterVec   // count of skipped versions, per peer and region
 
@@ -148,13 +148,13 @@ func initMetrics() {
 		Help:      "count of all observed versions, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	PmAEPulls = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pulls",
 		Help:      "pulled objects during anti entropy, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	PmAEPushes = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	PmAEUpdates = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pushes",
 		Help:      "pushed objects during anti entropy, labeled by peer and region",
@@ -219,11 +219,11 @@ func registerMetrics() error {
 		log.Debug().Err(err).Msg("unable to register PmAEVersions")
 		return err
 	}
-	if err := prometheus.Register(PmAEPulls); err != nil {
+	if err := prometheus.Register(PmAERepairs); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAEPulls")
 		return err
 	}
-	if err := prometheus.Register(PmAEPushes); err != nil {
+	if err := prometheus.Register(PmAEUpdates); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAEPushes")
 		return err
 	}

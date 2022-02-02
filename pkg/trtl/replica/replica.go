@@ -152,8 +152,8 @@ func (r *Service) remotePhase1(ctx context.Context, wg *sync.WaitGroup, log zero
 				Msg("anti-entropy synchronization complete")
 
 			// Update Prometheus metrics
-			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nUpdates))
-			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nRepairs))
+			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nUpdates))
+			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nRepairs))
 			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nVersions))
 		} else {
 			log.Debug().Msg("anti-entropy complete with no synchronization")
