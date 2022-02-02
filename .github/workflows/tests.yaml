@@ -51,9 +51,13 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          name: trisacrypto/trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Run Unit Tests
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
@@ -89,9 +93,13 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          name: trisacrypto/trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Build
         run: go build ./cmd/...
