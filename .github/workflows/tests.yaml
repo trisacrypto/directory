@@ -30,6 +30,9 @@ jobs:
   test:
     name: Go Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -47,7 +50,6 @@ jobs:
           version: '3.x'
 
       - name: Install Dependencies
-        working-directory: ./directory
         run: |
           go version
           go get -u github.com/kevinburke/go-bindata/...
@@ -62,24 +64,24 @@ jobs:
           path: trisa
 
       - name: Code Generation
-        working-directory: ./directory
         run: go generate ./...
 
       - name: Run Unit Tests
-        working-directory: ./directory
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
 
       - name: Upload Coverage report to CodeCov
-        working-directory: ./directory
         uses: codecov/codecov-action@v1.0.0
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage.txt
+          file: ./directory/coverage.txt
 
   build:
     name: Go Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -97,7 +99,6 @@ jobs:
           version: '3.x'
 
       - name: Install Dependencies
-        working-directory: ./directory
         run: |
           go version
           go get -u github.com/kevinburke/go-bindata/...
@@ -112,9 +113,7 @@ jobs:
           path: trisa
 
       - name: Code Generation
-        working-directory: ./directory
         run: go generate ./...
 
       - name: Build
-        working-directory: ./directory
         run: go build ./cmd/...
