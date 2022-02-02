@@ -432,6 +432,49 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:contact-replace",
+				Usage:    "replace a contact record by VASP id and contact kind",
+				Category: "admin",
+				Action:   adminReplaceContact,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "contact",
+						Aliases: []string{"c"},
+						Usage:   "the kind of contact to replace (administrative, legal, technical, billing)",
+					},
+					&cli.StringFlag{
+						Name:    "data",
+						Aliases: []string{"d"},
+						Usage:   "path to JSON data to PUT VASP contact",
+					},
+				},
+			},
+			{
+				Name:     "admin:contact-delete",
+				Usage:    "delete a contact record by VASP id and contact kind",
+				Category: "admin",
+				Action:   adminDeleteContact,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "contact",
+						Aliases: []string{"c"},
+						Usage:   "the kind of contact to delete (administrative, legal, technical, billing)",
+					},
+				},
+			},
+			{
 				Name:     "admin:notes",
 				Usage:    "list notes associated with a VASP",
 				Category: "admin",
@@ -1028,6 +1071,62 @@ func adminDeleteVASP(c *cli.Context) (err error) {
 
 	var rep *admin.Reply
 	if rep, err = adminClient.DeleteVASP(ctx, vaspID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminReplaceContact(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	req := &admin.ReplaceContactRequest{}
+	if path := c.String("data"); path != "" {
+		var data []byte
+		if data, err = ioutil.ReadFile(path); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = json.Unmarshal(data, req); err != nil {
+			return cli.Exit(fmt.Errorf("could not unmarshal ReplaceContactRequest: %s", err), 1)
+		}
+	} else {
+		return cli.Exit("specify path to JSON data with replace contact request", 1)
+	}
+
+	if vaspID := c.String("id"); vaspID != "" {
+		req.VASP = vaspID
+	}
+
+	if kind := c.String("contact"); kind != "" {
+		req.Kind = kind
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.ReplaceContact(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminDeleteContact(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		cli.Exit("must specify VASP ID (--id)", 1)
+	}
+
+	kind := c.String("contact")
+	if kind == "" {
+		cli.Exit("must specify contact kind (--contact)", 1)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.DeleteContact(ctx, vaspID, kind); err != nil {
 		return cli.Exit(err, 1)
 	}
 

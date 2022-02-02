@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -54,10 +53,7 @@ func ContactFromType(contacts *pb.Contacts, kind string) *pb.Contact {
 }
 
 // Adds a contact on the VASP object.
-func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) (err error) {
-	if err = SetContactVerification(contact, secrets.CreateToken(VerificationTokenLength), false); err != nil {
-		return err
-	}
+func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) error {
 	switch kind {
 	case AdministrativeContact:
 		vasp.Contacts.Administrative = contact
@@ -74,7 +70,7 @@ func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) (err error) {
 }
 
 // Deletes a contact on the VASP object by setting it to nil.
-func DeleteContact(vasp *pb.VASP, kind string) {
+func DeleteContact(vasp *pb.VASP, kind string) error {
 	switch kind {
 	case AdministrativeContact:
 		vasp.Contacts.Administrative = nil
@@ -84,7 +80,10 @@ func DeleteContact(vasp *pb.VASP, kind string) {
 		vasp.Contacts.Legal = nil
 	case TechnicalContact:
 		vasp.Contacts.Technical = nil
+	default:
+		return fmt.Errorf("invalid contact type: %s", kind)
 	}
+	return nil
 }
 
 // Returns a standardized order of iterating through contacts.
