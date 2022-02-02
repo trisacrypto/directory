@@ -16,7 +16,7 @@ message CertificateRequest {
 
     // VASP information for the request
     string vasp = 2;
-    string common_name = 4;
+    string common_name = 3;
 
     // Request pipeline status
     CertificateRequestState status = 4;
