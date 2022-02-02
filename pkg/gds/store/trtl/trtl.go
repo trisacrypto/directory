@@ -3,7 +3,6 @@ package trtl
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -73,10 +72,6 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 func (s *Store) SearchVASPs(query map[string]interface{}) ([]*gds.VASP, error) {
 	// TODO: We need indexes for this.
 	return nil, errors.New("not implemented")
-}
-
-func normalize(s string) string {
-	return strings.ToLower(strings.TrimSpace(s))
 }
 
 // CreateVASP into the directory. This method requires the VASP to have a unique
