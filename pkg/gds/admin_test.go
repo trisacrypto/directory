@@ -997,6 +997,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	request.params["kind"] = "billing"
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
 	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.Nil(vasp.Contacts.Billing)
