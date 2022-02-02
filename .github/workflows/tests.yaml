@@ -54,7 +54,7 @@ jobs:
       - name: Clone TRISA repository
         uses: actions/checkout@main
         with:
-          name: trisacrypto/trisa
+          repository: trisacrypto/trisa
 
       - name: Code Generation
         run: go generate ./...
@@ -96,7 +96,7 @@ jobs:
       - name: Clone TRISA repository
         uses: actions/checkout@main
         with:
-          name: trisacrypto/trisa
+          repository: trisacrypto/trisa
 
       - name: Code Generation
         run: go generate ./...
