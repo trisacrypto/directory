@@ -350,6 +350,11 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair
 		pair := &pb.KVPair{}
 		if !opts.IterNoKeys {

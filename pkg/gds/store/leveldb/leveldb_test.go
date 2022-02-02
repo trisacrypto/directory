@@ -43,7 +43,7 @@ func TestLevelDB(t *testing.T) {
 
 func (s *leveldbTestSuite) TestDirectoryStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/vasp.json")
+	data, err := ioutil.ReadFile("../testdata/vasp.json")
 	s.NoError(err)
 
 	alice := &pb.VASP{}
@@ -134,7 +134,7 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 
 func (s *leveldbTestSuite) TestCertificateStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/certreq.json")
+	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
 	certreq := &models.CertificateRequest{}
