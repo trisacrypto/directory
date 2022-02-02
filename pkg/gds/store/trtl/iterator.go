@@ -71,7 +71,7 @@ func NewTrtlIterator(client trtlpb.TrtlClient, snapshot bool, namespace string) 
 		iter.cursor, iter.err = iter.client.Cursor(ctx, request)
 		iter.values = make([]*trtlpb.KVPair, 0)
 	} else {
-		//defer iter.cancel()
+		defer iter.cancel()
 		request := &trtlpb.IterRequest{
 			Namespace: namespace,
 		}
