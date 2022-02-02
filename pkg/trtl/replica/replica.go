@@ -142,13 +142,19 @@ func (r *Service) remotePhase1(ctx context.Context, wg *sync.WaitGroup, log zero
 	// When phase 3 is complete (or if phase 1 ends early) log anti-entropy
 	defer func() {
 		nUpdates := atomic.LoadUint64(&updates)
-		rRepairs := atomic.LoadUint64(&repairs)
-		if nUpdates > 0 || rRepairs > 0 {
+		nRepairs := atomic.LoadUint64(&repairs)
+		nVersions := atomic.LoadUint64(&versions)
+		if nUpdates > 0 || nRepairs > 0 {
 			r.synchronizedNow()
 			log.Info().
-				Uint64("local_repairs", rRepairs).
+				Uint64("local_repairs", nRepairs).
 				Uint64("remote_updates", nUpdates).
 				Msg("anti-entropy synchronization complete")
+
+			// Update Prometheus metrics
+			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nUpdates))
+			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nRepairs))
+			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nVersions))
 		} else {
 			log.Debug().Msg("anti-entropy complete with no synchronization")
 		}
@@ -295,11 +301,6 @@ gossip:
 				wg.Add(1)
 				go r.remotePhase2(ctx, wg, log, &seen, sender, &updates)
 			})
-
-			// Update Prometheus metrics
-			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
-			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
-			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(versions))
 
 		default:
 			log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
