@@ -11,13 +11,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rotationalio/honu/replica"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/jitter"
-	"github.com/trisacrypto/directory/pkg/trtl/metrics"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"google.golang.org/grpc"
@@ -87,7 +88,7 @@ bayou:
 		}
 
 		// Update prometheus metrics
-		metrics.PmAESyncs.WithLabelValues(peer.Name, peer.Region).Inc()
+		prom.PmAESyncs.WithLabelValues(peer.Name, peer.Region, "initiator").Inc()
 	}
 }
 
@@ -238,7 +239,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	// Compute latency in milliseconds
 	// NOTE: we're only tracking latency for successful AE sessions
 	latency := float64(time.Since(start)/1000) / 1000.0
-	metrics.PmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
+	prom.PmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil
@@ -296,6 +297,9 @@ func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.Clien
 // all replies are handled in initiatorPhase2 whether they are replies to phase1 or
 // messages sent in the remote's phase2.
 func (r *Service) initiatorPhase1(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, sender *streamSender) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	// Ensure that this routine signals when it exits
 	defer wg.Done()
 	log.Trace().Msg("starting initiator phase 1")
@@ -368,6 +372,10 @@ namespaces:
 	// complete and they can start the push phase.
 	sender.Send(&replica.Sync{Status: replica.Sync_COMPLETE})
 	log.Trace().Msg("initiator phase 1 complete")
+
+	// Compute latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	prom.PmAEPhase1Latency.WithLabelValues(r.conf.Name).Observe(latency)
 
 	log.Debug().
 		Uint64("versions", nVersions).
@@ -455,13 +463,21 @@ gossip:
 			// replica's and if so, save it to disk with an update instead of a put.
 			//
 			// NOTE: honu.Update performs the version checking in a transaction.
-			// TODO: record the update type in prometheus metrics.
-			if _, err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
+
+			var updateType honu.UpdateType
+			if updateType, err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
 				log.Warn().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
 					Msg("could not update object from remote peer")
 				continue gossip
+			}
+			// Log update type in prometheus metrics.
+			switch updateType {
+			case honu.UpdateStomp:
+				prom.PmAEStomps.WithLabelValues(r.conf.Name, r.conf.Region).Inc()
+			case honu.UpdateSkip:
+				prom.PmAESkips.WithLabelValues(r.conf.Name, r.conf.Region).Inc()
 			}
 			repairs++
 
@@ -494,6 +510,12 @@ gossip:
 			// exit the for loop and close the sender (via the defer above). Once all
 			// messages are sent, we can close the stream and finish.
 			log.Trace().Msg("initiator phase 2 complete")
+
+			// Update Prometheus metrics
+			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(versions))
+			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
+			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+
 			return
 
 		default:

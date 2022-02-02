@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/replica"
@@ -36,15 +37,15 @@ func init() {
 // 2. A peers management service for interacting with remote peers
 // 3. A replication service which implements auto-adapting anti-entropy replication.
 type Server struct {
-	srv     *grpc.Server     // The gRPC server that listens on its own independent port
-	conf    config.Config    // Configuration for the trtl server
-	db      *honu.DB         // Database connection for managing objects
-	trtl    *TrtlService     // Service for interacting with a Honu database
-	peers   *PeerService     // Service for managing remote peers
-	replica *replica.Service // Service that handles anti-entropy replication
-	metrics *MetricsService  // Service for Prometheus metrics
-	started time.Time        // The timestamp that the server was started (for uptime)
-	echan   chan error       // Channel for receiving errors from the gRPC server
+	srv     *grpc.Server         // The gRPC server that listens on its own independent port
+	conf    config.Config        // Configuration for the trtl server
+	db      *honu.DB             // Database connection for managing objects
+	trtl    *TrtlService         // Service for interacting with a Honu database
+	peers   *PeerService         // Service for managing remote peers
+	replica *replica.Service     // Service that handles anti-entropy replication
+	metrics *prom.MetricsService // Service for Prometheus metrics
+	started time.Time            // The timestamp that the server was started (for uptime)
+	echan   chan error           // Channel for receiving errors from the gRPC server
 }
 
 // New creates a new trtl server given a configuration.
@@ -118,7 +119,7 @@ func New(conf config.Config) (s *Server, err error) {
 	replication.RegisterReplicationServer(s.srv, s.replica)
 
 	// Initialize Metrics service for Prometheus
-	if s.metrics, err = NewMetricsService(); err != nil {
+	if s.metrics, err = prom.New(); err != nil {
 		return nil, err
 	}
 

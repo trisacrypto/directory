@@ -50,37 +50,43 @@ const (
 func DefaultProfiles() *Profiles {
 	return &Profiles{
 		Version: ProfileVersion,
-		Active:  "testnet",
+		Active:  "localhost",
 		Profiles: map[string]*Profile{
 			"production": {
 				Directory: &DirectoryProfile{
 					Endpoint: "api.vaspdirectory.net:443",
+					Insecure: true,
 				},
 				Admin: &AdminProfile{
 					Endpoint: "https://api.admin.vaspdirectory.net",
 				},
 				Members: &MembersProfile{
 					Endpoint: "members.vaspdirectory.net:443",
+					Insecure: true,
 				},
 				TrtlProfiles: []*TrtlProfile{
 					{
 						Endpoint: "trtl.us.vaspdirectory.net:443",
+						Insecure: true,
 					},
 				},
 			},
 			"testnet": {
 				Directory: &DirectoryProfile{
 					Endpoint: "api.trisatest.net:443",
+					Insecure: true,
 				},
 				Admin: &AdminProfile{
 					Endpoint: "https://api.admin.trisatest.net",
 				},
 				Members: &MembersProfile{
 					Endpoint: "members.trisatest.net:443",
+					Insecure: true,
 				},
 				TrtlProfiles: []*TrtlProfile{
 					{
 						Endpoint: "trtl.us.trisatest.net:443",
+						Insecure: true,
 					},
 				},
 			},

@@ -12,19 +12,26 @@ import (
 )
 
 var (
-	PmPuts  *prometheus.CounterVec // count of trtl Puts per namespace
-	PmGets  *prometheus.CounterVec // count of trtl Gets per namespace
-	PmDels  *prometheus.CounterVec // count of trtl Deletes per namespace
-	PmIters *prometheus.CounterVec // count of trtl Iters per namespace
+	// Basic RPC Metrics
+	PmPuts       *prometheus.CounterVec   // count of trtl Puts per namespace
+	PmGets       *prometheus.CounterVec   // count of trtl Gets per namespace
+	PmDels       *prometheus.CounterVec   // count of trtl Deletes per namespace
+	PmIters      *prometheus.CounterVec   // count of trtl Iters per namespace
+	PmRPCLatency *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
 	// PmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
 	// PmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
-	PmLatency       *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
-	PmAESyncs       *prometheus.CounterVec   // count of anti entropy sessions per peer and per region
-	PmAESyncLatency *prometheus.HistogramVec // the time it is taking for anti entropy sessions to complete, by peer
-	PmAEPushes      *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region
-	PmAEPulls       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
-	PmAEPushVSPull  prometheus.Gauge         // a gauge of objects pushed vs pulled
-	PmAEStomps      *prometheus.CounterVec   // count of stomped versions, per peer and region
+
+	// Anti-Entropy Metrics
+	PmAESyncs         *prometheus.CounterVec   // count of anti entropy sessions per peer, per region, and by perspective (initiator/remote)
+	PmAESyncLatency   *prometheus.HistogramVec // duration of anti entropy sessions (initiator perspective), by peer
+	PmAEPhase1Latency *prometheus.HistogramVec // time phase 1 of anti-entropy is taking from the perspective of the initiator, by peer
+	PmAEPhase2Latency *prometheus.HistogramVec // time phase 2 of anti-entropy is taking from the perspective of the remote, by peer
+	PmAEVersions      *prometheus.HistogramVec // count of all observed versions, per peer and region
+	PmAEPushes        *prometheus.HistogramVec // pushed objects during anti entropy, by peer and region (aka "updates")
+	PmAEPulls         *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region (aka "repairs")
+	PmAEStomps        *prometheus.CounterVec   // count of stomped versions, per peer and region
+	PmAESkips         *prometheus.CounterVec   // count of skipped versions, per peer and region
+
 )
 
 // A MetricsService manages Prometheus metrics
@@ -32,7 +39,7 @@ type MetricsService struct {
 	srv *http.Server
 }
 
-func NewMetricsService() (*MetricsService, error) {
+func New() (*MetricsService, error) {
 	initMetrics()
 	return &MetricsService{srv: &http.Server{}}, nil
 }
@@ -93,6 +100,12 @@ func initMetrics() {
 		Help:      "the count of iters, labeled by namespace",
 	}, []string{"namespace"})
 
+	PmRPCLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
+		Name:      "latency",
+		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
+	}, []string{"call"})
+
 	// PmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
 	// 	Namespace: PmNamespace,
 	// 	Name:      "objects",
@@ -105,23 +118,35 @@ func initMetrics() {
 	// 	Help:      "the count of tombstones, labeled by namespace",
 	// }, []string{"namespace"})
 
-	PmLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
-		Name:      "latency",
-		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
-	}, []string{"call"})
-
 	PmAESyncs = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: PmNamespace,
 		Name:      "syncs",
-		Help:      "the count of anti-entropy sessions, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "the count of anti-entropy sessions, labeled by peer, region, and perspective",
+	}, []string{"peer", "region", "perspective"})
 
 	PmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "sync_latency",
-		Help:      "time to anti-entropy session completion, labeled by peer",
+		Help:      "total duration of anti-entropy (originator perspective), labeled by peer",
 	}, []string{"peer"})
+
+	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
+		Name:      "phase1_latency",
+		Help:      "duration of anti-entropy phase 1 (originator perspective), labeled by peer",
+	}, []string{"peer"})
+
+	PmAEPhase2Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
+		Name:      "phase2_latency",
+		Help:      "duration of anti-entropy phase 2 (remote perspective), labeled by peer",
+	}, []string{"peer"})
+
+	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespace,
+		Name:      "versions",
+		Help:      "count of all observed versions, labeled by peer and region",
+	}, []string{"peer", "region"})
 
 	PmAEPulls = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
@@ -135,16 +160,16 @@ func initMetrics() {
 		Help:      "pushed objects during anti entropy, labeled by peer and region",
 	}, []string{"peer", "region"})
 
-	PmAEPushVSPull = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: PmNamespace,
-		Name:      "push_vs_pull",
-		Help:      "objects pushed vs pulled",
-	})
-
 	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: PmNamespace,
 		Name:      "stomps",
 		Help:      "count of stomped versions, labeled by peer and region",
+	}, []string{"peer", "region"})
+
+	PmAESkips = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespace,
+		Name:      "skips",
+		Help:      "count of skipped versions, labeled by peer and region",
 	}, []string{"peer", "region"})
 }
 
@@ -165,6 +190,10 @@ func registerMetrics() error {
 		log.Debug().Err(err).Msg("unable to register PmIters")
 		return err
 	}
+	if err := prometheus.Register(PmRPCLatency); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmLatency")
+		return err
+	}
 	// if err := prometheus.Register(PmObjects); err != nil {
 	// 	log.Debug().Err(err).Msg("unable to register PmObjects")
 	// 	return err
@@ -173,15 +202,22 @@ func registerMetrics() error {
 	// 	log.Debug().Err(err).Msg("unable to register PmTombstones")
 	// 	return err
 	// }
-	if err := prometheus.Register(PmLatency); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmLatency")
-		return err
-	}
+
 	if err := prometheus.Register(PmAESyncs); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAESyncs")
 	}
 	if err := prometheus.Register(PmAESyncLatency); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAESyncLatency")
+	}
+	if err := prometheus.Register(PmAEPhase1Latency); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEPhase1Latency")
+	}
+	if err := prometheus.Register(PmAEPhase2Latency); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEPhase2Latency")
+	}
+	if err := prometheus.Register(PmAEVersions); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAEVersions")
+		return err
 	}
 	if err := prometheus.Register(PmAEPulls); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAEPulls")
@@ -191,12 +227,12 @@ func registerMetrics() error {
 		log.Debug().Err(err).Msg("unable to register PmAEPushes")
 		return err
 	}
-	if err := prometheus.Register(PmAEPushVSPull); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEPushVSPull")
-		return err
-	}
 	if err := prometheus.Register(PmAEStomps); err != nil {
 		log.Debug().Err(err).Msg("unable to register PmAEStomps")
+		return err
+	}
+	if err := prometheus.Register(PmAESkips); err != nil {
+		log.Debug().Err(err).Msg("unable to register PmAESkips")
 		return err
 	}
 	return nil

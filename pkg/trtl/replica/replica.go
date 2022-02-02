@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
-	"github.com/trisacrypto/directory/pkg/trtl/metrics"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -89,6 +89,9 @@ func (r *Service) Gossip(stream replica.Replication_GossipServer) (err error) {
 		logctx.Debug().Msg("rejecting gossip request: anti-entropy not enabled")
 		return status.Error(codes.FailedPrecondition, "anti-entropy not enabled on remote")
 	}
+
+	// Update prometheus metrics
+	prom.PmAESyncs.WithLabelValues(r.conf.Name, r.conf.Region, "remote").Inc()
 
 	// Create a stream sender to ensure that both phase1 and phase2 go routines can send
 	// messages concurrently without violating the grpc semantic that only one go
@@ -253,8 +256,8 @@ gossip:
 			// replica's and if so, save it to disk with an update instead of a put.
 			//
 			// NOTE: honu.Update performs the version checking in a transaction.
-			// TODO: record the update type in prometheus metrics.
-			if _, err := r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
+			var updateType honu.UpdateType
+			if updateType, err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
 				log.Error().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
@@ -262,6 +265,14 @@ gossip:
 				continue gossip
 			}
 			atomic.AddUint64(&repairs, 1)
+
+			// Log update type in prometheus metrics.
+			switch updateType {
+			case honu.UpdateStomp:
+				prom.PmAEStomps.WithLabelValues(r.conf.Name, r.conf.Region).Inc()
+			case honu.UpdateSkip:
+				prom.PmAESkips.WithLabelValues(r.conf.Name, r.conf.Region).Inc()
+			}
 
 		case replica.Sync_ERROR:
 			// Something went wrong on the initiator, log and continue
@@ -285,16 +296,15 @@ gossip:
 				go r.remotePhase2(ctx, wg, log, &seen, sender, &updates)
 			})
 
+			// Update Prometheus metrics
+			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
+			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(versions))
+
 		default:
 			log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
 		}
 	}
-
-	// Update Prometheus metrics
-	metrics.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
-	metrics.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
-	metrics.PmAEPushVSPull.Add(float64(updates))
-	metrics.PmAEPushVSPull.Sub(float64(repairs))
 }
 
 // remotePhase2 is the counterpart to initiatorPhase1; the remote loops through all
@@ -307,6 +317,9 @@ gossip:
 // This go routine closes the sender channel when the phase is over because no more
 // messages should be sent from the remote.
 func (r *Service) remotePhase2(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, seen *nsmap, sender *streamSender, updates *uint64) {
+	// Start a timer to track latency
+	start := time.Now()
+
 	// Ensure that this routine signals when it exists
 	defer wg.Done()
 	log.Trace().Msg("starting remote phase 2")
@@ -378,6 +391,10 @@ namespaces:
 	// NOTE: this message MUST be sent, this function should not exit before this line.
 	sender.Send(&replica.Sync{Status: replica.Sync_COMPLETE})
 	log.Trace().Msg("phase 2 complete")
+
+	// Compute latency in milliseconds
+	latency := float64(time.Since(start)/1000) / 1000.0
+	prom.PmAEPhase2Latency.WithLabelValues(r.conf.Name).Observe(latency)
 }
 
 //===========================================================================

@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -84,10 +85,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 		// Compute latency in milliseconds
 		latency := float64(time.Since(start)/1000) / 1000.0
-		PmLatency.WithLabelValues("Get").Observe(latency)
+		prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 		// Update prometheus metrics
-		PmGets.WithLabelValues(object.Namespace).Inc()
+		prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 		return &pb.GetReply{
 			Value: object.Data,
@@ -100,10 +101,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	PmLatency.WithLabelValues("Get").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 	// Increment prometheus Get count
-	PmGets.WithLabelValues(object.Namespace).Inc()
+	prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 	return &pb.GetReply{
 		Value: object.Data,
@@ -152,10 +153,10 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// Compute Put latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	PmLatency.WithLabelValues("Put").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Put").Observe(latency)
 
 	// Increment prometheus Put counter
-	PmPuts.WithLabelValues(object.Namespace).Inc()
+	prom.PmPuts.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
@@ -203,14 +204,14 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 
 	// Compute Delete latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	PmLatency.WithLabelValues("Delete").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
-	PmDels.WithLabelValues(object.Namespace).Inc()
+	prom.PmDels.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
-	// pmTombstones.WithLabelValues(object.Namespace).Inc()
+	// prom.pmTombstones.WithLabelValues(object.Namespace).Inc()
 
 	return out, nil
 }
@@ -383,10 +384,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Compute Iter latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	PmLatency.WithLabelValues("Iter").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
-	PmIters.WithLabelValues(iter.Namespace()).Inc()
+	prom.PmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
