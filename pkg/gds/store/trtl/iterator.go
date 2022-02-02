@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	trtlpb "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -19,10 +18,6 @@ type iterWrapper struct {
 }
 
 type vaspIterator struct {
-	iterWrapper
-}
-
-type certReqIterator struct {
 	iterWrapper
 }
 
@@ -224,31 +219,4 @@ func (i *vaspIterator) Id() string {
 
 func (i *vaspIterator) Seek(vaspID string) bool {
 	return i.iter.Seek([]byte(vaspID))
-}
-
-func (i *certReqIterator) CertReq() (*models.CertificateRequest, error) {
-	r := new(models.CertificateRequest)
-	if err := proto.Unmarshal(i.iter.Value(), r); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceCertReqs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
-		return nil, err
-	}
-	return r, nil
-}
-
-func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {
-	reqs = make([]*models.CertificateRequest, 0)
-	defer i.iter.Release()
-	for i.iter.Next() {
-		r := new(models.CertificateRequest)
-		if err = proto.Unmarshal(i.iter.Value(), r); err != nil {
-			return nil, err
-		}
-		reqs = append(reqs, r)
-	}
-
-	if err = i.iter.Error(); err != nil {
-		return nil, err
-	}
-
-	return reqs, nil
 }
