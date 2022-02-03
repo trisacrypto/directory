@@ -513,8 +513,8 @@ gossip:
 
 			// Update Prometheus metrics
 			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(versions))
-			prom.PmAEPushes.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
-			prom.PmAEPulls.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
+			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
 
 			return
 
