@@ -106,16 +106,14 @@ Server side configuration is done with the environment. Please see the instructi
 
 Client-side configuration is setup using profiles. A profile is a set of related configurations for both development and production. For example, the default environments are "production" to connect to vaspdirectory.net, "testnet" to connect to trisatest.net, and "localhost" to connect to locally running development servers. The profiles are configured in a YAML file that is stored in an OS-specific configuration directory.
 
-You must first install the CLI Tools described in the section above. After that, install the profiles helper tools:
+You must first install the CLI Tools described in the section above. After that, install the profiles helper tool:
 
 
 ```
 $ gds profiles --install
-$ gdsutil profiles --install
-$ trtl profiles --install
 ```
 
-This will create YAML files in your OS-specific configuration directory. To view the path of the configuration files (e.g. for the GDS tool):
+This will create YAML files in your OS-specific configuration directory. To view the path of the configuration file:
 
 ```
 $ gds profiles --path
