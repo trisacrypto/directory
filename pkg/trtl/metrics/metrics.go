@@ -39,6 +39,10 @@ type MetricsService struct {
 	srv *http.Server
 }
 
+// New creates a metrics service and also initializes all of the prometheus metrics.
+// The trtl server *must* create the metrics service by calling New before any
+// metrics are logged to Prometheus. Even in the case of tests, the metrics service
+// must be created before the tests can be run.
 func New() (*MetricsService, error) {
 	initMetrics()
 	return &MetricsService{srv: &http.Server{}}, nil
