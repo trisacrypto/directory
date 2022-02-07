@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	TechnicalContact      = "technical"
-	AdministrativeContact = "administrative"
-	LegalContact          = "legal"
-	BillingContact        = "billing"
+	TechnicalContact        = "technical"
+	AdministrativeContact   = "administrative"
+	LegalContact            = "legal"
+	BillingContact          = "billing"
+	VerificationTokenLength = 48
 )
 
 type contactType struct {
@@ -34,6 +35,67 @@ func ContactIsVerified(contact *pb.Contact) (verified bool, err error) {
 		return false, err
 	}
 	return verified, nil
+}
+
+// Returns True if the contact kind is one of the recognized strings.
+func ContactKindIsValid(kind string) bool {
+	kinds := map[string]struct{}{
+		AdministrativeContact: {},
+		BillingContact:        {},
+		LegalContact:          {},
+		TechnicalContact:      {},
+	}
+	_, ok := kinds[kind]
+	return ok
+}
+
+// Returns the corresponding contact object for the given contact type.
+func ContactFromType(contacts *pb.Contacts, kind string) *pb.Contact {
+	switch kind {
+	case AdministrativeContact:
+		return contacts.Administrative
+	case BillingContact:
+		return contacts.Billing
+	case LegalContact:
+		return contacts.Legal
+	case TechnicalContact:
+		return contacts.Technical
+	}
+	return nil
+}
+
+// Adds a contact on the VASP object.
+func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) error {
+	switch kind {
+	case AdministrativeContact:
+		vasp.Contacts.Administrative = contact
+	case BillingContact:
+		vasp.Contacts.Billing = contact
+	case LegalContact:
+		vasp.Contacts.Legal = contact
+	case TechnicalContact:
+		vasp.Contacts.Technical = contact
+	default:
+		return fmt.Errorf("invalid contact type: %s", kind)
+	}
+	return nil
+}
+
+// Deletes a contact on the VASP object by setting it to nil.
+func DeleteContact(vasp *pb.VASP, kind string) error {
+	switch kind {
+	case AdministrativeContact:
+		vasp.Contacts.Administrative = nil
+	case BillingContact:
+		vasp.Contacts.Billing = nil
+	case LegalContact:
+		vasp.Contacts.Legal = nil
+	case TechnicalContact:
+		vasp.Contacts.Technical = nil
+	default:
+		return fmt.Errorf("invalid contact type: %s", kind)
+	}
+	return nil
 }
 
 // Returns a standardized order of iterating through contacts.

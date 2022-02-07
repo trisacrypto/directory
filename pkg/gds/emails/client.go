@@ -85,43 +85,20 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 	var nErrors int
 	iter := models.NewContactIterator(vasp.Contacts, true, false)
 	for iter.Next() {
-		var verified bool
 		contact, kind := iter.Value()
-		ctx := VerifyContactData{
-			Name:    contact.Name,
-			VID:     vasp.Id,
-			BaseURL: m.conf.VerifyContactBaseURL,
-		}
-		if ctx.Token, verified, err = models.GetContactVerification(contact); err != nil {
-			// If we can't get the verification token, this is a fatal error
+
+		var verified bool
+		if _, verified, err = models.GetContactVerification(contact); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
 			return sent, err
 		}
 
-		// If the contact has already been verified, then do not send a verify contact request
 		if !verified {
-			msg, err := VerifyContactEmail(
-				m.serviceEmail.Name, m.serviceEmail.Address,
-				contact.Name, contact.Email,
-				ctx,
-			)
-			if err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not create verify contact email")
+			if err := m.SendVerifyContact(vasp, contact); err != nil {
 				nErrors++
-				continue
-			}
-
-			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not send verify contact email")
-				nErrors++
-				continue
-			}
-
-			sent++
-
-			if err = models.AppendEmailLog(contact, string(admin.ResendVerifyContact), msg.Subject); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("could not log verify contact email")
-				nErrors++
-				continue
+				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("failed to send verify contact email")
+			} else {
+				sent++
 			}
 		}
 	}
@@ -131,6 +108,40 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 		return sent, fmt.Errorf("no verify contact emails were successfully sent (%d errors)", nErrors)
 	}
 	return sent, nil
+}
+
+// SendVerifyContact sends a verification email to a contact.
+func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (err error) {
+	ctx := VerifyContactData{
+		Name:    contact.Name,
+		VID:     vasp.Id,
+		BaseURL: m.conf.VerifyContactBaseURL,
+	}
+
+	if ctx.Token, _, err = models.GetContactVerification(contact); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
+		return err
+	}
+
+	msg, err := VerifyContactEmail(
+		m.serviceEmail.Name, m.serviceEmail.Address,
+		contact.Name, contact.Email,
+		ctx,
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("could not create verify contact email")
+		return err
+	}
+
+	if err = m.Send(msg); err != nil {
+		log.Error().Err(err).Msg("could not send verify contact email")
+		return err
+	}
+
+	if err = models.AppendEmailLog(contact, string(admin.ResendVerifyContact), msg.Subject); err != nil {
+		log.Error().Err(err).Msg("could not log verify contact email")
+	}
+	return nil
 }
 
 // SendReviewRequest is a shortcut for iComply verification in which we simply send

@@ -24,6 +24,8 @@ type DirectoryAdministrationClient interface {
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error)
 	DeleteVASP(ctx context.Context, id string) (out *Reply, err error)
+	ReplaceContact(ctx context.Context, in *ReplaceContactRequest) (out *Reply, err error)
+	DeleteContact(ctx context.Context, vaspID string, kind string) (out *Reply, err error)
 	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
 	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
@@ -165,8 +167,6 @@ type UpdateVASPRequest struct {
 	// into an ivms101.LegalPerson protocol buffer.
 	Entity map[string]interface{} `json:"entity,omitempty"`
 
-	// TODO: allow admin to update contacts, which may require contact reverification.
-
 	// Common name can be updated only if the certificate has not been issued. It also
 	// updates the certificate request to ensure the correct certs are issued. The TRISA
 	// endpoint can be changed at any time, but should match the common name.
@@ -187,6 +187,24 @@ type UpdateVASPRequest struct {
 
 // UpdateVASPReply is identical to RetrieveVASPReply, simply renamed for clarity.
 type UpdateVASPReply RetrieveVASPReply
+
+//===========================================================================
+// Contact management RPCs
+//===========================================================================
+
+// ReplaceContactRequest is a request-like struct for replacing a contact on a VASP.
+type ReplaceContactRequest struct {
+	// The ID of the VASP (optional - is part of the URL).
+	VASP string `json:"vasp,omitempty"`
+
+	// The kind of contact to replace, must be one of
+	// ("administrative", "technical", "legal", "billing").
+	Kind string `json:"kind"`
+
+	// The new contact to replace the existing contact with, must be marshalled into a
+	// gds.models.v1beta1.Contact protocol buffer.
+	Contact map[string]interface{} `json:"contact,omitempty"`
+}
 
 //===========================================================================
 // Review Notes RPCs

@@ -20,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -137,6 +138,8 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
 		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
 		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
+		{"replaceContact", http.MethodPut, "/v2/vasps/42/contacts/kind", true, true},
+		{"deleteContact", http.MethodDelete, "/v2/vasps/42/contacts/kind", true, true},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
 		// Authenticated and CSRF protected endpoints
 		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},
@@ -482,7 +485,6 @@ func (s *gdsTestSuite) TestListVASPs() {
 				"administrative": false,
 				"billing":        false,
 				"legal":          false,
-				"technical":      false,
 			},
 		},
 		{
@@ -492,10 +494,8 @@ func (s *gdsTestSuite) TestListVASPs() {
 			RegisteredDirectory: "trisatest.net",
 			VerificationStatus:  pb.VerificationState_APPEALED.String(),
 			VerifiedContacts: map[string]bool{
-				"administrative": false,
-				"billing":        true,
-				"legal":          true,
-				"technical":      false,
+				"billing": true,
+				"legal":   true,
 			},
 		},
 	}
@@ -531,6 +531,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs with the specified status
 	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -542,6 +543,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs with multiple status filters
 	request.path = "/v2/vasps?status=" + snippets[0].VerificationStatus + "&status=" + snippets[1].VerificationStatus
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -554,6 +556,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 	// List VASPs on multiple pages
 	request.path = "/v2/vasps?page=1&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -564,6 +567,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	pageResults := []admin.VASPSnippet{snippets[0]}
 
 	request.path = "/v2/vasps?page=2&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -576,6 +580,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(snippets, pageResults)
 
 	request.path = "/v2/vasps?page=3&page_size=1"
+	actual = &admin.ListVASPsReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListVASPs, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -663,7 +668,8 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieID := charlieVASP.Id
 	request.path = "/v2/vasps/" + charlieID
 	request.params["vaspID"] = charlieID
 
@@ -763,6 +769,244 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	require.Error(err)
 	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
 	require.Error(err)
+}
+
+// Test the ReplaceContact endpoint
+func (s *gdsTestSuite) TestReplaceContact() {
+	s.LoadSmallFixtures()
+	defer s.ResetSmallFixtures()
+	defer emails.PurgeMockEmails()
+	defer s.loadReferenceFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieID := charlieVASP.Id
+
+	// Attempt to update a VASP that doesn't exist
+	contact := charlieVASP.Contacts.Administrative
+	contactRequest, err := wire.Rewire(contact)
+	require.NoError(err, "could not rewire contact")
+	request := &httpRequest{
+		method: http.MethodPut,
+		path:   "/v2/vasps/invalid/contacts/administrative",
+		params: map[string]string{
+			"vaspID": "invalid",
+			"kind":   "administrative",
+		},
+		in: &admin.ReplaceContactRequest{
+			VASP:    "invalid",
+			Kind:    "administrative",
+			Contact: contactRequest,
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ReplaceContact, c, w, nil)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
+
+	// Replacing a contact kind that doesn't exist
+	request.path = "/v2/vasps/" + charlieID + "/contacts/invalid"
+	request.params["vaspID"] = charlieID
+	request.params["kind"] = "invalid"
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "invalid",
+		Contact: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	s.APIError(http.StatusBadRequest, "invalid contact kind provided", rep)
+
+	// Replacing a contact with no data
+	request.path = "/v2/vasps/" + charlieID + "/contacts/administrative"
+	request.params["kind"] = "administrative"
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "administrative",
+		Contact: map[string]interface{}{},
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	s.APIError(http.StatusBadRequest, "contact data is required for ReplaceContact request", rep)
+
+	// Test removing a contact email is not allowed
+	contact = &pb.Contact{
+		Email: "",
+	}
+	contactRequest, err = wire.Rewire(contact)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "administrative",
+		Contact: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
+
+	// Successfully replacing a contact name
+	contact = charlieVASP.Contacts.Administrative
+	contact.Name = "Clark Kent"
+	contactRequest, err = wire.Rewire(contact)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "administrative",
+		Contact: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Equal(contact.Name, vasp.Contacts.Administrative.Name)
+	require.Equal(contact.Email, vasp.Contacts.Administrative.Email)
+	require.Equal(contact.Phone, vasp.Contacts.Administrative.Phone)
+	require.Nil(vasp.Contacts.Technical)
+
+	// Successfully replacing a contact email
+	contact = charlieVASP.Contacts.Administrative
+	contact.Email = "clark.kent@charliebank.com"
+	contactRequest, err = wire.Rewire(contact)
+	require.NoError(err, "could not rewire contact")
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "administrative",
+		Contact: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	adminSent := time.Now()
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Equal(contact.Name, vasp.Contacts.Administrative.Name)
+	require.Equal(contact.Email, vasp.Contacts.Administrative.Email)
+	require.Equal(contact.Phone, vasp.Contacts.Administrative.Phone)
+	// Should no longer be verified
+	token, verified, err := models.GetContactVerification(vasp.Contacts.Administrative)
+	require.NoError(err, "could not retrieve contact verification")
+	require.NotEmpty(token)
+	require.False(verified)
+
+	// Successfully adding a new contact
+	contact = &pb.Contact{
+		Name:  "Lois Lane",
+		Email: "lois.lane@charliebank.com",
+	}
+	contactRequest, err = wire.Rewire(contact)
+	require.NoError(err, "could not rewire contact")
+	request.params["kind"] = "technical"
+	request.in = &admin.ReplaceContactRequest{
+		VASP:    charlieID,
+		Kind:    "technical",
+		Contact: contactRequest,
+	}
+	c, w = s.makeRequest(request)
+	technicalSent := time.Now()
+	rep = s.doRequest(a.ReplaceContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.NotNil(vasp.Contacts.Technical)
+	require.Equal(contact.Name, vasp.Contacts.Technical.Name)
+	require.Equal(contact.Email, vasp.Contacts.Technical.Email)
+	// Should not be verified
+	token, verified, err = models.GetContactVerification(vasp.Contacts.Technical)
+	require.NoError(err, "could not retrieve contact verification")
+	require.NotEmpty(token)
+	require.False(verified)
+
+	// Should send verification emails to the two contacts
+	messages := []*emailMeta{
+		{
+			contact:   vasp.Contacts.Administrative,
+			to:        "clark.kent@charliebank.com",
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: adminSent,
+		},
+		{
+			contact:   vasp.Contacts.Technical,
+			to:        "lois.lane@charliebank.com",
+			from:      s.svc.GetConf().Email.ServiceEmail,
+			subject:   emails.VerifyContactRE,
+			reason:    "verify_contact",
+			timestamp: technicalSent,
+		},
+	}
+	s.CheckEmails(messages)
+}
+
+// Test the DeleteContact endpoint
+func (s *gdsTestSuite) TestDeleteContact() {
+	s.LoadSmallFixtures()
+	defer s.ResetSmallFixtures()
+	defer s.loadReferenceFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieID := charlieVASP.Id
+
+	// Attempt to delete a VASP that doesn't exist
+	request := &httpRequest{
+		method: http.MethodDelete,
+		path:   "/v2/vasps/invalid/contacts/administrative",
+		params: map[string]string{
+			"vaspID": "invalid",
+			"kind":   "administrative",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.DeleteContact, c, w, nil)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
+
+	// Attempt to delete a contact that doesn't exist
+	request.path = "/v2/vasps/charliebank/contacts/invalid"
+	request.params["vaspID"] = charlieID
+	request.params["kind"] = "invalid"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteContact, c, w, nil)
+	s.APIError(http.StatusBadRequest, "invalid contact kind provided", rep)
+
+	// Test deleting a contact
+	request.path = "/v2/vasps/charliebank/contacts/administrative"
+	request.params["kind"] = "administrative"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Nil(vasp.Contacts.Administrative)
+	require.NotNil(vasp.Contacts.Billing)
+	require.NotNil(vasp.Contacts.Legal)
+
+	// Test deleting another contact
+	request.path = "/v2/vasps/charliebank/contacts/billing"
+	request.params["kind"] = "billing"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteContact, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	require.NoError(err, "could not retrieve VASP record")
+	require.Nil(vasp.Contacts.Billing)
+
+	// Test deleting the remaining contact is not allowed
+	request.path = "/v2/vasps/charliebank/contacts/legal"
+	request.params["kind"] = "legal"
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.DeleteContact, c, w, nil)
+	require.Equal(http.StatusBadRequest, rep.StatusCode)
 }
 
 // Test the CreateReviewNote endpoint.

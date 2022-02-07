@@ -25,6 +25,7 @@ import (
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
@@ -180,6 +181,12 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
+
+			contacts := vasps.Group("/:vaspID/contacts")
+			{
+				contacts.PUT("/:kind", csrf, s.ReplaceContact)
+				contacts.DELETE("/:kind", csrf, s.DeleteContact)
+			}
 
 			notes := vasps.Group("/:vaspID/notes")
 			{
@@ -990,8 +997,6 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		nChanges++
 	}
 
-	// TODO: update VASP contact information
-
 	// Update common name and trisa endpoint - this will also update any certificate requests.
 	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
 	// will be in an inconsistent state. Transactions would be very nice here, but instead this
@@ -1270,6 +1275,173 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 	if err = s.db.DeleteVASP(vaspID); err != nil {
 		log.Error().Err(err).Msg("could not delete VASP from database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// ReplaceContact completely replaces a contact on a VASP with a new contact.
+func (s *Admin) ReplaceContact(c *gin.Context) {
+	var (
+		in           *admin.ReplaceContactRequest
+		contact      *pb.Contact
+		vasp         *pb.VASP
+		emailUpdated bool
+		err          error
+	)
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+	kind := c.Param("kind")
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.ReplaceContactRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Sanity check: validate VASP ID
+	if in.VASP != "" && in.VASP != vaspID {
+		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not mactch the URL endpoint"))
+		return
+	}
+
+	// Sanity check: validate contact kind
+	if in.Kind != "" && in.Kind != kind {
+		log.Warn().Str("kind", in.Kind).Str("kind", kind).Msg("mismatched contact kind and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the contact kind does not match the URL endpoint"))
+		return
+	}
+
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// Contact data must be provided
+	if len(in.Contact) == 0 {
+		log.Warn().Msg("missing contact data on ReplaceContact request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("contact data is required for ReplaceContact request"))
+		return
+	}
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Remarshal the JSON contact data
+	update := &pb.Contact{}
+	if err = wire.Unwire(in.Contact, update); err != nil {
+		log.Warn().Err(err).Msg("could not unmarshal contact data")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	if contact = models.ContactFromType(vasp.Contacts, kind); contact == nil {
+		// If the contact doesn't exist then create it
+		if err = models.AddContact(vasp, kind, update); err != nil {
+			log.Warn().Err(err).Msg("could not add contact to VASP")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+			return
+		}
+		contact = update
+		emailUpdated = true
+	} else {
+		// Otherwise replace the existing contact info
+		contact.Name = update.Name
+		contact.Phone = update.Phone
+		contact.Person = update.Person
+		if contact.Email != update.Email {
+			contact.Email = update.Email
+			emailUpdated = true
+		}
+	}
+
+	// New VASP record must be valid
+	if err = vasp.Validate(true); err != nil {
+		log.Warn().Err(err).Msg("invalid VASP record after update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
+	}
+
+	if emailUpdated {
+		// The email address changed, so the contact needs to be verified
+		if err = models.SetContactVerification(contact, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
+			log.Warn().Err(err).Msg("could not set contact verification")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update verification status for the indicated contact"))
+			return
+		}
+
+		// Send the verification email
+		if err = s.svc.email.SendVerifyContact(vasp, contact); err != nil {
+			log.Warn().Err(err).Msg("could not send verification email")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
+			return
+		}
+	}
+
+	// Commit the contact changes to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP in database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// DeleteContact deletes a contact on a VASP.
+func (s *Admin) DeleteContact(c *gin.Context) {
+	var (
+		vasp *pb.VASP
+		err  error
+	)
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+	kind := c.Param("kind")
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// Delete the contact from the VASP
+	if err = models.DeleteContact(vasp, kind); err != nil {
+		log.Warn().Err(err).Msg("could not delete contact from VASP")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// New VASP record must be valid
+	if err = vasp.Validate(true); err != nil {
+		log.Warn().Err(err).Msg("invalid VASP record after update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
+	}
+
+	// Commit the contact changes to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP in database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
 		return
 	}
 

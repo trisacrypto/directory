@@ -272,10 +272,17 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 
 		if removeExtra {
 			a.Extra, b.Extra = nil, nil
-			a.Contacts.Administrative.Extra, b.Contacts.Administrative.Extra = nil, nil
-			a.Contacts.Technical.Extra, b.Contacts.Technical.Extra = nil, nil
-			a.Contacts.Legal.Extra, b.Contacts.Legal.Extra = nil, nil
-			a.Contacts.Billing.Extra, b.Contacts.Billing.Extra = nil, nil
+			iter := models.NewContactIterator(a.Contacts, false, false)
+			for iter.Next() {
+				contact, _ := iter.Value()
+				contact.Extra = nil
+			}
+
+			iter = models.NewContactIterator(b.Contacts, false, false)
+			for iter.Next() {
+				contact, _ := iter.Value()
+				contact.Extra = nil
+			}
 		}
 
 		require.True(proto.Equal(a, b), "vasps are not the same")
