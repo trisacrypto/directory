@@ -37,6 +37,18 @@ func ContactIsVerified(contact *pb.Contact) (verified bool, err error) {
 	return verified, nil
 }
 
+// Returns True if the contact kind is one of the recognized strings.
+func ContactKindIsValid(kind string) bool {
+	kinds := map[string]struct{}{
+		AdministrativeContact: {},
+		BillingContact:        {},
+		LegalContact:          {},
+		TechnicalContact:      {},
+	}
+	_, ok := kinds[kind]
+	return ok
+}
+
 // Returns the corresponding contact object for the given contact type.
 func ContactFromType(contacts *pb.Contacts, kind string) *pb.Contact {
 	switch kind {

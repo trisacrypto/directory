@@ -648,7 +648,6 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 func (s *gdsTestSuite) TestUpdateVASP() {
 	s.LoadSmallFixtures()
 	defer s.ResetSmallFixtures()
-	defer emails.PurgeMockEmails()
 
 	a := s.svc.GetAdmin()
 

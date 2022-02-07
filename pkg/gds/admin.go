@@ -1317,6 +1317,13 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		return
 	}
 
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
 	// Contact data must be provided
 	if len(in.Contact) == 0 {
 		log.Warn().Msg("missing contact data on ReplaceContact request")
@@ -1407,6 +1414,13 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
 		log.Warn().Err(err).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
 		return
 	}
 
