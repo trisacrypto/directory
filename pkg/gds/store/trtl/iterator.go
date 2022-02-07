@@ -166,8 +166,8 @@ func (i *trtlStreamingIterator) Next() bool {
 
 	if i.next != nil {
 		// We have already loaded the next value
-		i.prev = &(*i.current)
-		i.current = &(*i.next)
+		i.prev = i.current
+		i.current = i.next
 		i.next = nil
 		return true
 	}
@@ -187,7 +187,7 @@ func (i *trtlStreamingIterator) Next() bool {
 	}
 
 	if i.current != nil {
-		i.prev = &(*i.current)
+		i.prev = i.current
 	}
 
 	i.current = val
@@ -202,8 +202,8 @@ func (i *trtlStreamingIterator) Prev() bool {
 		return false
 	}
 
-	i.next = &(*i.current)
-	i.current = &(*i.prev)
+	i.next = i.current
+	i.current = i.prev
 	i.prev = nil
 
 	return true
