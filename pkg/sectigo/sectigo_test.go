@@ -112,7 +112,11 @@ func (s *SectigoTestSuite) refresh(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) createSingleCertBatch(t *testing.T) {
-	rep, err := s.api.CreateSingleCertBatch(42, "foo", map[string]string{"foo": "bar"})
+	rep, err := s.api.CreateSingleCertBatch(42, "foo", map[string]string{
+		"commonName":     "foo",
+		"dNSName":        "foo.example.com",
+		"pkcs12Password": "bar",
+	})
 	require.NoError(t, err)
 	require.NotNil(t, rep)
 }
