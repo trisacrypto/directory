@@ -17,6 +17,8 @@ import (
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 )
 
 const (
@@ -135,7 +137,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 
 	// Should get a not found error trying to retrieve a VASP that doesn't exist
 	_, err = db.RetrieveVASP("12345")
-	require.EqualError(err, store.ErrEntityNotFound.Error())
+	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
 
 	// Attempt to Create the VASP
 	id, err := db.CreateVASP(alice)
@@ -174,7 +176,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	err = db.DeleteVASP(id)
 	require.NoError(err)
 	alicer, err = db.RetrieveVASP(id)
-	require.ErrorIs(err, store.ErrEntityNotFound)
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	require.Empty(alicer)
 
 	// Add a few more VASPs
@@ -200,6 +202,34 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	reqs, err := db.ListVASPs().All()
 	require.NoError(err)
 	require.Len(reqs, 10)
+
+	// Test seeking to a specific VASP
+	key := reqs[5].Id
+	iter = db.ListVASPs()
+	require.True(iter.SeekId(key))
+	require.True(iter.Next())
+	v, err := iter.VASP()
+	require.NoError(err)
+	require.NoError(iter.Error())
+	require.Equal(key, v.Id)
+
+	// Test that Prev() and Next() work properly
+	require.False(iter.Prev())
+	require.True(iter.Next())
+	next, err := iter.VASP()
+	require.NoError(err)
+	require.NotNil(next)
+	require.NotEqual(key, next.Id)
+	require.True(iter.Prev())
+	prev, err := iter.VASP()
+	require.NoError(err)
+	require.NotNil(prev)
+	require.Equal(key, prev.Id)
+	require.True(iter.Next())
+	next, err = iter.VASP()
+	require.NoError(err)
+	require.NotNil(next)
+	require.NotEqual(key, next.Id)
 
 	// Test iterating over all the VASPs
 	var niters int

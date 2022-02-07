@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
@@ -17,13 +18,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-)
-
-// Errors that may occur during Trtl operations.
-var (
-	ErrIncompleteRecord = errors.New("record is missing required fields")
-	ErrEntityNotFound   = errors.New("entity not found")
-	ErrProtocol         = errors.New("unexpected protocol error")
 )
 
 // Open a connection to the Trtl database.
@@ -42,9 +36,9 @@ type Store struct {
 	client pb.TrtlClient
 }
 
-func getContext() (context.Context, context.CancelFunc) {
+func withContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	// TODO: Timeout should be configurable.
-	return context.WithTimeout(context.Background(), time.Second*30)
+	return context.WithTimeout(ctx, time.Second*30)
 }
 
 //===========================================================================
@@ -63,9 +57,7 @@ func (s *Store) Close() error {
 // ListVASPs returns an iterator over all VASPs in the database.
 func (s *Store) ListVASPs() iterator.DirectoryIterator {
 	return &vaspIterator{
-		iterWrapper{
-			iter: NewTrtlIterator(s.client, false, wire.NamespaceVASPs),
-		},
+		NewTrtlStreamingIterator(s.client, wire.NamespaceVASPs),
 	}
 }
 
@@ -99,7 +91,7 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 		return "", err
 	}
 
-	ctx, cancel := getContext()
+	ctx, cancel := withContext(context.Background())
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -108,7 +100,7 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 	}
 	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
 		if err == nil {
-			err = ErrProtocol
+			err = storeerrors.ErrProtocol
 		}
 		return "", err
 	}
@@ -119,7 +111,7 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 func (s *Store) RetrieveVASP(id string) (v *gds.VASP, err error) {
 	key := []byte(id)
 
-	ctx, cancel := getContext()
+	ctx, cancel := withContext(context.Background())
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       key,
@@ -128,7 +120,7 @@ func (s *Store) RetrieveVASP(id string) (v *gds.VASP, err error) {
 	var reply *pb.GetReply
 	if reply, err = s.client.Get(ctx, request); err != nil {
 		if status.Code(err) == codes.NotFound {
-			return nil, ErrEntityNotFound
+			return nil, storeerrors.ErrEntityNotFound
 		}
 		return nil, err
 	}
@@ -145,7 +137,7 @@ func (s *Store) RetrieveVASP(id string) (v *gds.VASP, err error) {
 // entire VASP record and does not update individual fields.
 func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	if v.Id == "" {
-		return ErrIncompleteRecord
+		return storeerrors.ErrIncompleteRecord
 	}
 	key := []byte(v.Id)
 
@@ -165,7 +157,7 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 
 	// TODO: Update the indices.
 
-	ctx, cancel := getContext()
+	ctx, cancel := withContext(context.Background())
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -174,7 +166,7 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	}
 	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
 		if err == nil {
-			err = ErrProtocol
+			err = storeerrors.ErrProtocol
 		}
 		return err
 	}
@@ -187,7 +179,7 @@ func (s *Store) DeleteVASP(id string) error {
 
 	// TODO: Update the indices.
 
-	ctx, cancel := getContext()
+	ctx, cancel := withContext(context.Background())
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       key,
@@ -195,7 +187,7 @@ func (s *Store) DeleteVASP(id string) error {
 	}
 	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
 		if err == nil {
-			err = ErrProtocol
+			err = storeerrors.ErrProtocol
 		}
 		return err
 	}

@@ -1,7 +1,6 @@
 package trtl
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -13,145 +12,93 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type iterWrapper struct {
-	iter *trtlIterator
-}
-
 type vaspIterator struct {
-	iterWrapper
+	trtlIterator
 }
 
-func (i *iterWrapper) Next() bool {
-	return i.iter.Next()
+// trtlIterator is an interface that is implemented by both the trtlBatchIterator and
+// trtlStreamingIterator to iterate over values in the trtl store. The general workflow
+// is to instantiate the iterator with either NewTrtlBatchIterator or
+// NewTrtlStreamingIterator, call Next() to move the iterator to the next value, and if
+// Next() returns True, call Key() and/or Value() to retrieve the current key and/or
+// value. If Next() returns false, the iterator is already pointing to the last value.
+// The caller should check Error() to verify that no errors occurred during iteration
+// and Release() to clean up networking resources.
+type trtlIterator interface {
+	Next() bool
+	Prev() bool
+	Seek(key []byte) bool
+	Key() []byte
+	Value() []byte
+	Error() error
+	Release()
 }
 
-func (i *iterWrapper) Prev() bool {
-	return i.iter.Prev()
-}
-
-func (i *iterWrapper) Error() error {
-	return i.iter.Error()
-}
-
-func (i *iterWrapper) Release() {
-	i.iter.Release()
-}
-
-type trtlIterator struct {
+// trtlBatchIterator implements a batch iterator for the trtl store. Internally, the
+// key-value pairs are loaded from the server in paginated batches. This provides the
+// caller with materialized views of the data, and is best suited for operations such
+// as reading all of the objects in a namespace at once.
+type trtlBatchIterator struct {
 	client        trtlpb.TrtlClient
 	values        []*trtlpb.KVPair
 	index         int
 	nextPageToken string
-	cursor        trtlpb.Trtl_CursorClient
-	cancel        context.CancelFunc
-	snapshot      bool
 	namespace     string
 	err           error
 }
 
-func NewTrtlIterator(client trtlpb.TrtlClient, snapshot bool, namespace string) (iter *trtlIterator) {
-	iter = &trtlIterator{
+func NewTrtlBatchIterator(client trtlpb.TrtlClient, namespace string) *trtlBatchIterator {
+	return &trtlBatchIterator{
 		client:    client,
-		snapshot:  snapshot,
 		namespace: namespace,
+		index:     -1,
+		values:    make([]*trtlpb.KVPair, 0),
 	}
-
-	var ctx context.Context
-	ctx, iter.cancel = getContext()
-
-	if snapshot {
-		request := &trtlpb.CursorRequest{
-			Namespace: namespace,
-		}
-		iter.cursor, iter.err = iter.client.Cursor(ctx, request)
-		iter.values = make([]*trtlpb.KVPair, 0)
-	} else {
-		defer iter.cancel()
-		request := &trtlpb.IterRequest{
-			Namespace: namespace,
-		}
-
-		var reply *trtlpb.IterReply
-		var err error
-		if reply, err = iter.client.Iter(ctx, request); err != nil {
-			iter.err = err
-			return
-		}
-		iter.values = reply.Values
-		iter.nextPageToken = reply.NextPageToken
-	}
-	iter.index = -1
-
-	return iter
 }
 
-func (i *trtlIterator) nextCursor() bool {
-	if i.cursor == nil {
-		i.err = errors.New("nil cursor encountered on Next()")
-		return false
-	}
-
-	i.index++
-	if i.index >= len(i.values) {
-		// Fetch a new value from the cursor
-		var value *trtlpb.KVPair
-		var err error
-		if value, err = i.cursor.Recv(); err != nil {
-			if err != io.EOF {
-				i.err = err
-			}
-			i.cancel()
-			return false
-		}
-		i.values = append(i.values, value)
-	}
-
-	return true
-}
-
-func (i *trtlIterator) nextIter() bool {
-	i.index++
-	if i.index >= len(i.values) && i.nextPageToken != "" {
-		ctx, cancel := getContext()
-		defer cancel()
-
-		// Retrieve the next page from the server
-		request := &trtlpb.IterRequest{
-			Namespace: i.namespace,
-			Options: &trtlpb.Options{
-				PageToken: i.nextPageToken,
-			},
-		}
-		var reply *trtlpb.IterReply
-		var err error
-		if reply, err = i.client.Iter(ctx, request); err != nil {
-			i.err = err
-			return false
-		}
-
-		// Add the new values to the slice
-		i.values = append(i.values, reply.Values...)
-		i.nextPageToken = reply.NextPageToken
-	} else if i.index >= len(i.values) {
-		// No more values from the iterator
-		i.index = len(i.values) - 1
-		return false
-	}
-
-	return true
-}
-
-func (i *trtlIterator) Next() bool {
+func (i *trtlBatchIterator) Next() bool {
 	if i.err != nil {
 		return false
 	}
-	if i.snapshot {
-		return i.nextCursor()
+
+	if i.index >= len(i.values)-1 && i.nextPageToken == "" {
+		// No more values from the iterator
+		return false
 	}
-	return i.nextIter()
+
+	i.index++
+	if i.index > 0 && i.index < len(i.values) {
+		// We have already loaded the next value
+		return true
+	}
+
+	request := &trtlpb.IterRequest{
+		Namespace: i.namespace,
+	}
+	if i.index > 0 {
+		// We need to request the next page of values
+		request.Options = &trtlpb.Options{
+			PageToken: i.nextPageToken,
+		}
+	}
+
+	var reply *trtlpb.IterReply
+	var err error
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+
+	if reply, err = i.client.Iter(ctx, request); err != nil {
+		i.err = err
+		return false
+	}
+
+	// Add the new values to the slice
+	i.values = append(i.values, reply.Values...)
+	i.nextPageToken = reply.NextPageToken
+	return true
 }
 
-func (i *trtlIterator) Prev() bool {
+func (i *trtlBatchIterator) Prev() bool {
 	i.index--
 	if i.index < 0 {
 		i.index = 0
@@ -160,35 +107,148 @@ func (i *trtlIterator) Prev() bool {
 	return true
 }
 
-func (i *trtlIterator) Seek(key []byte) bool {
-	for current := i.Value(); bytes.Compare(current, key) < 0; current = i.Value() {
-		if !i.Next() {
-			return false
-		}
-	}
-	return true
+func (i *trtlBatchIterator) Seek(key []byte) bool {
+	// TODO: Figure out what to do about the batch seek method.
+	return false
 }
 
-func (i *trtlIterator) Key() []byte {
+func (i *trtlBatchIterator) Key() []byte {
 	return i.values[i.index].Key
 }
 
-func (i *trtlIterator) Value() []byte {
+func (i *trtlBatchIterator) Value() []byte {
 	return i.values[i.index].Value
 }
 
-func (i *trtlIterator) Error() error {
+func (i *trtlBatchIterator) Error() error {
 	return i.err
 }
 
-func (i *trtlIterator) Release() {
+func (i *trtlBatchIterator) Release() {
+}
+
+// trtlStreamingIterator implements a streaming iterator for the trtl store.
+// The iterator fetches the next value from the server when the caller calls Next(),
+// and only the previous and current values are stored in memory. This is best suited
+// for use cases where snapshot isolation or one-at-a-time processing is required.
+type trtlStreamingIterator struct {
+	client    trtlpb.TrtlClient
+	cursor    trtlpb.Trtl_CursorClient
+	cancel    context.CancelFunc
+	prev      *trtlpb.KVPair
+	current   *trtlpb.KVPair
+	next      *trtlpb.KVPair
+	eof       bool
+	namespace string
+	err       error
+}
+
+func NewTrtlStreamingIterator(client trtlpb.TrtlClient, namespace string) *trtlStreamingIterator {
+	return &trtlStreamingIterator{
+		client:    client,
+		namespace: namespace,
+	}
+}
+
+func (i *trtlStreamingIterator) Next() bool {
+	if i.cursor == nil {
+		var ctx context.Context
+		ctx, i.cancel = withContext(context.Background())
+		request := &trtlpb.CursorRequest{
+			Namespace: i.namespace,
+		}
+		i.cursor, i.err = i.client.Cursor(ctx, request)
+	}
+
+	if i.err != nil {
+		return false
+	}
+
+	if i.next != nil {
+		// We have already loaded the next value
+		i.prev = &(*i.current)
+		i.current = &(*i.next)
+		i.next = nil
+		return true
+	}
+
+	if i.eof {
+		return false
+	}
+
+	// Fetch the next value from the cursor
+	var val *trtlpb.KVPair
+	if val, i.err = i.cursor.Recv(); i.err != nil {
+		if i.err == io.EOF {
+			i.err = nil
+			i.eof = true
+		}
+		return false
+	}
+
+	if i.current != nil {
+		i.prev = &(*i.current)
+	}
+
+	i.current = val
+
+	return true
+}
+
+// The streaming iterator only stores the current and previous values, so successive
+// calls to Prev() are only valid if there is at least one Next() call in between them.
+func (i *trtlStreamingIterator) Prev() bool {
+	if i.prev == nil {
+		return false
+	}
+
+	i.next = &(*i.current)
+	i.current = &(*i.prev)
+	i.prev = nil
+
+	return true
+}
+
+// Seek() can only be called once before Next() and sets the initial position of the
+// iterator to the specified key if it exists.
+func (i *trtlStreamingIterator) Seek(key []byte) bool {
+	if i.cursor != nil {
+		i.err = errors.New("cursor already initialized, cannot call seek")
+		return false
+	}
+
+	var ctx context.Context
+	ctx, i.cancel = withContext(context.Background())
+	request := &trtlpb.CursorRequest{
+		Namespace: i.namespace,
+		SeekKey:   key,
+	}
+	i.cursor, i.err = i.client.Cursor(ctx, request)
+
+	return true
+}
+
+func (i *trtlStreamingIterator) Key() []byte {
+	return i.current.Key
+}
+
+func (i *trtlStreamingIterator) Value() []byte {
+	return i.current.Value
+}
+
+func (i *trtlStreamingIterator) Error() error {
+	return i.err
+}
+
+func (i *trtlStreamingIterator) Release() {
+	i.cursor.CloseSend()
 	i.cancel()
 }
 
 func (i *vaspIterator) VASP() (*pb.VASP, error) {
 	vasp := new(pb.VASP)
-	if err := proto.Unmarshal(i.iter.Value(), vasp); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
+	if err := proto.Unmarshal(i.Value(), vasp); err != nil {
+		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.Key())).Msg("corrupted data encountered")
 		return nil, err
 	}
 	return vasp, nil
@@ -196,27 +256,26 @@ func (i *vaspIterator) VASP() (*pb.VASP, error) {
 
 func (i *vaspIterator) All() (vasps []*pb.VASP, err error) {
 	vasps = make([]*pb.VASP, 0)
-	defer i.iter.Release()
+	defer i.Release()
 
-	for i.iter.Next() {
+	for i.Next() {
 		vasp := new(pb.VASP)
-		if err = proto.Unmarshal(i.iter.Value(), vasp); err != nil {
+		if err = proto.Unmarshal(i.Value(), vasp); err != nil {
 			return nil, err
 		}
 		vasps = append(vasps, vasp)
 	}
 
-	if err = i.iter.Error(); err != nil {
+	if err = i.Error(); err != nil {
 		return nil, err
 	}
 	return vasps, nil
 }
 
 func (i *vaspIterator) Id() string {
-	// The VASP ID is prefix + uuid so strip off the prefix and return the string
-	return string(i.iter.Key())
+	return string(i.Key())
 }
 
-func (i *vaspIterator) Seek(vaspID string) bool {
-	return i.iter.Seek([]byte(vaspID))
+func (i *vaspIterator) SeekId(vaspID string) bool {
+	return i.Seek([]byte(vaspID))
 }

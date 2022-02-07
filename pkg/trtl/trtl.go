@@ -561,6 +561,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair to send in the cursor stream
 		// NOTE: cannot call iter.Next() here or the iterator will advance
 		msg := &pb.KVPair{}
