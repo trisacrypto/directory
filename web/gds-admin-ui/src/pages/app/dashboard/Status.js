@@ -10,51 +10,52 @@ const Status = ({ statuses }) => {
     const colors = ['#0d6efd', '#dc3545', '#ffc107'];
 
     const getStatusesCounts = React.useCallback(() => {
-        const initialValue = { 'VERIFIED': 0, 'REJECTED': 0, 'PENDING_REVIEW': 0 }
+        const initialValue = { VERIFIED: 0, REJECTED: 0, PENDING_REVIEW: 0 };
         const reducer = (counts, status) => {
             switch (status[0]) {
                 case STATUS.VERIFIED:
-                    counts[STATUS.VERIFIED] += status[1]
+                    counts[STATUS.VERIFIED] += status[1];
                     break;
                 case STATUS.ERRORED:
                 case STATUS.REJECTED:
-                    counts[STATUS.REJECTED] += status[1]
+                    counts[STATUS.REJECTED] += status[1];
                     break;
                 default:
-                    counts[STATUS.PENDING_REVIEW] += status[1]
+                    counts[STATUS.PENDING_REVIEW] += status[1];
                     break;
             }
-            return counts
-        }
+            return counts;
+        };
         try {
             return Object.entries(statuses).reduce(reducer, initialValue);
         } catch (error) {
-            throw error
+            throw error;
         }
-    }, [statuses])
+    }, [statuses]);
 
     const statusRatios = () => {
-        if (statuses && typeof statuses === "object") {
-            const statusesCounts = getStatusesCounts(statuses)
-            return getRatios(statusesCounts)
+        if (statuses && typeof statuses === 'object') {
+            const statusesCounts = getStatusesCounts(statuses);
+            return getRatios(statusesCounts);
         }
 
-        return {}
-    }
+        return {};
+    };
 
-    const getDonutChartData = () => statuses ? Object.values(getStatusesCounts()) : []
-    const statusPercents = () => Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, val * 100.0]))
+    const getDonutChartData = () => (statuses ? Object.values(getStatusesCounts()) : []);
+    const statusPercents = () =>
+        Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, val * 100.0]));
 
     const getDonutChartLabels = () => {
-        if (statuses && typeof statuses === "object") {
-            return Object.keys(getStatusesCounts()).map(status => {
-                const status_ = capitalizeFirstLetter(status).split('_')
-                return status_.join(' ')
-            })
+        if (statuses && typeof statuses === 'object') {
+            return Object.keys(getStatusesCounts()).map((status) => {
+                const status_ = capitalizeFirstLetter(status).split('_');
+                return status_.join(' ');
+            });
         }
 
-        return []
-    }
+        return [];
+    };
 
     const donutChartData = {
         labels: getDonutChartLabels(),
@@ -121,7 +122,7 @@ const Status = ({ statuses }) => {
 };
 
 Status.propTypes = {
-    statuses: PropTypes.object
-}
+    statuses: PropTypes.object,
+};
 
 export default Status;
