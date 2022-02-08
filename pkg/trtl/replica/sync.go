@@ -152,20 +152,23 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 // AntiEntropySync performs bilateral anti-entropy with the specified remote peer using
 // the streaming Gossip RPC. This method initiates the Gossip stream with the remote
 // peer, exiting if it cannot connect to the replica (e.g. this method acts as the
-// client in an anti-entropy session). The sync method for the initiator has two phases.
-// In the first phase, the initiator loops over all objects in its local database and
-// sends check requests to the remote, collecting all repair messages sent back from
-// the remote (sometimes this is referred to as the pull phase of bilateral
-// anti-entropy). In the second phase, the initiator waits for check messages from the
-// remote and returns any objects that the remote requests (the push phase of bilateral
-// anti-entropy). Both phases and the sending of messages are run in their own go
-// routines, so 4 go routines are operating on the initiator side to handle the sync.
-// The first phase go routine ends when it finishes looping over its database, the
-// second phase go routine is also the recv go routine so it starts shortly after the
-// first phase go routine and runs concurrently with it. The second phase ends when it
-// receives complete from the remote. The send go routine ends when there are no more
-// messages on its channel. Once all go routines are completed the initiator closes the
-// channel, ending the synchronization between the initiator and the remote.
+// client in an anti-entropy session).
+//
+// The sync method for the initiator has two phases. In the first phase, the initiator
+// loops over all objects in its local database and sends check requests to the remote,
+// collecting all repair messages sent back from the remote (sometimes this is referred
+// to as the pull phase of bilateral anti-entropy). In the second phase, the initiator
+// waits for check messages from the remote and returns any objects that the remote
+// requests (the push phase of bilateral anti-entropy).
+//
+// Both phases and the sending of messages are run in their own go routines, so 4 go
+// routines are operating on the initiator side to handle the sync. The first phase go
+// routine ends when it finishes looping over its database, the second phase go routine
+// is also the recv go routine so it starts shortly after the first phase go routine and
+// runs concurrently with it. The second phase ends when it receives complete from the
+// remote. The send go routine ends when there are no more messages on its channel. Once
+// all go routines are completed the initiator closes the channel, ending the
+// synchronization between the initiator and the remote.
 func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
 	// Create a context with a timeout that is sooner than 95% of the timeouts selected
 	// by the normally distributed jittered interval, to ensure anti-entropy gossip
