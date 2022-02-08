@@ -19,7 +19,7 @@ type DirectoryIterator interface {
 	Id() string
 	VASP() (*pb.VASP, error)
 	All() ([]*pb.VASP, error)
-	Seek(vaspID string) bool
+	SeekId(vaspID string) bool
 }
 
 // CertificateIterator allows access to CertificateStore models

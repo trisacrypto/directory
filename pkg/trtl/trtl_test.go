@@ -515,6 +515,18 @@ func (s *trtlTestSuite) TestIter() {
 
 	require.Equal(2, pages, "number of people pages changed, have fixtures been modified?")
 	require.Equal(10, people, "number of people has changed, have fixtures been modified?")
+
+	// Test that a deleted object gets ignored by Iter
+	req := &pb.DeleteRequest{
+		Namespace: "people",
+		Key:       []byte(dbFixtures["alice"].Key),
+	}
+	_, err = client.Delete(ctx, req)
+	require.NoError(err, "could not delete object")
+
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people"})
+	require.NoError(err, "error iterating over people namespace")
+	require.Len(rep.Values, 9, "incorrect number of people returned")
 }
 
 func (s *trtlTestSuite) TestCursor() {

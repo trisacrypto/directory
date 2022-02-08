@@ -175,11 +175,11 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 
 	// If necessary, seek to the next key specified by the cursor.
 	if cursor.NextVasp != "" {
-		// If iter.Seek returns false (e.g. seek did not find the specified key) then
+		// If iter.SeekId() returns false (e.g. seek did not find the specified key) then
 		// iter.Next() should also return false, so it isn't necessary to check the return.
 		// NOTE: next key must be deleted after it's used for seeking so that the last
 		// page doesn't retain the old key and loop forever.
-		iter.Seek(cursor.NextVasp)
+		iter.SeekId(cursor.NextVasp)
 		cursor.NextVasp = ""
 
 		// Because we're going to be calling Next, we need to back up one key to ensure
