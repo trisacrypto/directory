@@ -61,25 +61,26 @@ func (i *trtlBatchIterator) Next() bool {
 		return false
 	}
 
-	if i.index >= len(i.values)-1 && i.nextPageToken == "" {
+	// If our next index will not refer to a value from the current page and there is
+	// no next page, then we're done iterating. Note that we must also check the
+	// starting case to fetch the first page.
+	if len(i.values) > 0 && i.index+1 >= len(i.values) && i.nextPageToken == "" {
 		// No more values from the iterator
 		return false
 	}
 
 	i.index++
 	if i.index > 0 && i.index < len(i.values) {
-		// We have already loaded the next value
+		// If the index is not 0 and is in range of the current set of values, we do
+		// not have to fetch the next page since the next value is already loaded.
 		return true
 	}
 
 	request := &trtlpb.IterRequest{
 		Namespace: i.namespace,
-	}
-	if i.index > 0 {
-		// We need to request the next page of values
-		request.Options = &trtlpb.Options{
+		Options: &trtlpb.Options{
 			PageToken: i.nextPageToken,
-		}
+		},
 	}
 
 	var reply *trtlpb.IterReply
@@ -95,13 +96,15 @@ func (i *trtlBatchIterator) Next() bool {
 	// Add the new values to the slice
 	i.values = append(i.values, reply.Values...)
 	i.nextPageToken = reply.NextPageToken
-	return true
+
+	// If no new values are returned, then we're done iterating
+	return i.index < len(i.values)
 }
 
 func (i *trtlBatchIterator) Prev() bool {
 	i.index--
 	if i.index < 0 {
-		i.index = 0
+		i.index = -1
 		return false
 	}
 	return true
@@ -125,6 +128,8 @@ func (i *trtlBatchIterator) Error() error {
 }
 
 func (i *trtlBatchIterator) Release() {
+	// Cleanup values stored in memory and mark for garbage collection
+	i.values = nil
 }
 
 // trtlStreamingIterator implements a streaming iterator for the trtl store.
@@ -186,12 +191,9 @@ func (i *trtlStreamingIterator) Next() bool {
 		return false
 	}
 
-	if i.current != nil {
-		i.prev = i.current
-	}
-
+	// Enable one Prev() call
+	i.prev = i.current
 	i.current = val
-
 	return true
 }
 
