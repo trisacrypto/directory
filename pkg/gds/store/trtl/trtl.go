@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
@@ -198,9 +197,11 @@ func (s *Store) DeleteVASP(id string) error {
 // CertificateStore Implementation
 //===========================================================================
 
+// ListCertReqs
 func (s *Store) ListCertReqs() iterator.CertificateIterator {
-	log.Debug().Msg("not implemented")
-	return nil
+	return &certReqIterator{
+		NewTrtlStreamingIterator(s.client, wire.NamespaceCertReqs),
+	}
 }
 
 func (s *Store) CreateCertReq(r *models.CertificateRequest) (string, error) {
