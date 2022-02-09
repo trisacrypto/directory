@@ -243,4 +243,14 @@ function isOptionAvailable(verificationStatus = "") {
     return ["NO_VERIFICATION", "SUBMITTED", "EMAIL_VERIFIED", "PENDING_REVIEW", "ERRORED"].includes(verificationStatus)
 }
 
+export const validateIsoCode = (cc = '') => {
+    if (typeof cc === 'string' && cc.length !== 2) {
+        const matches = cc.match(/\b(\w)/g);
+        const acronym = matches?.join('')
+        return acronym?.length === 2 ? acronym : ''
+    }
+
+    return cc
+}
+
 export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
