@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlpb "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -111,8 +112,20 @@ func (i *trtlBatchIterator) Prev() bool {
 }
 
 func (i *trtlBatchIterator) Seek(key []byte) bool {
-	// TODO: Figure out what to do about the batch seek method.
-	return false
+	var err error
+
+	if len(i.values) > 0 {
+		i.err = errors.New("cannot call Seek() on a batch iterator after Next() has been called")
+		return false
+	}
+
+	// Using a page size of 100 to match the default page size in the members list RPC
+	if i.nextPageToken, err = trtl.SeekCursor(100, key, i.namespace); err != nil {
+		i.err = err
+		return false
+	}
+
+	return i.Next()
 }
 
 func (i *trtlBatchIterator) Key() []byte {
@@ -200,15 +213,11 @@ func (i *trtlStreamingIterator) Next() bool {
 // The streaming iterator only stores the current and previous values, so successive
 // calls to Prev() are only valid if there is at least one Next() call in between them.
 func (i *trtlStreamingIterator) Prev() bool {
-	if i.prev == nil {
-		return false
-	}
-
 	i.next = i.current
 	i.current = i.prev
 	i.prev = nil
 
-	return true
+	return i.current != nil
 }
 
 // Seek() can only be called once before Next() and sets the initial position of the
@@ -227,7 +236,7 @@ func (i *trtlStreamingIterator) Seek(key []byte) bool {
 	}
 	i.cursor, i.err = i.client.Cursor(ctx, request)
 
-	return true
+	return i.Next()
 }
 
 func (i *trtlStreamingIterator) Key() []byte {
