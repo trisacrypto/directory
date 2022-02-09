@@ -6,8 +6,8 @@ const financialTransfersPermitted = {
 }
 
 const hasRequiredRegulatoryProgram = {
-    "yes": "does",
-    "no": "does not",
+    "yes": "has",
+    "no": "has not",
     "partial": "has a partially implemented"
 }
 

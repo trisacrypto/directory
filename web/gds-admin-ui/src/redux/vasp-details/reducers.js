@@ -1,6 +1,6 @@
 import produce from "immer";
-import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateIvms101ActionTypes, ReviewVaspActionTypes } from ".";
-import { FetchVaspDetailsActionTypes } from "./constants";
+import { DeleteContactActionTypes, CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, UpdateReviewNotesActionTypes, UpdateTrixoActionTypes, UpdateBusinessInfosActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateIvms101ActionTypes, ReviewVaspActionTypes } from ".";
+import { FetchVaspDetailsActionTypes, UpdateContactActionTypes } from "./constants";
 
 const INITIAL_STATE = {
     data: null,
@@ -49,6 +49,8 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
         case UpdateTrisaImplementationDetailsActionTypes.UPDATE_TRISA_DETAILS:
         case UpdateIvms101ActionTypes.UPDATE_IVMS_101:
         case ReviewVaspActionTypes.REVIEW_VASP:
+        case UpdateContactActionTypes.UPDATE_CONTACT:
+        case DeleteContactActionTypes.DELETE_CONTACT:
             return {
                 ...state,
                 loading: true,
@@ -99,6 +101,11 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
             return produce(state, draft => {
                 draft.data.vasp.verification_status = action.payload.status
             })
+        case UpdateContactActionTypes.API_RESPONSE_ERROR:
+            return {
+                ...state,
+                error: action.payload.error
+            }
         default:
             return state
     }

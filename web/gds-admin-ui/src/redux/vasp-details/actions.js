@@ -1,5 +1,5 @@
 import { CreateReviewNoteActionTypes, DeleteReviewNotesActionTypes, FetchReviewNotesActionTypes, ReviewVaspActionTypes, UpdateBusinessInfosActionTypes, UpdateIvms101ActionTypes, UpdateReviewNotesActionTypes, UpdateTrisaImplementationDetailsActionTypes, UpdateTrixoActionTypes } from ".";
-import { FetchVaspDetailsActionTypes } from "./constants";
+import { DeleteContactActionTypes, FetchVaspDetailsActionTypes, UpdateContactActionTypes } from "./constants";
 
 const fetchVaspDetailsApiResponse = (vaspId, history) => ({
     type: FetchVaspDetailsActionTypes.FETCH_VASP_DETAILS,
@@ -133,6 +133,33 @@ export const clearIvms101ErrorMessage = () => ({
     type: UpdateIvms101ActionTypes.CLEAR_ERROR_MESSAGE,
     payload: {}
 })
+
+export const updateContact = ({ vaspId, contactType, data, setIsOpen }) => ({
+    type: UpdateContactActionTypes.UPDATE_CONTACT,
+    payload: { vaspId, contactType, data, setIsOpen }
+})
+
+export const updateContactResponseError = (error) => ({
+    type: UpdateContactActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+export const deleteContactResponse = (vaspId, contactType, setIsOpen) => ({
+    type: DeleteContactActionTypes.DELETE_CONTACT,
+    payload: { vaspId, contactType, setIsOpen }
+})
+
+export const deleteContactResponseSuccess = (data) => ({
+    type: DeleteContactActionTypes.DELETE_CONTACT,
+    payload: { data }
+})
+
+export const deleteContactResponseError = (error) => ({
+    type: DeleteContactActionTypes.API_RESPONSE_ERROR,
+    payload: { error }
+})
+
+
 
 export {
     reviewVaspApiResponse,

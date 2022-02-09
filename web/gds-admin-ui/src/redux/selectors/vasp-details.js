@@ -7,3 +7,5 @@ export const getVaspDetailsLoadingState = createSelector(vaspDetailsState, state
 export const getVaspDetailsErrorState = createSelector(vaspDetailsState, state => state.error)
 export const getTrisaDetailsErrorState = createSelector(vaspDetailsState, state => state.trisaError)
 export const getIvmsErrorState = createSelector(vaspDetailsState, state => state.ivmsError)
+
+export const getContacts = createSelector(getVaspDetails, state => state.vasp.contacts)

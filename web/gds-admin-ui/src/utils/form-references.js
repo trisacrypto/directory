@@ -82,3 +82,15 @@ export const getIvms101RecordInitialValues = (data) => {
         ...Object.assign(defaultValues, data),
     }
 }
+
+export const getContactInitialValues = (data) => {
+    const initialValue = {
+        email: "",
+        extra: null,
+        name: "",
+        person: null,
+        phone: ""
+    }
+
+    return Object.assign(initialValue, data)
+}
