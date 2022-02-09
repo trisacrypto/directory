@@ -217,11 +217,7 @@ func (i *trtlStreamingIterator) Prev() bool {
 	i.current = i.prev
 	i.prev = nil
 
-	if i.current == nil {
-		return false
-	}
-
-	return true
+	return i.current != nil
 }
 
 // Seek() can only be called once before Next() and sets the initial position of the
