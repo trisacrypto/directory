@@ -1,36 +1,36 @@
-
-import { pdf } from '@react-pdf/renderer'
-import { Modal, ModalContent, ModalOpenButton } from 'components/Modal'
-import { actionType, useModal } from 'contexts/modal'
-import { downloadFile } from 'helpers/api/utils'
-import nProgress from 'nprogress'
-import React from 'react'
-import { Dropdown, Row } from 'react-bootstrap'
-import { useSelector } from 'react-redux'
-import { getAllReviewNotes } from 'redux/selectors'
-import { isOptionAvailable } from 'utils'
-import VaspDocument from '../../VaspDocument'
-import BusinessInfosForm from './BusinessInfosForm'
-import DeleteVaspModal from './DeleteVaspModal'
-import Ivms101RecordForm from './Ivms101RecordForm'
-import ReviewForm from './ReviewForm'
-import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
+import { pdf } from '@react-pdf/renderer';
+import { Modal, ModalContent, ModalOpenButton } from 'components/Modal';
+import { actionType, useModal } from 'contexts/modal';
+import { downloadFile } from 'helpers/api/utils';
+import nProgress from 'nprogress';
+import React from 'react';
+import { Dropdown, Row } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
+import { getAllReviewNotes } from 'redux/selectors';
+import { isOptionAvailable } from 'utils';
+import VaspDocument from '../../VaspDocument';
+import BusinessInfosForm from './BusinessInfosForm';
+import DeleteVaspModal from './DeleteVaspModal';
+import Ivms101RecordForm from './Ivms101RecordForm';
+import ReviewForm from './ReviewForm';
+import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm';
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
-    const { dispatch } = useModal()
-    const reviewNotes = useSelector(getAllReviewNotes)
+    const { dispatch } = useModal();
+    const reviewNotes = useSelector(getAllReviewNotes);
 
-    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
+    const handleClose = () =>
+        dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } });
 
     const generatePdfDocument = async (filename) => {
-        nProgress.start()
+        nProgress.start();
         try {
-            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
-            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
-            nProgress.done()
+            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob();
+            downloadFile(blob, `${filename}.pdf`, 'application/pdf');
+            nProgress.done();
         } catch (error) {
-            console.error('Unable to export as PDF', error)
-            nProgress.done()
+            console.error('Unable to export as PDF', error);
+            nProgress.done();
         }
     };
 
@@ -51,11 +51,11 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                         </Dropdown.Item>
                     </ModalOpenButton>
                     <ModalContent size="md">
-                        <Row className='p-4'>
+                        <Row className="p-4">
                             <ReviewForm />
                         </Row>
                     </ModalContent>
-                </Modal >
+                </Modal>
 
                 {
                     <>
@@ -66,27 +66,25 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                                 </Dropdown.Item>
                             </ModalOpenButton>
                             <ModalContent size="lg">
-                                <Row className='p-4'>
+                                <Row className="p-4">
                                     <BusinessInfosForm data={vasp} />
                                 </Row>
                             </ModalContent>
-                        </Modal >
-                        {
-                            isOptionAvailable(vasp?.vasp?.verification_status) && (
-                                <Modal>
-                                    <ModalOpenButton>
-                                        <Dropdown.Item>
-                                            <i className="mdi mdi-network me-1"></i>Edit TRISA Details
-                                        </Dropdown.Item>
-                                    </ModalOpenButton>
-                                    <ModalContent size="lg">
-                                        <Row className='p-4'>
-                                            <TrisaImplementationDetailsForm data={vasp} />
-                                        </Row>
-                                    </ModalContent>
-                                </Modal >
-                            )
-                        }
+                        </Modal>
+                        {isOptionAvailable(vasp?.vasp?.verification_status || 'NO_VERIFICATION') && (
+                            <Modal>
+                                <ModalOpenButton>
+                                    <Dropdown.Item>
+                                        <i className="mdi mdi-network me-1"></i>Edit TRISA Details
+                                    </Dropdown.Item>
+                                </ModalOpenButton>
+                                <ModalContent size="lg">
+                                    <Row className="p-4">
+                                        <TrisaImplementationDetailsForm data={vasp} />
+                                    </Row>
+                                </ModalContent>
+                            </Modal>
+                        )}
                         <Modal>
                             <ModalOpenButton>
                                 <Dropdown.Item>
@@ -94,11 +92,11 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                                 </Dropdown.Item>
                             </ModalOpenButton>
                             <ModalContent size="lg">
-                                <Row className='p-4'>
-                                    <Ivms101RecordForm data={vasp.vasp.entity} />
+                                <Row className="p-4">
+                                    <Ivms101RecordForm data={vasp?.vasp?.entity} />
                                 </Row>
                             </ModalContent>
-                        </Modal >
+                        </Modal>
                     </>
                 }
 
@@ -110,20 +108,20 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 </Dropdown.Item>
                 <Modal>
                     <ModalOpenButton>
-                        <Dropdown.Item disabled={!isOptionAvailable(vasp?.vasp?.verification_status)}>
+                        <Dropdown.Item
+                            disabled={!isOptionAvailable(vasp?.vasp?.verification_status || 'NO_VERIFICATION')}>
                             <i className="mdi mdi-trash-can me-1"></i>Delete
                         </Dropdown.Item>
                     </ModalOpenButton>
                     <ModalContent size="md">
-                        <Row className='p-4'>
+                        <Row className="p-4">
                             <DeleteVaspModal />
                         </Row>
                     </ModalContent>
-                </Modal >
-            </Dropdown.Menu >
-        </Dropdown >
-    )
-}
+                </Modal>
+            </Dropdown.Menu>
+        </Dropdown>
+    );
+};
 
-
-export default BasicDetailsDropDown
+export default BasicDetailsDropDown;
