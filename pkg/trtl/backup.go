@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/rotationalio/honu"
-	"github.com/rotationalio/honu/iterator"
-	"github.com/rotationalio/honu/object"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/syndtr/goleveldb/leveldb"
+	ldbstore "github.com/trisacrypto/directory/pkg/gds/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
 )
@@ -112,39 +112,22 @@ func (m *BackupManager) backup(path string) (err error) {
 		os.RemoveAll(archive)
 	}()
 
-	// Open a second honu database at the backup location
-	arcdb, err := honu.Open("leveldb:///"+archive, m.conf.GetHonuConfig())
+	// Open a second leveldb database at the backup location
+	arcdb, err := leveldb.OpenFile(archive, nil)
 	if err != nil {
 		return fmt.Errorf("could not open archive database: %s", err)
 	}
 
-	// Copy all objects to the archive database
-	// TODO: Write objects in batches rather than one at a time
+	// Get the underlying levelDB database
+	//engine := m.db.Engine().(*leveldb.LevelDBEngine)
+	//ldb := engine.DB()
+
+	// Copy all records to the archive database
 	var narchived uint64
-	var iter iterator.Iterator
-	if iter, err = m.db.Iter(nil); err != nil {
-		return fmt.Errorf("could not create trtl iterator: %s", err)
+	if narchived, err = ldbstore.CopyDB(ldb, arcdb); err != nil {
+		return fmt.Errorf("could not write all records to archive database, wrote %d records: %s", narchived, err)
 	}
-	for iter.Next() {
-		var object *object.Object
-		if object, err = iter.Object(); err != nil {
-			return fmt.Errorf("could not retrieve object from trtl database: %s", err)
-		}
-
-		// Write the object to the archive database
-		if err = arcdb.Update(object); err != nil {
-			return fmt.Errorf("could not write object to archive database: %s", err)
-		}
-		log.Debug().Str("namespace", object.Namespace).Str("key", string(object.Key)).Msg("archived object")
-		narchived++
-	}
-
-	// Release the iterator and check for errors
-	iter.Release()
-	if err = iter.Error(); err != nil {
-		return fmt.Errorf("could not iterate over trtl database: %s", err)
-	}
-	log.Info().Uint64("objects", narchived).Msg("trtl archive completed")
+	log.Info().Uint64("records", narchived).Msg("trtl archive completed")
 
 	// Close the archive database
 	if err = arcdb.Close(); err != nil {
