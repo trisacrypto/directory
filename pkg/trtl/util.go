@@ -1,47 +1,16 @@
 package trtl
 
-import (
-	"encoding/base64"
-	"sync"
+import "github.com/trisacrypto/directory/pkg/trtl/internal"
 
-	"github.com/rotationalio/honu/object"
-)
-
-// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
-func b64e(src []byte) string {
-	return base64.RawURLEncoding.EncodeToString(src)
-}
-
-// nsmap is a lightweight tool for keeping track of what objects we've seen during
-// gossip. It is threadsafe and implements set methods. This should be replaced by a
-// bloom filter for memory saving increases in performance
-type nsmap struct {
-	sync.RWMutex
-	seen map[string]map[string]struct{}
-}
-
-func (m *nsmap) Add(obj *object.Object) {
-	m.Lock()
-	defer m.Unlock()
-	if m.seen == nil {
-		m.seen = make(map[string]map[string]struct{})
+// SeekCursor returns a next page token that will cause the iter method to
+// start pagination at the specified key. This is a hack to support the Seek() method in
+// the trtl store iterator interface. In the future, the Iter method should be able to
+// seek via an RPC.
+func SeekCursor(pageSize int32, nextKey []byte, namespace string) (string, error) {
+	cursor := &internal.PageCursor{
+		PageSize:  pageSize,
+		NextKey:   nextKey,
+		Namespace: namespace,
 	}
-
-	if _, ok := m.seen[obj.Namespace]; !ok {
-		m.seen[obj.Namespace] = make(map[string]struct{})
-	}
-
-	m.seen[obj.Namespace][b64e(obj.Key)] = struct{}{}
-}
-
-func (m *nsmap) In(namespace string, key []byte) bool {
-	m.RLock()
-	defer m.RUnlock()
-	if m.seen != nil {
-		if nsm, nok := m.seen[namespace]; nok {
-			_, kok := nsm[b64e(key)]
-			return kok
-		}
-	}
-	return false
+	return cursor.Dump()
 }

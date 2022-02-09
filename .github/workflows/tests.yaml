@@ -30,6 +30,9 @@ jobs:
   test:
     name: Go Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -38,6 +41,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          path: ./directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -51,9 +56,15 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          repository: trisacrypto/trisa
+          ref: main
+          path: trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Run Unit Tests
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
@@ -63,11 +74,14 @@ jobs:
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage.txt
+          file: ./directory/coverage.txt
 
   build:
     name: Go Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -76,6 +90,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          path: ./directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -89,9 +105,15 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          repository: trisacrypto/trisa
+          ref: main
+          path: trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Build
         run: go build ./cmd/...

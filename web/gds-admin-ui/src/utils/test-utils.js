@@ -10,7 +10,6 @@ import { Suspense } from "react";
 export const render = (ui) => {
     const history = createMemoryHistory()
 
-
     return rtlRender(
         <Provider store={configureStore({})}>
             <Suspense fallback="loading...">

@@ -236,8 +236,21 @@ const getConductsCustomerKYC = (status) => status ? "does" : "does not"
 const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
 const getSafeguardPii = (status) => status ? "does" : "does not"
 
-function isEditMenuAvailable(verificationStatus) {
-    return ["NO_VERIFICATION", "SUBMITTED", "EMAIL_VERIFIED", "PENDING_REVIEW"].includes(verificationStatus)
+function isOptionAvailable(verificationStatus = "") {
+    if (!verificationStatus) {
+        throw new Error("isOptionAvailable has been called without parameter")
+    }
+    return ["NO_VERIFICATION", "SUBMITTED", "EMAIL_VERIFIED", "PENDING_REVIEW", "ERRORED"].includes(verificationStatus)
 }
 
-export { isEditMenuAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+export const validateIsoCode = (cc = '') => {
+    if (typeof cc === 'string' && cc.length !== 2) {
+        const matches = cc.match(/\b(\w)/g);
+        const acronym = matches?.join('')
+        return acronym?.length === 2 ? acronym : ''
+    }
+
+    return cc
+}
+
+export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

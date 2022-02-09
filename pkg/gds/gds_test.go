@@ -47,17 +47,29 @@ func (s *gdsTestSuite) TestRegister() {
 
 	// Emails need to be filled in for a valid VASP registration. Need to make copies
 	// of the contacts here to avoid modifying the fixtures for other tests.
+	var admin, billing, legal, technical pb.Contact
 	contacts := *refVASP.Contacts
-	admin := *refVASP.Contacts.Administrative
+	if refVASP.Contacts.Administrative != nil {
+		admin = *refVASP.Contacts.Administrative
+	}
 	contacts.Administrative = &admin
 	contacts.Administrative.Email = "admin@example.com"
-	billing := *refVASP.Contacts.Billing
+
+	if refVASP.Contacts.Billing != nil {
+		billing = *refVASP.Contacts.Billing
+	}
 	contacts.Billing = &billing
 	contacts.Billing.Email = "billing@example.com"
-	legal := *refVASP.Contacts.Legal
+
+	if refVASP.Contacts.Legal != nil {
+		legal = *refVASP.Contacts.Legal
+	}
 	contacts.Legal = &legal
 	contacts.Legal.Email = "legal@example.com"
-	technical := *refVASP.Contacts.Technical
+
+	if refVASP.Contacts.Technical != nil {
+		technical = *refVASP.Contacts.Technical
+	}
 	contacts.Technical = &technical
 	contacts.Technical.Email = "technical@example.com"
 

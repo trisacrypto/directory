@@ -8,9 +8,10 @@ import React from 'react'
 import { Dropdown, Row } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import { getAllReviewNotes } from 'redux/selectors'
-import { isEditMenuAvailable } from 'utils'
+import { isOptionAvailable } from 'utils'
 import VaspDocument from '../../VaspDocument'
 import BusinessInfosForm from './BusinessInfosForm'
+import DeleteVaspModal from './DeleteVaspModal'
 import Ivms101RecordForm from './Ivms101RecordForm'
 import ReviewForm from './ReviewForm'
 import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
@@ -71,7 +72,7 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                             </ModalContent>
                         </Modal >
                         {
-                            isEditMenuAvailable(vasp?.vasp?.verification_status) && (
+                            isOptionAvailable(vasp?.vasp?.verification_status) && (
                                 <Modal>
                                     <ModalOpenButton>
                                         <Dropdown.Item>
@@ -107,6 +108,18 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                 <Dropdown.Item onClick={handleClose}>
                     <i className="mdi mdi-email me-1"></i>Resend
                 </Dropdown.Item>
+                <Modal>
+                    <ModalOpenButton>
+                        <Dropdown.Item disabled={!isOptionAvailable(vasp?.vasp?.verification_status)}>
+                            <i className="mdi mdi-trash-can me-1"></i>Delete
+                        </Dropdown.Item>
+                    </ModalOpenButton>
+                    <ModalContent size="md">
+                        <Row className='p-4'>
+                            <DeleteVaspModal />
+                        </Row>
+                    </ModalContent>
+                </Modal >
             </Dropdown.Menu >
         </Dropdown >
     )

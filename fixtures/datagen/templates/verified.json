@@ -33,42 +33,9 @@
         "country_of_registration": ""
     },
     "contacts": {
-        "technical": {
-            "name": "",
-            "email": "",
-            "phone": "",
-            "person": null,
-            "extra": {
-                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-                "verified": false,
-                "token": "technical_token",
-                "email_log": []
-            }
-        },
-        "administrative": {
-            "name": "",
-            "email": "",
-            "phone": "",
-            "person": null,
-            "extra": {
-                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-                "verified": false,
-                "token": "administrative_token",
-                "email_log": []
-            }
-        },
-        "legal": {
-            "name": "",
-            "email": "",
-            "phone": "",
-            "person": null,
-            "extra": {
-                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-                "verified": false,
-                "token": "legal_token",
-                "email_log": []
-            }
-        },
+        "technical": null,
+        "administrative": null,
+        "legal": null,
         "billing": {
             "name": "Didna Respont",
             "email": "lostmy@email.com",

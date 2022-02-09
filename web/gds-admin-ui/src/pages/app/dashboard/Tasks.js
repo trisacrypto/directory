@@ -14,17 +14,6 @@ import NoData from 'components/NoData';
 dayjs.extend(relativeTime)
 
 
-const NoData = () => {
-    return (
-        <div className='text-center no-pending'>
-            <h5>No data</h5>
-            <p>
-                No available pending registrations
-            </p>
-        </div>
-    )
-}
-
 const PendingReviewsTable = ({ data }) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });
     const { dispatch } = useModal()
@@ -36,7 +25,7 @@ const PendingReviewsTable = ({ data }) => {
     }
 
     return (
-        <SimpleBar style={{ maxHeight: 350 }}>
+        <SimpleBar style={{ maxHeight: 350 }} className="task">
             <Table responsive className="table table-centered table-nowrap table-hover mb-0 z-index-2">
                 <tbody>
                     {

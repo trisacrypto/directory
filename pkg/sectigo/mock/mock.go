@@ -246,15 +246,63 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusOK, &sectigo.BatchResponse{
-		BatchID:      42,
-		CreationDate: time.Now().Format(time.RFC3339),
-		Status:       sectigo.BatchStatusReadyForDownload,
-		Active:       false,
-		BatchName:    in.BatchName,
-		OrderNumber:  23,
-		Profile:      "profile",
-	})
+
+	subjectParams := map[string]bool{
+		"organizationName":    false,
+		"localityName":        false,
+		"stateOrProvinceName": false,
+		"countryName":         false,
+	}
+	nameParams := map[string]bool{
+		"commonName":     false,
+		"dNSName":        false,
+		"pkcs12Password": false,
+	}
+
+	for k, v := range in.ProfileParams {
+		if v == "" {
+			c.JSON(http.StatusBadRequest, fmt.Errorf("empty profile parameter %s", k))
+			return
+		}
+
+		if _, ok := subjectParams[k]; ok {
+			subjectParams[k] = true
+		} else if _, ok := nameParams[k]; ok {
+			nameParams[k] = true
+		} else {
+			c.JSON(http.StatusBadRequest, fmt.Errorf("invalid profile parameter %s", k))
+			return
+		}
+	}
+
+	hasSubject, hasName := true, true
+	for _, ok := range subjectParams {
+		if !ok {
+			hasSubject = false
+		}
+	}
+
+	for _, ok := range nameParams {
+		if !ok {
+			hasName = false
+		}
+	}
+
+	// ProfileCipherTraceEndEntityCertificate: includes subject and name parameters
+	// ProfileCipherTraceEE: only includes name parameters
+	if hasSubject && hasName || !hasSubject && hasName {
+		c.JSON(http.StatusOK, &sectigo.BatchResponse{
+			BatchID:      42,
+			CreationDate: time.Now().Format(time.RFC3339),
+			Status:       sectigo.BatchStatusReadyForDownload,
+			Active:       false,
+			BatchName:    in.BatchName,
+			OrderNumber:  23,
+			Profile:      "profile",
+		})
+	} else {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("invalid profile parameters"))
+	}
 }
 
 func (s *Server) uploadCSR(c *gin.Context) {

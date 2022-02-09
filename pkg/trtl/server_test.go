@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/options"
@@ -196,12 +195,10 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 			ReindexOnBoot: false,
 		},
 		Replica: config.ReplicaConfig{
-			Enabled:        true,
-			PID:            metaPID,
-			Region:         metaRegion,
-			Name:           metaOwner,
-			GossipInterval: 1 * time.Second,
-			GossipSigma:    100 * time.Millisecond,
+			Enabled: false, // Replica is tested in the replica package
+			PID:     metaPID,
+			Region:  metaRegion,
+			Name:    metaOwner,
 		},
 		MTLS: config.MTLSConfig{
 			Insecure: true,

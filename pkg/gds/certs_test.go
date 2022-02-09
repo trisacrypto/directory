@@ -137,6 +137,82 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.Equal("automated", cert.AuditLog[5].Source)
 }
 
+// Test that the certificate manager is able to process an end entity profile.
+func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
+	s.setupCertManager()
+	defer s.teardownCertManager()
+	defer s.loadReferenceFixtures()
+	require := s.Require()
+
+	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
+
+	quebecCertReq.Profile = sectigo.ProfileCipherTraceEndEntityCertificate
+	quebecCertReq.Params = map[string]string{
+		"organizationName":    "TRISA Member VASP",
+		"localityName":        "Menlo Park",
+		"stateOrProvinceName": "California",
+		"countryName":         "US",
+	}
+	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
+
+	// Create a secret that the certificate manager can retrieve.
+	sm := s.svc.GetSecretManager().With(quebecCertReq.Id)
+	ctx := context.Background()
+	require.NoError(sm.CreateSecret(ctx, "password"))
+	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
+
+	// Run the certificate manager through two iterations to fully process the request.
+	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// VASP should contain the new certificate
+	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
+	require.NotNil(v.IdentityCertificate)
+
+	// Certificate request should be updated
+	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_COMPLETED, cert.Status)
+}
+
+// Test that the certificate manager is able to process a CipherTraceEE profile.
+func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
+	s.setupCertManager()
+	defer s.teardownCertManager()
+	defer s.loadReferenceFixtures()
+	require := s.Require()
+
+	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
+
+	quebecCertReq.Profile = sectigo.ProfileCipherTraceEE
+	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
+
+	// Create a secret that the certificate manager can retrieve
+	sm := s.svc.GetSecretManager().With(quebecCertReq.Id)
+	ctx := context.Background()
+	require.NoError(sm.CreateSecret(ctx, "password"))
+	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
+
+	// Run the certificate manager through two iterations to fully process the request.
+	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// VASP should contain the new certificate
+	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
+	require.NotNil(v.IdentityCertificate)
+
+	// Certificate request should be updated
+	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_COMPLETED, cert.Status)
+}
+
 // Test that certificate submission fails if the user available balance is 0.
 func (s *gdsTestSuite) TestSubmitNoBalance() {
 	s.setupCertManager()

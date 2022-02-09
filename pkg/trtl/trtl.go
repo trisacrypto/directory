@@ -3,6 +3,7 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -33,6 +35,9 @@ func NewTrtlService(s *Server) (*TrtlService, error) {
 const (
 	defaultPageSize = 100
 )
+
+// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
+var b64e = base64.RawURLEncoding.EncodeToString
 
 // Get is a unary request to retrieve a value for a key.
 // If metadata is requested in the GetRequest, the request will use honu.Object() to
@@ -80,10 +85,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 		// Compute latency in milliseconds
 		latency := float64(time.Since(start)/1000) / 1000.0
-		pmLatency.WithLabelValues("Get").Observe(latency)
+		prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 		// Update prometheus metrics
-		pmGets.WithLabelValues(object.Namespace).Inc()
+		prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 		return &pb.GetReply{
 			Value: object.Data,
@@ -96,10 +101,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Get").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 	// Increment prometheus Get count
-	pmGets.WithLabelValues(object.Namespace).Inc()
+	prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 	return &pb.GetReply{
 		Value: object.Data,
@@ -148,10 +153,10 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// Compute Put latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Put").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Put").Observe(latency)
 
 	// Increment prometheus Put counter
-	pmPuts.WithLabelValues(object.Namespace).Inc()
+	prom.PmPuts.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
@@ -199,14 +204,14 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 
 	// Compute Delete latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Delete").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
-	pmDels.WithLabelValues(object.Namespace).Inc()
+	prom.PmDels.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
-	// pmTombstones.WithLabelValues(object.Namespace).Inc()
+	// prom.pmTombstones.WithLabelValues(object.Namespace).Inc()
 
 	return out, nil
 }
@@ -346,6 +351,11 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair
 		pair := &pb.KVPair{}
 		if !opts.IterNoKeys {
@@ -379,10 +389,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Compute Iter latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Iter").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
-	pmIters.WithLabelValues(iter.Namespace()).Inc()
+	prom.PmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
@@ -550,6 +560,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		if object, err = iter.Object(); err != nil {
 			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
+		}
+
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
 		}
 
 		// Create the key value pair to send in the cursor stream
