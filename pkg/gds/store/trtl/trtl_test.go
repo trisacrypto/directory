@@ -207,29 +207,23 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	key := reqs[5].Id
 	iter = db.ListVASPs()
 	require.True(iter.SeekId(key))
-	require.True(iter.Next())
 	v, err := iter.VASP()
 	require.NoError(err)
 	require.NoError(iter.Error())
 	require.Equal(key, v.Id)
 
-	// Test that Prev() and Next() work properly
-	require.False(iter.Prev())
-	require.True(iter.Next())
+	// Test Prev() and Next() interactions
+	require.False(iter.Prev(), "should move behind the first VASP")
+	require.True(iter.Next(), "should move to the first VASP")
 	next, err := iter.VASP()
 	require.NoError(err)
 	require.NotNil(next)
-	require.NotEqual(key, next.Id)
-	require.True(iter.Prev())
-	prev, err := iter.VASP()
-	require.NoError(err)
-	require.NotNil(prev)
-	require.Equal(key, prev.Id)
-	require.True(iter.Next())
+	require.Equal(key, next.Id, "should be the first VASP")
+	require.True(iter.Next(), "should move to the second VASP")
 	next, err = iter.VASP()
 	require.NoError(err)
 	require.NotNil(next)
-	require.NotEqual(key, next.Id)
+	require.NotEqual(key, next.Id, "should be the second VASP")
 
 	// Test iterating over all the VASPs
 	var niters int
