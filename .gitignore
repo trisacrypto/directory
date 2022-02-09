@@ -18,3 +18,5 @@
 fixtures/
 .env
 .secrets
+.vscode/
+.DS_Store
