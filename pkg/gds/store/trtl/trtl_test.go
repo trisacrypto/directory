@@ -133,7 +133,6 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 
 	// Initially there should be no VASPs
-	// TODO: Test snapshot isolation iteration
 	iter := db.ListVASPs()
 	require.False(iter.Next())
 
@@ -217,15 +216,15 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	// Test Prev() and Next() interactions
 	require.False(iter.Prev(), "should move behind the first VASP")
 	require.True(iter.Next(), "should move to the first VASP")
-	next, err := iter.VASP()
+	first, err := iter.VASP()
 	require.NoError(err)
-	require.NotNil(next)
-	require.Equal(key, next.Id, "should be the first VASP")
+	require.NotNil(first)
+	require.Equal(key, first.Id, "should be the first VASP")
 	require.True(iter.Next(), "should move to the second VASP")
-	next, err = iter.VASP()
+	second, err := iter.VASP()
 	require.NoError(err)
-	require.NotNil(next)
-	require.NotEqual(key, next.Id, "should be the second VASP")
+	require.NotNil(second)
+	require.NotEqual(key, second.Id, "should be the second VASP")
 
 	// Test iterating over all the VASPs
 	var niters int
@@ -288,6 +287,14 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 
 	db, err := store.NewMock(s.grpc.Conn)
 	require.NoError(err)
+
+	// Initially there should be no CertReqs
+	iter := db.ListCertReqs()
+	require.False(iter.Next())
+
+	// Should get a not found error trying to retrieve a CertReq that doesn't exist
+	_, err = db.RetrieveCertReq("12345")
+	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
 
 	// Attempt to Create the CertReq
 	id, err := db.CreateCertReq(certreq)
@@ -354,14 +361,32 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	s.NoError(err)
 	s.Len(reqs, 10)
 
-	// Test iterating over all the certificates
-	var niters int
-	iter := db.ListCertReqs()
-	for iter.Next() {
-		s.NotEmpty(iter.CertReq())
-		niters++
+	// Test Prev() and Next() interactions
+	iter = db.ListCertReqs()
+	require.False(iter.Prev(), "should move behind the first CertReq")
+	require.True(iter.Next(), "should move to the first CertReq")
+	first, err := iter.CertReq()
+	require.NoError(err)
+	require.NotNil(first)
+	require.True(iter.Next(), "should move to the second CertReq")
+	second, err := iter.CertReq()
+	require.NoError(err)
+	require.NotNil(second)
+	require.NotEqual(first.Id, second.Id)
+
+	// Create enough CertReqs to exceed the page size
+	for i := 0; i < 100; i++ {
+		crr := &models.CertificateRequest{
+			Vasp:       uuid.New().String(),
+			CommonName: fmt.Sprintf("trisa%d.example.com", i+1),
+			Status:     models.CertificateRequestState_COMPLETED,
+		}
+		_, err := db.CreateCertReq(crr)
+		s.NoError(err)
 	}
-	s.NoError(iter.Error())
-	iter.Release()
-	s.Equal(10, niters)
+
+	// Test listing all of the CertReqs
+	reqs, err = db.ListCertReqs().All()
+	require.NoError(err)
+	require.Len(reqs, 110)
 }
