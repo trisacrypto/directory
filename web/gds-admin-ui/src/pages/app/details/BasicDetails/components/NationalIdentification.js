@@ -33,9 +33,9 @@ function NationalIdentification({ data }) {
                     <p className="fw-bold mb-1">National Identification</p>
                     <hr className="my-1" />
                     <p className="mb-2 fw-bold">
-                        Issued by :{' '}
+                        Issued by:{' '}
                         <span className="fw-normal">
-                        {`${getDataFormatted(data).issued_country_emoji} (${getDataFormatted(data).issued_country_code}) by authority ${getDataFormatted(data).issued_authority}`}
+                            {`${getDataFormatted(data).issued_country_emoji} (${getDataFormatted(data).issued_country_code}) by authority ${getDataFormatted(data).issued_authority}`}
                         </span>
                     </p>
                     <p className="mb-1 fw-bold">

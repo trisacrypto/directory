@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Tools
+                    Books
                      
                     <br />
-                    Baby
+                    Jewelery
                      
                     <br />
                     23
                      
-                    Herzog Pines
+                    Lyla Mission
                     <br />
-                    Irving
+                    Santa Fe
                      
                     
                      
                     MA
                      
-                    78878-2716
+                    12321
                       
                     <br />
                     US
