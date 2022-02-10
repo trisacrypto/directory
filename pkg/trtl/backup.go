@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/rotationalio/honu"
+	honuldb "github.com/rotationalio/honu/engines/leveldb"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -29,18 +30,17 @@ func NewBackupManager(s *Server) (*BackupManager, error) {
 	return &BackupManager{
 		conf: s.conf,
 		db:   s.db,
+		stop: make(chan struct{}),
 	}, nil
 }
 
 // Runs the main BackupManager routine which periodically wakes up and creates a backup
 // of the trtl database.
-func (m *BackupManager) Run(stop chan struct{}) {
+func (m *BackupManager) Run() {
 	backupDir, err := m.getBackupStorage()
 	if err != nil {
 		log.Fatal().Err(err).Msg("trtl backup manager cannot access backup directory")
 	}
-
-	m.stop = stop
 
 	ticker := time.NewTicker(m.conf.Backup.Interval)
 	log.Info().Dur("interval", m.conf.Backup.Interval).Str("store", backupDir).Msg("trtl backup manager started")
@@ -94,7 +94,7 @@ backups:
 }
 
 func (m *BackupManager) Shutdown() error {
-	if m.stop != nil {
+	if m.conf.Backup.Enabled && m.stop != nil {
 		close(m.stop)
 	}
 	return nil
@@ -118,9 +118,13 @@ func (m *BackupManager) backup(path string) (err error) {
 		return fmt.Errorf("could not open archive database: %s", err)
 	}
 
-	// Get the underlying levelDB database
-	//engine := m.db.Engine().(*leveldb.LevelDBEngine)
-	//ldb := engine.DB()
+	// Get the underlying levelDB object
+	var engine *honuldb.LevelDBEngine
+	var ok bool
+	if engine, ok = m.db.Engine().(*honuldb.LevelDBEngine); !ok {
+		return fmt.Errorf("unexpected database engine type: %T, expected %T", engine, &honuldb.LevelDBEngine{})
+	}
+	ldb := engine.DB()
 
 	// Copy all records to the archive database
 	var narchived uint64
@@ -135,8 +139,14 @@ func (m *BackupManager) backup(path string) (err error) {
 	}
 
 	// Create the compressed tar archive
-	if err = utils.WriteGzip(filepath.Dir(archive), archive+".tgz"); err != nil {
+	dest := filepath.Join(filepath.Dir(archive), filepath.Base(archive)+".tgz")
+	if err = utils.WriteGzip(archive, dest); err != nil {
 		return fmt.Errorf("could not create compressed tar archive: %s", err)
+	}
+
+	// Remove the archive database
+	if err = os.RemoveAll(archive); err != nil {
+		return fmt.Errorf("could not remove archive database: %s", err)
 	}
 
 	return nil

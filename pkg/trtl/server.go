@@ -155,7 +155,7 @@ func (t *Server) Serve() (err error) {
 		go t.replica.AntiEntropy(make(chan struct{}, 1))
 
 		// Run the backup manager if enabled
-		go t.backup.Run(make(chan struct{}))
+		go t.backup.Run()
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine

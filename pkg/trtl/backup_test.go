@@ -7,89 +7,49 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rotationalio/honu"
-	"github.com/rotationalio/honu/options"
+	honuldb "github.com/rotationalio/honu/engines/leveldb"
+	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
-	"google.golang.org/protobuf/proto"
 )
-
-// Test that the backup manager does not create backups if disabled.
-func (s *trtlTestSuite) TestBackupManagerDisabled() {
-	defer s.reset()
-	require := s.Require()
-
-	s.trtl.Shutdown()
-
-	s.conf.Backup = config.BackupConfig{
-		Enabled:  false,
-		Interval: time.Millisecond,
-		Storage:  "testdata/backup",
-		Keep:     1,
-	}
-	var err error
-	s.trtl, err = trtl.New(*s.conf)
-	require.NoError(err)
-
-	backup, err := trtl.NewBackupManager(s.trtl)
-	require.NoError(err)
-
-	// Start the backup manager
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		go backup.Run(nil)
-	}()
-
-	// Backup should not be created
-	backupDir := s.conf.Backup.Storage
-	require.NoDirExists(backupDir)
-
-	// Make sure the backup manager is stopped before we exit
-	wg.Wait()
-}
 
 // Test that the backup manager periodically creates backups.
 func (s *trtlTestSuite) TestBackupManager() {
-	defer s.reset()
-	defer os.RemoveAll(s.conf.Backup.Storage)
+	backupDir := "testdata/backup"
+	defer os.RemoveAll(backupDir)
 	require := s.Require()
 
-	s.trtl.Shutdown()
-
+	// Restart the trtl service with backups enabled
+	s.resetEnvironment()
 	s.conf.Backup = config.BackupConfig{
 		Enabled:  true,
 		Interval: time.Millisecond,
-		Storage:  "testdata/backups",
+		Storage:  backupDir,
 		Keep:     1,
 	}
-	var err error
-	s.trtl, err = trtl.New(*s.conf)
-	require.NoError(err)
+	s.setupServers()
 
+	// Create a backup manager that's separate from the trtl service
 	backup, err := trtl.NewBackupManager(s.trtl)
 	require.NoError(err)
 
 	// Start the backup manager
-	stop := make(chan struct{})
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backup.Run(stop)
+		backup.Run()
 	}()
 
 	// Wait for at least one backup interval to elapse
 	time.Sleep(s.conf.Backup.Interval)
 
-	// Make sure that the backup manager is stopped before we proceed
-	backup.Shutdown()
+	// Make sure that the backup manager is stopped
+	require.NoError(backup.Shutdown())
 	wg.Wait()
 
 	// Backup should be created
-	backupDir := s.conf.Backup.Storage
 	require.DirExists(backupDir)
 	files, err := ioutil.ReadDir(backupDir)
 	require.NoError(err)
@@ -108,21 +68,33 @@ func (s *trtlTestSuite) compareBackup(name string) {
 	defer os.RemoveAll(root)
 
 	// Open the backup DB
-	backup, err := honu.Open("leveldb:///"+root, s.conf.GetHonuConfig())
+	backup, err := leveldb.OpenFile(root, nil)
 	require.NoError(err)
 
-	// Make sure both databases have the same objects
-	iter, err := s.trtl.GetDB().Iter(nil)
-	require.NoError(err)
+	// Get the current underlying levelDB object
+	engine, ok := s.trtl.GetDB().Engine().(*honuldb.LevelDBEngine)
+	require.True(ok)
+	current := engine.DB()
+
+	// Make sure everything in the current DB is also in the backup DB
+	iter := current.NewIterator(nil, nil)
 	for iter.Next() {
-		dbObject, err := iter.Object()
+		// Make sure the value is the same
+		val, err := backup.Get(iter.Key(), nil)
 		require.NoError(err)
-
-		backupObject, err := backup.Object(dbObject.Key, options.WithNamespace(dbObject.Namespace))
-		require.NoError(err)
-
-		require.True(proto.Equal(dbObject, backupObject), "objects do not match")
+		require.Equal(val, iter.Value())
 	}
-	iter.Release()
 	require.NoError(iter.Error())
+	iter.Release()
+
+	// Make sure there are no extra keys in the backup DB
+	iter = backup.NewIterator(nil, nil)
+	defer iter.Release()
+	for iter.Next() {
+		key := iter.Key()
+		_, err := current.Get(key, nil)
+		require.NoError(err)
+	}
+	require.NoError(iter.Error())
+	iter.Release()
 }

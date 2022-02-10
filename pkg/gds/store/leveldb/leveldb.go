@@ -665,7 +665,7 @@ func CopyDB(src *leveldb.DB, dst *leveldb.DB) (ncopied uint64, err error) {
 	// Release the iterator and check for errors, just in case we didn't write anything
 	iter.Release()
 	if err = iter.Error(); err != nil {
-		return ncopied, fmt.Errorf("could not iterate over gds store: %s", err)
+		return ncopied, fmt.Errorf("could not iterate over GDS store: %s", err)
 	}
 
 	// Write final rows to the database
