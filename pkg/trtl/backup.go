@@ -30,7 +30,7 @@ func NewBackupManager(s *Server) (*BackupManager, error) {
 	return &BackupManager{
 		conf: s.conf,
 		db:   s.db,
-		stop: make(chan struct{}),
+		stop: make(chan struct{}, 1),
 	}, nil
 }
 
@@ -39,6 +39,9 @@ func NewBackupManager(s *Server) (*BackupManager, error) {
 func (m *BackupManager) Run() {
 	backupDir, err := m.getBackupStorage()
 	if err != nil {
+		// If we're here, we're just starting the BackupManager, do not continue if we
+		// know we won't be able to access the backup directory. log.Fatal() will kill
+		// the program.
 		log.Fatal().Err(err).Msg("trtl backup manager cannot access backup directory")
 	}
 
@@ -47,8 +50,13 @@ func (m *BackupManager) Run() {
 
 backups:
 	for {
-		// Wait for next tick
-		<-ticker.C
+		// Wait for next tick or a stop message
+		select {
+		case <-m.stop:
+			log.Warn().Msg("trtl backup manager received stop signal")
+			return
+		case <-ticker.C:
+		}
 
 		// Begin the backup process
 		start := time.Now()
@@ -83,19 +91,12 @@ backups:
 				log.Debug().Int("kept", m.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
 			}
 		}
-
-		select {
-		case <-m.stop:
-			log.Warn().Msg("trtl backup manager received stop signal")
-			return
-		default:
-		}
 	}
 }
 
 func (m *BackupManager) Shutdown() error {
 	if m.conf.Backup.Enabled && m.stop != nil {
-		close(m.stop)
+		m.stop <- struct{}{}
 	}
 	return nil
 }
