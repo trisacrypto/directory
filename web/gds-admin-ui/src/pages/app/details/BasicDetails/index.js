@@ -13,6 +13,7 @@ import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
 import BasicDetailsDropDown from './components/BasicDetailsDropdown';
 import PropTypes from 'prop-types'
+import TrisaDetails from './components/TrisaDetails';
 
 
 function BasicDetails({ data }) {
@@ -87,14 +88,9 @@ function BasicDetails({ data }) {
                             <Col>
                                 <p className="mb-2 fw-bold">Business categorie(s): <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
                             </Col>
-                            <div className='mt-4'>
-                                <h4 className='text-dark mb-0'>TRISA details <button onClick={handleTrisaJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h4>
-                                <hr className='my-1' />
-                                <p className="mb-2 fw-bold">ID: <span className="fw-normal">{formatDisplayedData(data?.vasp?.id)}</span></p>
-                                <p className="mb-2 fw-bold">Common name: <span className="fw-normal">{formatDisplayedData(data?.vasp?.common_name)}</span></p>
-                                <p className="mb-2 fw-bold">Endpoint: <span className="fw-normal">{formatDisplayedData(data?.vasp?.trisa_endpoint)}</span></p>
-                                <p className="mb-2 fw-bold">Registered directory: <span className="fw-normal">{formatDisplayedData(data?.vasp?.registered_directory)}</span></p>
-                            </div>
+                            <Col className='mt-4'>
+                                <TrisaDetails data={data} handleTrisaJsonExportClick={handleTrisaJsonExportClick} />
+                            </Col>
                         </Col>
                         <Col sm={12} className='d-flex justify-content-around flex-sm-wrap flex-md-nowrap text-center'>
                             <p className="fw-bold mb-2 text-dark"> <span className='d-block'>First listed</span> <span className="fw-normal">{formatDate(data?.vasp?.first_listed)}</span></p>

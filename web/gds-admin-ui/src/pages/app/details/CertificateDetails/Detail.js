@@ -25,13 +25,13 @@ function Detail({ data, title }) {
                 }
             </p>
             <p className='m-0'>
-                <span className='fw-bold'>Organisation: </span>
+                <span className='fw-bold'>Organization: </span>
                 {
                     formatToReadableString(data?.organization)
                 }
             </p>
             <p className='m-0'>
-                <span className='fw-bold'>Organisational unit: </span>
+                <span className='fw-bold'>Organizational unit: </span>
                 {
                     formatToReadableString(data?.organizational_unit)
                 }

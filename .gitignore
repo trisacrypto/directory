@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.DS_Store
 
 # Test binary, built with `go test -c`
 *.test
@@ -18,3 +19,7 @@
 fixtures/
 .env
 .secrets
+.vscode/
+.DS_Store
+
+

@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/trisacrypto/trisa/pkg/iso3166"
+
+	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 )
 
 //===========================================================================
@@ -364,7 +366,7 @@ func (c sequence) Load(data []byte) (s sequence, err error) {
 	var n int
 	var i uint64
 	if i, n = binary.Uvarint(data); n <= 0 {
-		return s, ErrCorruptedSequence
+		return s, storeerrors.ErrCorruptedSequence
 	}
 	return sequence(i), nil
 }

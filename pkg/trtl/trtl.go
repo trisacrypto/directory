@@ -351,6 +351,11 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair
 		pair := &pb.KVPair{}
 		if !opts.IterNoKeys {
@@ -555,6 +560,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		if object, err = iter.Object(); err != nil {
 			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
+		}
+
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
 		}
 
 		// Create the key value pair to send in the cursor stream

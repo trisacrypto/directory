@@ -310,7 +310,7 @@ func (r *Service) initiatorPhase1(ctx context.Context, wg *sync.WaitGroup, log z
 	// Access the objects in the object-store by namespace
 namespaces:
 	for _, namespace := range r.replicatedNamespaces {
-		iter, err := r.db.Iter(nil, options.WithNamespace(namespace))
+		iter, err := r.db.Iter(nil, options.WithNamespace(namespace), options.WithTombstones())
 		if err != nil {
 			log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 			continue namespaces
