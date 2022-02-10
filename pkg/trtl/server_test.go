@@ -173,9 +173,9 @@ func (s *trtlTestSuite) EqualVersion(expectedVersion, actualVersion *pb.Version,
 // Test setup helpers
 //===========================================================================
 
-// Creates a valid config for the tests.
+// Creates a valid config for the tests so long as the current config is empty
 func (s *trtlTestSuite) setupConfig() (err error) {
-	if s.tmpdb != "" {
+	if s.conf != nil || s.tmpdb != "" {
 		return errors.New("cannot create configuration, run test suite cleanup first")
 	}
 
