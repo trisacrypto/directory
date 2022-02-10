@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Computers
+                    Tools
                      
                     <br />
-                    Garden
+                    Baby
                      
                     <br />
                     23
                      
-                    Tobin Meadow
+                    Herzog Pines
                     <br />
-                    South Jordan
+                    Irving
                      
                     
                      
                     MA
                      
-                    66557
+                    78878-2716
                       
                     <br />
                     US
