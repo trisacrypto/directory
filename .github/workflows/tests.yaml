@@ -133,6 +133,9 @@ jobs:
 
       - name: Run Tests
         working-directory: ./web/gds-ui
+        env: 
+          REACT_APP_GDS_API_ENDPOINT : http://localhost:8080 #maybe we can made is dynamic like ${{secrets.REACT_APP_GDS_API_ENDPOINT}}
+          REACT_APP_GDS_IS_TESTNET : true
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
