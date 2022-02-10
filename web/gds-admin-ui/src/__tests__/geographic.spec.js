@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Automotive
+                    Computers
                      
                     <br />
-                    Movies
+                    Garden
                      
                     <br />
                     23
                      
-                    Bernadette Knoll
+                    Tobin Meadow
                     <br />
-                    Danville
+                    South Jordan
                      
                     
                      
                     MA
                      
-                    15705
+                    66557
                       
                     <br />
                     US

@@ -10,7 +10,7 @@ function NationalIdentification({ data }) {
     return (
         <Col>
             {
-                data ? (
+                data && (
                     <Col className="mt-3">
                         <p className="fw-bold mb-1">National Identification</p>
                         <hr className='my-1' />
@@ -19,11 +19,6 @@ function NationalIdentification({ data }) {
                         <p className="mb-2 fw-bold">LEIX: <span className="fw-normal">{formatDisplayedData(data?.national_identification.national_identifier)}</span></p>
                         <p className="mb-2 fw-bold">Country of registration: <span className="fw-normal">{formatDisplayedData(isoCountries[data?.national_identification?.country_of_issue])}</span></p>
                         <p className="mb-2 fw-bold">Customer number: <span className="fw-normal">{formatDisplayedData(data?.customer_number)}</span></p>
-                    </Col>
-
-                ) : (
-                    <Col>
-                        <p className="mb-1 fw-bold">National Identification: <span className="fw-normal">{formatDisplayedData(data?.national_identification)}</span></p>
                     </Col>
                 )
             }
