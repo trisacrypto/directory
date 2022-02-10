@@ -238,7 +238,8 @@ const getSafeguardPii = (status) => status ? "does" : "does not"
 
 function isOptionAvailable(verificationStatus = "") {
     if (!verificationStatus) {
-        throw new Error("isOptionAvailable has been called without parameter")
+        return false;
+        //throw new Error("isOptionAvailable has been called without parameter")
     }
     return ["NO_VERIFICATION", "SUBMITTED", "EMAIL_VERIFIED", "PENDING_REVIEW", "ERRORED"].includes(verificationStatus)
 }

@@ -72,7 +72,7 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                             </ModalContent>
                         </Modal >
                         {
-                            isOptionAvailable(vasp?.vasp?.verification_status) && (
+                           isOptionAvailable(vasp?.vasp?.verification_status) && (
                                 <Modal>
                                     <ModalOpenButton>
                                         <Dropdown.Item>
