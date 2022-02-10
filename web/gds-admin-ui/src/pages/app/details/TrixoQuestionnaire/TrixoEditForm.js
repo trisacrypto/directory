@@ -10,7 +10,7 @@ import { useParams } from 'react-router-dom'
 import { updateTrixoResponse } from 'redux/vasp-details'
 import { isoCountries } from 'utils/country'
 import { getTrixoFormInitialValues } from 'utils/form-references'
-import OtherJuridictions from './OtherJuridictions'
+import OtherJurisdictions from './OtherJurisdictions'
 import Regulations from './Regulations'
 import { ModalContext } from 'components/Modal'
 import { getVaspDetailsLoadingState } from 'redux/selectors'
@@ -68,7 +68,7 @@ function TrixoEditForm({ data }) {
 
                 </Form.Text>
             </Form.Group>
-            <OtherJuridictions register={register} name={`other_jurisdictions`} control={control} />
+            <OtherJurisdictions register={register} name={`other_jurisdictions`} control={control} />
             <Form.Group as={Row} className="mb-3 mt-2">
                 <Form.Label column sm="12" className="fw-normal">
                     Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?
@@ -86,7 +86,7 @@ function TrixoEditForm({ data }) {
             <Form.Group as={Row} className="mb-3">
                 <h4>CDD & Travel Rule Policies</h4>
                 <Form.Label column sm="12" className="fw-normal">
-                    Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
+                    Does your organization have a program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
                 </Form.Label>
                 <Col sm="10">
                     <Field.Select register={register} name={`has_required_regulatory_program`}>

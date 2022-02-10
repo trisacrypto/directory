@@ -159,7 +159,7 @@ const TrixoForm = ({ data }) => (
     <View>
         <Text style={styles.header1}>TRIXO Form</Text>
         <Text>Organization <Text style={styles.textBold}>{financialTransfersPermitted[data?.financial_transfers_permitted]} </Text>
-            partially permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates.</Text>
+            partially permitted to send and/or receive transfers of virtual assets in the jurisdiction(s) in which it operates.</Text>
         <View style={[styles.dFlex]}>
             <Text style={styles.textBold}>Primary National Jurisdiction: </Text>
             <Text>{isoCountries[data?.primary_national_jurisdiction]}</Text>
@@ -170,17 +170,17 @@ const TrixoForm = ({ data }) => (
         </View>
         <View>
             {
-                Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map(juridiction => {
+                Array.isArray(data?.other_jurisdictions) && data?.other_jurisdictions.map(jurisdiction => {
                     return (
                         <View>
                             <Text style={styles.header2}>Other Jurisdictions</Text>
                             <View style={[styles.dFlex]}>
                                 <Text style={styles.textBold}>Country: </Text>
-                                <Text>{isoCountries[juridiction?.country]}</Text>
+                                <Text>{isoCountries[jurisdiction?.country]}</Text>
                             </View>
                             <View>
                                 <Text style={styles.textBold}>Regulator name: </Text>
-                                <Text>{juridiction?.regulator_name}</Text>
+                                <Text>{jurisdiction?.regulator_name}</Text>
                             </View>
                         </View>
                     )

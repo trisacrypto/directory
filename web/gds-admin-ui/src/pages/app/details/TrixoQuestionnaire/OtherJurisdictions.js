@@ -4,7 +4,7 @@ const { useFieldArray } = require("react-hook-form");
 const { isoCountries } = require("utils/country");
 
 
-const OtherJuridictions = ({ register, name, control }) => {
+const OtherJurisdictions = ({ register, name, control }) => {
     const { fields, append, remove } = useFieldArray({
         name,
         control
@@ -13,7 +13,7 @@ const OtherJuridictions = ({ register, name, control }) => {
 
     return (
         <Row>
-            <h4>Other Jursidictions</h4>
+            <h4>Other Jurisdictions</h4>
             <p className='m-0'>
                 Please add any other regulatory jurisdictions your organization complies with.
             </p>
@@ -49,10 +49,10 @@ const OtherJuridictions = ({ register, name, control }) => {
                 <Button onClick={() => append({
                     country: "",
                     regulator_name: ""
-                })}>Add Juridiction</Button>
+                })}>Add Jurisdiction</Button>
             </Col>
         </Row>
     )
 }
 
-export default OtherJuridictions
+export default OtherJurisdictions

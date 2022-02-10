@@ -70,7 +70,7 @@ func (i *vaspIterator) Id() string {
 	return string(key[len(preVASPs):])
 }
 
-func (i *vaspIterator) Seek(vaspID string) bool {
+func (i *vaspIterator) SeekId(vaspID string) bool {
 	key := vaspKey(vaspID)
 	return i.iter.Seek(key)
 }

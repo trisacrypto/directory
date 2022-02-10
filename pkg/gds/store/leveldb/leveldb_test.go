@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -43,7 +44,7 @@ func TestLevelDB(t *testing.T) {
 
 func (s *leveldbTestSuite) TestDirectoryStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/vasp.json")
+	data, err := ioutil.ReadFile("../testdata/vasp.json")
 	s.NoError(err)
 
 	alice := &pb.VASP{}
@@ -93,7 +94,7 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	err = s.db.DeleteVASP(id)
 	s.NoError(err)
 	alicer, err = s.db.RetrieveVASP(id)
-	s.ErrorIs(err, ErrEntityNotFound)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(alicer)
 
 	// Add a few more VASPs
@@ -134,7 +135,7 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 
 func (s *leveldbTestSuite) TestCertificateStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("testdata/certreq.json")
+	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
 	certreq := &models.CertificateRequest{}
@@ -170,7 +171,7 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
 	_, err = s.db.CreateCertReq(icrr)
-	s.ErrorIs(err, ErrIDAlreadySet)
+	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
 
 	// Sleep for a second to roll over the clock for the modified time stamp
 	time.Sleep(1 * time.Second)
@@ -189,13 +190,13 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 
 	// Attempt to update a certificate request with no Id on it
 	certreq.Id = ""
-	s.ErrorIs(s.db.UpdateCertReq(certreq), ErrIncompleteRecord)
+	s.ErrorIs(s.db.UpdateCertReq(certreq), storeerrors.ErrIncompleteRecord)
 
 	// Delete the CertReq
 	err = s.db.DeleteCertReq(id)
 	s.NoError(err)
 	crr, err = s.db.RetrieveCertReq(id)
-	s.ErrorIs(err, ErrEntityNotFound)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(crr)
 
 	// Add a few more certificate requests
