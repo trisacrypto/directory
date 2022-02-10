@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Computers
+                    Books
                      
                     <br />
-                    Garden
+                    Jewelery
                      
                     <br />
                     23
                      
-                    Tobin Meadow
+                    Lyla Mission
                     <br />
-                    South Jordan
+                    Santa Fe
                      
                     
                      
                     MA
                      
-                    66557
+                    12321
                       
                     <br />
                     US

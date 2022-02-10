@@ -44,4 +44,19 @@ describe("<NationalIdentification/>", () => {
         expect(screen.getByText(/country of registration:/i).firstElementChild.textContent).toBe("N/A")
         expect(screen.getByText(/customer number:/i).firstElementChild.textContent).toBe("N/A")
     })
+
+
+    it('should render N/A if national_identification property is null', () => {
+            const data = {
+            customer_number: "",
+            national_identification: null
+        }
+
+        render(<NationalIdentification data={data} />)
+
+        expect(screen.getByText(/issued by:/i).firstElementChild.textContent).toBe("N/A (N/A) by authority N/A")
+        expect(screen.getByText(/national identification type:/i).firstElementChild.textContent).toBe("N/A")
+        expect(screen.getByText(/country of registration:/i).firstElementChild.textContent).toBe("N/A")
+        expect(screen.getByText(/customer number:/i).firstElementChild.textContent).toBe("N/A")  // this is the case when the data is not available')
+     })
 })
