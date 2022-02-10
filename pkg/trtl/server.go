@@ -44,6 +44,7 @@ type Server struct {
 	peers   *PeerService         // Service for managing remote peers
 	replica *replica.Service     // Service that handles anti-entropy replication
 	metrics *prom.MetricsService // Service for Prometheus metrics
+	backup  *BackupManager       // Manages backups of the trtl database
 	started time.Time            // The timestamp that the server was started (for uptime)
 	echan   chan error           // Channel for receiving errors from the gRPC server
 }
@@ -98,6 +99,13 @@ func New(conf config.Config) (s *Server, err error) {
 		if s.db, err = honu.Open(conf.Database.URL, conf.GetHonuConfig()); err != nil {
 			return nil, fmt.Errorf("honu error: %v", err)
 		}
+
+		// Initialize the backup manager
+		if s.conf.Backup.Enabled {
+			if s.backup, err = NewBackupManager(s); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// Initialize the Honu service
@@ -145,6 +153,9 @@ func (t *Server) Serve() (err error) {
 		// awkward to create this channel here, but it follows the pattern for our other
 		// background routines that need stop channels injected directly from tests.
 		go t.replica.AntiEntropy(make(chan struct{}, 1))
+
+		// Run the backup manager if enabled
+		go t.backup.Run()
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
@@ -192,6 +203,14 @@ func (t *Server) Shutdown() (err error) {
 	errs := make([]error, 0)
 	log.Info().Msg("gracefully shutting down trtl server")
 	t.srv.GracefulStop()
+
+	// Shutdown the backup manager
+	if t.conf.Backup.Enabled {
+		if err = t.backup.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("could not shutdown backup manager")
+			errs = append(errs, err)
+		}
+	}
 
 	// Shutdown the Prometheus metrics server
 	if t.conf.MetricsEnabled {

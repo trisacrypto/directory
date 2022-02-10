@@ -173,7 +173,7 @@ func (s *trtlTestSuite) EqualVersion(expectedVersion, actualVersion *pb.Version,
 // Test setup helpers
 //===========================================================================
 
-// creates a valid config for the tests so long as the current config is empty
+// Creates a valid config for the tests so long as the current config is empty
 func (s *trtlTestSuite) setupConfig() (err error) {
 	if s.conf != nil || s.tmpdb != "" {
 		return errors.New("cannot create configuration, run test suite cleanup first")
@@ -202,6 +202,9 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 		},
 		MTLS: config.MTLSConfig{
 			Insecure: true,
+		},
+		Backup: config.BackupConfig{
+			Enabled: false,
 		},
 	}
 
@@ -275,6 +278,17 @@ func (s *trtlTestSuite) cleanup() (err error) {
 func (s *trtlTestSuite) reset() {
 	require := s.Require()
 
+	// Reset the previous environment
+	s.resetEnvironment()
+
+	// Run the trtl server on the new configuration
+	require.NoError(s.setupServers(), "could not reset servers")
+}
+
+// shutdown the trtl servers and reset the configuration and fixtures
+func (s *trtlTestSuite) resetEnvironment() {
+	require := s.Require()
+
 	// Cleanup previous configuration and shutdown servers, deleting the tmp database.
 	require.NoError(s.cleanup(), "could not cleanup before reset")
 
@@ -283,9 +297,6 @@ func (s *trtlTestSuite) reset() {
 
 	// Extract the honu db fixture into tmpdb
 	require.NoError(s.extractDB(), "could not reset db")
-
-	// Run the trtl server on the new configuration
-	require.NoError(s.setupServers(), "could not reset servers")
 }
 
 //===========================================================================

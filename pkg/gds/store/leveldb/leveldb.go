@@ -571,36 +571,10 @@ func (s *Store) Backup(path string) (err error) {
 		return fmt.Errorf("could not open archive database: %s", err)
 	}
 
-	// Create a new batch write to the archive database, writing every 100 records as
-	// we iterate over all of the data in the store database.
-	var nrows, narchived uint64
-	batch := new(leveldb.Batch)
-	iter := s.db.NewIterator(nil, nil)
-	for iter.Next() {
-		nrows++
-		batch.Put(iter.Key(), iter.Value())
-
-		if nrows%100 == 0 {
-			if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
-				return fmt.Errorf("could not write next 100 rows after %d rows: %s", narchived, err)
-			}
-			batch.Reset()
-			narchived += 100
-		}
+	var narchived uint64
+	if narchived, err = CopyDB(s.db, arcdb); err != nil {
+		return fmt.Errorf("could not write all records to archive database, wrote %d records: %s", narchived, err)
 	}
-
-	// Release the iterator and check for errors, just in case we didn't write anything
-	iter.Release()
-	if err = iter.Error(); err != nil {
-		return fmt.Errorf("could not iterate over gds store: %s", err)
-	}
-
-	// Write final rows to the database
-	if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
-		return fmt.Errorf("could not write final %d rows after %d rows: %s", nrows-narchived, narchived, err)
-	}
-	batch.Reset()
-	narchived += (nrows - narchived)
 	log.Info().Uint64("records", narchived).Msg("leveldb archive complete")
 
 	// Close the archive database
@@ -665,6 +639,42 @@ func (s *Store) Backup(path string) (err error) {
 	}
 
 	return nil
+}
+
+// CopyDB is a utility function to copy all the records from one leveldb database
+// object to another.
+func CopyDB(src *leveldb.DB, dst *leveldb.DB) (ncopied uint64, err error) {
+	// Create a new batch write to the destination database, writing every 100 records
+	// as we iterate over all of the data in the source database.
+	var nrows uint64
+	batch := new(leveldb.Batch)
+	iter := src.NewIterator(nil, nil)
+	for iter.Next() {
+		nrows++
+		batch.Put(iter.Key(), iter.Value())
+
+		if nrows%100 == 0 {
+			if err = dst.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+				return ncopied, fmt.Errorf("could not write next 100 rows after %d rows: %s", ncopied, err)
+			}
+			batch.Reset()
+			ncopied += 100
+		}
+	}
+
+	// Release the iterator and check for errors, just in case we didn't write anything
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return ncopied, fmt.Errorf("could not iterate over GDS store: %s", err)
+	}
+
+	// Write final rows to the database
+	if err = dst.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+		return ncopied, fmt.Errorf("could not write final %d rows after %d rows: %s", nrows-ncopied, ncopied, err)
+	}
+	batch.Reset()
+	ncopied += (nrows - ncopied)
+	return ncopied, nil
 }
 
 //===========================================================================
