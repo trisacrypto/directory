@@ -20,10 +20,13 @@ func (s *trtlTestSuite) TestBackupManager() {
 	defer os.RemoveAll(backupDir)
 	require := s.Require()
 
-	// Restart the trtl service with backups enabled
+	// Restart the trtl service with the backup manager config. Since we are managing
+	// the backup manager independently from the trtl service, Enabled is set to false
+	// to prevent the parent trtl service from trying to shut down the backup manager
+	// and blocking indefinitely.
 	s.resetEnvironment()
 	s.conf.Backup = config.BackupConfig{
-		Enabled:  true,
+		Enabled:  false,
 		Interval: time.Millisecond,
 		Storage:  backupDir,
 		Keep:     1,

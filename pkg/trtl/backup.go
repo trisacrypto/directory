@@ -30,7 +30,7 @@ func NewBackupManager(s *Server) (*BackupManager, error) {
 	return &BackupManager{
 		conf: s.conf,
 		db:   s.db,
-		stop: make(chan struct{}, 1),
+		stop: make(chan struct{}),
 	}, nil
 }
 
@@ -95,7 +95,7 @@ backups:
 }
 
 func (m *BackupManager) Shutdown() error {
-	if m.conf.Backup.Enabled && m.stop != nil {
+	if m.stop != nil {
 		m.stop <- struct{}{}
 	}
 	return nil
