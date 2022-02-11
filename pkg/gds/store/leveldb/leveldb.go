@@ -18,6 +18,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
+	"github.com/trisacrypto/directory/pkg/gds/store/index"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -38,7 +39,7 @@ func Open(path string) (*Store, error) {
 	// Perform a reindex if the local indices are null or empty. In the case where the
 	// store has no data, this won't be harmful - but in the case where the stored index
 	// has been corrupted, this should repair it.
-	if len(store.names) == 0 || len(store.websites) == 0 || len(store.countries) == 0 || len(store.categories) == 0 {
+	if store.names.Empty() || store.websites.Empty() || store.countries.Empty() || store.categories.Empty() {
 		log.Info().Msg("reindexing to recover from empty indices")
 		if err = store.Reindex(); err != nil {
 			return nil, err
@@ -59,18 +60,16 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
-const searchPrefixMinLength = 3
-
 // Store implements store.Store for some basic LevelDB operations and simple protocol
 // buffer storage in a key/value database.
 type Store struct {
 	sync.RWMutex
 	db         *leveldb.DB
-	pkseq      sequence       // autoincrement sequence for ID values
-	names      uniqueIndex    // case insensitive name index
-	websites   uniqueIndex    // website/url index
-	countries  containerIndex // lookup vasps in a specific country
-	categories containerIndex // lookup vasps based on specified categories
+	pkseq      index.Sequence    // autoincrement sequence for ID values
+	names      index.SingleIndex // case insensitive name index
+	websites   index.SingleIndex // website/url index
+	countries  index.MultiIndex  // lookup vasps in a specific country
+	categories index.MultiIndex  // lookup vasps based on specified categories
 }
 
 //===========================================================================
@@ -102,7 +101,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
-	if name := normalize(v.CommonName); name == "" {
+	if name := index.Normalize(v.CommonName); name == "" {
 		return "", storeerrors.ErrIncompleteRecord
 	}
 
@@ -120,7 +119,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	defer s.Unlock()
 
 	// Check the uniqueness constraint
-	if _, ok := s.names.find(v.CommonName, normalize); ok {
+	if _, ok := s.names.Find(v.CommonName); ok {
 		return "", storeerrors.ErrDuplicateEntity
 	}
 
@@ -173,7 +172,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
-	if name := normalize(v.CommonName); name == "" {
+	if name := index.Normalize(v.CommonName); name == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
 
@@ -270,43 +269,23 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 	records := make(map[string]struct{})
 
 	s.RLock()
-	// Lookup by name
-	names, ok := parseQuery("name", query, normalize)
-	if ok {
-		log.Debug().Strs("name", names).Msg("search name query")
-		for _, name := range names {
-			if id := s.names[name]; id != "" {
-				// exact match
-				records[id] = struct{}{}
-			} else if len(name) >= searchPrefixMinLength {
-				// prefix match
-				for vasp, id := range s.names {
-					if strings.HasPrefix(vasp, name) {
-						records[id] = struct{}{}
-					}
-				}
-			}
-		}
+	// Search the name index
+	for _, result := range s.names.Search(query) {
+		records[result] = struct{}{}
 	}
 
 	// Lookup by website
-	websites, ok := parseQuery("website", query, normalizeURL)
-	if ok {
-		log.Debug().Strs("website", websites).Msg("search website query")
-		for _, website := range websites {
-			if id := s.websites[website]; id != "" {
-				records[id] = struct{}{}
-			}
-		}
+	for _, result := range s.websites.Search(query) {
+		records[result] = struct{}{}
 	}
 
 	// Filter by country
 	// NOTE: if country is not in the index, no records will be returned
-	countries, ok := parseQuery("country", query, normalizeCountry)
+	countries, ok := index.ParseQuery("country", query, index.NormalizeCountry)
 	if ok {
 		for _, country := range countries {
 			for record := range records {
-				if !s.countries.contains(country, record, nil) {
+				if !s.countries.Contains(country, record) {
 					// Remove the found VASP since it is not in the country index
 					// NOTE: safe to remove during map iteration: https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-map-within-a-range-loop
 					delete(records, record)
@@ -317,11 +296,11 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 
 	// Filter by category
 	// NOTE: if category is not in the index, no records will be returned
-	categories, ok := parseQuery("category", query, normalize)
+	categories, ok := index.ParseQuery("category", query, index.Normalize)
 	if ok {
 		for _, category := range categories {
 			for record := range records {
-				if !s.categories.contains(category, record, nil) {
+				if !s.categories.Contains(category, record) {
 					// Remove the found VASP since it is not in the country index
 					// NOTE: safe to remove during map iteration: https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-map-within-a-range-loop
 					delete(records, record)
@@ -480,10 +459,10 @@ func careqKey(id string) (key []byte) {
 // Reindex rebuilds the name and country indices for the server and synchronizes them
 // back to disk to ensure they're complete and accurate.
 func (s *Store) Reindex() (err error) {
-	names := make(uniqueIndex)
-	websites := make(uniqueIndex)
-	countries := make(containerIndex)
-	categories := make(containerIndex)
+	names := index.NewNamesIndex()
+	websites := index.NewWebsiteIndex()
+	countries := index.NewCountryIndex()
+	categories := index.NewCategoryIndex()
 
 	iter := s.db.NewIterator(util.BytesPrefix(preVASPs), nil)
 	defer iter.Release()
@@ -494,16 +473,16 @@ func (s *Store) Reindex() (err error) {
 			return err
 		}
 
-		names.add(vasp.CommonName, vasp.Id, normalize)
+		names.Add(vasp.CommonName, vasp.Id)
 		for _, name := range vasp.Entity.Names() {
-			names.add(name, vasp.Id, normalize)
+			names.Add(name, vasp.Id)
 		}
 
-		websites.add(vasp.Website, vasp.Id, normalizeURL)
-		countries.add(vasp.Entity.CountryOfRegistration, vasp.Id, normalizeCountry)
-		categories.add(vasp.BusinessCategory.String(), vasp.Id, normalize)
+		websites.Add(vasp.Website, vasp.Id)
+		countries.Add(vasp.Entity.CountryOfRegistration, vasp.Id)
+		categories.Add(vasp.BusinessCategory.String(), vasp.Id)
 		for _, vaspCategory := range vasp.VaspCategories {
-			categories.add(vaspCategory, vasp.Id, normalize)
+			categories.Add(vaspCategory, vasp.Id)
 		}
 	}
 
@@ -512,19 +491,19 @@ func (s *Store) Reindex() (err error) {
 	}
 
 	s.Lock()
-	if len(names) > 0 {
+	if !names.Empty() {
 		s.names = names
 	}
 
-	if len(websites) > 0 {
+	if !websites.Empty() {
 		s.websites = websites
 	}
 
-	if len(countries) > 0 {
+	if !countries.Empty() {
 		s.countries = countries
 	}
 
-	if len(categories) > 0 {
+	if !categories.Empty() {
 		s.categories = categories
 	}
 	s.Unlock()
@@ -534,10 +513,10 @@ func (s *Store) Reindex() (err error) {
 	}
 
 	log.Debug().
-		Int("names", len(s.names)).
-		Int("websites", len(s.websites)).
-		Int("countries", len(s.countries)).
-		Int("categories", len(s.categories)).
+		Int("names", s.names.Len()).
+		Int("websites", s.websites.Len()).
+		Int("countries", s.countries.Len()).
+		Int("categories", s.categories.Len()).
 		Msg("reindex complete")
 	return nil
 }
@@ -672,36 +651,36 @@ func (s *Store) Backup(path string) (err error) {
 //===========================================================================
 
 func (s *Store) insertIndices(v *pb.VASP) (err error) {
-	s.names.add(v.CommonName, v.Id, normalize)
+	s.names.Add(v.CommonName, v.Id)
 	for _, name := range v.Entity.Names() {
-		s.names.add(name, v.Id, normalize)
+		s.names.Add(name, v.Id)
 	}
 
-	s.websites.add(v.Website, v.Id, normalizeURL)
+	s.websites.Add(v.Website, v.Id)
 
-	s.countries.add(v.Entity.CountryOfRegistration, v.Id, normalizeCountry)
+	s.countries.Add(v.Entity.CountryOfRegistration, v.Id)
 
-	s.categories.add(v.BusinessCategory.String(), v.Id, normalize)
+	s.categories.Add(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
-		s.categories.add(vaspCategory, v.Id, normalize)
+		s.categories.Add(vaspCategory, v.Id)
 	}
 
 	return nil
 }
 
 func (s *Store) removeIndices(v *pb.VASP) (err error) {
-	s.names.rm(v.CommonName, normalize)
+	s.names.Remove(v.CommonName)
 	for _, name := range v.Entity.Names() {
-		s.names.rm(name, normalize)
+		s.names.Remove(name)
 	}
 
-	s.websites.rm(v.Website, normalizeURL)
+	s.websites.Remove(v.Website)
 
-	s.countries.rm(v.Entity.CountryOfRegistration, v.Id, normalizeCountry)
+	s.countries.Remove(v.Entity.CountryOfRegistration, v.Id)
 
-	s.categories.rm(v.BusinessCategory.String(), v.Id, normalize)
+	s.categories.Remove(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
-		s.categories.rm(vaspCategory, v.Id, normalize)
+		s.categories.Remove(vaspCategory, v.Id)
 	}
 	return nil
 }
@@ -729,17 +708,17 @@ func (s *Store) sync() (err error) {
 	}
 
 	log.Debug().
-		Int("names", len(s.names)).
-		Int("websites", len(s.websites)).
-		Int("countries", len(s.countries)).
-		Int("categories", len(s.categories)).
+		Int("names", s.names.Len()).
+		Int("websites", s.websites.Len()).
+		Int("countries", s.countries.Len()).
+		Int("categories", s.categories.Len()).
 		Msg("indices synchronized")
 	return nil
 }
 
 // sync the autoincrement sequence with the leveldb auto sequence key
 func (s *Store) seqsync() (err error) {
-	var pk sequence
+	var pk index.Sequence
 	var data []byte
 	if data, err = s.db.Get(keyAutoSequence, nil); err != nil {
 		// If the auto sequence key is not found, simply leave pk to 0
@@ -787,7 +766,7 @@ func (s *Store) syncnames() (err error) {
 
 	if s.names == nil {
 		// Create the index to load it from disk
-		s.names = make(uniqueIndex)
+		s.names = index.NewNamesIndex()
 
 		// fetch the names from the database
 		if val, err = s.db.Get(keyNameIndex, nil); err != nil {
@@ -805,7 +784,7 @@ func (s *Store) syncnames() (err error) {
 	}
 
 	// Put the current names back to the database
-	if len(s.names) > 0 {
+	if !s.names.Empty() {
 		if val, err = s.names.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal names index")
 			return storeerrors.ErrCorruptedIndex
@@ -831,7 +810,7 @@ func (s *Store) syncwebsites() (err error) {
 
 	if s.websites == nil {
 		// Create the index to load it from disk
-		s.websites = make(uniqueIndex)
+		s.websites = index.NewWebsiteIndex()
 
 		// fetch the websites from the database
 		if val, err = s.db.Get(keyWebsiteIndex, nil); err != nil {
@@ -849,7 +828,7 @@ func (s *Store) syncwebsites() (err error) {
 	}
 
 	// Put the current websites back to the database
-	if len(s.websites) > 0 {
+	if !s.websites.Empty() {
 		if val, err = s.websites.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal websites index")
 			return storeerrors.ErrCorruptedIndex
@@ -875,7 +854,7 @@ func (s *Store) synccountries() (err error) {
 
 	if s.countries == nil {
 		// Create the countries index an dload from the database
-		s.countries = make(containerIndex)
+		s.countries = index.NewCountryIndex()
 
 		// fetch the countries from the database
 		if val, err = s.db.Get(keyCountryIndex, nil); err != nil {
@@ -892,7 +871,7 @@ func (s *Store) synccountries() (err error) {
 		}
 	}
 
-	if len(s.countries) > 0 {
+	if !s.countries.Empty() {
 		// Put the current countries back to the database
 		if val, err = s.countries.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal country index")
@@ -919,7 +898,7 @@ func (s *Store) synccategories() (err error) {
 
 	if s.categories == nil {
 		// Create the categories index and load from the database
-		s.categories = make(containerIndex)
+		s.categories = index.NewCategoryIndex()
 
 		// fetch the categories from the database
 		if val, err = s.db.Get(keyCategoryIndex, nil); err != nil {
@@ -936,7 +915,7 @@ func (s *Store) synccategories() (err error) {
 		}
 	}
 
-	if len(s.categories) > 0 {
+	if !s.categories.Empty() {
 		// Put the current categories back to the database
 		if val, err = s.categories.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal categories index")
