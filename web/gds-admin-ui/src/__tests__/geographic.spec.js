@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Books
+                    Kids
                      
                     <br />
-                    Jewelery
+                    Toys
                      
                     <br />
                     23
                      
-                    Lyla Mission
+                    Pierre Stravenue
                     <br />
-                    Santa Fe
+                    Bloomington
                      
                     
                      
                     MA
                      
-                    12321
+                    72007-0963
                       
                     <br />
                     US
