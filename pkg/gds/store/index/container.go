@@ -70,12 +70,12 @@ func (c Container) Remove(key, value string, norm Normalizer) bool {
 }
 
 // Find all values for the specified key in the index, returns nil if it doesn't exist.
-func (c Container) Find(key string, norm Normalizer) (value []string, ok bool) {
+func (c Container) Find(key string, norm Normalizer) (values []string, ok bool) {
 	if norm != nil {
 		key = norm(key)
 	}
-	value, ok = c[key]
-	return value, ok
+	values, ok = c[key]
+	return values, ok
 }
 
 // Reverse find - find all keys that index the specified value.
