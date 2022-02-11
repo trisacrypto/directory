@@ -60,7 +60,7 @@ function BasicDetails({ data }) {
                             {data?.vasp?.verification_status ? <span className={classNames('badge rounded-pill px-1 ms-1 align-text-bottom', getStatusClassName(data?.vasp?.verification_status))}>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
                         </div>
                         <div className='d-flex align-items-center'>
-                            <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }}>{countryCodeEmoji(data?.vasp?.entity?.country_of_registration)}</span>
+                            <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }} data-testid="country-flag">{countryCodeEmoji(data?.vasp?.entity?.country_of_registration || data?.vasp?.entity?.geographic_addresses[0]?.country)}</span>
                             {isValidHttpUrl(data?.vasp?.website) ? <a target="_blank" href={`${data?.vasp?.website}`} rel="noreferrer">{data?.vasp?.website}</a> : null}
                         </div>
                     </div>

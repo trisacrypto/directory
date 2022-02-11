@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import BasicDetails from "pages/app/details/BasicDetails"
 import { render } from "utils/test-utils"
 import BasicDetailsDropDown from "pages/app/details/BasicDetails/components/BasicDetailsDropdown"
+import countryCodeEmoji from "utils/country"
 
 describe("BasicDetailsDropDown", () => {
 
@@ -313,5 +314,65 @@ describe("BasicDetailsDropDown", () => {
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
 
+    })
+
+    describe("Flag Emoji", () => {
+
+        it("Should show country flag emoji", () => {
+            const mockVaspData = {
+                "name": "Guidehouse Inc.",
+                "vasp": {
+                    "entity": {
+                        "country_of_registration": "EN",
+                        "customer_number": "",
+                    },
+                },
+            }
+
+            render(<BasicDetails data={mockVaspData} />)
+
+            const countryFlagEl = screen.getByTestId(/country-flag/i)
+            expect(countryFlagEl.textContent).toBe(countryCodeEmoji(mockVaspData.vasp.entity.country_of_registration))
+        })
+
+        it("Should use IVMS101 country when country of registration is empty", () => {
+            const mockVaspData = {
+                "name": "Guidehouse Inc.",
+                "vasp": {
+                    "entity": {
+                        "country_of_registration": "",
+                        "customer_number": "",
+                        "geographic_addresses": [
+                            {
+                                "address_line": [
+                                    "150 North Riverside Plaza",
+                                    "Suite 2100",
+                                    "Chicago, IL 60606"
+                                ],
+                                "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+                                "building_name": "",
+                                "building_number": "",
+                                "country": "US",
+                                "country_sub_division": "",
+                                "department": "",
+                                "district_name": "",
+                                "floor": "",
+                                "post_box": "",
+                                "post_code": "",
+                                "room": "",
+                                "street_name": "",
+                                "sub_department": "",
+                                "town_location_name": "",
+                                "town_name": ""
+                            }
+                        ]
+                    },
+                },
+            }
+            render(<BasicDetails data={mockVaspData} />)
+
+            const countryFlagEl = screen.getByTestId(/country-flag/i)
+            expect(countryFlagEl.textContent).toBe(countryCodeEmoji(mockVaspData.vasp.entity.geographic_addresses[0].country))
+        })
     })
 })
