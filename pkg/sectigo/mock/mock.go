@@ -111,8 +111,6 @@ func Start(profile string) error {
 		authority++
 	}
 
-	fmt.Println("mock started with profile", profile)
-
 	mockServer.setupHandlers()
 	mockServer.server = httptest.NewServer(mockServer.router)
 	sectigo.SetBaseURL(mockServer.URL())
