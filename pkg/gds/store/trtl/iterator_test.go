@@ -21,9 +21,9 @@ func (s *trtlStoreTestSuite) TestBatchIterator() {
 	require.Nil(iter.Key(), "Key should be nil when iterator is exhausted")
 	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
 	require.False(iter.Next(), "Next should return false when iterator is exhausted")
-	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
+	require.Nil(iter.Value(), "Value should still be nil after calling Next")
 	require.False(iter.Prev(), "Prev should return false when iterator is exhausted")
-	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
+	require.Nil(iter.Value(), "Value should still be nil after calling Prev")
 	require.Nil(iter.Error())
 	iter.Release()
 
@@ -44,6 +44,7 @@ func (s *trtlStoreTestSuite) TestBatchIterator() {
 	require.Equal(req.Key, iter.Key())
 	require.Equal(req.Value, iter.Value())
 	require.Nil(iter.Error())
+	iter.Release()
 
 	// Calling Next() first
 	iter = trtl.NewTrtlBatchIterator(client, req.Namespace)
@@ -218,9 +219,9 @@ func (s *trtlStoreTestSuite) TestStreamingIterator() {
 	require.Nil(iter.Key(), "Key should be nil when iterator is exhausted")
 	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
 	require.False(iter.Next(), "Next should return false when iterator is exhausted")
-	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
+	require.Nil(iter.Value(), "Value should still be nil after calling Next")
 	require.False(iter.Prev(), "Prev should return false when iterator is exhausted")
-	require.Nil(iter.Value(), "Value should be nil when iterator is exhausted")
+	require.Nil(iter.Value(), "Value should still be nil after calling Prev")
 	require.Nil(iter.Error())
 	iter.Release()
 
@@ -241,6 +242,7 @@ func (s *trtlStoreTestSuite) TestStreamingIterator() {
 	require.Equal(req.Key, iter.Key())
 	require.Equal(req.Value, iter.Value())
 	require.Nil(iter.Error())
+	iter.Release()
 
 	// Calling Next() first
 	iter = trtl.NewTrtlStreamingIterator(client, req.Namespace)
