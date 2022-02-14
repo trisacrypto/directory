@@ -15,7 +15,7 @@ import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
 
 function Ivms101RecordForm({ data }) {
-    const { register, control, handleSubmit } = useForm({
+    const { register, control, handleSubmit, formState: { isDirty } } = useForm({
         defaultValues: getIvms101RecordInitialValues(data)
     })
     const params = useParams()
@@ -141,12 +141,6 @@ function Ivms101RecordForm({ data }) {
                     </Field.Select>
                 </FormGroup>
                 <FormGroup>
-                    <Form.Label className='mt-3 fw-normal'>Country of Issue</Form.Label>
-                    <Field.Select register={register} name={`national_identification.country_of_issue`}>
-                        <CountryOptions />
-                    </Field.Select>
-                </FormGroup>
-                <FormGroup>
                     <Form.Label className='fw-normal mt-3'>Registration Authority</Form.Label>
                     <Field.Input register={register} name={`national_identification.registration_authority`} />
                     <Form.Text>If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.</Form.Text>
@@ -156,7 +150,7 @@ function Ivms101RecordForm({ data }) {
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>
                     </ModalCloseButton>
-                    <Button type='submit' disabled={isLoading}>Save</Button>
+                    <Button type='submit' disabled={isLoading || !isDirty}>Save</Button>
                 </div>
             </Form>
         </div>
