@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/trisacrypto/directory/pkg/sectigo"
 	. "github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 )
@@ -190,7 +189,7 @@ func (s *SectigoTestSuite) profiles(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) profileParams(t *testing.T) {
-	id, err := strconv.Atoi(sectigo.ProfileIDCipherTraceEE)
+	id, err := strconv.Atoi(ProfileIDCipherTraceEE)
 	require.NoError(t, err)
 	rep, err := s.api.ProfileParams(id)
 	require.NoError(t, err)
@@ -198,7 +197,8 @@ func (s *SectigoTestSuite) profileParams(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) profileDetail(t *testing.T) {
-	id, err := strconv.Atoi(sectigo.ProfileIDCipherTraceEE)
+	id, err := strconv.Atoi(ProfileIDCipherTraceEE)
+	require.NoError(t, err)
 	rep, err := s.api.ProfileDetail(id)
 	require.NoError(t, err)
 	require.NotNil(t, rep)
