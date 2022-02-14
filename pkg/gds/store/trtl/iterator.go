@@ -49,6 +49,7 @@ type trtlBatchIterator struct {
 	values        []*trtlpb.KVPair
 	index         int
 	nextPageToken string
+	iterCalled    bool
 	namespace     string
 	err           error
 }
@@ -67,17 +68,18 @@ func (i *trtlBatchIterator) Next() bool {
 		return false
 	}
 
+	i.index++
+
 	// If our next index will not refer to a value from the current page and there is
 	// no next page, then we're done iterating. Note that we must also check the
 	// starting case to fetch the first page.
-	if len(i.values) > 0 && i.index+1 >= len(i.values) && i.nextPageToken == "" {
+	if i.iterCalled && i.index >= len(i.values) && i.nextPageToken == "" {
 		// No more values from the iterator
 		return false
 	}
 
-	i.index++
-	if i.index > 0 && i.index < len(i.values) {
-		// If the index is not 0 and is in range of the current set of values, we do
+	if i.index >= 0 && i.index < len(i.values) {
+		// If the index is in the range of the current set of values, we do
 		// not have to fetch the next page since the next value is already loaded.
 		return true
 	}
@@ -99,6 +101,12 @@ func (i *trtlBatchIterator) Next() bool {
 		return false
 	}
 
+	// We can't rely on checking the length of the values in the batch to determine
+	// whether or not to fetch new values because it's possible for the Iter() call to
+	// return no values. So, we set a flag here to remind us that we've already called
+	// Iter() and there's no point calling it again if nextPageToken is empty.
+	i.iterCalled = true
+
 	// Add the new values to the slice
 	i.values = append(i.values, reply.Values...)
 	i.nextPageToken = reply.NextPageToken
@@ -113,7 +121,7 @@ func (i *trtlBatchIterator) Prev() bool {
 		i.index = -1
 		return false
 	}
-	return true
+	return i.index < len(i.values)
 }
 
 func (i *trtlBatchIterator) Seek(key []byte) bool {
@@ -134,10 +142,16 @@ func (i *trtlBatchIterator) Seek(key []byte) bool {
 }
 
 func (i *trtlBatchIterator) Key() []byte {
+	if i.index < 0 || i.index > len(i.values)-1 {
+		return nil
+	}
 	return i.values[i.index].Key
 }
 
 func (i *trtlBatchIterator) Value() []byte {
+	if i.index < 0 || i.index > len(i.values)-1 {
+		return nil
+	}
 	return i.values[i.index].Value
 }
 
@@ -206,6 +220,8 @@ func (i *trtlStreamingIterator) Next() bool {
 			i.err = nil
 			i.eof = true
 		}
+		i.prev = i.current
+		i.current = nil
 		return false
 	}
 
@@ -245,10 +261,16 @@ func (i *trtlStreamingIterator) Seek(key []byte) bool {
 }
 
 func (i *trtlStreamingIterator) Key() []byte {
+	if i.current == nil {
+		return nil
+	}
 	return i.current.Key
 }
 
 func (i *trtlStreamingIterator) Value() []byte {
+	if i.current == nil {
+		return nil
+	}
 	return i.current.Value
 }
 
