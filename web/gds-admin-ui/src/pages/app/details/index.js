@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 
 import PageTitle from 'components/PageTitle';
-import { Redirect, useHistory, useParams } from "react-router-dom"
+import { useHistory, useParams } from "react-router-dom"
 
 import Contact from './contact';
 import BasicDetails from './BasicDetails';
@@ -12,16 +12,14 @@ import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import TrixoQuestionnaire from './TrixoQuestionnaire';
 import { useSelector } from 'react-redux';
-import { getVaspDetails, getVaspDetailsErrorState } from 'redux/selectors';
+import { getVaspDetails } from 'redux/selectors';
 import { fetchVaspDetailsApiResponse } from 'redux/vasp-details';
 
 
 const ReviewNotes = React.lazy(() => import('./ReviewNotes'))
-const errorMessage = "Could not retrieve VASP record by ID"
 
 const VaspDetails = () => {
     const params = useParams();
-    const vaspDetailsError = useSelector(getVaspDetailsErrorState)
     const vasp = useSelector(getVaspDetails)
     const dispatch = useDispatch()
     const safeDispatch = useSafeDispatch(dispatch)
@@ -36,7 +34,7 @@ const VaspDetails = () => {
     }, [params.id, safeDispatch])
 
 
-    return  (
+    return (
         <React.Fragment>
             <PageTitle
                 breadCrumbItems={[

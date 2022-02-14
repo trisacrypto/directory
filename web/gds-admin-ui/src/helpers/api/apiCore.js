@@ -51,6 +51,12 @@ instance.interceptors.response.use(
         }
 
         if (error && error.response && error.response.status === 401) {
+            const configData = error.response.config && error.response.config.data ? JSON.parse(error.response.config.data)?.credential : ''
+
+            if (error.response.config.url === '/authenticate' && configData) {
+                return Promise.reject(error)
+            }
+
             if (!isRefreshing) {
                 isRefreshing = true
                 reauthenticate().then(response => {

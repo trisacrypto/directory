@@ -52,6 +52,7 @@ const AuthProvider = ({ children }) => {
     }
 
     const login = async (user) => {
+
         try {
             const response = await postCredentials(user)
             const { access_token } = response.data
@@ -65,12 +66,13 @@ const AuthProvider = ({ children }) => {
             })
 
         } catch (error) {
-            console.error('[LOGIN]', error)
+            return Promise.reject(error)
         }
 
     }
 
     const logout = () => {
+        window.google.accounts.id.disableAutoSelect()
         dispatch({ type: 'LOGOUT' })
         api.deleteUserSession()
         api.setLoggedInUser(null)
