@@ -61,3 +61,17 @@ export const ReviewVaspActionTypes = {
     API_RESPONSE_SUCCESS: '@@review_vasp/API_RESPONSE_SUCCESS',
     REVIEW_VASP: '@@review_vasp/REVIEW_VASP',
 }
+
+export const UpdateContactActionTypes = {
+    UPDATE_CONTACT: '@@update_contact/UPDATE_CONTACT',
+
+    API_RESPONSE_SUCCESS: '@@update_contact/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@update_contact/API_RESPONSE_ERROR'
+}
+
+export const DeleteContactActionTypes = {
+    DELETE_CONTACT: '@@delete_contact/DELETE_CONTACT',
+
+    API_RESPONSE_SUCCESS: '@@delete_contact/API_RESPONSE_SUCCESS',
+    API_RESPONSE_ERROR: '@@delete_contact/API_RESPONSE_ERROR'
+}

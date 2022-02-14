@@ -38,4 +38,22 @@ function deleteVasp(id) {
     })
 }
 
-export { getVasp, updateVasp, reviewVasp, getAdminVerificationToken, deleteVasp };
+function putContact(vaspId, kind, data) {
+    const csrfToken = getCookie('csrf_token')
+    return api.update(`/vasps/${vaspId}/contacts/${kind}`, data, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+function removeContact(vaspId, kind) {
+    const csrfToken = getCookie('csrf_token')
+    return api.delete(`/vasps/${vaspId}/contacts/${kind}`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+}
+
+export { removeContact, putContact, getVasp, updateVasp, reviewVasp, getAdminVerificationToken, deleteVasp };

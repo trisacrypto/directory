@@ -6,7 +6,6 @@ import countryCodeEmoji, { isoCountries } from 'utils/country';
 import TrixoDropdown from './TrixoDropdown';
 
 function TrixoForm({ data }) {
-    // console.log(data);
     return (
         <Card>
             <Card.Body>
