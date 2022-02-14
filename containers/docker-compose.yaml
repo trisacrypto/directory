@@ -71,6 +71,7 @@ services:
     ports:
       - 8080:8080
     profiles:
+      - proxy
       - api
       - all
 
@@ -79,7 +80,7 @@ services:
       context: ../
       dockerfile: ./containers/gds-ui/Dockerfile
       args:
-        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080/
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
     image: trisa/gds-ui
