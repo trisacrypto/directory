@@ -147,6 +147,7 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	var params map[string]string
 
 	profile := s.certs.Profile()
+	fmt.Println(profile)
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		params = r.Params
 	} else {

@@ -69,7 +69,7 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	svc.admin = admin
 
 	if conf.Sectigo.Testing {
-		if err = mock.Start(); err != nil {
+		if err = mock.Start(conf.Sectigo.Profile); err != nil {
 			return nil, err
 		}
 	}

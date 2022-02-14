@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,14 +31,52 @@ import (
 
 var mockServer *Server
 
+type Profile struct {
+	ID      string
+	Name    string
+	Balance int
+	Params  []string
+}
+
+var subjectParams = [4]string{
+	"organizationName",
+	"localityName",
+	"stateOrProvinceName",
+	"countryName",
+}
+
+var nameParams = [3]string{
+	"commonName",
+	"dNSName",
+	"pkcs12Password",
+}
+
+// All the profiles that the mock knows about.
+var validProfiles = []Profile{
+	{
+		ID:      sectigo.ProfileIDCipherTraceEE,
+		Name:    sectigo.ProfileCipherTraceEE,
+		Balance: 50,
+		Params:  nameParams[:],
+	},
+	{
+		ID:      sectigo.ProfileIDCipherTraceEndEntityCertificate,
+		Name:    sectigo.ProfileCipherTraceEndEntityCertificate,
+		Balance: 100,
+		Params:  append(nameParams[:], subjectParams[:]...),
+	},
+}
+
 // Server helps verify that the success paths of the Sectigo API calls are working,
 // while also providing a way for tests to inject handlers to test the errors that
 // might be returned from the Sectigo API.
 type Server struct {
-	server   *httptest.Server
-	router   *gin.Engine
-	handlers sync.Map
-	calls    sync.Map
+	server          *httptest.Server
+	router          *gin.Engine
+	handlers        sync.Map
+	calls           sync.Map
+	profileLookup   map[string]Profile
+	authorityLookup map[int]Profile
 }
 
 // Get returns the current mock server.
@@ -45,17 +84,34 @@ func Get() *Server {
 	return mockServer
 }
 
-// Start initializes a new server which mocks the Sectigo REST API. By default, it sets up
+// Start() initializes a new server which mocks the Sectigo REST API. By default, it sets up
 // HTTP handlers which return 200 OK responses with mocked data, but custom handlers can
 // be passed in by tests to test specific error paths. Note that this function modifies
 // the externally used baseURL for the Sectigo endpoint, and the caller must call Stop()
-// to close the server and undo the mock when done.
-func Start() error {
+// to close the server and undo the mock when done. Start() takes one paramter, which is the
+// name of the sectigo profile that the mock server uses to verify request parameters in
+// createSingleCertBatch.
+func Start(profile string) error {
 	gin.SetMode(gin.TestMode)
 
 	mockServer = &Server{
-		router: gin.New(),
+		router:          gin.New(),
+		profileLookup:   make(map[string]Profile),
+		authorityLookup: make(map[int]Profile),
 	}
+
+	// TODO: We are only loading one authority so that we can get consistent behavior
+	// from the tests.
+	authority := 1
+	for _, p := range validProfiles {
+		mockServer.profileLookup[p.ID] = p
+		if p.Name == profile {
+			mockServer.authorityLookup[authority] = p
+		}
+		authority++
+	}
+
+	fmt.Println("mock started with profile", profile)
 
 	mockServer.setupHandlers()
 	mockServer.server = httptest.NewServer(mockServer.router)
@@ -247,16 +303,11 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 		return
 	}
 
-	subjectParams := map[string]bool{
-		"organizationName":    false,
-		"localityName":        false,
-		"stateOrProvinceName": false,
-		"countryName":         false,
-	}
-	nameParams := map[string]bool{
-		"commonName":     false,
-		"dNSName":        false,
-		"pkcs12Password": false,
+	var profile Profile
+	var ok bool
+	if profile, ok = s.authorityLookup[in.AuthorityID]; !ok {
+		c.JSON(http.StatusNotFound, "unrecognized authority id")
+		return
 	}
 
 	for k, v := range in.ProfileParams {
@@ -265,44 +316,35 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 			return
 		}
 
-		if _, ok := subjectParams[k]; ok {
-			subjectParams[k] = true
-		} else if _, ok := nameParams[k]; ok {
-			nameParams[k] = true
-		} else {
-			c.JSON(http.StatusBadRequest, fmt.Errorf("invalid profile parameter %s", k))
+		found := false
+		for _, p := range profile.Params {
+			if p == k {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusBadRequest, fmt.Errorf("unrecognized profile parameter %s", k))
 			return
 		}
 	}
 
-	hasSubject, hasName := true, true
-	for _, ok := range subjectParams {
-		if !ok {
-			hasSubject = false
+	for _, p := range profile.Params {
+		if _, ok := in.ProfileParams[p]; !ok {
+			c.JSON(http.StatusBadRequest, fmt.Errorf("missing profile parameter %s", p))
+			return
 		}
 	}
 
-	for _, ok := range nameParams {
-		if !ok {
-			hasName = false
-		}
-	}
-
-	// ProfileCipherTraceEndEntityCertificate: includes subject and name parameters
-	// ProfileCipherTraceEE: only includes name parameters
-	if hasSubject && hasName || !hasSubject && hasName {
-		c.JSON(http.StatusOK, &sectigo.BatchResponse{
-			BatchID:      42,
-			CreationDate: time.Now().Format(time.RFC3339),
-			Status:       sectigo.BatchStatusReadyForDownload,
-			Active:       false,
-			BatchName:    in.BatchName,
-			OrderNumber:  23,
-			Profile:      "profile",
-		})
-	} else {
-		c.JSON(http.StatusBadRequest, fmt.Errorf("invalid profile parameters"))
-	}
+	c.JSON(http.StatusOK, &sectigo.BatchResponse{
+		BatchID:      42,
+		CreationDate: time.Now().Format(time.RFC3339),
+		Status:       sectigo.BatchStatusReadyForDownload,
+		Active:       false,
+		BatchName:    in.BatchName,
+		OrderNumber:  23,
+		Profile:      profile.Name,
+	})
 }
 
 func (s *Server) uploadCSR(c *gin.Context) {
@@ -421,33 +463,54 @@ func (s *Server) devices(c *gin.Context) {
 
 func (s *Server) userAuthorities(c *gin.Context) {
 	s.incrementCall(sectigo.UserAuthoritiesEP)
-	c.JSON(http.StatusOK, []*sectigo.AuthorityResponse{
-		{
-			ID:      42,
-			Balance: 100,
-			Enabled: true,
-		},
-	})
+	authorities := make([]*sectigo.AuthorityResponse, 0)
+	for id, profile := range s.authorityLookup {
+		authorities = append(authorities, &sectigo.AuthorityResponse{
+			ID:          id,
+			Balance:     profile.Balance,
+			Enabled:     true,
+			ProfileName: profile.Name,
+		})
+	}
+	c.JSON(http.StatusOK, authorities)
 }
 
 func (s *Server) authorityUserBalanceAvailable(c *gin.Context) {
 	s.incrementCall(sectigo.AuthorityUserBalanceAvailableEP)
-	id := c.Param("param0")
-	if id == "" {
+	authority := c.Param("param0")
+	if authority == "" {
 		c.JSON(http.StatusBadRequest, "missing authority id")
 		return
 	}
-	c.JSON(http.StatusOK, 100)
+	id, err := strconv.Atoi(authority)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "invalid authority id")
+		return
+	}
+	var auth Profile
+	var ok bool
+	if auth, ok = s.authorityLookup[id]; !ok {
+		c.JSON(http.StatusNotFound, "unrecognized authority id")
+		return
+	}
+	c.JSON(http.StatusOK, auth.Balance)
 }
 
 func (s *Server) profiles(c *gin.Context) {
 	s.incrementCall(sectigo.ProfilesEP)
-	c.JSON(http.StatusOK, []*sectigo.ProfileResponse{
-		{
-			ProfileID: 42,
+	profiles := make([]*sectigo.ProfileResponse, 0)
+	for _, profile := range s.authorityLookup {
+		id, err := strconv.Atoi(profile.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+		profiles = append(profiles, &sectigo.ProfileResponse{
+			ProfileID: id,
 			CA:        "sectigo",
-		},
-	})
+		})
+	}
+	c.JSON(http.StatusOK, profiles)
 }
 
 func (s *Server) profileParameters(c *gin.Context) {
@@ -457,12 +520,21 @@ func (s *Server) profileParameters(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "missing profile id")
 		return
 	}
-	c.JSON(http.StatusOK, []*sectigo.ProfileParamsResponse{
-		{
-			Name:    "foo",
-			Message: "bar",
-		},
-	})
+	var profile Profile
+	var ok bool
+	if profile, ok = s.profileLookup[id]; !ok {
+		c.JSON(http.StatusNotFound, "unrecognized profile id")
+		return
+	}
+	params := make([]*sectigo.ProfileParamsResponse, 0)
+	for _, param := range profile.Params {
+		params = append(params, &sectigo.ProfileParamsResponse{
+			Name:     param,
+			Required: true,
+		})
+	}
+
+	c.JSON(http.StatusOK, params)
 }
 
 func (s *Server) profileDetail(c *gin.Context) {
@@ -472,9 +544,22 @@ func (s *Server) profileDetail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "missing profile id")
 		return
 	}
+	var profile Profile
+	var ok bool
+	if profile, ok = s.profileLookup[id]; !ok {
+		c.JSON(http.StatusNotFound, "unrecognized profile id")
+		return
+	}
+
+	profileId, err := strconv.Atoi(profile.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
 	c.JSON(http.StatusOK, &sectigo.ProfileDetailResponse{
-		ProfileName: "foo",
-		ProfileID:   42,
+		ProfileName: profile.Name,
+		ProfileID:   profileId,
 	})
 }
 
