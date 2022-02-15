@@ -55,7 +55,7 @@ const rootRoute = {
             route: PrivateRoute
         },
         {
-            path: '/internal-error',
+            path: '/error',
             name: 'Error',
             component: PageError,
             route: PrivateRoute
