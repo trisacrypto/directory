@@ -80,6 +80,7 @@ type EmailConfig struct {
 	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
 	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps/"`
 	Testing              bool   `split_words:"true" default:"false"`
+	Storage              string `split_words:"true" default:""`
 }
 
 type CertManConfig struct {
@@ -201,7 +202,12 @@ func (c MembersConfig) Validate() error {
 
 func (c EmailConfig) Validate() error {
 	if c.AdminReviewBaseURL != "" && !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
-		return errors.New("admin review base URL must end in a /")
+		return errors.New("invalid configuration: admin review base URL must end in a /")
 	}
+
+	if c.Storage != "" && !c.Testing {
+		return errors.New("invalid configuration: email archiving is only supported in testing mode")
+	}
+
 	return nil
 }

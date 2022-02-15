@@ -46,6 +46,7 @@ var testEnv = map[string]string{
 	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify-contact",
 	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_EMAIL_TESTING":                        "true",
+	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
 	"GDS_CERTMAN_INTERVAL":                     "60s",
 	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
 	"GDS_BACKUP_ENABLED":                       "true",
@@ -107,6 +108,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
 	require.Equal(t, testEnv["GDS_VERIFY_CONTACT_URL"], conf.Email.VerifyContactBaseURL)
 	require.Equal(t, testEnv["GDS_ADMIN_REVIEW_URL"], conf.Email.AdminReviewBaseURL)
+	require.Equal(t, testEnv["GDS_EMAIL_STORAGE"], conf.Email.Storage)
 	require.True(t, conf.Email.Testing)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
 	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
@@ -209,9 +211,17 @@ func TestEmailConfigValidation(t *testing.T) {
 	}
 
 	err := conf.Validate()
-	require.EqualError(t, err, "admin review base URL must end in a /")
+	require.EqualError(t, err, "invalid configuration: admin review base URL must end in a /")
 
 	conf.AdminReviewBaseURL += "/"
+	err = conf.Validate()
+	require.NoError(t, err)
+
+	conf.Storage = "fixtures/emails"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
+
+	conf.Testing = true
 	err = conf.Validate()
 	require.NoError(t, err)
 }
