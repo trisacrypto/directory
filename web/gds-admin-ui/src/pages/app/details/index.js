@@ -36,7 +36,7 @@ const VaspDetails = () => {
     }, [params.id, safeDispatch])
 
 
-    return  (
+    return vaspDetailsError ? <Redirect to={{ pathname: '/not-found', state: { error: errorMessage } }} /> : (
         <React.Fragment>
             <PageTitle
                 breadCrumbItems={[

@@ -12,6 +12,7 @@ const VaspsDetails = React.lazy(() => import('../pages/app/details'))
 const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
 const ErrorPageNotFoundAlt = React.lazy(() => import('../pages/error/PageNotFoundAlt'));
 const ServerError = React.lazy(() => import('../pages/error/ServerError'));
+const PageError = React.lazy(() => import('../pages/error/PageError'));
 
 // root routes
 const rootRoute = {
@@ -51,6 +52,12 @@ const rootRoute = {
             path: '/not-found',
             name: 'NotFound',
             component: ErrorPageNotFoundAlt,
+            route: PrivateRoute
+        },
+        {
+            path: '/internal-error',
+            name: 'Error',
+            component: PageError,
             route: PrivateRoute
         },
         {
