@@ -66,7 +66,7 @@ func SetDoubleCookieTokens(c *gin.Context, domain string, exp int64) error {
 	}
 
 	// Compute max age from the expires unix timestamp of the refresh token.
-	maxAge := int((time.Until(time.Unix(exp, 0))).Seconds()) + 1
+	maxAge := int((time.Until(time.Unix(exp, 0))).Seconds()) + 60
 
 	// Set the reference cookie
 	c.SetCookie(CSRFReferenceCookie, token, maxAge, "/", domain, true, true)
