@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg/gds/client"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 	"github.com/trisacrypto/directory/pkg/gds/store/index"
@@ -22,9 +22,9 @@ import (
 )
 
 // Open a connection to the Trtl database.
-func Open(profile *client.TrtlProfile) (store *Store, err error) {
+func Open(conf config.DatabaseConfig) (store *Store, err error) {
 	store = &Store{}
-	if store.conn, err = profile.Connect(); err != nil {
+	if store.conn, err = Connect(conf); err != nil {
 		return nil, err
 	}
 	store.client = pb.NewTrtlClient(store.conn)
