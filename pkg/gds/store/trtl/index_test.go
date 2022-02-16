@@ -44,6 +44,7 @@ func (s *trtlStoreTestSuite) TestSearch() {
 
 	// Create a bunch of records
 	err = createVASPs(db, 100, 1)
+	require.NoError(err, "could not create fixtures")
 
 	// Test a simple search
 	query := map[string]interface{}{
