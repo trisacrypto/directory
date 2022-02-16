@@ -301,7 +301,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 		for _, category := range categories {
 			for record := range records {
 				if !s.categories.Contains(category, record) {
-					// Remove the found VASP since it is not in the country index
+					// Remove the found VASP since it is not in the category index
 					// NOTE: safe to remove during map iteration: https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-map-within-a-range-loop
 					delete(records, record)
 				}
