@@ -186,23 +186,8 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Empty(alicer)
 
 	// Add a few more VASPs
-	for i := 0; i < 10; i++ {
-		vasp := &pb.VASP{
-			Entity: &ivms101.LegalPerson{
-				Name: &ivms101.LegalPersonName{
-					NameIdentifiers: []*ivms101.LegalPersonNameId{
-						{
-							LegalPersonName:               fmt.Sprintf("Test %d", i+1),
-							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
-						},
-					},
-				},
-			},
-			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
-		}
-		_, err := db.CreateVASP(vasp)
-		require.NoError(err)
-	}
+	err = createVASPs(db, 10, 1)
+	require.NoError(err)
 
 	// Test listing all of the VASPs
 	reqs, err := db.ListVASPs().All()
@@ -243,23 +228,8 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Equal(10, niters)
 
 	// Create enough VASPs to exceed the page size
-	for i := 0; i < 100; i++ {
-		vasp := &pb.VASP{
-			Entity: &ivms101.LegalPerson{
-				Name: &ivms101.LegalPersonName{
-					NameIdentifiers: []*ivms101.LegalPersonNameId{
-						{
-							LegalPersonName:               fmt.Sprintf("Test %d", i+11),
-							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
-						},
-					},
-				},
-			},
-			CommonName: fmt.Sprintf("trisa%d.test.net", i+11),
-		}
-		_, err := db.CreateVASP(vasp)
-		require.NoError(err)
-	}
+	err = createVASPs(db, 100, 11)
+	require.NoError(err)
 
 	// Test listing all of the VASPs
 	reqs, err = db.ListVASPs().All()
@@ -394,4 +364,27 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	reqs, err = db.ListCertReqs().All()
 	require.NoError(err)
 	require.Len(reqs, 110)
+}
+
+func createVASPs(db *store.Store, num, startIndex int) error {
+	for i := 0; i < num; i++ {
+		vasp := &pb.VASP{
+			Entity: &ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               fmt.Sprintf("Test VASP %04X", i+startIndex),
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+			},
+			CommonName: fmt.Sprintf("trisa%04d.test.net", i+startIndex),
+		}
+
+		if _, err := db.CreateVASP(vasp); err != nil {
+			return err
+		}
+	}
+	return nil
 }
