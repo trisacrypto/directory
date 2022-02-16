@@ -34,8 +34,11 @@ var testEnv = map[string]string{
 	"GDS_MEMBERS_INSECURE":                     "true",
 	"GDS_MEMBERS_CERTS":                        "fixtures/creds/gds.gz",
 	"GDS_MEMBERS_CERT_POOL":                    "fixtures/creds/pool.gz",
-	"GDS_DATABASE_URL":                         "fixtures/db",
+	"GDS_DATABASE_URL":                         "trtl://trtl.test:4436",
 	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
+	"GDS_DATABASE_INSECURE":                    "true",
+	"GDS_DATABASE_CERT_PATH":                   "fixtures/creds/certs.pem",
+	"GDS_DATABASE_POOL_PATH":                   "fixtures/creds/pool.zip",
 	"SECTIGO_USERNAME":                         "foo",
 	"SECTIGO_PASSWORD":                         "supersecret",
 	"SECTIGO_PROFILE":                          "17",
@@ -99,6 +102,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_MEMBERS_CERT_POOL"], conf.Members.CertPool)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
+	require.Equal(t, true, conf.Database.Insecure)
+	require.Equal(t, testEnv["GDS_DATABASE_CERT_PATH"], conf.Database.CertPath)
+	require.Equal(t, testEnv["GDS_DATABASE_POOL_PATH"], conf.Database.PoolPath)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
 	require.Equal(t, testEnv["SECTIGO_PASSWORD"], conf.Sectigo.Password)
 	require.Equal(t, testEnv["SECTIGO_PROFILE"], conf.Sectigo.Profile)
@@ -158,6 +164,8 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS",
 		"GDS_MEMBERS_CERTS",
 		"GDS_MEMBERS_CERT_POOL",
+		"GDS_DATABASE_CERT_PATH",
+		"GDS_DATABASE_POOL_PATH",
 	}
 
 	// Collect required environment variables and cleanup after
