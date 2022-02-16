@@ -145,6 +145,11 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 	require.NotEmpty(id)
 
+	// Should not be able to create a duplicate VASP
+	id2, err := db.CreateVASP(alice)
+	require.EqualError(err, storeerrors.ErrDuplicateEntity.Error())
+	require.Empty(id2)
+
 	// Attempt to Retrieve the VASP
 	alicer, err := db.RetrieveVASP(id)
 	require.NoError(err)
@@ -244,13 +249,13 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 				Name: &ivms101.LegalPersonName{
 					NameIdentifiers: []*ivms101.LegalPersonNameId{
 						{
-							LegalPersonName:               fmt.Sprintf("Test %d", i+1),
+							LegalPersonName:               fmt.Sprintf("Test %d", i+11),
 							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
 						},
 					},
 				},
 			},
-			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
+			CommonName: fmt.Sprintf("trisa%d.test.net", i+11),
 		}
 		_, err := db.CreateVASP(vasp)
 		require.NoError(err)

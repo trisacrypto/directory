@@ -2,6 +2,7 @@ package trtl
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -195,6 +196,7 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 
 	// Check the uniqueness constraint
 	if _, ok := s.names.Find(v.CommonName); ok {
+		fmt.Printf("%+v\n", s.names)
 		return "", storeerrors.ErrDuplicateEntity
 	}
 
