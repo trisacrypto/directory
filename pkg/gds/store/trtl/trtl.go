@@ -2,7 +2,6 @@ package trtl
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -100,6 +99,11 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 	}
 }
 
+// SearchVASPs is intended to specifically identify a VASP (rather than as a browsing
+// functionality). As such it is primarily a filtering search rather than an inclusive
+// search. The query can contain a one or more name or website terms. Names are prefixed
+// matched to the index and websites are hostname matched. The query can contain one or
+// more country and category filters as well, which reduce the number of search results.
 func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*gds.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
@@ -194,9 +198,12 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 	s.Lock()
 	defer s.Unlock()
 
-	// Check the uniqueness constraint
+	// Check the uniqueness constraints
 	if _, ok := s.names.Find(v.CommonName); ok {
-		fmt.Printf("%+v\n", s.names)
+		return "", storeerrors.ErrDuplicateEntity
+	}
+
+	if _, ok := s.websites.Find(v.Website); ok {
 		return "", storeerrors.ErrDuplicateEntity
 	}
 
@@ -289,6 +296,15 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	o, err := s.RetrieveVASP(v.Id)
 	if err != nil {
 		return err
+	}
+
+	// Check the uniqueness constraints
+	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
+	}
+
+	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
 	}
 
 	// Update the VASP record

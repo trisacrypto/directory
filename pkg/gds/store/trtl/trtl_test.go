@@ -367,7 +367,11 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 }
 
 func createVASPs(db *store.Store, num, startIndex int) error {
+	countries := []string{"TV", "KY", "CC", "LT", "EH", "SC", "NU"}
+	bcats := []pb.BusinessCategory{pb.BusinessCategoryBusiness, pb.BusinessCategoryNonCommercial, pb.BusinessCategoryPrivate}
+
 	for i := 0; i < num; i++ {
+		country := countries[i%len(countries)]
 		vasp := &pb.VASP{
 			Entity: &ivms101.LegalPerson{
 				Name: &ivms101.LegalPersonName{
@@ -378,8 +382,11 @@ func createVASPs(db *store.Store, num, startIndex int) error {
 						},
 					},
 				},
+				CountryOfRegistration: country,
 			},
-			CommonName: fmt.Sprintf("trisa%04d.test.net", i+startIndex),
+			Website:          fmt.Sprintf("https://test%04X.net/", i+startIndex),
+			CommonName:       fmt.Sprintf("trisa%04d.test.net", i+startIndex),
+			BusinessCategory: bcats[i%len(bcats)],
 		}
 
 		if _, err := db.CreateVASP(vasp); err != nil {

@@ -2,6 +2,7 @@ package trtl
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/rs/zerolog/log"
@@ -30,14 +31,14 @@ func (s *Store) Reindex() (err error) {
 	ctx, cancel := withContext(context.Background())
 	defer cancel()
 
-	iter, err := s.client.Cursor(ctx, &pb.CursorRequest{Namespace: wire.NamespaceVASPs})
+	cursor, err := s.client.Cursor(ctx, &pb.CursorRequest{Namespace: wire.NamespaceVASPs})
 	if err != nil {
 		return err
 	}
 
 	for {
 		var pair *pb.KVPair
-		if pair, err = iter.Recv(); err != nil {
+		if pair, err = cursor.Recv(); err != nil {
 			if err == io.EOF {
 				break
 			}
@@ -49,17 +50,30 @@ func (s *Store) Reindex() (err error) {
 			return err
 		}
 
+		// Update name index
 		names.Add(vasp.CommonName, vasp.Id)
 		for _, name := range vasp.Entity.Names() {
 			names.Add(name, vasp.Id)
 		}
 
+		// Update website index
 		websites.Add(vasp.Website, vasp.Id)
+
+		// Update country index
 		countries.Add(vasp.Entity.CountryOfRegistration, vasp.Id)
+		for _, addr := range vasp.Entity.GeographicAddresses {
+			countries.Add(addr.Country, vasp.Id)
+		}
+
+		// Update category index
 		categories.Add(vasp.BusinessCategory.String(), vasp.Id)
 		for _, vaspCategory := range vasp.VaspCategories {
 			categories.Add(vaspCategory, vasp.Id)
 		}
+	}
+
+	if err = cursor.CloseSend(); err != nil {
+		log.Error().Err(err).Msg("could not close the trtl cursor in reindex")
 	}
 
 	// Critical section
@@ -107,6 +121,9 @@ func (s *Store) insertIndices(v *gds.VASP) error {
 	s.websites.Add(v.Website, v.Id)
 
 	s.countries.Add(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Add(addr.Country, v.Id)
+	}
 
 	s.categories.Add(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
@@ -125,6 +142,9 @@ func (s *Store) removeIndices(v *gds.VASP) error {
 	s.websites.Remove(v.Website)
 
 	s.countries.Remove(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Remove(addr.Country, v.Id)
+	}
 
 	s.categories.Remove(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
@@ -140,6 +160,25 @@ var (
 	keyCountryIndex  = []byte("countries")
 	keyCategoryIndex = []byte("categories")
 )
+
+// Sync exposes the index synchronization functionality to tests, allowing them to sync
+// a single index or all indices all at once.
+func (s *Store) Sync(index string) error {
+	switch index {
+	case "name", "names":
+		return s.syncnames()
+	case "website", "websites":
+		return s.syncwebsites()
+	case "country", "countries":
+		return s.synccountries()
+	case "category", "categories":
+		return s.synccategories()
+	case "", "all":
+		return s.sync()
+	default:
+		return fmt.Errorf(`unknown index %q, use empty string or "all" to sync all indices`, index)
+	}
+}
 
 func (s *Store) sync() (err error) {
 	if err = s.syncnames(); err != nil {
@@ -361,4 +400,24 @@ func (s *Store) synccategories() (err error) {
 		log.Debug().Int("size", len(value)).Msg("categories index checkpointed")
 	}
 	return nil
+}
+
+// GetNamesIndex for testing
+func (s *Store) GetNamesIndex() index.SingleIndex {
+	return s.names
+}
+
+// GetWebsitesIndex for testing
+func (s *Store) GetWebsitesIndex() index.SingleIndex {
+	return s.websites
+}
+
+// GetCountriesIndex for testing
+func (s *Store) GetCountriesIndex() index.MultiIndex {
+	return s.countries
+}
+
+// GetCategoriesIndex for testing
+func (s *Store) GetCategoriesIndex() index.MultiIndex {
+	return s.categories
 }

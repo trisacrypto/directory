@@ -1,9 +1,60 @@
 package trtl_test
 
+import store "github.com/trisacrypto/directory/pkg/gds/store/trtl"
+
 func (s *trtlStoreTestSuite) TestIndexSync() {
-	// TODO: Test Index Sync and Reindex
+	require := s.Require()
+	require.NoError(s.grpc.Connect(), "could not connect to grpc bufconn")
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err, "could not create mock trtl store")
+
+	// Ensure that indices are all empty
+	require.True(db.GetNamesIndex().Empty(), "name index not empty, have fixtures changed?")
+	require.True(db.GetWebsitesIndex().Empty(), "website index not empty, have fixtures changed?")
+	require.True(db.GetCountriesIndex().Empty(), "country index not empty, have fixtures changed?")
+	require.True(db.GetCategoriesIndex().Empty(), "category index not empty, have fixtures changed?")
+
+	// Create a bunch of records
+	err = createVASPs(db, 100, 1)
+	require.NoError(err, "could not create 100 vasps for index tests")
+	require.Equal(200, db.GetNamesIndex().Len(), "names index has an unexpected length")
+	require.Equal(100, db.GetWebsitesIndex().Len(), "website index has an unexpected length")
+	require.Equal(7, db.GetCountriesIndex().Len(), "countries index has an unexpected length")
+	require.Equal(3, db.GetCategoriesIndex().Len(), "categories index has an unexpected length")
+
+	// Sync the indices to disk
+	// NOTE: this should also test any conflicts with reserved namespaces in trtl
+	require.NoError(db.Sync("all"), "could not sync indices to disk")
+
+	// TODO: check that we can load the indices from disk
+
+	// TODO: check updating records
+	// TODO: check deleting records
 }
 
 func (s *trtlStoreTestSuite) TestSearch() {
-	// TODO: Test Search
+	require := s.Require()
+	require.NoError(s.grpc.Connect(), "could not connect to grpc bufconn")
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err, "could not create mock trtl store")
+
+	// Create a bunch of records
+	err = createVASPs(db, 100, 1)
+
+	// Test a simple search
+	query := map[string]interface{}{
+		"name":     []string{"Test VASP 00A1", "Test VASP F32A", "Test VASP 0014"},
+		"website":  []string{"https://test0003.net/", "https://test00FA.net"},
+		"country":  "CC",
+		"category": "PRIVATE_ORGANIZATION",
+	}
+
+	vasps, err := db.SearchVASPs(query)
+	require.NoError(err, "could not search vasps with query")
+	require.Len(vasps, 1, "no vasps returned from search")
+	require.Equal("trisa0003.test.net", vasps[0].CommonName)
 }

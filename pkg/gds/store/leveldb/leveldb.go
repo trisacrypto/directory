@@ -118,8 +118,12 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	s.Lock()
 	defer s.Unlock()
 
-	// Check the uniqueness constraint
-	if _, ok := s.names.Find(v.CommonName); ok {
+	// Check the uniqueness constraints
+	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
+		return "", storeerrors.ErrDuplicateEntity
+	}
+
+	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
 		return "", storeerrors.ErrDuplicateEntity
 	}
 
@@ -197,6 +201,15 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	o, err := s.RetrieveVASP(v.Id)
 	if err != nil {
 		return err
+	}
+
+	// Check the uniqueness constraints
+	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
+	}
+
+	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
 	}
 
 	// Insert the new record
@@ -473,13 +486,22 @@ func (s *Store) Reindex() (err error) {
 			return err
 		}
 
+		// Update name index
 		names.Add(vasp.CommonName, vasp.Id)
 		for _, name := range vasp.Entity.Names() {
 			names.Add(name, vasp.Id)
 		}
 
+		// Update website index
 		websites.Add(vasp.Website, vasp.Id)
+
+		// Update country index
 		countries.Add(vasp.Entity.CountryOfRegistration, vasp.Id)
+		for _, addr := range vasp.Entity.GeographicAddresses {
+			countries.Add(addr.Country, vasp.Id)
+		}
+
+		// Update category index
 		categories.Add(vasp.BusinessCategory.String(), vasp.Id)
 		for _, vaspCategory := range vasp.VaspCategories {
 			categories.Add(vaspCategory, vasp.Id)
@@ -669,6 +691,9 @@ func (s *Store) insertIndices(v *pb.VASP) (err error) {
 	s.websites.Add(v.Website, v.Id)
 
 	s.countries.Add(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Add(addr.Country, v.Id)
+	}
 
 	s.categories.Add(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
@@ -687,6 +712,9 @@ func (s *Store) removeIndices(v *pb.VASP) (err error) {
 	s.websites.Remove(v.Website)
 
 	s.countries.Remove(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Remove(addr.Country, v.Id)
+	}
 
 	s.categories.Remove(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
