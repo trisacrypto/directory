@@ -28,6 +28,34 @@ func Open(profile *client.TrtlProfile) (store *Store, err error) {
 		return nil, err
 	}
 	store.client = pb.NewTrtlClient(store.conn)
+
+	if err = store.sync(); err != nil {
+		return nil, err
+	}
+
+	// Perform a reindex if the local indices are null or empty. In the case where the
+	// store has no data, this won't be harmful - but in the case where the stored index
+	// has been corrupted, this should repair it.
+	if store.names.Empty() || store.websites.Empty() || store.countries.Empty() || store.categories.Empty() {
+		log.Info().Msg("reindexing to recover from empty indices")
+		if err = store.Reindex(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Run background go routine to periodically checkpoint index to disk.
+	// NOTE: the leveldb store does this in the backup go routine.
+	// TODO: configure (enable/disable) this functionality and shutdown
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		for {
+			<-ticker.C
+			if err := store.sync(); err != nil {
+				log.Error().Err(err).Msg("could not synchronize indices")
+			}
+		}
+	}()
+
 	return store, nil
 }
 
