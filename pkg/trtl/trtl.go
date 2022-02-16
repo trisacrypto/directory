@@ -193,6 +193,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	var object *object.Object
 	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
+		if err == engine.ErrNotFound {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

@@ -16,8 +16,10 @@ const (
 var reservedNamespaces = map[string]struct{}{
 	NamespacePeers:    {},
 	NamespaceSequence: {},
-	NamespaceIndex:    {},
 	NamespaceDefault:  {}, // if the user does not specify a namespace
+
+	// TODO: add index namespace back to reserved namespaces when trtl does indexing.
+	// NamespaceIndex:    {},
 }
 
 // Replicated namespaces are the namespaces that are used in anti-entropy by default.
