@@ -24,7 +24,10 @@ import (
 func New(conf config.EmailConfig) (m *EmailManager, err error) {
 	m = &EmailManager{conf: conf}
 	if conf.Testing {
-		m.client = &mockSendGridClient{}
+		log.Warn().Bool("testing", conf.Testing).Str("storage", conf.Storage).Msg("using mock sendgrid client")
+		m.client = &mockSendGridClient{
+			storage: conf.Storage,
+		}
 	} else {
 		m.client = sendgrid.NewSendClient(conf.SendGridAPIKey)
 	}
