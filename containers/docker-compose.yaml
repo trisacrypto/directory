@@ -27,7 +27,7 @@ services:
       - GDS_ADMIN_MODE=release
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
       - GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE
-      - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
+      - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com,100kode.io
       - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:4433
