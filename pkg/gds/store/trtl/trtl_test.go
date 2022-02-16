@@ -48,7 +48,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	conf := config.Config{
 		Maintenance: false,
 		BindAddr:    ":4436",
-		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
+		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
 		ConsoleLog:  true,
 		Database: config.DatabaseConfig{
 			URL:           fmt.Sprintf("leveldb:///%s", s.tmpdb),
@@ -235,6 +235,9 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	reqs, err = db.ListVASPs().All()
 	require.NoError(err)
 	require.Len(reqs, 110)
+
+	// Cleanup database
+	require.NoError(deleteVASPs(db), "could not cleanup database")
 }
 
 func (s *trtlStoreTestSuite) TestCertificateStore() {
@@ -393,5 +396,34 @@ func createVASPs(db *store.Store, num, startIndex int) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func deleteVASPs(db *store.Store) error {
+	n := 0
+	iter := db.ListVASPs()
+	for iter.Next() {
+		vasp, err := iter.VASP()
+		if err != nil {
+			iter.Release()
+			return err
+		}
+
+		if err := db.DeleteVASP(vasp.Id); err != nil {
+			iter.Release()
+			return err
+		}
+
+		n++
+	}
+
+	iter.Release()
+	if err := iter.Error(); err != nil {
+		return err
+	}
+
+	// TODO: do better at managing empty indices
+	db.DeleteIndices()
+	fmt.Printf("deleted %d records\n", n)
 	return nil
 }

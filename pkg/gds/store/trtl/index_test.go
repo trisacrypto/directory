@@ -1,6 +1,8 @@
 package trtl_test
 
-import store "github.com/trisacrypto/directory/pkg/gds/store/trtl"
+import (
+	store "github.com/trisacrypto/directory/pkg/gds/store/trtl"
+)
 
 func (s *trtlStoreTestSuite) TestIndexSync() {
 	require := s.Require()
@@ -31,7 +33,15 @@ func (s *trtlStoreTestSuite) TestIndexSync() {
 	// TODO: check that we can load the indices from disk
 
 	// TODO: check updating records
-	// TODO: check deleting records
+
+	// Test deleting the records clears the indices
+	require.NoError(deleteVASPs(db), "could not delete vasps during index test")
+	require.True(db.GetNamesIndex().Empty(), "name index not empty after delete")
+	require.True(db.GetWebsitesIndex().Empty(), "website index not empty after delete")
+
+	// TODO: multi-index has empty arrays but still contains country/categories
+	// require.True(db.GetCountriesIndex().Empty(), "country index not empty after delete")
+	// require.True(db.GetCategoriesIndex().Empty(), "category index not empty after delete")
 }
 
 func (s *trtlStoreTestSuite) TestSearch() {
@@ -42,9 +52,9 @@ func (s *trtlStoreTestSuite) TestSearch() {
 	db, err := store.NewMock(s.grpc.Conn)
 	require.NoError(err, "could not create mock trtl store")
 
-	// Create a bunch of records
+	// Create a bunch of records removing any records that were there before
 	err = createVASPs(db, 100, 1)
-	require.NoError(err, "could not create fixtures")
+	require.NoError(err, "could not create 100 vasps for search test")
 
 	// Test a simple search
 	query := map[string]interface{}{
@@ -58,4 +68,5 @@ func (s *trtlStoreTestSuite) TestSearch() {
 	require.NoError(err, "could not search vasps with query")
 	require.Len(vasps, 1, "no vasps returned from search")
 	require.Equal("trisa0003.test.net", vasps[0].CommonName)
+	require.NoError(deleteVASPs(db), "could not delete vasps after search test")
 }

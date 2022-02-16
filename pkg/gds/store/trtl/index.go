@@ -421,3 +421,18 @@ func (s *Store) GetCountriesIndex() index.MultiIndex {
 func (s *Store) GetCategoriesIndex() index.MultiIndex {
 	return s.categories
 }
+
+// DeleteIndices for testing
+// TODO: remove this function in favor of SC-3653
+func (s *Store) DeleteIndices() (err error) {
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+
+	keys := [][]byte{keyNameIndex, keyWebsiteIndex, keyCategoryIndex, keyCountryIndex}
+	for _, key := range keys {
+		if _, err := s.client.Delete(ctx, &pb.DeleteRequest{Key: key, Namespace: wire.NamespaceIndices}); err != nil {
+			log.Debug().Err(err).Msg("could not delete index")
+		}
+	}
+	return nil
+}
