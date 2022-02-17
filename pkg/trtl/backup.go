@@ -26,10 +26,11 @@ type BackupManager struct {
 	stop chan struct{}
 }
 
-func NewBackupManager(s *Server) (*BackupManager, error) {
+func NewBackupManager(conf config.BackupConfig, db *honu.DB) (*BackupManager, error) {
 	return &BackupManager{
-		conf: s.conf.Backup,
-		db:   s.db,
+		conf: conf,
+		db:   db,
+		stop: make(chan struct{}),
 	}, nil
 }
 
@@ -40,11 +41,6 @@ func (m *BackupManager) Run() {
 		log.Warn().Msg("trtl backups disabled")
 		return
 	}
-
-	// Create the shutdown channel in Run so that calls to Shutdown() then Run() work
-	// NOTE: no buffer in the channel to ensure that the Shutdown caller blocks until
-	// the backup has been completed.
-	m.stop = make(chan struct{})
 
 	backupDir, err := m.getBackupStorage()
 	if err != nil {
