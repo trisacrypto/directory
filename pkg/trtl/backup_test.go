@@ -42,7 +42,7 @@ func (s *trtlTestSuite) TestBackupManager() {
 
 	// Wait for the backup manager to run through its loop. The shutdown check is at
 	// the beginning so there is a timing window here.
-	time.Sleep(conf.Interval * 2)
+	time.Sleep(conf.Interval * 3)
 
 	// Make sure that the backup manager is stopped
 	require.NoError(backup.Shutdown())
