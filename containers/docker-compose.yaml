@@ -77,6 +77,8 @@ services:
     init: true
     ports:
       - 4436:4436
+    volumes:
+      - ../fixtures:/data
     environment:
       - TRTL_MAINTENANCE=false
       - TRTL_BIND_ADDR=:4436
@@ -84,7 +86,7 @@ services:
       - TRTL_METRICS_ENABLED=false
       - TRTL_LOG_LEVEL=debug
       - TRTL_CONSOLE_LOG=true
-      - TRTL_DATABASE_URL=leveldb:////data/db
+      - TRTL_DATABASE_URL=leveldb:////data/trtl/db
       - TRTL_DATABASE_REINDEX_ON_BOOT=false
       - TRTL_REPLICA_ENABLED=false
       - TRTL_REPLICA_PID=8

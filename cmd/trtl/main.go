@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,10 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/rotationalio/honu"
+	opts "github.com/rotationalio/honu/options"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -85,6 +90,13 @@ func main() {
 			Usage:    "validate the current trtl configuration",
 			Category: "server",
 			Action:   validate,
+		},
+		{
+			Name:      "migrate",
+			Usage:     "migrate a leveldb database to a trtl database",
+			ArgsUsage: "src dst",
+			Category:  "server",
+			Action:    migrate,
 		},
 		{
 			Name:     "status",
@@ -425,6 +437,53 @@ func validate(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 	return printJSON(conf)
+}
+
+// migrate a leveldb database to a trtl database.
+func migrate(c *cli.Context) (err error) {
+	if c.NArg() != 2 {
+		return cli.Exit("specify src and dst database paths", 1)
+	}
+
+	var (
+		srcdb *leveldb.DB
+		dstdb *honu.DB
+	)
+
+	// Open the source for reading
+	if srcdb, err = leveldb.OpenFile(c.Args().Get(0), &opt.Options{ReadOnly: true}); err != nil {
+		return cli.Exit(fmt.Errorf("could not open src db at %q: %s", c.Args().Get(0), err), 1)
+	}
+
+	// Open the destination for writing
+	// TODO: allow user to specify replica information
+	if dstdb, err = honu.Open(fmt.Sprintf("leveldb:///%s", c.Args().Get(1))); err != nil {
+		return cli.Exit(fmt.Errorf("could not open dst db at %q: %s", c.Args().Get(1), err), 1)
+	}
+
+	// Loop over the source database and write into the honu database
+	nKeys := 0
+	iter := srcdb.NewIterator(nil, nil)
+	for iter.Next() {
+		// Get the key and split the namespace; this is GDS-specific logic
+		parts := bytes.SplitN(iter.Key(), []byte("::"), 2)
+		namespace := string(parts[0])
+		key := parts[1]
+
+		if _, err = dstdb.Put(key, iter.Value(), opts.WithNamespace(namespace)); err != nil {
+			return cli.Exit(fmt.Errorf("could not put %s :: %s: %s", namespace, string(key), err), 1)
+		}
+
+		nKeys++
+	}
+
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("migrated %d keys\n", nKeys)
+	return nil
 }
 
 //===========================================================================
