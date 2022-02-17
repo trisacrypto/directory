@@ -7,7 +7,7 @@
 // templates/review_request.html (1.225kB)
 // templates/review_request.txt (978B)
 // templates/verify_contact.html (652B)
-// templates/verify_contact.txt (528B)
+// templates/verify_contact.txt (529B)
 
 package emails
 
@@ -91,7 +91,7 @@ func deliver_certsHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "deliver_certs.html", size: 1577, mode: os.FileMode(0644), modTime: time.Unix(1632262825, 0)}
+	info := bindataFileInfo{name: "deliver_certs.html", size: 1577, mode: os.FileMode(0644), modTime: time.Unix(1628127539, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x36, 0x7d, 0x10, 0x39, 0xf8, 0xa, 0x55, 0xa4, 0x1d, 0x9c, 0x6f, 0xb1, 0xd0, 0x2c, 0x26, 0xec, 0x7, 0x47, 0x7b, 0x10, 0xf1, 0xcc, 0x91, 0x48, 0x87, 0x4, 0xf4, 0xcb, 0xf1, 0x3e, 0x22, 0x60}}
 	return a, nil
 }
@@ -111,7 +111,7 @@ func deliver_certsTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "deliver_certs.txt", size: 1267, mode: os.FileMode(0644), modTime: time.Unix(1632262825, 0)}
+	info := bindataFileInfo{name: "deliver_certs.txt", size: 1267, mode: os.FileMode(0644), modTime: time.Unix(1628127539, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xee, 0x62, 0x6e, 0xe5, 0x26, 0x48, 0xcc, 0x1, 0x1c, 0x9f, 0x28, 0x99, 0x7, 0xc, 0x25, 0x3b, 0x86, 0xba, 0x6f, 0xbc, 0x7b, 0x6c, 0xba, 0x6b, 0x40, 0x58, 0x92, 0x5, 0xfc, 0xb4, 0xf0, 0xf6}}
 	return a, nil
 }
@@ -131,7 +131,7 @@ func reject_registrationHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reject_registration.html", size: 587, mode: os.FileMode(0644), modTime: time.Unix(1622582528, 0)}
+	info := bindataFileInfo{name: "reject_registration.html", size: 587, mode: os.FileMode(0644), modTime: time.Unix(1628118153, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xfd, 0xdb, 0xf6, 0x6, 0xa7, 0xb8, 0x68, 0x11, 0x89, 0xea, 0x97, 0x3a, 0xf1, 0x23, 0xe7, 0xc2, 0xb7, 0x2b, 0x89, 0x53, 0xbe, 0xcf, 0xe3, 0x46, 0xe1, 0x35, 0xed, 0xec, 0x37, 0xd2, 0x40, 0x7d}}
 	return a, nil
 }
@@ -151,7 +151,7 @@ func reject_registrationTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reject_registration.txt", size: 469, mode: os.FileMode(0644), modTime: time.Unix(1622582528, 0)}
+	info := bindataFileInfo{name: "reject_registration.txt", size: 469, mode: os.FileMode(0644), modTime: time.Unix(1628118156, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x63, 0xbf, 0x13, 0xc7, 0xbb, 0x61, 0x9f, 0xfc, 0x2e, 0x8, 0x33, 0x69, 0x65, 0xbd, 0xfe, 0x42, 0x2, 0xec, 0x9e, 0x97, 0xc9, 0x3, 0x2c, 0x84, 0x78, 0xc, 0x88, 0xb2, 0x88, 0xfb, 0xf2, 0x74}}
 	return a, nil
 }
@@ -171,7 +171,7 @@ func review_requestHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "review_request.html", size: 1225, mode: os.FileMode(0644), modTime: time.Unix(1634832170, 0)}
+	info := bindataFileInfo{name: "review_request.html", size: 1225, mode: os.FileMode(0644), modTime: time.Unix(1634667864, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x3a, 0xaf, 0xd0, 0xf, 0x60, 0x6c, 0x66, 0x89, 0xd8, 0x30, 0x12, 0x82, 0x14, 0xb6, 0xa2, 0x82, 0xa6, 0x1a, 0x2a, 0x94, 0xca, 0xa2, 0x2b, 0x7a, 0x3e, 0xe8, 0xa6, 0xa1, 0x7a, 0x1a, 0x6a, 0x81}}
 	return a, nil
 }
@@ -191,7 +191,7 @@ func review_requestTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "review_request.txt", size: 978, mode: os.FileMode(0644), modTime: time.Unix(1634832170, 0)}
+	info := bindataFileInfo{name: "review_request.txt", size: 978, mode: os.FileMode(0644), modTime: time.Unix(1634667864, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8a, 0x58, 0xb6, 0xd4, 0x10, 0xd8, 0x3d, 0xe1, 0xce, 0x64, 0x58, 0x97, 0x33, 0xa8, 0xef, 0x45, 0xf5, 0xa7, 0xc7, 0xd5, 0x9f, 0xe4, 0x56, 0xdb, 0xc2, 0xa5, 0xc5, 0xec, 0x21, 0xc1, 0xa3, 0xe5}}
 	return a, nil
 }
@@ -211,12 +211,12 @@ func verify_contactHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "verify_contact.html", size: 652, mode: os.FileMode(0644), modTime: time.Unix(1622582599, 0)}
+	info := bindataFileInfo{name: "verify_contact.html", size: 652, mode: os.FileMode(0644), modTime: time.Unix(1622585428, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xb2, 0xbc, 0x1a, 0xa9, 0x34, 0x54, 0x24, 0x29, 0xe9, 0x94, 0x3c, 0xc1, 0xaf, 0xcd, 0xbe, 0x61, 0xa2, 0xcc, 0x6a, 0xbb, 0xa9, 0xe4, 0xda, 0x44, 0x6e, 0x20, 0x3f, 0xe1, 0x28, 0xe6, 0xba, 0xed}}
 	return a, nil
 }
 
-var _verify_contactTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\x91\xbd\x8e\xdc\x30\x0c\x84\x7b\x3d\xc5\x74\x69\x36\x7e\x80\x54\xf9\x03\x92\x03\x82\x14\xb7\x9b\xf4\xb4\xcc\x5d\x13\x96\x45\x87\xa2\x77\x61\x1c\xfc\xee\x81\x2c\xe4\x90\xe6\x3a\x63\x38\xe6\x37\x23\x7e\xe7\x94\x14\x2f\x2f\xe8\x7e\xd2\xcc\xd8\xf7\x53\x08\x97\x91\xf2\x84\x4d\x57\x5c\xd5\x50\xd6\x7e\x16\x77\xc9\x37\x10\x2e\xcf\x4f\xe7\x4f\xc8\xec\x0f\xb5\x09\xc6\x37\x29\x6e\xe4\xa2\x19\xc6\x7f\x56\x2e\xde\xe1\xa2\xe8\xf9\x26\x19\x3e\x32\x8c\xef\xc2\x0f\x2c\xa6\x91\x4b\x39\x61\x49\x4c\x85\x0f\xe0\x6f\x36\xb9\x6e\x5f\x34\x3b\x45\xff\xf5\xfc\x03\xfb\x7e\x3f\xa4\x8a\x36\xf0\x4c\x92\xd0\x6f\x88\x49\xe2\x54\xf1\x3e\x4a\x41\x92\x3c\x75\x21\x3c\x5d\x8f\x80\x91\x72\x56\x6f\x16\x68\x43\x56\xc7\x2b\x28\xea\xb2\x81\xf2\x80\x85\x8a\xf3\xeb\x1c\x3d\x27\x7d\x40\xb2\x6b\xa3\xf5\xa6\x8f\xc2\x06\x1a\x06\xe3\x52\xd0\x93\x7d\x08\xe1\x8d\x98\xff\xf0\xef\x8c\x31\xd2\xfd\xc8\x66\xba\xf6\x89\xd1\x1a\x54\xe5\x58\x1b\xdb\x6f\xad\xcc\x7f\xa1\x9a\x5a\xd3\xb4\x17\xa5\x61\x96\x5c\x40\xde\xbe\x3e\xba\x49\xa1\x4e\x14\x6a\xb5\x56\x5b\x35\xcf\x6b\x16\xdf\x70\x4e\x14\x27\xc4\x91\x72\xe6\x84\xc3\xfa\xbe\xde\xa3\x2c\x14\xb9\x2b\x75\xda\x45\x9d\xbb\x10\x3e\x73\xf1\x7a\x25\xb2\xa1\x9c\x42\x43\x7d\x4b\xda\x53\xc2\x57\x31\x8e\xae\xb6\xe1\xcc\x76\x97\xc8\xb8\x30\xcd\xe1\x6f\x00\x00\x00\xff\xff\xb4\xa7\x17\x83\x10\x02\x00\x00")
+var _verify_contactTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\x91\xcd\x8e\xd4\x40\x0c\x84\xef\xfd\x14\x75\xe3\x32\xe4\x01\x38\xf1\x27\xc1\x4a\x88\xc3\xce\xc0\xdd\xe9\x78\x26\x56\x3a\xed\xe0\x76\x66\x14\xad\xf2\xee\xa8\xd3\xb0\xe2\xc2\x2d\x2a\x57\xfc\x55\xb5\xbf\x72\x4a\x8a\x97\x17\x74\xdf\x69\x66\xec\xfb\x29\x84\xcb\x48\x79\xc2\xa6\x2b\xae\x6a\x28\x6b\x3f\x8b\xbb\xe4\x1b\x08\x97\xe7\xa7\xf3\x07\x64\xf6\x87\xda\x04\xe3\x9b\x14\x37\x72\xd1\x0c\xe3\x5f\x2b\x17\xef\x70\x51\xf4\x7c\x93\x0c\x1f\x19\xc6\x77\xe1\x07\x16\xd3\xc8\xa5\x9c\xb0\x24\xa6\xc2\x07\xf0\x27\x9b\x5c\xb7\x4f\x9a\x9d\xa2\xff\x78\xfe\x86\x7d\xc7\xfd\xd0\x2a\xdb\xc0\x33\x49\x42\xbf\x21\x26\x89\x53\xe5\xfb\x28\x05\x49\xf2\xd4\x85\xf0\x74\x3d\x12\x46\xca\x59\xbd\x59\xa0\x8d\x59\x1d\xaf\xa4\xa8\xcb\x06\xca\x03\x16\x2a\xce\xaf\x73\xf4\x9c\xf4\x01\xc9\xae\x8d\xd6\x9b\x3e\x0a\x1b\x68\x18\x8c\x4b\x41\x4f\xf6\x2e\x84\xff\xe4\xfc\x8b\x7f\x63\x8c\x91\xee\x47\x36\xd3\xb5\x4f\xfc\xa7\x41\x55\x8e\xb5\xb1\xfd\xd6\xca\xfc\x13\xaa\xa9\x35\x4d\x7b\x52\x1a\x66\xc9\x05\xe4\xed\xeb\xbd\x9b\x14\xea\x44\xa1\x56\x6b\xb5\x55\xf3\xbc\x66\xf1\x0d\xe7\x44\x71\x42\x1c\x29\x67\x4e\x38\xac\x6f\xeb\x41\xca\x42\x91\xbb\x52\xa7\x5d\xd4\xb9\x0b\xe1\x23\x17\xaf\x67\x22\x1b\xca\x29\x34\xd4\x97\xa4\x3d\x25\x7c\x16\xe3\xe8\x6a\x1b\xce\x6c\x77\x89\x8c\x0b\xd3\x1c\x7e\x07\x00\x00\xff\xff\x33\xeb\x6c\x64\x11\x02\x00\x00")
 
 func verify_contactTxtBytes() ([]byte, error) {
 	return bindataRead(
@@ -231,8 +231,8 @@ func verify_contactTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "verify_contact.txt", size: 528, mode: os.FileMode(0644), modTime: time.Unix(1622582599, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x1a, 0xe1, 0x94, 0x81, 0xf5, 0x2a, 0x4c, 0x11, 0x5d, 0xdb, 0xfb, 0xfa, 0x72, 0xc, 0x8b, 0x3f, 0xf, 0x52, 0x18, 0x43, 0x74, 0x20, 0x38, 0x6d, 0xc8, 0x3e, 0x62, 0xf, 0x6f, 0x7f, 0xd8, 0xc}}
+	info := bindataFileInfo{name: "verify_contact.txt", size: 529, mode: os.FileMode(0644), modTime: time.Unix(1645135781, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x69, 0x21, 0x96, 0x79, 0x1c, 0xd, 0x1a, 0x80, 0xea, 0x81, 0xa0, 0x70, 0x3b, 0xec, 0xda, 0x6a, 0x83, 0x5f, 0xc0, 0xe9, 0xae, 0x48, 0x5b, 0xa6, 0xcb, 0xc4, 0xe2, 0x57, 0x49, 0xc6, 0x2e, 0xc7}}
 	return a, nil
 }
 
