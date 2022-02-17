@@ -48,8 +48,8 @@ services:
       - SECTIGO_PASSWORD
       - SECTIGO_PROFILE
       - SECTIGO_TESTING
-      - GDS_EMAIL_TESTING
-      - GDS_EMAIL_STORAGE
+      - GDS_EMAIL_TESTING=true
+      - GDS_EMAIL_STORAGE=/data/emails
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
