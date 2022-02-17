@@ -101,10 +101,8 @@ func New(conf config.Config) (s *Server, err error) {
 		}
 
 		// Initialize the backup manager
-		if s.conf.Backup.Enabled {
-			if s.backup, err = NewBackupManager(s); err != nil {
-				return nil, err
-			}
+		if s.backup, err = NewBackupManager(s.conf.Backup, s.db); err != nil {
+			return nil, err
 		}
 	}
 
