@@ -6,6 +6,8 @@ services:
       dockerfile: ./containers/gds/Dockerfile
     image: trisa/gds
     init: true
+    depends_on:
+      - trtl
     ports:
       - 4433:4433
       - 4434:4434
@@ -20,7 +22,7 @@ services:
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_LOG_LEVEL=debug
       - GDS_CONSOLE_LOG=true
-      - GDS_DATABASE_URL=trtl://trtl:4436
+      - GDS_DATABASE_URL=trtl://trtl:4436/
       - GDS_DATABASE_REINDEX_ON_BOOT=false
       - GDS_DATABASE_INSECURE=true
       - GDS_DATABASE_CERT_PATH
@@ -55,7 +57,7 @@ services:
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
-      - GDS_BACKUP_ENABLED=true
+      - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
       - GDS_BACKUP_KEEP=1
@@ -93,6 +95,7 @@ services:
       - TRTL_INSECURE=true
       - TRTL_MTLS_CERT_PATH
       - TRTL_MTLS_CHAIN_PATH
+      - TRTL_BACKUP_ENABLED=false
     profiles:
       - db
       - gds
@@ -105,6 +108,8 @@ services:
       dockerfile: ./containers/grpc-proxy/Dockerfile
     image: trisa/grpc-proxy
     init: true
+    depends_on:
+      - gds
     ports:
       - 8080:8080
     profiles:
@@ -122,6 +127,8 @@ services:
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
     image: trisa/gds-ui
     init: true
+    depends_on:
+      - envoy
     ports:
       - 3000:80
     profiles:
@@ -138,6 +145,8 @@ services:
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
     image: trisa/gds-admin-ui
+    depends_on:
+      - gds
     init: true
     ports:
       - 3001:80

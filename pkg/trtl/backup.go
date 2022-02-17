@@ -21,32 +21,41 @@ import (
 // BackupManager runs as an independent service which periodically copies the trtl
 // storage to a compressed backup location on disk.
 type BackupManager struct {
-	conf config.Config
+	conf config.BackupConfig
 	db   *honu.DB
 	stop chan struct{}
 }
 
 func NewBackupManager(s *Server) (*BackupManager, error) {
 	return &BackupManager{
-		conf: s.conf,
+		conf: s.conf.Backup,
 		db:   s.db,
-		stop: make(chan struct{}),
 	}, nil
 }
 
 // Runs the main BackupManager routine which periodically wakes up and creates a backup
 // of the trtl database.
 func (m *BackupManager) Run() {
+	if !m.conf.Enabled {
+		log.Warn().Msg("trtl backups disabled")
+		return
+	}
+
+	// Create the shutdown channel in Run so that calls to Shutdown() then Run() work
+	// NOTE: no buffer in the channel to ensure that the Shutdown caller blocks until
+	// the backup has been completed.
+	m.stop = make(chan struct{})
+
 	backupDir, err := m.getBackupStorage()
 	if err != nil {
 		// If we're here, we're just starting the BackupManager, do not continue if we
 		// know we won't be able to access the backup directory. log.Fatal() will kill
-		// the program.
+		// the program with an exit code of 1.
 		log.Fatal().Err(err).Msg("trtl backup manager cannot access backup directory")
 	}
 
-	ticker := time.NewTicker(m.conf.Backup.Interval)
-	log.Info().Dur("interval", m.conf.Backup.Interval).Str("store", backupDir).Msg("trtl backup manager started")
+	ticker := time.NewTicker(m.conf.Interval)
+	log.Info().Dur("interval", m.conf.Interval).Str("store", backupDir).Msg("trtl backup manager started")
 
 backups:
 	for {
@@ -80,15 +89,15 @@ backups:
 		if archives, err = listArchives(backupDir); err != nil {
 			log.Error().Err(err).Msg("could not list backup directory")
 		} else {
-			if len(archives) > m.conf.Backup.Keep {
+			if len(archives) > m.conf.Keep {
 				var removed int
-				for _, archive := range archives[:len(archives)-m.conf.Backup.Keep] {
+				for _, archive := range archives[:len(archives)-m.conf.Keep] {
 					log.Debug().Str("archive", archive).Msg("deleting archive")
 					if err = os.Remove(archive); err == nil {
 						removed++
 					}
 				}
-				log.Debug().Int("kept", m.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
+				log.Debug().Int("kept", m.conf.Keep).Int("removed", removed).Msg("backup directory cleaned up")
 			}
 		}
 	}
@@ -96,7 +105,12 @@ backups:
 
 func (m *BackupManager) Shutdown() error {
 	if m.stop != nil {
+		// Should block until the current backup completes
 		m.stop <- struct{}{}
+
+		// Close the channel and set it to nil so that multiple shutdown calls don't block.
+		close(m.stop)
+		m.stop = nil
 	}
 	return nil
 }
@@ -154,13 +168,13 @@ func (m *BackupManager) backup(path string) (err error) {
 }
 
 // get the configured backup directory storage or return an error
-func (s *BackupManager) getBackupStorage() (path string, err error) {
-	if s.conf.Backup.Storage == "" {
+func (m *BackupManager) getBackupStorage() (path string, err error) {
+	if m.conf.Storage == "" {
 		return "", errors.New("incorrectly configured: backups enabled but no backup storage")
 	}
 
 	var stat os.FileInfo
-	path = s.conf.Backup.Storage
+	path = m.conf.Storage
 	if stat, err = os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			// Create the directory if it does not exist
