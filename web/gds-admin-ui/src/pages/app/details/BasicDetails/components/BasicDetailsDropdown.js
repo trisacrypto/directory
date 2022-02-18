@@ -72,7 +72,7 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                             </ModalContent>
                         </Modal >
                         {
-                           isOptionAvailable(vasp?.vasp?.verification_status) && (
+                            isOptionAvailable(vasp?.vasp?.verification_status) && (
                                 <Modal>
                                     <ModalOpenButton>
                                         <Dropdown.Item>
@@ -95,7 +95,7 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                             </ModalOpenButton>
                             <ModalContent size="lg">
                                 <Row className='p-4'>
-                                    <Ivms101RecordForm data={vasp.vasp.entity} />
+                                    <Ivms101RecordForm data={vasp.vasp?.entity} />
                                 </Row>
                             </ModalContent>
                         </Modal >
