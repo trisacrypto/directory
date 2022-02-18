@@ -79,9 +79,6 @@ jobs:
   gds_admin_test:
     name: GDS Admin UI Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -100,7 +97,7 @@ jobs:
       - name: Run Tests
         working-directory: ./web/gds-admin-ui
         env: 
-          #maybe we can make it dynamic like ${{secrets.REACT_APP_GDS_API_ENDPOINT}}
+        
           REACT_APP_GDS_API_ENDPOINT : http://localhost:4434/v2 
           REACT_APP_GDS_IS_TESTNET : true
         run: yarn test
@@ -114,9 +111,7 @@ jobs:
   gds_ui_test:
     name: GDS UI Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
+  
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -135,7 +130,7 @@ jobs:
       - name: Run Tests
         working-directory: ./web/gds-ui
         env: 
-          #maybe we can make it dynamic like ${{secrets.REACT_APP_GDS_API_ENDPOINT}}
+         
           REACT_APP_GDS_API_ENDPOINT : http://localhost:8080 
           REACT_APP_GDS_IS_TESTNET : true
         run: yarn test
@@ -143,7 +138,7 @@ jobs:
       - name: Upload Coverage report to CodeCov
         uses: codecov/codecov-action@v1.0.0
         with:
-          # Make sure to add to GitHub secrets!
+        
           token: ${{secrets.CODECOV_TOKEN}}
 
   lingui_gds_ui:
