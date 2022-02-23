@@ -1,7 +1,7 @@
 import React from "react";
 import { NavItem } from "./NavItem";
 import { HStack, Flex } from "@chakra-ui/react";
-import Logo from "../../UI/Logo";
+import Logo from "../../ui/Logo";
 export const NavBar = ({ ...props }): React.ReactElement => {
   return (
     <Flex

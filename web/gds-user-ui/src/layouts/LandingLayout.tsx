@@ -1,7 +1,7 @@
 import React from "react";
 import { Flex, FlexProps } from "@chakra-ui/react";
-import LandingHeader from "../components/Header/LandingHeader";
-import LandingFooter from '../components/Footer/LandingFooter';
+import LandingHeader from "../components/header/LandingHeader"
+import LandingFooter from '../components/footer/LandingFooter';
 
 
 

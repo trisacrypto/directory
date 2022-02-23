@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, Box, Flex, Text, Button, Stack, FlexProps } from "@chakra-ui/react";
-import {MenuIcon , CloseIcon} from '../Icon/index'
-import Logo from "../UI/Logo";
-import MenuItem from "../Menu/Landing/MenuItem";
+import { Link, Box, Flex, FlexProps } from "@chakra-ui/react";
+import {MenuIcon , CloseIcon} from '../icon'
+import Logo from "../ui/Logo";
+import MenuItem from "../menu/landing/MenuItem";
 
 
 const LandingHeader = (props : FlexProps) : JSX.Element => {
@@ -18,19 +18,19 @@ const LandingHeader = (props : FlexProps) : JSX.Element => {
       w="100%"
       mb={8}
       p={8}
-      bg={["system.blue", "system.blue", "transparent", "transparent"]}
-      color={["white", "white", "system.blue", "system.blue"]}
+      bg={["white", "white", "transparent", "transparent"]}
+      color={"system.blue"}
       {...props}
     >
       <Flex align="center">
         <Logo
           w="100px"
-          color={["white", "white", "system.blue", "system.blue"]}
+          color={["system.blue"]}
         />
       </Flex>
 
       <Box display={{ base: "block", md: "none" }} onClick={toggleMenu}>
-        {show ? <CloseIcon /> : <MenuIcon />}
+        {show ? <CloseIcon  /> : <MenuIcon />}
       </Box>
 
       <Box
@@ -45,7 +45,7 @@ const LandingHeader = (props : FlexProps) : JSX.Element => {
         >
           <MenuItem to="/">Home</MenuItem>
           <MenuItem to="/about">About Us</MenuItem>
-          <MenuItem to="/doc">Documentation </MenuItem>
+          <MenuItem to="https://trisa.dev">Documentation </MenuItem>
           <MenuItem to="/login" isLast>
             Login
           </MenuItem>

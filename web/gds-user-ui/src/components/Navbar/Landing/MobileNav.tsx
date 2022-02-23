@@ -14,7 +14,7 @@ import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import React, { useRef, ReactElement } from "react";
 
 import { NavItem } from "./NavItem";
-import Logo from "../../UI/Logo";
+import Logo from "../../ui/Logo";
 export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const openMenuRef = useRef(null);

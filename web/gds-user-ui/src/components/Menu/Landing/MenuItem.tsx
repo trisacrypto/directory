@@ -1,12 +1,12 @@
 import { Link, Text  } from "@chakra-ui/react";
 
-interface IProps {
+interface MenuItemProps {
     children: React.ReactNode;
     isLast?: boolean;
     to: string;
 } 
 
-const MenuItem = ({ children, isLast, to = "/", ...rest }: IProps) : JSX.Element => {
+const MenuItem = ({ children, isLast, to = "/", ...rest }: MenuItemProps) : JSX.Element => {
   return (
     <Text
       mb={{ base: isLast ? 0 : 8, sm: 0 }}
@@ -14,7 +14,9 @@ const MenuItem = ({ children, isLast, to = "/", ...rest }: IProps) : JSX.Element
       display="block"
       {...rest}
     >
-      <Link href={to}>{children}</Link>
+      {to.startsWith('http') ? <a href={to}>{children}</a> : <Link href={to}>{children}</Link>}
+        
+
     </Text>
   );
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import { Story } from "@storybook/react";
+import LandingHeader from "./LandingHeader";
 
-import  LandingHeader  from './LandingHeader';
 
 interface LandingHeaderProps {
 
