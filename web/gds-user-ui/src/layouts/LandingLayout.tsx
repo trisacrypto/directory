@@ -1,11 +1,11 @@
 import React from "react";
 import { Flex, FlexProps } from "@chakra-ui/react";
-import Header from "../components/Header/LandingHeader";
+import LandingHeader from "../components/Header/LandingHeader";
+import LandingFooter from '../components/Footer/LandingFooter';
 
 
 
-
-export default function LandingLayout(props : FlexProps) {
+export default function LandingLayout(props : FlexProps) : JSX.Element {
   return (
     <Flex
       direction="column"
@@ -14,8 +14,13 @@ export default function LandingLayout(props : FlexProps) {
       m="0 auto"
       {...props}
     >
-      <Header />
-      {props.children}
-    </Flex>
+      <LandingHeader />
+          
+          {props.children}
+          
+       <LandingFooter />
+      </Flex>
+      
+      
   );
 }

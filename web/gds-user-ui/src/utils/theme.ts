@@ -9,12 +9,12 @@ const colors = {
         900: "#171923",
     },
     system: {
-        link: "#23A7E0",
-        btng: "#1BCE9F",
-        btno: "#FF7A59",
-        wht: "#E3EBEF",
-        grey: "#5B5858",
-        gr: "#0A864F",
+        blue: "#23A7E0",
+        cyan: "#1BCE9F",
+        orange: "#FF7A59",
+        white: "#E3EBEF",
+        gray: "#5B5858",
+        green: "#0A864F",
     }
 };
 

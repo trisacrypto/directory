@@ -1,14 +1,11 @@
 import React from 'react';
-import { Link, Box, Flex, Text, Button, Stack } from "@chakra-ui/react";
+import { Link, Box, Flex, Text, Button, Stack, FlexProps } from "@chakra-ui/react";
 import {MenuIcon , CloseIcon} from '../Icon/index'
 import Logo from "../UI/Logo";
 import MenuItem from "../Menu/Landing/MenuItem";
 
-interface IProps {
 
-}
-
-const LandingHeader = (props : IProps) => {
+const LandingHeader = (props : FlexProps) : JSX.Element => {
   const [show, setShow] = React.useState(false);
   const toggleMenu = () => setShow(!show);
 
@@ -21,14 +18,14 @@ const LandingHeader = (props : IProps) => {
       w="100%"
       mb={8}
       p={8}
-      bg={["system.link", "system.link", "transparent", "transparent"]}
-      color={["white", "white", "system.link", "system.link"]}
+      bg={["system.blue", "system.blue", "transparent", "transparent"]}
+      color={["white", "white", "system.blue", "system.blue"]}
       {...props}
     >
       <Flex align="center">
         <Logo
           w="100px"
-          color={["white", "white", "system.link", "system.link"]}
+          color={["white", "white", "system.blue", "system.blue"]}
         />
       </Flex>
 
