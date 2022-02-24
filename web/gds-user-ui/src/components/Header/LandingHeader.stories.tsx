@@ -4,7 +4,8 @@ import LandingHeader from "./LandingHeader";
 
 
 interface LandingHeaderProps {
-
+  title: string;
+  description?: string;
 }
 
 export default {
@@ -18,4 +19,7 @@ export const Header: Story<LandingHeaderProps> = ({ ...props }) => (
   />
 );
 
-Header.bind({});
+Header.bind({
+  title: "Landing",
+  descirption:"description"
+});

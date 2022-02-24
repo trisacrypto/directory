@@ -2,7 +2,8 @@ import React from "react";
 import { Flex, FlexProps } from "@chakra-ui/react";
 import LandingHeader from "../components/header/LandingHeader"
 import LandingFooter from '../components/footer/LandingFooter';
-
+import LandingHead from '../components/head/LandingHead';
+import AboutTrisaSection from "../components/section/about";
 
 
 export default function LandingLayout(props : FlexProps) : JSX.Element {
@@ -10,15 +11,16 @@ export default function LandingLayout(props : FlexProps) : JSX.Element {
     <Flex
       direction="column"
       align="center"
-      maxW={{ xl: "1200px" }}
+      maxW={"100%"}
       m="0 auto"
       {...props}
     >
-      <LandingHeader />
+        <LandingHeader />
           
           {props.children}
-          
-       <LandingFooter />
+          <LandingHead />
+          <AboutTrisaSection />
+        <LandingFooter />
       </Flex>
       
       

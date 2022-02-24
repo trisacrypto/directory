@@ -13,7 +13,7 @@ import { Flex, Text, Link } from "@chakra-ui/react";
       padding={4}
     >
     
-      <Flex width="100%" justifyContent="center" wrap="wrap">
+      <Flex width="100%" wrap="wrap">
          <Text width="100%" textAlign="center" color="white" fontSize="sm">
           A component of <Link href="https://trisa.io" color={"system.cyan"}>the TRISA architecture</Link> for Cryptocurrency Travel Rule compliance.
         </Text>
