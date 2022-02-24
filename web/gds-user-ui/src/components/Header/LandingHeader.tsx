@@ -3,7 +3,7 @@ import { Link, Box, Flex, FlexProps } from "@chakra-ui/react";
 import {MenuIcon , CloseIcon} from '../icon'
 import Logo from "../ui/Logo";
 import MenuItem from "../menu/landing/MenuItem";
-
+import { colors } from '../../utils/theme';
 
 const LandingHeader = (props : FlexProps) : JSX.Element => {
   const [show, setShow] = React.useState(false);
@@ -18,7 +18,7 @@ const LandingHeader = (props : FlexProps) : JSX.Element => {
       w="100%"
       p={8}
       bg={["white", "white", "transparent", "transparent"]}
-      color={"system.blue"}
+      color={colors.system.blue}
       {...props}
     >
       <Flex align="center">

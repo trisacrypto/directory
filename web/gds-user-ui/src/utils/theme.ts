@@ -5,7 +5,7 @@ const config: ThemeConfig = {
   useSystemColorMode: false,
 };
 
-const colors = {
+export const colors = {
   transparent: "transparent",
   black: "#000",
   white: "#fff",
