@@ -23,10 +23,14 @@ type DirectoryAdministrationClient interface {
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error)
+	DeleteVASP(ctx context.Context, id string) (out *Reply, err error)
+	ReplaceContact(ctx context.Context, in *ReplaceContactRequest) (out *Reply, err error)
+	DeleteContact(ctx context.Context, vaspID string, kind string) (out *Reply, err error)
 	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	ListReviewNotes(ctx context.Context, id string) (out *ListReviewNotesReply, err error)
 	UpdateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
 	DeleteReviewNote(ctx context.Context, vaspID string, noteID string) (out *Reply, err error)
+	ReviewToken(ctx context.Context, vaspID string) (out *ReviewTokenReply, err error)
 	Review(ctx context.Context, in *ReviewRequest) (out *ReviewReply, err error)
 	Resend(ctx context.Context, in *ResendRequest) (out *ResendReply, err error)
 }
@@ -163,8 +167,6 @@ type UpdateVASPRequest struct {
 	// into an ivms101.LegalPerson protocol buffer.
 	Entity map[string]interface{} `json:"entity,omitempty"`
 
-	// TODO: allow admin to update contacts, which may require contact reverification.
-
 	// Common name can be updated only if the certificate has not been issued. It also
 	// updates the certificate request to ensure the correct certs are issued. The TRISA
 	// endpoint can be changed at any time, but should match the common name.
@@ -185,6 +187,24 @@ type UpdateVASPRequest struct {
 
 // UpdateVASPReply is identical to RetrieveVASPReply, simply renamed for clarity.
 type UpdateVASPReply RetrieveVASPReply
+
+//===========================================================================
+// Contact management RPCs
+//===========================================================================
+
+// ReplaceContactRequest is a request-like struct for replacing a contact on a VASP.
+type ReplaceContactRequest struct {
+	// The ID of the VASP (optional - is part of the URL).
+	VASP string `json:"vasp,omitempty"`
+
+	// The kind of contact to replace, must be one of
+	// ("administrative", "technical", "legal", "billing").
+	Kind string `json:"kind"`
+
+	// The new contact to replace the existing contact with, must be marshalled into a
+	// gds.models.v1beta1.Contact protocol buffer.
+	Contact map[string]interface{} `json:"contact,omitempty"`
+}
 
 //===========================================================================
 // Review Notes RPCs
@@ -234,6 +254,14 @@ type ReviewTimelineParams struct {
 //===========================================================================
 // VASP Action RPCs
 //===========================================================================
+
+// ReviewToken requests are used to determine if the VASP is eligible to be reviewed.
+// If the admin verification token can be retrieved by an authenticated user, it can be
+// presented in the ReviewRequest to complete the review. If a 404 is returned, it means
+// that the VASP is not in a state where it can be reviewed.
+type ReviewTokenReply struct {
+	AdminVerificationToken string `json:"admin_verification_token"`
+}
 
 // Registration review requests are sent via email to the TRISA admin email address with
 // a lightweight token for review. This endpoint allows administrators to submit a review

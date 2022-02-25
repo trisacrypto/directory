@@ -6,6 +6,8 @@ services:
       dockerfile: ./containers/gds/Dockerfile
     image: trisa/gds
     init: true
+    depends_on:
+      - trtl
     ports:
       - 4433:4433
       - 4434:4434
@@ -20,14 +22,17 @@ services:
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_LOG_LEVEL=debug
       - GDS_CONSOLE_LOG=true
-      - GDS_DATABASE_URL=leveldb:////data/db
+      - GDS_DATABASE_URL=trtl://trtl:4436/
       - GDS_DATABASE_REINDEX_ON_BOOT=false
+      - GDS_DATABASE_INSECURE=true
+      - GDS_DATABASE_CERT_PATH
+      - GDS_DATABASE_POOL_PATH
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
       - GDS_ADMIN_MODE=release
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
       - GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE
-      - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com
+      - GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS=trisa.io,rotational.io,akiltechnologies.com,100kode.io
       - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:4433
@@ -43,6 +48,8 @@ services:
       - SECTIGO_PASSWORD
       - SECTIGO_PROFILE
       - SECTIGO_TESTING
+      - GDS_EMAIL_TESTING=true
+      - GDS_EMAIL_STORAGE=/data/emails
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
@@ -50,7 +57,7 @@ services:
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
-      - GDS_BACKUP_ENABLED=true
+      - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
       - GDS_BACKUP_KEEP=1
@@ -62,15 +69,54 @@ services:
       - api
       - all
 
+  trtl:
+    build:
+      context: ../
+      dockerfile: ./containers/trtl/Dockerfile
+    image: trisa/trtl
+    init: true
+    ports:
+      - 4436:4436
+      - 7777:7777
+    volumes:
+      - ../fixtures:/data
+    environment:
+      - TRTL_MAINTENANCE=false
+      - TRTL_BIND_ADDR=:4436
+      - TRTL_METRICS_ADDR=:7777
+      - TRTL_METRICS_ENABLED=true
+      - TRTL_LOG_LEVEL=debug
+      - TRTL_CONSOLE_LOG=true
+      - TRTL_DATABASE_URL=leveldb:////data/trtl/db
+      - TRTL_DATABASE_REINDEX_ON_BOOT=false
+      - TRTL_REPLICA_ENABLED=false
+      - TRTL_REPLICA_PID=8
+      - TRTL_REPLICA_REGION=docker
+      - TRTL_REPLICA_NAME=docker-8
+      - TRTL_REPLICA_GOSSIP_INTERVAL=10s
+      - TRTL_REPLICA_GOSSIP_SIGMA=1500ms
+      - TRTL_INSECURE=true
+      - TRTL_MTLS_CERT_PATH
+      - TRTL_MTLS_CHAIN_PATH
+      - TRTL_BACKUP_ENABLED=false
+    profiles:
+      - db
+      - gds
+      - api
+      - all
+
   envoy:
     build:
       context: ../
       dockerfile: ./containers/grpc-proxy/Dockerfile
     image: trisa/grpc-proxy
     init: true
+    depends_on:
+      - gds
     ports:
       - 8080:8080
     profiles:
+      - proxy
       - api
       - all
 
@@ -79,11 +125,13 @@ services:
       context: ../
       dockerfile: ./containers/gds-ui/Dockerfile
       args:
-        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080/
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
     image: trisa/gds-ui
     init: true
+    depends_on:
+      - envoy
     ports:
       - 3000:80
     profiles:
@@ -100,10 +148,36 @@ services:
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
     image: trisa/gds-admin-ui
+    depends_on:
+      - gds
     init: true
     ports:
       - 3001:80
     profiles:
       - admin
       - ui
+      - all
+
+  prometheus:
+    image: prom/prometheus:latest
+    depends_on:
+      - trtl
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    profiles:
+      - monitor
+      - all
+
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - 3002:3000
+    volumes:
+      - ./monitor/grafana:/var/lib/grafana
+    profiles:
+      - monitor
       - all

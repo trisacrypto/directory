@@ -42,8 +42,16 @@ func (s *Service) BackupManager(stop <-chan bool) {
 
 backups:
 	for {
-		// Wait for next tick
-		<-ticker.C
+		// Wait for next tick or a stop message
+		select {
+		case done := <-stop:
+			// The value of the signal doesn't matter, but we check it here for completeness
+			if done {
+				log.Warn().Msg("backup manager received stop signal")
+				return
+			}
+		case <-ticker.C:
+		}
 
 		// Begin the backup process
 		start := time.Now()
@@ -77,16 +85,6 @@ backups:
 				}
 				log.Debug().Int("kept", s.conf.Backup.Keep).Int("removed", removed).Msg("backup directory cleaned up")
 			}
-		}
-
-		select {
-		case done := <-stop:
-			// The value of the signal doesn't matter, but we check it here for completeness
-			if done {
-				log.Warn().Msg("backup manager received stop signal")
-				return
-			}
-		default:
 		}
 	}
 }

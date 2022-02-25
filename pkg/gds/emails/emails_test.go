@@ -134,6 +134,7 @@ func (suite *EmailTestSuite) SetupSuite() {
 		Testing:      true,
 		ServiceEmail: "service@example.com",
 		AdminEmail:   "admin@example.com",
+		Storage:      "fixtures/emails",
 	}
 }
 

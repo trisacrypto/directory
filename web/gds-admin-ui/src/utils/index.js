@@ -48,7 +48,7 @@ function formatDisplayedData(target) {
 }
 
 const getRatios = (data) => {
-    const total = Object.values(data).reduce((acc, x) => acc + x);
+    const total = Object.values(data).reduce((acc, x) => acc + x, 0);
     return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, (v / total).toFixed(2)]));
 }
 
@@ -92,7 +92,7 @@ function getStatusClassName(status = '') {
 }
 
 function isTestNet() {
-    return config.IS_TESNET
+    return config.IS_TESTNET
 }
 
 function getDirectoryName() {
@@ -236,5 +236,21 @@ const getConductsCustomerKYC = (status) => status ? "does" : "does not"
 const getMustSafeguardPii = (status) => status ? "must" : "is not required to"
 const getSafeguardPii = (status) => status ? "does" : "does not"
 
+function isOptionAvailable(verificationStatus = "") {
+    if (!verificationStatus) {
+        return false;
+    }
+    return ["NO_VERIFICATION", "SUBMITTED", "EMAIL_VERIFIED", "PENDING_REVIEW", "ERRORED"].includes(verificationStatus)
+}
 
-export { getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }
+export const validateIsoCode = (cc = '') => {
+    if (typeof cc === 'string' && cc.length !== 2) {
+        const matches = cc.match(/\b(\w)/g);
+        const acronym = matches?.join('')
+        return acronym?.length === 2 ? acronym : ''
+    }
+
+    return cc
+}
+
+export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

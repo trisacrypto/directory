@@ -24,6 +24,9 @@ service Trtl {
 
     // Sync is a bi-directional streaming mechanism to issue access requests synchronously.
     rpc Sync(stream SyncRequest) returns (stream SyncReply) {};
+
+    // This RPC servers as a health check for clients to make sure the server is online.
+    rpc Status(HealthCheck) returns (ServerStatus) {};
 }
 
 
@@ -119,6 +122,14 @@ message SyncReply {
         DeleteReply delete = 6;
         IterReply iter = 7;
     }
+}
+
+message HealthCheck {}
+
+message ServerStatus {
+    string status = 1;
+    string version = 2;
+    string uptime = 3;
 }
 
 // Options conditions all accesses to trtl, e.g. there are not different structs for

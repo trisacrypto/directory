@@ -548,7 +548,7 @@ func TestUpdateVASP(t *testing.T) {
 	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
-	// Ensure a VASP ID is required to create a note
+	// Ensure a VASP ID is required to update a VASP
 	_, err = client.UpdateVASP(context.TODO(), &admin.UpdateVASPRequest{})
 	require.EqualError(t, err, "request requires a valid ID to determine endpoint")
 
@@ -556,6 +556,38 @@ func TestUpdateVASP(t *testing.T) {
 	out, err := client.UpdateVASP(context.TODO(), req)
 	require.NoError(t, err)
 	require.NotZero(t, out)
+	require.Equal(t, fixture, out)
+}
+
+func TestDeleteVASP(t *testing.T) {
+	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
+	fixture := &admin.Reply{
+		Success: true,
+	}
+
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to delete a VASP
+	_, err = client.DeleteVASP(context.TODO(), "")
+	require.EqualError(t, err, "request requires a valid ID to determine endpoint")
+
+	// Correctly formatted request
+	out, err := client.DeleteVASP(context.TODO(), id)
+	require.NoError(t, err)
+	require.NotNil(t, out)
 	require.Equal(t, fixture, out)
 }
 
@@ -740,6 +772,33 @@ func TestDeleteReviewNote(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestReviewToken(t *testing.T) {
+	fixture := &admin.ReviewTokenReply{
+		AdminVerificationToken: "supersecretadminkey",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check the request is correct
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/vasps/1234/review", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	out, err := client.ReviewToken(context.TODO(), "1234")
+	require.NoError(t, err)
+	require.Equal(t, fixture.AdminVerificationToken, out.AdminVerificationToken)
+}
+
 func TestReview(t *testing.T) {
 	fixture := &admin.ReviewReply{
 		Status:  "reviewed",
@@ -755,7 +814,7 @@ func TestReview(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Double cookie protect GET request w/o middleware
-		// The client must a call to GET /v2/authenticate before authentication
+		// The client must call GET /v2/authenticate before authentication
 		if r.Method == http.MethodGet && r.URL.Path == "/v2/authenticate" {
 			w.Header().Add("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusNoContent)

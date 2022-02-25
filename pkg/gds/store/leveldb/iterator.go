@@ -37,13 +37,13 @@ func (i *iterWrapper) Release() {
 	i.iter.Release()
 }
 
-func (i *vaspIterator) VASP() *pb.VASP {
+func (i *vaspIterator) VASP() (*pb.VASP, error) {
 	vasp := new(pb.VASP)
 	if err := proto.Unmarshal(i.iter.Value(), vasp); err != nil {
 		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
-		return nil
+		return nil, err
 	}
-	return vasp
+	return vasp, nil
 }
 
 func (i *vaspIterator) All() (vasps []*pb.VASP, err error) {
@@ -70,18 +70,18 @@ func (i *vaspIterator) Id() string {
 	return string(key[len(preVASPs):])
 }
 
-func (i *vaspIterator) Seek(vaspID string) bool {
+func (i *vaspIterator) SeekId(vaspID string) bool {
 	key := vaspKey(vaspID)
 	return i.iter.Seek(key)
 }
 
-func (i *certReqIterator) CertReq() *models.CertificateRequest {
+func (i *certReqIterator) CertReq() (*models.CertificateRequest, error) {
 	r := new(models.CertificateRequest)
 	if err := proto.Unmarshal(i.iter.Value(), r); err != nil {
 		log.Error().Err(err).Str("type", wire.NamespaceCertReqs).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
-		return nil
+		return nil, err
 	}
-	return r
+	return r, nil
 }
 
 func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {

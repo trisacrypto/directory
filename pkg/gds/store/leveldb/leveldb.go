@@ -3,7 +3,6 @@ package leveldb
 import (
 	"archive/tar"
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +17,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
+	"github.com/trisacrypto/directory/pkg/gds/store/index"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -38,7 +39,7 @@ func Open(path string) (*Store, error) {
 	// Perform a reindex if the local indices are null or empty. In the case where the
 	// store has no data, this won't be harmful - but in the case where the stored index
 	// has been corrupted, this should repair it.
-	if len(store.names) == 0 || len(store.websites) == 0 || len(store.countries) == 0 || len(store.categories) == 0 {
+	if store.names.Empty() || store.websites.Empty() || store.countries.Empty() || store.categories.Empty() {
 		log.Info().Msg("reindexing to recover from empty indices")
 		if err = store.Reindex(); err != nil {
 			return nil, err
@@ -47,16 +48,6 @@ func Open(path string) (*Store, error) {
 
 	return store, nil
 }
-
-// Errors that may occur during LevelDB operations
-var (
-	ErrCorruptedSequence = errors.New("primary key sequence is invalid")
-	ErrCorruptedIndex    = errors.New("search indices are invalid")
-	ErrIncompleteRecord  = errors.New("record is missing required fields")
-	ErrIDAlreadySet      = errors.New("record must not have an ID (use update instead)")
-	ErrEntityNotFound    = errors.New("entity not found")
-	ErrDuplicateEntity   = errors.New("entity unique constraints violated")
-)
 
 // keys and prefixes for leveldb buckets and indices
 var (
@@ -69,18 +60,16 @@ var (
 	preCertReqs      = []byte("certreqs::")
 )
 
-const searchPrefixMinLength = 3
-
 // Store implements store.Store for some basic LevelDB operations and simple protocol
 // buffer storage in a key/value database.
 type Store struct {
 	sync.RWMutex
 	db         *leveldb.DB
-	pkseq      sequence       // autoincrement sequence for ID values
-	names      uniqueIndex    // case insensitive name index
-	websites   uniqueIndex    // website/url index
-	countries  containerIndex // lookup vasps in a specific country
-	categories containerIndex // lookup vasps based on specified categories
+	pkseq      index.Sequence    // autoincrement sequence for ID values
+	names      index.SingleIndex // case insensitive name index
+	websites   index.SingleIndex // website/url index
+	countries  index.MultiIndex  // lookup vasps in a specific country
+	categories index.MultiIndex  // lookup vasps based on specified categories
 }
 
 //===========================================================================
@@ -112,8 +101,8 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
-	if name := normalize(v.CommonName); name == "" {
-		return "", ErrIncompleteRecord
+	if name := index.Normalize(v.CommonName); name == "" {
+		return "", storeerrors.ErrIncompleteRecord
 	}
 
 	// Update management timestamps and record metadata
@@ -129,9 +118,13 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 	s.Lock()
 	defer s.Unlock()
 
-	// Check the uniqueness constraint
-	if _, ok := s.names.find(v.CommonName, normalize); ok {
-		return "", ErrDuplicateEntity
+	// Check the uniqueness constraints
+	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
+		return "", storeerrors.ErrDuplicateEntity
+	}
+
+	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
+		return "", storeerrors.ErrDuplicateEntity
 	}
 
 	// It is not necessary for the marshal to be inside the lock, but we don't want to
@@ -160,7 +153,7 @@ func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 	key := vaspKey(id)
 	if val, err = s.db.Get(key, nil); err != nil {
 		if err == leveldb.ErrNotFound {
-			return nil, ErrEntityNotFound
+			return nil, storeerrors.ErrEntityNotFound
 		}
 		return nil, err
 	}
@@ -177,14 +170,14 @@ func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 // entire VASP record and does not update individual fields.
 func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	if v.Id == "" {
-		return ErrIncompleteRecord
+		return storeerrors.ErrIncompleteRecord
 	}
 	key := vaspKey(v.Id)
 
 	// Ensure a common name exists for the uniqueness constraint
 	// NOTE: other validation should have been performed in advance
-	if name := normalize(v.CommonName); name == "" {
-		return ErrIncompleteRecord
+	if name := index.Normalize(v.CommonName); name == "" {
+		return storeerrors.ErrIncompleteRecord
 	}
 
 	// Update management timestamps and record metadata
@@ -208,6 +201,15 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 	o, err := s.RetrieveVASP(v.Id)
 	if err != nil {
 		return err
+	}
+
+	// Check the uniqueness constraints
+	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
+	}
+
+	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
+		return storeerrors.ErrDuplicateEntity
 	}
 
 	// Insert the new record
@@ -241,7 +243,7 @@ func (s *Store) DeleteVASP(id string) (err error) {
 	// lock to ensure the indices are correctly updated with what is on disk.
 	record, err := s.RetrieveVASP(id)
 	if err != nil {
-		if err == ErrEntityNotFound {
+		if err == storeerrors.ErrEntityNotFound {
 			return nil
 		}
 		return err
@@ -280,43 +282,23 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 	records := make(map[string]struct{})
 
 	s.RLock()
-	// Lookup by name
-	names, ok := parseQuery("name", query, normalize)
-	if ok {
-		log.Debug().Strs("name", names).Msg("search name query")
-		for _, name := range names {
-			if id := s.names[name]; id != "" {
-				// exact match
-				records[id] = struct{}{}
-			} else if len(name) >= searchPrefixMinLength {
-				// prefix match
-				for vasp, id := range s.names {
-					if strings.HasPrefix(vasp, name) {
-						records[id] = struct{}{}
-					}
-				}
-			}
-		}
+	// Search the name index
+	for _, result := range s.names.Search(query) {
+		records[result] = struct{}{}
 	}
 
 	// Lookup by website
-	websites, ok := parseQuery("website", query, normalizeURL)
-	if ok {
-		log.Debug().Strs("website", websites).Msg("search website query")
-		for _, website := range websites {
-			if id := s.websites[website]; id != "" {
-				records[id] = struct{}{}
-			}
-		}
+	for _, result := range s.websites.Search(query) {
+		records[result] = struct{}{}
 	}
 
 	// Filter by country
 	// NOTE: if country is not in the index, no records will be returned
-	countries, ok := parseQuery("country", query, normalizeCountry)
+	countries, ok := index.ParseQuery("country", query, index.NormalizeCountry)
 	if ok {
 		for _, country := range countries {
 			for record := range records {
-				if !s.countries.contains(country, record, nil) {
+				if !s.countries.Contains(country, record) {
 					// Remove the found VASP since it is not in the country index
 					// NOTE: safe to remove during map iteration: https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-map-within-a-range-loop
 					delete(records, record)
@@ -327,12 +309,12 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 
 	// Filter by category
 	// NOTE: if category is not in the index, no records will be returned
-	categories, ok := parseQuery("category", query, normalize)
+	categories, ok := index.ParseQuery("category", query, index.Normalize)
 	if ok {
 		for _, category := range categories {
 			for record := range records {
-				if !s.categories.contains(category, record, nil) {
-					// Remove the found VASP since it is not in the country index
+				if !s.categories.Contains(category, record) {
+					// Remove the found VASP since it is not in the category index
 					// NOTE: safe to remove during map iteration: https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-map-within-a-range-loop
 					delete(records, record)
 				}
@@ -348,7 +330,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 		for id := range records {
 			var vasp *pb.VASP
 			if vasp, err = s.RetrieveVASP(id); err != nil {
-				if err == ErrEntityNotFound {
+				if err == storeerrors.ErrEntityNotFound {
 					continue
 				}
 				return nil, err
@@ -376,7 +358,7 @@ func (s *Store) ListCertReqs() iterator.CertificateIterator {
 // CreateCertReq and assign a new ID and return the version.
 func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
 	if r.Id != "" {
-		return "", ErrIDAlreadySet
+		return "", storeerrors.ErrIDAlreadySet
 	}
 
 	// Create UUID for record
@@ -405,13 +387,13 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 // RetrieveCertReq returns a certificate request by certificate request ID.
 func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err error) {
 	if id == "" {
-		return nil, ErrEntityNotFound
+		return nil, storeerrors.ErrEntityNotFound
 	}
 
 	var val []byte
 	if val, err = s.db.Get(careqKey(id), nil); err != nil {
 		if err == leveldb.ErrNotFound {
-			return nil, ErrEntityNotFound
+			return nil, storeerrors.ErrEntityNotFound
 		}
 		return nil, err
 	}
@@ -428,7 +410,7 @@ func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err er
 // complete as possible, including an ID generated by the caller.
 func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 	if r.Id == "" {
-		return ErrIncompleteRecord
+		return storeerrors.ErrIncompleteRecord
 	}
 
 	// Update management timestamps and record metadata
@@ -490,10 +472,10 @@ func careqKey(id string) (key []byte) {
 // Reindex rebuilds the name and country indices for the server and synchronizes them
 // back to disk to ensure they're complete and accurate.
 func (s *Store) Reindex() (err error) {
-	names := make(uniqueIndex)
-	websites := make(uniqueIndex)
-	countries := make(containerIndex)
-	categories := make(containerIndex)
+	names := index.NewNamesIndex()
+	websites := index.NewWebsiteIndex()
+	countries := index.NewCountryIndex()
+	categories := index.NewCategoryIndex()
 
 	iter := s.db.NewIterator(util.BytesPrefix(preVASPs), nil)
 	defer iter.Release()
@@ -504,16 +486,25 @@ func (s *Store) Reindex() (err error) {
 			return err
 		}
 
-		names.add(vasp.CommonName, vasp.Id, normalize)
+		// Update name index
+		names.Add(vasp.CommonName, vasp.Id)
 		for _, name := range vasp.Entity.Names() {
-			names.add(name, vasp.Id, normalize)
+			names.Add(name, vasp.Id)
 		}
 
-		websites.add(vasp.Website, vasp.Id, normalizeURL)
-		countries.add(vasp.Entity.CountryOfRegistration, vasp.Id, normalizeCountry)
-		categories.add(vasp.BusinessCategory.String(), vasp.Id, normalize)
+		// Update website index
+		websites.Add(vasp.Website, vasp.Id)
+
+		// Update country index
+		countries.Add(vasp.Entity.CountryOfRegistration, vasp.Id)
+		for _, addr := range vasp.Entity.GeographicAddresses {
+			countries.Add(addr.Country, vasp.Id)
+		}
+
+		// Update category index
+		categories.Add(vasp.BusinessCategory.String(), vasp.Id)
 		for _, vaspCategory := range vasp.VaspCategories {
-			categories.add(vaspCategory, vasp.Id, normalize)
+			categories.Add(vaspCategory, vasp.Id)
 		}
 	}
 
@@ -522,19 +513,19 @@ func (s *Store) Reindex() (err error) {
 	}
 
 	s.Lock()
-	if len(names) > 0 {
+	if !names.Empty() {
 		s.names = names
 	}
 
-	if len(websites) > 0 {
+	if !websites.Empty() {
 		s.websites = websites
 	}
 
-	if len(countries) > 0 {
+	if !countries.Empty() {
 		s.countries = countries
 	}
 
-	if len(categories) > 0 {
+	if !categories.Empty() {
 		s.categories = categories
 	}
 	s.Unlock()
@@ -544,10 +535,10 @@ func (s *Store) Reindex() (err error) {
 	}
 
 	log.Debug().
-		Int("names", len(s.names)).
-		Int("websites", len(s.websites)).
-		Int("countries", len(s.countries)).
-		Int("categories", len(s.categories)).
+		Int("names", s.names.Len()).
+		Int("websites", s.websites.Len()).
+		Int("countries", s.countries.Len()).
+		Int("categories", s.categories.Len()).
 		Msg("reindex complete")
 	return nil
 }
@@ -581,36 +572,10 @@ func (s *Store) Backup(path string) (err error) {
 		return fmt.Errorf("could not open archive database: %s", err)
 	}
 
-	// Create a new batch write to the archive database, writing every 100 records as
-	// we iterate over all of the data in the store database.
-	var nrows, narchived uint64
-	batch := new(leveldb.Batch)
-	iter := s.db.NewIterator(nil, nil)
-	for iter.Next() {
-		nrows++
-		batch.Put(iter.Key(), iter.Value())
-
-		if nrows%100 == 0 {
-			if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
-				return fmt.Errorf("could not write next 100 rows after %d rows: %s", narchived, err)
-			}
-			batch.Reset()
-			narchived += 100
-		}
+	var narchived uint64
+	if narchived, err = CopyDB(s.db, arcdb); err != nil {
+		return fmt.Errorf("could not write all records to archive database, wrote %d records: %s", narchived, err)
 	}
-
-	// Release the iterator and check for errors, just in case we didn't write anything
-	iter.Release()
-	if err = iter.Error(); err != nil {
-		return fmt.Errorf("could not iterate over gds store: %s", err)
-	}
-
-	// Write final rows to the database
-	if err = arcdb.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
-		return fmt.Errorf("could not write final %d rows after %d rows: %s", nrows-narchived, narchived, err)
-	}
-	batch.Reset()
-	narchived += (nrows - narchived)
 	log.Info().Uint64("records", narchived).Msg("leveldb archive complete")
 
 	// Close the archive database
@@ -677,41 +642,83 @@ func (s *Store) Backup(path string) (err error) {
 	return nil
 }
 
+// CopyDB is a utility function to copy all the records from one leveldb database
+// object to another.
+func CopyDB(src *leveldb.DB, dst *leveldb.DB) (ncopied uint64, err error) {
+	// Create a new batch write to the destination database, writing every 100 records
+	// as we iterate over all of the data in the source database.
+	var nrows uint64
+	batch := new(leveldb.Batch)
+	iter := src.NewIterator(nil, nil)
+	for iter.Next() {
+		nrows++
+		batch.Put(iter.Key(), iter.Value())
+
+		if nrows%100 == 0 {
+			if err = dst.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+				return ncopied, fmt.Errorf("could not write next 100 rows after %d rows: %s", ncopied, err)
+			}
+			batch.Reset()
+			ncopied += 100
+		}
+	}
+
+	// Release the iterator and check for errors, just in case we didn't write anything
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return ncopied, fmt.Errorf("could not iterate over GDS store: %s", err)
+	}
+
+	// Write final rows to the database
+	if err = dst.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+		return ncopied, fmt.Errorf("could not write final %d rows after %d rows: %s", nrows-ncopied, ncopied, err)
+	}
+	batch.Reset()
+	ncopied += (nrows - ncopied)
+	return ncopied, nil
+}
+
 //===========================================================================
 // Indices and Synchronization
 //===========================================================================
 
 func (s *Store) insertIndices(v *pb.VASP) (err error) {
-	s.names.add(v.CommonName, v.Id, normalize)
+	s.names.Add(v.CommonName, v.Id)
 	for _, name := range v.Entity.Names() {
-		s.names.add(name, v.Id, normalize)
+		s.names.Add(name, v.Id)
 	}
 
-	s.websites.add(v.Website, v.Id, normalizeURL)
+	s.websites.Add(v.Website, v.Id)
 
-	s.countries.add(v.Entity.CountryOfRegistration, v.Id, normalizeCountry)
+	s.countries.Add(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Add(addr.Country, v.Id)
+	}
 
-	s.categories.add(v.BusinessCategory.String(), v.Id, normalize)
+	s.categories.Add(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
-		s.categories.add(vaspCategory, v.Id, normalize)
+		s.categories.Add(vaspCategory, v.Id)
 	}
 
 	return nil
 }
 
 func (s *Store) removeIndices(v *pb.VASP) (err error) {
-	s.names.rm(v.CommonName, normalize)
+	s.names.Remove(v.CommonName)
 	for _, name := range v.Entity.Names() {
-		s.names.rm(name, normalize)
+		s.names.Remove(name)
 	}
 
-	s.websites.rm(v.Website, normalizeURL)
+	s.websites.Remove(v.Website)
 
-	s.countries.rm(v.Entity.CountryOfRegistration, v.Id, normalizeCountry)
+	s.countries.Remove(v.Entity.CountryOfRegistration, v.Id)
+	for _, addr := range v.Entity.GeographicAddresses {
+		s.countries.Remove(addr.Country, v.Id)
+	}
 
-	s.categories.rm(v.BusinessCategory.String(), v.Id, normalize)
+	s.categories.Remove(v.BusinessCategory.String(), v.Id)
 	for _, vaspCategory := range v.VaspCategories {
-		s.categories.rm(vaspCategory, v.Id, normalize)
+		s.categories.Remove(vaspCategory, v.Id)
 	}
 	return nil
 }
@@ -739,17 +746,17 @@ func (s *Store) sync() (err error) {
 	}
 
 	log.Debug().
-		Int("names", len(s.names)).
-		Int("websites", len(s.websites)).
-		Int("countries", len(s.countries)).
-		Int("categories", len(s.categories)).
+		Int("names", s.names.Len()).
+		Int("websites", s.websites.Len()).
+		Int("countries", s.countries.Len()).
+		Int("categories", s.categories.Len()).
 		Msg("indices synchronized")
 	return nil
 }
 
 // sync the autoincrement sequence with the leveldb auto sequence key
 func (s *Store) seqsync() (err error) {
-	var pk sequence
+	var pk index.Sequence
 	var data []byte
 	if data, err = s.db.Get(keyAutoSequence, nil); err != nil {
 		// If the auto sequence key is not found, simply leave pk to 0
@@ -780,7 +787,7 @@ func (s *Store) seqsync() (err error) {
 	}
 	if err = s.db.Put(keyAutoSequence, data, nil); err != nil {
 		log.Error().Err(err).Msg("could not put primary key sequence value")
-		return ErrCorruptedSequence
+		return storeerrors.ErrCorruptedSequence
 	}
 
 	log.Debug().Uint64("sequence", uint64(s.pkseq)).Msg("cached primary key sequence to disk")
@@ -797,7 +804,7 @@ func (s *Store) syncnames() (err error) {
 
 	if s.names == nil {
 		// Create the index to load it from disk
-		s.names = make(uniqueIndex)
+		s.names = index.NewNamesIndex()
 
 		// fetch the names from the database
 		if val, err = s.db.Get(keyNameIndex, nil); err != nil {
@@ -810,20 +817,20 @@ func (s *Store) syncnames() (err error) {
 
 		if err = s.names.Load(val); err != nil {
 			log.Error().Err(err).Msg("could not unmarshal names index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
 	// Put the current names back to the database
-	if len(s.names) > 0 {
+	if !s.names.Empty() {
 		if val, err = s.names.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal names index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 
 		if err = s.db.Put(keyNameIndex, val, nil); err != nil {
 			log.Error().Err(err).Msg("could not put names index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
@@ -841,7 +848,7 @@ func (s *Store) syncwebsites() (err error) {
 
 	if s.websites == nil {
 		// Create the index to load it from disk
-		s.websites = make(uniqueIndex)
+		s.websites = index.NewWebsiteIndex()
 
 		// fetch the websites from the database
 		if val, err = s.db.Get(keyWebsiteIndex, nil); err != nil {
@@ -854,20 +861,20 @@ func (s *Store) syncwebsites() (err error) {
 
 		if err = s.websites.Load(val); err != nil {
 			log.Error().Err(err).Msg("could not unmarshal websites index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
 	// Put the current websites back to the database
-	if len(s.websites) > 0 {
+	if !s.websites.Empty() {
 		if val, err = s.websites.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal websites index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 
 		if err = s.db.Put(keyWebsiteIndex, val, nil); err != nil {
 			log.Error().Err(err).Msg("could not put websites index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
@@ -885,7 +892,7 @@ func (s *Store) synccountries() (err error) {
 
 	if s.countries == nil {
 		// Create the countries index an dload from the database
-		s.countries = make(containerIndex)
+		s.countries = index.NewCountryIndex()
 
 		// fetch the countries from the database
 		if val, err = s.db.Get(keyCountryIndex, nil); err != nil {
@@ -898,20 +905,20 @@ func (s *Store) synccountries() (err error) {
 
 		if err = s.countries.Load(val); err != nil {
 			log.Error().Err(err).Msg("could not unmarshall country index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
-	if len(s.countries) > 0 {
+	if !s.countries.Empty() {
 		// Put the current countries back to the database
 		if val, err = s.countries.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal country index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 
 		if err = s.db.Put(keyCountryIndex, val, nil); err != nil {
 			log.Error().Err(err).Msg("could not put country index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
@@ -929,7 +936,7 @@ func (s *Store) synccategories() (err error) {
 
 	if s.categories == nil {
 		// Create the categories index and load from the database
-		s.categories = make(containerIndex)
+		s.categories = index.NewCategoryIndex()
 
 		// fetch the categories from the database
 		if val, err = s.db.Get(keyCategoryIndex, nil); err != nil {
@@ -942,20 +949,20 @@ func (s *Store) synccategories() (err error) {
 
 		if err = s.categories.Load(val); err != nil {
 			log.Error().Err(err).Msg("could not unmarshall categories index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 
-	if len(s.categories) > 0 {
+	if !s.categories.Empty() {
 		// Put the current categories back to the database
 		if val, err = s.categories.Dump(); err != nil {
 			log.Error().Err(err).Msg("could not marshal categories index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 
 		if err = s.db.Put(keyCategoryIndex, val, nil); err != nil {
 			log.Error().Err(err).Msg("could not put categories index")
-			return ErrCorruptedIndex
+			return storeerrors.ErrCorruptedIndex
 		}
 	}
 

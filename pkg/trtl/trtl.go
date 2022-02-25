@@ -3,6 +3,7 @@ package trtl
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"time"
 
@@ -12,7 +13,9 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
+	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,6 +35,9 @@ func NewTrtlService(s *Server) (*TrtlService, error) {
 const (
 	defaultPageSize = 100
 )
+
+// b64e encodes []byte keys and values as base64 encoded strings suitable for logging.
+var b64e = base64.RawURLEncoding.EncodeToString
 
 // Get is a unary request to retrieve a value for a key.
 // If metadata is requested in the GetRequest, the request will use honu.Object() to
@@ -79,10 +85,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 		// Compute latency in milliseconds
 		latency := float64(time.Since(start)/1000) / 1000.0
-		pmLatency.WithLabelValues("Get").Observe(latency)
+		prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 		// Update prometheus metrics
-		pmGets.WithLabelValues(object.Namespace).Inc()
+		prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 		return &pb.GetReply{
 			Value: object.Data,
@@ -95,10 +101,10 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply,
 
 	// Compute Get latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Get").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
 
 	// Increment prometheus Get count
-	pmGets.WithLabelValues(object.Namespace).Inc()
+	prom.PmGets.WithLabelValues(object.Namespace).Inc()
 
 	return &pb.GetReply{
 		Value: object.Data,
@@ -147,10 +153,10 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// Compute Put latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Put").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Put").Observe(latency)
 
 	// Increment prometheus Put counter
-	pmPuts.WithLabelValues(object.Namespace).Inc()
+	prom.PmPuts.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
@@ -187,6 +193,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	var object *object.Object
 	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
+		if err == engine.ErrNotFound {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -198,14 +207,14 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 
 	// Compute Delete latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Delete").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Delete").Observe(latency)
 
 	// Increment Prometheus Delete counter
-	pmDels.WithLabelValues(object.Namespace).Inc()
+	prom.PmDels.WithLabelValues(object.Namespace).Inc()
 
 	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
-	// pmTombstones.WithLabelValues(object.Namespace).Inc()
+	// prom.pmTombstones.WithLabelValues(object.Namespace).Inc()
 
 	return out, nil
 }
@@ -345,6 +354,11 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair
 		pair := &pb.KVPair{}
 		if !opts.IterNoKeys {
@@ -378,10 +392,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Compute Iter latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
-	pmLatency.WithLabelValues("Iter").Observe(latency)
+	prom.PmRPCLatency.WithLabelValues("Iter").Observe(latency)
 
 	// Increment Prometheus Iter counter
-	pmIters.WithLabelValues(iter.Namespace()).Inc()
+	prom.PmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().
@@ -551,6 +565,11 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Ignore deleted objects
+		if object.Version.Tombstone {
+			continue
+		}
+
 		// Create the key value pair to send in the cursor stream
 		// NOTE: cannot call iter.Next() here or the iterator will advance
 		msg := &pb.KVPair{}
@@ -599,6 +618,21 @@ func (h *TrtlService) Sync(stream pb.Trtl_SyncServer) (err error) {
 	return status.Error(codes.Unimplemented, "not implemented")
 }
 
+func (h *TrtlService) Status(ctx context.Context, in *pb.HealthCheck) (out *pb.ServerStatus, err error) {
+	// Create the default status
+	out = &pb.ServerStatus{
+		Status:  "ok",
+		Version: pkg.Version(),
+		Uptime:  h.uptime(),
+	}
+
+	// If we're in maintenance mode return a maintenance mode
+	if h.parent.conf.Maintenance {
+		out.Status = "maintenance"
+	}
+	return out, nil
+}
+
 // returnMeta is a helper function for returning the metadata on an object
 func returnMeta(object *object.Object) *pb.Meta {
 	meta := &pb.Meta{
@@ -622,4 +656,12 @@ func returnMeta(object *object.Object) *pb.Meta {
 		}
 	}
 	return meta
+}
+
+// uptime is a helper function that returns how long the server has been running, if known
+func (h *TrtlService) uptime() string {
+	if !h.parent.started.IsZero() {
+		return time.Since(h.parent.started).String()
+	}
+	return "unknown"
 }

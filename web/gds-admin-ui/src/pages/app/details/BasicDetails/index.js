@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Card, Col, Dropdown, Row } from 'react-bootstrap';
+import { Card, Col, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from 'constants/index';
 import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
 import dayjs from 'dayjs';
@@ -11,58 +11,9 @@ import Geographic from './components/Geographic';
 import countryCodeEmoji from 'utils/country';
 import { downloadFile } from 'helpers/api/utils';
 import classNames from 'classnames';
-import { actionType, useModal } from 'contexts/modal';
-import { useSelector } from 'react-redux';
-import { getAllReviewNotes } from 'redux/selectors';
-import VaspDocument from '../VaspDocument';
-import { pdf } from '@react-pdf/renderer';
-import NProgress from 'nprogress'
-
-export const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
-    const { dispatch } = useModal()
-    const reviewNotes = useSelector(getAllReviewNotes)
-    const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
-
-    const generatePdfDocument = async (filename) => {
-        NProgress.start()
-        try {
-            const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
-            downloadFile(blob, `${filename}.pdf`, 'application/pdf')
-            NProgress.done()
-        } catch (error) {
-            console.error('Unable to export as PDF', error)
-            NProgress.done()
-        }
-
-    };
-
-
-    return (
-        <Dropdown className="float-end" align="end">
-            <Dropdown.Toggle
-                data-testid="dripicons-dots-3"
-                variant="link"
-                tag="a"
-                className="card-drop arrow-none cursor-pointer p-0 shadow-none">
-                <i className="dripicons-dots-3"></i>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-                <Dropdown.Item data-testid="reviewItem" disabled={isNotPendingReview()}>
-                    <i className="mdi mdi-card-search me-1"></i>Review
-                </Dropdown.Item>
-                <Dropdown.Item>
-                    <i className="mdi mdi-square-edit-outline me-1"></i>Edit
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
-                    <i className="mdi mdi-printer me-1"></i>Print
-                </Dropdown.Item>
-                <Dropdown.Item onClick={handleClose}>
-                    <i className="mdi mdi-email me-1"></i>Resend
-                </Dropdown.Item>
-            </Dropdown.Menu>
-        </Dropdown>
-    )
-}
+import BasicDetailsDropDown from './components/BasicDetailsDropdown';
+import PropTypes from 'prop-types'
+import TrisaDetails from './components/TrisaDetails';
 
 
 function BasicDetails({ data }) {
@@ -109,7 +60,7 @@ function BasicDetails({ data }) {
                             {data?.vasp?.verification_status ? <span className={classNames('badge rounded-pill px-1 ms-1 align-text-bottom', getStatusClassName(data?.vasp?.verification_status))}>{StatusLabel[data?.vasp?.verification_status]}</span> : null}
                         </div>
                         <div className='d-flex align-items-center'>
-                            <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }}>{countryCodeEmoji(data?.vasp?.entity?.country_of_registration)}</span>
+                            <span className="fw-normal d-block me-1" style={{ fontSize: '2rem' }} data-testid="country-flag">{countryCodeEmoji(data?.vasp?.entity?.country_of_registration || data?.vasp?.entity?.geographic_addresses[0]?.country)}</span>
                             {isValidHttpUrl(data?.vasp?.website) ? <a target="_blank" href={`${data?.vasp?.website}`} rel="noreferrer">{data?.vasp?.website}</a> : null}
                         </div>
                     </div>
@@ -125,7 +76,7 @@ function BasicDetails({ data }) {
                             <Row>
                                 <Col>
                                     <Name data={data?.vasp?.entity?.name} />
-                                    <NationalIdentification data={data?.vasp?.entity?.national_identification} />
+                                    <NationalIdentification data={data?.vasp?.entity} />
                                 </Col>
                                 <Col>
                                     <p className="mb-2 mt-md-3 mt-lg-3 fw-bold">Established on: <span className="fw-normal">{formatDisplayedData(data?.vasp?.established_on)}</span></p>
@@ -137,14 +88,9 @@ function BasicDetails({ data }) {
                             <Col>
                                 <p className="mb-2 fw-bold">Business categorie(s): <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
                             </Col>
-                            <div className='mt-4'>
-                                <h4 className='text-dark mb-0'>TRISA details <button onClick={handleTrisaJsonExportClick} className='mdi mdi-arrow-down-bold-circle-outline border-0 bg-transparent' title="Download as JSON"></button></h4>
-                                <hr className='my-1' />
-                                <p className="mb-2 fw-bold">ID: <span className="fw-normal">{formatDisplayedData(data?.vasp?.id)}</span></p>
-                                <p className="mb-2 fw-bold">Common name: <span className="fw-normal">{formatDisplayedData(data?.vasp?.common_name)}</span></p>
-                                <p className="mb-2 fw-bold">Endpoint: <span className="fw-normal">{formatDisplayedData(data?.vasp?.trisa_endpoint)}</span></p>
-                                <p className="mb-2 fw-bold">Registered directory: <span className="fw-normal">{formatDisplayedData(data?.vasp?.registered_directory)}</span></p>
-                            </div>
+                            <Col className='mt-4'>
+                                <TrisaDetails data={data} handleTrisaJsonExportClick={handleTrisaJsonExportClick} />
+                            </Col>
                         </Col>
                         <Col sm={12} className='d-flex justify-content-around flex-sm-wrap flex-md-nowrap text-center'>
                             <p className="fw-bold mb-2 text-dark"> <span className='d-block'>First listed</span> <span className="fw-normal">{formatDate(data?.vasp?.first_listed)}</span></p>
@@ -161,6 +107,10 @@ function BasicDetails({ data }) {
         </>
 
     )
+}
+
+BasicDetails.propTypes = {
+    data: PropTypes.object.isRequired
 }
 
 export default BasicDetails

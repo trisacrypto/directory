@@ -31,6 +31,9 @@ message CertificateRequest {
     string profile = 11;
     string reject_reason = 12;
 
+    // Generic parameters used for making requests to certificate issuing services
+    map<string, string> params = 13;
+
     // Logging information timestamps
     string created = 15;
     string modified = 16;

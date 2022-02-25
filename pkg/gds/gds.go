@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -142,7 +143,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		}
 	} else {
 		// Validate common name if supplied
-		if err = validateCommonName(vasp.CommonName); err != nil {
+		if err = ValidateCommonName(vasp.CommonName); err != nil {
 			log.Warn().Err(err).Str("common_name", vasp.CommonName).Msg("invalid common name")
 			return nil, status.Error(codes.InvalidArgument, "invalid common name supplied")
 		}
@@ -188,19 +189,12 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	// Begin verification process by sending emails to all contacts in the VASP record.
 	// TODO: add to processing queue to return sooner/parallelize work
 	// Create the verification tokens and save the VASP back to the database
-	var contacts = []*pb.Contact{
-		vasp.Contacts.Technical,
-		vasp.Contacts.Administrative,
-		vasp.Contacts.Billing,
-		vasp.Contacts.Legal,
-	}
-
-	for idx, contact := range contacts {
-		if contact != nil && contact.Email != "" {
-			if err = models.SetContactVerification(contact, secrets.CreateToken(48), false); err != nil {
-				log.Error().Err(err).Int("index", idx).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
-			}
+	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	for iter.Next() {
+		contact, kind := iter.Value()
+		if err = models.SetContactVerification(contact, secrets.CreateToken(48), false); err != nil {
+			log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
+			return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 		}
 	}
 
@@ -226,12 +220,13 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Create PKCS12 password along with certificate request.
+	var certRequest *models.CertificateRequest
 	password := secrets.CreateToken(16)
-	certRequest := &models.CertificateRequest{
-		Id:         uuid.New().String(),
-		Vasp:       vasp.Id,
-		CommonName: vasp.CommonName,
+	if certRequest, err = models.NewCertificateRequest(vasp); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not create certificate request")
+		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
+
 	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", email); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
@@ -446,18 +441,10 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	prevVerified := 0
 	found := false
 	contactEmail := ""
-	contacts := []*pb.Contact{
-		vasp.Contacts.Technical,
-		vasp.Contacts.Administrative,
-		vasp.Contacts.Billing,
-		vasp.Contacts.Legal,
-	}
-	for idx, contact := range contacts {
-		// Ignore empty contacts
-		if contact == nil {
-			continue
-		}
 
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		contact, kind := iter.Value()
 		// Get the verification status
 		token, verified, err := models.GetContactVerification(contact)
 		if err != nil {
@@ -468,7 +455,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		// Perform token check and if token matches, mark contact as verified
 		if token == in.Token {
 			found = true
-			log.Info().Str("vasp", vasp.Id).Int("index", idx).Msg("contact email verified")
+			log.Info().Str("vasp", vasp.Id).Str("contact", kind).Msg("contact email verified")
 			if err = models.SetContactVerification(contact, "", true); err != nil {
 				log.Error().Err(err).Msg("could not set verification on contact extra data field")
 				return nil, status.Error(codes.Aborted, "could not verify contact")
@@ -590,17 +577,10 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 
 // Get a valid email address from the contacts on a VASP.
 func getContactEmail(vasp *pb.VASP) string {
-	contacts := []*pb.Contact{
-		vasp.Contacts.Technical,
-		vasp.Contacts.Administrative,
-		vasp.Contacts.Billing,
-		vasp.Contacts.Legal,
-	}
-
-	for _, contact := range contacts {
-		if contact != nil && contact.Email != "" {
-			return contact.Email
-		}
+	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		return contact.Email
 	}
 	return ""
 }
@@ -626,19 +606,25 @@ func validateEndpoint(endpoint string) (err error) {
 	return nil
 }
 
-// Validate a common name.
-func validateCommonName(name string) (err error) {
-	var host, port string
-	if host, port, err = net.SplitHostPort(name); err != nil {
-		return errors.New("unable to parse common name")
+// From: https://stackoverflow.com/a/3824105/488917
+var cnre = regexp.MustCompile(`^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$`)
+
+// Validate a common name. The common name should not be empty, nor start with an "*"
+// (e.g. a DNS wildcard). It should not start with a - and each label should be no more
+// than 63 octets long. The common name should not have a scheme e.g. https:// prefix
+// and it shouldn't have a port, e.g. example.com:443. Parsing is primarily based on
+// a regular expression match from the cnre pattern.
+func ValidateCommonName(name string) (err error) {
+	if name == "" {
+		return errors.New("common name should not be empty")
 	}
 
-	if host == "" {
-		return errors.New("missing host in common name")
+	if strings.HasPrefix(name, "*") {
+		return errors.New("wildcards are not allowed in TRISA common names")
 	}
 
-	if port != "" {
-		return errors.New("common name contains a port number")
+	if !cnre.MatchString(name) {
+		return errors.New("common name does not match domain name regular expression")
 	}
 	return nil
 }

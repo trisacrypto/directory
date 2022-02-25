@@ -349,6 +349,93 @@ func (s *APIv2) UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *Upd
 	return out, nil
 }
 
+func (s *APIv2) DeleteVASP(ctx context.Context, id string) (out *Reply, err error) {
+	// vaspID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) ReplaceContact(ctx context.Context, in *ReplaceContactRequest) (out *Reply, err error) {
+	// vaspID is required for the endpoint
+	if in.VASP == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/contacts/%s", in.VASP, in.Kind)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPut, path, in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) DeleteContact(ctx context.Context, vaspID string, kind string) (out *Reply, err error) {
+	// vaspID is required for the endpoint
+	if vaspID == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/contacts/%s", vaspID, kind)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s *APIv2) CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error) {
 	// vaspID is required for the endpoint
 	if in.VASP == "" {
@@ -458,6 +545,35 @@ func (s *APIv2) DeleteReviewNote(ctx context.Context, vaspID string, noteID stri
 
 	// Execute the request and get a response
 	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) ReviewToken(ctx context.Context, vaspID string) (out *ReviewTokenReply, err error) {
+	// The ID is required for the review token request to determine the endpoint
+	if vaspID == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/review", vaspID)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ReviewTokenReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

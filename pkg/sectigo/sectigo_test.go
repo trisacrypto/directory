@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 		Profile: "CipherTrace EE",
 		Testing: true,
 	}
-	require.NoError(mock.Start())
+	require.NoError(mock.Start(conf.Profile))
 	s.api, err = New(conf)
 	require.NoError(err)
 }
@@ -112,7 +113,11 @@ func (s *SectigoTestSuite) refresh(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) createSingleCertBatch(t *testing.T) {
-	rep, err := s.api.CreateSingleCertBatch(42, "foo", map[string]string{"foo": "bar"})
+	rep, err := s.api.CreateSingleCertBatch(1, "foo", map[string]string{
+		"commonName":     "foo",
+		"dNSName":        "foo.example.com",
+		"pkcs12Password": "bar",
+	})
 	require.NoError(t, err)
 	require.NotNil(t, rep)
 }
@@ -169,7 +174,7 @@ func (s *SectigoTestSuite) userAuthorities(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) authorityAvailableBalance(t *testing.T) {
-	rep, err := s.api.AuthorityAvailableBalance(42)
+	rep, err := s.api.AuthorityAvailableBalance(1)
 	require.NoError(t, err)
 	require.Greater(t, rep, 0)
 }
@@ -184,13 +189,17 @@ func (s *SectigoTestSuite) profiles(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) profileParams(t *testing.T) {
-	rep, err := s.api.ProfileParams(42)
+	id, err := strconv.Atoi(ProfileIDCipherTraceEE)
+	require.NoError(t, err)
+	rep, err := s.api.ProfileParams(id)
 	require.NoError(t, err)
 	require.NotNil(t, rep)
 }
 
 func (s *SectigoTestSuite) profileDetail(t *testing.T) {
-	rep, err := s.api.ProfileDetail(42)
+	id, err := strconv.Atoi(ProfileIDCipherTraceEE)
+	require.NoError(t, err)
+	rep, err := s.api.ProfileDetail(id)
 	require.NoError(t, err)
 	require.NotNil(t, rep)
 }

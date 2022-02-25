@@ -62,8 +62,9 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 		log.Debug().Msg("cert-manager checking certificate request pipelines")
 
 		for careqs.Next() {
-			req := careqs.CertReq()
-			if req == nil {
+			var req *models.CertificateRequest
+			if req, err = careqs.CertReq(); err != nil {
+				log.Error().Err(err).Msg("could not parse certificate request from database")
 				continue
 			}
 
@@ -143,20 +144,17 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	params := make(map[string]string)
-	params["commonName"] = r.CommonName
-	params["dNSName"] = r.CommonName
-	params["pkcs12Password"] = string(pkcs12Password)
+	var params map[string]string
 
 	profile := s.certs.Profile()
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
-		// Default to TRISA Production locality since none has been provided.
-		// TODO: make this part of the certificate request (See SC-2606).
-		params["organizationName"] = "TRISA Production"
-		params["localityName"] = "Menlo Park"
-		params["stateOrProvinceName"] = "California"
-		params["countryName"] = "US"
+		params = r.Params
+	} else {
+		params = make(map[string]string)
 	}
+	params["commonName"] = r.CommonName
+	params["dNSName"] = r.CommonName
+	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse

@@ -6,7 +6,7 @@ import config from "config";
 import { APICore, setCookie } from 'helpers/api/apiCore';
 import { getCookie } from 'utils';
 import toast from 'react-hot-toast';
-import { Alert } from 'react-bootstrap';
+import { Alert, Col, Row } from 'react-bootstrap';
 import useAuth from 'contexts/auth/use-auth';
 
 
@@ -15,7 +15,7 @@ const api = new APICore()
 const Login = () => {
 
     const [csrfProtected, setCsrfProtected] = React.useState(false)
-    const [loginError] = React.useState('');
+    const [loginError, setLoginError] = React.useState('');
     const isMounted = React.useRef(true)
     const { state } = useLocation()
     const { login } = useAuth()
@@ -23,7 +23,7 @@ const Login = () => {
 
     React.useEffect(() => {
         if (isMounted.current) {
-            window.onload = () => {
+            window.onGoogleLibraryLoad = () => {
 
                 api.get('/authenticate').then(response => {
                     const csrfToken = getCookie('csrf_token')
@@ -39,17 +39,19 @@ const Login = () => {
         }
 
         return () => { isMounted.current = false }
-
     }, [])
 
     const handleCredentialResponse = (response) => {
-        if (response?.credential) {
+        if (response && response.credential) {
             const data = {
                 credential
-                    : response?.credential
+                    : response.credential
             }
             login(data).then(res => {
                 setRedirectOnLogin(true)
+            }).catch(error => {
+                setLoginError("Address could not be authenticated (not a @trisa.io account).")
+                console.error('[handleCredentialResponse]', error)
             })
         }
 
@@ -59,18 +61,22 @@ const Login = () => {
         <>
             {redirectOnLogin ? <Redirect to={state ? state.from : '/'} /> : null}
             <AccountLayout >
-                {loginError && (
-                    <Alert variant="danger" className="my-2">
-                        {loginError}
-                    </Alert>
-                )}
-                <div className="text-center w-75 m-auto">
-                    <h4 className="text-dark-50 text-center mt-0 fw-bold">Sign In</h4>
-                    <p className="text-muted mb-4">
-                        Please use your @trisa.io Google account to access the GDS Admin.
-                    </p>
-                </div>
-                {csrfProtected ? <SignWithGoogle clientId={config.GOOGLE_CLIENT_ID} text="sign_in_with" loginResponse={handleCredentialResponse} /> : <p className="text-center">loading...</p>}
+                <Row>
+                    <Col sm={12}>
+                        {loginError && (
+                            <Alert variant="danger" className="my-2">
+                                {loginError}
+                            </Alert>
+                        )}
+                        <div className="text-center w-75 m-auto">
+                            <h4 className="text-dark-50 text-center mt-0 fw-bold">Sign In</h4>
+                            <p className="text-muted mb-4">
+                                Please use your @trisa.io Google account to access the GDS Admin.
+                            </p>
+                        </div>
+                        {csrfProtected ? <SignWithGoogle clientId={config.GOOGLE_CLIENT_ID} text="signin_with" loginResponse={handleCredentialResponse} /> : <p className="text-center">loading...</p>}
+                    </Col>
+                </Row>
             </AccountLayout>
         </>
     );

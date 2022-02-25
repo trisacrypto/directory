@@ -120,3 +120,17 @@ a[disabled] {
 .form-check-label{
     font-weight: 400;
 }
+
+.task .table-responsive{
+    height: 350px;
+}
+
+.btn-circle {
+    width: 20px;
+    height: 20px;
+    padding: 1px 0px;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.42857;
+}

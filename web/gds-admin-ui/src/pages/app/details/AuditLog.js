@@ -7,10 +7,11 @@ import { StatusLabel } from "../../../constants";
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 
+function sortByTimestamp(data = []) {
+    return data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+}
 
 const AuditLog = ({ data }) => {
-    const dataSorted = React.useMemo(() => data?.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()), [data])
-
     return data ? (
         <Card>
             <Card.Body>
@@ -19,7 +20,7 @@ const AuditLog = ({ data }) => {
                 <SimpleBar style={{ maxHeight: '330px', width: '100%' }}>
                     <Timeline>
                         {
-                            Array.isArray(dataSorted) && dataSorted.map((log, idx) => (
+                            sortByTimestamp(data).map((log, idx) => (
                                 <TimelineItem key={idx}>
                                     <i className="mdi mdi-file-search-outline bg-info-lighten text-info timeline-icon"></i>
                                     <div className="timeline-item-info mb-3">
@@ -43,7 +44,7 @@ const AuditLog = ({ data }) => {
 };
 
 AuditLog.propTypes = {
-    data: PropTypes.arrayOf(PropTypes.object).isRequired
+    data: PropTypes.arrayOf(PropTypes.object)
 }
 
 export default AuditLog;

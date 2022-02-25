@@ -30,6 +30,9 @@ jobs:
   test:
     name: Go Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -38,6 +41,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          path: ./directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -51,9 +56,15 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          repository: trisacrypto/trisa
+          ref: main
+          path: trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Run Unit Tests
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
@@ -63,11 +74,104 @@ jobs:
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage.txt
+          file: ./directory/coverage.txt
+ 
+  gds_admin_test:
+    name: GDS Admin UI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.8.0
+          cache: "yarn"
+          cache-dependency-path: ./web/gds-admin-ui/yarn.lock
+
+      - name: Install Dependencies
+        working-directory: ./web/gds-admin-ui
+        run: yarn 
+
+      - name: Run Tests
+        working-directory: ./web/gds-admin-ui
+        env: 
+        
+          REACT_APP_GDS_API_ENDPOINT : http://localhost:4434/v2 
+          REACT_APP_GDS_IS_TESTNET : true
+        run: yarn test
+
+      - name: Upload Coverage report to CodeCov
+        uses: codecov/codecov-action@v1.0.0
+        with:
+          # Make sure to add to GitHub secrets!
+          token: ${{secrets.CODECOV_TOKEN}}
+  
+  gds_ui_test:
+    name: GDS UI Tests
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.8.0
+          cache: "yarn"
+          cache-dependency-path: ./web/gds-ui/yarn.lock
+
+      - name: Install Dependencies
+        working-directory: ./web/gds-ui
+        run: yarn 
+
+      - name: Run Tests
+        working-directory: ./web/gds-ui
+        env: 
+         
+          REACT_APP_GDS_API_ENDPOINT : http://localhost:8080 
+          REACT_APP_GDS_IS_TESTNET : true
+        run: yarn test
+
+      - name: Upload Coverage report to CodeCov
+        uses: codecov/codecov-action@v1.0.0
+        with:
+        
+          token: ${{secrets.CODECOV_TOKEN}}
+
+  lingui_gds_ui:
+    name: Lingui Extract && Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.8.0
+          cache: "yarn"
+          cache-dependency-path: ./web/gds-ui/yarn.lock
+
+      - name: Install Dependencies
+        working-directory: ./web/gds-ui
+        run: yarn 
+
+      - name: Extract 
+        working-directory: ./web/gds-ui
+        run: yarn extract-c
+
+      - name: Compile
+        working-directory: ./web/gds-ui
+        run: yarn compile
   build:
     name: Go Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -76,6 +180,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          path: ./directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -89,9 +195,15 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
-      # # TODO: figure out code generation and include TRISA repo in GitHub actions
-      # - name: Code Generation
-      #   run: go generate ./...
+      - name: Clone TRISA repository
+        uses: actions/checkout@main
+        with:
+          repository: trisacrypto/trisa
+          ref: main
+          path: trisa
+
+      - name: Code Generation
+        run: go generate ./...
 
       - name: Build
         run: go build ./cmd/...

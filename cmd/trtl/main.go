@@ -1,12 +1,18 @@
 package main
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/rotationalio/honu"
+	opts "github.com/rotationalio/honu/options"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -86,6 +92,13 @@ func main() {
 			Action:   validate,
 		},
 		{
+			Name:      "migrate",
+			Usage:     "migrate a leveldb database to a trtl database",
+			ArgsUsage: "src dst",
+			Category:  "server",
+			Action:    migrate,
+		},
+		{
 			Name:     "status",
 			Usage:    "check the status of the trtl database and replication service",
 			Category: "client",
@@ -163,6 +176,35 @@ func main() {
 					Name:    "meta",
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
+				},
+			},
+		},
+		{
+			Name:     "db:list",
+			Usage:    "list all of the keys in the trtl database",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   dbList,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "namespace",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespace as a string (optional)",
+				},
+				&cli.StringFlag{
+					Name:    "prefix",
+					Aliases: []string{"p"},
+					Usage:   "specify a prefix of keys to list (optional)",
+				},
+				&cli.StringFlag{
+					Name:    "seek-key",
+					Aliases: []string{"s", "seek"},
+					Usage:   "specify a key to seek to before iterating (optional)",
+				},
+				&cli.BoolFlag{
+					Name:    "b64encode",
+					Aliases: []string{"b"},
+					Usage:   "specify the prefix/seek key as base64 encoded values which must be decoded",
 				},
 			},
 		},
@@ -311,29 +353,34 @@ func main() {
 		},
 		{
 			Name:      "profile",
-			Aliases:   []string{"config"},
+			Aliases:   []string{"config", "profiles"},
 			Usage:     "view and manage profiles to configure trtl with",
-			UsageText: "trtl profile [name]\n   trtl profile --activate [name]\n   trtl profile --list\n   trtl profile --path\n   trtl profile --install",
+			UsageText: "trtl profile [name]\n   trtl profile --activate [name]\n   trtl profile --list\n   trtl profile --path\n   trtl profile --install\n   trtl profile --edit",
 			Action:    manageProfiles,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:    "l",
-					Aliases: []string{"list"},
+					Name:    "list",
+					Aliases: []string{"l"},
 					Usage:   "list the available profiles and exit",
 				},
 				&cli.BoolFlag{
-					Name:    "p",
-					Aliases: []string{"path"},
+					Name:    "path",
+					Aliases: []string{"p"},
 					Usage:   "show the path to the configuration and exit",
 				},
 				&cli.BoolFlag{
-					Name:    "i",
-					Aliases: []string{"install"},
+					Name:    "install",
+					Aliases: []string{"i"},
 					Usage:   "install the default profiles and exit",
 				},
+				&cli.BoolFlag{
+					Name:    "edit",
+					Aliases: []string{"e"},
+					Usage:   "edit the profiles YAML using $EDITOR",
+				},
 				&cli.StringFlag{
-					Name:    "a",
-					Aliases: []string{"activate"},
+					Name:    "activate",
+					Aliases: []string{"a"},
 					Usage:   "activate the profile with the specified name",
 				},
 			},
@@ -385,13 +432,62 @@ func serve(c *cli.Context) (err error) {
 
 // validate checks the current trtl configuration and prints the status.
 func validate(c *cli.Context) (err error) {
-	// TODO: load and validate the trtl configuration
-	fmt.Println("trtl config is valid; ready to serve")
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(conf)
+}
+
+// migrate a leveldb database to a trtl database.
+func migrate(c *cli.Context) (err error) {
+	if c.NArg() != 2 {
+		return cli.Exit("specify src and dst database paths", 1)
+	}
+
+	var (
+		srcdb *leveldb.DB
+		dstdb *honu.DB
+	)
+
+	// Open the source for reading
+	if srcdb, err = leveldb.OpenFile(c.Args().Get(0), &opt.Options{ReadOnly: true}); err != nil {
+		return cli.Exit(fmt.Errorf("could not open src db at %q: %s", c.Args().Get(0), err), 1)
+	}
+
+	// Open the destination for writing
+	// TODO: allow user to specify replica information
+	if dstdb, err = honu.Open(fmt.Sprintf("leveldb:///%s", c.Args().Get(1))); err != nil {
+		return cli.Exit(fmt.Errorf("could not open dst db at %q: %s", c.Args().Get(1), err), 1)
+	}
+
+	// Loop over the source database and write into the honu database
+	nKeys := 0
+	iter := srcdb.NewIterator(nil, nil)
+	for iter.Next() {
+		// Get the key and split the namespace; this is GDS-specific logic
+		parts := bytes.SplitN(iter.Key(), []byte("::"), 2)
+		namespace := string(parts[0])
+		key := parts[1]
+
+		if _, err = dstdb.Put(key, iter.Value(), opts.WithNamespace(namespace)); err != nil {
+			return cli.Exit(fmt.Errorf("could not put %s :: %s: %s", namespace, string(key), err), 1)
+		}
+
+		nKeys++
+	}
+
+	iter.Release()
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("migrated %d keys\n", nKeys)
 	return nil
 }
 
 //===========================================================================
-// Client Functions
+// Initialization Functions
 //===========================================================================
 
 var dbClient pb.TrtlClient
@@ -425,21 +521,23 @@ func initPeersClient(c *cli.Context) (err error) {
 	return nil
 }
 
-// status prints the status of the trtl service.
-func status(c *cli.Context) (err error) {
-	// TODO: call the trtl status RPC once implemented
-	return cli.Exit("trtl status not implemented", 1)
-}
+//===========================================================================
+// Trtl (DB) Client Functions
+//===========================================================================
 
 // dbGet prints values from the trtl database given a set of keys.
 func dbGet(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
+	ctx, cancel := profile.Context()
+	defer cancel()
+
 	for _, keys := range c.Args().Slice() {
 		var key []byte
 		if key, err = wire.DecodeKey(keys, b64decode); err != nil {
 			return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
 		}
 
+		// Execute the Get request
 		var resp *pb.GetReply
 		req := &pb.GetRequest{
 			Key: key,
@@ -447,29 +545,26 @@ func dbGet(c *cli.Context) (err error) {
 				ReturnMeta: c.Bool("meta"),
 			},
 		}
-		if resp, err = dbClient.Get(context.TODO(), req); err != nil {
+		if resp, err = dbClient.Get(ctx, req); err != nil {
 			return cli.Exit(err, 1)
 		}
 
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the response using the protojson printer and add a newline after.
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
+		fmt.Println("")
 	}
 	return nil
 }
 
 // dbPut puts a value to to a key in the trtl database
 func dbPut(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Execute the Put request
 	var resp *pb.PutReply
 	req := &pb.PutRequest{
 		Key:       []byte(c.String("key")),
@@ -479,35 +574,30 @@ func dbPut(c *cli.Context) (err error) {
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
-	if resp, err = dbClient.Put(context.TODO(), req); err != nil {
+	if resp, err = dbClient.Put(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 	if resp.Success {
-		fmt.Printf("successfully put value %s to key %s", req.Value, req.Key)
+		fmt.Printf("successfully put value %s to key %s\n", req.Value, req.Key)
 	} else {
-		fmt.Printf("could not put value %s to key %s", req.Value, req.Key)
+		fmt.Printf("could not put value %s to key %s\n", req.Value, req.Key)
 	}
 	if resp.Meta != nil {
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the response
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
 	}
-
 	return nil
 }
 
 // dbDelete deletes a key in the trtl database
 func dbDelete(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Execute the Put request
 	var resp *pb.DeleteReply
 	req := &pb.DeleteRequest{
 		Key:       []byte(c.String("key")),
@@ -516,32 +606,85 @@ func dbDelete(c *cli.Context) (err error) {
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
-	if resp, err = dbClient.Delete(context.TODO(), req); err != nil {
+	if resp, err = dbClient.Delete(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
 	if resp.Success {
-		fmt.Printf("successfully deleted key %s", req.Key)
+		fmt.Printf("successfully deleted key %s\n", req.Key)
 	} else {
-		fmt.Printf("could not delete key %s", req.Key)
+		fmt.Printf("could not delete key %s\n", req.Key)
 	}
 	if resp.Meta != nil {
-		jsonpb := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			AllowPartial:    true,
-			UseProtoNames:   true,
-			UseEnumNumbers:  false,
-			EmitUnpopulated: true,
-		}
-		var outdata []byte
-		if outdata, err = jsonpb.Marshal(resp); err != nil {
+		// Print the protocol buffer response as JSON
+		if err = printJSON(resp); err != nil {
 			return cli.Exit(err, 1)
 		}
-		fmt.Println(string(outdata) + "\n")
 	}
 
 	return nil
 }
+
+// dbList lists all the keys in the trtl database
+func dbList(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Create a cursor request that returns no values, just keys in the specified namespace
+	req := &pb.CursorRequest{
+		Namespace: c.String("namespace"),
+		Options: &pb.Options{
+			IterNoValues: true,
+		},
+	}
+
+	b64decode := c.Bool("b64decode")
+	if prefix := c.String("prefix"); prefix != "" {
+		if req.Prefix, err = wire.DecodeKey(prefix, b64decode); err != nil {
+			return cli.Exit(fmt.Errorf("could not decode prefix: %s", err), 1)
+		}
+	}
+
+	if seekKey := c.String("seek-key"); seekKey != "" {
+		if req.SeekKey, err = wire.DecodeKey(seekKey, b64decode); err != nil {
+			return cli.Exit(fmt.Errorf("could not decode seek-key: %s", err), 1)
+		}
+	}
+
+	var stream pb.Trtl_CursorClient
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err != io.EOF {
+				return cli.Exit(err, 1)
+			}
+			break
+		}
+
+		fmt.Println(wire.EncodeKey(rep.Key, b64decode))
+	}
+	return nil
+}
+
+// status prints the status of the trtl service.
+func status(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *pb.ServerStatus
+	if rep, err = dbClient.Status(ctx, &pb.HealthCheck{}); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(rep)
+}
+
+//===========================================================================
+// Peers (Replica) Client Functions
+//===========================================================================
 
 // addPeers creates a Peer and calls the peers management service to add it.
 func addPeers(c *cli.Context) (err error) {
@@ -617,6 +760,10 @@ func listPeers(c *cli.Context) (err error) {
 	return nil
 }
 
+//===========================================================================
+// Anti-Entropy (Replica) Admin Functions
+//===========================================================================
+
 func gossip(c *cli.Context) (err error) {
 	return errors.New("honu replication required")
 }
@@ -668,6 +815,14 @@ func manageProfiles(c *cli.Context) (err error) {
 	// Handle install and then exit
 	if c.Bool("install") {
 		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle edit and then exit
+	if c.Bool("edit") {
+		if err = profiles.EditProfiles(); err != nil {
 			return cli.Exit(err, 1)
 		}
 		return nil
@@ -730,19 +885,26 @@ func loadProfile(c *cli.Context) (err error) {
 }
 
 // helper function to print JSON response and exit
-func printJSON(m proto.Message) error {
-	opts := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-	}
+func printJSON(m interface{}) (err error) {
+	var data []byte
 
-	data, err := opts.Marshal(m)
-	if err != nil {
-		return cli.Exit(err, 1)
+	switch msg := m.(type) {
+	case proto.Message:
+		opts := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		if data, err = opts.Marshal(msg); err != nil {
+			return cli.Exit(err, 1)
+		}
+	default:
+		if data, err = json.MarshalIndent(m, "", "  "); err != nil {
+			return cli.Exit(err, 1)
+		}
 	}
 
 	fmt.Println(string(data))

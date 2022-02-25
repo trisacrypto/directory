@@ -255,6 +255,11 @@ func main() {
 						Usage:   "the administrative token sent in the review request email",
 					},
 					&cli.BoolFlag{
+						Name:    "fetch-token",
+						Aliases: []string{"T"},
+						Usage:   "attempt to fetch the admin verification token before review",
+					},
+					&cli.BoolFlag{
 						Name:    "reject",
 						Aliases: []string{"R"},
 						Usage:   "reject the registration request",
@@ -413,6 +418,63 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:delete",
+				Usage:    "delete a VASP detail record by id",
+				Category: "admin",
+				Action:   adminDeleteVASP,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+				},
+			},
+			{
+				Name:     "admin:contact-replace",
+				Usage:    "replace a contact record by VASP id and contact kind",
+				Category: "admin",
+				Action:   adminReplaceContact,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "contact",
+						Aliases: []string{"c"},
+						Usage:   "the kind of contact to replace (administrative, legal, technical, billing)",
+					},
+					&cli.StringFlag{
+						Name:    "data",
+						Aliases: []string{"d"},
+						Usage:   "path to JSON data to PUT VASP contact",
+					},
+				},
+			},
+			{
+				Name:     "admin:contact-delete",
+				Usage:    "delete a contact record by VASP id and contact kind",
+				Category: "admin",
+				Action:   adminDeleteContact,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to retrieve",
+					},
+					&cli.StringFlag{
+						Name:    "contact",
+						Aliases: []string{"c"},
+						Usage:   "the kind of contact to delete (administrative, legal, technical, billing)",
+					},
+				},
+			},
+			{
 				Name:     "admin:notes",
 				Usage:    "list notes associated with a VASP",
 				Category: "admin",
@@ -529,9 +591,9 @@ func main() {
 			},
 			{
 				Name:      "profile",
-				Aliases:   []string{"config"},
+				Aliases:   []string{"config", "profiles"},
 				Usage:     "view and manage profiles to configure client with",
-				UsageText: "gds profile [name]\n   gds profile --activate [name]\n   gds profile --list\n   gds profile --path\n   gds profile --install",
+				UsageText: "gds profile [name]\n   gds profile --activate [name]\n   gds profile --list\n   gds profile --path\n   gds profile --install\n   gds profile --edit",
 				Action:    manageProfiles,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -548,6 +610,11 @@ func main() {
 						Name:    "install",
 						Aliases: []string{"i"},
 						Usage:   "install the default profiles and exit",
+					},
+					&cli.BoolFlag{
+						Name:    "edit",
+						Aliases: []string{"e"},
+						Usage:   "edit the profiles YAML using $EDITOR",
 					},
 					&cli.StringFlag{
 						Name:    "activate",
@@ -630,8 +697,8 @@ func review(c *cli.Context) (err error) {
 		RejectReason:           c.String("reason"),
 	}
 
-	if req.ID == "" || req.AdminVerificationToken == "" {
-		return cli.Exit("specify both id and token", 1)
+	if req.ID == "" {
+		return cli.Exit("must specify the id of the VASP", 1)
 	}
 
 	if !req.Accept && req.RejectReason == "" {
@@ -640,6 +707,19 @@ func review(c *cli.Context) (err error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	if c.Bool("fetch-token") {
+		rep, err := adminClient.ReviewToken(ctx, req.ID)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+		req.AdminVerificationToken = rep.AdminVerificationToken
+		fmt.Printf("admin verification token fetch: %q\n", rep.AdminVerificationToken)
+	}
+
+	if req.AdminVerificationToken == "" {
+		return cli.Exit("must specify fetch-token or the admin verification token", 1)
+	}
 
 	rep, err := adminClient.Review(ctx, req)
 	if err != nil {
@@ -980,6 +1060,79 @@ func adminUpdateVASP(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
+func adminDeleteVASP(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		cli.Exit("must specify VASP ID (--id)", 1)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.DeleteVASP(ctx, vaspID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminReplaceContact(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	req := &admin.ReplaceContactRequest{}
+	if path := c.String("data"); path != "" {
+		var data []byte
+		if data, err = ioutil.ReadFile(path); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = json.Unmarshal(data, req); err != nil {
+			return cli.Exit(fmt.Errorf("could not unmarshal ReplaceContactRequest: %s", err), 1)
+		}
+	} else {
+		return cli.Exit("specify path to JSON data with replace contact request", 1)
+	}
+
+	if vaspID := c.String("id"); vaspID != "" {
+		req.VASP = vaspID
+	}
+
+	if kind := c.String("contact"); kind != "" {
+		req.Kind = kind
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.ReplaceContact(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminDeleteContact(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		cli.Exit("must specify VASP ID (--id)", 1)
+	}
+
+	kind := c.String("contact")
+	if kind == "" {
+		cli.Exit("must specify contact kind (--contact)", 1)
+	}
+
+	var rep *admin.Reply
+	if rep, err = adminClient.DeleteContact(ctx, vaspID, kind); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
 func adminListNotes(c *cli.Context) (err error) {
 	ctx, cancel := profile.Context()
 	defer cancel()
@@ -1196,6 +1349,14 @@ func manageProfiles(c *cli.Context) (err error) {
 	// Handle install and then exit
 	if c.Bool("install") {
 		if err = profiles.Install(); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return nil
+	}
+
+	// Handle edit and then exit
+	if c.Bool("edit") {
+		if err = profiles.EditProfiles(); err != nil {
 			return cli.Exit(err, 1)
 		}
 		return nil

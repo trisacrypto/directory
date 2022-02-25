@@ -39,7 +39,7 @@ func TestModifyBaseURL(t *testing.T) {
 	require.Equal(t, "https://iot.sectigo.com/api/v1/certificates/find", ep.String())
 
 	// Create a mock Server
-	require.NoError(t, mock.Start())
+	require.NoError(t, mock.Start(""))
 	defer mock.Stop()
 
 	// Check that mock Server updated the sectigo URL

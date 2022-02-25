@@ -51,6 +51,12 @@ instance.interceptors.response.use(
         }
 
         if (error && error.response && error.response.status === 401) {
+            const configData = error.response.config && error.response.config.data ? JSON.parse(error.response.config.data)?.credential : ''
+
+            if (error.response.config.url === '/authenticate' && configData) {
+                return Promise.reject(error)
+            }
+
             if (!isRefreshing) {
                 isRefreshing = true
                 reauthenticate().then(response => {
@@ -73,29 +79,29 @@ instance.interceptors.response.use(
             })
         }
 
-        if (error && error.response && error.response.status === 404) {
-            // window.location.href = '/not-found';
-        } else {
-            switch (error.response.status) {
-                case 403:
-                    message = 'Session expired';
-                    sessionStorage.removeItem(AUTH_SESSION_KEY)
-                    setAuthorization(null)
-                    window.location.href = '/login'
-                    break;
-                case 404:
-                    message = 'Sorry! the data you are looking for could not be found';
-                    break;
-                case 500:
-                    message = 'Something went wrong';
-                    break;
-                default: {
-                    message =
-                        error.response && error.response.data ? error.response.data['message'] : error.message || error;
-                }
+        switch (error.response.status) {
+            case 403:
+                message = 'Session expired';
+                sessionStorage.removeItem(AUTH_SESSION_KEY)
+                setAuthorization(null)
+                window.location.href = '/login'
+                break;
+            case 404:
+                message = error || 'Sorry! the data you are looking for could not be found';
+                break;
+            case 400:
+                message = error
+                break;
+            case 500:
+                message = error ?? 'Something went wrong';
+                break;
+            default: {
+                message =
+                    error.response && error.response.data ? error.response.data['message'] : error.message || error;
             }
-            return Promise.reject(message);
         }
+        return Promise.reject(message);
+        // }
     }
 );
 
@@ -185,8 +191,8 @@ class APICore {
         return instance.put(url, data, config);
     };
 
-    patch = (url, data) => {
-        return instance.patch(url, data)
+    patch = (url, data, config) => {
+        return instance.patch(url, data, config)
     }
 
     /**

@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
@@ -24,6 +25,7 @@ import (
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
@@ -174,9 +176,17 @@ func (s *Admin) setupRoutes() (err error) {
 		{
 			vasps.GET("", s.ListVASPs)
 			vasps.GET("/:vaspID", s.RetrieveVASP)
-			vasps.PATCH("/:vaspID", s.UpdateVASP)
+			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
+			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
+			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
+
+			contacts := vasps.Group("/:vaspID/contacts")
+			{
+				contacts.PUT("/:kind", csrf, s.ReplaceContact)
+				contacts.DELETE("/:kind", csrf, s.DeleteContact)
+			}
 
 			notes := vasps.Group("/:vaspID/notes")
 			{
@@ -434,8 +444,9 @@ func (s *Admin) Summary(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -443,17 +454,14 @@ func (s *Admin) Summary(c *gin.Context) {
 		out.VASPsCount++
 
 		// Count contacts
-		contacts := []*pb.Contact{
-			vasp.Contacts.Administrative, vasp.Contacts.Legal,
-			vasp.Contacts.Technical, vasp.Contacts.Billing,
-		}
-
-		for _, contact := range contacts {
-			if contact != nil && contact.Email != "" {
-				out.ContactsCount++
-				if _, verified, _ := models.GetContactVerification(contact); verified {
-					out.VerifiedContacts++
-				}
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		for iter.Next() {
+			out.ContactsCount++
+			contact, kind := iter.Value()
+			if verified, err := models.ContactIsVerified(contact); err != nil {
+				log.Warn().Str("contact", kind).Err(err).Msg("could not retrieve verification status")
+			} else if verified {
+				out.VerifiedContacts++
 			}
 		}
 
@@ -478,8 +486,9 @@ func (s *Admin) Summary(c *gin.Context) {
 	for iter2.Next() {
 		// Fetch CertificateRequest from the database
 		var certreq *models.CertificateRequest
-		if certreq = iter2.CertReq(); certreq == nil {
-			// CertificateRequest could not be parsed; error logged in CertReq() method continue iteration
+		var err error
+		if certreq, err = iter2.CertReq(); err != nil {
+			log.Error().Err(err).Msg("could not parse CertificateRequest from database")
 			continue
 		}
 
@@ -518,8 +527,9 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -533,7 +543,11 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 				if _, ok := out.Names[name]; !ok {
 					out.Names[name] = vasp.Id
 				} else {
-					log.Warn().Str("name", name).Msg("duplicate name detected")
+					// Since this is not a unique index and multiple certs have been
+					// issued to organizations in the past, we will encounter name
+					// collisions here. We want this to be at debug level instead of at
+					// warning level to avoid alert spam.
+					log.Debug().Str("name", name).Msg("duplicate name detected")
 				}
 			}
 		}
@@ -647,8 +661,9 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
-		if vasp = iter.VASP(); vasp == nil {
-			// VASP could not be parsed; error logged in VASP() method continue iteration
+		var err error
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -752,8 +767,9 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			// In the page range so add to the list reply
 			// Fetch VASP from the database
 			var vasp *pb.VASP
-			if vasp = iter.VASP(); vasp == nil {
-				// VASP could not be parsed; error logged in VASP() method continue iteration
+			var err error
+			if vasp, err = iter.VASP(); err != nil {
+				log.Error().Err(err).Msg("could not parse VASP from database")
 				out.Count--
 				continue
 			}
@@ -784,7 +800,12 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			snippet.VerifiedContacts = models.ContactVerifications(vasp)
+			var errs *multierror.Error
+			if snippet.VerifiedContacts, errs = models.ContactVerifications(vasp); errs != nil {
+				for _, err := range errs.Errors {
+					log.Error().Err(err).Msg("could not get contact verifications")
+				}
+			}
 
 			// Append to list in reply
 			out.VASPs = append(out.VASPs, snippet)
@@ -835,8 +856,8 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
-		VerifiedContacts: models.VerifiedContacts(vasp),
 		Traveler:         models.IsTraveler(vasp),
+		VerifiedContacts: models.VerifiedContacts(vasp),
 	}
 
 	// Attempt to determine the VASP name from IVMS 101 data.
@@ -868,17 +889,10 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	if vasp.Contacts.Administrative != nil {
-		vasp.Contacts.Administrative.Extra = nil
-	}
-	if vasp.Contacts.Legal != nil {
-		vasp.Contacts.Legal.Extra = nil
-	}
-	if vasp.Contacts.Technical != nil {
-		vasp.Contacts.Technical.Extra = nil
-	}
-	if vasp.Contacts.Billing != nil {
-		vasp.Contacts.Billing.Extra = nil
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		contact.Extra = nil
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
@@ -983,8 +997,6 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		nChanges++
 	}
 
-	// TODO: update VASP contact information
-
 	// Update common name and trisa endpoint - this will also update any certificate requests.
 	// NOTE: if updated is true and any failure occurs after this point, the certificate requests
 	// will be in an inconsistent state. Transactions would be very nice here, but instead this
@@ -1013,17 +1025,9 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
 	// ensure that certificate requests are not saved when the VASP record is not valid.
 	if err = vasp.Validate(true); err != nil {
-		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
-		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
-			log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
-			return
-		}
-
-		// If certificate requests were updated in updateVASPEndpoint it is possible that
-		// this warning indicates an inconsistent state has occurred, but this is unlikely
-		// so we're keeping the log level at warning state.
-		log.Warn().Err(err).Msg("ignoring validation error")
+		log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
 	}
 
 	// Add a record to the audit log
@@ -1223,6 +1227,225 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	// modifications to its certificate requests. If the VASP is not saved after this
 	// method, it could lead to an inconsistency that needs to be repaired manually.
 	return true, http.StatusOK, nil
+}
+
+// DeleteVASP removes a VASP and its associated certificate requests if and only if the
+// VASP verification status is in PENDING_REVIEW or earlier or ERRORED.
+func (s *Admin) DeleteVASP(c *gin.Context) {
+	var (
+		vaspID     string
+		vasp       *pb.VASP
+		certReqIDs []string
+		err        error
+	)
+
+	vaspID = c.Param("vaspID")
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Only allow deletions if the VASP has not been reviewed yet
+	if vasp.VerificationStatus > pb.VerificationState_PENDING_REVIEW && vasp.VerificationStatus < pb.VerificationState_ERRORED {
+		log.Warn().Str("status", vasp.VerificationStatus.String()).Msg("VASP is in invalid state for deletion")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("cannot delete VASP in its current state"))
+		return
+	}
+
+	// Retrieve the associated certificate requests
+	if certReqIDs, err = models.GetCertReqIDs(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve certificate request IDs for VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate requests for VASP"))
+		return
+	}
+
+	// Delete the certificate requests
+	for _, id := range certReqIDs {
+		if err = s.db.DeleteCertReq(id); err != nil {
+			log.Warn().Err(err).Str("certreq_id", id).Msg("could not delete certificate request")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete associated certificate request"))
+			return
+		}
+	}
+
+	// Delete the VASP object to finalize the VASP deletion
+	if err = s.db.DeleteVASP(vaspID); err != nil {
+		log.Error().Err(err).Msg("could not delete VASP from database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// ReplaceContact completely replaces a contact on a VASP with a new contact.
+func (s *Admin) ReplaceContact(c *gin.Context) {
+	var (
+		in           *admin.ReplaceContactRequest
+		contact      *pb.Contact
+		vasp         *pb.VASP
+		emailUpdated bool
+		err          error
+	)
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+	kind := c.Param("kind")
+
+	// Parse incoming JSON data from the client request
+	in = new(admin.ReplaceContactRequest)
+	if err = c.ShouldBind(&in); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	// Sanity check: validate VASP ID
+	if in.VASP != "" && in.VASP != vaspID {
+		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not mactch the URL endpoint"))
+		return
+	}
+
+	// Sanity check: validate contact kind
+	if in.Kind != "" && in.Kind != kind {
+		log.Warn().Str("kind", in.Kind).Str("kind", kind).Msg("mismatched contact kind and URL")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the contact kind does not match the URL endpoint"))
+		return
+	}
+
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// Contact data must be provided
+	if len(in.Contact) == 0 {
+		log.Warn().Msg("missing contact data on ReplaceContact request")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("contact data is required for ReplaceContact request"))
+		return
+	}
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Remarshal the JSON contact data
+	update := &pb.Contact{}
+	if err = wire.Unwire(in.Contact, update); err != nil {
+		log.Warn().Err(err).Msg("could not unmarshal contact data")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
+		return
+	}
+
+	if contact = models.ContactFromType(vasp.Contacts, kind); contact == nil {
+		// If the contact doesn't exist then create it
+		if err = models.AddContact(vasp, kind, update); err != nil {
+			log.Warn().Err(err).Msg("could not add contact to VASP")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+			return
+		}
+		contact = update
+		emailUpdated = true
+	} else {
+		// Otherwise replace the existing contact info
+		contact.Name = update.Name
+		contact.Phone = update.Phone
+		contact.Person = update.Person
+		if contact.Email != update.Email {
+			contact.Email = update.Email
+			emailUpdated = true
+		}
+	}
+
+	// New VASP record must be valid
+	if err = vasp.Validate(true); err != nil {
+		log.Warn().Err(err).Msg("invalid VASP record after update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
+	}
+
+	if emailUpdated {
+		// The email address changed, so the contact needs to be verified
+		if err = models.SetContactVerification(contact, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
+			log.Warn().Err(err).Msg("could not set contact verification")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update verification status for the indicated contact"))
+			return
+		}
+
+		// Send the verification email
+		if err = s.svc.email.SendVerifyContact(vasp, contact); err != nil {
+			log.Warn().Err(err).Msg("could not send verification email")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
+			return
+		}
+	}
+
+	// Commit the contact changes to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP in database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// DeleteContact deletes a contact on a VASP.
+func (s *Admin) DeleteContact(c *gin.Context) {
+	var (
+		vasp *pb.VASP
+		err  error
+	)
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+	kind := c.Param("kind")
+
+	// Retrieve the VASP from the database
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Kind must be one of the accepted values
+	if !models.ContactKindIsValid(kind) {
+		log.Warn().Str("kind", kind).Msg("invalid contact kind")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// Delete the contact from the VASP
+	if err = models.DeleteContact(vasp, kind); err != nil {
+		log.Warn().Err(err).Msg("could not delete contact from VASP")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+		return
+	}
+
+	// New VASP record must be valid
+	if err = vasp.Validate(true); err != nil {
+		log.Warn().Err(err).Msg("invalid VASP record after update")
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
+		return
+	}
+
+	// Commit the contact changes to the database
+	if err = s.db.UpdateVASP(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP in database")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
+		return
+	}
+
+	c.JSON(http.StatusOK, admin.Reply{Success: true})
 }
 
 // CreateReviewNote creates a new review note given the vaspID param and a CreateReviewNoteRequest.
@@ -1481,6 +1704,52 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 	c.JSON(http.StatusOK, &admin.Reply{Success: true})
 }
 
+// ReviewToken returns the admin verification token of the VASP if the VASP is in a
+// state that it can be reviewed in, e.g. PENDING_REVIEW, otherwise a 404 is returned.
+func (s *Admin) ReviewToken(c *gin.Context) {
+	var (
+		err    error
+		out    *admin.ReviewTokenReply
+		vasp   *pb.VASP
+		vaspID string
+	)
+
+	// Get vaspID from the URL
+	vaspID = c.Param("vaspID")
+
+	// Lookup the VASP record associated with the request
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Check if the VASP is in a state where it can be reviewed
+	if vasp.VerificationStatus != pb.VerificationState_PENDING_REVIEW {
+		log.Debug().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("could not retrieve admin verification token in current state")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("admin verification token not available if VASP is not pending review"))
+		return
+	}
+
+	// Construct the reply
+	out = &admin.ReviewTokenReply{}
+	if out.AdminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
+		log.Error().Err(err).Str("id", vaspID).Msg("could not retrieve admin verification token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin verification token"))
+		return
+	}
+
+	// Check that an admin verification token will be returned
+	if out.AdminVerificationToken == "" {
+		log.Error().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("admin verification token not available to review VASP")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve admin verification token"))
+		return
+	}
+
+	// Return the request with the admin verification token
+	c.JSON(http.StatusOK, out)
+}
+
 // Review a registration request and either accept or reject it. On accept, the
 // certificate request that was created on verify is used to send a Sectigo request and
 // the certificate manager process watches it until the certificate has been issued. On
@@ -1535,8 +1804,8 @@ func (s *Admin) Review(c *gin.Context) {
 	// Check that the administration verification token is correct
 	var adminVerificationToken string
 	if adminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
-		log.Error().Err(err).Msg("could not retrieve admin token from extra data field on VASP")
-		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin token from data"))
+		log.Error().Err(err).Str("id", vaspID).Msg("could not retrieve admin verification token")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve admin verification token"))
 		return
 	}
 	if in.AdminVerificationToken != adminVerificationToken {

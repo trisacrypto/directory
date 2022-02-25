@@ -272,10 +272,17 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 
 		if removeExtra {
 			a.Extra, b.Extra = nil, nil
-			a.Contacts.Administrative.Extra, b.Contacts.Administrative.Extra = nil, nil
-			a.Contacts.Technical.Extra, b.Contacts.Technical.Extra = nil, nil
-			a.Contacts.Legal.Extra, b.Contacts.Legal.Extra = nil, nil
-			a.Contacts.Billing.Extra, b.Contacts.Billing.Extra = nil, nil
+			iter := models.NewContactIterator(a.Contacts, false, false)
+			for iter.Next() {
+				contact, _ := iter.Value()
+				contact.Extra = nil
+			}
+
+			iter = models.NewContactIterator(b.Contacts, false, false)
+			for iter.Next() {
+				contact, _ := iter.Value()
+				contact.Extra = nil
+			}
 		}
 
 		require.True(proto.Equal(a, b), "vasps are not the same")
@@ -585,6 +592,21 @@ func (s *gdsTestSuite) generateDB() {
 		require.NoError(utils.WriteGzip(path, fixturePath))
 		log.Info().Str("db", fixturePath).Msg("successfully regenerated test database")
 	}
+}
+
+// SetVerificationStatus sets the verification status of a VASP fixture on the
+// database. This is useful for testing VerificationState checks without having to use
+// multiple fixtures.
+func (s *gdsTestSuite) SetVerificationStatus(id string, status pb.VerificationState) {
+	require := s.Require()
+
+	// Retrieve the VASP from the database
+	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	require.NoError(err, "VASP not found in database")
+
+	// Set the verification status and write back to the database
+	vasp.VerificationStatus = status
+	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
 }
 
 func pathExists(path string) bool {

@@ -2,8 +2,11 @@ package gds_test
 
 import (
 	"context"
+	"errors"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -44,17 +47,29 @@ func (s *gdsTestSuite) TestRegister() {
 
 	// Emails need to be filled in for a valid VASP registration. Need to make copies
 	// of the contacts here to avoid modifying the fixtures for other tests.
+	var admin, billing, legal, technical pb.Contact
 	contacts := *refVASP.Contacts
-	admin := *refVASP.Contacts.Administrative
+	if refVASP.Contacts.Administrative != nil {
+		admin = *refVASP.Contacts.Administrative
+	}
 	contacts.Administrative = &admin
 	contacts.Administrative.Email = "admin@example.com"
-	billing := *refVASP.Contacts.Billing
+
+	if refVASP.Contacts.Billing != nil {
+		billing = *refVASP.Contacts.Billing
+	}
 	contacts.Billing = &billing
 	contacts.Billing.Email = "billing@example.com"
-	legal := *refVASP.Contacts.Legal
+
+	if refVASP.Contacts.Legal != nil {
+		legal = *refVASP.Contacts.Legal
+	}
 	contacts.Legal = &legal
 	contacts.Legal.Email = "legal@example.com"
-	technical := *refVASP.Contacts.Technical
+
+	if refVASP.Contacts.Technical != nil {
+		technical = *refVASP.Contacts.Technical
+	}
 	contacts.Technical = &technical
 	contacts.Technical.Email = "technical@example.com"
 
@@ -581,4 +596,38 @@ func (s *gdsTestSuite) TestStatusMaintenance() {
 	notAfter, err := time.Parse(time.RFC3339, status.NotAfter)
 	require.NoError(err)
 	require.True(notAfter.Sub(expectedNotAfter) < time.Minute)
+}
+
+// Test Common Name Validation
+func TestValidateCommonName(t *testing.T) {
+	var (
+		noMatch     = errors.New("common name does not match domain name regular expression")
+		empty       = errors.New("common name should not be empty")
+		noWildcards = errors.New("wildcards are not allowed in TRISA common names")
+	)
+
+	testCases := []struct {
+		input    string
+		expected error
+	}{
+		{"trisa.example.com", nil},
+		{"subdomain.trisa-testnet.example.com", nil},
+		{"example.com", nil},
+		{"localhost", nil},
+		{"", empty},
+		{"*.example.com", noWildcards},
+		{"-foo.example.com", noMatch},
+		{"https://trisa.example.com", noMatch},
+		{"trisa.example.com:443", noMatch},
+		{"  trisa.example.com   ", noMatch},
+	}
+
+	for _, tc := range testCases {
+		if tc.expected == nil {
+			require.NoError(t, gds.ValidateCommonName(tc.input), "could not validate %q", tc.input)
+		} else {
+			err := gds.ValidateCommonName(tc.input)
+			require.EqualError(t, err, tc.expected.Error(), "%q was not invalid", tc.input)
+		}
+	}
 }

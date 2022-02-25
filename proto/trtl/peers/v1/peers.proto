@@ -47,4 +47,5 @@ message PeersList {
 message PeersStatus {
     int64 network_size = 1;          // The total number of peers known to the replica (including itself)
     map<string, int64> regions = 2;  // The number of peers known to the replica per known region
+    string last_synchronization = 3; // The timestamp of the last synchronization that exchanged data
 }

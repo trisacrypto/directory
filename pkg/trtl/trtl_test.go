@@ -370,7 +370,7 @@ func (s *trtlTestSuite) TestIter() {
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
-	_, err := client.Iter(ctx, &pb.IterRequest{Namespace: "index"})
+	_, err := client.Iter(ctx, &pb.IterRequest{Namespace: "sequence"})
 	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")
 
 	// Test Invalid Options
@@ -515,6 +515,18 @@ func (s *trtlTestSuite) TestIter() {
 
 	require.Equal(2, pages, "number of people pages changed, have fixtures been modified?")
 	require.Equal(10, people, "number of people has changed, have fixtures been modified?")
+
+	// Test that a deleted object gets ignored by Iter
+	req := &pb.DeleteRequest{
+		Namespace: "people",
+		Key:       []byte(dbFixtures["alice"].Key),
+	}
+	_, err = client.Delete(ctx, req)
+	require.NoError(err, "could not delete object")
+
+	rep, err = client.Iter(ctx, &pb.IterRequest{Namespace: "people"})
+	require.NoError(err, "error iterating over people namespace")
+	require.Len(rep.Values, 9, "incorrect number of people returned")
 }
 
 func (s *trtlTestSuite) TestCursor() {
@@ -527,7 +539,7 @@ func (s *trtlTestSuite) TestCursor() {
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
-	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "index"})
+	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "sequence"})
 	require.NoError(err, "could not create cursor stream")
 	_, err = stream.Recv()
 	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")
@@ -650,4 +662,21 @@ func (s *trtlTestSuite) TestCursor() {
 		i++
 	}
 	require.Equal(2, i, "expected 3 results returned after seek, have fixtures changed?")
+}
+
+func (s *trtlTestSuite) TestStatus() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
+
+	// Test sending a Status request
+	rep, err := client.Status(ctx, &pb.HealthCheck{})
+	require.NoError(err)
+	require.Equal("ok", rep.Status)
+	require.NotEmpty(rep.Version)
+	require.NotEmpty(rep.Uptime)
 }

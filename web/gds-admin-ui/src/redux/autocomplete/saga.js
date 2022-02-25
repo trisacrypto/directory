@@ -1,6 +1,7 @@
-const { call, put, takeEvery } = require("redux-saga/effects")
-const { default: getAllAutocomplete } = require("services/autocomplete")
-const { fetchAutocompleteApiResponseSuccess, FetchAutocompleteActionTypes, fetchAutocompleteApiResponseError } = require(".")
+import { call, put, takeEvery } from "redux-saga/effects"
+import getAllAutocomplete from "services/autocomplete"
+import { fetchAutocompleteApiResponseError, fetchAutocompleteApiResponseSuccess } from "."
+import { FetchAutocompleteActionTypes } from "./constants"
 
 function* fetchAutocompletes() {
     try {

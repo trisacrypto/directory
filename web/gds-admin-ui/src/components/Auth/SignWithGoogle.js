@@ -1,6 +1,5 @@
-
-
 import React from 'react'
+import PropTypes from 'prop-types'
 
 function SignWithGoogle({ loginResponse, text, clientId }) {
 
@@ -24,6 +23,12 @@ function SignWithGoogle({ loginResponse, text, clientId }) {
             </div>
         </div>
     )
+}
+
+SignWithGoogle.propTypes = {
+    text: PropTypes.oneOf(['signin_with', 'signup_with', 'continue_with']),
+    clientId: PropTypes.string.isRequired,
+    loginResponse: PropTypes.func.isRequired
 }
 
 export default SignWithGoogle

@@ -64,8 +64,9 @@ func (s *gdsTestSuite) TestBackupManager() {
 		s.svc.BackupManager(stop)
 	}()
 
-	// Wait for at least one backup interval to elapse
-	time.Sleep(s.svc.GetConf().Backup.Interval * 1)
+	// Wait for the backup manager to run through its loop. The shutdown check is at
+	// the beginning so there is a timing window here.
+	time.Sleep(s.svc.GetConf().Backup.Interval * 3)
 
 	// Make sure that the backup manager is stopped before we proceed
 	stop <- true
