@@ -1,4 +1,4 @@
- import React from "react";
+import React from "react";
 import { Flex, Text, Link, useColorModeValue } from "@chakra-ui/react";
 import { colors } from '../../utils/theme';
 const Footer = (): React.ReactElement => {
