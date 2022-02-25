@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ChakraProvider } from '@chakra-ui/react'
-import store from './application/store/index'
+import store from './application/store'
 import { Provider } from "react-redux";
 import customTheme from "./utils/theme";
 
