@@ -1,10 +1,10 @@
  import React from "react";
-import { Flex, Text, Link } from "@chakra-ui/react";
+import { Flex, Text, Link, useColorModeValue } from "@chakra-ui/react";
 import { colors } from '../../utils/theme';
 const Footer = (): React.ReactElement => {
   return (
     <Flex
-      bg={colors.system.gray}
+      bg={useColorModeValue(colors.system.gray, 'transparent')}
       color="white"
       width="100%"
       justifyContent="center"
