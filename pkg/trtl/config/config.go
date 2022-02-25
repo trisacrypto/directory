@@ -17,17 +17,18 @@ import (
 // Note: because we need to validate the configuration, `config.New()`
 // must be called to ensure that the `processed` is correctly set
 type Config struct {
-	Maintenance    bool                `split_words:"true" default:"false"`
-	BindAddr       string              `split_words:"true" default:":4436"`
-	MetricsAddr    string              `split_words:"true" default:":7777"`
-	MetricsEnabled bool                `split_words:"true" default:"true"`
-	LogLevel       logger.LevelDecoder `split_words:"true" default:"info"`
-	ConsoleLog     bool                `split_words:"true" default:"false"`
-	Database       DatabaseConfig
-	Replica        ReplicaConfig
-	MTLS           MTLSConfig
-	Backup         BackupConfig
-	processed      bool
+	Maintenance     bool                  `split_words:"true" default:"false"`
+	BindAddr        string                `split_words:"true" default:":4436"`
+	MetricsAddr     string                `split_words:"true" default:":7777"`
+	MetricsEnabled  bool                  `split_words:"true" default:"true"`
+	LogLevel        logger.LevelDecoder   `split_words:"true" default:"info"`
+	ConsoleLog      bool                  `split_words:"true" default:"false"`
+	Database        DatabaseConfig        `split_words:"true"`
+	Replica         ReplicaConfig         `split_words:"true"`
+	ReplicaStrategy ReplicaStrategyConfig `split_words:"true"`
+	MTLS            MTLSConfig            `split_words:"true"`
+	Backup          BackupConfig          `split_words:"true"`
+	processed       bool
 }
 
 type DatabaseConfig struct {
@@ -36,12 +37,19 @@ type DatabaseConfig struct {
 }
 
 type ReplicaConfig struct {
-	Enabled        bool          `split_words:"true" default:"true"`
-	PID            uint64        `split_words:"true" required:"false"`
-	Region         string        `split_words:"true" required:"false"`
-	Name           string        `split_words:"true" required:"false"`
-	GossipInterval time.Duration `split_words:"true" default:"1m"`
-	GossipSigma    time.Duration `split_words:"true" default:"5s"`
+	Enabled        bool          `split_words:"true" default:"true" json:"enabled"`
+	PID            uint64        `split_words:"true" required:"false" json:"pid"`
+	Region         string        `split_words:"true" required:"false" json:"region"`
+	Name           string        `split_words:"true" required:"false" json:"name"`
+	GossipInterval time.Duration `split_words:"true" default:"1m" json:"gossip_interval"`
+	GossipSigma    time.Duration `split_words:"true" default:"5s" json:"gossip_sigma"`
+}
+
+type ReplicaStrategyConfig struct {
+	HostnamePID bool   `split_words:"true" default:"false"` // Set to true to use HostnamePID
+	Hostname    string `envconfig:"TRTL_REPLICA_HOSTNAME"`  // configure the hostname from the environment
+	FilePID     string `split_words:"true"`                 // Set to the PID filename path to use FilePID
+	JSONConfig  string `split_words:"true"`                 // Set to the config map path to use JSONConfig
 }
 
 type MTLSConfig struct {
@@ -65,6 +73,11 @@ type BackupConfig struct {
 func New() (_ Config, err error) {
 	var conf Config
 	if err = envconfig.Process("trtl", &conf); err != nil {
+		return Config{}, err
+	}
+
+	// Process replica strategies before configuration validation
+	if conf.Replica, err = conf.Replica.Configure(conf.ReplicaStrategy.Strategies()...); err != nil {
 		return Config{}, err
 	}
 
@@ -129,6 +142,24 @@ func (c *ReplicaConfig) Validate() error {
 		}
 	}
 	return nil
+}
+
+// Strategies extracts the replica configuration strategies from the configuration
+func (c *ReplicaStrategyConfig) Strategies() (strategies []ReplicaStrategy) {
+	strategies = make([]ReplicaStrategy, 0)
+	if c.HostnamePID {
+		strategies = append(strategies, HostnamePID(c.Hostname))
+	}
+
+	if c.FilePID != "" {
+		strategies = append(strategies, FilePID(c.FilePID))
+	}
+
+	if c.JSONConfig != "" {
+		strategies = append(strategies, JSONConfig(c.JSONConfig))
+	}
+
+	return strategies
 }
 
 func (c *MTLSConfig) Validate() error {

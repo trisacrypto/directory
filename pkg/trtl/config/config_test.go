@@ -13,6 +13,8 @@ import (
 var testEnv = map[string]string{
 	"TRTL_MAINTENANCE":              "true",
 	"TRTL_BIND_ADDR":                ":445",
+	"TRTL_METRICS_ADDR":             ":9090",
+	"TRTL_METRICS_ENABLED":          "true",
 	"TRTL_LOG_LEVEL":                "debug",
 	"TRTL_CONSOLE_LOG":              "true",
 	"TRTL_DATABASE_URL":             "leveldb:///fixtures/db",
@@ -23,10 +25,20 @@ var testEnv = map[string]string{
 	"TRTL_REPLICA_REGION":           "us-east-1c",
 	"TRTL_REPLICA_GOSSIP_INTERVAL":  "30m",
 	"TRTL_REPLICA_GOSSIP_SIGMA":     "3m",
-	"TRTL_METRICS_ADDR":             ":7777",
-	"TRTL_METRICS_ENABLED":          "true",
+	"TRTL_INSECURE":                 "true",
 	"TRTL_MTLS_CHAIN_PATH":          "fixtures/certs/chain.pem",
 	"TRTL_MTLS_CERT_PATH":           "fixtures/certs/cert.pem",
+	"TRTL_BACKUP_ENABLED":           "true",
+	"TRTL_BACKUP_INTERVAL":          "1h",
+	"TRTL_BACKUP_STORAGE":           "fixtures/backups",
+	"TRTL_BACKUP_KEEP":              "7",
+}
+
+var strategyEnv = map[string]string{
+	"TRTL_REPLICA_STRATEGY_HOSTNAME_PID": "true",
+	"TRTL_REPLICA_HOSTNAME":              "pizza-36",
+	"TRTL_REPLICA_STRATEGY_FILE_PID":     "",
+	"TRTL_REPLICA_STRATEGY_JSON_CONFIG":  "testdata/replicas.json",
 }
 
 func TestConfig(t *testing.T) {
@@ -50,6 +62,8 @@ func TestConfig(t *testing.T) {
 	// Test configuration set from the environment
 	require.True(t, conf.Maintenance)
 	require.Equal(t, testEnv["TRTL_BIND_ADDR"], conf.BindAddr)
+	require.Equal(t, testEnv["TRTL_METRICS_ADDR"], conf.MetricsAddr)
+	require.True(t, conf.MetricsEnabled)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.True(t, conf.ConsoleLog)
 	require.Equal(t, testEnv["TRTL_DATABASE_URL"], conf.Database.URL)
@@ -60,8 +74,13 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["TRTL_REPLICA_REGION"], conf.Replica.Region)
 	require.Equal(t, 30*time.Minute, conf.Replica.GossipInterval)
 	require.Equal(t, 3*time.Minute, conf.Replica.GossipSigma)
-	require.Equal(t, testEnv["TRTL_METRICS_ADDR"], conf.MetricsAddr)
-	require.True(t, conf.MetricsEnabled)
+	require.True(t, conf.MTLS.Insecure)
+	require.Equal(t, testEnv["TRTL_MTLS_CHAIN_PATH"], conf.MTLS.ChainPath)
+	require.Equal(t, testEnv["TRTL_MTLS_CERT_PATH"], conf.MTLS.CertPath)
+	require.True(t, conf.Backup.Enabled)
+	require.Equal(t, 1*time.Hour, conf.Backup.Interval)
+	require.Equal(t, testEnv["TRTL_BACKUP_STORAGE"], conf.Backup.Storage)
+	require.Equal(t, 7, conf.Backup.Keep)
 }
 
 func TestRequiredConfig(t *testing.T) {
@@ -165,6 +184,38 @@ func TestValidateMTLSConfig(t *testing.T) {
 		CertPath:  "/path/to/cert",
 	}
 	require.NoError(t, conf.Validate())
+}
+
+func TestKubernetesStatefulSetStrategy(t *testing.T) {
+	// Set required environment variables and cleanup after
+	prevEnv := curEnv()
+	t.Cleanup(func() {
+		for key, val := range prevEnv {
+			if val != "" {
+				os.Setenv(key, val)
+			} else {
+				os.Unsetenv(key)
+			}
+		}
+	})
+	setEnv()
+
+	// Set the replica strategy environment variables
+	for key, val := range strategyEnv {
+		os.Setenv(key, val)
+	}
+
+	// Load configuration from the environment
+	conf, err := config.New()
+	require.NoError(t, err)
+
+	// Check that the configuration was loaded from the strategy
+	require.True(t, conf.Replica.Enabled)
+	require.Equal(t, uint64(44), conf.Replica.PID)
+	require.Equal(t, "brooklyn", conf.Replica.Region)
+	require.Equal(t, "donatello", conf.Replica.Name)
+	require.Equal(t, 21*time.Minute, conf.Replica.GossipInterval)
+	require.Equal(t, 1500*time.Millisecond, conf.Replica.GossipSigma)
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
