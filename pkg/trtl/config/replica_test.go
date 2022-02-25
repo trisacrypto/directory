@@ -20,7 +20,7 @@ func TestReplicaConfigureNoModification(t *testing.T) {
 		Enabled:        true,
 		PID:            53,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -33,7 +33,7 @@ func TestReplicaConfigureNoModification(t *testing.T) {
 	require.True(t, conf.Enabled)
 	require.Equal(t, uint64(53), conf.PID)
 	require.Equal(t, "ibelin", conf.Region)
-	require.Equal(t, "balin", conf.Name)
+	require.Equal(t, "balian", conf.Name)
 	require.Equal(t, 10*time.Minute, conf.GossipInterval)
 	require.Equal(t, 1500*time.Second, conf.GossipSigma)
 }
@@ -47,7 +47,7 @@ func TestReplicaConfigurationErrors(t *testing.T) {
 		Enabled:        true,
 		PID:            53,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -64,7 +64,7 @@ func TestReplicaConfigurationErrors(t *testing.T) {
 	require.True(t, other.Enabled)
 	require.Equal(t, uint64(53), other.PID)
 	require.Equal(t, "ibelin", other.Region)
-	require.Equal(t, "balin", other.Name)
+	require.Equal(t, "balian", other.Name)
 	require.Equal(t, 10*time.Minute, other.GossipInterval)
 	require.Equal(t, 1500*time.Second, other.GossipSigma)
 
@@ -82,7 +82,7 @@ func TestMultiErrorStrategy(t *testing.T) {
 		Enabled:        true,
 		PID:            53,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -117,7 +117,7 @@ func TestHostnamePID(t *testing.T) {
 		Enabled:        true,
 		PID:            40,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -139,7 +139,7 @@ func TestFilePID(t *testing.T) {
 		Enabled:        true,
 		PID:            40,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -147,7 +147,7 @@ func TestFilePID(t *testing.T) {
 	other, err := conf.Configure(config.FilePID("testdata/test.pid"))
 	require.NoError(t, err, "could not read pid file")
 	require.Equal(t, uint64(158), other.PID)
-	require.Equal(t, "balin-158", other.Name)
+	require.Equal(t, "balian-158", other.Name)
 
 	_, err = conf.Configure(config.FilePID("testdata/bad.pid"))
 	require.Error(t, err, "bad pid did not error")
@@ -158,7 +158,7 @@ func TestJSONConfig(t *testing.T) {
 		Enabled:        true,
 		PID:            48,
 		Region:         "ibelin",
-		Name:           "balin",
+		Name:           "balian",
 		GossipInterval: 10 * time.Minute,
 		GossipSigma:    1500 * time.Second,
 	}
@@ -166,12 +166,12 @@ func TestJSONConfig(t *testing.T) {
 	// Ensure JSON config does not work if an error happens ahead of it
 	other, err := conf.Configure(makeErroringStrategy(), config.JSONConfig("testdata/replicas.json"))
 	require.Error(t, err)
-	require.Equal(t, "balin", other.Name)
+	require.Equal(t, "balian", other.Name)
 
 	// Ensure JSON config skips without error if the file doesn't exist
 	other, err = conf.Configure(config.JSONConfig("testdata/missing.json"))
 	require.NoError(t, err, "error occurred instead of skipping")
-	require.Equal(t, "balin", other.Name)
+	require.Equal(t, "balian", other.Name)
 
 	// Ensure JSON config processes real data and processing doesn't continue
 	other, err = conf.Configure(config.JSONConfig("testdata/replicas.json"), makeRandomTestStrategy())
