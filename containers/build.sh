@@ -84,6 +84,7 @@ fi
 # Build the primary backend images
 docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile $REPO
 docker build -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile $REPO
+docker build -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
 docker build -t trisa/grpc-proxy:$TAG -f $DIR/grpc-proxy/Dockerfile $REPO
 
 # Build the UI images for trisatest.net and vaspdirectory.net
@@ -119,6 +120,7 @@ docker build \
 # Retag the images to push to gcr.io
 docker tag trisa/gds:$TAG gcr.io/trisa-gds/gds:$TAG
 docker tag trisa/trtl:$TAG gcr.io/trisa-gds/trtl:$TAG
+docker tag trisa/trtl-init:$TAG gcr.io/trisa-gds/trtl-init:$TAG
 docker tag trisa/grpc-proxy:$TAG gcr.io/trisa-gds/grpc-proxy:$TAG
 docker tag trisa/gds-ui:$TAG gcr.io/trisa-gds/gds-ui:$TAG
 docker tag trisa/gds-testnet-ui:$TAG gcr.io/trisa-gds/gds-testnet-ui:$TAG
@@ -128,6 +130,7 @@ docker tag trisa/gds-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-testnet-admin-ui
 # Push to DockerHub
 docker push trisa/gds:$TAG
 docker push trisa/trtl:$TAG
+docker push trisa/trtl-init:$TAG
 docker push trisa/grpc-proxy:$TAG
 docker push trisa/gds-ui:$TAG
 docker push trisa/gds-testnet-ui:$TAG
@@ -137,6 +140,7 @@ docker push trisa/gds-testnet-admin-ui:$TAG
 # Push to GCR
 docker push gcr.io/trisa-gds/gds:$TAG
 docker push gcr.io/trisa-gds/trtl:$TAG
+docker push gcr.io/trisa-gds/trtl-init:$TAG
 docker push gcr.io/trisa-gds/grpc-proxy:$TAG
 docker push gcr.io/trisa-gds/gds-ui:$TAG
 docker push gcr.io/trisa-gds/gds-testnet-ui:$TAG
