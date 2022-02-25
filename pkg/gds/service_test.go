@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rotationalio/honu"
+	honuldb "github.com/rotationalio/honu/engines/leveldb"
 	"github.com/rs/zerolog/log"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/suite"
@@ -22,6 +24,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -48,6 +51,7 @@ var (
 			"delta":       {},
 		},
 	}
+	dbPath = filepath.Join("testdata", "db")
 )
 
 // The GDS Test Suite provides mock functionality and database fixtures for the services
@@ -63,12 +67,14 @@ var (
 // access the internals of the service and services for testing purposes.
 type gdsTestSuite struct {
 	suite.Suite
-	ftype    fixtureType
-	fixtures map[string]map[string]interface{}
-	svc      *gds.Service
-	dbPaths  map[fixtureType]string
-	grpc     *bufconn.GRPCListener
-	conf     *config.Config
+	ftype        fixtureType
+	fixtures     map[string]map[string]interface{}
+	svc          *gds.Service
+	stype        storeType
+	trtl         *trtl.Server
+	trtlListener *bufconn.GRPCListener
+	grpc         *bufconn.GRPCListener
+	conf         *config.Config
 }
 
 // SetConfig allows a custom config to be specified by the tests.
@@ -83,22 +89,13 @@ func (s *gdsTestSuite) ResetConfig() {
 }
 
 func (s *gdsTestSuite) SetupSuite() {
-	var err error
-	require := s.Require()
 	gin.SetMode(gin.TestMode)
-
-	// Create database paths to unpack fixtures to
-	s.dbPaths = make(map[fixtureType]string)
-	for _, ftype := range []fixtureType{empty, small, full} {
-		s.dbPaths[ftype], err = ioutil.TempDir("testdata", "db-*")
-		require.NoError(err)
-	}
 
 	// Load the reference fixtures into memory for use in testing
 	s.loadReferenceFixtures()
 
 	// Generate the databases if required (depends on the loaded reference fixtures)
-	if *update || !pathExists(fullDBFixturePath) || !pathExists(smallDBFixturePath) {
+	if !pathExists(dbPath) {
 		s.generateDB()
 	}
 
@@ -124,6 +121,15 @@ func (s *gdsTestSuite) SetupMembers() {
 	go s.svc.GetMembers().Run(s.grpc.Listener)
 }
 
+// SetupTrtl starts the Trtl server
+// Run this inside the test methods after loading the appropriate fixtures
+func (s *gdsTestSuite) SetupTrtl() {
+
+	// Using a bufconn listener allows us to avoid network requests
+	s.trtlListener = bufconn.New(bufSize)
+	go s.trtl.Run(s.trtlListener.Listener)
+}
+
 // Helper function to shutdown any previously running GDS or Members servers and release the gRPC connection
 func (s *gdsTestSuite) shutdownServers() {
 	// Shutdown old GDS and Members servers, if they exist
@@ -138,6 +144,16 @@ func (s *gdsTestSuite) shutdownServers() {
 	if s.grpc != nil {
 		s.grpc.Release()
 	}
+
+	// Shutdown the Trtl server if it is running
+	if s.trtl != nil {
+		if err := s.trtl.Shutdown(); err != nil {
+			log.Warn().Err(err).Msg("could not shutdown Trtl server to start new one")
+		}
+	}
+	if s.trtlListener != nil {
+		s.trtlListener.Release()
+	}
 }
 
 func (s *gdsTestSuite) TearDownSuite() {
@@ -145,26 +161,24 @@ func (s *gdsTestSuite) TearDownSuite() {
 		s.svc.GetStore().Close()
 	}
 
-	for _, path := range s.dbPaths {
-		os.RemoveAll(path)
-		log.Info().Str("path", path).Msg("cleaned up database fixture")
-	}
-	s.grpc.Release()
+	os.RemoveAll(dbPath)
+	s.shutdownServers()
 }
 
 func TestGDS(t *testing.T) {
+	s := new(gdsTestSuite)
+	s.stype = storeLevelDB
+	suite.Run(t, new(gdsTestSuite))
+}
+
+func TestTrtl(t *testing.T) {
+	s := new(gdsTestSuite)
+	s.stype = storeTrtl
 	suite.Run(t, new(gdsTestSuite))
 }
 
 func (s *gdsTestSuite) TestFixtures() {
-	// Ensure all fixtures are loaded and extracted
-	s.LoadFullFixtures()
-	s.LoadSmallFixtures()
-	s.LoadEmptyFixtures()
-
-	// Close the empty fixtures so we can open a leveldb connection to it
-	s.svc.GetStore().Close()
-	defer s.ResetEmptyFixtures()
+	s.loadReferenceFixtures()
 
 	require := s.Require()
 	expected := map[fixtureType]map[string]int{
@@ -180,61 +194,85 @@ func (s *gdsTestSuite) TestFixtures() {
 	require.Len(s.fixtures[vasps], expected[full][vasps])
 	require.Len(s.fixtures[certreqs], expected[full][certreqs])
 
-	// Test the loaded database paths
-	require.Len(s.dbPaths, 3)
 	for ftype := range expected {
-		require.Contains(s.dbPaths, ftype)
-	}
+		// Test the levelDB fixtures
+		s.stype = storeLevelDB
+		s.loadFixtures(ftype, dbPath)
 
-	// Test the fixtures databases
-	for ftype, dbPath := range s.dbPaths {
 		db, err := leveldb.OpenFile(dbPath, nil)
-		require.NoError(err, "could not open ftype %d db at %s", ftype, dbPath)
+		require.NoError(err, "could not open levelDB at %s", dbPath)
 
 		// Ensure database is closed if there is an error with the test
 		defer db.Close()
 
 		// Count the number of things in the database
-		counts := make(map[string]int)
-		iter := db.NewIterator(nil, nil)
-		defer iter.Release()
+		counts := s.countFixtures(db)
+		require.Equal(expected[ftype], counts)
 
-		for iter.Next() {
-			// Fetch the key and split the namespace from the ID
-			key := strings.Split(string(iter.Key()), "::")
-			require.Len(key, 2, "key does not have a namespace prefix")
+		// Ensure the database is closed before next loop
+		db.Close()
 
-			// Ensure we can unmarshal the fixture
-			var obj interface{}
-			switch prefix := key[0]; prefix {
-			case vasps:
-				vasp := &pb.VASP{}
-				require.NoError(proto.Unmarshal(iter.Value(), vasp))
-				obj = vasp
-			case certreqs:
-				certreq := &models.CertificateRequest{}
-				require.NoError(proto.Unmarshal(iter.Value(), certreq))
-				obj = certreq
-			case index:
-				continue
-			default:
-				require.Fail("unrecognized object for namespace %q", prefix)
-			}
+		// Test the Trtl fixtures
+		s.stype = storeTrtl
+		s.loadFixtures(ftype, dbPath)
 
-			// Count occurrence of the key
-			counts[key[0]]++
+		// Count the number of things in the database
+		hdb, err := honu.Open(dbPath)
+		require.NoError(err, "could not open Honu db at %s", dbPath)
 
-			// Test that the database fixture matches our reference
-			s.CompareFixture(key[0], key[1], obj, false)
-		}
+		engine, ok := hdb.Engine().(*honuldb.LevelDBEngine)
+		require.True(ok, "could not retrieve Honu LevelDBEngine")
+		db = engine.DB()
 
-		// Ensure we have the expected number of items in the database
-		require.NoError(iter.Error())
+		// Ensure database is closed if there is an error with the test
+		defer db.Close()
+
+		// Count the number of things in the database
+		counts = s.countFixtures(db)
 		require.Equal(expected[ftype], counts)
 
 		// Ensure the database is closed before next loop
 		db.Close()
 	}
+}
+
+func (s *gdsTestSuite) countFixtures(db *leveldb.DB) (counts map[string]int) {
+	require := s.Require()
+	counts = make(map[string]int)
+
+	iter := db.NewIterator(nil, nil)
+	for iter.Next() {
+		// Fetch the key and split the namespace from the ID
+		key := strings.Split(string(iter.Key()), "::")
+		require.Len(key, 2, "key does not have a namespace prefix")
+
+		// Ensure we can unmarshal the fixture
+		var obj interface{}
+		switch prefix := key[0]; prefix {
+		case vasps:
+			vasp := &pb.VASP{}
+			require.NoError(proto.Unmarshal(iter.Value(), vasp))
+			obj = vasp
+		case certreqs:
+			certreq := &models.CertificateRequest{}
+			require.NoError(proto.Unmarshal(iter.Value(), certreq))
+			obj = certreq
+		case index:
+			continue
+		default:
+			require.Fail("unrecognized object for namespace %q", prefix)
+		}
+
+		// Count occurrence of the key
+		counts[key[0]]++
+
+		// Test that the database fixture matches our reference
+		s.CompareFixture(key[0], key[1], obj, false)
+	}
+
+	require.NoError(iter.Error())
+	iter.Release()
+	return counts
 }
 
 //===========================================================================
@@ -374,6 +412,14 @@ func (s *gdsTestSuite) CheckEmails(messages []*emailMeta) {
 //===========================================================================
 // Test fixtures management
 //===========================================================================
+
+type storeType uint8
+
+const (
+	storeUnknown storeType = iota
+	storeLevelDB
+	storeTrtl
+)
 
 type fixtureType uint8
 
