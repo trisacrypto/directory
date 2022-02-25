@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, Box, Flex, FlexProps } from "@chakra-ui/react";
+import { Link, Box, Flex, FlexProps, useColorModeValue } from "@chakra-ui/react";
 import {MenuIcon , CloseIcon} from '../icon'
 import Logo from "../ui/Logo";
 import MenuItem from "../menu/landing/MenuItem";
@@ -8,7 +8,7 @@ import { colors } from '../../utils/theme';
 const LandingHeader = (props : FlexProps) : JSX.Element => {
   const [show, setShow] = React.useState(false);
   const toggleMenu = () => setShow(!show);
-
+  const iconColor = useColorModeValue('black', 'white');
   return (
     <Flex
       as="nav"
@@ -17,19 +17,19 @@ const LandingHeader = (props : FlexProps) : JSX.Element => {
       wrap="wrap"
       w="100%"
       p={8}
-      bg={["white", "white", "transparent", "transparent"]}
+      bg={"transparent"}
       color={colors.system.blue}
       {...props}
     >
       <Flex align="center">
         <Logo
           w="100px"
-          color={["system.blue"]}
+          color={["colors.system.blue"]}
         />
       </Flex>
 
       <Box display={{ base: "block", md: "none" }} onClick={toggleMenu}>
-        {show ? <CloseIcon  /> : <MenuIcon />}
+        {show ? <CloseIcon color={iconColor}/> : <MenuIcon color={iconColor} />}
       </Box>
 
       <Box

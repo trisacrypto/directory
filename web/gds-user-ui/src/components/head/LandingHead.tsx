@@ -39,7 +39,7 @@ const LandingHead : React.FC<any> = ({title, description} : LandingHeaderProps):
        {title || 'TRISA Global Directory Service'}
         </Heading>
         {description ? <Text maxW={"2xl"}>{description}</Text> :
-         (<Text maxW={"2xl"}>
+         (<Text fontSize={'2xl'}>
             Become Travel Rule compliant. <br/>
             Apply to Become a TRISA certified Virtual Asset Service Provider.'
   
