@@ -280,13 +280,11 @@ func BenchmarkTrtlCursor(b *testing.B) {
 	// Run the trtl Cursor on a loop
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		results := make([]*pb.KVPair, 0, 3)
 		for {
-			rep, err := stream.Recv()
+			_, err := stream.Recv()
 			if err == io.EOF {
 				break
 			}
-			results = append(results, rep)
 		}
 		require.NoError(b, err)
 	}
