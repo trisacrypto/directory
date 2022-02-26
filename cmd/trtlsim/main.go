@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	interval  = 5 * time.Second                                        // the ticker interval, default to 5 seconds
-	sigma     = 100 * time.Millisecond                                 // the amount of jitter, default to 100 ms
+	interval  = 15 * time.Minute                                       // the ticker interval, default to 5 seconds
+	sigma     = 1500 * time.Millisecond                                // the amount of jitter, default to 100 ms
 	accesses  = 15                                                     // desired accesses per interval, default to 15
 	regions   = 7                                                      // number of regions simultaneously using the accessor
 	endpoint  = "localhost:4436"                                       // the endpoint of the running trtl server
