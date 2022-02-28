@@ -794,6 +794,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			// Add certificate serial number if it exists
 			if vasp.IdentityCertificate != nil {
 				snippet.CertificateSerial = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+				snippet.CertificateExpiration = vasp.IdentityCertificate.NotAfter
 			}
 
 			// Name is a computed value, ignore errors in finding the name.
