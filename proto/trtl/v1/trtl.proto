@@ -130,6 +130,16 @@ message ServerStatus {
     string status = 1;
     string version = 2;
     string uptime = 3;
+    ReplicaStatus replica = 15;
+}
+
+message ReplicaStatus {
+    bool enabled = 1;
+    uint64 pid = 2;
+    string region = 3;
+    string name = 4;
+    string interval = 5;
+    string sigma = 6;
 }
 
 // Options conditions all accesses to trtl, e.g. there are not different structs for

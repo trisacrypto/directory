@@ -624,6 +624,14 @@ func (h *TrtlService) Status(ctx context.Context, in *pb.HealthCheck) (out *pb.S
 		Status:  "ok",
 		Version: pkg.Version(),
 		Uptime:  h.uptime(),
+		Replica: &pb.ReplicaStatus{
+			Enabled:  h.parent.conf.Replica.Enabled,
+			Pid:      h.parent.conf.Replica.PID,
+			Region:   h.parent.conf.Replica.Region,
+			Name:     h.parent.conf.Replica.Name,
+			Interval: h.parent.conf.Replica.GossipInterval.String(),
+			Sigma:    h.parent.conf.Replica.GossipSigma.String(),
+		},
 	}
 
 	// If we're in maintenance mode return a maintenance mode
