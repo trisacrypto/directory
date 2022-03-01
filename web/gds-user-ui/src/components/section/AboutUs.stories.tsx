@@ -5,12 +5,14 @@ import AboutTrisaSection from "./AboutUs";
 interface AboutUsProps {}
 
 export default {
-  title: "Pages",
+  title: "Components/AboutUs",
   component: AboutTrisaSection,
 };
 
-export const aboutUs: Story<AboutUsProps> = ({ ...props }) => (
+export const standard: Story<AboutUsProps> = ({ ...props }) => (
   <AboutTrisaSection {...props} />
 );
 
-aboutUs.bind({});
+standard.bind({});
+
+
