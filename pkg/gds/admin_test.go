@@ -1697,7 +1697,6 @@ func (s *gdsTestSuite) TestResend() {
 
 // Test the ReviewTimeline endpoint.
 func (s *gdsTestSuite) TestReviewTimeline() {
-	s.LoadFullFixtures()
 	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
