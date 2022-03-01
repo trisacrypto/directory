@@ -149,20 +149,20 @@ func initMetrics() {
 	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "versions",
-		Help:      "count of all observed versions, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "count of all observed versions, labeled by peer, region, and perspective",
+	}, []string{"peer", "region", "perspective"})
 
 	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pulls",
-		Help:      "pulled objects during anti entropy, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "pulled objects during anti entropy, labeled by peer, region, and perspective",
+	}, []string{"peer", "region", "perspective"})
 
 	PmAEUpdates = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pushes",
-		Help:      "pushed objects during anti entropy, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "pushed objects during anti entropy, labeled by peer, region and perspective",
+	}, []string{"peer", "region", "perspective"})
 
 	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: PmNamespace,

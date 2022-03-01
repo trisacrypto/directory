@@ -152,9 +152,9 @@ func (r *Service) remotePhase1(ctx context.Context, wg *sync.WaitGroup, log zero
 				Msg("anti-entropy synchronization complete")
 
 			// Update Prometheus metrics
-			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nUpdates))
-			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nRepairs))
-			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(nVersions))
+			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region, "remote").Observe(float64(nUpdates))
+			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region, "remote").Observe(float64(nRepairs))
+			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region, "remote").Observe(float64(nVersions))
 		} else {
 			log.Debug().Msg("anti-entropy complete with no synchronization")
 		}
@@ -220,8 +220,17 @@ gossip:
 					// Note that we have to set the object version to zero to
 					// indicate that we don't have a version of it, so the client
 					// replica's version is later and it sends a repair message.
-					sync.Object.Version = &object.VersionZero
-					sender.Send(sync)
+					sender.Send(&replica.Sync{
+						Status: replica.Sync_CHECK,
+						Object: &object.Object{
+							Key:       sync.Object.Key,
+							Namespace: sync.Object.Namespace,
+							Region:    sync.Object.Region,
+							Owner:     sync.Object.Owner,
+							Version:   &object.VersionZero,
+							// purposefully omit Data
+						},
+					})
 				} else {
 					// This is an unhandled error, log and return error information.
 					log.Warn().Err(err).
@@ -231,9 +240,18 @@ gossip:
 
 					// If there is an object error, send a response back to the
 					// initiator's CHECK reqest so that it can be logged there as well.
-					sync.Status = replica.Sync_ERROR
-					sync.Error = err.Error()
-					sender.Send(sync)
+					sender.Send(&replica.Sync{
+						Status: replica.Sync_ERROR,
+						Object: &object.Object{
+							Key:       sync.Object.Key,
+							Namespace: sync.Object.Namespace,
+							Region:    sync.Object.Region,
+							Owner:     sync.Object.Owner,
+							Version:   sync.Object.Version,
+							// purposefully omit Data
+						},
+						Error: err.Error(),
+					})
 				}
 
 				// CHECK is done here if there was an error.
@@ -247,12 +265,26 @@ gossip:
 				sync.Status = replica.Sync_REPAIR
 				sync.Object = local
 				sync.Error = ""
-				if ok := sender.Send(sync); ok {
+				if ok := sender.Send(&replica.Sync{
+					Status: replica.Sync_REPAIR,
+					Object: local,
+				},
+				); ok {
 					atomic.AddUint64(&updates, 1)
 				}
 			case sync.Object.Version.IsLater(local.Version):
 				// Send a check request back to the initiating replica to fetch its version
-				sender.Send(sync)
+				sender.Send(&replica.Sync{
+					Status: replica.Sync_CHECK,
+					Object: &object.Object{
+						Key:       local.Key,
+						Namespace: local.Namespace,
+						Region:    local.Region,
+						Owner:     local.Owner,
+						Version:   local.Version,
+						// purposefully omit Data
+					},
+				})
 			default:
 				// The versions are equal, do nothing
 			}
