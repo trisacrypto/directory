@@ -242,7 +242,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	// Compute latency in milliseconds
 	// NOTE: we're only tracking latency for successful AE sessions
 	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
+	prom.PmAESyncLatency.WithLabelValues(peer.Name, peer.Region).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil

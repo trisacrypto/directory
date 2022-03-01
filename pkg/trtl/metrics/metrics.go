@@ -23,7 +23,7 @@ var (
 
 	// Anti-Entropy Metrics
 	PmAESyncs         *prometheus.CounterVec   // count of anti entropy sessions per peer, per region, and by perspective (initiator/remote)
-	PmAESyncLatency   *prometheus.HistogramVec // duration of anti entropy sessions (initiator perspective), by peer
+	PmAESyncLatency   *prometheus.HistogramVec // duration of anti entropy sessions (initiator perspective), by peer and region
 	PmAEPhase1Latency *prometheus.HistogramVec // time phase 1 of anti-entropy is taking from the perspective of the initiator, by peer
 	PmAEPhase2Latency *prometheus.HistogramVec // time phase 2 of anti-entropy is taking from the perspective of the remote, by peer
 	PmAEVersions      *prometheus.HistogramVec // count of all observed versions, per peer and region
@@ -131,8 +131,8 @@ func initMetrics() {
 	PmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "sync_latency",
-		Help:      "total duration of anti-entropy (originator perspective), labeled by peer",
-	}, []string{"peer"})
+		Help:      "total duration of anti-entropy (originator perspective), labeled by peer and region",
+	}, []string{"peer", "region"})
 
 	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
