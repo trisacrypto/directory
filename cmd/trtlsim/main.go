@@ -317,7 +317,7 @@ const (
 	readers          = 30
 	registerInterval = 5 * time.Minute
 	registerSigma    = 30 * time.Second
-	reissueAge       = 1 * time.Minute
+	reissueAge       = 10 * time.Minute
 	reissueInterval  = 2 * time.Minute
 	reissueSigma     = 15 * time.Second
 	nsVASPs          = "vasps"
@@ -643,6 +643,11 @@ func (t *TRISAModel) userProfiles(wg *sync.WaitGroup) {
 		if roulette := rand.Float64(); roulette < 0.2 {
 			// Randomly select a user to update
 			user := t.pick(nsUsers)
+			if user == "" {
+				// No users in the database to update
+				continue
+			}
+
 			if err := t.Put(user, nsUsers, rand.Intn(2048)+512); err != nil {
 				log.Fatal(fmt.Errorf("could not update user: %s", err))
 			}
