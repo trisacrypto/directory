@@ -268,8 +268,7 @@ gossip:
 				if ok := sender.Send(&replica.Sync{
 					Status: replica.Sync_REPAIR,
 					Object: local,
-				},
-				); ok {
+				}); ok {
 					atomic.AddUint64(&updates, 1)
 				}
 			case sync.Object.Version.IsLater(local.Version):
