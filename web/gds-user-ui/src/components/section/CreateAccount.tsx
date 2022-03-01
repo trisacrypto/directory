@@ -46,7 +46,7 @@ export default function CreateAccount() {
            Continue with google
            </Text>
            </Button>
-           <Text py={5}>
+           <Text py={3}>
             Or
           </Text >
         </Stack>
@@ -55,6 +55,9 @@ export default function CreateAccount() {
           rounded={'lg'}
           bg={useColorModeValue('white', 'transparent')}
           width={'100%'}
+    
+          position={'relative'}
+          bottom={5}
          >
           <Stack spacing={4} >
             <FormControl id="email">
@@ -66,11 +69,11 @@ export default function CreateAccount() {
             <Stack spacing={10}>
              
               <Button
-                bg={'blue.400'}
+                bg={colors.system.blue}
                 color={'white'}
                 height={'64px'}
                 _hover={{
-                  bg: 'blue.500',
+                  bg: '#10aaed',
                 }}>
                 Create an Account
               </Button>
