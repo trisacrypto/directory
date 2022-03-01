@@ -710,16 +710,6 @@ func (s *gdsTestSuite) SetVerificationStatus(id string, status pb.VerificationSt
 	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
 }
 
-func pathExists(path string) bool {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return false
-	}
-
-	// Note this will return true if there is another error like a permissions error.
-	// Those errors will be caught when the file is unzipped.
-	return true
-}
-
 func remarshalProto(namespace string, obj map[string]interface{}) (_ protoreflect.ProtoMessage, err error) {
 	var data []byte
 	if data, err = json.Marshal(obj); err != nil {
