@@ -194,7 +194,6 @@ func (t *Server) Run(sock net.Listener) {
 	if err := t.srv.Serve(sock); err != nil {
 		t.echan <- err
 	}
-	fmt.Println("server stopped")
 }
 
 // Shutdown the trtl server gracefully.
