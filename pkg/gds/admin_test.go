@@ -591,7 +591,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 }
 
 // Test the RetrieveVASP endpoint.
-func (s *gdsTestSuite) TestRetrieveVASP() {
+func (s *gdsTestSuite) TestXRetrieveVASP() {
 	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1696,7 +1696,8 @@ func (s *gdsTestSuite) TestResend() {
 }
 
 // Test the ReviewTimeline endpoint.
-func (s *gdsTestSuite) TestReviewTimeline() {
+func (s *gdsTestSuite) TestXReviewTimeline() {
+	s.LoadFullFixtures()
 	s.LoadSmallFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()

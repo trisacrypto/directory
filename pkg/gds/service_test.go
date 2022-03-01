@@ -2,9 +2,7 @@ package gds_test
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -14,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rotationalio/honu"
-	honuldb "github.com/rotationalio/honu/engines/leveldb"
+	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/suite"
@@ -24,6 +22,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	trtlstore "github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
@@ -41,11 +40,8 @@ const (
 )
 
 var (
-	update             = flag.Bool("update", false, "update the gzipped test databases")
-	fakesFixturePath   = filepath.Join("testdata", "fakes.tgz")
-	fullDBFixturePath  = filepath.Join("testdata", "db.tgz")
-	smallDBFixturePath = filepath.Join("testdata", "smalldb.tgz")
-	smallDBSubset      = map[string]map[string]struct{}{
+	fakesFixturePath = filepath.Join("testdata", "fakes.tgz")
+	smallDBSubset    = map[string]map[string]struct{}{
 		vasps: {
 			"charliebank": {},
 			"delta":       {},
@@ -94,10 +90,13 @@ func (s *gdsTestSuite) SetupSuite() {
 	// Load the reference fixtures into memory for use in testing
 	s.loadReferenceFixtures()
 
-	// Generate the databases if required (depends on the loaded reference fixtures)
-	if !pathExists(dbPath) {
-		s.generateDB()
+	// Start the Trtl server if required
+	if s.stype == storeTrtl {
+		s.SetupTrtl()
 	}
+
+	// Generate the fixture database
+	s.generateDB(empty)
 
 	// Start with an empty fixtures service
 	s.LoadEmptyFixtures()
@@ -121,13 +120,28 @@ func (s *gdsTestSuite) SetupMembers() {
 	go s.svc.GetMembers().Run(s.grpc.Listener)
 }
 
-// SetupTrtl starts the Trtl server
-// Run this inside the test methods after loading the appropriate fixtures
+// SetupTrtl starts the Trtl server, which must be done before calling generateDB.
 func (s *gdsTestSuite) SetupTrtl() {
+	var err error
+	require := s.Require()
+
+	conf := trtl.MockConfig()
+	conf.Database.URL = "leveldb:///" + dbPath
+
+	// Mark as processed since the config wasn't loaded from the envrionment
+	conf, err = conf.Mark()
+	require.NoError(err)
+
+	// Start the Trtl server
+	s.trtl, err = trtl.New(conf)
+	require.NoError(err, "could not start Trtl server")
 
 	// Using a bufconn listener allows us to avoid network requests
 	s.trtlListener = bufconn.New(bufSize)
 	go s.trtl.Run(s.trtlListener.Listener)
+
+	// Connect to the running Trtl server
+	require.NoError(s.trtlListener.Connect())
 }
 
 // Helper function to shutdown any previously running GDS or Members servers and release the gRPC connection
@@ -161,20 +175,20 @@ func (s *gdsTestSuite) TearDownSuite() {
 		s.svc.GetStore().Close()
 	}
 
-	os.RemoveAll(dbPath)
 	s.shutdownServers()
+	os.RemoveAll(dbPath)
 }
 
-func TestGDS(t *testing.T) {
+func TestGDSLevelDB(t *testing.T) {
 	s := new(gdsTestSuite)
 	s.stype = storeLevelDB
-	suite.Run(t, new(gdsTestSuite))
+	suite.Run(t, s)
 }
 
-func TestTrtl(t *testing.T) {
+func TestGDSTrtl(t *testing.T) {
 	s := new(gdsTestSuite)
 	s.stype = storeTrtl
-	suite.Run(t, new(gdsTestSuite))
+	suite.Run(t, s)
 }
 
 func (s *gdsTestSuite) TestFixtures() {
@@ -195,48 +209,57 @@ func (s *gdsTestSuite) TestFixtures() {
 	require.Len(s.fixtures[certreqs], expected[full][certreqs])
 
 	for ftype := range expected {
-		// Test the levelDB fixtures
-		s.stype = storeLevelDB
-		s.loadFixtures(ftype, dbPath)
+		switch s.stype {
+		case storeLevelDB:
+			// Test the levelDB fixtures
+			s.loadFixtures(ftype)
 
-		db, err := leveldb.OpenFile(dbPath, nil)
-		require.NoError(err, "could not open levelDB at %s", dbPath)
+			// Close the database so we can open a leveldb connection to it
+			s.svc.GetStore().Close()
+			defer s.ResetEmptyFixtures()
 
-		// Ensure database is closed if there is an error with the test
-		defer db.Close()
+			db, err := leveldb.OpenFile(dbPath, nil)
+			require.NoError(err, "could not open levelDB at %s", dbPath)
 
-		// Count the number of things in the database
-		counts := s.countFixtures(db)
-		require.Equal(expected[ftype], counts)
+			// Ensure database is closed if there is an error with the test
+			defer db.Close()
 
-		// Ensure the database is closed before next loop
-		db.Close()
+			// Count the number of things in the database
+			counts := s.countLevelDBFixtures(db)
+			require.Equal(expected[ftype], counts)
 
-		// Test the Trtl fixtures
-		s.stype = storeTrtl
-		s.loadFixtures(ftype, dbPath)
+			// Ensure the database is closed before next loop
+			db.Close()
 
-		// Count the number of things in the database
-		hdb, err := honu.Open(dbPath)
-		require.NoError(err, "could not open Honu db at %s", dbPath)
+			s.resetFixtures(ftype)
+		case storeTrtl:
+			// Test the Trtl fixtures
+			s.loadFixtures(ftype)
 
-		engine, ok := hdb.Engine().(*honuldb.LevelDBEngine)
-		require.True(ok, "could not retrieve Honu LevelDBEngine")
-		db = engine.DB()
+			// Stop the Trtl server so we can open the database with Honu
+			s.trtl.Shutdown()
+			defer s.ResetEmptyFixtures()
 
-		// Ensure database is closed if there is an error with the test
-		defer db.Close()
+			// Count the number of things in the database
+			hdb, err := honu.Open("leveldb:///" + dbPath)
+			require.NoError(err, "could not open Honu db at %s", dbPath)
 
-		// Count the number of things in the database
-		counts = s.countFixtures(db)
-		require.Equal(expected[ftype], counts)
+			// Ensure database is closed if there is an error with the test
+			defer hdb.Close()
 
-		// Ensure the database is closed before next loop
-		db.Close()
+			// Count the number of things in the database
+			counts := s.countHonuFixtures(hdb)
+			require.Equal(expected[ftype], counts)
+
+			// Ensure the database is closed before next loop
+			hdb.Close()
+		default:
+			require.Fail("unknown store type")
+		}
 	}
 }
 
-func (s *gdsTestSuite) countFixtures(db *leveldb.DB) (counts map[string]int) {
+func (s *gdsTestSuite) countLevelDBFixtures(db *leveldb.DB) (counts map[string]int) {
 	require := s.Require()
 	counts = make(map[string]int)
 
@@ -275,6 +298,35 @@ func (s *gdsTestSuite) countFixtures(db *leveldb.DB) (counts map[string]int) {
 	return counts
 }
 
+func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
+	require := s.Require()
+	counts = make(map[string]int)
+
+	iter, err := db.Iter(nil, options.WithNamespace(vasps))
+	require.NoError(err, "could not create Honu vasp iterator")
+	for iter.Next() {
+		vasp := &pb.VASP{}
+		require.NoError(proto.Unmarshal(iter.Value(), vasp))
+		counts[vasps]++
+		s.CompareFixture(vasps, string(iter.Key()), vasp, false)
+	}
+	require.NoError(iter.Error())
+	iter.Release()
+
+	iter, err = db.Iter(nil, options.WithNamespace(certreqs))
+	require.NoError(err, "could not create Honu certreq iterator")
+	for iter.Next() {
+		certreq := &models.CertificateRequest{}
+		require.NoError(proto.Unmarshal(iter.Value(), certreq))
+		counts[certreqs]++
+		s.CompareFixture(certreqs, string(iter.Key()), certreq, false)
+	}
+	require.NoError(iter.Error())
+	iter.Release()
+
+	return counts
+}
+
 //===========================================================================
 // Custom Assertions
 //===========================================================================
@@ -293,10 +345,13 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 	switch namespace {
 	case vasps:
 		var a *pb.VASP
+		var data pb.VASP
 		for _, f := range s.fixtures[namespace] {
 			ref := f.(*pb.VASP)
 			if ref.Id == key {
-				a = ref
+				// Avoid modifying the object in the fixtures map
+				data = *ref
+				a = &data
 				break
 			}
 		}
@@ -347,7 +402,6 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 	default:
 		require.Fail("unhandled namespace %s", namespace)
 	}
-
 }
 
 type emailMeta struct {
@@ -484,11 +538,11 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 	require.NoError(err)
 }
 
-func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
+func (s *gdsTestSuite) loadFixtures(ftype fixtureType) {
 	// If we're already at the specified fixture type and no custom config is provided,
 	// do nothing
 	if s.ftype == ftype && s.conf == nil {
-		log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("CACHED FIXTURE")
+		log.Info().Uint8("ftype", uint8(ftype)).Msg("CACHED FIXTURE")
 		return
 	}
 
@@ -501,17 +555,13 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 		}
 	}
 
-	// If we're given a fixture path to extract, check if dir is empty, otherwise extract it
-	if fpath != "" {
-		if !pathExists(filepath.Join(s.dbPaths[ftype], "CURRENT")) {
-			if _, err := utils.ExtractGzip(fpath, s.dbPaths[ftype], false); err != nil {
-				log.Warn().Err(err).Str("db", fpath).Msg("unable to extract test fixtures")
-			}
-			log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Str("dbpath", s.dbPaths[ftype]).Msg("FIXTURE EXTRACTED")
-		}
-	}
-
 	s.shutdownServers()
+
+	// Recreate the database directory
+	require.NoError(os.RemoveAll(dbPath), "could not remove fixture database directory")
+	db, err := leveldb.OpenFile(dbPath, nil)
+	require.NoError(err, "could not open new fixture database")
+	db.Close()
 
 	// Use the custom config if specified
 	var conf config.Config
@@ -521,37 +571,45 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType, fpath string) {
 		conf = gds.MockConfig()
 	}
 
-	// Create the new service with a database to the specified path
-	conf.Database.URL = "leveldb:///" + s.dbPaths[ftype]
-	s.svc, err = gds.NewMock(conf)
+	// Store-specific handling of the database
+	switch s.stype {
+	case storeLevelDB:
+		conf.Database.URL = "leveldb:///" + dbPath
+	case storeTrtl:
+		s.SetupTrtl()
+	default:
+		require.Fail("unrecognized store type")
+	}
+	s.generateDB(ftype)
+
+	// Create the new service
+	if s.trtlListener != nil {
+		require.NoError(s.trtlListener.Connect())
+		s.svc, err = gds.NewMock(conf, s.trtlListener.Conn)
+	} else {
+		s.svc, err = gds.NewMock(conf, nil)
+	}
+
 	require.NoError(err, "could not create mock GDS service")
 
 	s.ftype = ftype
-	log.Info().Uint8("ftype", uint8(ftype)).Str("path", fpath).Msg("FIXTURE LOADED")
+	log.Info().Uint8("ftype", uint8(ftype)).Msg("FIXTURE LOADED")
 }
 
 func (s *gdsTestSuite) LoadEmptyFixtures() {
-	s.loadFixtures(empty, "")
+	s.loadFixtures(empty)
 }
 
 // LoadFullFixtures loads the JSON test fixtures from disk and stores them in the dbFixtures map.
 func (s *gdsTestSuite) LoadFullFixtures() {
-	s.loadFixtures(full, fullDBFixturePath)
+	s.loadFixtures(full)
 }
 
 func (s *gdsTestSuite) LoadSmallFixtures() {
-	s.loadFixtures(small, smallDBFixturePath)
+	s.loadFixtures(small)
 }
 
 func (s *gdsTestSuite) resetFixtures(ftype fixtureType) {
-	var err error
-	require := s.Require()
-
-	// Delete the current fixture database
-	os.RemoveAll(s.dbPaths[ftype])
-	s.dbPaths[ftype], err = ioutil.TempDir("testdata", "db-*")
-	require.NoError(err)
-
 	// Set the ftype to unknown to ensure the loader loads the fixture
 	s.ftype = unknown
 }
@@ -571,73 +629,70 @@ func (s *gdsTestSuite) ResetSmallFixtures() {
 // generateDB generates an updated database and compresses it to a gzip file.
 // Note: This also generates a temporary directory which the suite teardown
 // should clean up.
-func (s *gdsTestSuite) generateDB() {
+func (s *gdsTestSuite) generateDB(ftype fixtureType) {
 	// Data is required to generate the database
 	require := s.Require()
 	require.NotEmpty(s.fixtures, "there are no reference fixtures to generate the db with")
 	require.NotEmpty(s.fixtures[vasps], "there are no reference vasps fixtures to generate the db with")
 	require.NotEmpty(s.fixtures[certreqs], "there are no reference certreqs fixtures to generate the db with")
 
-	// Loop through each database type and create the database
-	for ftype, path := range s.dbPaths {
-		// No need to do anything with the empty database
-		if ftype == empty {
-			continue
-		}
+	// No need to do anything with the empty database
+	if ftype == empty {
+		return
+	}
 
-		// Open a Store object to write fixtures to the database
-		store, err := store.Open(config.DatabaseConfig{
-			URL:           "leveldb:///" + path,
+	// Create the Store object depending on the store type
+	var db store.Store
+	var err error
+	switch s.stype {
+	case storeLevelDB:
+		db, err = store.Open(config.DatabaseConfig{
+			URL:           "leveldb:///" + dbPath,
 			ReindexOnBoot: false,
 		})
-		require.NoError(err)
-		defer store.Close()
+		require.NoError(err, "could not open leveldb store")
+		defer db.Close()
+	case storeTrtl:
+		require.NoError(s.trtlListener.Connect())
+		db, err = trtlstore.NewMock(s.trtlListener.Conn)
+		require.NoError(err, "could not open trtl store")
+		defer db.Close()
+	default:
+		require.Fail("unrecognized store type")
+	}
 
-		// Loop through all the reference fixtures, adding them as necessary
-		for namespace, items := range s.fixtures {
-		itemLoop:
-			for key, item := range items {
+	// Loop through all the reference fixtures, adding them as necessary
+	for namespace, items := range s.fixtures {
+	itemLoop:
+		for key, item := range items {
 
-				// If we're in small database mode, check if we should add the data
-				if ftype == small {
-					if _, ok := smallDBSubset[namespace][key]; !ok {
-						continue itemLoop
-					}
-				}
-
-				// Add the fixture to the database, updating indices
-				switch namespace {
-				case vasps:
-					vasp := item.(*pb.VASP)
-					id, err := store.CreateVASP(vasp)
-					require.NoError(err, "could not insert VASP into store")
-					require.Equal(vasp.Id, id)
-				case certreqs:
-					err = store.UpdateCertReq(item.(*models.CertificateRequest))
-					require.NoError(err, "could not insert CertificateRequest into store")
-				default:
-					require.Fail("unrecognized object for namespace %q", namespace)
+			// If we're in small database mode, check if we should add the data
+			if ftype == small {
+				if _, ok := smallDBSubset[namespace][key]; !ok {
+					continue itemLoop
 				}
 			}
+
+			// Add the fixture to the database, updating indices
+			switch namespace {
+			case vasps:
+				vasp := item.(*pb.VASP)
+				id, err := db.CreateVASP(vasp)
+				require.NoError(err, "could not insert VASP into store")
+				require.Equal(vasp.Id, id)
+			case certreqs:
+				err = db.UpdateCertReq(item.(*models.CertificateRequest))
+				require.NoError(err, "could not insert CertificateRequest into store")
+			default:
+				require.Fail("unrecognized object for namespace %q", namespace)
+			}
 		}
-
-		// Close the database to sync the indices
-		require.NoError(store.Close(), "could not close store")
-
-		// Write the database to the fixture path
-		var fixturePath string
-		switch ftype {
-		case small:
-			fixturePath = smallDBFixturePath
-		case full:
-			fixturePath = fullDBFixturePath
-		default:
-			require.Fail("unrecognized database path for ftype %d", ftype)
-		}
-
-		require.NoError(utils.WriteGzip(path, fixturePath))
-		log.Info().Str("db", fixturePath).Msg("successfully regenerated test database")
 	}
+
+	// Close the database to sync the indices
+	require.NoError(db.Close(), "could not close store")
+
+	log.Info().Msg("successfully regenerated test database")
 }
 
 // SetVerificationStatus sets the verification status of a VASP fixture on the
