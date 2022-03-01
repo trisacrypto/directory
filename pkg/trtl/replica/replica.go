@@ -149,6 +149,7 @@ func (r *Service) remotePhase1(ctx context.Context, wg *sync.WaitGroup, log zero
 			log.Info().
 				Uint64("local_repairs", nRepairs).
 				Uint64("remote_updates", nUpdates).
+				Uint64("versions", nVersions).
 				Msg("anti-entropy synchronization complete")
 
 			// Update Prometheus metrics
