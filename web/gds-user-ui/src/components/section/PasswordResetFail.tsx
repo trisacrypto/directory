@@ -16,7 +16,10 @@ import {
 
 import { colors } from '../../utils/theme';
 
-export default function PasswordReset() {
+interface PasswordResetProps {
+  email : string;
+}
+export default function PasswordReset(props :PasswordResetProps) {
   return (
     <Flex
       align={'center'}
@@ -26,9 +29,11 @@ export default function PasswordReset() {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={12} mx={'auto'} maxW={'lg'} py={12} px={6} >
         <Stack align={'center'}>
-          <Heading fontSize={'xl'}>Sorry. We could not find a user account with the email address [insert email address].  </Heading>
-          
-         
+          <Heading fontSize={'xl'}>Sorry. We could not find a user account with the email address
+            <Text as={'span'}>{ props.email }</Text>
+            .
+          </Heading>
+
         </Stack>
       
           <Box
