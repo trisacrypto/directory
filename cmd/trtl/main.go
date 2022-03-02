@@ -123,6 +123,11 @@ func main() {
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
 				},
+				&cli.StringFlag{
+					Name:    "namespace",
+					Aliases: []string{"n"},
+					Usage:   "specify the namespace as a string",
+				},
 			},
 		},
 		{
@@ -540,7 +545,8 @@ func dbGet(c *cli.Context) (err error) {
 		// Execute the Get request
 		var resp *pb.GetReply
 		req := &pb.GetRequest{
-			Key: key,
+			Key:       key,
+			Namespace: c.String("namespace"),
 			Options: &pb.Options{
 				ReturnMeta: c.Bool("meta"),
 			},
