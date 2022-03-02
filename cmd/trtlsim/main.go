@@ -34,13 +34,13 @@ func init() {
 const (
 	interval  = 10 * time.Second                                       // the ticker interval, default to 5 seconds
 	sigma     = 200 * time.Millisecond                                 // the amount of jitter, default to 100 ms
-	accesses  = 10000                                                  // desired accesses per interval, default to 15
+	accesses  = 100000                                                 // desired accesses per interval, default to 15
 	regions   = 1                                                      // number of regions simultaneously using the accessor
 	endpoint  = "localhost:4436"                                       // the endpoint of the running trtl server
 	insecure  = true                                                   // connect without mTLS
 	certPath  = "fixtures/certs/mtls.client.dev/client.pem"            // path to file on disk with certificate key-pair if using mTLS
 	poolPath  = "fixtures/certs/mtls.client.dev/certificate.chain.pem" // path to file on disk with trust pool if using mTLS
-	keyspace  = 600000                                                 // the number of keys the simulator operates on
+	keyspace  = 6000000                                                // the number of keys the simulator operates on
 	chunkSize = 512                                                    // size of each write
 	strategy  = "weighted_random"                                      // simulation strategy
 )
