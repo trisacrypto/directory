@@ -14,11 +14,9 @@ import {
   Image,
 } from '@chakra-ui/react';
 
-import { GoogleIcon } from '../icon';
-
 import { colors } from '../../utils/theme';
 
-export default function CreateAccount() {
+export default function PasswordReset() {
   return (
     <Flex
       align={'center'}
