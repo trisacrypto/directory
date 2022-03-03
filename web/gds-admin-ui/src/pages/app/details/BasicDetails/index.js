@@ -4,6 +4,7 @@ import { Card, Col, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from 'constants/index';
 import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
 import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat'
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
 import { BUSINESS_CATEGORY } from 'constants/basic-details';
@@ -17,7 +18,8 @@ import TrisaDetails from './components/TrisaDetails';
 
 
 function BasicDetails({ data }) {
-    const formatDate = (date) => date ? dayjs(date).format('MM-DD-YYYY') : 'N/A';
+    dayjs.extend(localizedFormat)
+    const formatDate = (date) => date ? dayjs(date).format('L') : 'N/A';
     const isNotPendingReview = () => data?.vasp?.verification_status !== Status.PENDING_REVIEW
 
     const handleIvmsJsonExportClick = () => {
