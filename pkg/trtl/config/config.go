@@ -43,6 +43,7 @@ type ReplicaConfig struct {
 	Name           string        `split_words:"true" required:"false" json:"name"`
 	GossipInterval time.Duration `split_words:"true" default:"1m" json:"gossip_interval"`
 	GossipSigma    time.Duration `split_words:"true" default:"5s" json:"gossip_sigma"`
+	ObjectSampling bool          `split_words:"true" default:"false"`
 }
 
 type ReplicaStrategyConfig struct {
