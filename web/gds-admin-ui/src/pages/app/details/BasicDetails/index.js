@@ -18,8 +18,18 @@ import TrisaDetails from './components/TrisaDetails';
 
 
 function BasicDetails({ data }) {
-    dayjs.extend(localizedFormat)
-    const formatDate = (date) => date ? dayjs(date).format('L') : 'N/A';
+    const userLang = navigator.language || navigator.userLanguage;
+    const formatDate = (date) => {
+        if (date) {
+            const dateObj = new Date(date);
+            return dateObj.toLocaleDateString(userLang, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+        return 'N/A';
+    };
     const isNotPendingReview = () => data?.vasp?.verification_status !== Status.PENDING_REVIEW
 
     const handleIvmsJsonExportClick = () => {
