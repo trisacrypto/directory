@@ -341,14 +341,6 @@ namespaces:
 				continue objects
 			}
 
-			// Apply time-based object samping if enabled and the version has a timestamp
-			if r.conf.ObjectSampling && obj.Version.Created > 0 {
-				if !ReplicateObjectRoulette(obj.Version.Timestamp()) {
-					// skip the object
-					continue objects
-				}
-			}
-
 			// Remove the data from the object and create the check message
 			obj.Data = nil
 			msg := &replica.Sync{
