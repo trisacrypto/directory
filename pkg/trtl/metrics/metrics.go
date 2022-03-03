@@ -133,28 +133,28 @@ func initMetrics() {
 		Namespace: PmNamespace,
 		Name:      "sync_latency",
 		Help:      "total duration of anti-entropy (originator perspective), labeled by peer and region",
-		Buckets:   prometheus.LinearBuckets(100, 200, 50),
+		Buckets:   prometheus.LinearBuckets(10, 10, 50),
 	}, []string{"peer", "region"})
 
 	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase1_latency",
 		Help:      "duration of anti-entropy phase 1 (originator perspective), labeled by peer",
-		Buckets:   prometheus.LinearBuckets(100, 200, 50),
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEPhase2Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase2_latency",
 		Help:      "duration of anti-entropy phase 2 (remote perspective), labeled by peer",
-		Buckets:   prometheus.LinearBuckets(100, 200, 50),
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "versions",
 		Help:      "count of all observed versions, labeled by peer, region, and perspective",
-		Buckets:   prometheus.LinearBuckets(2000, 2000, 1000),
+		Buckets:   prometheus.LinearBuckets(10, 2000, 1000),
 	}, []string{"peer", "region", "perspective"})
 
 	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
