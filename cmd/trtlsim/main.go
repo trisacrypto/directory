@@ -315,9 +315,9 @@ func (wr *WeightedRandom) accessor(client pb.TrtlClient) {
 
 const (
 	readers          = 30
-	registerInterval = 5 * time.Minute
+	registerInterval = 15 * time.Minute
 	registerSigma    = 30 * time.Second
-	reissueAge       = 10 * time.Minute
+	reissueAge       = 30 * time.Minute
 	reissueInterval  = 2 * time.Minute
 	reissueSigma     = 15 * time.Second
 	nsVASPs          = "vasps"
@@ -516,7 +516,7 @@ func (t *TRISAModel) register(wg *sync.WaitGroup) {
 	// simulators write to records created by a different simulator
 	nUpdates := rand.Intn(24) + 3
 	for i := 0; i < nUpdates; i++ {
-		time.Sleep(randSleep(15*time.Second, 142*time.Second))
+		time.Sleep(randSleep(1*time.Second, 48*time.Second))
 		roulette := rand.Float64()
 		switch {
 		case roulette < 0.05:

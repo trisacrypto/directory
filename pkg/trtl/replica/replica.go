@@ -398,6 +398,14 @@ namespaces:
 				continue objects
 			}
 
+			// Apply time-based object samping if enabled and the version has a timestamp
+			if r.conf.ObjectSampling && obj.Version.Created > 0 {
+				if !ReplicateObjectRoulette(obj.Version.Timestamp()) {
+					// skip the object
+					continue objects
+				}
+			}
+
 			// Ensure that we can send, otherwise stop.
 			if ok := sender.Send(&replica.Sync{Status: replica.Sync_REPAIR, Object: obj}); !ok {
 				// NOTE: breaking objects loop not the namespaces loop or returning to
