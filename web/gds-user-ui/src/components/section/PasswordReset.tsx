@@ -30,10 +30,8 @@ export default function PasswordReset() {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>
-          <Heading  fontSize={'xl'}>Enter your email address.</Heading>
-         
+          <Heading fontSize={'xl'}>Enter your email address.</Heading>
         </Stack>
-     
         <Box
           rounded={'lg'}
           bg={useColorModeValue('white', 'transparent')}
@@ -59,9 +57,7 @@ export default function PasswordReset() {
               >
                 Submit
               </Button>
-              
             </Stack>
-            
           </Stack>
         </Box>
       </Stack>

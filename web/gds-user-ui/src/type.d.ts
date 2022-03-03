@@ -1,1 +1,1 @@
-//define common type 
+// define common type
