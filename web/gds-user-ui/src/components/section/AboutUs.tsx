@@ -11,8 +11,8 @@ import {
   useColorModeValue
 } from '@chakra-ui/react';
 
-import trisaNetworkSvg from 'assets/trisa_network.svg';
-import { colors } from 'utils/theme';
+import trisaNetworkSvg from '../../assets/trisa_network.svg';
+import { colors } from '../../utils/theme';
 
 export default function AboutTrisaSection() {
   return (

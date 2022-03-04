@@ -28,6 +28,7 @@
     "import/resolver": ""
   },
   "rules": {
+    "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-var-requires": "off",
@@ -185,7 +186,7 @@
     "no-tabs": "error",
     "no-template-curly-in-string": "error",
     "no-throw-literal": "error",
-    "no-trailing-spaces": "error",
+    "no-trailing-spaces": "off",
     "no-undef-init": "off",
     "no-undefined": "off",
     "no-underscore-dangle": "off",
