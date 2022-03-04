@@ -1,19 +1,16 @@
-import { Stack } from "@chakra-ui/react";
+import { Stack, StackProps } from "@chakra-ui/react";
 
-type FormLayoutProps = {
-  children: React.ReactNode;
-};
-const FormLayout: React.FC<FormLayoutProps> = ({ children }) => {
+interface FormLayoutProps extends StackProps {}
+const FormLayout: React.FC<FormLayoutProps> = (props) => {
   return (
     <Stack
       spacing={3.5}
       align="start"
       border="2px solid #E5EDF1"
-      borderRadius={2.5}
+      borderRadius="10px"
       padding={{ base: 3, md: 9 }}
-    >
-      {children}
-    </Stack>
+      {...props}
+    />
   );
 };
 
