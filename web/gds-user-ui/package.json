@@ -25,6 +25,7 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
+    "react-phone-number-input": "^3.1.46",
     "react-redux": "^7.2.6",
     "react-scripts": "5.0.0",
     "react-select": "^5.2.2",
