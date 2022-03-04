@@ -42,6 +42,10 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 
 // Test that the backup manager periodically creates backups.
 func (s *gdsTestSuite) TestBackupManager() {
+	if s.stype == storeTrtl {
+		s.T().Skip("backup manager not supported for trtl store")
+	}
+
 	conf := gds.MockConfig()
 	conf.Backup = config.BackupConfig{
 		Enabled:  true,
