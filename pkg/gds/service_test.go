@@ -538,6 +538,13 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 	require.NoError(err)
 }
 
+// loadFixtures loads a new set of fixtures into the database. This method must respect
+// the ftype variable on the test suite, which indicates which fixtures are currently
+// loaded. If the ftype is different than the indicated fixture type, then this causes
+// the current database to be completely overwritten with the indicated fixtures. Tests
+// that require database fixtures should call the appropriate load method, either
+// LoadFullFixtures, LoadSmallFixtures, or LoadEmptyFixtures to ensure that the correct
+// fixtures are present before test execution.
 func (s *gdsTestSuite) loadFixtures(ftype fixtureType) {
 	// If we're already at the specified fixture type and no custom config is provided,
 	// do nothing
@@ -609,8 +616,12 @@ func (s *gdsTestSuite) LoadSmallFixtures() {
 	s.loadFixtures(small)
 }
 
+// resetFixtures uncaches the current database which causes the next call to
+// loadFixtures to generate a new database that overwrites the current one. Tests that
+// modify the database should call either ResetEmptyFixtures, ResetFullFixtures, or
+// ResetSmallFixtures to ensure that the fixtures are reset for the next test.
 func (s *gdsTestSuite) resetFixtures(ftype fixtureType) {
-	// Set the ftype to unknown to ensure the loader loads the fixture
+	// Set the ftype to unknown to ensure the loader loads the fixture.
 	s.ftype = unknown
 }
 
