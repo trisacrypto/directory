@@ -1,21 +1,17 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import  LandingLayout  from './LandingLayout';
+import LandingLayout from "./LandingLayout";
 
-interface LandingLayoutProps {
-
-}
+interface LandingLayoutProps {}
 
 export default {
-  title: "Landing",
+  title: "Layouts/LandingLayout",
   component: LandingLayout,
 };
 
-export const Layout: Story<LandingLayoutProps> = ({ ...props }) => (
-  <LandingLayout
-    {...props}
-  />
+export const Default: Story<LandingLayoutProps> = ({ ...props }) => (
+  <LandingLayout {...props} />
 );
 
-Layout.bind({});
+Default.bind({});
