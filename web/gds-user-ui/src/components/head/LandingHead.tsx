@@ -1,21 +1,17 @@
 import React from "react";
-import {
-
-  Flex,
-  Heading,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Flex, Heading, Stack, Text } from "@chakra-ui/react";
 
 interface LandingHeaderProps {
-  
-  title: string,
-  description?: string
+  title: string;
+  description?: string;
 }
 // we should add props to the LandingHead component to allow it to update content dynamically
-const LandingHead : React.FC<any> = ({title, description} : LandingHeaderProps): any => {
+const LandingHead: React.FC<any> = ({
+  title,
+  description,
+}: LandingHeaderProps): any => {
   return (
-      <Flex
+    <Flex
       bgGradient="linear(270deg,#24a9df,#1aebb4)"
       color="white"
       width="100%"
@@ -28,24 +24,24 @@ const LandingHead : React.FC<any> = ({title, description} : LandingHeaderProps):
         textAlign={"center"}
         color="white"
         align={"center"}
-        spacing={{ base: 8, md: 10 }}
-        py={{ base: 10, md: 20 }}
-        >
-       <Heading
+        spacing={{ base: 3 }}
+        py={{ base: 5 }}
+      >
+        <Heading
           fontWeight={600}
-          fontSize={{ base: "3xl", sm: "4xl", md: "6xl" }}
-          lineHeight={"110%"}
+          fontSize={{ base: "2xl", sm: "2xl", md: "4xl" }}
+          lineHeight={"80%"}
         >
-       {title || 'TRISA Global Directory Service'}
+          {title || "TRISA Global Directory Service"}
         </Heading>
-        {description ? <Text maxW={"2xl"}>{description}</Text> :
-         (<Text fontSize={'2xl'}>
-            Become Travel Rule compliant. <br/>
+        {description ? (
+          <Text maxW={"2xl"}>{description}</Text>
+        ) : (
+          <Text fontSize={"xl"}>
+            Become Travel Rule compliant. <br />
             Apply to Become a TRISA certified Virtual Asset Service Provider.'
-  
-        </Text>)
-        }
-       
+          </Text>
+        )}
       </Stack>
     </Flex>
   );
