@@ -83,6 +83,7 @@ fi
 
 # Build the primary backend images
 docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile $REPO
+docker build -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile $REPO
 docker build -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile $REPO
 docker build -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
 docker build -t trisa/trtlsim:$TAG -f $DIR/trtlsim/Dockerfile .
@@ -120,6 +121,7 @@ docker build \
 
 # Retag the images to push to gcr.io
 docker tag trisa/gds:$TAG gcr.io/trisa-gds/gds:$TAG
+docker tag trisa/gds-bff:$TAG gcr.io/trisa-gds/gds-bff:$TAG
 docker tag trisa/trtl:$TAG gcr.io/trisa-gds/trtl:$TAG
 docker tag trisa/trtl-init:$TAG gcr.io/trisa-gds/trtl-init:$TAG
 docker tag trisa/trtlsim:$TAG gcr.io/trisa-gds/trtlsim:$TAG
@@ -131,6 +133,7 @@ docker tag trisa/gds-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-testnet-admin-ui
 
 # Push to DockerHub
 docker push trisa/gds:$TAG
+docker push trisa/gds-bff:$TAG
 docker push trisa/trtl:$TAG
 docker push trisa/trtl-init:$TAG
 docker push trisa/trtlsim:$TAG
@@ -142,6 +145,7 @@ docker push trisa/gds-testnet-admin-ui:$TAG
 
 # Push to GCR
 docker push gcr.io/trisa-gds/gds:$TAG
+docker push gcr.io/trisa-gds/gds-bff:$TAG
 docker push gcr.io/trisa-gds/trtl:$TAG
 docker push gcr.io/trisa-gds/trtl-init:$TAG
 docker push gcr.io/trisa-gds/trtlsim:$TAG
