@@ -2,7 +2,6 @@ import React from "react";
 import { Story } from "@storybook/react";
 import LandingHeader from "./LandingHeader";
 
-
 interface LandingHeaderProps {
   title: string;
   description?: string;
@@ -14,12 +13,10 @@ export default {
 };
 
 export const Header: Story<LandingHeaderProps> = ({ ...props }) => (
-  <LandingHeader
-    {...props}
-  />
+  <LandingHeader {...props} />
 );
 
 Header.bind({
   title: "Landing",
-  descirption:"description"
+  descirption: "description",
 });

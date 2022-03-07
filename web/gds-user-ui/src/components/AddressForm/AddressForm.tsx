@@ -2,7 +2,7 @@ import { Grid, GridItem, VStack, Text } from "@chakra-ui/react";
 import InputFormControl from "components/ui/InputFormControl";
 import SelectFormControl from "components/ui/SelectFormControl";
 
-const LegalPersonForm: React.FC<{}> = () => {
+const AddressForm: React.FC<{}> = () => {
   return (
     <>
       <Text>Address 1</Text>
@@ -42,4 +42,4 @@ const LegalPersonForm: React.FC<{}> = () => {
   );
 };
 
-export default LegalPersonForm;
+export default AddressForm;
