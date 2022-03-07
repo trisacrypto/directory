@@ -120,6 +120,21 @@ services:
       - api
       - all
 
+  gds-bff:
+    build:
+      context: ../
+      dockerfile: ./containers/bff/Dockerfile
+    image: trisa/gds-bff
+    init: true
+    depends_on:
+      - gds
+    ports:
+      - 4437:4437
+    profiles:
+      - bff
+      - api
+      - all
+
   gds-ui:
     build:
       context: ../
