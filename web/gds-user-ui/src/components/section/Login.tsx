@@ -14,7 +14,7 @@ import {
   Image,
 } from "@chakra-ui/react";
 
-import { GoogleIcon } from "../Icon";
+import { GoogleIcon } from "../icon";
 
 import { colors } from "../../utils/theme";
 

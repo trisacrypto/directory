@@ -10,7 +10,7 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import { Link, useLocation, Navigate, Location } from "react-router-dom";
-import { getIcon } from "../Icon";
+import { getIcon } from "../icon";
 import { colors } from "../../utils/theme";
 
 const datas = [
