@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
@@ -17,7 +18,16 @@ type Config struct {
 	Mode        string              `split_words:"true" default:"release"`
 	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool                `split_words:"true" default:"false"`
+	TestNet     DirectoryConfig
+	MainNet     DirectoryConfig
 	processed   bool
+}
+
+// DirectoryConfig is a generic configuration for connecting to a GDS service.
+type DirectoryConfig struct {
+	Insecure bool          `split_words:"true" default:"true"`
+	Endpoint string        `split_words:"true" required:"true"`
+	Timeout  time.Duration `split_words:"true" default:"10s"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.

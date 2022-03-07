@@ -3,6 +3,7 @@ package config_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -10,11 +11,17 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_BFF_MAINTENANCE": "false",
-	"GDS_BFF_BIND_ADDR":   "8080",
-	"GDS_BFF_MODE":        "debug",
-	"GDS_BFF_LOG_LEVEL":   "debug",
-	"GDS_BFF_CONSOLE_LOG": "true",
+	"GDS_BFF_MAINTENANCE":      "false",
+	"GDS_BFF_BIND_ADDR":        "8080",
+	"GDS_BFF_MODE":             "debug",
+	"GDS_BFF_LOG_LEVEL":        "debug",
+	"GDS_BFF_CONSOLE_LOG":      "true",
+	"GDS_BFF_TESTNET_INSECURE": "true",
+	"GDS_BFF_TESTNET_ENDPOINT": "localhost:8443",
+	"GDS_BFF_TESTNET_TIMEOUT":  "5s",
+	"GDS_BFF_MAINNET_INSECURE": "true",
+	"GDS_BFF_MAINNET_ENDPOINT": "localhost:8444",
+	"GDS_BFF_MAINNET_TIMEOUT":  "3s",
 }
 
 func TestConfig(t *testing.T) {
@@ -40,6 +47,12 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_MODE"], conf.Mode)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.True(t, conf.ConsoleLog)
+	require.True(t, conf.TestNet.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_TESTNET_ENDPOINT"], conf.TestNet.Endpoint)
+	require.Equal(t, 5*time.Second, conf.TestNet.Timeout)
+	require.True(t, conf.MainNet.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_MAINNET_ENDPOINT"], conf.MainNet.Endpoint)
+	require.Equal(t, 3*time.Second, conf.MainNet.Timeout)
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
