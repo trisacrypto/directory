@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import Addresses from ".";
+import Addresses from "./";
 
 type AddressesProps = {};
 

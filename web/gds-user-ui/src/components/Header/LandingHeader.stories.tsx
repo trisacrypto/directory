@@ -8,15 +8,15 @@ interface LandingHeaderProps {
 }
 
 export default {
-  title: "Landing",
+  title: "components/LandingHeader",
   component: LandingHeader,
 };
 
-export const Header: Story<LandingHeaderProps> = ({ ...props }) => (
+export const Default: Story<LandingHeaderProps> = ({ ...props }) => (
   <LandingHeader {...props} />
 );
 
-Header.bind({
+Default.bind({
   title: "Landing",
-  descirption: "description",
+  decription: "description",
 });

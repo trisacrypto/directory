@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Stack,
-  Container,
   Box,
   Flex,
   Text,
@@ -15,7 +14,7 @@ import {
   Button,
 } from "@chakra-ui/react";
 
-import { colors } from "../../utils/theme";
+import { colors } from "utils/theme";
 
 type Props = StyleProps &
   FlexProps & {

@@ -1,9 +1,9 @@
 import React from "react";
 import { Flex, FlexProps } from "@chakra-ui/react";
 import LandingHeader from "components/Header/LandingHeader";
-import LandingHead from "components/head/LandingHead";
-import AboutTrisaSection from "components/section/AboutUs";
-import JoinUsSection from "components/section/JoinUs";
+import LandingHead from "components/Head/LandingHead";
+import AboutTrisaSection from "components/Section/AboutUs";
+import JoinUsSection from "components/Section/JoinUs";
 import LandingFooter from "components/Footer/LandingFooter";
 
 export default function LandingLayout(props: FlexProps): JSX.Element {

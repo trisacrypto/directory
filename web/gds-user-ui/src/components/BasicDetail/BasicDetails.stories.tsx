@@ -1,6 +1,6 @@
 import { Meta, Story } from "@storybook/react";
 import { FormikProps } from "formik";
-import BasicDetails from "./BasicDetails";
+import BasicDetails from "./";
 
 type BasicDetailsProps = {
   formik: FormikProps<any>;

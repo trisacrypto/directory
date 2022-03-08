@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import Contacts from "./Contacts";
+import Contacts from ".";
 
 export default {
   title: "components/Contacts",
