@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import LegalPerson from "./LegalPerson";
+import LegalPerson from ".";
 
 export default {
   title: "components/Legal Person",

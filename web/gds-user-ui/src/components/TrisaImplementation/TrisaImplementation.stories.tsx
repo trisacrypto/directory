@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import TrisaImplementation from "./TrisaImplementation";
+import TrisaImplementation from ".";
 
 export default {
   title: "components/Trisa Implementation",

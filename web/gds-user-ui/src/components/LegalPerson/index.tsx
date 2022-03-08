@@ -3,8 +3,8 @@ import { Box, Heading, HStack, Icon, Stack, Text } from "@chakra-ui/react";
 import Addresses from "components/Addresses";
 import CountryOfRegistration from "components/CountryOfRegistration";
 import FormLayout from "layouts/FormLayout";
-import NameIdentifiers from "./NameIdentifiers";
-import NationalIdentification from "./NationalIdentificaton";
+import NameIdentifiers from "../NameIdentifiers";
+import NationalIdentification from "../NameIdentification";
 
 type LegalPersonProps = {};
 

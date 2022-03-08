@@ -4,12 +4,12 @@ import LandingFooter from "./LandingFooter";
 interface LandingFooterProps {}
 
 export default {
-  title: "Landing",
+  title: "components/LandingFooter",
   component: LandingFooter,
 };
 
-export const Footer: Story<LandingFooterProps> = ({ ...props }) => (
+export const Default: Story<LandingFooterProps> = ({ ...props }) => (
   <LandingFooter {...props} />
 );
 
-Footer.bind({});
+Default.bind({});

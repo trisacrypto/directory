@@ -4,11 +4,11 @@ import { CheckCircleIcon } from "@chakra-ui/icons";
 import BasicDetailsForm from "components/BasicDetailsForm";
 import { FormikProps } from "formik";
 
-type BasicDetailsProps = {
+type TBasicDetailsProps = {
   formik: FormikProps<any>;
 };
 
-const BasicDetails: React.FC<BasicDetailsProps> = () => {
+const BasicDetails: React.FC<TBasicDetailsProps> = () => {
   return (
     <Stack
       spacing={5}

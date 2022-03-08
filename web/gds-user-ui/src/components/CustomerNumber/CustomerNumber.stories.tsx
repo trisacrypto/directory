@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import CustomerNumber from "./CustomerNumber";
+import CustomerNumber from ".";
 
 type CustomerNumberProps = {};
 

@@ -12,7 +12,7 @@ import {
 import DeleteButton from "components/ui/DeleteButton";
 import FormButton from "components/ui/FormButton";
 import FormLayout from "layouts/FormLayout";
-import AddressForm from "../AddressForm/AddressForm";
+import AddressForm from "../AddressForm";
 
 type AddressesPropsProps = {};
 const Addresses: React.FC<AddressesPropsProps> = () => {

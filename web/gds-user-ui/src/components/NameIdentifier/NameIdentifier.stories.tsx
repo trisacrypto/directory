@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import NameIdentifier from "./NameIdentifier";
+import NameIdentifier from ".";
 
 type NameIdentifierProps = {
   name: string;

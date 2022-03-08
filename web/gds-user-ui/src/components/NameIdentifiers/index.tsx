@@ -1,7 +1,7 @@
 import { HStack } from "@chakra-ui/react";
 import Button from "components/ui/FormButton";
 import FormLayout from "layouts/FormLayout";
-import NameIdentifier from "./NameIdentifier";
+import NameIdentifier from "../NameIdentifier";
 
 const NameIdentifiers: React.FC = () => {
   return (

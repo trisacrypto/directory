@@ -14,9 +14,9 @@ import {
   Image,
 } from "@chakra-ui/react";
 
-import { GoogleIcon } from "../Icon";
+import { GoogleIcon } from "components/Icon";
 
-import { colors } from "../../utils/theme";
+import { colors } from "utils/theme";
 
 export default function CreateAccount() {
   return (

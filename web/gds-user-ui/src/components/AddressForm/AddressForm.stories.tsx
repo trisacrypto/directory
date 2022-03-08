@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import AddressForm from "./AddressForm";
+import AddressForm from ".";
 
 type AddressFormProps = {};
 

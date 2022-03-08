@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Flex, FlexProps, useColorModeValue } from "@chakra-ui/react";
 import { MenuIcon, CloseIcon } from "../Icon";
-import Logo from "../ui/Logo";
-import MenuItem from "../Menu/Landing/MenuItem";
-import { colors } from "../../utils/theme";
+import Logo from "components/ui/Logo";
+import MenuItem from "components/Menu/Landing/MenuItem";
+import { colors } from "utils/theme";
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);

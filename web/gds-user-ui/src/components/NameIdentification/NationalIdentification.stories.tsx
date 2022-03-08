@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import NationalIdentification from "./NationalIdentificaton";
+import NationalIdentification from ".";
 
 type NationalIdentificationProps = {};
 
