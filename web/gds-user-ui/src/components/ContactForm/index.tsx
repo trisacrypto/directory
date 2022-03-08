@@ -3,14 +3,16 @@ import InputFormControl from "components/ui/InputFormControl";
 import PhoneNumberInput from "components/ui/PhoneNumberInput";
 import FormLayout from "layouts/FormLayout";
 
-const LegalContact: React.FC = () => {
+type ContactFormProps = {
+  title: string;
+  description: string;
+};
+
+const ContactForm: React.FC<ContactFormProps> = ({ title, description }) => {
   return (
     <FormLayout>
-      <Heading size="md">Legal/ Compliance Contact (required)</Heading>
-      <Text fontStyle="italic">
-        Compliance officer or legal contact for requests about the compliance
-        requirements and legal status of your organization.
-      </Text>
+      <Heading size="md">{title}</Heading>
+      <Text fontStyle="italic">{description}</Text>
       <InputFormControl
         label="Full Name"
         formHelperText="Preferred name for email communication."
@@ -34,4 +36,4 @@ const LegalContact: React.FC = () => {
   );
 };
 
-export default LegalContact;
+export default ContactForm;
