@@ -23,7 +23,7 @@ var (
 
 	// Anti-Entropy Metrics
 	PmAESyncs         *prometheus.CounterVec   // count of anti entropy sessions per peer, per region, and by perspective (initiator/remote)
-	PmAESyncLatency   *prometheus.HistogramVec // duration of anti entropy sessions (initiator perspective), by peer
+	PmAESyncLatency   *prometheus.HistogramVec // duration of anti entropy sessions (initiator perspective), by peer and region
 	PmAEPhase1Latency *prometheus.HistogramVec // time phase 1 of anti-entropy is taking from the perspective of the initiator, by peer
 	PmAEPhase2Latency *prometheus.HistogramVec // time phase 2 of anti-entropy is taking from the perspective of the remote, by peer
 	PmAEVersions      *prometheus.HistogramVec // count of all observed versions, per peer and region
@@ -108,6 +108,7 @@ func initMetrics() {
 		Namespace: PmNamespace,
 		Name:      "latency",
 		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
+		Buckets:   prometheus.ExponentialBuckets(5, 2, 12),
 	}, []string{"call"})
 
 	// PmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -131,38 +132,44 @@ func initMetrics() {
 	PmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "sync_latency",
-		Help:      "total duration of anti-entropy (originator perspective), labeled by peer",
-	}, []string{"peer"})
+		Help:      "total duration of anti-entropy (originator perspective), labeled by peer and region",
+		Buckets:   prometheus.LinearBuckets(10, 10, 50),
+	}, []string{"peer", "region"})
 
 	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase1_latency",
 		Help:      "duration of anti-entropy phase 1 (originator perspective), labeled by peer",
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEPhase2Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase2_latency",
 		Help:      "duration of anti-entropy phase 2 (remote perspective), labeled by peer",
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "versions",
-		Help:      "count of all observed versions, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "count of all observed versions, labeled by peer, region, and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 2000, 1000),
+	}, []string{"peer", "region", "perspective"})
 
 	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pulls",
-		Help:      "pulled objects during anti entropy, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "pulled objects during anti entropy, labeled by peer, region, and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
+	}, []string{"peer", "region", "perspective"})
 
 	PmAEUpdates = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pushes",
-		Help:      "pushed objects during anti entropy, labeled by peer and region",
-	}, []string{"peer", "region"})
+		Help:      "pushed objects during anti entropy, labeled by peer, region and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
+	}, []string{"peer", "region", "perspective"})
 
 	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: PmNamespace,

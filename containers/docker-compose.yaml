@@ -77,13 +77,14 @@ services:
     init: true
     ports:
       - 4436:4436
+      - 7777:7777
     volumes:
       - ../fixtures:/data
     environment:
       - TRTL_MAINTENANCE=false
       - TRTL_BIND_ADDR=:4436
       - TRTL_METRICS_ADDR=:7777
-      - TRTL_METRICS_ENABLED=false
+      - TRTL_METRICS_ENABLED=true
       - TRTL_LOG_LEVEL=debug
       - TRTL_CONSOLE_LOG=true
       - TRTL_DATABASE_URL=leveldb:////data/trtl/db
@@ -116,6 +117,27 @@ services:
       - 8080:8080
     profiles:
       - proxy
+      - api
+      - all
+
+  gds-bff:
+    build:
+      context: ../
+      dockerfile: ./containers/bff/Dockerfile
+    image: trisa/gds-bff
+    init: true
+    depends_on:
+      - gds
+    ports:
+      - 4437:4437
+    environment:
+      - GDS_BFF_MAINTENANCE=false
+      - GDS_BFF_BIND_ADDR=:4437
+      - GDS_BFF_MODE=release
+      - GDS_BFF_LOG_LEVEL=debug
+      - GDS_BFF_CONSOLE_LOG=true
+    profiles:
+      - bff
       - api
       - all
 
@@ -155,4 +177,28 @@ services:
     profiles:
       - admin
       - ui
+      - all
+
+  prometheus:
+    image: prom/prometheus:latest
+    depends_on:
+      - trtl
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    profiles:
+      - monitor
+      - all
+
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - 3002:3000
+    volumes:
+      - ./monitor/grafana:/var/lib/grafana
+    profiles:
+      - monitor
       - all

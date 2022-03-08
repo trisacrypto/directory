@@ -1,0 +1,1083 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "target": {
+            "limit": 100,
+            "matchAny": false,
+            "tags": [],
+            "type": "dashboard"
+          },
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 1,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "description": "",
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "mappings": []
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 12,
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "right",
+            "values": [
+              "value"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "trtl_deletes",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "trtl_puts",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "trtl_gets",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "trtl_iters",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "D"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "trtl_cursors",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "E"
+          }
+        ],
+        "title": "Total RPCs",
+        "type": "piechart"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "id": 6,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_deletes{}[$__interval])",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_gets{}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_puts{}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_iters{}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "D"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_cursors{}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "E"
+          }
+        ],
+        "title": "RPCs/second",
+        "type": "timeseries"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 7,
+          "x": 0,
+          "y": 8
+        },
+        "id": 23,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_latency_sum{call=\"Get\"}[$__interval]) / rate(trtl_latency_count{call=\"Get\"}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Average Latency",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.50, rate(trtl_latency_bucket{call=\"Get\"}[$__interval]))",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Median Latency",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.75, rate(trtl_latency_bucket{call=\"Get\"}[$__interval]))",
+            "format": "time_series",
+            "interval": "",
+            "legendFormat": "Third Quartile Latency",
+            "refId": "A"
+          }
+        ],
+        "title": "Get Statistics",
+        "type": "stat"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 7,
+          "y": 8
+        },
+        "id": 18,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": true
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": false,
+            "expr": "trtl_latency_bucket{call=\"Get\"}",
+            "format": "heatmap",
+            "interval": "",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "title": "Get Latency Distribution",
+        "type": "bargauge"
+      },
+      {
+        "cards": {},
+        "color": {
+          "cardColor": "#b4ff00",
+          "colorScale": "sqrt",
+          "colorScheme": "interpolateOranges",
+          "exponent": 0.5,
+          "mode": "spectrum"
+        },
+        "dataFormat": "tsbuckets",
+        "gridPos": {
+          "h": 12,
+          "w": 9,
+          "x": 15,
+          "y": 8
+        },
+        "heatmap": {},
+        "hideZeroBuckets": false,
+        "highlightCards": true,
+        "id": 14,
+        "legend": {
+          "show": false
+        },
+        "maxDataPoints": 25,
+        "pluginVersion": "8.4.1",
+        "reverseYBuckets": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "sum(rate(trtl_latency_bucket{}[$__interval])) by (le)",
+            "interval": "",
+            "legendFormat": "{{le}} ms",
+            "refId": "A"
+          }
+        ],
+        "title": "RPC Latency Heatmap",
+        "tooltip": {
+          "show": true,
+          "showHistogram": false
+        },
+        "type": "heatmap",
+        "xAxis": {
+          "show": true
+        },
+        "yAxis": {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        "yBucketBound": "auto"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 7,
+          "x": 0,
+          "y": 12
+        },
+        "id": 22,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_latency_sum{call=\"Put\"}[$__interval]) / rate(trtl_latency_count{call=\"Put\"}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Average Latency",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.50, rate(trtl_latency_bucket{call=\"Put\"}[$__interval]))",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Median Latency",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.75, rate(trtl_latency_bucket{call=\"Put\"}[$__interval]))",
+            "format": "time_series",
+            "interval": "",
+            "legendFormat": "Third Quartile Latency",
+            "refId": "A"
+          }
+        ],
+        "title": "Put Statistics",
+        "type": "stat"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 7,
+          "y": 12
+        },
+        "id": 20,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": true
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": false,
+            "expr": "trtl_latency_bucket{call=\"Put\"}",
+            "format": "heatmap",
+            "interval": "",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "title": "Put Latency Distribution",
+        "type": "bargauge"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 7,
+          "x": 0,
+          "y": 16
+        },
+        "id": 24,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_latency_sum{call=\"Delete\"}[$__interval]) / rate(trtl_latency_count{call=\"Delete\"}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Average Latency",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.50, rate(trtl_latency_bucket{call=\"Delete\"}[$__interval]))",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Median Latency",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.75, rate(trtl_latency_bucket{call=\"Delete\"}[$__interval]))",
+            "format": "time_series",
+            "interval": "",
+            "legendFormat": "Third Quartile Latency",
+            "refId": "A"
+          }
+        ],
+        "title": "Delete Statistics",
+        "type": "stat"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 7,
+          "y": 16
+        },
+        "id": 16,
+        "maxDataPoints": 25,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": false,
+          "text": {}
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": false,
+            "expr": "trtl_latency_bucket{call=\"Delete\"}",
+            "format": "heatmap",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "title": "Delete Latency Distribution",
+        "type": "bargauge"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 0,
+          "y": 20
+        },
+        "id": 25,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_latency_sum{call=\"Iter\"}[$__interval]) / rate(trtl_latency_count{call=\"Iter\"}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Average Latency",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.50, rate(trtl_latency_bucket{call=\"Iter\"}[$__interval]))",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Median Latency",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.75, rate(trtl_latency_bucket{call=\"Iter\"}[$__interval]))",
+            "format": "time_series",
+            "interval": "",
+            "legendFormat": "Third Quartile Latency",
+            "refId": "A"
+          }
+        ],
+        "title": "Iter Statistics",
+        "type": "stat"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 8,
+          "y": 20
+        },
+        "id": 26,
+        "maxDataPoints": 25,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": false,
+          "text": {}
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": false,
+            "expr": "trtl_latency_bucket{call=\"Iter\"}",
+            "format": "heatmap",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "title": "Iter Latency Distribution",
+        "type": "bargauge"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 0,
+          "y": 25
+        },
+        "id": 27,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "rate(trtl_latency_sum{call=\"Cursor\"}[$__interval]) / rate(trtl_latency_count{call=\"Cursor\"}[$__interval])",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Average Latency",
+            "refId": "B"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.50, rate(trtl_latency_bucket{call=\"Cursor\"}[$__interval]))",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "Median Latency",
+            "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": true,
+            "expr": "histogram_quantile(.75, rate(trtl_latency_bucket{call=\"Cursor\"}[$__interval]))",
+            "format": "time_series",
+            "interval": "",
+            "legendFormat": "Third Quartile Latency",
+            "refId": "A"
+          }
+        ],
+        "title": "Cursor Statistics",
+        "type": "stat"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 8,
+          "y": 25
+        },
+        "id": 28,
+        "maxDataPoints": 25,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": false,
+          "text": {}
+        },
+        "pluginVersion": "8.4.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "hGg4vdf7k"
+            },
+            "exemplar": false,
+            "expr": "trtl_latency_bucket{call=\"Cursor\"}",
+            "format": "heatmap",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "title": "Cursor Latency Distribution",
+        "type": "bargauge"
+      }
+    ],
+    "refresh": false,
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Trtl Metrics",
+    "uid": "MpHwLJB7k",
+    "version": 2,
+    "weekStart": ""
+  }

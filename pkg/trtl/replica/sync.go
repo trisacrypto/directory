@@ -242,7 +242,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	// Compute latency in milliseconds
 	// NOTE: we're only tracking latency for successful AE sessions
 	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmAESyncLatency.WithLabelValues(peer.Name).Observe(latency)
+	prom.PmAESyncLatency.WithLabelValues(peer.Name, peer.Region).Observe(latency)
 
 	// Anti-entropy session complete
 	return nil
@@ -504,6 +504,7 @@ gossip:
 				log.Info().
 					Uint64("local_repairs", repairs).
 					Uint64("remote_updates", updates).
+					Uint64("versions", versions).
 					Msg("anti-entropy synchronization complete")
 			} else {
 				log.Debug().Msg("anti-entropy complete with no synchronization")
@@ -515,9 +516,9 @@ gossip:
 			log.Trace().Msg("initiator phase 2 complete")
 
 			// Update Prometheus metrics
-			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(versions))
-			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(updates))
-			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region).Observe(float64(repairs))
+			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region, "initiator").Observe(float64(versions))
+			prom.PmAEUpdates.WithLabelValues(r.conf.Name, r.conf.Region, "initiator").Observe(float64(updates))
+			prom.PmAERepairs.WithLabelValues(r.conf.Name, r.conf.Region, "initiator").Observe(float64(repairs))
 
 			return
 

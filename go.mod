@@ -24,6 +24,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.14.2 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/mroth/weightedrand v0.4.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/rotationalio/honu v0.3.0
