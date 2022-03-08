@@ -10,6 +10,7 @@
     "@chakra-ui/storybook-addon": "^1.0.3",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
+    "@fortawesome/fontawesome-free": "^6.0.0",
     "@reduxjs/toolkit": "^1.7.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
