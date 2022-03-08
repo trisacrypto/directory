@@ -2,6 +2,7 @@ package bff
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
 
 func init() {
@@ -52,6 +54,15 @@ func New(conf config.Config) (s *Server, err error) {
 		echan: make(chan error, 1),
 	}
 
+	// Connect to the TestNet and MainNet directory services
+	if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
+		return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
+	}
+
+	if s.mainnet, err = ConnectGDS(conf.MainNet); err != nil {
+		return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
+	}
+
 	// Create the router
 	gin.SetMode(conf.Mode)
 	s.router = gin.New()
@@ -76,6 +87,8 @@ type Server struct {
 	conf    config.Config
 	srv     *http.Server
 	router  *gin.Engine
+	testnet gds.TRISADirectoryClient
+	mainnet gds.TRISADirectoryClient
 	healthy bool
 	echan   chan error
 }
@@ -165,4 +178,14 @@ func (s *Server) GetConf() config.Config {
 // GetRouter returns the Gin API router for testing purposes.
 func (s *Server) GetRouter() http.Handler {
 	return s.router
+}
+
+// GetTestNet returns the TestNet directory client for testing purposes.
+func (s *Server) GetTestNet() gds.TRISADirectoryClient {
+	return s.testnet
+}
+
+// GetMainNet returns the MainNet directory client for testing purposes.
+func (s *Server) GetMainNet() gds.TRISADirectoryClient {
+	return s.mainnet
 }
