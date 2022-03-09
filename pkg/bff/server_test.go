@@ -73,9 +73,18 @@ func (s *bffTestSuite) SetupSuite() {
 	// state doesn't change between tests.
 	go s.bff.Serve()
 
+	// Wait for 500 ms to ensure the BFF starts serving
+	time.Sleep(500 * time.Millisecond)
+
 	// Create the BFF client for making requests to the server
+	require.NotEmpty(s.bff.GetURL(), "no url to connect to client on")
 	s.client, err = api.New(s.bff.GetURL())
 	require.NoError(err, "could not initialize BFF client")
+}
+
+func (s *bffTestSuite) AfterTest(suiteName, testName string) {
+	s.testnet.Reset()
+	s.mainnet.Reset()
 }
 
 func (s *bffTestSuite) TearDownSuite() {
