@@ -95,6 +95,7 @@ type Server struct {
 	router  *gin.Engine
 	testnet gds.TRISADirectoryClient
 	mainnet gds.TRISADirectoryClient
+	started time.Time
 	healthy bool
 	url     string
 	echan   chan error
@@ -127,6 +128,7 @@ func (s *Server) Serve() (err error) {
 
 	// Set the URL from the listener
 	s.url = "http://" + sock.Addr().String()
+	s.started = time.Now()
 
 	// Listen for HTTP requests on the specified address and port
 	go func() {
@@ -177,6 +179,13 @@ func (s *Server) setupRoutes() (err error) {
 	s.router.Use(ginzerolog.Logger("gin"))
 	s.router.Use(gin.Recovery())
 	s.router.Use(s.Available())
+
+	// Add the v1 API routes
+	v1 := s.router.Group("/v1")
+	{
+		// Heartbeat route (no authentication required)
+		v1.GET("/status", s.Status)
+	}
 
 	// NotFound and NotAllowed routes
 	s.router.NoRoute(api.NotFound)

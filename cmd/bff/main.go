@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff"
+	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/urfave/cli/v2"
 )
@@ -33,6 +38,21 @@ func main() {
 						Aliases: []string{"a"},
 						Usage:   "the address and port to bind the server on",
 						EnvVars: []string{"GDS_BFF_BIND_ADDR"},
+					},
+				},
+			},
+			{
+				Name:     "status",
+				Usage:    "send a status check to the BFF server",
+				Category: "client",
+				Action:   status,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "url",
+						Aliases: []string{"u", "endpoint"},
+						Usage:   "specify the URL to connect to the BFF server on",
+						EnvVars: []string{"GDS_BFF_CLIENT_URL"},
+						Value:   "http://localhost:4437",
 					},
 				},
 			},
@@ -67,5 +87,37 @@ func serve(c *cli.Context) (err error) {
 	if err = srv.Serve(); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+// Status checks if the GDS BFF is up
+func status(c *cli.Context) (err error) {
+	var client api.BFFClient
+	if client, err = api.New(c.String("url")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var rep *api.StatusReply
+	if rep, err = client.Status(ctx); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+//===========================================================================
+// Helper Functions
+//===========================================================================
+
+func printJSON(msg interface{}) (err error) {
+	var data []byte
+	if data, err = json.MarshalIndent(msg, "", "  "); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Println(string(data))
 	return nil
 }

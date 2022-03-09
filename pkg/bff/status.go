@@ -15,6 +15,19 @@ const (
 	serverStatusMaintenance = "maintenance"
 )
 
+func (s *Server) Status(c *gin.Context) {
+	// The available middleware handles stopping and maintenance mode. If the request
+	// has come this far, the status is necessarily ok.
+	out := api.StatusReply{
+		Status:  serverStatusOK,
+		Version: pkg.Version(),
+		Uptime:  time.Since(s.started).String(),
+	}
+
+	// Render the response
+	c.JSON(http.StatusOK, out)
+}
+
 // Available is middleware that uses the healthy boolean to return a service unavailable
 // http status code if the server is shutting down. This middleware must be first in the
 // chain to ensure that complex handling to slow the shutdown of the server.
@@ -31,9 +44,9 @@ func (s *Server) Available() gin.HandlerFunc {
 			}
 
 			c.JSON(http.StatusServiceUnavailable, api.StatusReply{
-				Status:    status,
-				Timestamp: time.Now(),
-				Version:   pkg.Version(),
+				Status:  status,
+				Uptime:  time.Since(s.started).String(),
+				Version: pkg.Version(),
 			})
 
 			c.Abort()

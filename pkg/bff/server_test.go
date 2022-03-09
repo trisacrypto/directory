@@ -80,8 +80,9 @@ func (s *bffTestSuite) SetupSuite() {
 
 func (s *bffTestSuite) TearDownSuite() {
 	require := s.Require()
-	err := s.bff.Shutdown()
-	require.NoError(err, "could not shutdown the BFF server after tests")
+	require.NoError(s.bff.Shutdown(), "could not shutdown the BFF server after tests")
+	s.testnet.Shutdown()
+	s.mainnet.Shutdown()
 }
 
 func TestBFF(t *testing.T) {

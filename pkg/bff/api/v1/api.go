@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"time"
 )
 
 //===========================================================================
@@ -25,7 +24,7 @@ type Reply struct {
 
 // StatusReply is returned on status requests. Note that no request is needed.
 type StatusReply struct {
-	Status    string    `json:"status"`
-	Timestamp time.Time `json:"timestamp,omitempty"`
-	Version   string    `json:"version,omitempty"`
+	Status  string `json:"status"`
+	Uptime  string `json:"uptime,omitempty"`
+	Version string `json:"version,omitempty"`
 }
