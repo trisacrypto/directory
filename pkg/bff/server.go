@@ -127,7 +127,7 @@ func (s *Server) Serve() (err error) {
 	}
 
 	// Set the URL from the listener
-	s.url = "http://" + sock.Addr().String()
+	s.SetURL("http://" + sock.Addr().String())
 	s.started = time.Now()
 
 	// Listen for HTTP requests on the specified address and port
@@ -172,6 +172,13 @@ func (s *Server) SetHealth(health bool) {
 	s.healthy = health
 	s.Unlock()
 	log.Debug().Bool("healthy", health).Msg("server health set")
+}
+
+func (s *Server) SetURL(url string) {
+	s.Lock()
+	s.url = url
+	s.Unlock()
+	log.Debug().Str("url", url).Msg("server url set")
 }
 
 func (s *Server) setupRoutes() (err error) {
@@ -226,5 +233,7 @@ func (s *Server) GetMainNet() gds.TRISADirectoryClient {
 // GetURL returns the URL that the server can be reached if it has been started. This
 // accessor is primarily used to create a test client.
 func (s *Server) GetURL() string {
+	s.RLock()
+	defer s.RUnlock()
 	return s.url
 }
