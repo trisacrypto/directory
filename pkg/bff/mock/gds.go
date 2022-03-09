@@ -15,7 +15,7 @@ func NewGDS(conf config.DirectoryConfig) (g *GDS, err error) {
 	g = &GDS{
 		srv:   grpc.NewServer(),
 		sock:  bufconn.New(bufSize),
-		Calls: make(map[string]uint32),
+		Calls: make(map[string]int),
 	}
 
 	gds.RegisterTRISADirectoryServer(g.srv, g)
@@ -42,7 +42,7 @@ type GDS struct {
 	sock            *bufconn.GRPCListener
 	srv             *grpc.Server
 	client          gds.TRISADirectoryClient
-	Calls           map[string]uint32
+	Calls           map[string]int
 	OnRegister      func(context.Context, *gds.RegisterRequest) (*gds.RegisterReply, error)
 	OnLookup        func(context.Context, *gds.LookupRequest) (*gds.LookupReply, error)
 	OnSearch        func(context.Context, *gds.SearchRequest) (*gds.SearchReply, error)

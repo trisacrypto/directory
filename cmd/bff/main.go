@@ -54,6 +54,12 @@ func main() {
 						EnvVars: []string{"GDS_BFF_CLIENT_URL"},
 						Value:   "http://localhost:4437",
 					},
+					&cli.BoolFlag{
+						Name:    "nogds",
+						Aliases: []string{"no-gds", "G"},
+						Usage:   "health check the BFF without requesting GDS status",
+						Value:   false,
+					},
 				},
 			},
 		},
@@ -100,8 +106,15 @@ func status(c *cli.Context) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	var params *api.StatusParams
+	if c.Bool("nogds") {
+		params = &api.StatusParams{
+			NoGDS: true,
+		}
+	}
+
 	var rep *api.StatusReply
-	if rep, err = client.Status(ctx); err != nil {
+	if rep, err = client.Status(ctx, params); err != nil {
 		return cli.Exit(err, 1)
 	}
 

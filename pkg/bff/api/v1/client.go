@@ -11,6 +11,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.
@@ -47,10 +49,16 @@ var _ BFFClient = &APIv1{}
 // Client Methods
 //===========================================================================
 
-func (s *APIv1) Status(ctx context.Context) (out *StatusReply, err error) {
+func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encdoe query params: %s", err)
+	}
+
 	//  Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/status", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/status", nil, &params); err != nil {
 		return nil, err
 	}
 
