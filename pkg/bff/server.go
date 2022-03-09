@@ -3,6 +3,7 @@ package bff
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -54,13 +55,18 @@ func New(conf config.Config) (s *Server, err error) {
 		echan: make(chan error, 1),
 	}
 
-	// Connect to the TestNet and MainNet directory services
-	if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
-		return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
-	}
+	// Connect to the TestNet and MainNet directory services if we're not in
+	// maintenance or testing mode (in testing mode, the connection will be manual).
+	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
+		if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
+			return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
+		}
+		log.Debug().Str("endpoint", conf.TestNet.Endpoint).Str("network", "testnet").Msg("connected to GDS")
 
-	if s.mainnet, err = ConnectGDS(conf.MainNet); err != nil {
-		return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
+		if s.mainnet, err = ConnectGDS(conf.MainNet); err != nil {
+			return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
+		}
+		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to GDS")
 	}
 
 	// Create the router
@@ -90,6 +96,7 @@ type Server struct {
 	testnet gds.TRISADirectoryClient
 	mainnet gds.TRISADirectoryClient
 	healthy bool
+	url     string
 	echan   chan error
 }
 
@@ -110,17 +117,28 @@ func (s *Server) Serve() (err error) {
 		log.Warn().Msg("starting server in maintenance mode")
 	}
 
+	// Create a socket to listen on so that we can infer the final URL (e.g. if the
+	// BindAddr is 127.0.0.1:0 for testing, a random port will be assigned, manually
+	// creating the listener will allow us to determine which port).
+	var sock net.Listener
+	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
+		s.echan <- err
+	}
+
+	// Set the URL from the listener
+	s.url = "http://" + sock.Addr().String()
+
 	// Listen for HTTP requests on the specified address and port
 	go func() {
-		log.Info().
-			Str("listen", s.conf.BindAddr).
-			Str("version", pkg.Version()).
-			Msg("gds bff server started")
-
-		if err = s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err = s.srv.Serve(sock); err != nil && err != http.ErrServerClosed {
 			s.echan <- err
 		}
 	}()
+
+	log.Info().
+		Str("listen", s.url).
+		Str("version", pkg.Version()).
+		Msg("gds bff server started")
 
 	// Listen for any errors that might have occurred and wait for all go routines to stop
 	if err = <-s.echan; err != nil {
@@ -170,7 +188,13 @@ func (s *Server) setupRoutes() (err error) {
 // Accessors - used primarily for testing
 //===========================================================================
 
-// GetConf returns a copy of the current configuration
+// SetClients allows tests to set a bufconn client to a mock GDS server.
+func (s *Server) SetClients(testnet, mainnet gds.TRISADirectoryClient) {
+	s.testnet = testnet
+	s.mainnet = mainnet
+}
+
+// GetConf returns a copy of the current configuration.
 func (s *Server) GetConf() config.Config {
 	return s.conf
 }
@@ -188,4 +212,10 @@ func (s *Server) GetTestNet() gds.TRISADirectoryClient {
 // GetMainNet returns the MainNet directory client for testing purposes.
 func (s *Server) GetMainNet() gds.TRISADirectoryClient {
 	return s.mainnet
+}
+
+// GetURL returns the URL that the server can be reached if it has been started. This
+// accessor is primarily used to create a test client.
+func (s *Server) GetURL() string {
+	return s.url
 }
