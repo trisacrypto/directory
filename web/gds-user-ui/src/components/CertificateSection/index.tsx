@@ -107,4 +107,8 @@ const CertificateSection: React.FC<CertificateSectionProps> = ({
   );
 };
 
+CertificateSection.defaultProps = {
+  step: 1,
+};
+
 export default CertificateSection;
