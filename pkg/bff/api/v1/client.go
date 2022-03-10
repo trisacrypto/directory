@@ -83,6 +83,27 @@ func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply,
 	return out, nil
 }
 
+func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/lookup", nil, &params); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &LookupReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 //===========================================================================
 // Helper Methods
 //===========================================================================

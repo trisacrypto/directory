@@ -115,3 +115,31 @@ func TestStatus(t *testing.T) {
 	require.Equal(t, fixture.Uptime, out.Uptime)
 	require.Equal(t, fixture.Version, out.Version)
 }
+
+func TestLookup(t *testing.T) {
+	fixture := &api.LookupReply{
+		Results: []map[string]interface{}{
+			{"foo": "1", "color": "red"},
+			{"foo": "2", "color": "blue"},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/lookup", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Lookup(context.TODO(), &api.LookupParams{CommonName: "example.com"})
+	require.NoError(t, err)
+	require.Equal(t, fixture.Results, out.Results)
+}
