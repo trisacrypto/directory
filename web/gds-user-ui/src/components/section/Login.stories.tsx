@@ -1,7 +1,6 @@
 import React from "react";
 import { Story } from "@storybook/react";
 import Login from "./Login";
-
 interface LoginProps {}
 
 export default {

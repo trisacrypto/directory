@@ -9,7 +9,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 
-enum DetailType {
+enum DetailsCardEnum {
   ORG = "org",
   CERT = "cert",
 }
@@ -18,7 +18,7 @@ interface DetailsCardProps {
   data: any;
 }
 
-const DetailsCard = ({ type, title, data }: DetailsCardProps) => {
+const DetailsCard = ({ type, data }: DetailsCardProps) => {
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -32,7 +32,7 @@ const DetailsCard = ({ type, title, data }: DetailsCardProps) => {
       px={5}
     >
       <Stack>
-        {type === DetailType.ORG ? (
+        {type === DetailsCardEnum.ORG ? (
           <Stack>
             <Heading fontSize={20}>Organizational Details</Heading>
             <UnorderedList p={5} mt={10} px={5}>

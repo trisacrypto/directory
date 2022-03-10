@@ -6,7 +6,7 @@ import EllipseIcon from "components/Icon/EllipseIcon";
 interface NetworkStatusProps {
   isOnline: boolean;
 }
-const NetworkStatus: FC<NetworkStatusProps> = (props: NetworkStatusProps) => {
+const NetworkStatus = (props: NetworkStatusProps) => {
   const { isOnline } = props;
   return (
     <Box
