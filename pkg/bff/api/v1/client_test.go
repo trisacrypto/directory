@@ -81,9 +81,9 @@ func TestClient(t *testing.T) {
 
 func TestStatus(t *testing.T) {
 	fixture := &api.StatusReply{
-		Status:    "ok",
-		Timestamp: time.Now(),
-		Version:   "1.0.test",
+		Status:  "ok",
+		Uptime:  (2 * time.Second).String(),
+		Version: "1.0.test",
 	}
 
 	// Create a Test Server
@@ -101,9 +101,17 @@ func TestStatus(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.Status(context.TODO())
+	// Test with nil params
+	out, err := client.Status(context.TODO(), nil)
 	require.NoError(t, err)
 	require.Equal(t, fixture.Status, out.Status)
-	require.True(t, fixture.Timestamp.Equal(out.Timestamp))
+	require.Equal(t, fixture.Uptime, out.Uptime)
+	require.Equal(t, fixture.Version, out.Version)
+
+	// Test with params
+	out, err = client.Status(context.TODO(), &api.StatusParams{NoGDS: true})
+	require.NoError(t, err)
+	require.Equal(t, fixture.Status, out.Status)
+	require.Equal(t, fixture.Uptime, out.Uptime)
 	require.Equal(t, fixture.Version, out.Version)
 }

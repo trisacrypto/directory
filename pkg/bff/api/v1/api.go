@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"time"
 )
 
 //===========================================================================
@@ -10,7 +9,7 @@ import (
 //===========================================================================
 
 type BFFClient interface {
-	Status(ctx context.Context) (out *StatusReply, err error)
+	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
 }
 
 //===========================================================================
@@ -23,9 +22,16 @@ type Reply struct {
 	Error   string `json:"error,omitempty" yaml:"error,omitempty"`
 }
 
+// StatusParams is parsed from the query parameters of the GET request
+type StatusParams struct {
+	NoGDS bool `url:"nogds,omitempty" form:"nogds" default:"false"`
+}
+
 // StatusReply is returned on status requests. Note that no request is needed.
 type StatusReply struct {
-	Status    string    `json:"status"`
-	Timestamp time.Time `json:"timestamp,omitempty"`
-	Version   string    `json:"version,omitempty"`
+	Status  string `json:"status"`
+	Uptime  string `json:"uptime,omitempty"`
+	Version string `json:"version,omitempty"`
+	TestNet string `json:"testnet,omitempty"`
+	MainNet string `json:"mainnet,omitempty"`
 }
