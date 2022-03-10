@@ -53,7 +53,7 @@ func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply,
 	// Create the query params from the input
 	var params url.Values
 	if params, err = query.Values(in); err != nil {
-		return nil, fmt.Errorf("could not encdoe query params: %s", err)
+		return nil, fmt.Errorf("could not encode query params: %s", err)
 	}
 
 	//  Make the HTTP request
