@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/go-querystring/query"
@@ -98,6 +99,30 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 
 	// Execute the request and get a response
 	out = &LookupReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error) {
+	// network is required for the endpoint
+	if in.Network == "" {
+		return nil, ErrNetworkRequired
+	}
+
+	// Determine the path for the request
+	in.Network = strings.ToLower(strings.TrimSpace(in.Network))
+	path := fmt.Sprintf("/v1/register/%s", in.Network)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &RegisterReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

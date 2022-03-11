@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,6 +13,10 @@ var (
 	unsuccessful = Reply{Success: false}
 	notFound     = Reply{Success: false, Error: "resource not found"}
 	notAllowed   = Reply{Success: false, Error: "method not allowed"}
+)
+
+var (
+	ErrNetworkRequired = errors.New("request requires a valid network (mainnet or testnet)")
 )
 
 // ErrorResponse constructs an new response from the error or returns a success: false.
