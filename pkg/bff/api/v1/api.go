@@ -47,7 +47,7 @@ type LookupParams struct {
 	CommonName string `url:"common_name,omitempty" form:"common_name"`
 }
 
-// LookupReply can return 1..2 results either one result found from one directory
+// LookupReply can return 1-2 results either one result found from one directory
 // service or results found from both TestNet and MainNet. If no results are found, the
 // Lookup endpoint returns a 404 error (not found). The result is the simplest case,
 // just a JSON serialization of the protocol buffers returned from GDS to help long term
