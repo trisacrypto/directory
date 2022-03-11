@@ -9,9 +9,9 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/bff/mock"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (s *bffTestSuite) TestStatus() {
@@ -63,9 +63,7 @@ func (s *bffTestSuite) TestStatus() {
 	require.Equal(s.mainnet.Calls["Status"], 2)
 
 	// Test Status with TestNet Error
-	s.testnet.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
-		return nil, status.Error(codes.Unavailable, "unreachable host")
-	}
+	s.testnet.UseError(mock.StatusRPC, codes.Unavailable, "unreachable host")
 	rep, err = s.client.Status(context.TODO(), nil)
 	require.NoError(err, "could not make status request")
 	require.Equal("ok", rep.Status, "server did not return an ok status")
