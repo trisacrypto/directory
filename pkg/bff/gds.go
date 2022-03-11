@@ -117,8 +117,8 @@ func (s *Server) Lookup(c *gin.Context) {
 		}
 	}
 
-	go lookup(s.testnet, 0, "testnet")
-	go lookup(s.mainnet, 1, "mainnet")
+	go lookup(s.testnet, 0, testnet)
+	go lookup(s.mainnet, 1, mainnet)
 	wg.Wait()
 
 	// If there were multiple errors, return a 500
