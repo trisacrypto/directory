@@ -1,0 +1,45 @@
+{
+    "error": null,
+    "id": "6a57fea4-8fb7-42f3-bf0c-55fecccd2e53",
+    "registered_directory": "trisatest.net",
+    "common_name": "api.alice.vaspbot.net",
+    "endpoint": "api.alice.vaspbot.net:443",
+    "identity_certificate": {
+        "version": "3",
+        "serial_number": "JjAoAUmTaW34z6UXvGnsPkGYaDxvijGodgiCsRtY",
+        "signature": "dIVNcqNnIPtDcN2tDW0QM0T3DNHRnKiza57tmDX2qDo1q5WX6YdLzhh/C2dbkyl8VH6BUCjQPXemO9p7U6o/kGwjxmLZ1Ysk4eoTjSndYL4aISgItwNdDIZEHR+TC+8tRozQ0kod//FgsLieK5SwE/D7KvG+51rtEdQgWUc4lnXyQv2zpL1AkFN4O45I8r/2ptwnBo1MSZEjmY/RKp1glvHG5NKoOxS5WV5hpM4kbR7ms+hAr5XmWHJjqhty+VBrvQOpP7vW0DuoaAwYPVwZJAOQkTYapii4ri5ub1bpPrgmrBq79J8kvSFwuSeP/TD0/kyMFx5k8/Thn84EJS7emTIPS9133xxawnDM289KdouKTFLgDAF8ihqb5nVc7P2n6BFO5ZLO5rHFLPy0HMX6HCY1OgVaMc+yXdF/n3DKDQuawq37edcJndtdCI4Xz7IkmW8k52Boak00gGJbYviQcNSp8cnX+qv+niQRGwZkBWgrzDCr4m3ZsBJ3FOClI+JRDdajmEO+qnRJvsOTuf/ohE0CfK9dMPSZdVYfhEPSooS/fokhzeJWDxga2D6nMP/wo+JtjyHcMYRWswlBF/xsR+WnLoYipQNzEg/ScHC9OBtJWPKn1D6N8KHB9Yl2T9GlgQROf+UXA6JBS0PIWiB5b40XMxQYIKplFE5xW9bwV4DoGc1cp8XQcEfp0CUFowQjnNWSRiPMA6tgX5Wmkn4UhJNOtRdQWEepZ5l24+CXyqhJY7O1KoXa0KH7zzVpATfqszQ06OqDsFC/MzooigniGCbkE6gAiu65iPf+5ERYteIt2+MQoxAgvTnZXmDpkowz7Uio+GYefSS9KlCNIBPmMxyHltYsGL0g/D8ut+W27O1WvMe3sW5UQeqDCCxZySeBNuv3QdaFTLbG0Q==",
+        "signature_algorithm": "SHA384-RSA",
+        "public_key_algorithm": "RSA",
+        "subject": {
+            "common_name": "api.alice.vaspbot.net",
+            "serial_number": "",
+            "organization": ["Alice VASP, Inc."],
+            "organizational_unit": [""],
+            "street_address": [""],
+            "locality": ["New York"],
+            "province": ["New York"],
+            "postal_code": [""],
+            "country": ["US"]
+        },
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "serial_number": "",
+            "organization": ["CipherTrace Inc"],
+            "organizational_unit": [""],
+            "street_address": [""],
+            "locality": ["Menlo Park"],
+            "province": ["California"],
+            "postal_code": [""],
+            "country": ["US"]
+        },
+        "not_before": "2021-11-24T23:19:21Z",
+        "not_after": "2022-12-24T23:19:20Z",
+        "revoked": false,
+        "data": "NtMcKV3ObQ0UYWVZ8xB8wdynA+zqGUxy06tO1aT6ucdsltw4C+JmDsO7BNFbTjniPq/6qLAvdHtSahRoO+r2SiCoOSfurMHfXjuPTcMgqavUYOKV6LWliqJpY8qt8bXicjJ7hArjO6OU9XqUOVVy7LwbaDoqwEgvChSVQJjRjv3yH6OjL8ytOTyFJSUZ2fY3zZwy2V5aVP1lpdTNsq+VVmvt19P5Av8IjEnZrA+bD8QrnXtiIGPI3vupi80QJ/pFLeYrCjaf/vqlUJHHiwzRwsUleXWfQShCi+TiBaMy2yuazSiExKDtzohC7dopsU2QqusaVFJsqghY4o4YDVAEzkwKrAvFxZ15jBqn7ViENL1QUnvF1Lt3lS/e7nu30Ry0V5JuqjnMGKY8YTihxBhYfnqlh6UB3/9+spuPqOZcTzu+JUgZHvV0wsDamO7dhFqUZT5d8onN+LAdQzbKufZSjtuos/LLDjK2OlR+wmG9T/p4/hXQJ5jOqwikQ39GK24vBQnWHXRzkU/iau24sq7S8yFS+8WR8ild+8vhYOW9f04u7hR4PTXsW5glbbFMs15FpwBjPnzx+jVZt+KJAxPKwHfrYg7hv4uk2aegGzAlWwNIA8NYORN5tvAq4jhtdAKoCoxFXi0NCODOa89UxLzAUoBmWS/UkYC3BsxlFn9m7lKwsMVb+LHja3LbBoCw6Fdy1cz6prpd2zAJggBrQXgnfZX4VKSLnOsuQHWiwPJkgNXfUGSxW0NM3EjMhw64hClFi5Mf5EfYOXZQl9KdfuCGDfYbdbVvPXNb4Zefi9wuO5rsTJ/wPhW+XO/V1Ew5x/WC7egpvAVcks2Y8c89WBIN4zNpsaxedVukDUN4qc4GXWd/UbF1aok/8oax37oM5XX7xfk5T25vvq9qzeL+VaafB3EOhpsS83tSzKXGzWTvc50b5SFaG30q4eSoNOtoNh4psIkM4eGlRalNoy+02Vf914M4OCacbwSnRNbv5M1fCP87NIKtQ2XhLPhdKVA6NNVoMWC49l9oEXvt118g1AQDMH6/yVvhxw/vQBrQfRSuKuTcJe/gr/nZr5oF7HP2RgtJvoA4So/1i3ejcncnJxoSKDYN2ZhW/luDfI4nD0LuYaPiSJHgCG1V6RHNLSAHu95Vyy1St2tvItORRV4JfbUCRA93weO5bbyON+12JWgzVqWYOAVONS/Bw5nCl6qa1nYholctgERSA9WYLlHXnnFLENr4ZUqJi8cLOWyTHzwcD0YaH8Du0EDc3pLHPKHfXAHr+LL2IvFrknkzzaMVn1PLZOtTSqU7O2n8gVFLuWRXPc82ZZ/0PBQWt40d/sOiP8YwLwxN35s1CzKUjIvcf0o8OQ==",
+        "chain": "vguL7QXca5nXmy3yKpyFhKP0yAreDrQuyHo2v6cAAcbc7Ck4yc1nH0nb+tozyOpL81Agzm3Fag4gXG3FS8aPOPmi84KIAmSUC3xtPYtZmybsCvkdsaA44Y+yfC/oXPIvSp4PyKAFI8TGlihfFzb5mCPHGylqJTjUq5MR9d1Qt71NFl/cC77YGuYdRGB3KKam5Nhu1lueQrDnjJ8S3OZMi1B8/7aQ+T0Xl2n61n57UuQu3NpQZpSJBlxm+ijh4Rxj7lPaJ00EoIi2tTxP1u9/xRGSz6tXzABgmOF7hDSoedAE0v+xJ+1+j3RFiTsOF4+mo7/81t+n/6FlrnWpYZ+yTWCdK4l4c0+H0C5EVOWhjihchKu6QqUg7XOxQruuDKX0ypHdfoGmundUqIBgzvC0xFWUrvF1nBD4OMqHxdjyf7kzuLv8UuP5BB/tJxZGEs6QawsDzOh7SUgl8mRBF9n0Cr4kYVOpaiPV7mkwx3bv6xYGf7muBNKGIQ9SF/CywKJZf/3TDpNlHs2aok7rFMsullSj8NHtVDT/v1UBrX+wx0/0oOO/tNgC2CpS5hod/3t7bUG7PYgdwbssR1t2KT4qfq9yi3Z8I/6aYkVBkfPO4CAepZqOf/dosZ64+ufO6cTOE1e/+2Q+5w2DU+6+Lc3yxQYg5bBBqVzP2CzB3GtCANqSOtR69+KZELFSe7OoWViJMlKIdOknj4/sGafiJQvYC5aM5+hhI0+1wVC55I46gPJaHcjGbm89LahCea3WGpePvHFRM/5ZMwsirRvZHCPqUd0XpX7H23QqTej/dp4ywpPHf6W2QW9pHYGv0VSs/cZAVJgBPmyc8e0CA/CRJoU37vEC2vWjk8T0E98hFtcb3QMQPBOqtq4lCF/4zO1rzhanrwY/4PPRLD/L6KwQHO+UfWCSrlaPO//S36UTStDi3Ou56CKVwgUX9lzDSEDneZJv3A2yDV2Bf1RMEWpuzBWwob0eAd/on32k9HRKNLPaydQF7S7F4jmFzzkl0hZ3yJqs2t09aEwp20RXqbLSOv0aSQO4Sng5L2LarnFzEhpYhFu2Wn8Q67l5VGwuyXEfb3RGZWHuI3lIhI2E86DYUzYrXCs80X7sSzJqjJFu5BHyzgW3tuuyTehJs7ZrL/Ebwp0V6ToYCE5p2x47JcGunUX98IbcqUGyeibKyAAnHrjyumGvF/NDMqExi8qVRhyY9Fol5ST1+oCKp5LS1p5DifDNwHk8FQI1zP9xybcluCVYixNA2fiFwaKTq/sRfjDpe+pb9pnmXWD8++iDulxaZnV6pduoPQPBvU/QU4EzHg6k9cFbjCUbGnayc0AQjGCTkadCMWFz5YglGMYk94zUFgXMRg=="
+    },
+    "signing_certificate": null,
+    "name": "Alice VASP, Inc.",
+    "country": "US",
+    "verified_on": "2021-11-24T23:14:56Z"
+}

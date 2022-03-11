@@ -1,0 +1,45 @@
+{
+    "error": null,
+    "id": "ca0cff66-719f-4a62-8086-be953699b27d",
+    "registered_directory": "vaspdirectory.net",
+    "common_name": "trisa.charlieexchange.jp",
+    "endpoint": "trisa.charlieexchange.jp:443",
+    "identity_certificate": {
+        "version": "3",
+        "serial_number": "IjQ3fXjsfwEwteot0GpFFNa4fP2Peg==",
+        "signature": "++izjJv3YK/4qJO9gGjdJ82M28cj6t7b+xmJYhebLDkgzq88fs7z/5y/lmiztKp4+KgkG5ooTDYuXRaJUs9+F69zbAY/5GhzgMyrTf5XmYU5Qn+Xy0kXggNhqN8ffKJ4OeLuFObJP2kD/Q1JkfSgolV8GC+NuSFxCZx2owxyh5bhwxIb8uN8v1jetaoqxGudZSMFe93KlFGwnHHo80m91P7vX8WyG6xGNubFRiK27T/0FhWutXYd1nujGQjn5Q+mXiaZ+mAZm76gan4GhXZvtlc9mWcqLtSCUdLduft3bVAPRaXp9Y5+9BroVs5uNo+wZZ1JJuAAG3EV26/Q4mMMCVU1AyQqPqlUeKSRWHve/ZpG1cqGWV5a2/70VQ1htAJuT89cWpdSnAjjNU/lO4zuok22EbmFQ7ew0/ADYZuUFNIYGqBp+toaMtcYDJUjFBcneMbJA1wLc4MmdeyPRVBwV/EJku+LN7Jm4d9eGGDJGFRRdXZGl9A29y6sYJb3kn6Gbb2nd1Si45F3IeCYY/Q0BJX/oJkKJQHRDBCqSTvdwbtSOf57q4sfEOtHWjvaD/f2vCx4l0ilA7aSCwqRVAmmceX+PfFM+41j8KoVh+2FMcFIe2ePkP8QOu8QZxpV5b7Gx0myntUVi5tHrbIIK9bigZCw6kIfoyv9ll8YeRFQNB2W0PJNXz9rCoW9fVZTxjn25AglxTNyp2CY/pgdqTeFbWlWFhqpcLIxlSxC2xJvA/WSk5vCmmx/0YvFX015bHx3u1A1cPu3mji2gIYQ/XCgHdse+baMG0hOya1/KEsWGT2u6cyRvgdUkPdeR70zXwzIHtwHJ9EgNyQ5dkZZ5Pu0DAArWfAFrnJOvR6+5p/0Fe8qiq7LV5G7O+oLqgz/9QXONpsYfoyrftm6PA==",
+        "signature_algorithm": "SHA384-RSA",
+        "public_key_algorithm": "RSA",
+        "subject": {
+            "common_name": "trisa.charlieexchange.jp",
+            "serial_number": "",
+            "organization": ["Charlie Exchange, Co."],
+            "organizational_unit": [""],
+            "street_address": [""],
+            "locality": ["東京都"],
+            "province": ["都道府県"],
+            "postal_code": [""],
+            "country": ["JP"]
+        },
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "serial_number": "",
+            "organization": ["CipherTrace Inc"],
+            "organizational_unit": [""],
+            "street_address": [""],
+            "locality": ["Menlo Park"],
+            "province": ["California"],
+            "postal_code": [""],
+            "country": ["US"]
+        },
+        "not_before": "2021-06-04T22:22:22Z",
+        "not_after": "2022-07-04T22:22:22Z",
+        "revoked": false,
+        "data": "NC5ohpuqdWddKf0qjSQxhYiTZwVT7p+YQ5Z9qKe8X6+CfwIkXXH8dpqyIk/LvtW3j0PlC98S9i4CdCijXFLnOiKqJrpwTsLl+XJ2sys1/1diNw3eHEFPNeSGUcEbD4xT2YxZN/ralyfubpXkdq1QfzOPYv5rH6zA7dlQSbQSIFJEVCruq6pUlbU8DT0SkXJjXSJ8ETVKm7wQfetCUsccQC5BE+LnvrWhiAX4u6hoRcnfELCtLC91Jvd8aBZrQwEBsIVGtRpMCCYmwoy+uyo+AbwPoafAuHTVHiMheQSP8Xc7jCLxX9IPQyjffaTpBOqOGB7uC9HjOUjGHD8y9rulkavdF2SfOzgwq3px4DKaQD2sQFgulcSrIiUVzeZx7uo0L8RvlebF7ucp0AE16TFgdRHsYJz8+vSBKYiujq6AkpKvoQOBbaiSidemmE5DrJl90dxJbuvN1PUjOY+PJe32AWLjeKzyp2jq57NR0QoFYyDHabh3u5WwyacG9UMghG7qBBqqmpDwABoUmaA5pxaMxiuBbBfjQwi5ZFEAeEYEs8BLDHPU24iaGlOEpKafAEDVJwVSMZn4kVTD5yxnIkGnM06immQM3SzkK2EDUpzsWt1Nq77MtfQxI4OI60okdeU8lN4XJclHhLjs4s1fN8R7mC2YnbJwqyP4WAHQnrqkigEeOhmiy7AeMmsrIFJo9R87uVYsNFiN39YPbNzmyZkYBWicasCfVLuZpraUnx9Te6+Dz6AdP7qhbYSPWOTo+OXP4wHVxZV4XmfAH+Yqye6/PGphpByq5HOeMax5If6uCEaORFY93j7RnEGrxVAHqgT+KTVW2y7reO9VbrT2Yx3g4C6xRv4ljbEiwa70l9wByi3H2uCe3gkGnl+c6IeKRAvD5MDGZtyv0nE7f4CjnayJszOvC7YAvW7MDhyiYuP2MQ2n0m4W3a1TVnQExWF8h/3WcgeIIWhFX8OOH5W/JembDfZnSK/mDKikNPdShcou1ACWTxu+uEuK4EqGnZudPnmBglp1pza/oiEZ6LFbdE0rX9gyZOw9bCLq2VrQR50QrjDMwVPnGBvNV2lUx3EC1VB7GCHwhr4fPw2csHuN/Mr4xJIdP9/55SXMybTrnESfDkuXmg+IsG/UnYlVQg3gpfFFvtzRGyt3S9/cttTSZQISxDNpEiUWuKj/v7lWHEj8UmZcrjNTmAKr8Od0Ti46zuYqHBPXuQ7TG7VSSPS++Cw3a00VyLpMR6pIcWUPztVJpoq/iCxyWi3BVGMwfQ7s1DiHnx6yl7DeBnYxt2zUoK//lDdXc6Nq3wBidhg8uTs8n8of8FL/KopsQgA6NAKUOhLjktzmWLtagt+hp6qQgew/ig==",
+        "chain": "0vRH8XTzjn/rONpir5pn3/TbmKiF+ZigBM7bgPk4nsjqjcB/AZJvTR4dvRX9VoIa2ATVBKhsgjYZI8ZGU84wYQHy32ZsLklqZlV8XqKmchAbZvIeA8T4rumFDcgncvTg5dbPQXUD7a1uSSgkrVNIIENndLaeD3jXC35QBOnYp0fVaNupQpcvXWJi7EgO9smTNjMMkTKwFpITEL/OB2q+vSBKStSRxTYShWc91BLnpa7Jdh03a/kh3eZotYQId/JiAZrI3OS9yq2UkTqfLySC2RBZ9Bq+zUysPDnDwM+KHH+x10njMTnBP2K8aAsIpba3g+pskn6gbV9a6aNe9njbsdSfewR08T9Q7vdA8jTzSmOkm0hb1d9RKO7VMzqJJhoiOLPBgcTtdeWo7guUMIOf0AiIT/Nrkh4eRrL51+Jk9xXSKjmWp5vvJLriEzc56Vu1ZD0KfY9BubtKVzNStXax83UzFy/uufmkdFQMus6PlSppUYkSyhhDxzEqh5TUbEU3bvRcugIri6lWV/m0eWJI7JcJuU12sgSyUEtVlFeyj+qH6MIhV31xXipz918D3//rhYTJiYOJxR/fbQZLJQs8fB85vylytkw77ZXBb7KpK93tg4+pBrf9yZz3y0MrH3s98QL6IaS5hPIHbIP9MTRVRYfumAXFOh8raDG5o+RegPQHCsvsRehYGAVRttABWtyWwh59yBg9N2HSOc0R7t7DkqBc1P7NaGTPTgPhk2FVkWdbUOFy/e/ggzheOB/7yBsOjUKGJULdLTg8au9Adc7NHxumMhxJPo6pkJ2jfXWwNuZwU9lGstLBd/hiYNsbF8IJJNv7zq3HROEWygEvuLfGw1HeWYyNeUlLQW9wtVjokAJGBoDnQx2VekPhSc7gpRMVelb3tsQfk78GefwLvIYZq9Jit14gV36dmDR9kvU6RbOeeyAHDqbTj19C/reP70syWCIiGwbAYpFl7SgTH3nCe/an3OHp7LchIms/vybFbt9ZRG18vG4mb5RydEeYV9NyLNLaNai5TRFAI/I+p1ltg5O60+uhdUF77JqFQyqUZbvCTSEbxdbnCJ4KD4jHp0RgjRN1tKA9IJjokmP3nF43WIB3GG+1fqWewPrm8s7gCrvPdczxP3ntmQyINLOtTWQAq+nT7Yp7KzGL8+Vrptw9PkqPM/C9WvKvbqnkGlXlkyoq5mRQQBqvsEghdQqmhAepELi/SKWgYhF+fEdnWbZyHm2EDJzhbZoQs/LjpPuwqrUQqkoX29FHuGy8GsB2sOYWiav2h2nh++o8j2iwOQHeLBdZoTwUH8+jrvqRNsJYCVa0akrnBqTgljdMKBY8Gu/7vKcTXI33jDb2Gx5A3c5B4w=="
+    },
+    "signing_certificate": null,
+    "name": "Charlie Exchange, Co.",
+    "country": "JP",
+    "verified_on": "2021-06-04T20:14:32Z"
+}
