@@ -20,27 +20,27 @@ func (s *bffTestSuite) TestLookup() {
 	params.CommonName = "api.alice.vaspbot.net"
 
 	// Test NotFound returns a 404
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "not found"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "not found"))
+	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "tesnet not found"))
+	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
 	_, err = s.client.Lookup(context.TODO(), params)
-	require.EqualError(err, "[404] no results returned for query", "expected a 404 error when both GDS return not found")
+	require.EqualError(err, "[404] no results returned for query", "expected a 404 error when both GDSes return not found")
 
-	// Test InternalError when both GDS return Unavailable
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.Unavailable, "cannot connect"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.Unavailable, "cannot connect"))
+	// Test InternalError when both GDSes return Unavailable
+	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.Unavailable, "testnet cannot connect"))
+	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.Unavailable, "mainnet cannot connect"))
 	_, err = s.client.Lookup(context.TODO(), params)
-	require.EqualError(err, "[500] unable to execute Lookup request", "expected a 500 error when both GDS return unavailable")
+	require.EqualError(err, "[500] unable to execute Lookup request", "expected a 500 error when both GDSes return unavailable")
 
 	// Test one result from TestNet
 	require.NoError(s.testnet.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "not found"))
+	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
 	rep, err := s.client.Lookup(context.TODO(), params)
 	require.NoError(err, "could not fetch expected result from testnet")
 	require.Len(rep.Results, 1, "expected one result back from server")
 	require.Equal("6a57fea4-8fb7-42f3-bf0c-55fecccd2e53", rep.Results[0]["id"])
 
 	// Test one result from MainNet
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "not found"))
+	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "testnet not found"))
 	require.NoError(s.mainnet.UseFixture(mock.LookupRPC, "testdata/mainnet/lookup_reply.json"))
 	rep, err = s.client.Lookup(context.TODO(), params)
 	require.NoError(err, "could not fetch expected result from mainnet")
