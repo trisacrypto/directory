@@ -11,6 +11,7 @@ import (
 type BFFClient interface {
 	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
 	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
+	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
 }
 
 //===========================================================================
@@ -58,4 +59,36 @@ type LookupParams struct {
 // but will exclude it from any results returned.
 type LookupReply struct {
 	Results []map[string]interface{} `json:"results"`
+}
+
+// RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
+// specified GDS in v1.4. In v1.5 this will be expanded to include fields for both
+// TestNet and MainNet registration (e.g. multiple fields for endpoint and domain).
+// All generic fields (e.g. map[string]interface{}) should match their protobuf spec.
+type RegisterRequest struct {
+	// The network of the directory to register with, e.g. testnet or mainnet
+	// NOTE: not required for front-end, used to determine endpoint in the client.
+	Network string `json:"network,omitempty"`
+
+	// RegisterRequest ProtocolBuffer fields
+	Entity           map[string]interface{} `json:"entity"`
+	Contacts         map[string]interface{} `json:"contacts"`
+	TRISAEndpoint    string                 `json:"trisa_endpoint"`
+	CommonName       string                 `json:"common_name"`
+	Website          string                 `json:"website"`
+	BusinessCategory string                 `json:"business_category"`
+	VASPCategories   []string               `json:"vasp_categories"`
+	EstablishedOn    string                 `json:"established_on"`
+	TRIXO            map[string]interface{} `json:"trixo"`
+}
+
+// RegisterReply is converted from a protocol buffer RegisterReply.
+type RegisterReply struct {
+	Error               map[string]interface{} `json:"error"`
+	Id                  string                 `json:"id"`
+	RegisteredDirectory string                 `json:"registered_directory"`
+	CommonName          string                 `json:"common_name"`
+	Status              string                 `json:"status"`
+	Message             string                 `json:"message"`
+	PKCS12Password      string                 `json:"pkcs12password"`
 }
