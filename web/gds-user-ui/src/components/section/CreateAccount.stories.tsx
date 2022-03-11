@@ -1,9 +1,7 @@
 import React from "react";
 import { Story } from "@storybook/react";
 import CreateAccount from "./CreateAccount";
-
 interface CreateAccountProps {}
-
 export default {
   title: "Components/CreateAccount",
   component: CreateAccount,

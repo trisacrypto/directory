@@ -23,6 +23,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	testnet = "testnet"
+	mainnet = "mainnet"
+)
+
 // ConnectGDS creates a gRPC client to the TRISA Directory Service specified in the
 // configuration. This method is used to connect to both the TestNet and the MainNet and
 // to connect to mock GDS services in testing using buffconn.
@@ -47,7 +52,7 @@ func ConnectGDS(conf config.DirectoryConfig) (_ gds.TRISADirectoryClient, err er
 }
 
 // Lookup makes a request on behalf of the user to both the TestNet and MainNet GDS
-// servers, returning 1..2 results (e.g. either or both GDS responses). If no results
+// servers, returning 1-2 results (e.g. either or both GDS responses). If no results
 // are returned, Lookup returns a 404 not found error. If one of the GDS requests fails,
 // the error is logged, but the valid response is returned. If both GDS requests fail,
 // a 500 error is returned. This endpoint passes through the response from GDS as JSON,
@@ -96,14 +101,27 @@ func (s *Server) Lookup(c *gin.Context) {
 			return
 		}
 
+		// There is currently an error message on the reply that is unused. This check
+		// future proofs the use case where that field is returned and also ensures that
+		// an empty reply is not returned.
+		if rep.Error != nil && rep.Error.Code != 0 {
+			rerr := fmt.Errorf("[%d] %s", rep.Error.Code, rep.Error.Message)
+			log.Warn().Err(rerr).Msg("received error in response body with a gRPC status ok")
+			if rep.Id == "" && rep.CommonName == "" {
+				// If we don't have an ID or common name, don't return an empty result
+				errs[idx] = rerr
+				return
+			}
+		}
+
 		if results[idx], err = wire.Rewire(rep); err != nil {
 			log.Error().Err(err).Str("network", name).Msg("could not rewire LookupReply")
 			errs[idx] = err
 		}
 	}
 
-	go lookup(s.testnet, 0, "testnet")
-	go lookup(s.mainnet, 1, "mainnet")
+	go lookup(s.testnet, 0, testnet)
+	go lookup(s.mainnet, 1, mainnet)
 	wg.Wait()
 
 	// If there were multiple errors, return a 500
