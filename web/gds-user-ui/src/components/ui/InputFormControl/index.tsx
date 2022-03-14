@@ -16,6 +16,7 @@ interface _FormControlProps extends FormControlProps {
   inputProps?: InputProps;
   name?: string;
   error?: string;
+  type?: React.HTMLInputTypeAttribute;
 }
 
 const InputFormControl: React.FC<_FormControlProps> = ({
@@ -25,6 +26,7 @@ const InputFormControl: React.FC<_FormControlProps> = ({
   inputProps,
   name,
   isInvalid,
+  type = "text",
 }) => {
   const inputColorMode = useColorModeValue("#E3EBEF", undefined);
 
@@ -36,6 +38,7 @@ const InputFormControl: React.FC<_FormControlProps> = ({
         id={controlId}
         background={inputColorMode}
         borderRadius={0}
+        type={type}
         {...inputProps}
       />
       {!isInvalid ? (

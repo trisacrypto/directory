@@ -5,12 +5,12 @@ import LandingHead from "./LandingHead";
 interface LandingHeadProps {}
 
 export default {
-  title: "Landing",
+  title: "components/LandingHead",
   component: LandingHead,
 };
 
-export const Head: Story<LandingHeadProps> = ({ ...props }) => (
+export const Default: Story<LandingHeadProps> = ({ ...props }) => (
   <LandingHead {...props} />
 );
 
-Head.bind({});
+Default.bind({});

@@ -1,17 +1,15 @@
-import { ReactNode } from "react";
+import React, { FC } from "react";
 import {
   Stack,
   Container,
   Box,
   Flex,
   Text,
-  Heading,
   Button,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { Link, useLocation, Navigate, Location } from "react-router-dom";
-import { getIcon } from "../icon";
-import { colors } from "../../utils/theme";
+import { getIcon } from "components/Icon";
+import { colors } from "utils/theme";
 
 const datas = [
   {

@@ -5,7 +5,7 @@ import JoinUsSection from "./JoinUs";
 interface JoinUsProps {}
 
 export default {
-  title: "Components/JoinUs",
+  title: "components/JoinUs",
   component: JoinUsSection,
 };
 
