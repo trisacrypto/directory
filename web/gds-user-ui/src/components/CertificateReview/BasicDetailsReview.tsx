@@ -11,11 +11,11 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { colors } from "utils/theme";
-interface BasicDetailsSectionProps {
+interface BasicDetailsReviewProps {
   data: any;
 }
 
-const BasicDetailsSection = (props: BasicDetailsSectionProps) => {
+const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -29,7 +29,7 @@ const BasicDetailsSection = (props: BasicDetailsSectionProps) => {
     >
       <Stack>
         <Box display={"flex"} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Section 1: Basic Details</Heading>
+          <Heading fontSize={24}>Review 1: Basic Details</Heading>
           <Button
             bg={colors.system.blue}
             color={"white"}
@@ -69,7 +69,7 @@ const BasicDetailsSection = (props: BasicDetailsSectionProps) => {
     </Box>
   );
 };
-BasicDetailsSection.defaultProps = {
+BasicDetailsReview.defaultProps = {
   data: {},
 };
-export default BasicDetailsSection;
+export default BasicDetailsReview;
