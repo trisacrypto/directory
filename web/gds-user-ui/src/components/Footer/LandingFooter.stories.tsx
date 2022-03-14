@@ -1,21 +1,15 @@
 import React from "react";
 import { Story } from "@storybook/react";
-
-import  LandingFooter  from './LandingFooter';
-
-interface LandingFooterProps {
-
-}
+import LandingFooter from "./LandingFooter";
+interface LandingFooterProps {}
 
 export default {
-  title: "Landing",
+  title: "components/LandingFooter",
   component: LandingFooter,
 };
 
-export const Footer: Story<LandingFooterProps> = ({ ...props }) => (
-  <LandingFooter
-    {...props}
-  />
+export const Default: Story<LandingFooterProps> = ({ ...props }) => (
+  <LandingFooter {...props} />
 );
 
-Footer.bind({});
+Default.bind({});

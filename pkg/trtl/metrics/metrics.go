@@ -108,6 +108,7 @@ func initMetrics() {
 		Namespace: PmNamespace,
 		Name:      "latency",
 		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
+		Buckets:   prometheus.ExponentialBuckets(5, 2, 12),
 	}, []string{"call"})
 
 	// PmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -132,36 +133,42 @@ func initMetrics() {
 		Namespace: PmNamespace,
 		Name:      "sync_latency",
 		Help:      "total duration of anti-entropy (originator perspective), labeled by peer and region",
+		Buckets:   prometheus.LinearBuckets(10, 10, 50),
 	}, []string{"peer", "region"})
 
 	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase1_latency",
 		Help:      "duration of anti-entropy phase 1 (originator perspective), labeled by peer",
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEPhase2Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "phase2_latency",
 		Help:      "duration of anti-entropy phase 2 (remote perspective), labeled by peer",
+		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
 
 	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "versions",
 		Help:      "count of all observed versions, labeled by peer, region, and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 2000, 1000),
 	}, []string{"peer", "region", "perspective"})
 
 	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pulls",
 		Help:      "pulled objects during anti entropy, labeled by peer, region, and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
 	}, []string{"peer", "region", "perspective"})
 
 	PmAEUpdates = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: PmNamespace,
 		Name:      "pushes",
 		Help:      "pushed objects during anti entropy, labeled by peer, region and perspective",
+		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
 	}, []string{"peer", "region", "perspective"})
 
 	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{

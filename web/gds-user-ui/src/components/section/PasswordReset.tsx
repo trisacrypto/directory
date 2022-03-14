@@ -12,48 +12,48 @@ import {
   Text,
   useColorModeValue,
   Image,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
-import { GoogleIcon } from '../icon';
-
-import { colors } from '../../utils/theme';
+import { colors } from "../../utils/theme";
 
 export default function PasswordReset() {
   return (
     <Flex
-      minH={'100vh'}
-      minWidth={'100vw'}
-      align={'center'}
-      justify={'center'}
+      minH={"100vh"}
+      minWidth={"100vw"}
+      align={"center"}
+      justify={"center"}
       fontFamily={colors.font}
-      fontSize={'xl'}
-      bg={useColorModeValue('white', 'gray.800')}>
-      <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
-        <Stack align={'left'}>
-          <Heading fontSize={'xl'}>Enter your email address.</Heading>
+      fontSize={"xl"}
+      bg={useColorModeValue("white", "gray.800")}
+    >
+      <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6} width={"100%"}>
+        <Stack align={"left"}>
+          <Heading fontSize={"xl"}>Enter your email address.</Heading>
         </Stack>
+
         <Box
-          rounded={'lg'}
-          bg={useColorModeValue('white', 'transparent')}
-          position={'relative'}
+          rounded={"lg"}
+          bg={useColorModeValue("white", "transparent")}
+          position={"relative"}
           bottom={5}
-         >
-          <Stack spacing={4} >
+        >
+          <Stack spacing={4}>
             <FormControl id="email">
-              <Input type="email" height={'64px'} placeholder="Email Address"/>
+              <Input type="email" height={"64px"} placeholder="Email Address" />
             </FormControl>
-            <Stack spacing={8} >
+            <Stack spacing={8}>
               <Button
                 bg={colors.system.blue}
-                color={'white'}
-                height={'57px'}
-                w={['full', '50%']}
+                color={"white"}
+                height={"57px"}
+                w={["full", "50%"]}
                 _hover={{
-                  bg: '#10aaed',
+                  bg: "#10aaed",
                 }}
                 _focus={{
-                 borderColor: 'transparent',
-               }}
+                  borderColor: "transparent",
+                }}
               >
                 Submit
               </Button>

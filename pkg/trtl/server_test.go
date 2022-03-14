@@ -12,14 +12,12 @@ import (
 
 	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/options"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
-	"github.com/trisacrypto/directory/pkg/utils/logger"
 
 	"google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,10 +25,7 @@ import (
 )
 
 const (
-	metaRegion = "tauceti"
-	metaOwner  = "taurian"
-	metaPID    = 8
-	bufSize    = 1024 * 1024
+	bufSize = 1024 * 1024
 )
 
 var (
@@ -131,8 +126,8 @@ func (s *trtlTestSuite) EqualMeta(expectedKey []byte, expectedNamespace string, 
 	expectedMeta := &pb.Meta{
 		Key:       expectedKey,
 		Namespace: expectedNamespace,
-		Region:    metaRegion,
-		Owner:     fmt.Sprintf("%d:%s", metaPID, metaOwner),
+		Region:    s.conf.Replica.Region,
+		Owner:     fmt.Sprintf("%d:%s", s.conf.Replica.PID, s.conf.Replica.Name),
 		Version:   expectedVersion,
 		Parent:    expectedParent,
 	}
@@ -185,28 +180,8 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 	}
 
 	// Create the configuration without loading it from the environment
-	conf := config.Config{
-		Maintenance: false,
-		BindAddr:    ":4436",
-		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:  true,
-		Database: config.DatabaseConfig{
-			URL:           fmt.Sprintf("leveldb:///%s", s.tmpdb),
-			ReindexOnBoot: false,
-		},
-		Replica: config.ReplicaConfig{
-			Enabled: false, // Replica is tested in the replica package
-			PID:     metaPID,
-			Region:  metaRegion,
-			Name:    metaOwner,
-		},
-		MTLS: config.MTLSConfig{
-			Insecure: true,
-		},
-		Backup: config.BackupConfig{
-			Enabled: false,
-		},
-	}
+	conf := trtl.MockConfig()
+	conf.Database.URL = fmt.Sprintf("leveldb:///%s", s.tmpdb)
 
 	// Mark as processed since the config wasn't loaded from the environment
 	if conf, err = conf.Mark(); err != nil {

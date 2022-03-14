@@ -22,9 +22,6 @@
     "noUnusedLocals": false,
     "jsx": "react-jsx",
     "baseUrl": "src",
-    "files": [ 
-  "custom.d.ts" 
-],  
   },
   "include": [
     "src"

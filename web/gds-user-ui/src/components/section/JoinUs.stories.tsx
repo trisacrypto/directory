@@ -5,12 +5,12 @@ import JoinUsSection from "./JoinUs";
 interface JoinUsProps {}
 
 export default {
-  title: "Pages",
+  title: "components/JoinUs",
   component: JoinUsSection,
 };
 
-export const JoinUs: Story<JoinUsProps> = ({ ...props }) => (
+export const Default: Story<JoinUsProps> = ({ ...props }) => (
   <JoinUsSection {...props} />
 );
 
-JoinUs.bind({});
+Default.bind({});

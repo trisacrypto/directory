@@ -1,0 +1,47 @@
+# Dynamic Builds
+ARG BUILDER_IMAGE=golang:1.16-buster
+ARG FINAL_IMAGE=debian:buster-slim
+
+# Build Stage
+FROM ${BUILDER_IMAGE} AS builder
+
+# Ensure ca-certificates are up to date
+RUN update-ca-certificates
+
+# Use modeules for dependencies
+WORKDIR $GOPATH/src/github.com/trisacrypto/directory
+COPY go.mod .
+COPY go.sum .
+
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+RUN go mod download
+RUN go mod verify
+
+# Copy only what is needed (ignore web and fixtures)
+COPY cmd ./cmd
+COPY pkg ./pkg
+
+# Run tests to avoid building a broken container
+RUN go test -timeout 180s ./...
+
+# Build binaries
+RUN go build -v -o /go/bin/bff ./cmd/bff
+RUN go build -v -o /go/bin/trtl ./cmd/trtl
+
+# Final Stage
+FROM ${FINAL_IMAGE} AS final
+
+LABEL maintainer="TRISA <info@trisa.io>"
+LABEL description="TRISA GDS Backend for Front-End"
+
+# Ensure ca-certificates are up to date
+RUN set -x && apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the binary to the production image from the builder stage.
+COPY --from=builder /go/bin/bff /usr/local/bin/bff
+COPY --from=builder /go/bin/trtl /usr/local/bin/trtl
+
+CMD [ "/usr/local/bin/bff", "serve" ]

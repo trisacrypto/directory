@@ -149,6 +149,23 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 	profile := s.certs.Profile()
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		params = r.Params
+		if params == nil {
+			// The certificate request was created before the profile params were generated,
+			// so use the old method of defining the params and issue a warning to note that
+			// the certificate request is from prior v1.3.
+			// TODO: Remove this code after all old certificate requests in vaspdirectory.net have been issued
+			log.Warn().Str("vasp", vasp.Id).Str("certreq", r.Id).
+				Msg("certificate request params are nil, falling back to pre v1.3 params")
+
+			params = make(map[string]string)
+			if params["organizationName"], err = vasp.Name(); err != nil {
+				params["organizationName"] = "TRISA Member VASP"
+			}
+			params["localityName"] = "Menlo Park"
+			params["stateOrProvinceName"] = "California"
+			params["countryName"] = "US"
+		}
+
 	} else {
 		params = make(map[string]string)
 	}

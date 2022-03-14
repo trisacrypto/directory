@@ -1,14 +1,14 @@
-import React from 'react';
-import { Link, Box, Flex, FlexProps, useColorModeValue } from "@chakra-ui/react";
-import {MenuIcon , CloseIcon} from '../icon'
-import Logo from "../ui/Logo";
-import MenuItem from "../menu/landing/MenuItem";
-import { colors } from '../../utils/theme';
+import React from "react";
+import { Box, Flex, FlexProps, useColorModeValue } from "@chakra-ui/react";
+import { MenuIcon, CloseIcon } from "../Icon";
+import Logo from "components/ui/Logo";
+import MenuItem from "components/Menu/Landing/MenuItem";
+import { colors } from "utils/theme";
 
-const LandingHeader = (props : FlexProps) : JSX.Element => {
+const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const toggleMenu = () => setShow(!show);
-  const iconColor = useColorModeValue('black', 'white');
+  const iconColor = useColorModeValue("black", "white");
   return (
     <Flex
       as="nav"
@@ -22,14 +22,15 @@ const LandingHeader = (props : FlexProps) : JSX.Element => {
       {...props}
     >
       <Flex align="center">
-        <Logo
-          w="100px"
-          color={["colors.system.blue"]}
-        />
+        <Logo w="100px" color={["colors.system.blue"]} />
       </Flex>
 
       <Box display={{ base: "block", md: "none" }} onClick={toggleMenu}>
-        {show ? <CloseIcon color={iconColor}/> : <MenuIcon color={iconColor} />}
+        {show ? (
+          <CloseIcon color={iconColor} />
+        ) : (
+          <MenuIcon color={iconColor} />
+        )}
       </Box>
 
       <Box
