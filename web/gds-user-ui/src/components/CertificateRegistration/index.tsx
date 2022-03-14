@@ -52,7 +52,7 @@ const defaultRowData = [
     status: null,
   },
 ];
-const CertificateRegistration = ({ title, data }: any) => {
+const CertificateRegistration = ({ data }: any) => {
   const textColor = useColorModeValue("#858585", "white");
   return (
     <Card>
