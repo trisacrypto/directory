@@ -1,5 +1,4 @@
 import { Meta, Story } from "@storybook/react";
-
 import BasicDetailsReview from "./BasicDetailsReview";
 
 export default {
