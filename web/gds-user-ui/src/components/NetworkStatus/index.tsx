@@ -1,7 +1,6 @@
-import React, { FC } from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { Stack, Text } from "@chakra-ui/react";
 
-import EllipseIcon from "components/Icon/EllipseIcon";
+import { IoEllipse } from "react-icons/io5";
 
 interface NetworkStatusProps {
   isOnline: boolean;
@@ -9,26 +8,20 @@ interface NetworkStatusProps {
 const NetworkStatus = (props: NetworkStatusProps) => {
   const { isOnline } = props;
   return (
-    <Box
-      bg={"white"}
-      minHeight={67}
-      minWidth={246}
-      pt={5}
-      mt={10}
-      mx={5}
-      px={5}
-      border="2px solid #C4C4C4"
-      fontFamily={"Open Sans"}
-    >
-      <Box pb={2} display={"flex"} justifyContent={"space-between"}>
+    <Stack minHeight={82} bg={"white"} p={5} border="1px solid #C4C4C4">
+      <Stack
+        direction={"row"}
+        justifyContent="space-between"
+        alignItems="center"
+      >
         <Text fontWeight={"bold"}> Network Status </Text>
         {isOnline ? (
-          <EllipseIcon fill={"#34A853"} />
+          <IoEllipse fontSize="2rem" fill={"#34A853"} />
         ) : (
-          <EllipseIcon fill={"#C4C4C4"} />
+          <IoEllipse fontSize="2rem" fill={"#C4C4C4"} />
         )}
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   );
 };
 NetworkStatus.defaultProps = {
