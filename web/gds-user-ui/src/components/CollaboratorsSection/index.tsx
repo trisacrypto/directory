@@ -13,7 +13,6 @@ import {
   MenuItem,
   IconButton,
   MenuList,
-  Box,
   VStack,
 } from "@chakra-ui/react";
 import { BsThreeDots } from "react-icons/bs";
@@ -23,6 +22,15 @@ import FormButton from "components/ui/FormButton";
 
 type CollaboratorsSectionProps = {};
 
+type Row = {
+  id: string;
+  name: string;
+  permission: string;
+  added: string;
+  role: string;
+  status: string;
+};
+
 const rows = [
   {
     id: "18001",
@@ -30,6 +38,7 @@ const rows = [
     permission: "Owner",
     added: "14/01/2022",
     role: "Compliance Officer",
+    status: "active",
   },
   {
     id: "18001",
@@ -37,6 +46,7 @@ const rows = [
     permission: "Editor",
     added: "14/01/2022",
     role: "Director of Engineering",
+    status: "active",
   },
   {
     id: "18001",
@@ -44,6 +54,7 @@ const rows = [
     permission: "Viewer",
     added: "14/01/2022",
     role: "General Manager",
+    status: "active",
   },
 ];
 
@@ -77,42 +88,50 @@ const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+const TableRow: React.FC<{ row: Row }> = ({ row }) => {
+  return (
+    <>
+      <RowItem>
+        <>
+          <Td>{row.id}</Td>
+          <Td>{row.name}</Td>
+          <Td>{row.permission}</Td>
+          <Td>{row.added}</Td>
+          <Td>{row.role}</Td>
+          <Td>
+            <Tag
+              size="md"
+              borderRadius="full"
+              color="white"
+              background="#60C4CA"
+            >
+              <TagLabel textTransform="capitalize">{row.status}</TagLabel>
+            </Tag>
+          </Td>
+          <Td paddingY={0}>
+            <Menu>
+              <MenuButton
+                as={IconButton}
+                icon={<BsThreeDots />}
+                background="transparent"
+                borderRadius={50}
+              />
+              <MenuList>
+                <MenuItem>Download</MenuItem>
+              </MenuList>
+            </Menu>
+          </Td>
+        </>
+      </RowItem>
+    </>
+  );
+};
+
 const TableRows: React.FC<{}> = () => {
   return (
     <>
       {rows.map((row) => (
-        <RowItem>
-          <>
-            <Td>{row.id}</Td>
-            <Td>{row.name}</Td>
-            <Td>{row.permission}</Td>
-            <Td>{row.added}</Td>
-            <Td>{row.role}</Td>
-            <Td>
-              <Tag
-                size="md"
-                borderRadius="full"
-                color="white"
-                background="#60C4CA"
-              >
-                <TagLabel>Active</TagLabel>
-              </Tag>
-            </Td>
-            <Td paddingY={0}>
-              <Menu>
-                <MenuButton
-                  as={IconButton}
-                  icon={<BsThreeDots />}
-                  background="transparent"
-                  borderRadius={50}
-                />
-                <MenuList>
-                  <MenuItem>Download</MenuItem>
-                </MenuList>
-              </Menu>
-            </Td>
-          </>
-        </RowItem>
+        <TableRow row={row} />
       ))}
     </>
   );
