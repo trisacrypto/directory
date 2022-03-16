@@ -1,6 +1,8 @@
 package bff_test
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -13,6 +15,21 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
+
+// loadFixture is a helper function to return an unwired JSON protocol buffer for the
+// the BFF client to post to the server, which will then rewire it for GDS requests.
+func loadFixture(path string) (fixture map[string]interface{}, err error) {
+	var data []byte
+	if data, err = ioutil.ReadFile(path); err != nil {
+		return nil, err
+	}
+
+	fixture = make(map[string]interface{})
+	if err = json.Unmarshal(data, &fixture); err != nil {
+		return nil, err
+	}
+	return fixture, nil
+}
 
 // The BFF Test Suite provides mock functionality and fixtures for running BFF tests
 // that expect to interact with two GDS services: TestNet and MainNet.

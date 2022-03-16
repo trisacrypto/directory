@@ -211,13 +211,13 @@ func (s *Server) Register(c *gin.Context) {
 	// Unwire the protocol buffers into the request
 	if err = wire.Unwire(in.Entity, req.Entity); err != nil {
 		log.Warn().Err(err).Msg("could not unwire legal person entity")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse legal person entity"))
 		return
 	}
 
 	if err = wire.Unwire(in.Contacts, req.Contacts); err != nil {
 		log.Warn().Err(err).Msg("could not unwire contacts")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse contacts"))
 		return
 	}
 
@@ -229,19 +229,20 @@ func (s *Server) Register(c *gin.Context) {
 
 	if err = wire.Unwire(in.TRIXO, req.Trixo); err != nil {
 		log.Warn().Err(err).Msg("could not unwire TRIXO form")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse TRIXO form"))
 		return
 	}
 
 	// Make the gds request
+	log.Debug().Str("network", network).Msg("issuing GDS register request")
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
 	var rep *gds.RegisterReply
 	defer cancel()
 
 	switch network {
-	case "testnet":
+	case testnet:
 		rep, err = s.testnet.Register(ctx, req)
-	case "mainnet":
+	case mainnet:
 		rep, err = s.mainnet.Register(ctx, req)
 	default:
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
@@ -253,9 +254,9 @@ func (s *Server) Register(c *gin.Context) {
 		serr, _ := status.FromError(err)
 		switch serr.Code() {
 		case codes.InvalidArgument, codes.AlreadyExists:
-			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(serr.Message()))
 		case codes.Aborted:
-			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
 		default:
 			log.Error().Err(err).Str("code", serr.Code().String()).Str("network", network).Msg("could not register with directory service")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not register with %s", network)))
