@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react";
-import Collaborators from ".";
+import Collaborators from "./Collaborators";
 
 export default {
   title: "components/Collaborators",
