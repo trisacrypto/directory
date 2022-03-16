@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import {
   Box,
   useColorModeValue,
@@ -9,7 +8,11 @@ import {
 import SidebarContent from "./SidebarContent";
 import MobileNav from "./MobileNav";
 
-export default function Sidebar({ children }: { children: ReactNode }) {
+type SidebarProps = {
+  children: React.ReactNode;
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -33,9 +36,17 @@ export default function Sidebar({ children }: { children: ReactNode }) {
         </DrawerContent>
       </Drawer>
       <MobileNav onOpen={onOpen} />
-      <Box ml={{ base: 0, md: 72 }} p="4">
+      <Box
+        ml={{ base: 0, md: 274 }}
+        p="4"
+        height="calc(100vh - 80px)"
+        overflow="scroll"
+        background="#F7F8FC"
+      >
         {children}
       </Box>
     </Box>
   );
-}
+};
+
+export default Sidebar;

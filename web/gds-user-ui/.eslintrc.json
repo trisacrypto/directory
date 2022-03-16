@@ -284,6 +284,7 @@
     "yield-star-spacing": "error",
     "yoda": "error",
     "@typescript-eslint/ban-types": ["warn"],
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "react/no-unescaped-entities": "off"
   }
 }

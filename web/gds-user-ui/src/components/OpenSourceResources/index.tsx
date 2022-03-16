@@ -1,5 +1,5 @@
-import { Link, ListItem, UnorderedList } from "@chakra-ui/react";
-import Card from "components/Card";
+import { Link, ListItem, UnorderedList } from '@chakra-ui/react';
+import Card from 'components/Card';
 
 const OpenSourceResources: React.FC = () => {
   return (
@@ -9,7 +9,7 @@ const OpenSourceResources: React.FC = () => {
         <UnorderedList>
           <ListItem color="#1F4CED">
             <Link href="https://github.com/trisacrypto/trisa" isExternal>
-              TRISA Github's repo
+              TRISA Github&apos;s repo
             </Link>
           </ListItem>
           <ListItem color="#1F4CED">
@@ -20,13 +20,12 @@ const OpenSourceResources: React.FC = () => {
           <ListItem color="#1F4CED">
             <Link
               href="https://github.com/trisacrypto/trisa/commit/436fd73fc48973ce09ccbae4260df6213d0c2894"
-              isExternal
-            >
+              isExternal>
               Reference implementation
             </Link>
           </ListItem>
           <ListItem color="#1F4CED">
-            <Link isExternal>Meet Alice VASP, Bob VASP and "Evil" VASP</Link>
+            <Link isExternal>Meet Alice VASP, Bob VASP and &quot;Evil&quot; VASP</Link>
           </ListItem>
         </UnorderedList>
       </Card.CardBody>

@@ -13,14 +13,12 @@ import {
   MenuItem,
   IconButton,
   MenuList,
-  VStack,
-} from "@chakra-ui/react";
-import { BsThreeDots } from "react-icons/bs";
-import FormLayout from "layouts/FormLayout";
-import React from "react";
-import FormButton from "components/ui/FormButton";
-
-type CollaboratorsSectionProps = {};
+  VStack
+} from '@chakra-ui/react';
+import { BsThreeDots } from 'react-icons/bs';
+import FormLayout from 'layouts/FormLayout';
+import React from 'react';
+import FormButton from 'components/ui/FormButton';
 
 type Row = {
   id: string;
@@ -33,29 +31,29 @@ type Row = {
 
 const rows = [
   {
-    id: "18001",
-    name: "Jones Ferdinand",
-    permission: "Owner",
-    added: "14/01/2022",
-    role: "Compliance Officer",
-    status: "active",
+    id: '18001',
+    name: 'Jones Ferdinand',
+    permission: 'Owner',
+    added: '14/01/2022',
+    role: 'Compliance Officer',
+    status: 'active'
   },
   {
-    id: "18001",
-    name: "Eason Yang",
-    permission: "Editor",
-    added: "14/01/2022",
-    role: "Director of Engineering",
-    status: "active",
+    id: '18001',
+    name: 'Eason Yang',
+    permission: 'Editor',
+    added: '14/01/2022',
+    role: 'Director of Engineering',
+    status: 'active'
   },
   {
-    id: "18001",
-    name: "Anusha Aggarwal",
-    permission: "Viewer",
-    added: "14/01/2022",
-    role: "General Manager",
-    status: "active",
-  },
+    id: '18001',
+    name: 'Anusha Aggarwal',
+    permission: 'Viewer',
+    added: '14/01/2022',
+    role: 'General Manager',
+    status: 'active'
+  }
 ];
 
 const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,25 +62,24 @@ const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       border="1px solid #23A7E0"
       borderRadius={100}
       css={{
-        "td:first-child": {
-          border: "1px solid #23A7E0",
-          borderRight: "none",
+        'td:first-child': {
+          border: '1px solid #23A7E0',
+          borderRight: 'none',
           borderTopLeftRadius: 100,
-          borderBottomLeftRadius: 100,
+          borderBottomLeftRadius: 100
         },
-        "td:last-child": {
-          border: "1px solid #23A7E0",
-          borderLeft: "none",
+        'td:last-child': {
+          border: '1px solid #23A7E0',
+          borderLeft: 'none',
           borderTopRightRadius: 100,
           borderBottomRightRadius: 100,
-          textAlign: "center",
+          textAlign: 'center'
         },
-        "td:not(:first-child):not(:last-child)": {
-          borderTop: "1px solid #23A7E0",
-          borderBottom: "1px solid #23A7E0",
-        },
-      }}
-    >
+        'td:not(:first-child):not(:last-child)': {
+          borderTop: '1px solid #23A7E0',
+          borderBottom: '1px solid #23A7E0'
+        }
+      }}>
       {children}
     </Tr>
   );
@@ -99,12 +96,7 @@ const TableRow: React.FC<{ row: Row }> = ({ row }) => {
           <Td>{row.added}</Td>
           <Td>{row.role}</Td>
           <Td>
-            <Tag
-              size="md"
-              borderRadius="full"
-              color="white"
-              background="#60C4CA"
-            >
+            <Tag size="md" borderRadius="full" color="white" background="#60C4CA">
               <TagLabel textTransform="capitalize">{row.status}</TagLabel>
             </Tag>
           </Td>
@@ -127,30 +119,21 @@ const TableRow: React.FC<{ row: Row }> = ({ row }) => {
   );
 };
 
-const TableRows: React.FC<{}> = () => {
+const TableRows: React.FC = () => {
   return (
     <>
       {rows.map((row) => (
-        <TableRow row={row} />
+        <TableRow key={row.id} row={row} />
       ))}
     </>
   );
 };
 
-const CollaboratorsSection: React.FC<CollaboratorsSectionProps> = () => {
+const CollaboratorsSection: React.FC = () => {
   return (
-    <FormLayout>
-      <Table
-        variant="unstyled"
-        css={{ borderCollapse: "separate", borderSpacing: "0 9px" }}
-      >
-        <TableCaption
-          placement="top"
-          textAlign="start"
-          p={0}
-          m={0}
-          fontSize={20}
-        >
+    <FormLayout overflowX={'scroll'}>
+      <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
+        <TableCaption placement="top" textAlign="start" p={0} m={0} fontSize={20}>
           Organization Collaborators
         </TableCaption>
         <Thead>
