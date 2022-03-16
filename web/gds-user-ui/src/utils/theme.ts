@@ -1,4 +1,5 @@
 import { extendTheme, ThemeConfig } from '@chakra-ui/react';
+import { link } from 'fs';
 
 const config: ThemeConfig = {
   initialColorMode: 'light',
@@ -20,7 +21,8 @@ export const colors = {
     orange: '#FF7A59',
     white: '#E3EBEF',
     gray: '#5B5858',
-    green: '#0A864F'
+    green: '#0A864F',
+    link: '#1F4CED'
   }
 };
 

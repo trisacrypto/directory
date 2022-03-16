@@ -6,6 +6,7 @@ import {
   Flex,
   Text,
   Heading,
+  Link,
   Button,
   Tooltip,
   InputRightElement,
@@ -16,31 +17,31 @@ import {
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
-
+import { colors } from 'utils/theme';
 export default function SearchDirectory() {
   return (
-    <Flex
-      minH={'100vh'}
-      minWidth={'100vw'}
-      bg={useColorModeValue('white', 'gray.800')}
+    <Box
+      width="100%"
       position={'relative'}
+      fontFamily={colors.font}
       color={useColorModeValue('black', 'white')}>
-      <Container maxW={'3xl'} zIndex={10} position={'relative'}>
+      <Container maxW={'5xl'} zIndex={10} position={'relative'} fontFamily={colors.font}>
         <Stack>
-          <Stack
-            flex={1}
-            justify={{ lg: 'center' }}
-            py={{ base: 4, md: 20 }}
-            px={{ base: 10, md: 55 }}>
-            <Box mb={{ base: 2, md: 20 }} color={useColorModeValue('black', 'white')}>
-              <Heading fontFamily={'heading'} mb={3} fontSize={'xl'}>
+          <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 10 }}>
+            <Box mb={{ base: 5 }} color={useColorModeValue('black', 'white')}>
+              <Text fontWeight={600} mb={5} fontSize={'2xl'}>
                 Search the Directory Service
-              </Heading>
-              <Text fontSize={'lg'}>Not a TRISA Member? Join the TRISA network today.</Text>
+              </Text>
+              <Text fontSize={'lg'}>
+                Not a TRISA Member?
+                <Link href={'/register'} color={'#1F4CED'} pl={2}>
+                  Join the TRISA network today.
+                </Link>
+              </Text>
             </Box>
 
             <Stack direction={['column', 'row']}>
-              <Text fontFamily={'Open Sans'} fontSize={'lg'} color={'black'}>
+              <Text fontSize={'lg'} color={'black'}>
                 Directory Search
               </Text>
 
@@ -70,6 +71,6 @@ export default function SearchDirectory() {
           <Flex flex={1} />
         </Stack>
       </Container>
-    </Flex>
+    </Box>
   );
 }
