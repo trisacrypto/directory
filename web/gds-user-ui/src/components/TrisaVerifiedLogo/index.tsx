@@ -2,7 +2,7 @@ import { Box, Stack, Text } from '@chakra-ui/react';
 import Card from 'components/Card';
 import { BsCheckCircleFill } from 'react-icons/bs';
 import FormButton from 'components/ui/FormButton';
-import TrisaLogo from 'components/TrisaLogo';
+import TrisaLogo from 'components/Icon/TrisaLogo';
 
 const TrisaVerifiedLogo: React.FC = () => {
   return (
