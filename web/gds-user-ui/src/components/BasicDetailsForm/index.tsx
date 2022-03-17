@@ -1,6 +1,7 @@
-import { VStack } from "@chakra-ui/react";
-import InputFormControl from "components/ui/InputFormControl";
-import SelectFormControl from "components/ui/SelectFormControl";
+import { VStack } from '@chakra-ui/react';
+import InputFormControl from 'components/ui/InputFormControl';
+import SelectFormControl from 'components/ui/SelectFormControl';
+import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 
 const BasicDetailsForm: React.FC = () => {
   return (
@@ -10,7 +11,7 @@ const BasicDetailsForm: React.FC = () => {
           controlId="website"
           label="Website"
           name="website"
-          inputProps={{ placeholder: "VASP Holdings LLC" }}
+          inputProps={{ placeholder: 'VASP Holdings LLC' }}
         />
 
         <InputFormControl
@@ -18,13 +19,14 @@ const BasicDetailsForm: React.FC = () => {
           label="Date of Incorporation / Establishment"
           name="website"
           formHelperText=""
-          inputProps={{ placeholder: "21/01/2021", type: "date" }}
+          inputProps={{ placeholder: '21/01/2021', type: 'date' }}
         />
 
         <SelectFormControl
           label="Business Category"
           placeholder="Select business category"
           controlId="business-category"
+          options={getBusinessCategoryOptions()}
         />
 
         <SelectFormControl
@@ -32,6 +34,7 @@ const BasicDetailsForm: React.FC = () => {
           placeholder="Select VASP category"
           controlId="vasp-category"
           isMulti
+          options={vaspCategories}
           formHelperText="Please select as many categories needed to represent the types of virtual asset services your organization provides."
         />
       </VStack>
