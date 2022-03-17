@@ -15,8 +15,8 @@ const TestNetCertificateProgressBar: FC = (props: ITestnetCertifacteProps) => {
       borderColor={'#C1C9D2'}
       borderRadius={8}
       borderWidth={1}
-      mt={10}
-      mx={5}
+      // mt={10}
+      // mx={5}
       px={5}
       fontFamily={'Open Sans'}>
       <Box pb={2} display={'flex'} justifyContent={'space-between'}>

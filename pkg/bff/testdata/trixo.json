@@ -1,0 +1,16 @@
+{
+    "primary_national_jurisdiction": "UA",
+    "primary_regulator": "European Securities and Markets Authority",
+    "financial_transfers_permitted": "yes",
+    "other_jurisdictions": [],
+    "has_required_regulatory_program": "yes",
+    "conducts_customer_kyc": true,
+    "kyc_threshold": 3000.0,
+    "kyc_threshold_currency": "UAH",
+    "must_comply_travel_rule": false,
+    "applicable_regulations": [],
+    "compliance_threshold": 10000.00,
+    "compliance_threshold_currency": "UAH",
+    "must_safegaurd_pii": false,
+    "safeguards_pii": true
+}
