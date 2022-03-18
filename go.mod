@@ -35,7 +35,7 @@ require (
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/trisa v0.3.1
+	github.com/trisacrypto/trisa v0.3.2
 	github.com/urfave/cli v1.22.5
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/exp v0.0.0-20220209042442-160e291fcf24 // indirect
