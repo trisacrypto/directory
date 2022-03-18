@@ -1,14 +1,11 @@
-import { Meta, Story } from "@storybook/react";
-import { FormikProps } from "formik";
-import BasicDetails from "./";
+import { Meta, Story } from '@storybook/react';
+import BasicDetails from './';
 
-type BasicDetailsProps = {
-  formik: FormikProps<any>;
-};
+type BasicDetailsProps = {};
 
 export default {
-  title: "components/BasicDetails",
-  component: BasicDetails,
+  title: 'components/BasicDetails',
+  component: BasicDetails
 } as Meta<BasicDetailsProps>;
 
 const Template: Story<BasicDetailsProps> = (args) => <BasicDetails {...args} />;
