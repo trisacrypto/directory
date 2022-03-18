@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react';
 import Collaborators from './Collaborators';
 
 export default {
-  title: 'pages/Collaborators',
+  title: 'modules/Collaborators',
   component: Collaborators
 } as Meta;
 

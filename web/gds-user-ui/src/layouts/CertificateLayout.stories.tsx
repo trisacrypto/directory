@@ -1,5 +1,5 @@
 import { Meta, Story } from '@storybook/react';
-import CertificateLayout from './CertificateLayout';
+import CertificateLayout from 'layouts/CertificateLayout';
 
 type CertificateLayoutProps = {
   children: React.ReactNode;
