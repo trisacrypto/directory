@@ -2,11 +2,8 @@ import { Box, Heading, Stack, Icon, HStack } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 
 import BasicDetailsForm from 'components/BasicDetailsForm';
-import { FormikProps } from 'formik';
 
-type TBasicDetailsProps = {
-  formik?: FormikProps<any>;
-};
+type TBasicDetailsProps = {};
 
 const BasicDetails: React.FC<TBasicDetailsProps> = () => {
   return (

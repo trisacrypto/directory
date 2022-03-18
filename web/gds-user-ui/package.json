@@ -22,11 +22,11 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-redux": "^7.1.22",
     "chakra-react-select": "^3.0.5",
-    "formik": "^2.2.9",
     "framer-motion": "^6",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-hook-form": "^7.28.0",
     "react-icons": "^4.3.1",
     "react-phone-number-input": "^3.1.46",
     "react-redux": "^7.2.6",
@@ -111,7 +111,6 @@
     "eslint-plugin-react": "^7.29.2",
     "eslint-plugin-react-hooks": "^4.3.0",
     "prettier": "2.5.1",
-    "storybook-formik": "^2.3.1",
     "webpack": "^5.69.1"
   }
 }

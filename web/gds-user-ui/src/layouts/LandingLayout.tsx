@@ -4,7 +4,7 @@ import LandingHeader from 'components/Header/LandingHeader';
 import LandingFooter from 'components/Footer/LandingFooter';
 
 type LandingLayoutProp = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
