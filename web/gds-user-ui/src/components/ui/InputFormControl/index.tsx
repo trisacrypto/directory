@@ -7,7 +7,10 @@ import {
   InputProps,
   useColorModeValue,
   FormErrorMessage,
-} from "@chakra-ui/react";
+  InputRightElement,
+  Button,
+  InputGroup
+} from '@chakra-ui/react';
 
 interface _FormControlProps extends FormControlProps {
   formHelperText?: string;
@@ -17,6 +20,10 @@ interface _FormControlProps extends FormControlProps {
   name?: string;
   error?: string;
   type?: React.HTMLInputTypeAttribute;
+  hasBtn?: boolean;
+  value?: string;
+  setBtnName?: string;
+  handleUserUpdate?: () => void;
 }
 
 const InputFormControl: React.FC<_FormControlProps> = ({
@@ -26,21 +33,40 @@ const InputFormControl: React.FC<_FormControlProps> = ({
   inputProps,
   name,
   isInvalid,
-  type = "text",
+  type = 'text',
+  hasBtn,
+  value,
+  setBtnName,
+  handleUserUpdate
 }) => {
-  const inputColorMode = useColorModeValue("#E3EBEF", undefined);
+  const inputColorMode = useColorModeValue('#E3EBEF', undefined);
 
   return (
     <CkFormControl isInvalid={isInvalid}>
       <FormLabel htmlFor={controlId}>{label}</FormLabel>
-      <Input
-        name={name}
-        id={controlId}
-        background={inputColorMode}
-        borderRadius={0}
-        type={type}
-        {...inputProps}
-      />
+      <InputGroup>
+        <Input
+          name={name}
+          id={controlId}
+          background={inputColorMode}
+          borderRadius={0}
+          type={type}
+          value={value}
+          {...inputProps}
+        />
+        {hasBtn && (
+          <InputRightElement width="4.5rem">
+            <Button
+              h="1.75rem"
+              bg={'transparent'}
+              color={'blue'}
+              size="sm"
+              onClick={handleUserUpdate}>
+              {setBtnName || 'Change'}
+            </Button>
+          </InputRightElement>
+        )}
+      </InputGroup>
       {!isInvalid ? (
         <FormHelperText>{formHelperText}</FormHelperText>
       ) : (

@@ -1,25 +1,24 @@
 // import commponents
 const routes = [
   {
-    path: "/dashboard",
-    name: "Dashboard",
-    icon: "bar-chart ",
+    path: '/dashboard',
+    name: 'Dashboard',
     // component: <Dashboard>,
-    layout: "/admin",
+    layout: '/admin'
   },
 
   {
-    path: "/login",
-    name: "Login",
+    path: '/login',
+    name: 'Login',
     // component: Login,
-    layout: "/landing",
+    layout: '/landing'
   },
   {
-    path: "/register",
-    name: "Register",
+    path: '/register',
+    name: 'Register',
     // component: Register,
-    layout: "/landing",
-  },
+    layout: '/landing'
+  }
 ];
 
 export default routes;
