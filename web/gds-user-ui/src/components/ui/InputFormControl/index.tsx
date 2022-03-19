@@ -23,7 +23,7 @@ interface _FormControlProps extends FormControlProps {
   hasBtn?: boolean;
   value?: string;
   setBtnName?: string;
-  handleUserUpdate?: () => void;
+  handleFn?: () => void;
 }
 
 const InputFormControl: React.FC<_FormControlProps> = ({
@@ -37,7 +37,7 @@ const InputFormControl: React.FC<_FormControlProps> = ({
   hasBtn,
   value,
   setBtnName,
-  handleUserUpdate
+  handleFn
 }) => {
   const inputColorMode = useColorModeValue('#E3EBEF', undefined);
 
@@ -56,12 +56,7 @@ const InputFormControl: React.FC<_FormControlProps> = ({
         />
         {hasBtn && (
           <InputRightElement width="4.5rem">
-            <Button
-              h="1.75rem"
-              bg={'transparent'}
-              color={'blue'}
-              size="sm"
-              onClick={handleUserUpdate}>
+            <Button h="1.75rem" bg={'transparent'} color={'blue'} size="sm" onClick={handleFn}>
               {setBtnName || 'Change'}
             </Button>
           </InputRightElement>

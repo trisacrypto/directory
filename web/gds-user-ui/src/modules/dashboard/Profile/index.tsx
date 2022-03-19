@@ -13,8 +13,8 @@ const UserProfile: React.FC = () => {
     // fetch user information
   });
 
-  const handleClick = () => {
-    alert('clicked');
+  const handleUpdate = () => {
+    console.log('handle update action');
   };
   return (
     <DashboardLayout>
@@ -33,7 +33,7 @@ const UserProfile: React.FC = () => {
               label="Name"
               value={''}
               hasBtn
-              handleUserUpdate={handleClick}
+              handleFn={handleUpdate}
             />
             <InputFormControl
               controlId="email"
@@ -41,16 +41,16 @@ const UserProfile: React.FC = () => {
               type="email"
               value={''}
               hasBtn
-              handleUserUpdate={handleClick}
+              handleFn={handleUpdate}
             />
             <InputFormControl
               controlId="password"
-              label="Passworkd"
+              label="Password"
               type="password"
               value={''}
               hasBtn
               setBtnName="Change"
-              handleUserUpdate={handleClick}
+              handleFn={handleUpdate}
             />
           </Stack>
           <UserDetails
