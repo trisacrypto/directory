@@ -1,4 +1,12 @@
-import { Box, BoxProps, Heading, HeadingProps, Stack } from "@chakra-ui/react";
+import {
+  Box,
+  BoxProps,
+  Heading,
+  HeadingProps,
+  Stack,
+  FlexProps,
+  StackProps
+} from '@chakra-ui/react';
 
 const CardHeader: React.FC<HeadingProps> = ({ children, ...props }) => {
   return (
@@ -14,20 +22,21 @@ export const CardBody: React.FC<BoxProps> = (props) => {
 
 interface CardProps {
   CardHeader: React.FC<HeadingProps>;
-  CardBody: React.FC<BoxProps>;
+  CardBody: React.FC<any>;
 }
 
 const Card: React.FC<BoxProps> & CardProps = (props) => {
+  const { children, ...rest } = props;
   return (
-    <Stack
-      border="1px solid #C4C4C4"
-      padding="20px"
-      w="100%"
-      maxW="300px"
-      spacing="17px"
-      borderRadius={10}
-      {...props}
-    />
+    <Box
+      border="2px solid #E5EDF1"
+      borderRadius="10px"
+      padding={{ base: 3, md: 9 }}
+      fontFamily="Open Sans"
+      bg="white"
+      {...rest}>
+      {children}
+    </Box>
   );
 };
 
