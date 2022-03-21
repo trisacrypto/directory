@@ -115,3 +115,76 @@ func TestStatus(t *testing.T) {
 	require.Equal(t, fixture.Uptime, out.Uptime)
 	require.Equal(t, fixture.Version, out.Version)
 }
+
+func TestLookup(t *testing.T) {
+	fixture := &api.LookupReply{
+		Results: []map[string]interface{}{
+			{"foo": "1", "color": "red"},
+			{"foo": "2", "color": "blue"},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/lookup", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Lookup(context.TODO(), &api.LookupParams{CommonName: "example.com"})
+	require.NoError(t, err)
+	require.Equal(t, fixture.Results, out.Results)
+}
+
+func TestRegister(t *testing.T) {
+	fixture := &api.RegisterReply{
+		Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
+		RegisteredDirectory: "vaspdirectory.net",
+		CommonName:          "trisa.example.com",
+		Status:              "PENDING_REVIEW",
+		Message:             "Thank you for registering",
+		PKCS12Password:      "supersecret squirrel",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/register/mainnet", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.RegisterRequest{
+		Network:          "MainNet",
+		TRISAEndpoint:    "trisa.example.com:443",
+		CommonName:       "trisa.example.com",
+		Website:          "https://example.com",
+		BusinessCategory: "PRIVATE_ORGANIZATION",
+		VASPCategories:   []string{"ATM", "Other"},
+		EstablishedOn:    "2019-01-14",
+	}
+
+	out, err := client.Register(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture.Id, out.Id)
+	require.Equal(t, fixture.RegisteredDirectory, out.RegisteredDirectory)
+	require.Equal(t, fixture.CommonName, out.CommonName)
+	require.Equal(t, fixture.Status, out.Status)
+	require.Equal(t, fixture.Message, out.Message)
+	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
+}

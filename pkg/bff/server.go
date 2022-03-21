@@ -192,6 +192,10 @@ func (s *Server) setupRoutes() (err error) {
 	{
 		// Heartbeat route (no authentication required)
 		v1.GET("/status", s.Status)
+
+		// GDS public routes (no authentication required)
+		v1.GET("/lookup", s.Lookup)
+		v1.POST("/register/:network", s.Register)
 	}
 
 	// NotFound and NotAllowed routes

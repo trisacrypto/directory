@@ -6,8 +6,8 @@ import {
   Input,
   InputProps,
   useColorModeValue,
-  FormErrorMessage,
-} from "@chakra-ui/react";
+  FormErrorMessage
+} from '@chakra-ui/react';
 
 interface _FormControlProps extends FormControlProps {
   formHelperText?: string;
@@ -26,9 +26,9 @@ const InputFormControl: React.FC<_FormControlProps> = ({
   inputProps,
   name,
   isInvalid,
-  type = "text",
+  type = 'text'
 }) => {
-  const inputColorMode = useColorModeValue("#E3EBEF", undefined);
+  const inputColorMode = useColorModeValue('#E3EBEF', undefined);
 
   return (
     <CkFormControl isInvalid={isInvalid}>

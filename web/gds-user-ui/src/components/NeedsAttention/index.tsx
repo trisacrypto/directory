@@ -1,39 +1,27 @@
-import React, { FC } from "react";
-import { Box, Text, Button } from "@chakra-ui/react";
+import { Box, Text, Stack } from "@chakra-ui/react";
+import FormButton from "components/ui/FormButton";
 
 const NeedsAttention = () => {
   return (
-    <Box
-      bg={"#D8EAF6"}
+    <Stack
       minHeight={67}
-      minWidth={246}
-      pt={5}
-      mt={10}
-      mx={5}
-      px={5}
+      bg={"#D8EAF6"}
+      p={5}
       border="1px solid #DFE0EB"
-      fontFamily={"Open Sans"}
       fontSize={18}
     >
-      <Box pb={2} display={"flex"} justifyContent={"space-between"}>
-        <Text fontWeight={"bold"}> Needs Attention </Text>
-        <Text> Complete Testnet Registration </Text>
-        <Button
-          bg={"#55ACD8"}
-          color={"white"}
-          height={34}
-          width={142}
-          _hover={{
-            bg: "#55ACD8",
-          }}
-          _focus={{
-            borderColor: "transparent",
-          }}
-        >
-          Start
-        </Button>
-      </Box>
-    </Box>
+      <Stack direction={"row"} spacing={3} alignItems="center">
+        <Stack direction={["column", "row"]} spacing={3}>
+          <Text fontWeight={"bold"}> Needs Attention </Text>
+          <Text> Complete Testnet Registration </Text>
+        </Stack>
+        <Box>
+          <FormButton width={142} borderRadius={5}>
+            Start
+          </FormButton>
+        </Box>
+      </Stack>
+    </Stack>
   );
 };
 

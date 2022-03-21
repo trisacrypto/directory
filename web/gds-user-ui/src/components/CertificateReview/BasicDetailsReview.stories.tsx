@@ -1,10 +1,9 @@
-import { Meta, Story } from "@storybook/react";
-
-import BasicDetailsReview from "./BasicDetailsReview";
+import { Meta, Story } from '@storybook/react';
+import BasicDetailsReview from './BasicDetailsReview';
 
 export default {
-  title: "components/BasicDetailsReview",
-  component: BasicDetailsReview,
+  title: 'components/BasicDetailsReview',
+  component: BasicDetailsReview
 } as Meta;
 
 const Template: Story = (args) => <BasicDetailsReview {...args} />;

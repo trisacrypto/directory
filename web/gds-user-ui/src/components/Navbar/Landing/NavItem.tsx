@@ -1,6 +1,6 @@
-import React from "react";
-import { LinkProps, NavLink } from "react-router-dom";
-import { LinkBox, BoxProps, Text } from "@chakra-ui/react";
+import React from 'react';
+import { LinkProps, NavLink } from 'react-router-dom';
+import { LinkBox, BoxProps, Text } from '@chakra-ui/react';
 
 type Props = LinkProps &
   BoxProps & {
@@ -32,12 +32,11 @@ export const NavItem: React.FC<Props> = ({
       color="gray.400"
       fontWeight="700"
       activeStyle={{
-        color: "black",
-        borderBottom: "5px solid gold",
+        color: 'black',
+        borderBottom: '5px solid gold'
       }}
       isActive={(match: unknown) => !!match}
-      {...props}
-    >
+      {...props}>
       {pageName}
     </LinkBox>
   );

@@ -1,17 +1,19 @@
-import React from "react";
-import { Story } from "@storybook/react";
+import React from 'react';
+import { Story } from '@storybook/react';
 
-import LandingLayout from "./LandingLayout";
+import LandingLayout from './LandingLayout';
 
-interface LandingLayoutProps {}
-
-export default {
-  title: "Layouts/LandingLayout",
-  component: LandingLayout,
+type LandingLayoutProps = {
+  children: React.ReactNode;
 };
 
-export const Default: Story<LandingLayoutProps> = ({ ...props }) => (
-  <LandingLayout {...props} />
-);
+export default {
+  title: 'Layouts/LandingLayout',
+  component: LandingLayout
+};
 
-Default.bind({});
+export const Default: Story<LandingLayoutProps> = (props) => <LandingLayout {...props} />;
+
+Default.bind({
+  children: <div>Hello World</div>
+});

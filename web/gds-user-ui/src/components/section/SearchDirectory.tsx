@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Stack,
   Container,
@@ -6,63 +6,59 @@ import {
   Flex,
   Text,
   Heading,
+  Link,
   Button,
   Tooltip,
   InputRightElement,
   Input,
   FormHelperText,
   FormControl,
-  useColorModeValue,
-} from "@chakra-ui/react";
+  useColorModeValue
+} from '@chakra-ui/react';
 
-import { SearchIcon } from "@chakra-ui/icons";
-
-import { colors } from "../../utils/theme";
-
+import { SearchIcon } from '@chakra-ui/icons';
+import { colors } from 'utils/theme';
 export default function SearchDirectory() {
   return (
-    <Flex
-      bg={useColorModeValue("white", "gray.800")}
-      position={"relative"}
-      color={useColorModeValue("black", "white")}
-    >
-      <Container maxW={"3xl"} zIndex={10} position={"relative"}>
+    <Box
+      width="100%"
+      position={'relative'}
+      fontFamily={colors.font}
+      color={useColorModeValue('black', 'white')}>
+      <Container maxW={'5xl'} zIndex={10} position={'relative'} fontFamily={colors.font}>
         <Stack>
-          <Stack flex={1} justify={{ lg: "center" }} py={{ base: 4, md: 20 }}>
-            <Box
-              mb={{ base: 2, md: 20 }}
-              color={useColorModeValue("blak", "white")}
-            >
-              <Heading fontFamily={"heading"} mb={3} fontSize={"xl"}>
+          <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 10 }}>
+            <Box mb={{ base: 5 }} color={useColorModeValue('black', 'white')}>
+              <Text fontWeight={600} mb={5} fontSize={'2xl'}>
                 Search the Directory Service
-              </Heading>
-              <Text fontSize={"lg"}>
-                Not a TRISA Member? Join the TRISA network today.
+              </Text>
+              <Text fontSize={'lg'}>
+                Not a TRISA Member?
+                <Link href={'/register'} color={'#1F4CED'} pl={2}>
+                  Join the TRISA network today.
+                </Link>
               </Text>
             </Box>
 
-            <Stack
-              direction={["column", "row"]}
-              justifyContent={"space-between"}
-            >
-              <Text fontFamily={"Open Sans"} fontSize={"lg"} color={"black"}>
+            <Stack direction={['column', 'row']}>
+              <Text fontSize={'lg'} color={'black'}>
                 Directory Search
               </Text>
 
-              <FormControl color={"gray.500"}>
+              <FormControl color={'gray.500'}>
                 <Input
                   size="md"
                   pr="4.5rem"
-                  type={"gray.100"}
+                  type={'gray.100'}
                   placeholder="Common name or VASP ID"
                 />
 
-                <FormHelperText ml={1} color={"#1F4CED"}>
+                <FormHelperText ml={1} color={'#1F4CED'}>
                   <Tooltip label="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.">
                     What’s a Common name or VASP ID?
                   </Tooltip>
                 </FormHelperText>
-                <InputRightElement width="2.5rem" color={"black"}>
+                <InputRightElement width="2.5rem" color={'black'}>
                   <Button h="2.5rem" size="sm" onClick={(e) => {}}>
                     <SearchIcon />
                   </Button>
@@ -75,6 +71,6 @@ export default function SearchDirectory() {
           <Flex flex={1} />
         </Stack>
       </Container>
-    </Flex>
+    </Box>
   );
 }
