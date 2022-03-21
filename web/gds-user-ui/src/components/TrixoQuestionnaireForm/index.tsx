@@ -1,7 +1,7 @@
 import { Grid, GridItem, Heading, Text, VStack } from '@chakra-ui/react';
+import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
 import SwitchFormControl from 'components/SwitchFormControl';
-import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import FormLayout from 'layouts/FormLayout';
@@ -22,8 +22,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
       <VStack align="start">
         <Heading size="md">Other Jurisdictions</Heading>
         <Text>Please add any other regulatory jurisdictions your organization complies with.</Text>
+
+        <OtherJuridictions name={'trixo.other_jurisdictions'} />
       </VStack>
-      <FormButton borderRadius={5}>Add Jurisdiction</FormButton>
 
       <SelectFormControl
         label="Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"

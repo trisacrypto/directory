@@ -1,7 +1,7 @@
-import { InfoIcon } from "@chakra-ui/icons";
-import { Box, Heading, HStack, Icon, Stack, Text } from "@chakra-ui/react";
-import ContactForm from "components/ContactForm";
-import FormLayout from "layouts/FormLayout";
+import { InfoIcon } from '@chakra-ui/icons';
+import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import ContactForm from 'components/ContactForm';
+import FormLayout from 'layouts/FormLayout';
 
 const Contacts: React.FC = () => {
   return (
@@ -14,10 +14,9 @@ const Contacts: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          Please supply contact information for representatives of your
-          organization. All contacts will receive an email verification token
-          and the contact email must be verified before the registration can
-          proceed.
+          Please supply contact information for representatives of your organization. All contacts
+          will receive an email verification token and the contact email must be verified before the
+          registration can proceed.
         </Text>
       </FormLayout>
       <ContactForm

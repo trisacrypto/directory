@@ -1,6 +1,6 @@
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
 import Card, { CardBody } from 'components/Card';
-import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 
 type CertificateLayoutProps = {
