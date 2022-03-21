@@ -54,7 +54,7 @@ export default function SearchDirectory() {
                 />
 
                 <FormHelperText ml={1} color={'#1F4CED'}>
-                  <Tooltip label=" Some description about name and vasp id">
+                  <Tooltip label="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.">
                     What’s a Common name or VASP ID?
                   </Tooltip>
                 </FormHelperText>
