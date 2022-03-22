@@ -196,7 +196,7 @@ func (s *Server) setupRoutes() (err error) {
 		// GDS public routes (no authentication required)
 		v1.GET("/lookup", s.Lookup)
 		v1.POST("/register/:network", s.Register)
-		v1.GET("/verify", s.VerifyContact)
+		v1.GET("/verify-contact", s.VerifyContact)
 	}
 
 	// NotFound and NotAllowed routes
