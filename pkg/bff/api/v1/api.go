@@ -12,6 +12,7 @@ type BFFClient interface {
 	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
 	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
 	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
+	VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error)
 }
 
 //===========================================================================
@@ -84,11 +85,25 @@ type RegisterRequest struct {
 
 // RegisterReply is converted from a protocol buffer RegisterReply.
 type RegisterReply struct {
-	Error               map[string]interface{} `json:"error"`
+	Error               map[string]interface{} `json:"error,omitempty"`
 	Id                  string                 `json:"id"`
 	RegisteredDirectory string                 `json:"registered_directory"`
 	CommonName          string                 `json:"common_name"`
 	Status              string                 `json:"status"`
 	Message             string                 `json:"message"`
 	PKCS12Password      string                 `json:"pkcs12password"`
+}
+
+// VerifyContactParams is converted into a GDS VerifyContactRequest.
+type VerifyContactParams struct {
+	ID        string `url:"vaspID,omitempty" form:"vaspID"`
+	Token     string `url:"token,omitempty" form:"token"`
+	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
+}
+
+// VerifyContactReply
+type VerifyContactReply struct {
+	Error   map[string]interface{} `json:"error,omitempty"`
+	Status  string                 `json:"status"`
+	Message string                 `json:"message"`
 }

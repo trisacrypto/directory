@@ -24,8 +24,10 @@ import (
 )
 
 const (
-	testnet = "testnet"
-	mainnet = "mainnet"
+	testnet       = "testnet"
+	mainnet       = "mainnet"
+	trisatest     = "trisatest.net"
+	vaspdirectory = "vaspdirectory.net"
 )
 
 // ConnectGDS creates a gRPC client to the TRISA Directory Service specified in the
@@ -233,7 +235,7 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	// Make the gds request
+	// Make the GDS request
 	log.Debug().Str("network", network).Msg("issuing GDS register request")
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
 	var rep *gds.RegisterReply
@@ -278,6 +280,85 @@ func (s *Server) Register(c *gin.Context) {
 		if out.Error, err = wire.Rewire(rep.Error); err != nil {
 			log.Error().Err(err).Msg("could not rewire response error struct")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle register response from %s", network)))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// VerifyContact is currently a passthrough helper that forwards the verify contact
+// request from the user interface to the GDS that needs contact verification.
+func (s *Server) VerifyContact(c *gin.Context) {
+	// Bind the parameters associated with the verify contact request
+	params := &api.VerifyContactParams{}
+	if err := c.ShouldBindQuery(&params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Ensure that we have all required parameters
+	if params.ID == "" || params.Token == "" || params.Directory == "" {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("must provide vaspID, token, and registered_directory in query parameters"))
+		return
+	}
+
+	// Ensure the registered_directory is one we understand
+	params.Directory = strings.ToLower(params.Directory)
+	if params.Directory != trisatest && params.Directory != vaspdirectory {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+	}
+
+	// Make the GDS request
+	log.Debug().Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
+	req := &gds.VerifyContactRequest{Id: params.ID, Token: params.Token}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	defer cancel()
+
+	var (
+		err error
+		rep *gds.VerifyContactReply
+	)
+
+	switch params.Directory {
+	case trisatest:
+		rep, err = s.testnet.VerifyContact(ctx, req)
+	case vaspdirectory:
+		rep, err = s.mainnet.VerifyContact(ctx, req)
+	default:
+		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not verify contact"))
+		return
+	}
+
+	// Handle GDS errors
+	if err != nil {
+		serr, _ := status.FromError(err)
+		switch serr.Code() {
+		case codes.InvalidArgument:
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(serr.Message()))
+		case codes.NotFound:
+			c.JSON(http.StatusNotFound, api.ErrorResponse(serr.Message()))
+		case codes.Aborted:
+			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
+		default:
+			log.Error().Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not verify contact")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(serr.Message()))
+		}
+		return
+	}
+
+	// Create the response from the reply
+	out := &api.VerifyContactReply{
+		Status:  rep.Status.String(),
+		Message: rep.Message,
+	}
+
+	if rep.Error != nil && rep.Error.Code != 0 {
+		if out.Error, err = wire.Rewire(rep.Error); err != nil {
+			log.Error().Err(err).Msg("could not rewire response error struct")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle verify contact response from %s", params.Directory)))
 			return
 		}
 	}
