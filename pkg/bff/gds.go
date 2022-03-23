@@ -130,6 +130,7 @@ func (s *Server) Lookup(c *gin.Context) {
 		if out.Results[idx], err = wire.Rewire(result); err != nil {
 			log.Error().Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))
+			return
 		}
 	}
 

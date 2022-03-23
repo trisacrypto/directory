@@ -2,7 +2,6 @@ package bff
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -50,14 +49,12 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPCFunc, flatten b
 
 // FlattenResults removes nil proto messages from the slice (exported for testing purposes).
 func FlattenResults(in []proto.Message) (out []proto.Message) {
-	fmt.Printf("%#v\n", in)
 	out = make([]proto.Message, 0, len(in))
 	for _, msg := range in {
 		if msg != nil {
 			out = append(out, msg)
 		}
 	}
-	fmt.Printf("%#v\n", out)
 	return out
 }
 
