@@ -116,9 +116,10 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 // SendVerifyContact sends a verification email to a contact.
 func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (err error) {
 	ctx := VerifyContactData{
-		Name:    contact.Name,
-		VID:     vasp.Id,
-		BaseURL: m.conf.VerifyContactBaseURL,
+		Name:        contact.Name,
+		VID:         vasp.Id,
+		BaseURL:     m.conf.VerifyContactBaseURL,
+		DirectoryID: m.conf.DirectoryID,
 	}
 
 	if ctx.Token, _, err = models.GetContactVerification(contact); err != nil {

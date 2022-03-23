@@ -30,10 +30,11 @@ func init() {
 
 // VerifyContactData to complete the verify contact email templates.
 type VerifyContactData struct {
-	Name    string // Used to address the email
-	Token   string // The unique token needed to verify the email
-	VID     string // The ID of the VASP/Registration
-	BaseURL string // The URL of the verify contact endpoint to build the VerifyContactURL
+	Name        string // Used to address the email
+	Token       string // The unique token needed to verify the email
+	VID         string // The ID of the VASP/Registration
+	BaseURL     string // The URL of the verify contact endpoint to build the VerifyContactURL
+	DirectoryID string // The registered directory to build a URL accessible by the BFF
 }
 
 // VerifyContactURL composes the link to verify the contact from the context. If the
@@ -57,6 +58,7 @@ func (d VerifyContactData) VerifyContactURL() string {
 	params := link.Query()
 	params.Set("vaspID", d.VID)
 	params.Set("token", d.Token)
+	params.Set("registered_directory", d.DirectoryID)
 	link.RawQuery = params.Encode()
 	return link.String()
 }

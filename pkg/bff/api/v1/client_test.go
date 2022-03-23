@@ -188,3 +188,30 @@ func TestRegister(t *testing.T) {
 	require.Equal(t, fixture.Message, out.Message)
 	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
 }
+
+func TestVerifyEmail(t *testing.T) {
+	fixture := &api.VerifyContactReply{
+		Status:  "PENDING_REVIEW",
+		Message: "thank you for verifying your email",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/verify-contact", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.VerifyContact(context.TODO(), &api.VerifyContactParams{Directory: "trisatest.net", ID: "foo", Token: "bar"})
+	require.NoError(t, err)
+	require.Equal(t, fixture.Status, out.Status)
+	require.Equal(t, fixture.Message, out.Message)
+}
