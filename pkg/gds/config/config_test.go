@@ -46,7 +46,7 @@ var testEnv = map[string]string{
 	"GDS_SERVICE_EMAIL":                        "test@example.com",
 	"GDS_ADMIN_EMAIL":                          "admin@example.com",
 	"SENDGRID_API_KEY":                         "bar1234",
-	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify-contact",
+	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify",
 	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_EMAIL_TESTING":                        "true",
 	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
@@ -215,7 +215,7 @@ func TestRequiredConfig(t *testing.T) {
 
 func TestEmailConfigValidation(t *testing.T) {
 	conf := config.EmailConfig{
-		VerifyContactBaseURL: "http://localhost:3000/verify-contact",
+		VerifyContactBaseURL: "http://localhost:3000/verify",
 		AdminReviewBaseURL:   "http://localhost:3001/vasps",
 	}
 

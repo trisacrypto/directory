@@ -50,7 +50,7 @@ func TestEmailBuilders(t *testing.T) {
 
 	setupMIMEDir(t)
 
-	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify-contact", DirectoryID: "testnet.io"}
+	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify", DirectoryID: "testnet.io"}
 	mail, err := emails.VerifyContactEmail(sender, senderEmail, recipient, recipientEmail, vcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.VerifyContactRE, mail.Subject)
@@ -87,13 +87,13 @@ func TestVerifyContactURL(t *testing.T) {
 		Name:    "Darlene Ulmsted",
 		Token:   "1234defg4321",
 		VID:     "42",
-		BaseURL: "http://localhost:8080/verify-contact",
+		BaseURL: "http://localhost:8080/verify",
 	}
 	link, err := url.Parse(data.VerifyContactURL())
 	require.NoError(t, err)
 	require.Equal(t, "http", link.Scheme)
 	require.Equal(t, "localhost:8080", link.Host)
-	require.Equal(t, "/verify-contact", link.Path)
+	require.Equal(t, "/verify", link.Path)
 	params := link.Query()
 	require.Equal(t, data.Token, params.Get("token"))
 	require.Equal(t, data.VID, params.Get("vaspID"))
@@ -159,7 +159,7 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	email, err := emails.New(suite.conf)
 	require.NoError(err)
 
-	data := emails.VerifyContactData{Name: recipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify-contact", DirectoryID: "testnet.io"}
+	data := emails.VerifyContactData{Name: recipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify", DirectoryID: "testnet.io"}
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))

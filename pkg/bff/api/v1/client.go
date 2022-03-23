@@ -138,7 +138,7 @@ func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out
 
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/verify-contact", nil, &params); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/verify", nil, &params); err != nil {
 		return nil, err
 	}
 
