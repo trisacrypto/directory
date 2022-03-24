@@ -80,7 +80,7 @@ type EmailConfig struct {
 	AdminEmail           string `envconfig:"GDS_ADMIN_EMAIL" default:"TRISA Admins <admin@trisa.io>"`
 	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
-	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
+	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify"`
 	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps/"`
 	Testing              bool   `split_words:"true" default:"false"`
 	Storage              string `split_words:"true" default:""`
