@@ -1,8 +1,8 @@
 import React, { FC, useEffect } from 'react';
 import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
-import { useCertificateSteps } from 'contexts/certificateStepsContext';
-
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
 enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -10,27 +10,25 @@ enum LCOLOR {
   'INCOMPLETE' = '#C1C9D2'
 }
 enum LSTATUS {
-  'COMPLETE' = 'Complete',
-  'PROGRESS' = 'Progress',
-  'SAVE' = 'Save',
-  'INCOMPLETE' = 'Incomplete'
+  'COMPLETE' = 'complete',
+  'PROGRESS' = 'progress',
+  'SAVE' = 'save',
+  'INCOMPLETE' = 'incomplete'
 }
 type StepLabelProps = {};
 
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
-  const [certificateSteps] = useCertificateSteps();
-
+  const dispatch = useDispatch();
+  const CurrentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const Steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const getStep = (step: number) => {
-    return certificateSteps.steps?.filter((s) => s?.key === step);
+    return Steps?.filter((s) => s?.key === step);
   };
 
   // this function need some clean up
   const getLabel = (step: number) => {
     const s = getStep(step);
-    console.log('step', s);
     if (s && s?.length === 1) {
-      if (s[0]?.status === LSTATUS.COMPLETE) {
-      }
       if (s[0]?.status === LSTATUS.COMPLETE) {
         return {
           color: LCOLOR.COMPLETE,
@@ -49,10 +47,16 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           icon: FaCheckCircle
         };
       }
+      if (s[0]?.status === LSTATUS.INCOMPLETE) {
+        return {
+          color: LCOLOR.INCOMPLETE,
+          icon: FaRegCircle
+        };
+      }
     } else {
       return step === 1
         ? {
-            color: LCOLOR.COMPLETE,
+            color: LCOLOR.PROGRESS,
             icon: FaCheckCircle
           }
         : {

@@ -8,7 +8,7 @@ const store = configureStore({
 });
 
 export type AppDispatch = typeof store.dispatch;
-export const useAppDispatch = () => useDispatch();
+export const useAppDispatch = () => useDispatch<AppDispatch>();
 export type AppThunk = ThunkAction<void, RootState, unknown, Action<string>>;
 
 export default store;

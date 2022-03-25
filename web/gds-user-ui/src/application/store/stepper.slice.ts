@@ -1,35 +1,34 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
+import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
 export type TStep = {
   status: string;
   key?: number;
 };
 export type TPayload = {
-  currentStep: number;
+  currentStep: number | string;
   steps: TStep[];
 };
-export const initialValue: TPayload = {
-  currentStep: 1,
-  steps: [
-    {
-      key: 1,
-      status: 'progress'
-    }
-  ]
-};
+export const initialValue: TPayload = loadStepperFromLocalStorage();
 
 const stepperSlice: any = createSlice({
   name: 'stepper',
   initialState: initialValue,
   reducers: {
-    setCurrentStep: (state: any, { payload }: PayloadAction<Partial<TPayload>>) => {
+    setCurrentStep: (state: any, { payload }: any) => {
       state.currentStep = payload.currentStep;
     },
-    setSteps: (state: any, { payload }: PayloadAction<Partial<TPayload>>) => {
-      state.steps = [...state.steps, payload.steps];
+    addStep: (state: any, { payload }: any) => {
+      state.steps.push(payload);
+    },
+    setStepStatus: (state: any, { payload }: any) => {
+      state.steps.map((step: any) => {
+        if (step.key === state.currentStep) {
+          step.status = payload.status;
+        }
+      });
     }
   }
 });
 
 export const stepperReducer = stepperSlice.reducer;
-export const { setSteps, setCurrentStep } = stepperSlice.actions;
+export const { addStep, setCurrentStep, setStepStatus } = stepperSlice.actions;

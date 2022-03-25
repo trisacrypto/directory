@@ -12,11 +12,9 @@ import { CertificateStepsProvider } from 'contexts/certificateStepsContext';
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <CertificateStepsProvider>
-        <ChakraProvider theme={customTheme}>
-          <App />
-        </ChakraProvider>
-      </CertificateStepsProvider>
+      <ChakraProvider theme={customTheme}>
+        <App />
+      </ChakraProvider>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')
