@@ -531,7 +531,7 @@ func (s *gdsTestSuite) setupCertManager(profile string) {
 
 func (s *gdsTestSuite) teardownCertManager() {
 	s.ResetConfig()
-	s.ResetFullFixtures()
+	s.ResetFixtures()
 	emails.PurgeMockEmails()
 	os.RemoveAll(s.svc.GetConf().CertMan.Storage)
 }
