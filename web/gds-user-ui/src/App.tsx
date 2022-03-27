@@ -1,11 +1,14 @@
 import LandingLayout from './layouts/LandingLayout';
-
-function App() {
+import { BrowserRouter } from 'react-router-dom';
+import AppRouter from 'application/routes';
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <LandingLayout />
-    </div>
+    <BrowserRouter>
+      <div className="App">
+        <AppRouter />
+      </div>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;

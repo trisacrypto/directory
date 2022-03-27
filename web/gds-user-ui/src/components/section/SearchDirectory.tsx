@@ -24,8 +24,9 @@ export default function SearchDirectory() {
       width="100%"
       position={'relative'}
       fontFamily={colors.font}
-      color={useColorModeValue('black', 'white')}>
-      <Container maxW={'5xl'} zIndex={10} position={'relative'} fontFamily={colors.font}>
+      color={useColorModeValue('black', 'white')}
+      id={'search'}>
+      <Container maxW={'5xl'} zIndex={10} position={'relative'} fontFamily={colors.font} mb={10}>
         <Stack>
           <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 10 }}>
             <Box mb={{ base: 5 }} color={useColorModeValue('black', 'white')}>
