@@ -13,18 +13,17 @@ const LandingHead: React.FC<any> = ({ title, description, hasBtn }: LandingHeade
       bgGradient="linear(270deg,#24a9df,#1aebb4)"
       color="white"
       width="100%"
-      height={351}
+      height={286}
       justifyContent="center"
       direction="column"
-      padding={4}>
-      <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
+      padding={4}
+      fontSize={'2xl'}>
+      <Stack textAlign={'center'} color="white" spacing={{ base: 3 }} px={60}>
         <Heading fontWeight={600} fontSize={{ md: '4xl', sm: '2xl' }} lineHeight={'80%'}>
           {title || 'TRISA Global Directory Service'}
         </Heading>
         {description ? (
-          <Text maxW={'2xl'} fontSize={{ md: '2xl', sm: 'lg' }}>
-            {description}
-          </Text>
+          <Text fontSize={{ base: 'xl', md: '2xl', sm: 'lg' }}>{description}</Text>
         ) : (
           <Text fontSize={{ base: '30px', md: '2xl', sm: 'lg' }}>
             Become Travel Rule compliant. <br />
