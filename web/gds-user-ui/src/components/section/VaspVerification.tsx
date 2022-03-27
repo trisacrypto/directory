@@ -51,8 +51,8 @@ export default function VaspVerification() {
           <Box my={{ base: 4 }} color="black">
             <Text fontFamily={'heading'} fontWeight={700} fontSize={'xl'}>
               TRISA members must complete a comprehensive multi-part verification form and due
-              diligence process. Once verified, TRISA will issue certificates for secure Travel Rule
-              compliance.
+              diligence process. Once verified, TRISA will issue TestNet and MainNet certificates
+              for secure Travel Rule compliance.
             </Text>
           </Box>
           <Box bg={'gray.100'} p={5}>
