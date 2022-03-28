@@ -1,14 +1,16 @@
-import BasicDetails from 'components/BasicDetail';
+import { SimpleDashboardLayout } from 'layouts';
 import CertificateLayout from 'layouts/CertificateLayout';
-import DashboardLayout from 'layouts/DashboardLayout';
 
 const Certificate: React.FC = () => {
   return (
-    <DashboardLayout>
-      <CertificateLayout>
-        <BasicDetails />
-      </CertificateLayout>
-    </DashboardLayout>
+    // <DashboardLayout>
+    //   <CertificateLayout>
+    //     <BasicDetails />
+    //   </CertificateLayout>
+    // </DashboardLayout>
+    <SimpleDashboardLayout>
+      <CertificateLayout />
+    </SimpleDashboardLayout>
   );
 };
 

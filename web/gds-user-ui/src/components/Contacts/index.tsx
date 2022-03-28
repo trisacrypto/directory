@@ -5,7 +5,7 @@ import FormLayout from 'layouts/FormLayout';
 
 const Contacts: React.FC = () => {
   return (
-    <Stack spacing={13}>
+    <Stack spacing={13} mt="2rem">
       <HStack>
         <Heading size="md">Section 3: Contacts</Heading>
         <Box>

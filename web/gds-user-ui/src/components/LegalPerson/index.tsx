@@ -10,7 +10,7 @@ type LegalPersonProps = {};
 
 const LegalPerson: React.FC<LegalPersonProps> = () => {
   return (
-    <Stack spacing={7}>
+    <Stack spacing={7} mt="2rem">
       <HStack>
         <Heading size="md">Section 2: Legal Person</Heading>
         <Box>

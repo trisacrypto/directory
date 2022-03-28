@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Heading, Stack } from '@chakra-ui/react';
 import CollaboratorsSection from 'components/CollaboratorsSection';
 
+=======
+>>>>>>> origin/main
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';

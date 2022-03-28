@@ -4,11 +4,11 @@ import { Route, Navigate } from 'react-router-dom';
 //import { useAuthState } from '../../';
 
 export interface PrivateRouteProps extends RouteProps {
-    redirectPath: string;
-    isAuthenticated: boolean;
+  redirectPath: string;
+  isAuthenticated: boolean;
 }
 
-export const PrivateRoute = ({ redirectPath, isAuthenticated,  ...props }: PrivateRouteProps) => {
+export const PrivateRoute = ({ redirectPath, isAuthenticated, ...props }: PrivateRouteProps) => {
   //const { user } = useAuthState()//;
   if (!isAuthenticated) {
     return <Navigate to={redirectPath} />;
