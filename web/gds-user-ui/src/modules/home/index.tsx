@@ -1,6 +1,3 @@
-import { Heading, Stack } from '@chakra-ui/react';
-import CollaboratorsSection from 'components/CollaboratorsSection';
-
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';

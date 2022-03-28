@@ -5,7 +5,7 @@ type SimpleDashboardLayout = {
 };
 export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ children }) => {
   return (
-    <Stack px={58}>
+    <Stack px={58} py={10}>
       <Box>{children}</Box>
     </Stack>
   );
