@@ -9,6 +9,7 @@ import SearchDirectory from 'components/Section/SearchDirectory';
 import AboutTrisaSection from 'components/Section/AboutUs';
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
+import { AxiosError } from 'axios';
 const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(false);
@@ -20,11 +21,16 @@ const HomePage: React.FC = () => {
     const query = isValidUuid(searchQuery) ? `uuid=${searchQuery}` : `common_name=${searchQuery}`;
 
     try {
-      const res = await lookup(query);
-      setResult(res.data);
+      const response = await lookup(query);
+      if (!response.success) {
+        setError(response.error);
+      } else {
+        setResult(response);
+      }
       setIsLoading(false);
-    } catch (e) {
+    } catch (e: any) {
       setIsLoading(false);
+      setError('Sorry something went wrong, try again ');
     }
   };
   return (

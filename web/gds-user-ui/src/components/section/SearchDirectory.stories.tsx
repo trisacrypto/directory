@@ -1,12 +1,17 @@
-import React from "react";
-import { Story } from "@storybook/react";
-import SearchDirectory from "./SearchDirectory";
+import React, { FormEvent } from 'react';
+import { Story } from '@storybook/react';
+import SearchDirectory from './SearchDirectory';
 
-interface SearchDirectoryProps {}
+interface SearchDirectoryProps {
+  handleSubmit: (e: FormEvent, query: string) => void;
+  isLoading: boolean;
+  result: any;
+  error: string;
+}
 
 export default {
-  title: "Components/SearchDirectory",
-  component: SearchDirectory,
+  title: 'Components/SearchDirectory',
+  component: SearchDirectory
 };
 
 export const standard: Story<SearchDirectoryProps> = ({ ...props }) => (
