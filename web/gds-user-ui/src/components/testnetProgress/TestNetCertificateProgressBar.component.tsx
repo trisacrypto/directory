@@ -1,6 +1,3 @@
-import React, { FC, useEffect } from 'react';
-import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button } from '@chakra-ui/react';
-
 import { Collapse } from '@chakra-ui/transition';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import {
@@ -8,41 +5,28 @@ import {
   CertificateStepLabel,
   CertificateSteps
 } from './CertificateStepper';
+import BasicDetails from 'components/BasicDetail';
+import LegalPerson from 'components/LegalPerson';
+import { FormProvider, useForm } from 'react-hook-form';
+import Contacts from 'components/Contacts';
+import TrixoQuestionnaire from 'components/TrixoQuestionnaire';
 
 const ProgressBar = () => {
   const { nextStep, previousStep } = useCertificateStepper();
+  const methods = useForm({});
 
   return (
-    <>
-      <CertificateSteps>
-        <CertificateStepLabel />
-        <CertificateStepContainer
-          key="1"
-          status="progress"
-          component={<Text> component 1 </Text>}
-        />
-        <CertificateStepContainer
-          key="2"
-          status="progress"
-          component={<Text> component 2 </Text>}
-        />
-        <CertificateStepContainer
-          key="3"
-          status="progress"
-          component={<Text> component 3 </Text>}
-        />
-        <CertificateStepContainer
-          key="4"
-          status="progress"
-          component={<Text> component 4 </Text>}
-        />
-      </CertificateSteps>
-
-      <HStack>
-        <Button onClick={() => nextStep()}>Next</Button>
-        <Button onClick={() => previousStep()}>Previous</Button>
-      </HStack>
-    </>
+    <FormProvider {...methods}>
+      <form>
+        <CertificateSteps>
+          <CertificateStepLabel />
+          <CertificateStepContainer key="1" status="progress" component={<BasicDetails />} />
+          <CertificateStepContainer key="2" status="complete" component={<LegalPerson />} />
+          <CertificateStepContainer key="3" status="progress" component={<Contacts />} />
+          <CertificateStepContainer key="4" status="progress" component={<TrixoQuestionnaire />} />
+        </CertificateSteps>
+      </form>
+    </FormProvider>
     // </CertificateStepsProvider>
   );
 };

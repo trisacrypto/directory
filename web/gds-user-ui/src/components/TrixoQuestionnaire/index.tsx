@@ -1,11 +1,11 @@
-import { InfoIcon } from "@chakra-ui/icons";
-import { Box, Heading, HStack, Icon, Stack, Text } from "@chakra-ui/react";
-import TrixoQuestionnaireForm from "components/TrixoQuestionnaireForm";
-import FormLayout from "layouts/FormLayout";
+import { InfoIcon } from '@chakra-ui/icons';
+import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import TrixoQuestionnaireForm from 'components/TrixoQuestionnaireForm';
+import FormLayout from 'layouts/FormLayout';
 
 const TrixoQuestionnaire: React.FC = () => {
   return (
-    <Stack spacing={4}>
+    <Stack spacing={4} mt="2rem">
       <HStack>
         <Heading size="md">Section 5: TRIXO Questionnaire</Heading>
         <Box>
@@ -14,11 +14,10 @@ const TrixoQuestionnaire: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          This questionnaire is designed to help TRISA members understand the
-          regulatory regime of your organization. The information provided will
-          help ensure that required compliance information exchanges are
-          conducted correctly and safely. All verified TRISA members will have
-          access to this information.
+          This questionnaire is designed to help TRISA members understand the regulatory regime of
+          your organization. The information provided will help ensure that required compliance
+          information exchanges are conducted correctly and safely. All verified TRISA members will
+          have access to this information.
         </Text>
       </FormLayout>
       <TrixoQuestionnaireForm />
