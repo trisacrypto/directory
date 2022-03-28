@@ -115,10 +115,12 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 	// mode, which means we cannot use the BFF fixture created during SetupSuite.
 	// A minimal maintenance mode configuration.
 	conf, err := config.Config{
-		Maintenance: true,
-		Mode:        gin.TestMode,
-		TestNet:     config.DirectoryConfig{Endpoint: "bufcon"},
-		MainNet:     config.DirectoryConfig{Endpoint: "bufcon"},
+		Maintenance:  true,
+		Mode:         gin.TestMode,
+		AllowOrigins: []string{"http://localhost"},
+		CookieDomain: "localhost",
+		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
+		MainNet:      config.DirectoryConfig{Endpoint: "bufcon"},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")
 
