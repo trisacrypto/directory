@@ -1,4 +1,3 @@
-import Certificate from 'modules/dashboard/Certificate/Certificate';
 import React, { Suspense } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 
@@ -11,7 +10,6 @@ const AppRouter: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/start" element={<StartPage />} />
-        <Route path="/certificate" element={<Certificate />} />
       </Routes>
     </Suspense>
   );
