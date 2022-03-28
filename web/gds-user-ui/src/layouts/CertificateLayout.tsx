@@ -1,6 +1,6 @@
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
-import Card, { CardBody } from 'components/Card';
-import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
+import Card from 'components/ui/Card';
+import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 
@@ -18,14 +18,14 @@ const CertificateLayout: React.FC<CertificateLayoutProps> = ({ children }) => {
       </Heading>
       <VStack spacing={3}>
         <Card maxW="100%">
-          <CardBody>
+          <Card.Body>
             This multi-section form is an important step in the registration and certificate
             issuance process. The information you provide will be used to verify the legal entity
             that you represent and, where appropriate, will be available to verified TRISA members
             to facilitate compliance decisions. To assist in completing the registration form, the
             form is broken into multiple sections. No information is sent until you complete Section
             6 - Review & Submit.
-          </CardBody>
+          </Card.Body>
         </Card>
         <Box width={'100%'}>
           <TestNetCertificateProgressBar />

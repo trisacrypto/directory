@@ -1,4 +1,4 @@
-import { Stack, StackProps } from "@chakra-ui/react";
+import { Stack, StackProps } from '@chakra-ui/react';
 
 interface FormLayoutProps extends StackProps {}
 const FormLayout: React.FC<FormLayoutProps> = (props) => {
@@ -8,6 +8,7 @@ const FormLayout: React.FC<FormLayoutProps> = (props) => {
       align="start"
       border="2px solid #E5EDF1"
       borderRadius="10px"
+      bg={'white'}
       padding={{ base: 3, md: 9 }}
       {...props}
     />

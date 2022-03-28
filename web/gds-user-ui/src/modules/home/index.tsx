@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Heading, Stack } from '@chakra-ui/react';
-import CollaboratorsSection from 'components/CollaboratorsSection';
-
-=======
->>>>>>> origin/main
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';
@@ -12,7 +7,6 @@ import SearchDirectory from 'components/Section/SearchDirectory';
 import AboutTrisaSection from 'components/Section/AboutUs';
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
-import { AxiosError } from 'axios';
 const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(false);
