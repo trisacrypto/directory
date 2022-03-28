@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react';
 import store from 'application/store';
 import { Provider } from 'react-redux';
-import Certificate from './Certificate';
+import Certificate from '.';
 
 export default {
   title: 'modules/Certificate',
