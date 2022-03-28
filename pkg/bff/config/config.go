@@ -13,14 +13,16 @@ import (
 // Config uses envconfig to load the required settings from the environment, parse and
 // validate them in preparation for running the GDS BFF API service.
 type Config struct {
-	Maintenance bool                `split_words:"true" default:"false"`
-	BindAddr    string              `split_words:"true" default:":4437"`
-	Mode        string              `split_words:"true" default:"release"`
-	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
-	ConsoleLog  bool                `split_words:"true" default:"false"`
-	TestNet     DirectoryConfig
-	MainNet     DirectoryConfig
-	processed   bool
+	Maintenance  bool                `split_words:"true" default:"false"`
+	BindAddr     string              `split_words:"true" default:":4437"`
+	Mode         string              `split_words:"true" default:"release"`
+	LogLevel     logger.LevelDecoder `split_words:"true" default:"info"`
+	ConsoleLog   bool                `split_words:"true" default:"false"`
+	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
+	CookieDomain string              `split_words:"true"`
+	TestNet      DirectoryConfig
+	MainNet      DirectoryConfig
+	processed    bool
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
