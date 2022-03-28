@@ -8,6 +8,7 @@ import { getCookie } from '../utils';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { actionType, useModal } from 'contexts/modal';
+import { APICore } from 'helpers/api/apiCore';
 
 const deliverCertsLabel = (
     <>
@@ -73,6 +74,8 @@ const schemaResolver = yupResolver(
     })
 );
 
+const api = new APICore();
+
 function ResendEmail() {
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { register, handleSubmit, formState: { errors }, control } = useForm({
@@ -96,7 +99,7 @@ function ResendEmail() {
             reason: ""
         }
         setIsSubmitting(true)
-        axios.post(`/vasps/${vasp?.id}/resend`, payload, {
+        api.create(`/vasps/${vasp?.id}/resend`, payload, {
             headers: {
                 'X-CSRF-TOKEN': cookie
             }
