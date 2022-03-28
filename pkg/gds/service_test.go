@@ -382,10 +382,13 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 
 	case certreqs:
 		var a *models.CertificateRequest
+		var data models.CertificateRequest
 		for _, f := range s.fixtures[namespace] {
 			ref := f.(*models.CertificateRequest)
 			if ref.Id == key {
-				a = ref
+				// Avoid modifying the object in the fixtures map
+				data = *ref
+				a = &data
 				break
 			}
 		}
