@@ -11,6 +11,7 @@ import (
 	"time"
 
 	ginzerolog "github.com/dn365/gin-zerolog"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -186,6 +187,15 @@ func (s *Server) setupRoutes() (err error) {
 	s.router.Use(ginzerolog.Logger("gin"))
 	s.router.Use(gin.Recovery())
 	s.router.Use(s.Available())
+
+	// Add CORS configuration
+	s.router.Use(cors.New(cors.Config{
+		AllowOrigins:     s.conf.AllowOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Add the v1 API routes
 	v1 := s.router.Group("/v1")

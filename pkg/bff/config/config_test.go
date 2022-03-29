@@ -16,6 +16,8 @@ var testEnv = map[string]string{
 	"GDS_BFF_MODE":             "debug",
 	"GDS_BFF_LOG_LEVEL":        "debug",
 	"GDS_BFF_CONSOLE_LOG":      "true",
+	"GDS_BFF_ALLOW_ORIGINS":    "https://vaspdirectory.net",
+	"GDS_BFF_COOKIE_DOMAIN":    "vaspdirectory.net",
 	"GDS_BFF_TESTNET_INSECURE": "true",
 	"GDS_BFF_TESTNET_ENDPOINT": "localhost:8443",
 	"GDS_BFF_TESTNET_TIMEOUT":  "5s",
@@ -47,6 +49,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_MODE"], conf.Mode)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.True(t, conf.ConsoleLog)
+	require.Len(t, conf.AllowOrigins, 1)
+	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
 	require.True(t, conf.TestNet.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_ENDPOINT"], conf.TestNet.Endpoint)
 	require.Equal(t, 5*time.Second, conf.TestNet.Timeout)

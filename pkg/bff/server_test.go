@@ -50,11 +50,13 @@ func (s *bffTestSuite) SetupSuite() {
 	// can also be used to test endpoints. The BFF server runs for the duration of the
 	// tests and must be shutdown when the test suite terminates.
 	conf, err := config.Config{
-		Maintenance: false,
-		BindAddr:    "127.0.0.1:0",
-		Mode:        gin.TestMode,
-		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:  true,
+		Maintenance:  false,
+		BindAddr:     "127.0.0.1:0",
+		Mode:         gin.TestMode,
+		LogLevel:     logger.LevelDecoder(zerolog.DebugLevel),
+		ConsoleLog:   true,
+		AllowOrigins: []string{"http://localhost"},
+		CookieDomain: "localhost",
 		TestNet: config.DirectoryConfig{
 			Insecure: true,
 			Endpoint: "bufnet",
