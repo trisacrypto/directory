@@ -136,7 +136,7 @@ services:
       - GDS_BFF_MODE=release
       - GDS_BFF_LOG_LEVEL=debug
       - GDS_BFF_CONSOLE_LOG=true
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3003,http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_BFF_TESTNET_INSECURE=true
       - GDS_BFF_TESTNET_ENDPOINT=gds:4433
