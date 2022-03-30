@@ -2,19 +2,37 @@ import { Grid, GridItem, VStack } from '@chakra-ui/react';
 import DeleteButton from 'components/ui/DeleteButton';
 import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
+import { Control, useFieldArray, UseFormRegister } from 'react-hook-form';
 
-const Regulations: React.FC = () => {
+type RegulationsProps = {
+  register: UseFormRegister<any>;
+  control: Control;
+  name: string;
+};
+
+const Regulations: React.FC<RegulationsProps> = ({ register, name, control }) => {
+  const { fields, append, remove } = useFieldArray({
+    name,
+    control
+  });
   return (
     <VStack align="start" w="100%">
-      <Grid templateColumns={{ base: '1fr auto' }} gap={6} width="100%">
-        <GridItem>
-          <InputFormControl controlId="applicable_regulation" />
-        </GridItem>
-        <GridItem display="flex" alignItems="center">
-          <DeleteButton tooltip={{ label: 'Remove line' }} />
-        </GridItem>
-      </Grid>
-      <FormButton borderRadius={5}>Add Regulation</FormButton>
+      {fields.map((field, index) => (
+        <Grid key={field.id} templateColumns={{ base: '1fr auto' }} gap={6} width="100%">
+          <GridItem>
+            <InputFormControl
+              controlId="applicable_regulation"
+              {...register(`${name}[${index}].name`)}
+            />
+          </GridItem>
+          <GridItem display="flex" alignItems="center">
+            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+          </GridItem>
+        </Grid>
+      ))}
+      <FormButton onClick={() => append({ name: '' })} borderRadius={5}>
+        Add Regulation
+      </FormButton>
     </VStack>
   );
 };

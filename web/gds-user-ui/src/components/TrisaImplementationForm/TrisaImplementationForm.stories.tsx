@@ -3,6 +3,7 @@ import TrisaImplementationForm from '.';
 
 type TrisaImplementationFormProps = {
   headerText: string;
+  name: string;
 };
 
 export default {
