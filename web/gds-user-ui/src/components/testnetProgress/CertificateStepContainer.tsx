@@ -1,10 +1,10 @@
 import React, { FC, useEffect } from 'react';
 import { Collapse } from '@chakra-ui/transition';
 interface StepLabelProps {
-  status: string;
   key: string;
   component: JSX.Element;
   isCurrentStep?: boolean;
+  isLast?: boolean;
 }
 
 const CertificateStepContainer: FC<StepLabelProps> = (props) => {

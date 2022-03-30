@@ -24,7 +24,7 @@ export const loadStepperFromLocalStorage = () => {
   };
 
   localStorage.setItem('trs_stepper', JSON.stringify(defaultValue));
-  return defaultValue;
+  return { ...defaultValue, lastStep: null };
 };
 
 export const addStepToLocalStorage = (data: any, key?: string) => {
@@ -56,4 +56,8 @@ export const setCurrentStepFromLocalStorage = (currentStep: number) => {
 
     localStorage.setItem('trs_stepper', JSON.stringify(getStepper));
   }
+};
+
+export const setStepFormValue = () => {
+  // add each step form value to localstorage
 };

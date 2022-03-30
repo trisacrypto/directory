@@ -20,11 +20,11 @@ const ProgressBar = () => {
       <form>
         <CertificateSteps>
           <CertificateStepLabel />
-          <CertificateStepContainer key="1" status="progress" component={<BasicDetails />} />
-          <CertificateStepContainer key="2" status="complete" component={<LegalPerson />} />
-          <CertificateStepContainer key="3" status="progress" component={<Contacts />} />
-          <CertificateStepContainer key="4" status="progress" component={<TrixoQuestionnaire />} />
-          <CertificateStepContainer key="5" status="progress" component={<ReviewSubmit />} />
+          <CertificateStepContainer key="1" component={<BasicDetails />} />
+          <CertificateStepContainer key="2" component={<LegalPerson />} />
+          <CertificateStepContainer key="3" component={<Contacts />} />
+          <CertificateStepContainer key="4" component={<TrixoQuestionnaire />} />
+          <CertificateStepContainer key="5" isLast component={<ReviewSubmit />} />
         </CertificateSteps>
       </form>
     </FormProvider>

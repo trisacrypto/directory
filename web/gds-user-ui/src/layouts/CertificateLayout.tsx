@@ -17,7 +17,7 @@ const CertificateLayout: React.FC<CertificateLayoutProps> = ({ children }) => {
         Certificate Registration
       </Heading>
       <VStack spacing={3}>
-        <Card maxW="100%">
+        <Card maxW="100%" bg={'white'}>
           <Card.Body>
             This multi-section form is an important step in the registration and certificate
             issuance process. The information you provide will be used to verify the legal entity
