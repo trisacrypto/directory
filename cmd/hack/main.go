@@ -4,8 +4,11 @@ Hack to try to reissue certificates and correctly update alice and bob.
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"time"
@@ -16,6 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -42,12 +46,17 @@ func main() {
 	}
 
 	// JOB 1: update the Alice and Bob records if we're on the TestNet.
-	if err = updateRobotCerts(); err != nil {
-		log.Fatal(err)
-	}
+	// if err = updateRobotCerts(); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// JOB 2: reissue certificates for NMS
-	if err = reissueNMSCerts(); err != nil {
+	// if err = reissueNMSCerts(); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// JOB 3: reissue certificates for Sygna
+	if err = reissueSygnaCerts(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -199,5 +208,246 @@ func reissueNMSCerts() (err error) {
 		return err
 	}
 
+	return nil
+}
+
+var vasptest1cert = "CAMSEHyhWDZSfNUfjnjx5FNXteUagAQLcta5zdtY87BsEPwVcyGgUSCGpXio2J17RmDCBQYiXhNnzYVnRzzp/CUUip463dguDy/Z+pv6F+cqoPLUez7sKKHxvtnv7QkFGFdWtNwUDZqhWKdZSXrpocIo03fmLHJYRjXs2kGr21eK2bwxPWpSikv1+3iu+VyMlv/ytIgIcz+hmEYWbeRLrSFmaNUP0VYfIRMipGY/0lIuyY8WNoNCKvEVudRQr5EHuc0ymoUl13tZP1S4uCuLo/+flpndTyI4z9dH3PK763TDHXW9HtsWCjeyHrE+96b8AqGYON1mnJoWbZgUcP4MeK2RmpC8MfNq5NuQa5UY6hZ4MD9ZAEEjNgFYWdW7gvWf5+E5KWmw+KRu3JEAH47VPTH05N+Hizf7+KxFSnbMby4ndoNoXc7tv+MLN0CnVFa3JOlkTpeFvofhyGbNV7Cs85Z3Yy09/Hkd+v54XOxxmVsrMfRu6K0JDHNULtFqQG8NI3Dg2Hd0nhfNRd0yhX1lTBNxTs/2tEpl+oh83ts88z0kzJmqtWAeY8zPdaxZPEpI8fewEZrapUY/79gqNS/2IqSAB9Ssll+nMjAMctm7k4GJEtXOZBEFf+7CckRj/+ugVWaZUkPMn1DWCZmCtGJiz4u2ietH5P7eoOLTKM0Omwl5jkSeEiPXhKF7FQ4NVgDvBY5keeVxtiIKU0hBMzg0LVJTQSoDUlNBMlAKIWdhdGV0dzA1LnRlc3QtdHJhdmVscnVsZS5zeWduYS5pbxoPQ2lwaGVyVHJhY2UgSW5jMgpNZW5sbyBQYXJrOgpDYWxpZm9ybmlhSgJVUzpFChZDaXBoZXJUcmFjZSBJc3N1aW5nIENBGg9DaXBoZXJUcmFjZSBJbmMyCk1lbmxvIFBhcms6CkNhbGlmb3JuaWFKAlVTQhQyMDIyLTAzLTMwVDAyOjQ3OjAwWkoUMjAyMy0wNC0zMFQwMjo0Njo1OVpa7xotLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJSnZUQ0NCNldnQXdJQkFnSVFmS0ZZTmxKODFSK09lUEhrVTFlMTVUQU5CZ2txaGtpRzl3MEJBUXdGQURCeQpNUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0JNS1EyRnNhV1p2Y201cFlURVRNQkVHQTFVRUJ4TUtUV1Z1CmJHOGdVR0Z5YXpFWU1CWUdBMVVFQ2hNUFEybHdhR1Z5VkhKaFkyVWdTVzVqTVI4d0hRWURWUVFERXhaRGFYQm8KWlhKVWNtRmpaU0JKYzNOMWFXNW5JRU5CTUI0WERUSXlNRE16TURBeU5EY3dNRm9YRFRJek1EUXpNREF5TkRZMQpPVm93ZlRFTE1Ba0dBMVVFQmhNQ1ZWTXhFekFSQmdOVkJBZ1RDa05oYkdsbWIzSnVhV0V4RXpBUkJnTlZCQWNUCkNrMWxibXh2SUZCaGNtc3hHREFXQmdOVkJBb1REME5wY0dobGNsUnlZV05sSUVsdVl6RXFNQ2dHQTFVRUF4TWgKWjJGMFpYUjNNRFV1ZEdWemRDMTBjbUYyWld4eWRXeGxMbk41WjI1aExtbHZNSUlDSWpBTkJna3Foa2lHOXcwQgpBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUF3M0RmSTh2ekxscE82bWZqVDd2SU1zc1ZqVUNxU0pVS1VLdXFBWHJsCmFOdnNtdExZVmJoTzJrT01ML09rU080TEV4dDhmMzlTUEdtVXVzUmdVMVJWbHlOcExDSXdCb0tpd1drb3JuOHgKQ1VXb0w3QytGdmtRNnFYbHdYM1NON3NmVVRuY1ZhODBrR2EreTdLQk9KZm1KV29VcDV0N1VQell3TkUvNFEvMgpYekFOZEpiSlRMb3NidGd2bk5sZURQa3NRMkRlNzhzVkdxZHdmRjYxSzFNcllPL1ZlTVBBNzRJcHhNMWNUbDRkCkdxVkpvSkVJdGlHbXZHMG5iUC9vZ29PcnF1VjIrbWZ0blhrRE1tdzhmVGIxdFB4YWJrWkZ0VW9ndkxnQ0NGVzAKUVJOUWRDNXBoSFV4dnU4NXlRQVQxYWQzSWFXNDNqM2xyZDlTU0o3d25KeFpoOTlVbHFaUk12WHlNcWdyUEN5OApEOVlmdms3TkNna3lXTW9ZNjkxbUliUTIrSXA2SXZpcXo4L3J2eWV2MmE3SmtLeG5VdzFBTFFIYVlZTHl1bGlqCjlmdnY5UmwyWjdoNzJkdzhFR05RRnJTNldiajd4aEJtaS9IVHZZSzJOOFhqOGREWnJHWjBIQTBkOXkramUzS3kKWkVnYWVsMnJNT1drRElMU0J4RWYydmkzc1A3S2JENEFGNkxiWnIwanVXK0RFeHBTdWNCTUFZSVR1cUxaUjB2MwpnR0JSVS9SY250SHdJMmhNZXAzbVlyVVZoMzhVL0I2MFp2RUxCdk9xdWNXbDBpa29uV3R3NEl1L3lmclJCY1ZLCmVhb2NtVnVzVktiOHlQRE80TWRGQ2xzU1I0SzVYemFINitLUGRDS2YyNjdxSTBId3VGZFFJUzE2ZVMrRE9OSy8KOXprQ0F3RUFBYU9DQkVJd2dnUStNQjhHQTFVZEl3UVlNQmFBRkZ1N2lNN1pHRG5MaTJ1QzhRQnZXbVFtNC8xMgpNQTRHQTFVZER3RUIvd1FFQXdJRjREQU1CZ05WSFJNQkFmOEVBakFBTUNBR0ExVWRKUUVCL3dRV01CUUdDQ3NHCkFRVUZCd01DQmdnckJnRUZCUWNEQVRCVkJnTlZIUjhFVGpCTU1FcWdTS0JHaGtSb2RIUndPaTh2WTJsd2FHVnkKZEhKaFkyVXVZM0pzTG1sdmRDNXpaV04wYVdkdkxtTnZiUzlEYVhCb1pYSlVjbUZqWlVsdWRHVnliV1ZrYVdGMApaVU5CTG1OeWJEQ0Jsd1lJS3dZQkJRVUhBUUVFZ1lvd2dZY3dVQVlJS3dZQkJRVUhNQUtHUkdoMGRIQTZMeTlqCmFYQm9aWEowY21GalpTNWpjblF1YVc5MExuTmxZM1JwWjI4dVkyOXRMME5wY0dobGNsUnlZV05sU1c1MFpYSnQKWldScFlYUmxRMEV1WTNKME1ETUdDQ3NHQVFVRkJ6QUJoaWRvZEhSd09pOHZZMmx3YUdWeWRISmhZMlV1YjJOegpjQzVwYjNRdWMyVmpkR2xuYnk1amIyMHdnZ0xKQmdOVkhSRUVnZ0xBTUlJQ3ZJSWhaMkYwWlhSM01EVXVkR1Z6CmRDMTBjbUYyWld4eWRXeGxMbk41WjI1aExtbHZnaUZuWVdKdmFuQjBlUzUwWlhOMExYUnlZWFpsYkhKMWJHVXUKYzNsbmJtRXVhVytDSVhSbGMzUjBkM1JsTG5SbGMzUXRkSEpoZG1Wc2NuVnNaUzV6ZVdkdVlTNXBiNEloWW1sMApZbXR5YzJVdWRHVnpkQzEwY21GMlpXeHlkV3hsTG5ONVoyNWhMbWx2Z2lGa2IzSmhkSGQwY0M1MFpYTjBMWFJ5CllYWmxiSEoxYkdVdWMzbG5ibUV1YVcrQ0lXcHRZMmgwZHpBeUxuUmxjM1F0ZEhKaGRtVnNjblZzWlM1emVXZHUKWVM1cGI0SWhaMkZpYjNSM2RIQXVkR1Z6ZEMxMGNtRjJaV3h5ZFd4bExuTjVaMjVoTG1sdmdpRm5ZV0p2WVhWdApkUzUwWlhOMExYUnlZWFpsYkhKMWJHVXVjM2xuYm1FdWFXK0NJWFpoYzNCMGR6azVMblJsYzNRdGRISmhkbVZzCmNuVnNaUzV6ZVdkdVlTNXBiNEloWjJGMFpYUjNNRFl1ZEdWemRDMTBjbUYyWld4eWRXeGxMbk41WjI1aExtbHYKZ2lGemVXZHVZV1p4Ymk1MFpYTjBMWFJ5WVhabGJISjFiR1V1YzNsbmJtRXVhVytDSVhSbGMzUjBkSFIwTG5SbApjM1F0ZEhKaGRtVnNjblZzWlM1emVXZHVZUzVwYjRJaGMzbG5iblIzT0RFdWRHVnpkQzEwY21GMlpXeHlkV3hsCkxuTjVaMjVoTG1sdmdpRm5ZV0p2WTJGMGJ5NTBaWE4wTFhSeVlYWmxiSEoxYkdVdWMzbG5ibUV1YVcrQ0lYTjUKWjI1aFpuaHRMblJsYzNRdGRISmhkbVZzY25Wc1pTNXplV2R1WVM1cGI0SWhjM2xuYm1GbU4zTXVkR1Z6ZEMxMApjbUYyWld4eWRXeGxMbk41WjI1aExtbHZnaUZ6ZVdkdVoySnNiaTUwWlhOMExYUnlZWFpsYkhKMWJHVXVjM2xuCmJtRXVhVytDSVhONVoyNWhabTlzTG5SbGMzUXRkSEpoZG1Wc2NuVnNaUzV6ZVdkdVlTNXBiNEloWjJGMFpYUjMKTVRFdWRHVnpkQzEwY21GMlpXeHlkV3hsTG5ONVoyNWhMbWx2Z2lGemVXZHVZV1p1T0M1MFpYTjBMWFJ5WVhabApiSEoxYkdVdWMzbG5ibUV1YVc4d0hRWURWUjBPQkJZRUZERDdWd2U5a1RITjVmTWVWVmRURk5lSzk0UzdNQTBHCkNTcUdTSWIzRFFFQkRBVUFBNElDQVFBTGN0YTV6ZHRZODdCc0VQd1ZjeUdnVVNDR3BYaW8ySjE3Um1EQ0JRWWkKWGhObnpZVm5SenpwL0NVVWlwNDYzZGd1RHkvWitwdjZGK2Nxb1BMVWV6N3NLS0h4dnRudjdRa0ZHRmRXdE53VQpEWnFoV0tkWlNYcnBvY0lvMDNmbUxISllSalhzMmtHcjIxZUsyYnd4UFdwU2lrdjErM2l1K1Z5TWx2L3l0SWdJCmN6K2htRVlXYmVSTHJTRm1hTlVQMFZZZklSTWlwR1kvMGxJdXlZOFdOb05DS3ZFVnVkUlFyNUVIdWMweW1vVWwKMTN0WlAxUzR1Q3VMby8rZmxwbmRUeUk0ejlkSDNQSzc2M1RESFhXOUh0c1dDamV5SHJFKzk2YjhBcUdZT04xbQpuSm9XYlpnVWNQNE1lSzJSbXBDOE1mTnE1TnVRYTVVWTZoWjRNRDlaQUVFak5nRllXZFc3Z3ZXZjUrRTVLV213CitLUnUzSkVBSDQ3VlBUSDA1TitIaXpmNytLeEZTbmJNYnk0bmRvTm9YYzd0ditNTE4wQ25WRmEzSk9sa1RwZUYKdm9maHlHYk5WN0NzODVaM1l5MDkvSGtkK3Y1NFhPeHhtVnNyTWZSdTZLMEpESE5VTHRGcVFHOE5JM0RnMkhkMApuaGZOUmQweWhYMWxUQk54VHMvMnRFcGwrb2g4M3RzODh6MGt6Sm1xdFdBZVk4elBkYXhaUEVwSThmZXdFWnJhCnBVWS83OWdxTlMvMklxU0FCOVNzbGwrbk1qQU1jdG03azRHSkV0WE9aQkVGZis3Q2NrUmovK3VnVldhWlVrUE0KbjFEV0NabUN0R0ppejR1MmlldEg1UDdlb09MVEtNME9td2w1amtTZUVpUFhoS0Y3RlE0TlZnRHZCWTVrZWVWeAp0Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KYu8kH4sIAAAAAAAA/9SYx470xrLn93yK2RcGRW8Wd0HvWfRuR08WXdGbpx90f9KRviNdSTMHGOD2qpHMYP4jojIYv/jfX38ML8rG/2J525UFmaVd/nsV0GVZ2V2WZfCgog+ZoSvZKlUhMjqFhOzHqzCl1oMKCHNpg6naqW4bkTpAhrYOgeaYC9Ct5WCtiPMtS+QPxfdu3tUZXqQhj2cZXbVgYUmCeM967BO5vz1jTl11A38DUpGsPFG4kpuPdCb6YVjrpgV3RyL6ly8pdQR7lRNgb90mD+nHYRx/xlwSMiMQh4qX9cI7dhglQwwoCbBB5g1GZ9CQc+VL5/Rb5+jL4LJDF8avtVvnrF/WIgh4+eNRurym0+0PabXO+r5+8jdtM5XhM3Tlsq1Rp2LXp4iyJQH/u2eZC7At1KX9ucsCU2f9coocHfx4OLocaHwyse6yzr6iwOhkvtuim590tvo+jD71GohhAYxDG9E5b8tF/85ZCMx6AY6D88qDs9MGA4thrNb6btdlmZXfP2cDoC1eoOkXS1ck/bWBrVSWrnj6QLhSJvdb6z4vvC/fLrHL+rL4b4+dHMVTPXWb6HDugMTYl37VIj+tX3D70rXnq3VeqMafK1kilGOKvbctduVBtt9dxkdj5YMZ1eYI2nEeyBNgvWDUCPYh7K2FT2F3hIhjEEvpuUPmJyTYisnjIlTmpZS9EozeB1sJz7yjw+CfqPWEgfCmjVxJFVcbl3St9sHoCs5sFwvmCoJcfHHKj1LAIRXS5+j19AvdpAlU/pw6lLkdmgPi5CujwstrI/a7CA6p+Ryr8TVPmw8/+nIdwpbT+4Ms3RRazTNJ21hYvbHatYplhQAELNuwchb71JJ37huJXRbtQkmOyEmAIm+km3PKcRTiGJQzrinK66bY1vfw0qdqNtmLBDgqKveWMNiqvQJ9jHAK6uXUgh/yB5f3ZrrJ57xfxQ4nhNKq5+AdEK1ZUhJF2rV1zRugyn2n7A6OiZqA84PkRcMSZgcP0jdx1kzfPCV3j1TYIMM3mXPxLMagRIM5dT3eBaJeQMxXSdHBs/4KWk7WHObkS3hvkMUk1JRDaQHX0ngG31vw4Pjz42wZo9OR7G6TFtvgjgCVyNje086GVTpkuNaLD9JHs+fXCOk9GRyMd15j9te0ZUEHNu04BOuBytvzKmebyXwVKJIx6/1t8dWUvEzuheq5wHaLY6MqFt6JhD9UM2fVEsaJSQalYxNyS3YgvHAe3MtQnwB1tyx98DSdvFiGl4+qsh46Q35dllw+rEhnEloQNqLRiVjkBq2BN5a0mD3orR59QjCg0+j3Zu7gmedh8fQhCyhH6183UrJ1hi5Jnn7TtM7S3/sU63tfoDOWyLKLCNCWJzCHzjJVNTMVLzBWxtEu4/94Acm7b0bX+alyVEasW3vMJft4NeQe/VKxgPxHydoiRFm+rmzOYnccGGAS5LvWG3vqUN+l61+Vy+u+rv2VBn6bBAIIxJ7BaL1xpRzLdEckq0fEMJYn0RbPV9F4VFF2ePRv6zqtirZYg7lE49pFvYFf3g7+qIvYOxusLQkoUBuMLkLsTwyTWwRTq/Zv1ckJMDAOlRWIA/sThXZngfyXG6DO6d/B+Y7NTTN1k//B71/dTmHjBjIW+6SItWWw/87Fbkgv7J3C4FFVmvIjkDxfVdp3tdpluf73Egj8VQ2sGmGIAmVPBgYsnC/JBqiF9hWFcZdKCpSK3gZkSDekPb8lwYOVQ7vLEBvMEbvThq//rfVLbt77Szb4S+xgdxHkW+RgnxSV66jvQCDq1yuD/74iV43QpohS51IOZuxvaoDfy/lJTfBZI7gG85u+/koN8KucGBaaFLGRXKL/iZrv2EShvwL5fxOcn2MT1xnCgPndYv+uBviz4PyWquhv1QBVI/wwDuIzbf6Jml8yJdnglxrg71L1bTzYyIvj/1QN8KfBgQUwvf6JGgMDvozjoV7/yQ/nh7HQG4j+LzXAX6Tq2ziGleWvYgP8Xs63mp5a/omaXzMF6O6fB+fP1ERBvL3Yn9UAfwzOL52YDb4YJuIFjiP8o6BaVzKwUi98P3cFo1Ap1CF0GhQB1plER04RzuIZjvZoGpVZ2qK1bE2wO18jkmAW3jz87BIrz2HFT9iMsAIRds+xjBU1QFgbwx35g33fnyfrec0HxZG82rjrGT8+Oy48smk0Na+4iUVVpXNfh52wWkEU8mA1Dg/g4qkO1Dx2wvkzZvIIImWvSUpkv8MFbsUZhgoVTo/TDD5O0+7QA2m2h3/p3f68VrmSgex+1D0fBWlha7Mj9InhmaAflbKtNx8xeoKdvF0RGRijwao772+5bc0YL20ZePWj1wEQssYm5KAbu2nj81F2nyF3Lxm9qVxCTJXAEZeTwoCS1iVg38UlzfyDwlOSnsToZUA9MChjkMaVl5moXqiw3X9YUi+NCTM2K8G8CK9jVOeomOb5t1EJUZAHRLUHJfbgMTXoD+Ch2hui8LSEEr7pSiBmPKTmLomHegrOkOrphQ75aIxhRqz7Q9cMkB18IUGUV9e6n0IA9rGsLzE1fIJdSCxGoguknlKbP3YMDV/n2fvLrJf2hqugwkmGp63CZImkISNcBUs5CAx1adg5eNUh1LmMcbrLE175T/cYaxJZF5K8wfZW+mkN6CIibzNPztjkPzJZFgcfzwnw8aInQVWT4TxheXJohnKWrnsM+pvWs7UnWlRU+DV8xQwvlA+CzVr7/XxslR8ksdeaOjBAXMDGPbuKSnOjG9wUq4SZRDG+NFfVwVd/dNi7dQq+McNaFQjBQg2/4nYmwtqi8E9grf7rv4BvfOIN7o9I9Te4JU4cyzIK+y/c0p8CyH+IuJgXfFiNHX9o/PnnuLX//8at4xCrX3HL+ANuOSlMgb+hFo/pXHsZbx7UXfrWuy/U0n9e88cDyN7/76j1RVrA/yVqlToD/opawZebwE9+hsadB90WXwxnuSxLN/LBWZGijrFc75lBWzzDWDRXVbJJcyxLVyMLVJXM0AqqejGUFFlM1i+bgTuCw4leIjD0FPaN9Pg8VBRdJYMH3794zMOjUK1Qf6BUBeizGV1YsYflG+2JV1C0LOyByBv1kbsSzISqwt4OHMoXMMbCn1Pw9BH5tcUCJ4ngEJaAxL+3xX7JZeUqZ78wmB9EjSTPR2bWJixKsZ9JJ2vTJsFkLWgJcmgpGKjiGk+ZD5gigF5His8lqyPas5DC4UlQNcSrisHRtK+PoB0I9hCKF//QF7NMLEw2KCFDciey370x8TLwwSVDnfS+AKNojHXIiryrNfGX4Jv5yUFDkoB04o59i0kxHvYNffKMY29zzihIa6wSkA9K0pKhb1an0TWWGkAxZKVohourFvBuho6GeibXcKBSBvKQaY1j7tWMbk9T0+NlAogwoQ2KIc7EI+CNY2ZCbmnuPv8c9gXzVssNTo1AUXuXVUJKUi9dbW9GYXe9X2hGZitAbmb23mPVTjUFCVZPF1tmxIctpzpoQEmfeRLJzV7yfD4e29o/9PoO0/mx6Jl/PBxKBXA8mNXZavs7ce6CkLm2tOT9zvrtZcmQNqoI8RbsV3BbOSW9dxBHJK/IL+cR9jUt4yQgrw/vZcRQ8FF0gmfHVSrZMUqUHO4HLrejxzTPrmIS5LNN4eIFITgxjoY80SHcxDRMAQ80zuTK1qnCeS+syxFgWHrQre8UziKn3WzFxQlK7F56Bjt2B9GVztC0+K4qntBlmQGMmy6/+3FH578uU8W4km53iJ1VNF6kjSYUYAVa1djwcn3Tr++9FvlNUQytswAdRQdffXcCLm1JT4auDqb6QiqZoTlG+ZWarDdD6xxemSqN1+/6X/QA/Ds+fFPT33CK11N7zv+AJOCLkmrrZ0oqXAbReev3zML+/tTfHwr8curf0tHvT805ev8VEAHGyg46it6JZIMZN+4a/Ivh8MNQ66l3htB/gKFfOyjgu4X6C6j9aqH+vINijN1uG2Cy2Wy1lBzsuj7a3IfUIt56O5Is1NGlcs02dpd0d0jl3q42tdhZTOaqPO66P3g7tnlgjsZbRFCC9hAGDLP200tMGIuX67hqdNEBftSi4mrxk7zWXohd8xp0JXf5yHYi29R2AMWDqMomcDWIAaIYRwl8EG5XvSJULz3QoysVT2oLEleyqJv7j+MPbOMb4zpwtlR3LmD4ch7guG2LUSW8oEo/uGFr1A/T7uSLOKahnDoXexf3G3ba0iU2YkKlF6QtxZCPFcQD5sIj5AhTSZacuxq+xk853UmjiCX5/rAB7SgO5pOHLIRrs3srZ3ICKlKxOC+uV3T9BIj9QspF49CaWjL1dA0at6KFBE83kXU046pIOgZgOCoZnJDFJoEx9UFSitLJNr+7hQDEgXtgHkVADRv5tIuF+chYpLDW4Phm/Xq47+ATEe8rZc242Z6osfVkrYCyqhGUC50KMKdRUTAH9ub1m76gnHoH52sm5G1dYSiAsQdJCmJtNQgNgbtefUChUAqBgWbMKGW3BQGVS0xRcyEr9Qbd4IptLdL6fZMkkpOWEhgzWz0ey67i1mJX+00QBM1ppVEghzV8lkcB1CXsb5xMEboau+3a+lD8ehRQyk+uJUwQljahG3bkrHbbyJLpbLpKGiorKLzVonRLF3jauadqTchCK1cZY5Bl4zarT2/0KfOWEDoun/Z2/CcdlDB/fYcx518dVPiMs4qDtM7ehXOC7vJxYsz9P6uDYumfOyhOv/RujLhbPgy3PV6uDOuudei3fALBm9n/EzeALz/+EzeAn6ZXv3fjT4bTfzabBuiKp699a9OMvAKKE55JGLGId5gVw0wZuRC1y5r6Y29533q9WWrtnieCXAhcqIaBaweQTv6WQtE2IvHnLaeQv1Ic3ozb1lbwSTyoC8lihVzJ7IOKosXGTnFDWCe1h3sqlT62wJW/+BrCHH7GaD0OPpyIpAYkZp61VYOYl0LSweJRniPDUqH7nB72JSCtWWuGfYFn0QDaQeGP9JZxsGSVrJLBYE0fh670i4lmdYdGc1oeBUH38W2hqNOQgohksyPK68d3xFwHBkIl3k4IYmQnJXxwzCePr09cBPkH5KcY8VHpqSSnPL9skLJ1g7ZbZqoqz4vYG9a9BSCSdXZgVuT1oiRPUns9c5qfEle2P9Xi6BbJUcpTj1YzyL0nCYPDoEejVnGfDW1KSDoBeMyhGjZwA2sw8v2YgtWkWcvMM+UkKIwr8jp3HoLkezQyCWV6RIbEQnuImgl8W3j1BvIMjSj1PkqGHIKomD1921NQYpr0Sei7wc92ca4Cbi3IuG1TVUT1YmyDw4q+k+BwFwLNuIZ4P5HIjYFwQpJ0koUy3Fy9vyh7KifcIxhA1n6+5QXlR364tM1aEKgM+7CB+dcG2Am63KF+LMcW05+60hxcUPEVT1/2eNfRlApcEnu411OYWt67ySXCPAt7biNInlymB6SpNqKyl2NL470yd+39xyd8snAz7LhFIsh5P+FwhJ11gUf9Df4ymzZYnacProo4wLdB80fjY3F0JYo6/WNYzf+YPws6/T1z/nlcomenGObCRXMfANvkxScczmbZRrYa6b//2NMQNsMoTVV48eLtQ0BYsVdQ4PQc5WO7Nukwcstuheqohb2d5msWBU/xMiyNqans6mZj39jqCyZqK5PFWHM23JhaqUDwiQOX1sZ4olZ1/HjJND51cVDPpSL1424lsktpTcSpBCHRuH+Y4KHgGparQd42qUABBvUcFVhmdDbX8Jsq9/fxEG0Z5n1P1H0zBMsrO6BuHpKX78Hdy5GzYF2i0G70ao9QHZheuWSbkQ4uOZoH+kcun95ZSXmd47jRb81bk0cN6pt2RY1XUyYs0ad7PNvgqe/w6onAS53TWjvEKu15LkPnKx0FK4ROQ3lFXOPA23k9UMd4N+mz+ujuIuEg4m5LVFQMD1YHAxhrdbzRtgFfF6PYfVE5DMuf7xeW6Kco4LCPlnxzujRn5QOzGrWykCQlttbh2rAvzB8gmoRPXWbo8xlZPieaLyNXdPmi1JWSa7t8N93OTkhl2u+VsK8Fe8wuEi7JvFNRhJm4BpjmNjeF08CHlRXgnQicAn9iuO4mSsErTV6guasNJHfcKep8di/daNO8bg71KYIvowb2h3G+0YRQLu/knnnIN3OnBBX6LIy0CSe/uzPa35oZ851EeDGO8AlwpiuXZ7XfqmuggIOpRX4Xpfo6U/9Bgw2pNXuPHLbbJh3ECKUlpctThT05k/IhTGErC+0SPA0G74tDMQH56eLIXURhSrkLSDJbS/gx/Zcf+/8TAAD//9oZ7hmeHgAA"
+
+var vasptest2cert = "CAMSEFtrENn1vXbwd6Q6mxydDbIagAQUhrKURuCAt8F2ceYJhzsRr9AzXxusTSJUJVHo5lX6dpAt19lSoNpR4PXv3YOjr0gAIJNyR4IJ87s04fJrsG1VSzcfzvGW8BSsZ1KIGENmsX0NwYYN43krYWZdVi50V5bNK6qF5N43trnnEAhrX94xCcVkdhL0Sus8EV/osTsEksvZ0GQ+0OCJ6LCweL8bnF82zF+K83cvpWgEOf4EF4gQFSfL3qapcW6UnO9EmoKP2xhA6aLM0nC8ToPOjjjqc/SB/8G5kog6/cEFJPte0H7b8F1R/6tKqHjodq4eQBEexWAEjz8wqXbFAlk8QZouYAolFZ5mQEm3C3IiYoUVN0wElnpc11t4amMgVxYklbhQJL9EY/SBlRpebfxNEgqVi7wmEITxQkVO/S1lDTDkVFAgAWMqdsiJotalf6Pw9unFlHYvic+yhVhtoGWsKSJS3aQu9T6TdizUkizNDW5hMx5MNy9+ZRk3gKDyUBuFTVqL3FaYzht0bTmgfw9oqHnbt6Z6eQSa3YnnrjWSKzTX7k02VKyPizeDc6kFYMgKWYk22rjDGfW3Uhtwh7ArIFNKraywczZCQd+Ppe+2FC3Lmq0A48daEMWj5aaLIrgciC0widRrUhw3X1YbP38IFjeQQ/+o+fnIhguroGV4+gmHi4wsCWz/CU8BY2AIj0p7GhxaOiIKU0hBMzg0LVJTQSoDUlNBMk8KIGh1Yi10cmlzYS5icmFobWEtZGV2LWpwLnN5Z25hLmlvGg9DaXBoZXJUcmFjZSBJbmMyCk1lbmxvIFBhcms6CkNhbGlmb3JuaWFKAlVTOkUKFkNpcGhlclRyYWNlIElzc3VpbmcgQ0EaD0NpcGhlclRyYWNlIEluYzIKTWVubG8gUGFyazoKQ2FsaWZvcm5pYUoCVVNCFDIwMjItMDMtMzBUMDI6NDg6NDNaShQyMDIzLTA0LTMwVDAyOjQ4OjQyWlrcEy0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlISERDQ0JRU2dBd0lCQWdJUVcyc1EyZlc5ZHZCM3BEcWJISjBOc2pBTkJna3Foa2lHOXcwQkFRd0ZBREJ5Ck1Rc3dDUVlEVlFRR0V3SlZVekVUTUJFR0ExVUVDQk1LUTJGc2FXWnZjbTVwWVRFVE1CRUdBMVVFQnhNS1RXVnUKYkc4Z1VHRnlhekVZTUJZR0ExVUVDaE1QUTJsd2FHVnlWSEpoWTJVZ1NXNWpNUjh3SFFZRFZRUURFeFpEYVhCbwpaWEpVY21GalpTQkpjM04xYVc1bklFTkJNQjRYRFRJeU1ETXpNREF5TkRnME0xb1hEVEl6TURRek1EQXlORGcwCk1sb3dmREVMTUFrR0ExVUVCaE1DVlZNeEV6QVJCZ05WQkFnVENrTmhiR2xtYjNKdWFXRXhFekFSQmdOVkJBY1QKQ2sxbGJteHZJRkJoY21zeEdEQVdCZ05WQkFvVEQwTnBjR2hsY2xSeVlXTmxJRWx1WXpFcE1DY0dBMVVFQXhNZwphSFZpTFhSeWFYTmhMbUp5WVdodFlTMWtaWFl0YW5BdWMzbG5ibUV1YVc4d2dnSWlNQTBHQ1NxR1NJYjNEUUVCCkFRVUFBNElDRHdBd2dnSUtBb0lDQVFDbXR2Y1NncFZQeC9yc1dXUkJ3NXN6NlY2ZWp0aDJXY0tJSXlUWnhBQnAKVWJsZUVXNVZ5OHVIejc1dElUQkRLNHpNbys4YjVMQ2xMWTh6RDlUWHhEeUdpK0VuK2NCOWdjeUhsQm9vemlkUQpYd3QzWWxGWWsydm51eDFYRUZ2Q0JFRDZEUWx5SklQQ0ltblEyK3FrNFZLQ21ZdTYra2hDSGxRUzR0emN4Q2hHCk5YRC8xNkUwbXIzeDVwVXp4azR0bDZ6bW1kT2cwSjVDNmRYNUdPWDYvNVZTMCtOd3ZmS3ZGQWdXVjBkVW9DdFQKWnJHTlhESk9NZ3B6UC96elRrb2pEYVhWTXZLa2Y5KzBWdml4RHl6WGhmSHVOYnl3dElOOVhBb29qeU9oWXdyNApBait2MmVkTDFtVUVILzAvQUU5bkFXSjhQM1YyTnN1TEpGeFNRT1FlWFhoTnl2ZHJwalNCVWNQQVVZb054am5FCkw2WE1HMXF4ZVdReUt4SVljeEFiRG91N3dYYzVnamxLQkpsaUtHWGdId0t3a3pIWkROZ0luUzBtaDRsZmJXR3YKNDk4RGJxZmxQMUhkWVI0MEhoQWpYbGdPcTVOOGRqSjhpaDZ5SzZxZWEvNTZ3M0hvTG5hZUFuSjR2RVRBenVwYgpaTUZXQnU2TlozS20vYTlUOWpNTHhRdXZTd1FpTWVTVzFZK3I5YlFsendVa3Z1QlREOXhKQkRpS0ltQks0V3RlCk0rN0hMQ3p2c2F2ZExCVitaM0RvanA1L1VIN01EbVhxcUVuNTRSc256NkNiSGJyYmpXT1IwT0tUanR1UzI5bEsKcVNFclVBVUZ4RktSNUZhQThuRVplV1Y0dXZNWWR2SWZkV2pRMlN3VlNjMTBnRUlKcUl4Y1VHdzNCeFRnWlNsTgo2UUlEQVFBQm80SUJvakNDQVo0d0h3WURWUjBqQkJnd0ZvQVVXN3VJenRrWU9jdUxhNEx4QUc5YVpDYmovWFl3CkRnWURWUjBQQVFIL0JBUURBZ1hnTUF3R0ExVWRFd0VCL3dRQ01BQXdJQVlEVlIwbEFRSC9CQll3RkFZSUt3WUIKQlFVSEF3SUdDQ3NHQVFVRkJ3TUJNRlVHQTFVZEh3Uk9NRXd3U3FCSW9FYUdSR2gwZEhBNkx5OWphWEJvWlhKMApjbUZqWlM1amNtd3VhVzkwTG5ObFkzUnBaMjh1WTI5dEwwTnBjR2hsY2xSeVlXTmxTVzUwWlhKdFpXUnBZWFJsClEwRXVZM0pzTUlHWEJnZ3JCZ0VGQlFjQkFRU0JpakNCaHpCUUJnZ3JCZ0VGQlFjd0FvWkVhSFIwY0RvdkwyTnAKY0dobGNuUnlZV05sTG1OeWRDNXBiM1F1YzJWamRHbG5ieTVqYjIwdlEybHdhR1Z5VkhKaFkyVkpiblJsY20xbApaR2xoZEdWRFFTNWpjblF3TXdZSUt3WUJCUVVITUFHR0oyaDBkSEE2THk5amFYQm9aWEowY21GalpTNXZZM053CkxtbHZkQzV6WldOMGFXZHZMbU52YlRBckJnTlZIUkVFSkRBaWdpQm9kV0l0ZEhKcGMyRXVZbkpoYUcxaExXUmwKZGkxcWNDNXplV2R1WVM1cGJ6QWRCZ05WSFE0RUZnUVVuQTkrWEl4S3ZPZ21hdVFEUFNpVlpKWnMxWjR3RFFZSgpLb1pJaHZjTkFRRU1CUUFEZ2dJQkFCU0dzcFJHNElDM3dYWng1Z21IT3hHdjBETmZHNnhOSWxRbFVlam1WZnAyCmtDM1gyVktnMmxIZzllL2RnNk92U0FBZ2szSkhnZ256dXpUaDhtdXdiVlZMTngvTzhaYndGS3huVW9nWVEyYXgKZlEzQmhnM2plU3RoWmwxV0xuUlhsczBycW9YazNqZTJ1ZWNRQ0d0ZjNqRUp4V1IyRXZSSzZ6d1JYK2l4T3dTUwp5OW5RWkQ3UTRJbm9zTEI0dnh1Y1h6Yk1YNHJ6ZHkrbGFBUTUvZ1FYaUJBVko4dmVwcWx4YnBTYzcwU2Fnby9iCkdFRHBvc3pTY0x4T2c4Nk9PT3B6OUlIL3dibVNpRHI5d1FVaysxN1FmdHZ3WFZIL3EwcW9lT2gycmg1QUVSN0YKWUFTUFB6Q3Bkc1VDV1R4Qm1pNWdDaVVWbm1aQVNiY0xjaUppaFJVM1RBU1dlbHpYVzNocVl5QlhGaVNWdUZBawp2MFJqOUlHVkdsNXQvRTBTQ3BXTHZDWVFoUEZDUlU3OUxXVU5NT1JVVUNBQll5cDJ5SW1pMXFWL28vRDI2Y1dVCmRpK0p6N0tGV0cyZ1phd3BJbExkcEM3MVBwTjJMTlNTTE0wTmJtRXpIa3czTDM1bEdUZUFvUEpRRzRWTldvdmMKVnBqT0czUnRPYUIvRDJpb2VkdTNwbnA1QkpyZGllZXVOWklyTk5mdVRUWlVySStMTjROenFRVmd5QXBaaVRiYQp1TU1aOWJkU0czQ0hzQ3NnVTBxdHJMQnpOa0pCMzQrbDc3WVVMY3VhclFEangxb1F4YVBscG9zaXVCeUlMVENKCjFHdFNIRGRmVmhzL2Z3Z1dONUJELzZqNStjaUdDNnVnWlhqNkNZZUxqQ3dKYlA4SlR3RmpZQWlQU25zYUhGbzYKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQpiliMfiwgAAAAAAAD/1JhH7/PKkt73/BTeC4aYRS5m0cyZYg47JjGIOZOf3vi/7w3n3GP7wjOAgdGyutmlp4F+6lf1P39+DC/Kxv9geduVBZkFLv8rCumyLEkcyzKWU4JDZkApWwG6WOgnoPOdwUZuSiUFNpYGGEz5napvLdIHzADrEADHXJBuLQdrRZxvWSJ/KL53867O8CJAPJ5ldNVChSUJ4j3riDFy/7nGnLrqBv4GpSJVeqJwJTcf6Uz0+8NKf1toeySif/mSUkWoVzoB0eg2dUi/k3H8GXNJyAxQHCpe1glN7DBKhhlIEhC9zBuMzuAh58qXzum3zoHL4EpYR4af2K1z1j9ikN4Ox4fjNR18f/+1Smd9Xz/5G9hMafgMKF32a1Sp2HYppmxJwP9hLXMh9ou0aXfussBUWbecIgeC34uD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"
+
+func reissueSygnaCerts() (err error) {
+	// Retrieve Sygna VASPs to edit
+	var vasptest1, vasptest2 *pb.VASP
+	vasptest1ID := "79246c65-0175-43ae-94c9-6a8d12745c44"
+	vasptest2ID := "4ff75b3e-a312-490d-a4c2-f17ab7bb9119"
+
+	if vasptest1, err = db.RetrieveVASP(vasptest1ID); err != nil {
+		return fmt.Errorf("could not retrieve vasptest1 record: %v", err)
+	}
+
+	if vasptest2, err = db.RetrieveVASP(vasptest2ID); err != nil {
+		return fmt.Errorf("could not retrieve vasptest2 record: %v", err)
+	}
+
+	// Update the legal person record for each VASP
+	vasptest1.Entity.Name.NameIdentifiers[0].LegalPersonName = "COOLBITX LTD. TAIWAN BRANCH (CAYMAN) - TEST (GATETW05)"
+	vasptest2.Entity.Name.NameIdentifiers[0].LegalPersonName = "COOLBITX LTD. TAIWAN BRANCH (CAYMAN) - DEV-HUB"
+
+	// Update common name and endpoint for each VASP
+	vasptest1.CommonName = "gatetw05.test-travelrule.sygna.io"
+	vasptest1.TrisaEndpoint = vasptest1.CommonName + ":443"
+
+	vasptest2.CommonName = "hub-trisa.brahma-dev-jp.sygna.io"
+	vasptest2.TrisaEndpoint = vasptest2.CommonName + ":443"
+
+	// Load the identity certificates from protobufs
+	vasptest1.IdentityCertificate = new(pb.Certificate)
+	vasptest2.IdentityCertificate = new(pb.Certificate)
+
+	var data1 []byte
+	if data1, err = base64.StdEncoding.DecodeString(vasptest1cert); err != nil {
+		return err
+	}
+
+	if err = proto.Unmarshal(data1, vasptest1.IdentityCertificate); err != nil {
+		return err
+	}
+
+	var data2 []byte
+	if data2, err = base64.StdEncoding.DecodeString(vasptest2cert); err != nil {
+		return err
+	}
+
+	if err = proto.Unmarshal(data2, vasptest2.IdentityCertificate); err != nil {
+		return err
+	}
+
+	// Cannot validate
+	// if err = vasptest1.Validate(false); err != nil {
+	// 	return fmt.Errorf("vasptest1 is not valid: %v", err)
+	// }
+	// if err = vasptest2.Validate(false); err != nil {
+	// 	return fmt.Errorf("vasptest2 is not valid: %v", err)
+	// }
+
+	if err = models.UpdateVerificationStatus(vasptest1, pb.VerificationState_VERIFIED, "manually reissued testnet certificates", "benjamin@rotational.io"); err != nil {
+		return fmt.Errorf("could not update VASP record: %v", err)
+	}
+
+	if err = models.UpdateVerificationStatus(vasptest2, pb.VerificationState_VERIFIED, "manually reissued testnet certificates", "benjamin@rotational.io"); err != nil {
+		return fmt.Errorf("could not update VASP record: %v", err)
+	}
+
+	// Create new certificate requests for the reissuance
+	password1 := secrets.CreateToken(16)
+	password2 := secrets.CreateToken(16)
+
+	fmt.Printf("password for %s (%s): %q\n", vasptest1.CommonName, vasptest1.Id, password1)
+	fmt.Printf("password for %s (%s): %q\n", vasptest2.CommonName, vasptest2.Id, password2)
+
+	var certreq1 *models.CertificateRequest
+	if certreq1, err = models.NewCertificateRequest(vasptest1); err != nil {
+		return err
+	}
+
+	var certreq2 *models.CertificateRequest
+	if certreq2, err = models.NewCertificateRequest(vasptest2); err != nil {
+		return err
+	}
+
+	certreq1.Id = "b6b432d9-0ecf-49c5-a5bd-7c59cc422811"
+	certreq1.Params["commonName"] = vasptest1.CommonName
+	certreq1.Params["dNSName"] = "gatetw05.test-travelrule.sygna.io;gabojpty.test-travelrule.sygna.io;testtwte.test-travelrule.sygna.io;bitbkrse.test-travelrule.sygna.io;doratwtp.test-travelrule.sygna.io;jmchtw02.test-travelrule.sygna.io;gabotwtp.test-travelrule.sygna.io;gaboaumu.test-travelrule.sygna.io;vasptw99.test-travelrule.sygna.io;gatetw06.test-travelrule.sygna.io;sygnafqn.test-travelrule.sygna.io;testtttt.test-travelrule.sygna.io;sygntw81.test-travelrule.sygna.io;gabocato.test-travelrule.sygna.io;sygnafxm.test-travelrule.sygna.io;sygnaf7s.test-travelrule.sygna.io;sygngbln.test-travelrule.sygna.io;sygnafol.test-travelrule.sygna.io;gatetw11.test-travelrule.sygna.io;sygnafn8.test-travelrule.sygna.io"
+	certreq1.AuthorityId = 23
+	certreq1.BatchId = 314706
+	certreq1.BatchName = "trisatest.net-certreq-b6b432d9-0ecf-49c5-a5bd-7c59cc422811"
+	certreq1.BatchStatus = "READY_FOR_DOWNLOAD"
+	certreq1.OrderNumber = 314706
+	certreq1.CreationDate = "2022-03-29 21:47:00"
+	certreq1.Profile = "CipherTrace EE"
+
+	certreq2.Id = "1bc4eb32-6a63-4865-865a-98cefb465891"
+	certreq2.Params["commonName"] = vasptest2.CommonName
+	certreq2.Params["dNSName"] = ""
+	certreq2.AuthorityId = 23
+	certreq2.BatchId = 314708
+	certreq2.BatchName = "trisatest.net-certreq-1bc4eb32-6a63-4865-865a-98cefb465891"
+	certreq2.BatchStatus = "READY_FOR_DOWNLOAD"
+	certreq2.OrderNumber = 314708
+	certreq2.CreationDate = "2022-03-29 21:48:42"
+	certreq2.Profile = "CipherTrace EE"
+
+	if err = models.UpdateCertificateRequestStatus(certreq1, models.CertificateRequestState_COMPLETED, "manual certificate request entry", "benjamin@rotational.io"); err != nil {
+		return fmt.Errorf("could not update certreq: %v", err)
+	}
+
+	if err = models.UpdateCertificateRequestStatus(certreq2, models.CertificateRequestState_COMPLETED, "manual certificate request entry", "benjamin@rotational.io"); err != nil {
+		return fmt.Errorf("could not update certreq: %v", err)
+	}
+
+	// Connect to secret manager
+	var sm *secrets.SecretManager
+	if sm, err = secrets.New(conf.Secrets); err != nil {
+		return err
+	}
+
+	// Make a new secret of type password
+	secretType := "password"
+	if err = sm.With(certreq1.Id).CreateSecret(context.TODO(), secretType); err != nil {
+		return err
+	}
+	if err = sm.With(certreq1.Id).AddSecretVersion(context.TODO(), secretType, []byte(password1)); err != nil {
+		return err
+	}
+	if err = sm.With(certreq2.Id).CreateSecret(context.TODO(), secretType); err != nil {
+		return err
+	}
+	if err = sm.With(certreq2.Id).AddSecretVersion(context.TODO(), secretType, []byte(password2)); err != nil {
+		return err
+	}
+
+	// Update the certreq
+	if err = db.UpdateCertReq(certreq1); err != nil {
+		return err
+	}
+	if err = db.UpdateCertReq(certreq2); err != nil {
+		return err
+	}
+
+	// Append the certificate request to the VASP
+	if err = models.AppendCertReqID(vasptest1, certreq1.Id); err != nil {
+		return err
+	}
+	if err = models.AppendCertReqID(vasptest2, certreq2.Id); err != nil {
+		return err
+	}
+
+	// Update the vasps
+	if err = db.UpdateVASP(vasptest1); err != nil {
+		return err
+	}
+	fmt.Println(vasptest1.CommonName + " updated")
+
+	if err = db.UpdateVASP(vasptest2); err != nil {
+		return err
+	}
+	fmt.Println(vasptest2.CommonName + " updated")
+
+	return nil
+}
+
+func makeIdentityCertificate(path, pkcs12password string) (err error) {
+	var archive *trust.Serializer
+	if archive, err = trust.NewSerializer(true, pkcs12password, trust.CompressionZIP); err != nil {
+		return err
+	}
+
+	var provider *trust.Provider
+	if provider, err = archive.ReadFile(path); err != nil {
+		return err
+	}
+
+	var cert *x509.Certificate
+	if cert, err = provider.GetLeafCertificate(); err != nil {
+		return err
+	}
+
+	pub := &pb.Certificate{
+		Version:            int64(cert.Version),
+		SerialNumber:       cert.SerialNumber.Bytes(),
+		Signature:          cert.Signature,
+		SignatureAlgorithm: cert.SignatureAlgorithm.String(),
+		PublicKeyAlgorithm: cert.PublicKeyAlgorithm.String(),
+		Subject: &pb.Name{
+			CommonName:         cert.Subject.CommonName,
+			SerialNumber:       cert.Subject.SerialNumber,
+			Organization:       cert.Subject.Organization,
+			OrganizationalUnit: cert.Subject.OrganizationalUnit,
+			StreetAddress:      cert.Subject.StreetAddress,
+			Locality:           cert.Subject.Locality,
+			Province:           cert.Subject.Province,
+			PostalCode:         cert.Subject.PostalCode,
+			Country:            cert.Subject.Country,
+		},
+		Issuer: &pb.Name{
+			CommonName:         cert.Issuer.CommonName,
+			SerialNumber:       cert.Issuer.SerialNumber,
+			Organization:       cert.Issuer.Organization,
+			OrganizationalUnit: cert.Issuer.OrganizationalUnit,
+			StreetAddress:      cert.Issuer.StreetAddress,
+			Locality:           cert.Issuer.Locality,
+			Province:           cert.Issuer.Province,
+			PostalCode:         cert.Issuer.PostalCode,
+			Country:            cert.Issuer.Country,
+		},
+		NotBefore: cert.NotBefore.Format(time.RFC3339),
+		NotAfter:  cert.NotAfter.Format(time.RFC3339),
+		Revoked:   false,
+	}
+
+	// Write the public certificate into the directory service data store
+	buf := bytes.NewBuffer(nil)
+	if err = pem.Encode(buf, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw}); err != nil {
+		return fmt.Errorf("could not PEM encode certificate: %s", err)
+	}
+	pub.Data = buf.Bytes()
+
+	// Write the entire provider chain into the directory service data store
+	if archive, err = trust.NewSerializer(false, "", trust.CompressionGZIP); err != nil {
+		return err
+	}
+
+	// Ensure only the public keys are written to the directory service
+	if pub.Chain, err = archive.Compress(provider.Public()); err != nil {
+		return err
+	}
+
+	// Now serialize and base64 encode the certificate
+	var data []byte
+	if data, err = proto.Marshal(pub); err != nil {
+		return err
+	}
+
+	fmt.Println(base64.StdEncoding.EncodeToString(data))
 	return nil
 }
