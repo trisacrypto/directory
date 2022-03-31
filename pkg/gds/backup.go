@@ -17,9 +17,6 @@ import (
 // compressed backup location, either locally on disk or to a cloud location. The
 // manager may also encrypt the storage with provided keys. The manager is started when
 // the server is started; but if it is not able to run, it will exit before continuing.
-//
-// TODO: allow storage to cloud storage rather than to disk
-// TODO: encrypt the backup storage file
 func (s *Service) BackupManager(stop <-chan bool) {
 	if !s.conf.Backup.Enabled {
 		log.Warn().Msg("backup manager is not enabled")
@@ -28,7 +25,8 @@ func (s *Service) BackupManager(stop <-chan bool) {
 
 	// Test that the store is backupable
 	if _, ok := s.db.(store.Backup); !ok {
-		log.Fatal().Msg("currently configured store cannot be backed up")
+		log.Error().Msg("currently configured store cannot be backed up, mark as disabled or use different store")
+		return
 	}
 
 	// Check backup directory
