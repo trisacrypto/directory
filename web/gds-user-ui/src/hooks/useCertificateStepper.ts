@@ -18,7 +18,7 @@ const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-
+  const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
   const nextStep = (state?: TState) => {
     if (state) {
       // user can go to the next with doing anything
@@ -28,18 +28,26 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         const foundNext = findStepKey(steps, currentStep + 1);
         if (foundNext.length === 0) {
+          if (currentStep === lastStep) {
+            return;
+          }
           dispatch(addStep({ key: currentStep + 1, status: 'progress' }));
         }
       } else {
+        if (currentStep === lastStep) {
+          return;
+        }
         dispatch(addStep({ key: currentStep, status: state.status }));
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
 
       // user can go to the next by updating a status
     } else {
+      if (currentStep === lastStep) {
+        return;
+      }
       const found = findStepKey(steps, currentStep + 1);
-      console.log('found', found);
-      console.log('nextKey', currentStep + 1);
+
       if (found.length === 0) {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: 'progress' }));
@@ -51,11 +59,15 @@ const useCertificateStepper = () => {
   };
   const previousStep = (state?: TState) => {
     // all set the previous state
+
     if (state) {
     } else {
       const step = currentStep;
+      if (currentStep === 1) {
+        return;
+      }
+
       dispatch(setCurrentStep({ currentStep: step - 1 }));
-      console.log('c2', currentStep);
       dispatch(setStepStatus({ step, status: 'incomplete' }));
     }
   };

@@ -20,7 +20,8 @@ export const loadStepperFromLocalStorage = () => {
         key: 1,
         status: 'progress'
       }
-    ]
+    ],
+    lastStep: null
   };
 
   localStorage.setItem('trs_stepper', JSON.stringify(defaultValue));
