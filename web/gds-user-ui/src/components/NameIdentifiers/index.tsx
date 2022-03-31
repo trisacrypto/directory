@@ -24,21 +24,21 @@ const NameIdentifiers: React.FC = () => {
   return (
     <FormLayout>
       <NameIdentifier
-        name="name.name_identifiers"
+        name="entity.name.name_identifiers"
         heading="Name identifiers"
         description="The name and type of name by which the legal person is known."
         ref={nameIdentifiersFieldArrayRef}
       />
 
       <NameIdentifier
-        name="name.local_name_identifiers"
+        name="entity.name.local_name_identifiers"
         heading="Local Name Identifiers"
         description="The name and type of name by which the legal person is known."
         ref={localNameIdentifiersFieldArrayRef}
       />
 
       <NameIdentifier
-        name="name.phonetic_name_identifiers"
+        name="entity.name.phonetic_name_identifiers"
         heading="Phonetic Name Identifiers"
         description="The name and type of name by which the legal person is known."
         ref={phoneticNameIdentifiersFieldArrayRef}
