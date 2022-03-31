@@ -199,11 +199,8 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 	defer s.Unlock()
 
 	// Check the uniqueness constraints
+	// NOTE: website removed as uniqueness constraint in SC-4483
 	if _, ok := s.names.Find(v.CommonName); ok {
-		return "", storeerrors.ErrDuplicateEntity
-	}
-
-	if _, ok := s.websites.Find(v.Website); ok {
 		return "", storeerrors.ErrDuplicateEntity
 	}
 
@@ -299,11 +296,8 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	}
 
 	// Check the uniqueness constraints
+	// NOTE: website removed as uniqueness constraint in SC-4483
 	if id, ok := s.names.Find(v.CommonName); ok && id != v.Id {
-		return storeerrors.ErrDuplicateEntity
-	}
-
-	if id, ok := s.websites.Find(v.Website); ok && id != v.Id {
 		return storeerrors.ErrDuplicateEntity
 	}
 

@@ -11,6 +11,7 @@ import {
   Button,
   InputGroup
 } from '@chakra-ui/react';
+import React from 'react';
 
 interface _FormControlProps extends FormControlProps {
   formHelperText?: string;
@@ -26,49 +27,59 @@ interface _FormControlProps extends FormControlProps {
   handleFn?: () => void;
 }
 
-const InputFormControl: React.FC<_FormControlProps> = ({
-  label,
-  formHelperText,
-  controlId,
-  inputProps,
-  name,
-  isInvalid,
-  type = 'text',
-  hasBtn,
-  value,
-  setBtnName,
-  handleFn
-}) => {
-  const inputColorMode = useColorModeValue('#E3EBEF', undefined);
+const InputFormControl = React.forwardRef<any, _FormControlProps>(
+  (
+    {
+      label,
+      formHelperText,
+      controlId,
+      inputProps,
+      name,
+      isInvalid,
+      type = 'text',
+      hasBtn,
+      value,
+      setBtnName,
+      handleFn,
+      onChange
+    },
+    ref
+  ) => {
+    const inputColorMode = useColorModeValue('#E3EBEF', undefined);
 
-  return (
-    <CkFormControl isInvalid={isInvalid}>
-      <FormLabel htmlFor={controlId}>{label}</FormLabel>
-      <InputGroup>
-        <Input
-          name={name}
-          id={controlId}
-          background={inputColorMode}
-          borderRadius={0}
-          type={type}
-          value={value}
-          {...inputProps}
-        />
-        {hasBtn && (
-          <InputRightElement width="4.5rem">
-            <Button h="1.75rem" bg={'transparent'} color={'blue'} size="sm" onClick={handleFn}>
-              {setBtnName || 'Change'}
-            </Button>
-          </InputRightElement>
+    return (
+      <CkFormControl isInvalid={isInvalid}>
+        <FormLabel htmlFor={controlId}>{label}</FormLabel>
+        <InputGroup>
+          <Input
+            name={name}
+            id={controlId}
+            background={inputColorMode}
+            borderRadius={0}
+            type={type}
+            value={value}
+            ref={ref}
+            onChange={onChange}
+            {...inputProps}
+          />
+          {hasBtn && (
+            <InputRightElement width="4.5rem">
+              <Button h="1.75rem" bg={'transparent'} color={'blue'} size="sm" onClick={handleFn}>
+                {setBtnName || 'Change'}
+              </Button>
+            </InputRightElement>
+          )}
+        </InputGroup>
+        {!isInvalid ? (
+          <FormHelperText>{formHelperText}</FormHelperText>
+        ) : (
+          <FormErrorMessage>{formHelperText}</FormErrorMessage>
         )}
-      </InputGroup>
-      {!isInvalid ? (
-        <FormHelperText>{formHelperText}</FormHelperText>
-      ) : (
-        <FormErrorMessage>{formHelperText}</FormErrorMessage>
-      )}
-    </CkFormControl>
-  );
-};
+      </CkFormControl>
+    );
+  }
+);
+
+InputFormControl.displayName = 'InputFormControl';
 
 export default InputFormControl;
