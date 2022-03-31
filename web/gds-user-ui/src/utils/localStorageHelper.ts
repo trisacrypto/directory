@@ -46,7 +46,6 @@ export const updateStepFromLocalStorage = (data: any, stepKey: number) => {
         return (getStepper.steps[step.key].status = data.status);
       }
     });
-    console.log(getStepper);
   }
 };
 export const setCurrentStepFromLocalStorage = (currentStep: number) => {
@@ -59,6 +58,15 @@ export const setCurrentStepFromLocalStorage = (currentStep: number) => {
   }
 };
 
-export const setStepFormValue = () => {
+export const setStepFormValueToLocalStorage = (currentStep: number, values: any) => {
   // add each step form value to localstorage
+  const hasLocalStepper: any = localStorage.getItem('trs_stepper');
+  if (hasLocalStepper) {
+    const getStepper: any = JSON.parse(hasLocalStepper);
+    getStepper.steps.map((step: any) => {
+      if (step.key === currentStep) {
+        return (getStepper.steps[step.key].datas = values);
+      }
+    });
+  }
 };
