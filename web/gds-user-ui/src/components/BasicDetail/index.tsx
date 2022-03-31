@@ -1,5 +1,6 @@
 import { Box, Heading, Stack, Icon, HStack } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
+import { useFormContext } from 'react-hook-form';
 
 import BasicDetailsForm from 'components/BasicDetailsForm';
 

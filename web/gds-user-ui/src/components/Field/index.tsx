@@ -9,14 +9,21 @@ type InputProps = {
 };
 
 const Input = React.forwardRef<any, any>(({ register, name, ...rest }, ref) => (
-  <InputFormControl type="text" ref={ref} {...rest} />
+  <InputFormControl type="text" ref={ref} {...rest} {...register(name)} />
 ));
 
 Input.displayName = 'Input';
 
-const Select: React.FC<any> = ({ register, name, ...rest }) => (
-  <SelectFormControl controlId={name} {...rest} />
-);
+type SelectProps = {
+  register: RegisterOptions;
+  name: string;
+};
+
+const Select = React.forwardRef<SelectProps, any>(({ register, name, ...rest }, ref) => (
+  <SelectFormControl controlId={name} ref={ref} {...rest} {...register(name)} />
+));
+
+Select.displayName = 'Select';
 
 const Field = () => {
   return <></>;

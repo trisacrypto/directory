@@ -1,10 +1,12 @@
 import { Heading, Text, Stack, VStack, Grid, GridItem, HStack, Box } from '@chakra-ui/react';
-import Field from 'components/Field';
 import DeleteButton from 'components/ui/DeleteButton';
+import InputFormControl from 'components/ui/InputFormControl';
+import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
 import React from 'react';
 import {
   Control,
+  Controller,
   FieldValues,
   RegisterOptions,
   useFieldArray,
@@ -27,6 +29,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   const { register, control } = useFormContext();
   const { fields, remove, append } = useFieldArray({ name, control });
 
+  const nameIdentiferTypeOptions = getNameIdentiferTypeOptions();
   React.useImperativeHandle(ref, () => ({
     addRow() {
       append({
@@ -41,7 +44,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       {fields &&
         fields.map((field, index) => {
           return (
-            <>
+            <React.Fragment key={field.id}>
               {index < 1 && (
                 <VStack align="start">
                   <Heading size="md">{heading}</Heading>
@@ -51,18 +54,27 @@ const NameIdentifier: React.ForwardRefExoticComponent<
               <HStack width="100%" key={field.id}>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6} width="100%">
                   <GridItem>
-                    <Field.Input
-                      register={register}
-                      name={`${name}[${index}].legal_person_name`}
-                      controlId={controlId}
+                    <InputFormControl
+                      controlId={`${name}[${index}].legal_person_name`}
+                      {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
                   <GridItem>
-                    <Field.Select
-                      register={register}
+                    <Controller
                       name={`${name}[${index}].legal_person_name_identifier_type`}
-                      controlId={controlId}
-                      options={getNameIdentiferTypeOptions()}
+                      control={control}
+                      render={({ field: f }) => (
+                        <SelectFormControl
+                          controlId={controlId!}
+                          name={f.name}
+                          formatOptionLabel={(data: any) => <>{data.label} Name</>}
+                          options={getNameIdentiferTypeOptions()}
+                          onChange={(newValue: any) => f.onChange(newValue.value)}
+                          value={nameIdentiferTypeOptions.find(
+                            (option) => option.value === f.value
+                          )}
+                        />
+                      )}
                     />
                   </GridItem>
                 </Grid>
@@ -72,7 +84,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
                 </Box>
               </HStack>
-            </>
+            </React.Fragment>
           );
         })}
     </Stack>

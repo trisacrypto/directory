@@ -1,7 +1,7 @@
-import { InfoIcon } from "@chakra-ui/icons";
-import { Box, Heading, HStack, Icon, Stack, Text } from "@chakra-ui/react";
-import TrisaImplementationForm from "components/TrisaImplementationForm";
-import FormLayout from "layouts/FormLayout";
+import { InfoIcon } from '@chakra-ui/icons';
+import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import TrisaImplementationForm from 'components/TrisaImplementationForm';
+import FormLayout from 'layouts/FormLayout';
 
 const TrisaImplementation: React.FC = () => {
   return (
@@ -14,12 +14,12 @@ const TrisaImplementation: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          Each VASP is required to establish a TRISA endpoint for inter-VASP
-          communication. Please specify the details of your endpoint for
-          certificate issuance.
+          Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please
+          specify the details of your endpoint for certificate issuance.
         </Text>
       </FormLayout>
-      <TrisaImplementationForm />
+      <TrisaImplementationForm name="trisa_endpoint_testnet" headerText="TRISA Endpoint: TestNet" />
+      <TrisaImplementationForm name="trisa_endpoint_mainnet" headerText="TRISA Endpoint: MainNet" />
     </Stack>
   );
 };

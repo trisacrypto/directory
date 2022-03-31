@@ -7,8 +7,11 @@ import AddressForm from '../AddressForm';
 
 type AddressesPropsProps = {};
 const Addresses: React.FC<AddressesPropsProps> = () => {
-  const { control } = useFormContext();
-  const { fields, remove, append } = useFieldArray({ control, name: 'geographic_addresses' });
+  const { control, register, getValues } = useFormContext();
+  const { fields, remove, append } = useFieldArray({
+    control,
+    name: 'entity.geographic_addresses'
+  });
 
   const handleAddressClick = () => {
     append({
@@ -28,7 +31,12 @@ const Addresses: React.FC<AddressesPropsProps> = () => {
             <HStack key={field.id} width="100%" spacing={4}>
               <Box flex={1}>
                 <Text>Address {index + 1}</Text>
-                <AddressForm />
+                <AddressForm
+                  rowIndex={index}
+                  name={'entity.geographic_addresses'}
+                  register={register}
+                  control={control}
+                />
               </Box>
               <Box alignSelf="flex-end" w={10} pb="25.1px">
                 <DeleteButton

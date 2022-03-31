@@ -216,7 +216,7 @@ func (s *gdsTestSuite) TestFixtures() {
 
 			// Close the database so we can open a leveldb connection to it
 			s.svc.GetStore().Close()
-			defer s.ResetEmptyFixtures()
+			defer s.ResetFixtures()
 
 			db, err := leveldb.OpenFile(dbPath, nil)
 			require.NoError(err, "could not open levelDB at %s", dbPath)
@@ -231,14 +231,14 @@ func (s *gdsTestSuite) TestFixtures() {
 			// Ensure the database is closed before next loop
 			db.Close()
 
-			s.resetFixtures(ftype)
+			s.ResetFixtures()
 		case storeTrtl:
 			// Test the Trtl fixtures
 			s.loadFixtures(ftype)
 
 			// Stop the Trtl server so we can open the database with Honu
 			s.trtl.Shutdown()
-			defer s.ResetEmptyFixtures()
+			defer s.ResetFixtures()
 
 			// Count the number of things in the database
 			hdb, err := honu.Open("leveldb:///" + dbPath)
@@ -382,10 +382,13 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 
 	case certreqs:
 		var a *models.CertificateRequest
+		var data models.CertificateRequest
 		for _, f := range s.fixtures[namespace] {
 			ref := f.(*models.CertificateRequest)
 			if ref.Id == key {
-				a = ref
+				// Avoid modifying the object in the fixtures map
+				data = *ref
+				a = &data
 				break
 			}
 		}
@@ -616,25 +619,13 @@ func (s *gdsTestSuite) LoadSmallFixtures() {
 	s.loadFixtures(small)
 }
 
-// resetFixtures uncaches the current database which causes the next call to
+// ResetFixtures uncaches the current database which causes the next call to
 // loadFixtures to generate a new database that overwrites the current one. Tests that
-// modify the database should call either ResetEmptyFixtures, ResetFullFixtures, or
-// ResetSmallFixtures to ensure that the fixtures are reset for the next test.
-func (s *gdsTestSuite) resetFixtures(ftype fixtureType) {
-	// Set the ftype to unknown to ensure the loader loads the fixture.
+// modify the database should call ResetFixtures to ensure that the fixtures are reset
+// for the next test.
+func (s *gdsTestSuite) ResetFixtures() {
+	// Set the ftype to unknown to ensure that loadFixtures loads the fixture.
 	s.ftype = unknown
-}
-
-func (s *gdsTestSuite) ResetEmptyFixtures() {
-	s.resetFixtures(empty)
-}
-
-func (s *gdsTestSuite) ResetFullFixtures() {
-	s.resetFixtures(full)
-}
-
-func (s *gdsTestSuite) ResetSmallFixtures() {
-	s.resetFixtures(small)
 }
 
 // generateDB generates an updated database and compresses it to a gzip file.

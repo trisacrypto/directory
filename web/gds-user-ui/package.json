@@ -11,6 +11,7 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@fortawesome/fontawesome-free": "^6.0.0",
+    "@hookform/resolvers": "^2.8.8",
     "@reduxjs/toolkit": "^1.7.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
@@ -24,6 +25,7 @@
     "axios": "^0.26.1",
     "chakra-react-select": "^3.0.5",
     "framer-motion": "^6",
+    "lodash": "^4.17.21",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -90,6 +92,7 @@
     ]
   },
   "devDependencies": {
+    "@hookform/devtools": "^4.1.0",
     "@storybook/addon-actions": "^6.4.19",
     "@storybook/addon-essentials": "^6.4.19",
     "@storybook/addon-interactions": "^6.4.19",

@@ -34,7 +34,7 @@ func (s *gdsTestSuite) TestRegister() {
 	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
 	s.SetupGDS()
-	defer s.ResetEmptyFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
@@ -378,7 +378,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
 	s.SetupGDS()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
