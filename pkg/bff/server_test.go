@@ -45,6 +45,10 @@ func (s *bffTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	// This configuration will run the BFF as a fully functional server on an open port
 	// on the system for local loop-back only. It is also in test mode, so a Gin context
 	// can also be used to test endpoints. The BFF server runs for the duration of the
@@ -54,7 +58,7 @@ func (s *bffTestSuite) SetupSuite() {
 		BindAddr:     "127.0.0.1:0",
 		Mode:         gin.TestMode,
 		LogLevel:     logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:   true,
+		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		TestNet: config.DirectoryConfig{
@@ -111,6 +115,7 @@ func (s *bffTestSuite) TearDownSuite() {
 	require.NoError(s.bff.Shutdown(), "could not shutdown the BFF server after tests")
 	s.testnet.Shutdown()
 	s.mainnet.Shutdown()
+	logger.ResetLogger()
 }
 
 func TestBFF(t *testing.T) {

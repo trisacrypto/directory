@@ -26,6 +26,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -85,6 +86,9 @@ func (s *gdsTestSuite) ResetConfig() {
 }
 
 func (s *gdsTestSuite) SetupSuite() {
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
 	gin.SetMode(gin.TestMode)
 
 	// Load the reference fixtures into memory for use in testing
@@ -177,6 +181,7 @@ func (s *gdsTestSuite) TearDownSuite() {
 
 	s.shutdownServers()
 	os.RemoveAll(dbPath)
+	logger.ResetLogger()
 }
 
 func TestGDSLevelDB(t *testing.T) {
