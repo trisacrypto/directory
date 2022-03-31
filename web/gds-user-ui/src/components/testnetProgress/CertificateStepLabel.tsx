@@ -7,13 +7,17 @@ enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
   'SAVE' = '#F29C36',
-  'INCOMPLETE' = '#C1C9D2'
+  'INCOMPLETE' = '#C1C9D2',
+  'NEXT' = '#E9E0E0',
+  'MISSING' = '#dc2f02'
 }
 enum LSTATUS {
   'COMPLETE' = 'complete',
   'PROGRESS' = 'progress',
   'SAVE' = 'save',
-  'INCOMPLETE' = 'incomplete'
+  'INCOMPLETE' = 'incomplete',
+  'NEXT' = 'next',
+  'MISSING' = 'missing'
 }
 type StepLabelProps = {};
 
@@ -35,6 +39,13 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           icon: FaCheckCircle
         };
       }
+      if (s[0]?.status === LSTATUS.NEXT) {
+        return {
+          color: LCOLOR.NEXT,
+          icon: FaCheckCircle
+        };
+      }
+
       if (s[0]?.status === LSTATUS.PROGRESS) {
         return {
           color: LCOLOR.PROGRESS,

@@ -7,6 +7,7 @@ export type TStep = {
 export type TPayload = {
   currentStep: number | string;
   steps: TStep[];
+  lastStep: number | null;
 };
 export const initialValue: TPayload = loadStepperFromLocalStorage();
 
@@ -22,13 +23,16 @@ const stepperSlice: any = createSlice({
     },
     setStepStatus: (state: any, { payload }: any) => {
       state.steps.map((step: any) => {
-        if (step.key === state.currentStep) {
+        if (step.key === payload.step && state.currentStep) {
           step.status = payload.status;
         }
       });
+    },
+    setLastStep: (state: any, { payload }: any) => {
+      state.lastStep = payload.lastStep;
     }
   }
 });
 
 export const stepperReducer = stepperSlice.reducer;
-export const { addStep, setCurrentStep, setStepStatus } = stepperSlice.actions;
+export const { addStep, setCurrentStep, setStepStatus, setLastStep } = stepperSlice.actions;

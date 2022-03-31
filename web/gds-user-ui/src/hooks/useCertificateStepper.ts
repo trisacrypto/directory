@@ -1,49 +1,69 @@
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
-import {
-  addStepToLocalStorage,
-  updateStepFromLocalStorage,
-  setCurrentStepFromLocalStorage
-} from 'utils/localStorageHelper';
-import { findStepKey } from 'utils/utils';
 
-// 'todo' comment: this hook should be improve
+import { findStepKey } from 'utils/utils';
+interface TState {
+  status?: boolean;
+  isMissed?: boolean;
+  step?: number;
+}
+
+// 'todo' this hook should be improve
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
-  const CurrentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const Steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const nextStep = (state?: any) => {
+  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
+
+  const nextStep = (state?: TState) => {
     if (state) {
-      // user can go to the next with doing anything
-      const found = findStepKey(Steps, CurrentStep);
+      const found = findStepKey(steps, currentStep);
       if (found.length === 1) {
-        updateStepFromLocalStorage(state, CurrentStep);
-        setCurrentStepFromLocalStorage(CurrentStep + 1);
         dispatch(setStepStatus(state));
-        dispatch(setCurrentStep({ currentStep: CurrentStep + 1 }));
-        const foundNext = findStepKey(Steps, CurrentStep + 1);
+        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
+        const foundNext = findStepKey(steps, currentStep + 1);
         if (foundNext.length === 0) {
-          addStepToLocalStorage({ key: CurrentStep + 1, status: 'progress' });
-          dispatch(addStep({ key: CurrentStep + 1, status: 'progress' }));
+          if (currentStep === lastStep) {
+            return;
+          }
+          dispatch(addStep({ key: currentStep + 1, status: 'progress' }));
         }
       } else {
-        addStepToLocalStorage({ key: CurrentStep, status: 'progress' });
-        setCurrentStepFromLocalStorage(CurrentStep);
-        dispatch(addStep({ key: CurrentStep, status: state.status }));
-        dispatch(setCurrentStep({ currentStep: CurrentStep + 1 }));
+        if (currentStep === lastStep) {
+          return;
+        }
+        dispatch(addStep({ key: currentStep, status: state.status }));
+        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
-
-      // user can go to the next by updating a status
     } else {
-      setCurrentStepFromLocalStorage(CurrentStep + 1);
-      dispatch(setCurrentStep({ currentStep: CurrentStep + 1 }));
+      if (currentStep === lastStep) {
+        return;
+      }
+      const found = findStepKey(steps, currentStep + 1);
+
+      if (found.length === 0) {
+        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
+        dispatch(addStep({ key: currentStep + 1, status: 'progress' }));
+      } else {
+        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
+        dispatch(setStepStatus({ step: currentStep + 1, status: 'progress' }));
+      }
     }
   };
-  const previousStep = () => {
+  const previousStep = (state?: TState) => {
     // all set the previous state
 
-    dispatch(setCurrentStep({ currentStep: CurrentStep - 1 }));
+    if (state) {
+    } else {
+      const step = currentStep;
+      if (currentStep === 1) {
+        return;
+      }
+
+      dispatch(setCurrentStep({ currentStep: step - 1 }));
+      dispatch(setStepStatus({ step, status: 'incomplete' }));
+    }
   };
 
   return {
