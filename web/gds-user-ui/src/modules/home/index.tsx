@@ -5,6 +5,7 @@ import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';
 import SearchDirectory from 'components/Section/SearchDirectory';
 import AboutTrisaSection from 'components/Section/AboutUs';
+
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
 const HomePage: React.FC = () => {
@@ -18,16 +19,19 @@ const HomePage: React.FC = () => {
     const query = isValidUuid(searchQuery) ? `uuid=${searchQuery}` : `common_name=${searchQuery}`;
 
     try {
-      const response = await lookup(query);
-      if (!response.success) {
-        setError(response.error);
-      } else {
+      const request = await lookup(query);
+      const response = request.results[0];
+      setIsLoading(false);
+      if (!response.error) {
         setResult(response);
       }
-      setIsLoading(false);
     } catch (e: any) {
       setIsLoading(false);
-      setError('Sorry something went wrong, try again ');
+      if (!e.response.data.success) {
+        setError(e.response.data.error);
+      } else {
+        setError('sorry something went wrong , please try again');
+      }
     }
   };
   return (

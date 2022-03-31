@@ -1,6 +1,6 @@
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
-import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm } from 'react-hook-form';
