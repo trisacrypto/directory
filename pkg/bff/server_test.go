@@ -3,6 +3,7 @@ package bff_test
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	"github.com/trisacrypto/directory/pkg/trtl"
+	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -35,15 +38,21 @@ func loadFixture(path string) (fixture map[string]interface{}, err error) {
 // that expect to interact with two GDS services: TestNet and MainNet.
 type bffTestSuite struct {
 	suite.Suite
-	bff     *bff.Server
-	client  api.BFFClient
-	testnet *mock.GDS
-	mainnet *mock.GDS
+	bff      *bff.Server
+	client   api.BFFClient
+	testnet  *mock.GDS
+	mainnet  *mock.GDS
+	dbPath   string
+	trtl     *trtl.Server
+	trtlsock *bufconn.GRPCListener
 }
 
 func (s *bffTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
+
+	// Setup a mock trtl server for the tests
+	s.SetupTrtl()
 
 	// This configuration will run the BFF as a fully functional server on an open port
 	// on the system for local loop-back only. It is also in test mode, so a Gin context
@@ -66,6 +75,10 @@ func (s *bffTestSuite) SetupSuite() {
 			Insecure: true,
 			Endpoint: "bufnet",
 			Timeout:  1 * time.Second,
+		},
+		Database: config.DatabaseConfig{
+			URL:      "trtl://bufnet/",
+			Insecure: true,
 		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
@@ -111,8 +124,39 @@ func (s *bffTestSuite) TearDownSuite() {
 	require.NoError(s.bff.Shutdown(), "could not shutdown the BFF server after tests")
 	s.testnet.Shutdown()
 	s.mainnet.Shutdown()
+
+	// Shutdown and cleanup trtl
+	s.trtl.Shutdown()
+	s.trtlsock.Release()
+	os.RemoveAll(s.dbPath)
+	s.dbPath = ""
 }
 
 func TestBFF(t *testing.T) {
 	suite.Run(t, new(bffTestSuite))
+}
+
+// SetupTrtl starts a Trtl server on a bufconn for testing with the BFF
+func (s *bffTestSuite) SetupTrtl() {
+	var err error
+	require := s.Require()
+
+	// Create a temporary directory for the testing database
+	s.dbPath, err = ioutil.TempDir("", "trtldb-*")
+	require.NoError(err, "could not create a temporary directory for trtl")
+
+	conf := trtl.MockConfig()
+	conf.Database.URL = "leveldb:///" + s.dbPath
+	conf, err = conf.Mark()
+	require.NoError(err, "could not validate mock config")
+
+	// Start the Trtl server
+	s.trtl, err = trtl.New(conf)
+	require.NoError(err, "could not start trtl server")
+
+	s.trtlsock = bufconn.New(1024 * 1024)
+	go s.trtl.Run(s.trtlsock.Listener)
+
+	// Connect to the running trtl server
+	require.NoError(s.trtlsock.Connect(), "could not connect to trtl socket")
 }

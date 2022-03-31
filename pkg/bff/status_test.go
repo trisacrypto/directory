@@ -121,6 +121,10 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 		CookieDomain: "localhost",
 		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
 		MainNet:      config.DirectoryConfig{Endpoint: "bufcon"},
+		Database: config.DatabaseConfig{
+			URL:      "trtl:///",
+			Insecure: true,
+		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")
 
