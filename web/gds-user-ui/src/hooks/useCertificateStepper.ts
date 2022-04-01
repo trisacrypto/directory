@@ -7,6 +7,8 @@ interface TState {
   status?: boolean;
   isMissed?: boolean;
   step?: number;
+  errors?: any;
+  isFormCompleted?: boolean;
 }
 
 // 'todo' this hook should be improve
@@ -17,7 +19,9 @@ const useCertificateStepper = () => {
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
 
   const nextStep = (state?: TState) => {
-    if (state) {
+    console.log('state is formcompleted', state?.isFormCompleted);
+    console.log('state is error', state?.errors);
+    if (state && state.status) {
       const found = findStepKey(steps, currentStep);
       if (found.length === 1) {
         dispatch(setStepStatus(state));

@@ -9,7 +9,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { certificateRegistrationValidationSchema } from 'validation-schemas';
+import { certificateRegistrationValidationSchema } from '../validation-schemas';
 
 type CertificateLayoutProps = {
   children?: React.ReactNode;
