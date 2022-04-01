@@ -7,6 +7,8 @@ interface TState {
   status?: boolean;
   isMissed?: boolean;
   step?: number;
+  isFormCompleted: boolean;
+  errors: any;
 }
 
 // 'todo' this hook should be improve

@@ -3,6 +3,7 @@ import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
 export type TStep = {
   status: string;
   key?: number;
+  isFormCompleted: boolean;
 };
 export type TPayload = {
   currentStep: number | string;

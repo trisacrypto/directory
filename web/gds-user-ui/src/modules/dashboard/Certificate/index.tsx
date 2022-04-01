@@ -1,7 +1,7 @@
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
-import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import CertificateLayout from 'layouts/CertificateLayout';
 import useCertificateStepper from 'hooks/useCertificateStepper';
