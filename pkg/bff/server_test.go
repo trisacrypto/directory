@@ -13,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
@@ -99,6 +100,11 @@ func (s *bffTestSuite) SetupSuite() {
 	mnClient, err := s.mainnet.Client()
 	require.NoError(err, "could not create mainnet GDS client")
 	s.bff.SetClients(tnClient, mnClient)
+
+	// Direct connect the BFF server to the database
+	db, err := db.DirectConnect(s.trtlsock.Conn)
+	require.NoError(err, "could not direct connect db to the BFF server")
+	s.bff.SetDB(db)
 
 	// Start the BFF server - the goal of the BFF tests is to have the server run for
 	// the entire duration of the tests. Implement reset methods to ensure the server

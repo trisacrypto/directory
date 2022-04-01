@@ -18,6 +18,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
@@ -56,8 +57,8 @@ func New(conf config.Config) (s *Server, err error) {
 		echan: make(chan error, 1),
 	}
 
-	// Connect to the TestNet and MainNet directory services if we're not in
-	// maintenance or testing mode (in testing mode, the connection will be manual).
+	// Connect to the TestNet and MainNet directory services and database if we're not
+	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
 		if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
 			return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
@@ -68,6 +69,11 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
 		}
 		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to GDS")
+
+		if s.db, err = db.Connect(s.conf.Database); err != nil {
+			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
+		}
+		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
 	}
 
 	// Create the router
@@ -96,6 +102,7 @@ type Server struct {
 	router  *gin.Engine
 	testnet gds.TRISADirectoryClient
 	mainnet gds.TRISADirectoryClient
+	db      *db.DB
 	started time.Time
 	healthy bool
 	url     string
@@ -164,6 +171,15 @@ func (s *Server) Shutdown() (err error) {
 		return err
 	}
 
+	// Shut down maintenance mode systems
+	if !s.conf.Maintenance {
+		if s.db != nil {
+			if err = s.db.Close(); err != nil {
+				log.Error().Err(err).Msg("could not shutdown trtl db connection")
+			}
+		}
+	}
+
 	log.Debug().Msg("successfully shutdown server")
 	return nil
 }
@@ -223,6 +239,11 @@ func (s *Server) setupRoutes() (err error) {
 func (s *Server) SetClients(testnet, mainnet gds.TRISADirectoryClient) {
 	s.testnet = testnet
 	s.mainnet = mainnet
+}
+
+// SetDB allows tests to set a bufconn client to a mock trtl server.
+func (s *Server) SetDB(db *db.DB) {
+	s.db = db
 }
 
 // GetConf returns a copy of the current configuration.
