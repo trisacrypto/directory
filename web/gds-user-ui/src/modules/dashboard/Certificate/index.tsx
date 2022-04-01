@@ -1,4 +1,4 @@
-import { SimpleDashboardLayout } from 'layouts';
+import { SimpleDashboardLayout } from 'layouts/SimpleDashboardLayout';
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
@@ -16,7 +16,8 @@ const Certificate: React.FC = () => {
     //   </CertificateLayout>
     // </DashboardLayout>
     <SimpleDashboardLayout>
-      <>
+      <CertificateLayout />
+      {/* <>
         <Heading size="lg" mb="24px">
           Certificate Registration
         </Heading>
@@ -52,7 +53,7 @@ const Certificate: React.FC = () => {
             </FormButton>
           </HStack>
         </VStack>
-      </>
+      </> */}
     </SimpleDashboardLayout>
   );
 };

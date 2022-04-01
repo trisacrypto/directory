@@ -27,17 +27,18 @@ const datas = [
 ];
 export default function JoinUsSection() {
   return (
-    <Box bg={colors.system.gray} position={'relative'} width="100%" id={'join'}>
-      <Container maxW={'5xl'} zIndex={10} position={'relative'} fontFamily={colors.font}>
+    <Flex bg={colors.system.gray} position={'relative'} width="100%" fontFamily={colors.font}>
+      <Container maxW={'5xl'} zIndex={10} position={'relative'} id={'join'}>
         <Stack>
           <Stack flex={1} color={'white'} justify={{ lg: 'center' }} py={{ base: 4, md: 10 }}>
             <Box mb={{ base: 10, md: 25 }} color="white">
-              <Text fontWeight={600} mb={6} fontSize={'2xl'}>
+              <Text fontWeight={600} pb={6} fontSize={'2xl'}>
                 Why Join TRISA
               </Text>
               <Text fontSize={'xl'}>
-                TRISA is the only global, open source, peer-to-peer and secure Travel Rule network.
-                Become a TRISA-certified VASP today. Learn how TRISA works.
+                TRISA is a global, open source, peer-to-peer and secure Travel Rule architecture and
+                network designed to be accessible and interoperable. Become a TRISA-certified VASP
+                today. Learn how TRISA works.
               </Text>
             </Box>
 
@@ -45,7 +46,7 @@ export default function JoinUsSection() {
               {datas.map((data) => (
                 <Box key={data.title} mb={20}>
                   <Text pb={4}>{getIcon(data.icon)}</Text>
-                  <Text fontSize={'2xl'} color={'white'} mb={2}>
+                  <Text fontSize={'xl'} color={'white'} mb={2}>
                     {data.title}
                   </Text>
                   <Text fontSize={'xl'}>{data.content}</Text>
@@ -70,6 +71,6 @@ export default function JoinUsSection() {
           <Flex flex={1} />
         </Stack>
       </Container>
-    </Box>
+    </Flex>
   );
 }

@@ -23,11 +23,13 @@ const HomePage: React.FC = () => {
       const response = request.results[0];
       setIsLoading(false);
       if (!response.error) {
+        setError('');
         setResult(response);
       }
     } catch (e: any) {
       setIsLoading(false);
       if (!e.response.data.success) {
+        setResult(false);
         setError(e.response.data.error);
       } else {
         setError('sorry something went wrong , please try again');

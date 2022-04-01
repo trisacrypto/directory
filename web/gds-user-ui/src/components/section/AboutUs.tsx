@@ -21,17 +21,15 @@ export default function AboutTrisaSection() {
       <Container maxW={'5xl'} py={12} fontFamily={colors.font} id={'about'}>
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
           <Stack spacing={4}>
-            <Heading
+            <Text
               color={useColorModeValue('black', 'white')}
               fontWeight={600}
-              fontSize={'2xl'}
-              alignSelf={'flex-start'}
-              position="relative"
-              bottom="0.2rem">
+              pb={6}
+              fontSize={'2xl'}>
               About Trisa
-            </Heading>
+            </Text>
 
-            <Text color={useColorModeValue('black', 'white')} fontSize={'lg'}>
+            <Text color={useColorModeValue('black', 'white')} fontSize={'xl'}>
               The Travel Rule Information Sharing Alliance (TRISA) is the only global, open source,
               secure, and peer-to-peer protocol for Travel Rule compliance. TRISA helps Virtual
               Asset Service Providers (VASPs) comply with the Travel Rule for cross-boarder
