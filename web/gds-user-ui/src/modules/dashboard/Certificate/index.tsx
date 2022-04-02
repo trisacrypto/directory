@@ -80,6 +80,11 @@ const Certificate: React.FC = () => {
     return fieldsNames.every((n) => getFieldValue(n).toString());
   }
 
+  function getCurrentFormValue() {
+    const fieldsNames = fieldNamesPerStepsEntries()[currentStep - 1][1];
+    return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
+  }
+
   function hasErroredField() {
     const fieldsNames = fieldNamesPerStepsEntries()[currentStep - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
@@ -87,12 +92,16 @@ const Certificate: React.FC = () => {
 
   function handleNextStepClick() {
     if (hasErroredField()) {
+      // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
       if (window.confirm('Would you like to continue ?')) {
         nextStep({ isFormCompleted: isFormCompleted(), errors: methods.formState.errors });
       }
     } else {
-      nextStep({ isFormCompleted: isFormCompleted(), errors: methods.formState.errors });
+      nextStep({
+        isFormCompleted: isFormCompleted(),
+        formValues: getCurrentFormValue()
+      });
     }
   }
 
@@ -124,7 +133,7 @@ const Certificate: React.FC = () => {
               <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
             </FormProvider>
           </Box>
-          <HStack width="100%" justifyContent="space-between" pt={5}>
+          <HStack width="100%" spacing={4} justifyContent={'center'} pt={4}>
             <FormButton
               onClick={() => previousStep()}
               isDisabled={currentStep === 1}
