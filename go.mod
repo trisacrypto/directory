@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/rotationalio/honu v0.3.0
-	github.com/rs/zerolog v1.21.0
+	github.com/rs/zerolog v1.26.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.4+incompatible
 	github.com/sendgrid/sendgrid-go v3.10.0+incompatible

@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 type TokenTestSuite struct {
@@ -19,10 +20,18 @@ type TokenTestSuite struct {
 }
 
 func (s *TokenTestSuite) SetupSuite() {
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	// Create the keys map from the testdata directory to create new token managers.
 	s.testdata = make(map[string]string)
 	s.testdata["1yAwhf28bXi3IWP6FYcGa0dcrfq"] = "testdata/1yAwhf28bXi3IWP6FYcGa0dcrfq.pem"
 	s.testdata["1yAxs5vPqCrg433fPrFENevvzen"] = "testdata/1yAxs5vPqCrg433fPrFENevvzen.pem"
+}
+
+func (s *TokenTestSuite) TearDownSuite() {
+	logger.ResetLogger()
 }
 
 func (s *TokenTestSuite) TestTokenManager() {

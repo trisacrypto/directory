@@ -18,6 +18,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 
 	"google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -63,6 +64,10 @@ type trtlTestSuite struct {
 func (s *trtlTestSuite) SetupSuite() {
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	// Load the fixtures then regenerate the test database if requested or required.
 	require.NoError(s.loadFixtures())
 	if _, err := os.Stat(dbtgz); *update || os.IsNotExist(err) {
@@ -78,6 +83,7 @@ func (s *trtlTestSuite) SetupSuite() {
 func (s *trtlTestSuite) TearDownSuite() {
 	require := s.Require()
 	require.NoError(s.cleanup())
+	logger.ResetLogger()
 }
 
 //===========================================================================
