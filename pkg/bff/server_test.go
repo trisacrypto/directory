@@ -52,6 +52,10 @@ func (s *bffTestSuite) SetupSuite() {
 	var err error
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	// Setup a mock trtl server for the tests
 	s.SetupTrtl()
 
@@ -64,7 +68,7 @@ func (s *bffTestSuite) SetupSuite() {
 		BindAddr:     "127.0.0.1:0",
 		Mode:         gin.TestMode,
 		LogLevel:     logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:   true,
+		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		TestNet: config.DirectoryConfig{
@@ -136,6 +140,9 @@ func (s *bffTestSuite) TearDownSuite() {
 	s.trtlsock.Release()
 	os.RemoveAll(s.dbPath)
 	s.dbPath = ""
+
+	// Cleanup logger
+	logger.ResetLogger()
 }
 
 func TestBFF(t *testing.T) {

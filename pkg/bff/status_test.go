@@ -117,6 +117,7 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 	conf, err := config.Config{
 		Maintenance:  true,
 		Mode:         gin.TestMode,
+		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
