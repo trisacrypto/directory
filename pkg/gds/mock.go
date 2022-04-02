@@ -100,7 +100,7 @@ func MockConfig() config.Config {
 		SecretKey:   "supersecretsquirrel",
 		Maintenance: false,
 		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
-		ConsoleLog:  true,
+		ConsoleLog:  false,
 		GDS: config.GDSConfig{
 			Enabled:  false,
 			BindAddr: "",
