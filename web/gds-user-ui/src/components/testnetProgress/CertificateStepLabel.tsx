@@ -3,6 +3,7 @@ import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button, Tooltip } from '
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
+import { findStepKey } from 'utils/utils';
 enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -22,15 +23,12 @@ enum LSTATUS {
 interface StepLabelProps {}
 
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
-  const CurrentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const Steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const getStep = (step: number) => {
-    return Steps?.filter((s) => s?.key === step);
-  };
+  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
 
   // this function need some clean up
   const getLabel = (step: number) => {
-    const s = getStep(step);
+    const s = findStepKey(steps, step);
     if (s && s?.length === 1) {
       if (s[0]?.status === LSTATUS.COMPLETE) {
         return {

@@ -1,6 +1,12 @@
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
+import {
+  addStep,
+  setCurrentStep,
+  setStepStatus,
+  TStep,
+  setStepFormValue
+} from 'application/store/stepper.slice';
 
 import { findStepKey } from 'utils/utils';
 interface TState {
@@ -9,6 +15,7 @@ interface TState {
   step?: number;
   errors?: any;
   isFormCompleted?: boolean;
+  formValues?: any;
 }
 
 // 'todo' this hook should be improve
@@ -21,8 +28,14 @@ const useCertificateStepper = () => {
   const nextStep = (state?: TState) => {
     console.log('state is formcompleted', state?.isFormCompleted);
     console.log('state is error', state?.errors);
+    console.log('form value from ', state?.formValues);
+    if (state?.formValues) {
+      dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
+    }
     if (state && state.status) {
       const found = findStepKey(steps, currentStep);
+      console.log('found', found);
+      console.log('found.length', currentStep);
       if (found.length === 1) {
         dispatch(setStepStatus(state));
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));

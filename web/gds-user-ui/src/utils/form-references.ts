@@ -2,7 +2,7 @@
 export const getCertificateRegistrationDefaultValue = () => {
   return {
     entity: {
-      country_of_registration: 'cote divoire',
+      country_of_registration: 'united states',
       name: {
         name_identifiers: [
           {

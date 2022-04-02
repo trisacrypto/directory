@@ -2,6 +2,7 @@ import { setCurrentStep } from 'application/store/stepper.slice';
 export type TStep = {
   status: string;
   key?: number;
+  data?: any;
 };
 export type TPayload = {
   currentStep: number | string;
@@ -18,7 +19,8 @@ export const loadStepperFromLocalStorage = () => {
     steps: [
       {
         key: 1,
-        status: 'progress'
+        status: 'progress',
+        data: {}
       }
     ],
     lastStep: null
