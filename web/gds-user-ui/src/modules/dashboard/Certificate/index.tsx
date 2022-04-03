@@ -71,6 +71,8 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
+  console.log('testttttt', methods.watch());
+
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
   }
@@ -94,8 +96,12 @@ const Certificate: React.FC = () => {
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
-      if (window.confirm('Would you like to continue ?')) {
-        nextStep({ isFormCompleted: isFormCompleted(), errors: methods.formState.errors });
+      if (window.confirm('Some requirement are missing , Would you like to continue ?')) {
+        nextStep({
+          isFormCompleted: isFormCompleted(),
+          errors: methods.formState.errors,
+          formValues: getCurrentFormValue()
+        });
       }
     } else {
       nextStep({
