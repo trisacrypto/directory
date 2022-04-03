@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 interface TrisaImplementationReviewProps {
   data: any;
@@ -38,12 +38,23 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             }}>
             <Tbody>
               <Tr>
-                <Td>TRISA Endpoint</Td>
+                <Td>TestNet TRISA Endpoint</Td>
                 <Td></Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>Certificate Common Name</Td>
+                <Td>TestNet Certificate Common Name</Td>
+                <Td></Td>
+                <Td></Td>
+              </Tr>
+              <Divider bg={'black'} height={0.5} />
+              <Tr>
+                <Td>MainNet TRISA Endpoint</Td>
+                <Td></Td>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td>MainNet Certificate Common Name</Td>
                 <Td></Td>
                 <Td></Td>
               </Tr>

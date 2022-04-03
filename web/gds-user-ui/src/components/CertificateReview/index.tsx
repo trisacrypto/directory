@@ -1,6 +1,5 @@
 import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
-import { CheckCircleIcon, InfoIcon } from '@chakra-ui/icons';
-import { useFormContext } from 'react-hook-form';
+
 import BasicDetailsReview from './BasicDetailsReview';
 import LegalPersonReview from './LegalPersonReview';
 import TrisaImplementationReview from './TrisaImplementationReview';
