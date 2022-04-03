@@ -9,8 +9,12 @@ type BasicDetailsFormProps = {};
 
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
   const options = getBusinessCategoryOptions();
-  const { getValues, register, control, formState } = useFormContext();
-  const { errors } = formState;
+  const {
+    getValues,
+    register,
+    control,
+    formState: { errors }
+  } = useFormContext();
 
   return (
     <>
@@ -62,7 +66,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
               name={name}
               options={vaspCategories}
               onChange={(val: any) => onChange(val.map((c: any) => c.value))}
-              value={vaspCategories.filter((c) => value.includes(c.value))}
+              value={value && vaspCategories.filter((c) => value.includes(c.value))}
               formHelperText="Please select as many categories needed to represent the types of virtual asset services your organization provides."
             />
           )}
