@@ -4,30 +4,35 @@ import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
-enum LCOLOR {
+import { IconType } from 'react-icons/lib';
+export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
   'SAVE' = '#F29C36',
   'INCOMPLETE' = '#C1C9D2',
   'NEXT' = '#E9E0E0',
-  'MISSING' = '#dc2f02'
+  'ERROR' = '#dc2f02'
 }
-enum LSTATUS {
+export enum LSTATUS {
   'COMPLETE' = 'complete',
   'PROGRESS' = 'progress',
   'SAVE' = 'save',
   'INCOMPLETE' = 'incomplete',
   'NEXT' = 'next',
-  'MISSING' = 'missing'
+  'ERROR' = 'error'
 }
 interface StepLabelProps {}
-
+type TStepLabel = {
+  color: string; // color of the icon
+  hasError?: boolean; // status of the step
+  icon: any; // icon of the step
+};
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
 
   // this function need some clean up
-  const getLabel = (step: number) => {
+  const getLabel = (step: number): TStepLabel | undefined => {
     const s = findStepKey(steps, step);
     if (s && s?.length === 1) {
       if (s[0]?.status === LSTATUS.COMPLETE) {
@@ -53,6 +58,13 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
         return {
           color: LCOLOR.SAVE,
           icon: FaCheckCircle
+        };
+      }
+      if (s[0]?.status === LSTATUS.ERROR) {
+        return {
+          color: LCOLOR.ERROR,
+          icon: FaDotCircle,
+          hasError: true
         };
       }
       if (s[0]?.status === LSTATUS.INCOMPLETE) {
@@ -93,7 +105,10 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Heading fontSize={20}> Progress bar </Heading>
         </Box>
         <Grid templateColumns="repeat(6, 1fr)" gap={2}>
-          <Tooltip label="" placement="top" bg={'red'}>
+          <Tooltip
+            label={getLabel(1)?.hasError && 'Missing require element'}
+            placement="top"
+            bg={'red'}>
             <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
               <HStack>
                 <Box pt={3}>

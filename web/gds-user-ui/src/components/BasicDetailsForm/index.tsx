@@ -1,16 +1,16 @@
-import { VStack } from '@chakra-ui/react';
+import { VStack, Text, FormErrorMessage } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Control, UseFormRegister } from 'react-hook-form/dist/types/form';
-
+import { yupResolver } from '@hookform/resolvers/yup';
+import { ValidationSchema, getDefaultValue } from './validation';
 type BasicDetailsFormProps = {};
 
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
   const options = getBusinessCategoryOptions();
   const {
-    getValues,
     register,
     control,
     formState: { errors }
@@ -27,6 +27,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           inputProps={{ placeholder: 'VASP Holdings LLC' }}
           {...register('website')}
         />
+        {errors.website && <FormErrorMessage>{errors.website.message}</FormErrorMessage>}
 
         <InputFormControl
           controlId="established_on"

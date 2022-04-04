@@ -44,28 +44,39 @@ export const certificateRegistrationValidationSchema = yup.object().shape({
       email: yup.string().email(),
       phone: yup.string()
     }),
-    technical: yup.object().shape({
-      name: yup.string().required(),
-      email: yup.string().email().required(),
-      phone: yup.string()
-    }),
+    technical: yup
+      .object()
+      .shape({
+        name: yup.string().required(),
+        email: yup.string().email().required(),
+        phone: yup.string()
+      })
+      .required(),
     billing: yup.object().shape({
       name: yup.string(),
       email: yup.string().email(),
       phone: yup.string()
     }),
-    legal: yup.object().shape({
-      name: yup.string().required(),
-      email: yup.string().email().required(),
-      phone: yup.string()
-    })
+    legal: yup
+      .object()
+      .shape({
+        name: yup.string().required(),
+        email: yup.string().email().required(),
+        phone: yup.string()
+      })
+      .required()
   }),
   trisa_endpoint: yup.string().trim().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
   common_name: yup.string(),
-  website: yup.string().url().required(),
-  business_category: yup.string(),
-  vasp_categories: yup.array().of(yup.string()),
-  established_on: yup.date(),
+  website: yup
+    .string()
+    .trim()
+    .url()
+    .test('empty-check', 'Website is required', (value) => value !== '')
+    .required(),
+  business_category: yup.string().nullable(true),
+  vasp_categories: yup.array().of(yup.string()).nullable(true),
+  established_on: yup.date().nullable(true),
   trixo: yup.object().shape({
     primary_national_jurisdiction: yup.string(),
     primary_regulator: yup.string(),
