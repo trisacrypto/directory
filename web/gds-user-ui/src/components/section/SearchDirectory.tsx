@@ -23,8 +23,7 @@ import {
 
 import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
-import ErrorMessage from 'components/ErrorMessage';
-import { auto } from '@popperjs/core';
+import ErrorMessage from 'components/ui/ErrorMessage';
 type TSearchDirectory = {
   handleSubmit: (e: FormEvent, query: string) => void;
   isLoading: boolean;

@@ -61,9 +61,9 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
               <Tr>
                 <Td>Addressess</Td>
                 <Td>
-                  {/* {legalPerson['entity.geographic_addresses'][0]?.address_line[0]} <br />
-                  {legalPerson['entity.geographic_addresses'][0]?.address_line[1]} <br />
-                  {legalPerson['entity.geographic_addresses'][0]?.address_line[2]} */}
+                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[0]} <br />
+                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[1]} <br />
+                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[2]}
                 </Td>
                 <Td>Legal Person</Td>
               </Tr>
