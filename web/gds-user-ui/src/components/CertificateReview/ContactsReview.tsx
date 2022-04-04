@@ -1,11 +1,22 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { getStepData } from 'utils/utils';
+
 interface ContactsProps {
   data: any;
 }
 
 const ContactsReview = (props: ContactsProps) => {
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [contacts, setContacts] = React.useState<any>({});
+  useEffect(() => {
+    const stepData = getStepData(steps, 3);
+    if (stepData) {
+      setContacts(stepData);
+    }
+  }, [steps]);
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -38,22 +49,41 @@ const ContactsReview = (props: ContactsProps) => {
             <Tbody>
               <Tr>
                 <Td>Technical Contact</Td>
-                <Td></Td>
+                <Td>
+                  {contacts['contacts.technical.name']} <br />
+                  {contacts['contacts.technical.email']} <br />
+                  {contacts['contacts.technical.phone']} <br />
+                </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Compliance/ Legal Contact</Td>
-                <Td></Td>
+                <Td>
+                  {' '}
+                  {contacts['contacts.legal.name']} <br />
+                  {contacts['contacts.legal.email']} <br />
+                  {contacts['contacts.legal.phone']} <br />
+                </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Administrative Contact</Td>
-                <Td></Td>
+                <Td>
+                  {' '}
+                  {contacts['contacts.administrative.name']} <br />
+                  {contacts['contacts.administrative.email']} <br />
+                  {contacts['contacts.administrative.phone']} <br />
+                </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Billing Contact</Td>
-                <Td></Td>
+                <Td>
+                  {' '}
+                  {contacts?.billing?.name} <br />
+                  {contacts?.billing?.email} <br />
+                  {contacts?.billing?.phone} <br />
+                </Td>
                 <Td></Td>
               </Tr>
             </Tbody>

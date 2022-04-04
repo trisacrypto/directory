@@ -1,9 +1,21 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { getStepData } from 'utils/utils';
+
 interface LegalSectionProps {}
 
 const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [legalPerson, setLegalPerson] = React.useState<any>({});
+
+  useEffect(() => {
+    const stepData = getStepData(steps, 2);
+    if (stepData) {
+      setLegalPerson(stepData);
+    }
+  }, [steps]);
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -43,12 +55,16 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
                 <Td fontStyle={'italic'}>
                   The name and type of name by which the legal person is known.
                 </Td>
-                <Td></Td>
+                <Td>{legalPerson['']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Addressess</Td>
-                <Td>123 Main Street Legal Person Suite 505 Springfield, CA 90210 USA</Td>
+                <Td>
+                  {/* {legalPerson['entity.geographic_addresses'][0]?.address_line[0]} <br />
+                  {legalPerson['entity.geographic_addresses'][0]?.address_line[1]} <br />
+                  {legalPerson['entity.geographic_addresses'][0]?.address_line[2]} */}
+                </Td>
                 <Td>Legal Person</Td>
               </Tr>
               <Tr>
@@ -58,7 +74,7 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>Country of Registration</Td>
-                <Td></Td>
+                <Td>{legalPerson['entity.national_identification.country_of_issue']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
@@ -68,22 +84,22 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>Identification Number</Td>
-                <Td></Td>
+                <Td>{legalPerson['entity.national_identification.national_identifier']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Identification Type</Td>
-                <Td></Td>
+                <Td>{legalPerson['entity.national_identification.national_identifier_type']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Country of Issue</Td>
-                <Td></Td>
+                <Td>{legalPerson['entity.national_identification.country_of_issue']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Reg Authority</Td>
-                <Td></Td>
+                <Td>{legalPerson['entity.national_identification.registration_authority']}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>

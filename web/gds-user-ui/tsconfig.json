@@ -17,7 +17,7 @@
     "noImplicitAny": true,
     "noUnusedLocals": false,
     "jsx": "react-jsx",
-    "baseUrl": "src"
+    "baseUrl": "./src"
   },
-  "include": ["src", "./custom.d.ts"]
+  "include": ["src", "src/custom.d.ts"]
 }

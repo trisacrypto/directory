@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import { Box, Heading, HStack, Icon, Stack, Text, useToast } from '@chakra-ui/react';
 
 import BasicDetailsReview from './BasicDetailsReview';
 import LegalPersonReview from './LegalPersonReview';
@@ -8,22 +8,29 @@ import TrixoReview from './TrixoReview';
 import FormLayout from 'layouts/FormLayout';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-
+import { hasStepError } from 'utils/utils';
 import ReviewSubmit from 'components/ReviewSubmit';
-import { ReportHandler } from 'web-vitals';
-
-interface TCertificateReviewProps {}
-
+import { registrationRequest } from 'modules/dashboard/certificate/service';
 const CertificateReview = () => {
   const { nextStep, previousStep } = useCertificateStepper();
-  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const toast = useToast();
+  const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
-    await null;
-    console.log('handleSubmitRegister', network);
+    try {
+      await registrationRequest(network, steps);
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.response.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+    }
   };
 
   return (

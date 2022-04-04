@@ -1,11 +1,20 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-interface TrisaImplementationReviewProps {
-  data: any;
-}
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { getStepData } from 'utils/utils';
+
+interface TrisaImplementationReviewProps {}
 
 const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [trisa, setTrisa] = React.useState<any>({});
+  useEffect(() => {
+    const stepData = getStepData(steps, 4);
+    if (stepData) {
+      setTrisa(stepData);
+    }
+  }, [steps]);
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -39,23 +48,23 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             <Tbody>
               <Tr>
                 <Td>TestNet TRISA Endpoint</Td>
-                <Td></Td>
+                <Td>{trisa['trisa_endpoint_testnet.endpoint']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>TestNet Certificate Common Name</Td>
-                <Td></Td>
+                <Td>{trisa['trisa_endpoint_testnet.common_name']}</Td>
                 <Td></Td>
               </Tr>
               <Divider bg={'black'} height={0.5} />
               <Tr>
                 <Td>MainNet TRISA Endpoint</Td>
-                <Td></Td>
+                <Td>{trisa['trisa_endpoint_.endpoint']}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>MainNet Certificate Common Name</Td>
-                <Td></Td>
+                <Td>{trisa['trisa_endpoint_.common_name']}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>

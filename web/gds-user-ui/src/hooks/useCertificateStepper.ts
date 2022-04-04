@@ -11,6 +11,7 @@ import {
 
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
+import { hasStepError } from '../utils/utils';
 
 interface TState {
   status?: boolean;
@@ -65,8 +66,10 @@ const useCertificateStepper = () => {
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
       // that mean we move to submit step
-      dispatch(setSubmitStep({ submitStep: true }));
-      dispatch(setCurrentStep({ currentStep: lastStep }));
+      if (!hasStepError(steps)) {
+        dispatch(setSubmitStep({ submitStep: true }));
+        dispatch(setCurrentStep({ currentStep: lastStep }));
+      }
     } else {
       const found = findStepKey(steps, currentStep + 1);
 

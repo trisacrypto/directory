@@ -1,62 +1,22 @@
 import { SimpleDashboardLayout } from 'layouts';
-import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
+import { Box, Heading, HStack, VStack, useToast } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
-import { getCertificateRegistrationDefaultValue } from 'modules/dashboard/certificate/lib/form-references';
+
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { certificateRegistrationValidationSchema } from './lib/certificate-registration-validation-schema';
+import { hasStepError } from '../../../utils/utils';
 
-type CertificateLayoutProps = {
-  children?: React.ReactNode;
-};
-
-const fieldNamesPerSteps = {
-  basicDetails: ['website', 'established_on', 'business_category', 'vasp_categories'],
-  legalPerson: [
-    'entity.name.name_identifiers',
-    'entity.name.local_name_identifiers',
-    'entity.name.phonetic_name_identifiers',
-    'entity.geographic_addresses',
-    'entity.country_of_registration',
-    'entity.national_identification.national_identifier',
-    'entity.national_identification.national_identifier_type',
-    'entity.national_identification.country_of_issue',
-    'entity.national_identification.registration_authority'
-  ],
-  contacts: [
-    ...['administrative', 'technical', 'billing', 'legal'].flatMap((value) => [
-      `contacts.${value}.name`,
-      `contacts.${value}.email`,
-      `contacts.${value}.phone`
-    ])
-  ],
-  trisaImplementation: [
-    ...['trisa_endpoint_testnet', 'trisa_endpoint_mainnet'].flatMap((value) => [
-      `${value}.common_name`,
-      `${value}.endpoint`
-    ])
-  ],
-  trixoImplementation: [
-    'trixo.primary_national_jurisdiction',
-    'trixo.primary_regulator',
-    'trixo.financial_transfers_permitted',
-    'trixo.has_required_regulatory_program',
-    'trixo.conducts_customer_kyc',
-    'trixo.kyc_threshold',
-    'trixo.kyc_threshold_currency',
-    'trixo.must_comply_travel_rule',
-    'trixo.compliance_threshold',
-    'trixo.compliance_threshold_currency',
-    'trixo.must_safeguard_pii',
-    'trixo.safeguards_pii'
-  ]
-};
+import {
+  fieldNamesPerSteps,
+  certificateRegistrationValidationSchema,
+  getCertificateRegistrationDefaultValue
+} from './lib';
 
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 
@@ -64,11 +24,13 @@ const Certificate: React.FC = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
+  const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
+  const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
-  console.log('current', current);
+
   const methods = useForm({
     defaultValues: getCertificateRegistrationDefaultValue(),
     resolver: yupResolver(certificateRegistrationValidationSchema),
@@ -95,11 +57,24 @@ const Certificate: React.FC = () => {
   }
 
   function handleNextStepClick() {
+    if (currentStep === lastStep) {
+      if (hasStepError(steps)) {
+        toast({
+          position: 'top',
+          title: `Please fill all the required fields before submitting`,
+          status: 'error',
+          isClosable: true,
+          containerStyle: {
+            width: '800px',
+            maxWidth: '100%'
+          }
+        });
+      }
+    }
     if (hasErroredField()) {
-      console.log('last step errr');
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
-      if (window.confirm('Some requirement are missing , Would you like to continue ?')) {
+      if (window.confirm('Some requirement elements are missing, Would you like to continue?')) {
         nextStep({
           isFormCompleted: isFormCompleted(),
           errors: methods.formState.errors,
@@ -151,6 +126,7 @@ const Certificate: React.FC = () => {
                 onClick={handlePreviousStep}
                 isDisabled={currentStep === 1}
                 borderRadius={5}
+                type="button"
                 w="100%"
                 maxW="13rem">
                 Previous

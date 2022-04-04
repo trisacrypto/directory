@@ -1,11 +1,21 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-interface BasicDetailsReviewProps {
-  data: any;
-}
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { getStepData } from 'utils/utils';
+
+interface BasicDetailsReviewProps {}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [basicDetail, setBasicDetail] = React.useState<any>({});
+
+  useEffect(() => {
+    const stepData = getStepData(steps, 1);
+    if (stepData) {
+      setBasicDetail(stepData);
+    }
+  }, [steps]);
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -35,17 +45,17 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
             <Tbody>
               <Tr>
                 <Td>Website</Td>
-                <Td></Td>
+                <Td>{basicDetail.website}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>Date of Incorporation/ Establishmend</Td>
-                <Td></Td>
+                <Td>{basicDetail.established_on}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>VASP Category</Td>
-                <Td></Td>
+                <Td>{basicDetail.vasp_categories}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>
