@@ -58,15 +58,15 @@ export const getCertificateRegistrationDefaultValue = () => {
       ],
       financial_transfers_permitted: '',
       has_required_regulatory_program: '',
-      conducts_customer_kyc: null,
+      conducts_customer_kyc: false,
       kyc_threshold: 0,
       kyc_threshold_currency: 'USD',
-      must_comply_travel_rule: null,
+      must_comply_travel_rule: false,
       applicable_regulations: [],
       compliance_threshold: 0,
       compliance_threshold_currency: '',
-      must_safeguard_pii: null,
-      safeguards_pii: null
+      must_safeguard_pii: false,
+      safeguards_pii: false
     }
   };
 };

@@ -1,16 +1,19 @@
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
-import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
-import { getCertificateRegistrationDefaultValue } from 'modules/dashboard/certificate/lib/form-references';
+import { getCertificateRegistrationDefaultValue } from 'modules/dashboard/Certificate/lib/form-references';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { certificateRegistrationValidationSchema } from './lib/certificate-registration-validation-schema';
+import {
+  // certificateRegistrationValidationSchema,
+  certificateRegistrationValidationSchemas
+} from './lib/certificate-registration-validation-schema';
 
 type CertificateLayoutProps = {
   children?: React.ReactNode;
@@ -69,9 +72,14 @@ const Certificate: React.FC = () => {
   );
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   console.log('current', current);
+
+  function getCurrentStepValidationSchema() {
+    return certificateRegistrationValidationSchemas[currentStep - 1];
+  }
+
   const methods = useForm({
     defaultValues: getCertificateRegistrationDefaultValue(),
-    resolver: yupResolver(certificateRegistrationValidationSchema),
+    resolver: yupResolver(getCurrentStepValidationSchema()),
     mode: 'onChange'
   });
 
@@ -125,50 +133,57 @@ const Certificate: React.FC = () => {
     // </DashboardLayout>
     <SimpleDashboardLayout>
       <>
-        <Heading size="lg" mb="24px">
-          Certificate Registration
-        </Heading>
-        <VStack spacing={3}>
-          <Card maxW="100%" bg={'white'}>
-            <Card.Body>
-              This multi-section form is an important step in the registration and certificate
-              issuance process. The information you provide will be used to verify the legal entity
-              that you represent and, where appropriate, will be available to verified TRISA members
-              to facilitate compliance decisions. To assist in completing the registration form, the
-              form is broken into multiple sections. No information is sent until you complete
-              Section 6 - Review & Submit.
-            </Card.Body>
-          </Card>
-          <Box width={'100%'}>
-            <FormProvider {...methods}>
-              <TestNetCertificateProgressBar />
-              <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
-            </FormProvider>
-          </Box>
-          {!hasReachSubmitStep && (
-            <HStack width="100%" spacing={4} justifyContent={'center'} pt={4}>
-              <FormButton
-                onClick={handlePreviousStep}
-                isDisabled={currentStep === 1}
-                borderRadius={5}
-                w="100%"
-                maxW="13rem">
-                Previous
-              </FormButton>
-              <FormButton
-                borderRadius={5}
-                w="100%"
-                maxW="13rem"
-                backgroundColor="#FF7A59"
-                _hover={{ backgroundColor: '#f07253' }}>
-                Save & Next
-              </FormButton>
-              <FormButton onClick={handleNextStepClick} borderRadius={5} w="100%" maxW="13rem">
-                {currentStep === lastStep ? 'Finish & submit' : 'Save & Continue Later'}
-              </FormButton>
-            </HStack>
-          )}
-        </VStack>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+            <Heading size="lg" mb="24px">
+              Certificate Registration
+            </Heading>
+            <VStack spacing={3}>
+              <Card maxW="100%" bg={'white'}>
+                <Card.Body>
+                  This multi-section form is an important step in the registration and certificate
+                  issuance process. The information you provide will be used to verify the legal
+                  entity that you represent and, where appropriate, will be available to verified
+                  TRISA members to facilitate compliance decisions. To assist in completing the
+                  registration form, the form is broken into multiple sections. No information is
+                  sent until you complete Section 6 - Review & Submit.
+                </Card.Body>
+              </Card>
+              <Box width={'100%'}>
+                <TestNetCertificateProgressBar />
+                <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
+              </Box>
+              {!hasReachSubmitStep && (
+                <HStack width="100%" spacing={4} justifyContent={'center'} pt={4}>
+                  <FormButton
+                    onClick={handlePreviousStep}
+                    isDisabled={currentStep === 1}
+                    borderRadius={5}
+                    w="100%"
+                    maxW="13rem">
+                    Previous
+                  </FormButton>
+                  <FormButton
+                    borderRadius={5}
+                    w="100%"
+                    maxW="13rem"
+                    backgroundColor="#FF7A59"
+                    _hover={{ backgroundColor: '#f07253' }}>
+                    Save & Next
+                  </FormButton>
+                  <FormButton
+                    // onClick={handleNextStepClick}
+                    borderRadius={5}
+                    w="100%"
+                    maxW="13rem"
+                    type="submit">
+                    {currentStep === lastStep ? 'Finish & submit' : 'Save & Continue Later'}
+                  </FormButton>
+                </HStack>
+              )}
+            </VStack>
+          </form>
+        </FormProvider>
       </>
     </SimpleDashboardLayout>
   );

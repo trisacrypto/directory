@@ -3,8 +3,8 @@ import { Routes, Route, Link } from 'react-router-dom';
 
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
-const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
-const SubmitPage = React.lazy(() => import('modules/dashboard/certificate/submit'));
+const CertificatePage = React.lazy(() => import('modules/dashboard/Certificate/registration'));
+const SubmitPage = React.lazy(() => import('modules/dashboard/Certificate/submit'));
 
 const AppRouter: React.FC = () => {
   return (

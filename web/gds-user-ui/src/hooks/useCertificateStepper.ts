@@ -10,7 +10,7 @@ import {
 } from 'application/store/stepper.slice';
 
 import { findStepKey } from 'utils/utils';
-import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
+import { LSTATUS } from 'components/testnetProgress/CertificateStepLabel';
 
 interface TState {
   status?: boolean;

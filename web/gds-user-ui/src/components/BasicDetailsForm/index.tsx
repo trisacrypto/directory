@@ -22,6 +22,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
         <InputFormControl
           controlId="website"
           label="Website"
+          type="url"
           error="true"
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'VASP Holdings LLC' }}
