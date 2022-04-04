@@ -9,6 +9,7 @@ export type TPayload = {
   currentStep: number | string;
   steps: TStep[];
   lastStep: number | null;
+  hasReachSubmitStep?: boolean;
 };
 export const initialValue: TPayload = loadStepperFromLocalStorage();
 
@@ -47,6 +48,9 @@ const stepperSlice: any = createSlice({
         return found[0].data;
       }
       return null;
+    },
+    setSubmitStep: (state: any, { payload }: any) => {
+      state.hasReachSubmitStep = payload.submitStep;
     }
   }
 });
@@ -58,5 +62,6 @@ export const {
   setStepStatus,
   setLastStep,
   setStepFormValue,
-  getCurrentFormValues
+  getCurrentFormValues,
+  setSubmitStep
 } = stepperSlice.actions;

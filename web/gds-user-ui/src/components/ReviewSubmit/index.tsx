@@ -1,7 +1,9 @@
 import { Button, Heading, VStack, Stack, Text } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
-
-const ReviewSubmit: React.FC = () => {
+interface ReviewSubmitProps {
+  onSubmitHandler: (e: React.FormEvent, network: string) => void;
+}
+const ReviewSubmit: React.FC<ReviewSubmitProps> = ({ onSubmitHandler }) => {
   return (
     <VStack align="start" mt="2rem">
       <Heading size="md">Registration Submission</Heading>
@@ -28,6 +30,9 @@ const ReviewSubmit: React.FC = () => {
           maxW="200px"
           width="100%"
           boxShadow="lg"
+          onClick={(e) => {
+            onSubmitHandler(e, 'testnet');
+          }}
           _hover={{
             bgColor: '#f55c35'
           }}>
@@ -41,6 +46,9 @@ const ReviewSubmit: React.FC = () => {
           whiteSpace="normal"
           boxShadow="lg"
           maxW="200px"
+          onClick={(e) => {
+            onSubmitHandler(e, 'mainnet');
+          }}
           width="100%"
           _hover={{
             bgColor: '#189fda'
