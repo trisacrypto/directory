@@ -1,4 +1,4 @@
-package trtl
+package db
 
 import (
 	"crypto/tls"
@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/bff/config"
+	trtl "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Connect(conf config.DatabaseConfig) (conn *grpc.ClientConn, err error) {
+func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 	// Parse the URL to get the endpoint to the trtl server
 	dsn, err := url.Parse(conf.URL)
 	if err != nil {
@@ -57,9 +58,28 @@ func Connect(conf config.DatabaseConfig) (conn *grpc.ClientConn, err error) {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
 	}
 
-	// Connect the replica client
-	if conn, err = grpc.Dial(dsn.Host, opts...); err != nil {
+	db = &DB{}
+	if db.cc, err = grpc.Dial(dsn.Host, opts...); err != nil {
 		return nil, err
 	}
-	return conn, nil
+
+	db.trtl = trtl.NewTrtlClient(db.cc)
+	return db, nil
+}
+
+func DirectConnect(cc *grpc.ClientConn) (db *DB, err error) {
+	return &DB{
+		cc:   cc,
+		trtl: trtl.NewTrtlClient(cc),
+	}, nil
+}
+
+// DB is a wrapper around a trtl client to provide BFF-specific database interactions
+type DB struct {
+	cc   *grpc.ClientConn
+	trtl trtl.TrtlClient
+}
+
+func (db *DB) Close() error {
+	return db.cc.Close()
 }
