@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Sports
+                    Clothing
                      
                     <br />
-                    Games
+                    Automotive
                      
                     <br />
                     23
                      
-                    Gaylord Mountain
+                    Dach Burg
                     <br />
-                    Taylorsville
+                    Lynwood
                      
                     
                      
                     MA
                      
-                    66771
+                    43461
                       
                     <br />
                     US
