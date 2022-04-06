@@ -48,9 +48,9 @@ services:
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
-      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
-      - GDS_EMAIL_TESTING=true
+      - GDS_EMAIL_TESTING=false
       - GDS_EMAIL_STORAGE=/data/emails
       - GDS_CERTMAN_INTERVAL=5m
       - GDS_CERTMAN_STORAGE=/data/certs
@@ -64,6 +64,7 @@ services:
     profiles:
       - gds
       - api
+      - testnet
       - all
 
   trtl:
@@ -103,21 +104,7 @@ services:
       - db
       - gds
       - api
-      - all
-
-  envoy:
-    build:
-      context: ../
-      dockerfile: ./containers/grpc-proxy/Dockerfile
-    image: trisa/grpc-proxy
-    init: true
-    depends_on:
-      - gds
-    ports:
-      - 8080:8080
-    profiles:
-      - proxy
-      - api
+      - testnet
       - all
 
   gds-bff:
@@ -128,6 +115,7 @@ services:
     init: true
     depends_on:
       - gds
+      - gds-mainnet
     ports:
       - 4437:4437
     environment:
@@ -152,25 +140,28 @@ services:
     profiles:
       - bff
       - api
+      - testnet
+      - mainnet
       - all
 
-  gds-ui:
+  gds-user-ui:
     build:
       context: ../
-      dockerfile: ./containers/gds-ui/Dockerfile
+      dockerfile: ./containers/gds-user-ui/Dockerfile
       args:
-        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080
-        REACT_APP_GDS_IS_TESTNET: "true"
+        REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
-    image: trisa/gds-ui
+    image: trisa/gds-user-ui
     init: true
     depends_on:
-      - envoy
+      - gds-bff
     ports:
       - 3000:80
     profiles:
       - user
       - ui
+      - testnet
+      - mainnet
       - all
 
   gds-admin-ui:
@@ -190,6 +181,7 @@ services:
     profiles:
       - admin
       - ui
+      - testnet
       - all
 
   prometheus:
@@ -209,7 +201,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - 3002:3000
+      - 3003:3000
     volumes:
       - ./monitor/grafana:/var/lib/grafana
     profiles:
@@ -265,7 +257,7 @@ services:
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
-      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
@@ -281,6 +273,7 @@ services:
     profiles:
       - gds-mainnet
       - api-mainnet
+      - mainnet
       - all
 
   trtl-mainnet:
@@ -317,7 +310,28 @@ services:
       - TRTL_BACKUP_STORAGE=/data/backups
       - TRTL_BACKUP_KEEP=1
     profiles:
-      - db-mainnet
+      - db
       - gds-mainnet
       - api-mainnet
+      - mainnet
+      - all
+
+  gds-admin-ui-mainnet:
+    build:
+      context: ../
+      dockerfile: ./containers/gds-admin-ui/Dockerfile
+      args:
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:8434/v2
+        REACT_APP_GDS_IS_TESTNET: "false"
+        REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
+    image: trisa/gds-admin-ui
+    depends_on:
+      - gds-mainnet
+    init: true
+    ports:
+      - 3002:80
+    profiles:
+      - admin
+      - ui
+      - mainnet
       - all
