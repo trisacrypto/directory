@@ -5,7 +5,7 @@ import FormLayout from 'layouts/FormLayout';
 
 const TrisaImplementation: React.FC = () => {
   return (
-    <Stack spacing={7}>
+    <Stack spacing={7} pt={8}>
       <HStack>
         <Heading size="md">Section 4: TRISA Implementation</Heading>
         <Box>

@@ -15,8 +15,10 @@ import {
 } from '@chakra-ui/react';
 
 import { colors } from '../../utils/theme';
-
-export default function AuthEmailConfirmation() {
+interface AuthEmailConfirmationProps {
+  message?: string;
+}
+const AuthEmailConfirmation: React.FC<AuthEmailConfirmationProps> = (props) => {
   return (
     <Flex
       align={'center'}
@@ -29,9 +31,7 @@ export default function AuthEmailConfirmation() {
       <Stack spacing={6} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack>
           <Heading fontSize={'xl'}>Thank you for verifying your email address. </Heading>
-          <Text color={useColorModeValue('gray.600', 'white')}>
-            Your TRISA account in now active.
-          </Text>
+          <Text color={useColorModeValue('gray.600', 'white')}>{props.message}</Text>
         </Stack>
         <Stack spacing={8} direction={['column', 'row']} py="10">
           <Button
@@ -51,4 +51,5 @@ export default function AuthEmailConfirmation() {
       </Stack>
     </Flex>
   );
-}
+};
+export default AuthEmailConfirmation;

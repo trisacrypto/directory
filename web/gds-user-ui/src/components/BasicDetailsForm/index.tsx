@@ -1,16 +1,21 @@
-import { VStack } from '@chakra-ui/react';
+import { VStack, Text, FormErrorMessage } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Control, UseFormRegister } from 'react-hook-form/dist/types/form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { ValidationSchema, getDefaultValue } from './validation';
 
 type BasicDetailsFormProps = {};
 
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
   const options = getBusinessCategoryOptions();
-  const { getValues, register, control, formState } = useFormContext();
-  const { errors } = formState;
+  const {
+    register,
+    control,
+    formState: { errors }
+  } = useFormContext();
 
   return (
     <>
@@ -19,10 +24,12 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           controlId="website"
           label="Website"
           error="true"
+          type="url"
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'VASP Holdings LLC' }}
           {...register('website')}
         />
+        {errors.website && <FormErrorMessage>{errors.website.message}</FormErrorMessage>}
 
         <InputFormControl
           controlId="established_on"
@@ -62,7 +69,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
               name={name}
               options={vaspCategories}
               onChange={(val: any) => onChange(val.map((c: any) => c.value))}
-              value={vaspCategories.filter((c) => value.includes(c.value))}
+              value={value && vaspCategories.filter((c) => value.includes(c.value))}
               formHelperText="Please select as many categories needed to represent the types of virtual asset services your organization provides."
             />
           )}

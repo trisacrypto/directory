@@ -1,37 +1,39 @@
 import React, { FC, useEffect } from 'react';
-import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button } from '@chakra-ui/react';
+import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button, Tooltip } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
-enum LCOLOR {
+import { findStepKey } from 'utils/utils';
+import { IconType } from 'react-icons/lib';
+export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
   'SAVE' = '#F29C36',
   'INCOMPLETE' = '#C1C9D2',
   'NEXT' = '#E9E0E0',
-  'MISSING' = '#dc2f02'
+  'ERROR' = '#dc2f02'
 }
-enum LSTATUS {
+export enum LSTATUS {
   'COMPLETE' = 'complete',
   'PROGRESS' = 'progress',
   'SAVE' = 'save',
   'INCOMPLETE' = 'incomplete',
   'NEXT' = 'next',
-  'MISSING' = 'missing'
+  'ERROR' = 'error'
 }
-type StepLabelProps = {};
-
+interface StepLabelProps {}
+type TStepLabel = {
+  color: string; // color of the icon
+  hasError?: boolean; // status of the step
+  icon: any; // icon of the step
+};
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
-  const dispatch = useDispatch();
-  const CurrentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const Steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const getStep = (step: number) => {
-    return Steps?.filter((s) => s?.key === step);
-  };
+  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
 
   // this function need some clean up
-  const getLabel = (step: number) => {
-    const s = getStep(step);
+  const getLabel = (step: number): TStepLabel | undefined => {
+    const s = findStepKey(steps, step);
     if (s && s?.length === 1) {
       if (s[0]?.status === LSTATUS.COMPLETE) {
         return {
@@ -58,6 +60,13 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           icon: FaCheckCircle
         };
       }
+      if (s[0]?.status === LSTATUS.ERROR) {
+        return {
+          color: LCOLOR.ERROR,
+          icon: FaDotCircle,
+          hasError: true
+        };
+      }
       if (s[0]?.status === LSTATUS.INCOMPLETE) {
         return {
           color: LCOLOR.INCOMPLETE,
@@ -76,6 +85,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           };
     }
   };
+  const isActiveStep = (step: number) => step === currentStep;
 
   return (
     <>
@@ -96,23 +106,35 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Heading fontSize={20}> Progress bar </Heading>
         </Box>
         <Grid templateColumns="repeat(6, 1fr)" gap={2}>
-          <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
-            <HStack>
-              <Box pt={3}>
-                <Icon as={getLabel(1)?.icon} color={getLabel(1)?.color} />
-              </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
-                Basic Details
-              </Text>
-            </HStack>
-          </Box>
-
+          <Tooltip
+            label={getLabel(1)?.hasError && 'Missing required element'}
+            placement="top"
+            bg={'red'}>
+            <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
+              <HStack>
+                <Box pt={3}>
+                  <Icon as={getLabel(1)?.icon} color={getLabel(1)?.color} />
+                </Box>
+                <Text
+                  pt={2}
+                  color={'#3C4257'}
+                  fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
+                  fontSize={'0.8em'}>
+                  Basic Details
+                </Text>
+              </HStack>
+            </Box>
+          </Tooltip>
           <Box w="70px" h="1" bg={getLabel(2)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
                 <Icon as={getLabel(2)?.icon} color={getLabel(2)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}>
                 Legal Person
               </Text>
             </HStack>
@@ -123,7 +145,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(3)?.icon} color={getLabel(3)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}>
                 Contacts
               </Text>
             </HStack>
@@ -134,7 +160,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(4)?.icon} color={getLabel(4)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}>
                 Trisa implementation
               </Text>
             </HStack>
@@ -145,7 +175,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(5)?.icon} color={getLabel(5)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}>
                 TRIXO Questionnaire
               </Text>
             </HStack>
@@ -156,7 +190,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(6)?.icon} color={getLabel(6)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}>
                 Submit & Review
               </Text>
             </HStack>
