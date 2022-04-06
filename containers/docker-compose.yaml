@@ -15,7 +15,7 @@ services:
     volumes:
       - ../fixtures:/data
     environment:
-      - GDS_DIRECTORY_ID=local.directory.dev
+      - GDS_DIRECTORY_ID=trisatest.net
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_MAINTENANCE=false
       - GDS_LOG_LEVEL=debug
@@ -25,7 +25,7 @@ services:
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
       - GDS_ADMIN_MODE=release
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:4433
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
@@ -50,14 +50,14 @@ services:
       - SENDGRID_API_KEY
       - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
-      - GDS_EMAIL_TESTING=false
+      - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
-      - GDS_CERTMAN_INTERVAL=5m
+      - GDS_CERTMAN_INTERVAL=96h
       - GDS_CERTMAN_STORAGE=/data/certs
       - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
-      - GDS_BACKUP_KEEP=1
+      - GDS_BACKUP_KEEP=0
       - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
@@ -124,7 +124,7 @@ services:
       - GDS_BFF_MODE=release
       - GDS_BFF_LOG_LEVEL=debug
       - GDS_BFF_CONSOLE_LOG=true
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3003,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_BFF_TESTNET_INSECURE=true
       - GDS_BFF_TESTNET_ENDPOINT=gds:4433
@@ -133,8 +133,8 @@ services:
       - GDS_BFF_MAINNET_ENDPOINT=gds-mainnet:8433
       - GDS_BFF_MAINNET_TIMEOUT=5s
       - GDS_BFF_DATABASE_URL=trtl://trtl:4436/
-      - GDS_BFF_DATABASE_REINDEX_ON_BOOT="false"
-      - GDS_BFF_DATABASE_INSECURE="true"
+      - GDS_BFF_DATABASE_REINDEX_ON_BOOT=false
+      - GDS_BFF_DATABASE_INSECURE=true
       - GDS_BFF_DATABASE_CERT_PATH
       - GDS_BFF_DATABASE_POOL_PATH
     profiles:
@@ -172,7 +172,7 @@ services:
         REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/v2
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
-    image: trisa/gds-admin-ui
+    image: trisa/gds-testnet-admin-ui
     depends_on:
       - gds
     init: true
@@ -224,7 +224,7 @@ services:
     volumes:
       - ../fixtures:/data
     environment:
-      - GDS_DIRECTORY_ID=local.directory.dev
+      - GDS_DIRECTORY_ID=vaspdirectory.net
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_MAINTENANCE=false
       - GDS_LOG_LEVEL=debug
@@ -234,7 +234,7 @@ services:
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:8434
       - GDS_ADMIN_MODE=release
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3002
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:8433
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
@@ -258,7 +258,7 @@ services:
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
       - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
-      - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
+      - GDS_ADMIN_REVIEW_URL=http://localhost:3002/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
       - GDS_CERTMAN_INTERVAL=96h
