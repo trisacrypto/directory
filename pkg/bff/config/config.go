@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,6 +23,7 @@ type Config struct {
 	CookieDomain string              `split_words:"true"`
 	TestNet      DirectoryConfig
 	MainNet      DirectoryConfig
+	Database     DatabaseConfig
 	processed    bool
 }
 
@@ -30,6 +32,14 @@ type DirectoryConfig struct {
 	Insecure bool          `split_words:"true" default:"true"`
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
+}
+
+type DatabaseConfig struct {
+	URL           string `split_words:"true" required:"true"`
+	ReindexOnBoot bool   `split_words:"true" default:"false"`
+	Insecure      bool   `split_words:"true" default:"false"`
+	CertPath      string `split_words:"true"`
+	PoolPath      string `split_words:"true"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -65,9 +75,24 @@ func (c Config) Mark() (Config, error) {
 }
 
 // Validate the config to make sure that it is usable to run the GDS BFF server.
-func (c Config) Validate() error {
+func (c Config) Validate() (err error) {
 	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
+	}
+
+	if err = c.Database.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c DatabaseConfig) Validate() error {
+	// If the insecure flag isn't set then we must have certs when connecting to trtl.
+	if !c.Insecure {
+		if c.CertPath == "" || c.PoolPath == "" {
+			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+		}
 	}
 	return nil
 }
