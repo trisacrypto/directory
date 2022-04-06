@@ -64,8 +64,8 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       <InputFormControl
         label="Registration Authority"
         controlId="registration_authority"
-        isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
         isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+        isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && false}
         formHelperText="If the identifier is an LEI number, enter the ID used in the GLEIF Registration Authorities List."
         {...register('entity.national_identification.registration_authority')}
       />
