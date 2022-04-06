@@ -2,8 +2,14 @@ import { Button, Heading, VStack, Stack, Text } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
+  isTestNetSent?: boolean;
+  isMainNetSent?: boolean;
 }
-const ReviewSubmit: React.FC<ReviewSubmitProps> = ({ onSubmitHandler }) => {
+const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
+  onSubmitHandler,
+  isTestNetSent,
+  isMainNetSent
+}) => {
   return (
     <VStack align="start" mt="2rem">
       <Heading size="md">Registration Submission</Heading>
@@ -57,28 +63,32 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({ onSubmitHandler }) => {
         </Button>
       </Stack>
       <Stack spacing={10}>
-        <FormLayout>
-          <Text>
-            Your{' '}
-            <Text as="span" fontWeight="bold">
-              TestNet
-            </Text>{' '}
-            registration form has been successfully submitted. You will receive a confirmation email
-            from admin@trisa.io. In the email, you will receive instructions on next
-          </Text>
-          steps.
-        </FormLayout>
-        <FormLayout>
-          <Text>
-            Your{' '}
-            <Text as="span" fontWeight="bold">
-              MainNet
-            </Text>{' '}
-            registration form has been successfully submitted. You will receive a confirmation email
-            from admin@trisa.io. In the email, you will receive instructions on next
-          </Text>
-          steps.
-        </FormLayout>
+        {isTestNetSent && (
+          <FormLayout>
+            <Text>
+              Your{' '}
+              <Text as="span" fontWeight="bold">
+                TestNet
+              </Text>{' '}
+              registration form has been successfully submitted. You will receive a confirmation
+              email from admin@trisa.io. In the email, you will receive instructions on next
+            </Text>
+            steps.
+          </FormLayout>
+        )}
+        {isMainNetSent && (
+          <FormLayout>
+            <Text>
+              Your{' '}
+              <Text as="span" fontWeight="bold">
+                MainNet
+              </Text>{' '}
+              registration form has been successfully submitted. You will receive a confirmation
+              email from admin@trisa.io. In the email, you will receive instructions on next
+            </Text>
+            steps.
+          </FormLayout>
+        )}
       </Stack>
     </VStack>
   );

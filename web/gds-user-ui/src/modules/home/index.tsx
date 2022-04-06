@@ -24,13 +24,15 @@ const HomePage: React.FC = () => {
       setIsLoading(false);
       if (!response.error) {
         setResult(response);
+        setError('');
       }
     } catch (e: any) {
       setIsLoading(false);
       if (!e.response.data.success) {
         setError(e.response.data.error);
+        setResult(false);
       } else {
-        setError('sorry something went wrong , please try again');
+        console.log('sorry something went wrong , please try again');
       }
     }
   };

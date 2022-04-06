@@ -108,9 +108,14 @@ const useCertificateStepper = () => {
     }
   };
 
+  const jumpToStep = (step: number) => {
+    dispatch(setCurrentStep({ currentStep: step }));
+  };
+
   return {
     nextStep,
-    previousStep
+    previousStep,
+    jumpToStep
   };
 };
 

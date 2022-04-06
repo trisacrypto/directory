@@ -3,17 +3,22 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
-
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 interface TrisaImplementationReviewProps {}
 
 const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
+  const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trisa, setTrisa] = React.useState<any>({});
   useEffect(() => {
-    const stepData = getStepData(steps, 4);
-    if (stepData) {
-      setTrisa(stepData);
-    }
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const stepData = {
+      mainnet: getStepperData.trisa_endpoint_mainnet,
+      testnet: getStepperData.trisa_endpoint_testnet
+    };
+    console.log('trisa step data', stepData);
+    setTrisa(stepData);
   }, [steps]);
   return (
     <Box
@@ -32,6 +37,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             bg={colors.system.blue}
             color={'white'}
             height={'34px'}
+            onClick={() => jumpToStep(4)}
             _hover={{
               bg: '#10aaed'
             }}>
@@ -48,23 +54,23 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             <Tbody>
               <Tr>
                 <Td>TestNet TRISA Endpoint</Td>
-                <Td>{trisa['trisa_endpoint_testnet.endpoint']}</Td>
+                <Td>{trisa?.testnet?.endpoint}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>TestNet Certificate Common Name</Td>
-                <Td>{trisa['trisa_endpoint_testnet.common_name']}</Td>
+                <Td>{trisa?.testnet?.common_name}</Td>
                 <Td></Td>
               </Tr>
               <Divider bg={'black'} height={0.5} />
               <Tr>
                 <Td>MainNet TRISA Endpoint</Td>
-                <Td>{trisa['trisa_endpoint_.endpoint']}</Td>
+                <Td>{trisa?.mainnet?.endpoint}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>MainNet Certificate Common Name</Td>
-                <Td>{trisa['trisa_endpoint_.common_name']}</Td>
+                <Td>{trisa?.mainnet?.common_name}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>

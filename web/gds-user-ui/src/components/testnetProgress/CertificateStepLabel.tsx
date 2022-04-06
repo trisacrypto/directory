@@ -106,7 +106,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
         </Box>
         <Grid templateColumns="repeat(6, 1fr)" gap={2}>
           <Tooltip
-            label={getLabel(1)?.hasError && 'Missing require element'}
+            label={getLabel(1)?.hasError && 'Missing required element'}
             placement="top"
             bg={'red'}>
             <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>

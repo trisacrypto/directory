@@ -3,19 +3,23 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
-
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 interface ContactsProps {
   data: any;
 }
 
 const ContactsReview = (props: ContactsProps) => {
+  const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [contacts, setContacts] = React.useState<any>({});
   useEffect(() => {
-    const stepData = getStepData(steps, 3);
-    if (stepData) {
-      setContacts(stepData);
-    }
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const stepData = {
+      ...getStepperData.contacts
+    };
+    console.log('contact step data', stepData);
+    setContacts(stepData);
   }, [steps]);
   return (
     <Box
@@ -32,6 +36,7 @@ const ContactsReview = (props: ContactsProps) => {
           <Button
             bg={colors.system.blue}
             color={'white'}
+            onClick={() => jumpToStep(3)}
             height={'34px'}
             _hover={{
               bg: '#10aaed'
@@ -50,9 +55,9 @@ const ContactsReview = (props: ContactsProps) => {
               <Tr>
                 <Td>Technical Contact</Td>
                 <Td>
-                  {contacts['contacts.technical.name']} <br />
-                  {contacts['contacts.technical.email']} <br />
-                  {contacts['contacts.technical.phone']} <br />
+                  {contacts?.technical?.name} <br />
+                  {contacts?.technical?.email} <br />
+                  {contacts?.technical?.phone} <br />
                 </Td>
                 <Td></Td>
               </Tr>
@@ -60,9 +65,9 @@ const ContactsReview = (props: ContactsProps) => {
                 <Td>Compliance/ Legal Contact</Td>
                 <Td>
                   {' '}
-                  {contacts['contacts.legal.name']} <br />
-                  {contacts['contacts.legal.email']} <br />
-                  {contacts['contacts.legal.phone']} <br />
+                  {contacts?.legal?.name} <br />
+                  {contacts?.legal?.email} <br />
+                  {contacts?.legal?.phone} <br />
                 </Td>
                 <Td></Td>
               </Tr>
@@ -70,9 +75,9 @@ const ContactsReview = (props: ContactsProps) => {
                 <Td>Administrative Contact</Td>
                 <Td>
                   {' '}
-                  {contacts['contacts.administrative.name']} <br />
-                  {contacts['contacts.administrative.email']} <br />
-                  {contacts['contacts.administrative.phone']} <br />
+                  {contacts?.administrative?.name} <br />
+                  {contacts?.administrative?.email} <br />
+                  {contacts?.administrative?.phone} <br />
                 </Td>
                 <Td></Td>
               </Tr>

@@ -3,18 +3,25 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
-
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 interface BasicDetailsReviewProps {}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
+  const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [basicDetail, setBasicDetail] = React.useState<any>({});
 
   useEffect(() => {
-    const stepData = getStepData(steps, 1);
-    if (stepData) {
-      setBasicDetail(stepData);
-    }
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const stepData = {
+      website: getStepperData.website,
+      established_on: getStepperData.established_on,
+      vasp_categories: getStepperData.vasp_categories,
+      business_category: getStepperData.business_category
+    };
+
+    setBasicDetail(stepData);
   }, [steps]);
   return (
     <Box
@@ -32,6 +39,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
           <Button
             bg={colors.system.blue}
             color={'white'}
+            onClick={() => jumpToStep(1)}
             height={'34px'}
             _hover={{
               bg: '#10aaed'

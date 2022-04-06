@@ -1,4 +1,6 @@
 /* eslint-disable prefer-reflect */
+
+import React, { useState, useEffect } from 'react';
 import { Box, Heading, HStack, Icon, Stack, Text, useToast } from '@chakra-ui/react';
 
 import BasicDetailsReview from './BasicDetailsReview';
@@ -20,6 +22,9 @@ const CertificateReview = () => {
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
+  const [isTestNetSent, setIsTestNetSent] = useState(false);
+  const [isMainNetSent, setIsMainNetSent] = useState(false);
+
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
@@ -39,11 +44,18 @@ const CertificateReview = () => {
       }
 
       const response = await registrationRequest(network, formValue);
-      console.log('response', response);
-      if (response.status === 200) {
+
+      if (response.id || response.status === ' "SUBMITTED"') {
+        if (network === 'testnet') {
+          setIsTestNetSent(true);
+        }
+        if (network === 'mainnet') {
+          setIsMainNetSent(true);
+        }
         toast({
+          position: 'top-right',
           title: 'Success',
-          description: 'Certificate registered successfully',
+          description: response.message,
           status: 'success',
           duration: 5000,
           isClosable: true
@@ -88,7 +100,11 @@ const CertificateReview = () => {
           <TrixoReview />
         </Stack>
       ) : (
-        <ReviewSubmit onSubmitHandler={handleSubmitRegister} />
+        <ReviewSubmit
+          onSubmitHandler={handleSubmitRegister}
+          isTestNetSent={isTestNetSent}
+          isMainNetSent={isMainNetSent}
+        />
       )}
     </>
   );

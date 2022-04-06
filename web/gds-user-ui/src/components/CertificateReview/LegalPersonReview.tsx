@@ -3,18 +3,22 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+interface LegalReviewProps {}
 
-interface LegalSectionProps {}
-
-const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
+const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
+  const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [legalPerson, setLegalPerson] = React.useState<any>({});
 
   useEffect(() => {
-    const stepData = getStepData(steps, 2);
-    if (stepData) {
-      setLegalPerson(stepData);
-    }
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const stepData = {
+      ...getStepperData.entity
+    };
+    console.log('legal step data', stepData);
+    setLegalPerson(stepData);
   }, [steps]);
   return (
     <Box
@@ -32,6 +36,7 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
             bg={colors.system.blue}
             color={'white'}
             height={'34px'}
+            onClick={() => jumpToStep(2)}
             _hover={{
               bg: '#10aaed'
             }}>
@@ -55,26 +60,33 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
                 <Td fontStyle={'italic'}>
                   The name and type of name by which the legal person is known.
                 </Td>
-                <Td>{legalPerson['']}</Td>
+                <Td></Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Addressess</Td>
                 <Td>
-                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[0]} <br />
-                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[1]} <br />
-                  {legalPerson['entity.geographic_addresses']?.[0]?.address_line[2]}
+                  <Tr>
+                    <Td>
+                      {legalPerson?.geographic_addresses?.[0]?.address_line.map(
+                        (line: any, i: any) => {
+                          return <Text key={i}>{line}</Text>;
+                        }
+                      )}
+                    </Td>
+                    <Td>{legalPerson?.geographic_addresses?.[0] && 'Legal Person'}</Td>
+                  </Tr>
                 </Td>
-                <Td>Legal Person</Td>
+                <Td></Td>
               </Tr>
-              <Tr>
+              {/* <Tr>
                 <Td>Customer Number</Td>
                 <Td></Td>
                 <Td></Td>
-              </Tr>
+              </Tr> */}
               <Tr>
                 <Td>Country of Registration</Td>
-                <Td>{legalPerson['entity.national_identification.country_of_issue']}</Td>
+                <Td>{legalPerson?.national_identification?.country_of_issue}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
@@ -84,22 +96,22 @@ const LegalPersonReview: React.FC<LegalSectionProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>Identification Number</Td>
-                <Td>{legalPerson['entity.national_identification.national_identifier']}</Td>
+                <Td>{legalPerson?.national_identification?.national_identifier}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Identification Type</Td>
-                <Td>{legalPerson['entity.national_identification.national_identifier_type']}</Td>
+                <Td>{legalPerson?.national_identification?.national_identifier_type}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Country of Issue</Td>
-                <Td>{legalPerson['entity.national_identification.country_of_issue']}</Td>
+                <Td>{legalPerson?.national_identification?.country_of_issue}</Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Reg Authority</Td>
-                <Td>{legalPerson['entity.national_identification.registration_authority']}</Td>
+                <Td>{legalPerson?.national_identification?.registration_authority}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>
