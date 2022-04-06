@@ -110,7 +110,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.has_required_regulatory_program)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo.has_required_regulatory_program.toUpperCase()}
+                      {trixo?.has_required_regulatory_program?.toUpperCase()}
                     </TagLabel>
                   </Tag>
                 </Td>
@@ -128,7 +128,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo.financial_transfers_permitted.toUpperCase()}
+                      {trixo?.financial_transfers_permitted?.toUpperCase()}
                     </TagLabel>
                   </Tag>
                 </Td>
@@ -146,7 +146,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.must_comply_travel_rule)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo.must_comply_travel_rule ? 'YES' : 'NO'}
+                      {trixo?.must_comply_travel_rule ? 'YES' : 'NO'}
                     </TagLabel>
                   </Tag>
                 </Td>

@@ -85,6 +85,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           };
     }
   };
+  const isActiveStep = (step: number) => step === currentStep;
 
   return (
     <>
@@ -114,7 +115,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 <Box pt={3}>
                   <Icon as={getLabel(1)?.icon} color={getLabel(1)?.color} />
                 </Box>
-                <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+                <Text
+                  pt={2}
+                  color={'#3C4257'}
+                  fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
+                  fontSize={'0.8em'}>
                   Basic Details
                 </Text>
               </HStack>
@@ -125,7 +130,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(2)?.icon} color={getLabel(2)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}>
                 Legal Person
               </Text>
             </HStack>
@@ -136,7 +145,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(3)?.icon} color={getLabel(3)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}>
                 Contacts
               </Text>
             </HStack>
@@ -147,7 +160,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(4)?.icon} color={getLabel(4)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}>
                 Trisa implementation
               </Text>
             </HStack>
@@ -158,7 +175,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(5)?.icon} color={getLabel(5)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}>
                 TRIXO Questionnaire
               </Text>
             </HStack>
@@ -169,7 +190,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
               <Box pt={3}>
                 <Icon as={getLabel(6)?.icon} color={getLabel(6)?.color} />
               </Box>
-              <Text pt={2} color={'#3C4257'} fontSize={'0.8em'}>
+              <Text
+                pt={2}
+                color={'#3C4257'}
+                fontSize={'0.8em'}
+                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}>
                 Submit & Review
               </Text>
             </HStack>
