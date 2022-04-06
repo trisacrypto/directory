@@ -4,15 +4,15 @@ import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import { getNationalIdentificationOptions } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
-import { Controller, useFormContext, useForm } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 
-type NationalIdentificationProps = {};
+interface NationalIdentificationProps {}
 
 const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
-  const { register, control, getValues } = useFormContext();
+  const { register, control, watch } = useFormContext();
   const nationalIdentificationOptions = getNationalIdentificationOptions();
   const countries = getCountriesOptions();
-  const NationalIdentificationType = getValues(
+  const NationalIdentificationType = watch(
     'entity.national_identification.national_identifier_type'
   );
 
@@ -64,8 +64,8 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       <InputFormControl
         label="Registration Authority"
         controlId="registration_authority"
-        // isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
-        // isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+        isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+        isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
         formHelperText="If the identifier is an LEI number, enter the ID used in the GLEIF Registration Authorities List."
         {...register('entity.national_identification.registration_authority')}
       />
