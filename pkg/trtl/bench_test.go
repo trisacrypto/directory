@@ -85,6 +85,7 @@ func setupTrtl(t testing.TB) (bench *trtlBench, err error) {
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	go bench.trtl.Run(bench.grpc.Listener)
+	t.Cleanup(func() { cleanup(bench) })
 
 	return bench, err
 }
@@ -142,9 +143,6 @@ func BenchmarkTrtlGet(b *testing.B) {
 		_, gErr = cc.Get(ctx, &pb.GetRequest{Key: key})
 	}
 	require.NoError(b, gErr)
-
-	// Run cleanup function
-	cleanup(bench)
 }
 
 func BenchmarkTrtlPut(b *testing.B) {
@@ -174,8 +172,6 @@ func BenchmarkTrtlPut(b *testing.B) {
 	}
 	require.NoError(b, err)
 
-	// Run cleanup function
-	cleanup(bench)
 }
 
 func BenchmarkTrtlDelete(b *testing.B) {
@@ -190,27 +186,25 @@ func BenchmarkTrtlDelete(b *testing.B) {
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
 
-	// Manually add some fixtures
+	// Reset the timer to focus only on the Delete
+	b.ResetTimer()
 	var err error
 	for i := 0; i < b.N; i++ {
+		// Stop timer and put key/value to delete
+		b.StopTimer()
 		_, err = cc.Put(ctx, &pb.PutRequest{
 			Key:   []byte(fmt.Sprintf("t%d", i)),
 			Value: []byte(strconv.Itoa(i)),
 		})
-	}
-	require.NoError(b, err)
+		require.NoError(b, err)
 
-	// Run the trtl Delete on a loop
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+		// Start timer and perform the Delete
+		b.StartTimer()
 		_, err = cc.Delete(ctx, &pb.DeleteRequest{
 			Key: []byte(fmt.Sprintf("t%d", i)),
 		})
 	}
 	require.NoError(b, err)
-
-	// Run cleanup function
-	cleanup(bench)
 }
 
 func BenchmarkTrtlIter(b *testing.B) {
@@ -245,9 +239,6 @@ func BenchmarkTrtlIter(b *testing.B) {
 		})
 	}
 	require.NoError(b, err)
-
-	// Run cleanup function
-	cleanup(bench)
 }
 
 func BenchmarkTrtlCursor(b *testing.B) {
@@ -264,7 +255,7 @@ func BenchmarkTrtlCursor(b *testing.B) {
 
 	// Manually add some fixtures
 	var err error
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 1000; i++ {
 		_, err = cc.Put(ctx, &pb.PutRequest{
 			Namespace: "terminators",
 			Key:       []byte(fmt.Sprintf("t%d", i)),
@@ -289,9 +280,6 @@ func BenchmarkTrtlCursor(b *testing.B) {
 		require.NoError(b, err)
 	}
 	require.NoError(b, err)
-
-	// Run cleanup function
-	cleanup(bench)
 }
 
 func BenchmarkTrtlBatch(b *testing.B) {
@@ -341,7 +329,4 @@ func BenchmarkTrtlBatch(b *testing.B) {
 	}
 	_, err = stream.CloseAndRecv()
 	require.NoError(b, err)
-
-	// Run cleanup function
-	cleanup(bench)
 }
