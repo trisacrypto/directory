@@ -4,6 +4,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
 const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
+const VerifyPage = React.lazy(() => import('modules/verify'));
 
 const AppRouter: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ const AppRouter: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/getting-started" element={<StartPage />} />
         <Route path="/certificate/registration" element={<CertificatePage />} />
+        <Route path="/verify" element={<VerifyPage />} />
 
         <Route element={<Home />} />
       </Routes>

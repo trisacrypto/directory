@@ -9,7 +9,14 @@ type LandingLayoutProp = {
 
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
   return (
-    <Flex direction="column" align="center" maxW={'100%'} m="0 auto" fontFamily={'Open Sans'}>
+    <Flex
+      direction="column"
+      align="center"
+      maxW={'100%'}
+      m="0 auto"
+      fontFamily={'Open Sans'}
+      position={'relative'}
+      minHeight={'100vh'}>
       <LandingHeader />
       {props.children}
       <LandingFooter />
