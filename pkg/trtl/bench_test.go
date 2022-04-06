@@ -221,7 +221,7 @@ func BenchmarkTrtlIter(b *testing.B) {
 
 	// Manually add some fixtures
 	var err error
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < 1000; i++ {
 		_, err = cc.Put(ctx, &pb.PutRequest{
 			Namespace: "terminators",
 			Key:       []byte(fmt.Sprintf("t%d", i)),
