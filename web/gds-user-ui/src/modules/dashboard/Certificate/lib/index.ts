@@ -1,3 +1,3 @@
-export { certificateRegistrationValidationSchema } from './certificate-registration-validation-schema';
+export { validationSchema } from './validationSchema';
 export { fieldNamesPerSteps } from './fieldNamesPerSteps';
-export { getCertificateRegistrationDefaultValue } from './form-references';
+export { getRegistrationDefaultValue } from './defaultValues';

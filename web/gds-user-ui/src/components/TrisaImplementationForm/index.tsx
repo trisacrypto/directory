@@ -10,7 +10,7 @@ type TrisaImplementationFormProps = {
 
 const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({ headerText, name }) => {
   const { register, getValues } = useFormContext();
-  console.log('[]', getValues());
+  // console.log('[]', getValues());
   return (
     <FormLayout>
       <Heading size="md">{headerText}</Heading>

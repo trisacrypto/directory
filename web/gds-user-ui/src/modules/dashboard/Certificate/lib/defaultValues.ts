@@ -1,5 +1,5 @@
 // default value should be initialized from localstorage and assigned to each property
-export const getCertificateRegistrationDefaultValue = () => {
+export const getRegistrationDefaultValue = () => {
   return {
     entity: {
       country_of_registration: '',

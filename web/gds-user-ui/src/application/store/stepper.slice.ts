@@ -36,7 +36,7 @@ const stepperSlice: any = createSlice({
     setStepFormValue: (state: any, { payload }: any) => {
       state.steps.map((step: any) => {
         if (step.key === payload.step && state.currentStep) {
-          step.data = { ...step.data, ...payload.formValues };
+          step.data = payload.formValues;
         }
       });
     },

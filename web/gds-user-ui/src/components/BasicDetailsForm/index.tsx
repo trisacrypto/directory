@@ -6,6 +6,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { Control, UseFormRegister } from 'react-hook-form/dist/types/form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ValidationSchema, getDefaultValue } from './validation';
+
 type BasicDetailsFormProps = {};
 
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
@@ -23,6 +24,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           controlId="website"
           label="Website"
           error="true"
+          type="url"
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'VASP Holdings LLC' }}
           {...register('website')}

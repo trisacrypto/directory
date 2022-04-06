@@ -8,7 +8,7 @@ import {
   setStepFormValue,
   setSubmitStep
 } from 'application/store/stepper.slice';
-
+import { setStepperFromLocalStorage, addStepToLocalStorage } from 'utils/localStorageHelper';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
@@ -32,9 +32,11 @@ const useCertificateStepper = () => {
   const nextStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
     if (state?.formValues) {
+      console.log('state form value', state.formValues);
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
     }
     if (state?.isFormCompleted || !state?.errors) {
+      setStepperFromLocalStorage({ step: currentStep, status: LSTATUS.COMPLETE });
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
     // if we got an error than means ,require element are not completed
@@ -67,6 +69,7 @@ const useCertificateStepper = () => {
     if (currentStep === lastStep) {
       // that mean we move to submit step
       if (!hasStepError(steps)) {
+        setStepperFromLocalStorage({ step: lastStep });
         dispatch(setSubmitStep({ submitStep: true }));
         dispatch(setCurrentStep({ currentStep: lastStep }));
       }
@@ -74,6 +77,8 @@ const useCertificateStepper = () => {
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
+        setStepperFromLocalStorage({ step: currentStep + 1, status: LSTATUS.PROGRESS });
+        addStepToLocalStorage({ key: currentStep + 1, status: LSTATUS.PROGRESS });
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
@@ -86,9 +91,9 @@ const useCertificateStepper = () => {
   };
   const previousStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
-    if (state?.formValues) {
-      dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
-    }
+    // if (state?.formValues) {
+    //   dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
+    // }
     // do not allow to go back to the first step
     const step = currentStep;
     if (currentStep === 1) {
@@ -99,7 +104,7 @@ const useCertificateStepper = () => {
     // if the current status is already completed, do not change the status
     const found = findStepKey(steps, currentStep);
     if (found[0].status !== LSTATUS.COMPLETE) {
-      dispatch(setStepStatus({ step, status: 'incomplete' }));
+      dispatch(setStepStatus({ step, status: LSTATUS.INCOMPLETE }));
     }
   };
 

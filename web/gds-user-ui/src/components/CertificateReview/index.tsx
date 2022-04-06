@@ -1,3 +1,4 @@
+/* eslint-disable prefer-reflect */
 import { Box, Heading, HStack, Icon, Stack, Text, useToast } from '@chakra-ui/react';
 
 import BasicDetailsReview from './BasicDetailsReview';
@@ -11,6 +12,7 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { hasStepError } from 'utils/utils';
 import ReviewSubmit from 'components/ReviewSubmit';
 import { registrationRequest } from 'modules/dashboard/certificate/service';
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 const CertificateReview = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const toast = useToast();
@@ -21,15 +23,46 @@ const CertificateReview = () => {
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
-      await registrationRequest(network, steps);
+      const formValue = loadDefaultValueFromLocalStorage();
+      const getMainnetObj = formValue.trisa_endpoint_mainnet;
+      const getTestnetObj = formValue.trisa_endpoint_testnet;
+
+      delete formValue.trisa_endpoint_mainnet;
+      delete formValue.trisa_endpoint_testnet;
+      if (network === 'testnet') {
+        formValue.trisa_endpoint = getTestnetObj.endpoint;
+        formValue.common_name = getTestnetObj.common_name;
+      }
+      if (network === 'mainnet') {
+        formValue.trisa_endpoint = getMainnetObj.endpoint;
+        formValue.common_name = getMainnetObj.common_name;
+      }
+
+      const response = await registrationRequest(network, formValue);
+      console.log('response', response);
+      if (response.status === 200) {
+        toast({
+          title: 'Success',
+          description: 'Certificate registered successfully',
+          status: 'success',
+          duration: 5000,
+          isClosable: true
+        });
+      }
     } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.response.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true
-      });
+      console.log('err', err.response.data);
+      if (!err.response.data.success) {
+        toast({
+          position: 'top-right',
+          title: 'Error Submitting Certificate',
+          description: err.response.data.error,
+          status: 'error',
+          duration: 5000,
+          isClosable: true
+        });
+      } else {
+        console.log('something went wrong');
+      }
     }
   };
 
