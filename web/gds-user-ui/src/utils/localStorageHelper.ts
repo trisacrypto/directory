@@ -116,7 +116,6 @@ export const setCertificateFormValueToLocalStorage = (values: any) => {
   }
 };
 export const setStepperFromLocalStorage = ({ step, status, data }: any) => {
-  console.log('getter', step, status, data);
   try {
     const getStepper: any = JSON.parse(localStorage.getItem('trs_stepper') || '{}');
     if (getStepper) {
@@ -137,7 +136,6 @@ export const setStepperFromLocalStorage = ({ step, status, data }: any) => {
           }
         });
       }
-      console.log('setStepperFromLocalStorage', getStepper);
       localStorage.setItem('trs_stepper', JSON.stringify(getStepper));
     }
   } catch {

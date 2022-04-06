@@ -63,7 +63,7 @@ const Certificate: React.FC = () => {
       if (hasStepError(steps)) {
         toast({
           position: 'top',
-          title: `Please fill all the required fields before submitting`,
+          title: `Please fill in all required fields before proceeding`,
           status: 'error',
           isClosable: true,
           containerStyle: {
@@ -76,7 +76,7 @@ const Certificate: React.FC = () => {
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
-      if (window.confirm('Some requirement elements are missing, Would you like to continue?')) {
+      if (window.confirm('Some elements required for registration are missing; continue anyway?')) {
         nextStep({
           isFormCompleted: isFormCompleted(),
           errors: methods.formState.errors,
