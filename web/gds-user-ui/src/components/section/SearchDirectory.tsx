@@ -24,19 +24,24 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
 import ErrorMessage from 'components/ui/ErrorMessage';
+
 type TSearchDirectory = {
   handleSubmit: (e: FormEvent, query: string) => void;
   isLoading: boolean;
   result: any;
   error: string;
+  query: string;
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
   isLoading,
   result,
-  error
+  error,
+  query
 }) => {
   const [search, setSearch] = useState<string>('');
+  const customName = result?.name ? `${result.name} ${query}` : '';
+
   return (
     <Flex
       width="100%"
@@ -104,25 +109,37 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             justifyContent="center"
             justifyItems={'center'}
             alignContent="center"
-            border="2px solid #eee"
-            fontSize={18}
-            width="100%"
+            fontSize={'md'}
             mx={'auto'}
-            w={'2xl'}>
+            w={'4xl'}>
             <Box>
               <Table
-                variant={'simple'}
+                variant={'ghost'}
+                border={'2px solid #eee'}
+                css={{ borderCollapse: 'separate', borderSpacing: '0' }}
                 sx={{
-                  'td:first-child': { fontWeight: 'bold' },
+                  'td:first-child': { fontWeight: 'bold', maxWidth: '25%' },
+                  'td:nth-child(2)': { maxWidth: '75%' },
                   Tr: { borderStyle: 'hidden' }
                 }}>
-                <Thead bg={'#eee'} width={'100%'}>
-                  <Th>Global TRISA Directory Record</Th>
-                  <Th></Th>
+                <Thead bg={'#eee'} height={'50px'}>
+                  <Th colSpan={2}>Global TRISA Directory Record</Th>
                 </Thead>
                 <Tbody>
+                  <Tr
+                    sx={{
+                      'td:first-child': { fontWeight: 'bold', width: '30%' },
+                      'td:nth-child(2)': { width: '70%' }
+                    }}>
+                    <Td colSpan={2}>{customName}</Td>
+                  </Tr>
                   <Tr>
-                    <Td>Common Name</Td>
+                    <Td>
+                      {/* <Flex minWidth={'100%'} flexWrap="nowrap">
+                        <Text minWidth="100%">Common Name</Text>
+                      </Flex> */}
+                      Common Name
+                    </Td>
                     <Td>{result.common_name}</Td>
                   </Tr>
                   <Tr>
@@ -137,14 +154,28 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     <Td>TRISA Member ID</Td>
                     <Td>{result.id}</Td>
                   </Tr>
-                  <Tr>
-                    <Td>Country</Td>
-                    <Td>{result.country}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>TRISA Verification</Td>
-                    <Td></Td>
-                  </Tr>
+                  {result?.country && (
+                    <Tr>
+                      <Td>Country</Td>
+                      <Td>{result.country}</Td>
+                    </Tr>
+                  )}
+                  {result.verified_on && (
+                    <Tr>
+                      <Td>TRISA Verification</Td>
+                      <Td> VERIFIED ON {result.verified_on}</Td>
+                    </Tr>
+                  )}
+                  {result?.identity_certificate?.signature && (
+                    <Tr>
+                      <Td>TRISA Identity Signature</Td>
+                      <Td>
+                        <Flex flexWrap="nowrap" wordBreak={'break-word'}>
+                          <Text>{result?.identity_certificate?.signature}</Text>
+                        </Flex>
+                      </Td>
+                    </Tr>
+                  )}
                 </Tbody>
               </Table>
             </Box>
