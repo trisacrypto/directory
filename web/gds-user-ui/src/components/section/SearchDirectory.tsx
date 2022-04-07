@@ -70,6 +70,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     size="md"
                     pr="4.5rem"
                     type={'gray.100'}
+                    isRequired
                     placeholder="Common name or VASP ID"
                     name="search"
                     onChange={(event) => setSearch(event.currentTarget.value)}
@@ -113,7 +114,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <Table
                 variant={'simple'}
                 sx={{
-                  'td:first-child': { fontWeight: 'bold' },
+                  'td:first-of-type': { fontWeight: 'bold' },
                   Tr: { borderStyle: 'hidden' }
                 }}>
                 <Thead bg={'#eee'} width={'100%'}>
