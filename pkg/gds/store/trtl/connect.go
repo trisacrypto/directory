@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func Connect(conf config.DatabaseConfig) (conn *grpc.ClientConn, err error) {
@@ -21,7 +22,7 @@ func Connect(conf config.DatabaseConfig) (conn *grpc.ClientConn, err error) {
 
 	var opts []grpc.DialOption
 	if conf.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var sz *trust.Serializer
 		if sz, err = trust.NewSerializer(false); err != nil {

@@ -19,7 +19,12 @@ import (
 )
 
 // BackupManager runs as an independent service which periodically copies the trtl
-// storage to a compressed backup location on disk.
+// storage to a compressed backup location on disk. The backup manager is started when
+// the trtl service is started, but if it is not able to run it will force the database
+// to exit before continuing.
+//
+// TODO: allow storage to cloud storage rather than to disk
+// TODO: encrypt the backup storage file
 type BackupManager struct {
 	conf config.BackupConfig
 	db   *honu.DB

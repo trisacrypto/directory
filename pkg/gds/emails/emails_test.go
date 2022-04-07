@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 // If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
@@ -131,6 +132,10 @@ type EmailTestSuite struct {
 }
 
 func (suite *EmailTestSuite) SetupSuite() {
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	suite.conf = config.EmailConfig{
 		Testing:      true,
 		ServiceEmail: "service@example.com",
@@ -145,6 +150,10 @@ func (suite *EmailTestSuite) BeforeTest(suiteName, testName string) {
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
 	emails.PurgeMockEmails()
+}
+
+func (suite *EmailTestSuite) TearDownSuite() {
+	logger.ResetLogger()
 }
 
 func (suite *EmailTestSuite) TestSendVerifyContactEmail() {

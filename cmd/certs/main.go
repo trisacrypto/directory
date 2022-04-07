@@ -210,13 +210,13 @@ func initCA(c *cli.Context) (err error) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(1942),
 		Subject: pkix.Name{
-			CommonName:    "trisatest.net",
-			Organization:  []string{"TRISA", "CipherTrace"},
+			CommonName:    "trisa.dev",
+			Organization:  []string{"TRISA", "Rotational Labs"},
 			Country:       []string{"USA"},
-			Province:      []string{"CA"},
-			Locality:      []string{"Menlo Park"},
-			StreetAddress: []string{"68 Willow Road"},
-			PostalCode:    []string{"94025"},
+			Province:      []string{"MD"},
+			Locality:      []string{"Queenstown"},
+			StreetAddress: []string{"215 Alynn Way"},
+			PostalCode:    []string{"21658"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0),
@@ -224,6 +224,7 @@ func initCA(c *cli.Context) (err error) {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
+		DNSNames:              []string{"trisa.dev"},
 	}
 
 	// Create private key
@@ -312,6 +313,7 @@ func issue(c *cli.Context) (err error) {
 		SubjectKeyId: []byte{1, 2, 3, 4, 5, 6},
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
+		DNSNames:     []string{c.String("name")},
 	}
 
 	// Create private key

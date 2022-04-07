@@ -3,11 +3,13 @@ import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
 export type TStep = {
   status: string;
   key?: number;
+  data?: any;
 };
 export type TPayload = {
   currentStep: number | string;
   steps: TStep[];
   lastStep: number | null;
+  hasReachSubmitStep?: boolean;
 };
 export const initialValue: TPayload = loadStepperFromLocalStorage();
 
@@ -30,9 +32,36 @@ const stepperSlice: any = createSlice({
     },
     setLastStep: (state: any, { payload }: any) => {
       state.lastStep = payload.lastStep;
+    },
+    setStepFormValue: (state: any, { payload }: any) => {
+      state.steps.map((step: any) => {
+        if (step.key === payload.step && state.currentStep) {
+          step.data = payload.formValues;
+        }
+      });
+    },
+    getCurrentFormValues: (state: any, { payload }: any | null) => {
+      const found = state.steps.filter(
+        (step: any) => step.key === payload?.step || state.currentStep
+      );
+      if (found.length === 1) {
+        return found[0].data;
+      }
+      return null;
+    },
+    setSubmitStep: (state: any, { payload }: any) => {
+      state.hasReachSubmitStep = payload.submitStep;
     }
   }
 });
 
 export const stepperReducer = stepperSlice.reducer;
-export const { addStep, setCurrentStep, setStepStatus, setLastStep } = stepperSlice.actions;
+export const {
+  addStep,
+  setCurrentStep,
+  setStepStatus,
+  setLastStep,
+  setStepFormValue,
+  getCurrentFormValues,
+  setSubmitStep
+} = stepperSlice.actions;

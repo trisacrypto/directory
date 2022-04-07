@@ -160,7 +160,7 @@ export default function VaspVerification() {
                 px={8}
                 color={'white'}
                 as="a"
-                href="/certificate"
+                href="/certificate/registration"
                 _hover={{
                   bg: '#10aaed'
                 }}

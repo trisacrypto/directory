@@ -7,6 +7,7 @@ interface SearchDirectoryProps {
   isLoading: boolean;
   result: any;
   error: string;
+  query: string;
 }
 
 export default {

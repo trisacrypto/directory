@@ -20,7 +20,7 @@ func MockConfig() config.Config {
 		Maintenance: false,
 		BindAddr:    ":4436",
 		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:  true,
+		ConsoleLog:  false,
 		Database: config.DatabaseConfig{
 			URL:           "leveldb:///testdata/db",
 			ReindexOnBoot: false,

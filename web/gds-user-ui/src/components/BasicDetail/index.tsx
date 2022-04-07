@@ -15,6 +15,7 @@ const BasicDetails: React.FC<TBasicDetailsProps> = () => {
       paddingY="27px"
       border="3px solid #E5EDF1"
       mt="2rem"
+      bg={'white'}
       borderRadius="md">
       <HStack>
         <Heading size="md">Section 1: Basic Details</Heading>{' '}

@@ -63,7 +63,7 @@ export default function JoinUsSection() {
                 border="2px"
                 _hover={{ bg: '#FF7A77' }}
                 as={'a'}
-                href={'/start'}>
+                href={'/getting-started'}>
                 Join Today
               </Button>
             </Box>

@@ -12,10 +12,10 @@ const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(false);
   const [error, setError] = useState('');
-
+  const [search, setSearch] = useState('');
   const handleSearchSubmit = async (evt: FormEvent, searchQuery: string) => {
-    setIsLoading(true);
     evt.preventDefault();
+    setIsLoading(true);
     const query = isValidUuid(searchQuery) ? `uuid=${searchQuery}` : `common_name=${searchQuery}`;
 
     try {
@@ -25,14 +25,17 @@ const HomePage: React.FC = () => {
       if (!response.error) {
         setError('');
         setResult(response);
+        setSearch(searchQuery);
+        setError('');
       }
     } catch (e: any) {
       setIsLoading(false);
       if (!e.response.data.success) {
         setResult(false);
         setError(e.response.data.error);
+        setResult(false);
       } else {
-        setError('sorry something went wrong , please try again');
+        console.log('sorry something went wrong , please try again');
       }
     }
   };
@@ -46,6 +49,7 @@ const HomePage: React.FC = () => {
         isLoading={isLoading}
         result={result}
         error={error}
+        query={search}
       />
     </LandingLayout>
   );

@@ -32,8 +32,9 @@ jobs:
             trisa/gds
             gcr.io/trisa-gds/gds
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -87,8 +88,9 @@ jobs:
             trisa/gds-bff
             gcr.io/trisa-gds/gds-bff
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -142,8 +144,9 @@ jobs:
             trisa/gds-ui
             gcr.io/trisa-gds/gds-ui
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -201,8 +204,9 @@ jobs:
             trisa/gds-testnet-ui
             gcr.io/trisa-gds/gds-testnet-ui
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -260,8 +264,9 @@ jobs:
             trisa/gds-admin-ui
             gcr.io/trisa-gds/gds-admin-ui
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -319,8 +324,9 @@ jobs:
             trisa/gds-testnet-admin-ui
             gcr.io/trisa-gds/gds-testnet-admin-ui
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -378,8 +384,9 @@ jobs:
             trisa/grpc-proxy
             gcr.io/trisa-gds/grpc-proxy
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -433,8 +440,9 @@ jobs:
             trisa/trtl
             gcr.io/trisa-gds/trtl
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU
@@ -488,8 +496,9 @@ jobs:
             trisa/trtl-init
             gcr.io/trisa-gds/trtl-init
           tags: |
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
       - name: Setup QEMU

@@ -117,10 +117,15 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 	conf, err := config.Config{
 		Maintenance:  true,
 		Mode:         gin.TestMode,
+		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
 		MainNet:      config.DirectoryConfig{Endpoint: "bufcon"},
+		Database: config.DatabaseConfig{
+			URL:      "trtl:///",
+			Insecure: true,
+		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")
 

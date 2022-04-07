@@ -41,6 +41,10 @@ type trtlStoreTestSuite struct {
 func (s *trtlStoreTestSuite) SetupSuite() {
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	var err error
 	s.tmpdb, err = ioutil.TempDir("../testdata", "db-*")
 	require.NoError(err)
@@ -49,7 +53,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 		Maintenance: false,
 		BindAddr:    ":4436",
 		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
-		ConsoleLog:  true,
+		ConsoleLog:  false,
 		Database: config.DatabaseConfig{
 			URL:           fmt.Sprintf("leveldb:///%s", s.tmpdb),
 			ReindexOnBoot: false,
@@ -101,6 +105,8 @@ func (s *trtlStoreTestSuite) TearDownSuite() {
 	s.tmpdb = ""
 	s.grpc = nil
 	s.trtl = nil
+
+	logger.ResetLogger()
 }
 
 func TestTrtlStore(t *testing.T) {
