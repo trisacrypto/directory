@@ -1,3 +1,3 @@
-export { validationSchema } from './validationSchema';
-export { fieldNamesPerSteps } from './fieldNamesPerSteps';
-export { getRegistrationDefaultValue } from './defaultValues';
+export * from './validationSchema';
+export * from './fieldNamesPerSteps';
+export * from './defaultValues';
