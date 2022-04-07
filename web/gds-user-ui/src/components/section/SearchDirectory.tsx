@@ -58,7 +58,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             </Text>
             <Text fontSize={'lg'}>
               Not a TRISA Member?
-              <Link href={'/register'} color={'#1F4CED'} pl={2}>
+              <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
                 Join the TRISA network today.
               </Link>
             </Text>
@@ -75,6 +75,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     size="md"
                     pr="4.5rem"
                     type={'gray.100'}
+                    isRequired
                     placeholder="Common name or VASP ID"
                     name="search"
                     onChange={(event) => setSearch(event.currentTarget.value)}
