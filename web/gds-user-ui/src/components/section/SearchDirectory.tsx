@@ -70,6 +70,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     size="md"
                     pr="4.5rem"
                     type={'gray.100'}
+                    isRequired
                     placeholder="Common name or VASP ID"
                     name="search"
                     onChange={(event) => setSearch(event.currentTarget.value)}
