@@ -4,7 +4,7 @@ import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
-const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
+const CertificatePage = React.lazy(() => import('modules/dashboard/Certificate/registration'));
 const VerifyPage = React.lazy(() => import('modules/verify'));
 
 const AppRouter: React.FC = () => {
