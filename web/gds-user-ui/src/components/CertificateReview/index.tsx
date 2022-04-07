@@ -13,7 +13,7 @@ import { RootStateOrAny, useSelector } from 'react-redux';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { hasStepError } from 'utils/utils';
 import ReviewSubmit from 'components/ReviewSubmit';
-import { registrationRequest } from 'modules/dashboard/certificate/service';
+import { registrationRequest } from 'modules/dashboard/Certificate/service';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 const CertificateReview = () => {
   const { nextStep, previousStep } = useCertificateStepper();

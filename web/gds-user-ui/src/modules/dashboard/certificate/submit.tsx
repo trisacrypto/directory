@@ -4,7 +4,7 @@ import Card from 'components/ui/Card';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import ReviewSubmit from 'components/ReviewSubmit';
-import CertificateStepLabel from 'components/TestnetProgress/CertificateStepLabel';
+import CertificateStepLabel from 'components/testnetProgress/CertificateStepLabel';
 const Certificate: React.FC = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
