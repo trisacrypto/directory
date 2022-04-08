@@ -1,17 +1,32 @@
 import { Heading } from '@chakra-ui/react';
-import InputFormControl from 'components/ui/InputFormControl';
+import SelectFormControl from 'components/ui/SelectFormControl';
+import { getCountriesOptions } from 'constants/countries';
 import FormLayout from 'layouts/FormLayout';
-import { useFormContext } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 
 type CountryOfRegistrationProps = {};
 const CountryOfRegistration: React.FC<CountryOfRegistrationProps> = () => {
-  const { register } = useFormContext();
+  const { control } = useFormContext();
+  const countries = getCountriesOptions();
+
   return (
     <FormLayout>
       <Heading size="md">Country of Registration</Heading>
-      <InputFormControl
-        controlId="entity.country_of_registration"
-        {...register('entity.country_of_registration')}
+      <Controller
+        control={control}
+        name="entity.country_of_registration"
+        render={({ field }) => (
+          <SelectFormControl
+            ref={field.ref}
+            label="Business Category"
+            placeholder="Select a country"
+            controlId="entity.country_of_registration"
+            options={countries}
+            name={field.name}
+            value={countries.find((option) => option.value === field.value)}
+            onChange={(newValue: any) => field.onChange(newValue.value)}
+          />
+        )}
       />
     </FormLayout>
   );
