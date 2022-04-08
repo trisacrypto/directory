@@ -19,7 +19,6 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({ heade
   const commonName = watch(`${name}.common_name`);
   const trisaEndpoint = watch(`${name}.trisa_endpoint`);
   const [commonNameWarning, setCommonNameWarning] = React.useState<string | undefined>('');
-
   React.useEffect(() => {
     const trisaEndpointUri = trisaEndpoint.split(':')[0];
     const warningMessage =
