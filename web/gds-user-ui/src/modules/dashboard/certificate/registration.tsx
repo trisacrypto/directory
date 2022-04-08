@@ -1,7 +1,7 @@
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, HStack, VStack, useToast } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
-import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
@@ -33,9 +33,12 @@ const Certificate: React.FC = () => {
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
+
+  const resolver = yupResolver(getCurrentStepValidationSchema());
+
   const methods = useForm({
     defaultValues: loadDefaultValueFromLocalStorage(),
-    resolver: yupResolver(getCurrentStepValidationSchema()),
+    resolver,
     mode: 'onChange'
   });
 

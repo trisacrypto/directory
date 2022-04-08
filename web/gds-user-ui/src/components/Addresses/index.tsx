@@ -2,12 +2,13 @@ import { Box, Button, Heading, HStack, Text, Tooltip, VStack } from '@chakra-ui/
 import DeleteButton from 'components/ui/DeleteButton';
 import FormButton from 'components/ui/FormButton';
 import FormLayout from 'layouts/FormLayout';
+import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import AddressForm from '../AddressForm';
 
 type AddressesPropsProps = {};
 const Addresses: React.FC<AddressesPropsProps> = () => {
-  const { control, register, getValues } = useFormContext();
+  const { control, register } = useFormContext();
   const { fields, remove, append } = useFieldArray({
     control,
     name: 'entity.geographic_addresses'
@@ -15,7 +16,7 @@ const Addresses: React.FC<AddressesPropsProps> = () => {
 
   const handleAddressClick = () => {
     append({
-      address_type: 2,
+      address_type: '',
       address_line: ['', '', ''],
       country: ''
     });
@@ -39,10 +40,12 @@ const Addresses: React.FC<AddressesPropsProps> = () => {
                 />
               </Box>
               <Box alignSelf="flex-end" w={10} pb="25.1px">
-                <DeleteButton
-                  onDelete={() => remove(index)}
-                  tooltip={{ label: 'Delete the address line' }}
-                />
+                {index ? (
+                  <DeleteButton
+                    onDelete={() => remove(index)}
+                    tooltip={{ label: 'Delete the address line' }}
+                  />
+                ) : null}
               </Box>
             </HStack>
           );

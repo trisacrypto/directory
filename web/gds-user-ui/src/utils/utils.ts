@@ -1,3 +1,4 @@
+import _ from 'lodash';
 export const findStepKey = (steps: any, key: number) =>
   steps.filter((step: any) => step.key === key);
 
@@ -101,4 +102,8 @@ export const mapStepsDataToFormRequest = (steps: any) => {
       has_required_compliance_program: s['trixo.has_required_compliance_program']
     }
   };
+};
+
+export const getValueByPathname = (obj: Record<string, any>, path: string) => {
+  return _.get(obj, path);
 };
