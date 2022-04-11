@@ -53,6 +53,7 @@ export const getRegistrationDefaultValue = () => {
     business_category: '',
     vasp_categories: [],
     established_on: '',
+    organization_name: '',
     trixo: {
       primary_national_jurisdiction: '',
       primary_regulator: '',
