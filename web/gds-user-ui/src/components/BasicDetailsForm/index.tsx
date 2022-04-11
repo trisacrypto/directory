@@ -26,7 +26,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           error="true"
           type="url"
           isInvalid={!!errors.website}
-          inputProps={{ placeholder: 'VASP Holdings LLC' }}
+          inputProps={{ placeholder: 'https://example.com' }}
           {...register('website')}
         />
         {errors.website && <FormErrorMessage>{errors.website.message}</FormErrorMessage>}
