@@ -38,6 +38,18 @@ const NameColumn = ({ row }) => {
     );
 };
 
+const CertificateExpirationColumn = ({ row }) => {
+
+    return (
+        <React.Fragment>
+            <p className="m-0 d-inline-block align-middle font-16">
+                {dayjs(row?.original?.certificate_expiration).format("MMM DD, YYYY h:mm:ss a")}
+            </p>
+        </React.Fragment>
+    );
+};
+
+
 const LastUpdatedColumn = ({ row }) => {
 
     return <React.Fragment>
@@ -78,6 +90,12 @@ const columns = [
         accessor: 'last_updated',
         Cell: LastUpdatedColumn,
         sort: true,
+    },
+    {
+        Header: 'Certificate Expiration',
+        accessor: 'certificate_expiration',
+        sort: true,
+        Cell: CertificateExpirationColumn
     }
 ];
 

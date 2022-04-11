@@ -74,16 +74,13 @@ export const validationSchema = [
     })
   }),
   yup.object().shape({
-    trisa_endpoint: yup
-      .string()
-      .trim()
-      .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+    trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup.string()
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup.string()
     })
   }),
