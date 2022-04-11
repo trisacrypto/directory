@@ -24,7 +24,7 @@ interface _FormControlProps extends FormControlProps {
   hasBtn?: boolean;
   value?: string;
   setBtnName?: string;
-
+  isRequired?: boolean;
   handleFn?: () => void;
 }
 

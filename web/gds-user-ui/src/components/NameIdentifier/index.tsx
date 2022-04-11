@@ -26,7 +26,11 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   NameIdentifierProps & React.RefAttributes<unknown>
 > = React.forwardRef((props, ref) => {
   const { name, controlId, description, heading } = props;
-  const { register, control } = useFormContext();
+  const {
+    register,
+    control,
+    formState: { errors }
+  } = useFormContext();
   const { fields, remove, append } = useFieldArray({ name, control });
 
   const nameIdentiferTypeOptions = getNameIdentiferTypeOptions();
@@ -56,6 +60,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
+                      isRequired={index === 0}
+                      isInvalid={!!errors[name]?.[index]?.legal_person_name}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
@@ -78,6 +84,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                     />
                   </GridItem>
                 </Grid>
+
                 <Box
                   paddingBottom={{ base: 2, md: 0 }}
                   alignSelf={{ base: 'flex-end', md: 'initial' }}>

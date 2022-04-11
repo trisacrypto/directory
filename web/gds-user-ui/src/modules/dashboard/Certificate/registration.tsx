@@ -125,7 +125,7 @@ const Certificate: React.FC = () => {
                 <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
               </Box>
               {!hasReachSubmitStep && (
-                <HStack width="100%" spacing={4} justifyContent={'center'} pt={4}>
+                <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
                   <FormButton
                     onClick={handlePreviousStep}
                     isDisabled={currentStep === 1}
@@ -135,7 +135,7 @@ const Certificate: React.FC = () => {
                     maxW="13rem">
                     Previous
                   </FormButton>
-                  <FormButton
+                  {/* <FormButton
                     borderRadius={5}
                     w="100%"
                     maxW="13rem"
@@ -143,9 +143,15 @@ const Certificate: React.FC = () => {
                     type="submit"
                     _hover={{ backgroundColor: '#f07253' }}>
                     Save & Next
-                  </FormButton>
-                  <FormButton borderRadius={5} w="100%" maxW="13rem" type="submit">
-                    {currentStep === lastStep ? 'Finish & submit' : 'Save & Continue Later'}
+                  </FormButton> */}
+                  <FormButton
+                    borderRadius={5}
+                    w="100%"
+                    maxW="13rem"
+                    backgroundColor="#FF7A59"
+                    type="submit"
+                    _hover={{ backgroundColor: '#f07253' }}>
+                    {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
                   </FormButton>
                 </HStack>
               )}
