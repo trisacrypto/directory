@@ -13,6 +13,7 @@ import {
   useFormContext
 } from 'react-hook-form';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+
 type NameIdentifierProps = {
   name: string;
   description: string;
@@ -20,12 +21,13 @@ type NameIdentifierProps = {
   register?: RegisterOptions;
   control?: Control<FieldValues, any>;
   heading?: string;
+  type?: string;
 };
 
 const NameIdentifier: React.ForwardRefExoticComponent<
   NameIdentifierProps & React.RefAttributes<unknown>
 > = React.forwardRef((props, ref) => {
-  const { name, controlId, description, heading } = props;
+  const { name, controlId, description, heading, type } = props;
   const { register, control } = useFormContext();
   const { fields, remove, append } = useFieldArray({ name, control });
 
@@ -42,6 +44,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
+    console.log('from NameIdentifier', getStepperData.organization_name);
     const getOrganizationName = getStepperData.organization_name;
     setBasicDetailOrganizationName(getOrganizationName);
   }, [basicDetailOrganizationName]);
@@ -63,7 +66,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      value={index === 0 && basicDetailOrganizationName}
+                      value={
+                        index === 0 && type && type === 'legal' ? basicDetailOrganizationName : ''
+                      }
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
@@ -89,7 +94,11 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                 <Box
                   paddingBottom={{ base: 2, md: 0 }}
                   alignSelf={{ base: 'flex-end', md: 'initial' }}>
-                  <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+                  <DeleteButton
+                    onDelete={() => remove(index)}
+                    tooltip={{ label: 'Remove line' }}
+                    isDisabled={index > 0}
+                  />
                 </Box>
               </HStack>
             </React.Fragment>
