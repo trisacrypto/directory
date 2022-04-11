@@ -10,37 +10,40 @@ export const validationSchema = [
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
   yup.object().shape({
-    name: yup.object().shape({
-      name_identifiers: yup.array().of(
+    entity: yup.object().shape({
+      name: yup.object().shape({
+        name_identifiers: yup.array().of(
+          yup.object().shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
+          })
+        ),
+        local_name_identifiers: yup.array().of(
+          yup.object().shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
+          })
+        ),
+        phonetic_name_identifiers: yup.array().of(
+          yup.object().shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
+          })
+        )
+      }),
+      geographic_addresses: yup.array().of(
         yup.object().shape({
-          legal_person_name: yup.string(),
-          legal_person_name_identifier_type: yup.string()
+          address_type: yup.string().required(),
+          address_line: yup.array().of(yup.string().required()),
+          country: yup.string().required()
         })
       ),
-      local_name_identifiers: yup.array().of(
-        yup.object().shape({
-          legal_person_name: yup.string(),
-          legal_person_name_identifier_type: yup.string()
-        })
-      ),
-      phonetic_name_identifiers: yup.array().of(
-        yup.object().shape({
-          legal_person_name: yup.string(),
-          legal_person_name_identifier_type: yup.string()
-        })
-      )
-    }),
-    geographic_addresses: yup.array().of(
-      yup.object().shape({
-        address_type: yup.number(),
-        address_line: yup.array().of(yup.string())
+      national_identification: yup.object().shape({
+        national_identifier: yup.string(),
+        national_identifier_type: yup.string(),
+        country_of_issue: yup.string(),
+        registration_authority: yup.string()
       })
-    ),
-    national_identification: yup.object().shape({
-      national_identifier: yup.string(),
-      national_identifier_type: yup.number(),
-      country_of_issue: yup.string(),
-      registration_authority: yup.string()
     })
   }),
   yup.object().shape({

@@ -5,13 +5,10 @@ import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
 import NationalIdentification from '../NameIdentification';
 import Address from 'components/Addresses';
-import { useFormContext } from 'react-hook-form';
 
 type LegalPersonProps = {};
 
 const LegalPerson: React.FC<LegalPersonProps> = () => {
-  const {} = useFormContext();
-
   return (
     <Stack spacing={7} mt="2rem">
       <HStack>
