@@ -4,7 +4,7 @@ const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
 
 export const validationSchema = [
   yup.object().shape({
-    website: yup.string().trim().url().required(),
+    website: yup.string().url().trim().required(),
     established_on: yup
       .date()
       .nullable(true)

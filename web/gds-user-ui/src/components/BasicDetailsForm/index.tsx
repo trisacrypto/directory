@@ -35,6 +35,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           label="Website"
           error="true"
           type="url"
+          formHelperText={errors.website?.message}
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'https://example.com' }}
           {...register('website')}
