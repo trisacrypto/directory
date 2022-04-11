@@ -57,13 +57,13 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td>Date of Incorporation/ Establishmend</Td>
+                <Td>Date of Incorporation/ Establishment</Td>
                 <Td>{basicDetail.established_on}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>VASP Category</Td>
-                <Td>{basicDetail.vasp_categories}</Td>
+                <Td>{basicDetail.vasp_categories.join(' ')}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>

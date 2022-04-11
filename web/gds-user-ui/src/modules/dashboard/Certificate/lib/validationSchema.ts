@@ -10,57 +10,34 @@ export const validationSchema = [
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
   yup.object().shape({
-    name: yup
-      .object()
-      .shape({
-        name_identifiers: yup
-          .array()
-          .of(
-            yup.object().shape({
-              legal_person_name: yup.string(),
-              legal_person_name_identifier_type: yup.string()
+    name: yup.object().shape({
+      name_identifiers: yup.array().of(
+        yup
+          .object()
+          .shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
+          })
+          .when('legal_person_name', {
+            is: (legal_person_name: string) => legal_person_name.length > 0,
+            then: yup.object().shape({
+              legal_person_name_identifier_type: yup.string().required()
             })
-          )
-          .test({
-            name: 'no-empty-name-identifiers',
-            message: 'Please provide at least one name identifier',
-            test: (val) => {
-              val?.some((identifier) => {
-                console.log('identifier', identifier);
-                return false;
-              });
-              console.log(val);
-              return false;
-            }
-          }),
-
-        local_name_identifiers: yup.array().of(
-          yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
           })
-        ),
-        phonetic_name_identifiers: yup.array().of(
-          yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
-          })
-        )
-      })
-      .test({
-        name: 'no-empty-name-identifiers',
-        message: 'Please provide at least one legal name identifier',
-        test: (val) => {
-          val?.name_identifiers?.some((identifier) => {
-            return (
-              identifier.legal_person_name_identifier_type === 'LEGAL_PERSON_NAME_TYPE_CODE_LEGL'
-            );
-          });
-          console.log('val', val);
-          return false;
-        }
-      }),
-
+      ),
+      local_name_identifiers: yup.array().of(
+        yup.object().shape({
+          legal_person_name: yup.string(),
+          legal_person_name_identifier_type: yup.string()
+        })
+      ),
+      phonetic_name_identifiers: yup.array().of(
+        yup.object().shape({
+          legal_person_name: yup.string(),
+          legal_person_name_identifier_type: yup.string()
+        })
+      )
+    }),
     geographic_addresses: yup.array().of(
       yup.object().shape({
         address_type: yup.number(),
