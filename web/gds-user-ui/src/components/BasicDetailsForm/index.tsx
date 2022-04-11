@@ -24,7 +24,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           controlId="organization_name"
           label="Organization Name"
           error="true"
-          type="url"
+          formHelperText={errors.organization_name?.message}
           isInvalid={!!errors.organization_name}
           inputProps={{ placeholder: 'VASP HOLDING LLC' }}
           {...register('organization_name')}
@@ -43,7 +43,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
         <InputFormControl
           controlId="established_on"
           label="Date of Incorporation / Establishment"
-          formHelperText=""
+          formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
           inputProps={{ placeholder: '21/01/2021', type: 'date' }}
           {...register('established_on')}

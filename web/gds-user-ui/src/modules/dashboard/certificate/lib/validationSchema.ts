@@ -5,7 +5,20 @@ const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().trim().url().required(),
-    established_on: yup.date().nullable(true),
+    established_on: yup
+      .date()
+      .nullable(true)
+      .test('is-invalidate-date', 'Invalid date / year must be 4 digit ', (value) => {
+        if (value) {
+          const getYear = value.getFullYear();
+          if (getYear.toString().length !== 4) {
+            return false;
+          } else {
+            return true;
+          }
+        }
+        return false;
+      }),
     organization_name: yup.string().trim().required(),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
