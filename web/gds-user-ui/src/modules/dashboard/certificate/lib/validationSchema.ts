@@ -6,6 +6,7 @@ export const validationSchema = [
   yup.object().shape({
     website: yup.string().trim().url().required(),
     established_on: yup.date().nullable(true),
+    organization_name: yup.string().trim().required(),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),

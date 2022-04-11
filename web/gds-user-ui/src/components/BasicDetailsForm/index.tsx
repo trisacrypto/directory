@@ -21,6 +21,16 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
     <>
       <VStack spacing={4} w="100%">
         <InputFormControl
+          controlId="organization_name"
+          label="Organization Name"
+          error="true"
+          type="url"
+          isInvalid={!!errors.organization_name}
+          inputProps={{ placeholder: 'VASP HOLDING LLC' }}
+          {...register('organization_name')}
+        />
+
+        <InputFormControl
           controlId="website"
           label="Website"
           error="true"
@@ -29,7 +39,6 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           inputProps={{ placeholder: 'https://example.com' }}
           {...register('website')}
         />
-        {errors.website && <FormErrorMessage>{errors.website.message}</FormErrorMessage>}
 
         <InputFormControl
           controlId="established_on"
