@@ -26,18 +26,18 @@ export default function AboutTrisaSection() {
               fontWeight={600}
               pb={6}
               fontSize={'2xl'}>
-              About Trisa
+              About TRISA
             </Text>
 
             <Text color={useColorModeValue('black', 'white')} fontSize={'xl'}>
-              The Travel Rule Information Sharing Alliance (TRISA) is the only global, open source,
+              The Travel Rule Information Sharing Architecture (TRISA) is a global, open source,
               secure, and peer-to-peer protocol for Travel Rule compliance. TRISA helps Virtual
-              Asset Service Providers (VASPs) comply with the Travel Rule for cross-boarder
+              Asset Service Providers (VASPs) comply with the Travel Rule for cross-border
               cryptocurrency transactions. TRISA is designed to be interoperable.
               <br />
               <br />
               TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely
-              exchange Travel Rule compliance data. Learn how TRISA works.
+              exchange Travel Rule compliance data with each other.
             </Text>
             <Stack
               spacing={4}

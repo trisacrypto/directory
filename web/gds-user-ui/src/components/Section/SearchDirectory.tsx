@@ -56,7 +56,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               Search the Directory Service
             </Text>
             <Text fontSize={'lg'}>
-              Not a TRISA Member?
+              Enter the VASP Common Name or VASP ID. Not a TRISA Member?
               <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
                 Join the TRISA network today.
               </Link>
