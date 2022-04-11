@@ -21,20 +21,30 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
     <>
       <VStack spacing={4} w="100%">
         <InputFormControl
+          controlId="organization_name"
+          label="Organization Name"
+          error="true"
+          formHelperText={errors.organization_name?.message}
+          isInvalid={!!errors.organization_name}
+          inputProps={{ placeholder: 'VASP HOLDING LLC' }}
+          {...register('organization_name')}
+        />
+
+        <InputFormControl
           controlId="website"
           label="Website"
           error="true"
           type="url"
+          formHelperText={errors.website?.message}
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'https://example.com' }}
           {...register('website')}
         />
-        {errors.website && <FormErrorMessage>{errors.website.message}</FormErrorMessage>}
 
         <InputFormControl
           controlId="established_on"
           label="Date of Incorporation / Establishment"
-          formHelperText=""
+          formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
           inputProps={{ placeholder: '21/01/2021', type: 'date' }}
           {...register('established_on')}
