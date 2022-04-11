@@ -7,7 +7,7 @@ export const getRegistrationDefaultValue = () => {
         name_identifiers: [
           {
             legal_person_name: '',
-            legal_person_name_identifier_type: ''
+            legal_person_name_identifier_type: 'LEGAL_PERSON_NAME_TYPE_CODE_LEGL'
           }
         ],
         local_name_identifiers: [],

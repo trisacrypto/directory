@@ -3,7 +3,7 @@ import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
-import React from 'react';
+import React, { useState, FC, useEffect } from 'react';
 import {
   Control,
   Controller,
@@ -12,7 +12,7 @@ import {
   useFieldArray,
   useFormContext
 } from 'react-hook-form';
-
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 type NameIdentifierProps = {
   name: string;
   description: string;
@@ -39,6 +39,13 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
+  const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
+  useEffect(() => {
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const getOrganizationName = getStepperData.organization_name;
+    setBasicDetailOrganizationName(getOrganizationName);
+  }, [basicDetailOrganizationName]);
+
   return (
     <Stack align="start" width="100%">
       {fields &&
@@ -56,6 +63,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
+                      value={index === 0 && basicDetailOrganizationName}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>

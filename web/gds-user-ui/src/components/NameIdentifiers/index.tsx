@@ -1,13 +1,19 @@
+import React, { useState, FC, useEffect } from 'react';
 import { HStack } from '@chakra-ui/react';
 import Button from 'components/ui/FormButton';
 import FormLayout from 'layouts/FormLayout';
-import React from 'react';
 import NameIdentifier from '../NameIdentifier';
-
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 const NameIdentifiers: React.FC = () => {
   const nameIdentifiersFieldArrayRef = React.useRef<any>(null);
   const localNameIdentifiersFieldArrayRef = React.useRef<any>(null);
   const phoneticNameIdentifiersFieldArrayRef = React.useRef<any>(null);
+  const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
+  useEffect(() => {
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    const getOrganizationName = getStepperData.organization_name;
+    setBasicDetailOrganizationName(getOrganizationName);
+  }, [basicDetailOrganizationName]);
 
   const handleAddLegalNamesRow = () => {
     nameIdentifiersFieldArrayRef.current.addRow();
