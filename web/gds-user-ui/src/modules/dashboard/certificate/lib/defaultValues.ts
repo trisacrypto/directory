@@ -13,7 +13,13 @@ export const getRegistrationDefaultValue = () => {
         local_name_identifiers: [],
         phonetic_name_identifiers: []
       },
-      geographic_addresses: [],
+      geographic_addresses: [
+        {
+          address_type: '',
+          address_line: ['', '', ''],
+          country: ''
+        }
+      ],
       national_identification: {
         national_identifier: '',
         national_identifier_type: null,
@@ -47,6 +53,7 @@ export const getRegistrationDefaultValue = () => {
     business_category: '',
     vasp_categories: [],
     established_on: '',
+    organization_name: '',
     trixo: {
       primary_national_jurisdiction: '',
       primary_regulator: '',

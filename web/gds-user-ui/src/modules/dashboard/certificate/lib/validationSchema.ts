@@ -4,8 +4,22 @@ const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
 
 export const validationSchema = [
   yup.object().shape({
-    website: yup.string().trim().url().required(),
-    established_on: yup.date().nullable(true),
+    website: yup.string().url().trim().required(),
+    established_on: yup
+      .date()
+      .nullable(true)
+      .test('is-invalidate-date', 'Invalid date / year must be 4 digit ', (value) => {
+        if (value) {
+          const getYear = value.getFullYear();
+          if (getYear.toString().length !== 4) {
+            return false;
+          } else {
+            return true;
+          }
+        }
+        return false;
+      }),
+    organization_name: yup.string().trim().required(),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
@@ -18,8 +32,8 @@ export const validationSchema = [
             legal_person_name: yup.string(),
             legal_person_name_identifier_type: yup.string()
           })
-          .when('legal_person_name', {
-            is: (legal_person_name: string) => legal_person_name.length > 0,
+          .when('legal_person_name_identifier_type_defined', {
+            is: (legal_person_name_type: string) => legal_person_name_type.length > 0,
             then: yup.object().shape({
               legal_person_name_identifier_type: yup.string().required()
             })
@@ -27,28 +41,17 @@ export const validationSchema = [
       ),
       local_name_identifiers: yup.array().of(
         yup.object().shape({
-          legal_person_name: yup.string(),
-          legal_person_name_identifier_type: yup.string()
+          address_type: yup.string().required(),
+          address_line: yup.array().of(yup.string().required()),
+          country: yup.string().required()
         })
       ),
-      phonetic_name_identifiers: yup.array().of(
-        yup.object().shape({
-          legal_person_name: yup.string(),
-          legal_person_name_identifier_type: yup.string()
-        })
-      )
-    }),
-    geographic_addresses: yup.array().of(
-      yup.object().shape({
-        address_type: yup.number(),
-        address_line: yup.array().of(yup.string())
+      national_identification: yup.object().shape({
+        national_identifier: yup.string(),
+        national_identifier_type: yup.string(),
+        country_of_issue: yup.string(),
+        registration_authority: yup.string()
       })
-    ),
-    national_identification: yup.object().shape({
-      national_identifier: yup.string(),
-      national_identifier_type: yup.number(),
-      country_of_issue: yup.string(),
-      registration_authority: yup.string()
     })
   }),
   yup.object().shape({
@@ -82,16 +85,13 @@ export const validationSchema = [
     })
   }),
   yup.object().shape({
-    trisa_endpoint: yup
-      .string()
-      .trim()
-      .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+    trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup.string()
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup.string()
     })
   }),

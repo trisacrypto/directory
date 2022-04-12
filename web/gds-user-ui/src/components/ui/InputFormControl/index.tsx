@@ -14,7 +14,7 @@ import {
 import React from 'react';
 
 interface _FormControlProps extends FormControlProps {
-  formHelperText?: string;
+  formHelperText?: string | React.ReactNode;
   controlId: string;
   label?: string;
   inputProps?: InputProps;

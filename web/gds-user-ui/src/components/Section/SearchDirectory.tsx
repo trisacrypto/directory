@@ -48,16 +48,15 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
       position={'relative'}
       fontFamily={colors.font}
       color={useColorModeValue('black', 'white')}
-      id={'search'}
       minH={400}>
-      <Container maxW={'5xl'} fontFamily={colors.font} mb={10}>
+      <Container maxW={'5xl'} zIndex={10} fontFamily={colors.font} mb={10} id={'search'}>
         <Stack py={5}>
           <Box mb={{ base: 5 }} color={useColorModeValue('black', 'white')}>
-            <Text fontWeight={600} mb={5} fontSize={'2xl'} w={'100%'}>
+            <Text fontWeight={600} pb={4} fontSize={'2xl'}>
               Search the Directory Service
             </Text>
             <Text fontSize={'lg'}>
-              Not a TRISA Member?
+              Enter the VASP Common Name or VASP ID. Not a TRISA Member?
               <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
                 Join the TRISA network today.
               </Link>

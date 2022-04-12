@@ -63,7 +63,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>VASP Category</Td>
-                <Td>{basicDetail.vasp_categories.join(' ')}</Td>
+                <Td>{basicDetail?.vasp_categories?.join(' ')}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>

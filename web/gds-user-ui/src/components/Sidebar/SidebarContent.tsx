@@ -6,13 +6,13 @@ import {
   Image,
   CloseButton,
   Divider,
-  VStack,
-} from "@chakra-ui/react";
-import trisaLogo from "../../assets/images/logo-removebg-preview.png";
-import NavItem from "./NavItem";
-import MenuItems from "../../utils/menu";
-import { MdContactSupport } from "react-icons/md";
-import { IoLogoSlack } from "react-icons/io";
+  VStack
+} from '@chakra-ui/react';
+import trisaLogo from '../../assets/images/logo-removebg-preview.png';
+import NavItem from './NavItem';
+import MenuItems from '../../utils/menu';
+import { MdContactSupport } from 'react-icons/md';
+import { IoLogoSlack } from 'react-icons/io';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -22,19 +22,18 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
   return (
     <Box
       transition="3s ease"
-      bg={useColorModeValue("white", "gray.900")}
+      bg={useColorModeValue('white', 'gray.900')}
       borderRight="1px"
-      borderRightColor={useColorModeValue("gray.200", "gray.700")}
-      w={{ base: "full", md: 275 }}
+      borderRightColor={useColorModeValue('gray.200', 'gray.700')}
+      w={{ base: 'full', md: 275 }}
       pos="fixed"
       h="full"
-      {...rest}
-    >
+      {...rest}>
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
         <Box width="100%">
           <Image src={trisaLogo} alt="GDS UI" />
         </Box>
-        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
+        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
         {MenuItems.map((menu) => (

@@ -42,9 +42,9 @@ const Line: React.FC<Props> = ({ children, colSpan, title, ...rest }: any) => {
 };
 export default function VaspVerification() {
   return (
-    <Flex color={'black'} fontFamily={'Open Sans'} fontSize={'xl'} px={40}>
+    <Flex color={'black'} fontFamily={'Open Sans'} fontSize={'xl'} px={40} py={4}>
       <Container maxW={'5xl'}>
-        <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 20 }}>
+        <Stack flex={1} justify={{ lg: 'center' }}>
           <Box my={{ base: 4 }} color="black">
             <Text fontFamily={'heading'} fontWeight={700} fontSize={'xl'}>
               TRISA members must complete a comprehensive multi-part verification form and due
@@ -54,8 +54,8 @@ export default function VaspVerification() {
           </Box>
           <Box bg={'gray.100'} p={5}>
             <Text fontSize={'xl'} color={'black'}>
-              TRISA is the only global, open source, peer-to-peer and secure Travel Rule network.
-              Become a TRISA-certified VASP today. Learn how TRISA works.
+              TRISA’s verification form includes five sections and may require information from
+              several parties in your organization.
             </Text>
           </Box>
           <Box mx={20} pt={10}>
@@ -118,8 +118,9 @@ export default function VaspVerification() {
                 </chakra.dt>
                 <chakra.dd mt={2}>
                   Upon submission, a member of TRISA’s verification team will review the form and
-                  conduct a final due diligence phone call for physical verfication. Once due
-                  diligence is complete, TRISA will issue certificates to the VASP.
+                  conduct a final due diligence phone call for physical verfication. Once the VASP
+                  verification and due diligence is complete, TRISA will issue certificates to the
+                  VASP
                 </chakra.dd>
               </GridItem>
               <GridItem ml={4} colSpan={2} bg={'#eee'} mt={5} p={2}>
@@ -127,7 +128,7 @@ export default function VaspVerification() {
                   Need to Learn More?
                 </chakra.dt>
                 <chakra.dd mt={2}>
-                  <UnorderedList>
+                  <UnorderedList color={'#1F4CED'}>
                     <ListItem>
                       <Link>How TRISA Works</Link>
                     </ListItem>
@@ -153,7 +154,7 @@ export default function VaspVerification() {
                 Download PDF
               </Button>
             </Box> */}
-            <Box>
+            <Box pb={10}>
               <Button
                 bg={colors.system.blue}
                 px={8}

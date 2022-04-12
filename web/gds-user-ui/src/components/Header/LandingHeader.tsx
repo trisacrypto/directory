@@ -36,7 +36,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               </Link>
             </Box>
             <HStack>
-              <MenuItem to="/#about">About Trisa </MenuItem>
+              <MenuItem to="/#about">About TRISA </MenuItem>
               {/* <MenuItem to="/about">About Us</MenuItem> */}
               <MenuItem to="https://trisa.dev">Documentation </MenuItem>
               {/* <MenuItem to="/login" isLast>

@@ -33,9 +33,12 @@ const Certificate: React.FC = () => {
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
+
+  const resolver = yupResolver(getCurrentStepValidationSchema());
+
   const methods = useForm({
     defaultValues: loadDefaultValueFromLocalStorage(),
-    resolver: yupResolver(getCurrentStepValidationSchema()),
+    resolver,
     mode: 'onChange'
   });
 
