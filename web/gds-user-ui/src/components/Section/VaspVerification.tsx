@@ -167,7 +167,7 @@ export default function VaspVerification() {
                 _focus={{
                   borderColor: 'transparent'
                 }}>
-                Getting Started
+                Start Registration Process
               </Button>
             </Box>
           </Stack>

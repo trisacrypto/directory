@@ -52,7 +52,7 @@ export const getRegistrationDefaultValue = () => {
     website: '',
     business_category: '',
     vasp_categories: [],
-    established_on: '',
+    established_on: undefined,
     organization_name: '',
     trixo: {
       primary_national_jurisdiction: '',

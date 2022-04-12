@@ -1,27 +1,12 @@
 import * as yup from 'yup';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
-// yup.addMethod(yup.array, 'tuple', function (schema) {
-//   if (!this.isType(schema)) yup.ValidationError();
-//   return yup
-//     .object({
-//       tuple: yup.array().min(schema.length).max(schema.length),
-//       ...Object.fromEntries(Object.entries(schema))
-//     })
-//     .transform((value, originalValue) => {
-//       if (!this.isType(originalValue)) yup.ValidationError();
-//       return {
-//         tuple: originalValue,
-//         ...Object.fromEntries(Object.entries(originalValue))
-//       };
-//     });
-// });
+
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().url().trim().required(),
     established_on: yup
       .date()
-      .nullable(true)
       .test('is-invalidate-date', 'Invalid date / year must be 4 digit ', (value) => {
         if (value) {
           const getYear = value.getFullYear();
@@ -31,9 +16,10 @@ export const validationSchema = [
             return true;
           }
         }
-        return false;
-      }),
-    organization_name: yup.string().trim().required(),
+        return true;
+      })
+      .notRequired(),
+    organization_name: yup.string().trim().required('Organization name is required'),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
@@ -42,7 +28,7 @@ export const validationSchema = [
       name: yup.object().shape({
         name_identifiers: yup.array().of(
           yup.object().shape({
-            legal_person_name: yup.string().default(''),
+            legal_person_name: yup.string(),
             legal_person_name_identifier_type: yup.string()
           })
         ),
@@ -62,10 +48,7 @@ export const validationSchema = [
       geographic_addresses: yup.array().of(
         yup.object().shape({
           address_type: yup.string().required(),
-          address_line: yup
-            .array()
-            .tuple([yup.number(), yup.string(), yup.boolean()])
-            .default(['', '', false]),
+          address_line: yup.array().of(yup.string().required()),
           country: yup.string().required()
         })
       ),
@@ -111,11 +94,21 @@ export const validationSchema = [
     trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      common_name: yup
+        .string()
+        .matches(
+          /^([A-Za-z0-9\s.]+)$/,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      common_name: yup
+        .string()
+        .matches(
+          /^([A-Za-z0-9\s.]+)$/,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     })
   }),
   yup.object().shape({

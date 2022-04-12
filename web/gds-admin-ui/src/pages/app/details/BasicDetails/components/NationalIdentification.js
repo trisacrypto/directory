@@ -7,19 +7,19 @@ import PropTypes from 'prop-types';
 
 
 function getDataFormatted(data) {
-    const issued_country_emoji = data?.national_identification?.country_of_issue ? formatDisplayedData(countryCodeEmoji(data.national_identification.country_of_issue)) : 'N/A';
-    const issued_country_code = formatDisplayedData(data?.national_identification?.country_of_issue);
+    const issued_country_emoji = data?.country_of_registration ? formatDisplayedData(countryCodeEmoji(data.country_of_registration)) : 'N/A';
+    const issued_country_code = formatDisplayedData(data?.country_of_registration);
     const issued_authority = formatDisplayedData(data?.national_identification?.registration_authority);
     const nat_ident_type = data?.national_identification?.national_identifier_type ? formatDisplayedData(NATIONAL_IDENTIFIER_TYPE[data.national_identification.national_identifier_type]) : 'N/A';
     const leix = formatDisplayedData(data?.national_identification?.national_identifier)
-    const country_of_issue = data?.national_identification?.country_of_issue ? formatDisplayedData(isoCountries[data.national_identification.country_of_issue]) : 'N/A';
+    const country_of_registration = data?.country_of_registration ? formatDisplayedData(isoCountries[data.country_of_registration]) : 'N/A';
     const customer_number = formatDisplayedData(data?.customer_number);
     return {
         issued_country_emoji,
         issued_country_code,
         issued_authority,
         nat_ident_type,
-        country_of_issue,
+        country_of_registration,
         leix,
         customer_number
     };
@@ -53,7 +53,7 @@ function NationalIdentification({ data }) {
                     <p className="mb-2 fw-bold">
                         Country of registration:{' '}
                         <span className="fw-normal">
-                            {getDataFormatted(data).country_of_issue}
+                            {getDataFormatted(data).country_of_registration}
                         </span>
                     </p>
                     <p className="mb-2 fw-bold">
