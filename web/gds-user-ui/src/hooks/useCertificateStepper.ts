@@ -10,7 +10,7 @@ import {
 } from 'application/store/stepper.slice';
 import { setStepperFromLocalStorage, addStepToLocalStorage } from 'utils/localStorageHelper';
 import { findStepKey } from 'utils/utils';
-import { LSTATUS } from 'components/testnetProgress/CertificateStepLabel';
+import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
 
 interface TState {

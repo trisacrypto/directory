@@ -107,3 +107,13 @@ export const mapStepsDataToFormRequest = (steps: any) => {
 export const getValueByPathname = (obj: Record<string, any>, path: string) => {
   return _.get(obj, path);
 };
+
+export const getDomain = (url: string | URL) => {
+  try {
+    const _url = new URL(url);
+    return _url.hostname.replace('www.', '');
+  } catch (error) {
+    console.error('[error]', error);
+    throw new Error('Invalid URL format');
+  }
+};

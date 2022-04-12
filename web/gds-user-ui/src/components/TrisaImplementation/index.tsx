@@ -18,8 +18,16 @@ const TrisaImplementation: React.FC = () => {
           specify the details of your endpoint for certificate issuance.
         </Text>
       </FormLayout>
-      <TrisaImplementationForm name="trisa_endpoint_testnet" headerText="TRISA Endpoint: TestNet" />
-      <TrisaImplementationForm name="trisa_endpoint_mainnet" headerText="TRISA Endpoint: MainNet" />
+      <TrisaImplementationForm
+        type="TestNet"
+        name="trisa_endpoint_testnet"
+        headerText="TRISA Endpoint: TestNet"
+      />
+      <TrisaImplementationForm
+        type="MainNet"
+        name="trisa_endpoint_mainnet"
+        headerText="TRISA Endpoint: MainNet"
+      />
     </Stack>
   );
 };

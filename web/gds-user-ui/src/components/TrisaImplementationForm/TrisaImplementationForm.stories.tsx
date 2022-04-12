@@ -4,6 +4,7 @@ import TrisaImplementationForm from '.';
 type TrisaImplementationFormProps = {
   headerText: string;
   name: string;
+  type: 'TestNet' | 'MainNet';
 };
 
 export default {

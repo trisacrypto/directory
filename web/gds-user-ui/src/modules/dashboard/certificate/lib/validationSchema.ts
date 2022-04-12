@@ -94,11 +94,21 @@ export const validationSchema = [
     trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      common_name: yup
+        .string()
+        .matches(
+          /^([A-Za-z0-9\s.]+)$/,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      common_name: yup
+        .string()
+        .matches(
+          /^([A-Za-z0-9\s.]+)$/,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     })
   }),
   yup.object().shape({

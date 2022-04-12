@@ -1,5 +1,5 @@
 import { setCurrentStep } from 'application/store/stepper.slice';
-import { getRegistrationDefaultValue } from 'modules/dashboard/Certificate/lib';
+import { getRegistrationDefaultValue } from 'modules/dashboard/certificate/lib';
 export type TStep = {
   status: string;
   key?: number;
