@@ -1,5 +1,5 @@
 import { SimpleDashboardLayout } from 'layouts';
-import { Box, Heading, HStack, VStack, useToast } from '@chakra-ui/react';
+import { Box, Heading, HStack, VStack, useToast, Stack, Flex } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
@@ -11,8 +11,9 @@ import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
 import { hasStepError, getStepDatas } from 'utils/utils';
-
+import HomeButton from 'components/ui/HomeButton';
 import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
+import { link } from 'fs';
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
@@ -108,9 +109,15 @@ const Certificate: React.FC = () => {
       <>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <Heading size="lg" mb="24px">
-              Certificate Registration
-            </Heading>
+            <Flex justifyContent={'space-between'}>
+              <Heading size="lg" mb="24px">
+                Certificate Registration
+              </Heading>
+              <Box>
+                <HomeButton link={'/'} />
+              </Box>
+            </Flex>
+
             <VStack spacing={3}>
               <Card maxW="100%" bg={'white'}>
                 <Card.Body>

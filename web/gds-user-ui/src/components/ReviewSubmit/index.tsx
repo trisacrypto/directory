@@ -1,5 +1,6 @@
 import { Button, Heading, VStack, Stack, Text } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
+
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -60,6 +61,22 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             bgColor: '#189fda'
           }}>
           Submit MainNet Registration
+        </Button>
+        <Button
+          bgColor="#555151"
+          color="#fff"
+          as="a"
+          href="/certificate/registration"
+          size="lg"
+          py="2.5rem"
+          whiteSpace="normal"
+          boxShadow="lg"
+          maxW="200px"
+          width="100%"
+          _hover={{
+            bgColor: '#555151'
+          }}>
+          Back to Review Page
         </Button>
       </Stack>
       <Stack spacing={10}>
