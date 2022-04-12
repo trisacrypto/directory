@@ -15,7 +15,6 @@ import { getIvms101RecordInitialValues, getRegistrationAuthorities } from 'utils
 import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
 import * as yup from 'yup'
-import { DevTool } from '@hookform/devtools';
 import { Typeahead } from 'react-bootstrap-typeahead';
 
 
@@ -50,7 +49,6 @@ function Ivms101RecordForm({ data }) {
     const nationalIdentifierType = watch("national_identification.national_identifier_type")
     const isRegistrationAuthorityDisable = React.useCallback(() => nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX", [nationalIdentifierType])
     let _typeahead = React.useRef()
-    console.log('[_typeahead]', _typeahead)
 
     React.useEffect(() => {
         const timeout = setTimeout(() => {
@@ -200,7 +198,6 @@ function Ivms101RecordForm({ data }) {
                         !!errors["national_identification"]?.registration_authority ? <Form.Control.Feedback type="invalid">{errors["national_identification"]?.registration_authority.message}</Form.Control.Feedback> : <Form.Text> If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.</Form.Text>
                     }
                 </FormGroup>
-                <DevTool control={control} />
                 <div className='mt-3 text-end'>
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>
