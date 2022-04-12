@@ -103,7 +103,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
         px={5}
         fontFamily={'Open Sans'}>
         <Box pb={2} display={'flex'} justifyContent={'space-between'}>
-          <Heading fontSize={20}> Progress bar </Heading>
+          <Heading fontSize={20}> Certificate Progress </Heading>
         </Box>
         <Grid templateColumns="repeat(6, 1fr)" gap={2}>
           <Tooltip
