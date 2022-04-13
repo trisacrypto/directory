@@ -47,7 +47,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     console.log('from NameIdentifier', getStepperData.organization_name);
     const getOrganizationName = getStepperData.organization_name;
     setBasicDetailOrganizationName(getOrganizationName);
-  }, [basicDetailOrganizationName]);
+  });
 
   return (
     <Stack align="start" width="100%">
@@ -69,6 +69,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                       value={
                         index === 0 && type && type === 'legal' ? basicDetailOrganizationName : ''
                       }
+                      // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
@@ -80,6 +81,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                         <SelectFormControl
                           controlId={controlId!}
                           name={f.name}
+                          isDisabled={(index === 0 && type && type === 'legal') || false}
                           formatOptionLabel={(data: any) => <>{data.label} Name</>}
                           options={getNameIdentiferTypeOptions()}
                           onChange={(newValue: any) => f.onChange(newValue.value)}

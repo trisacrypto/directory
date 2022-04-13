@@ -22,7 +22,7 @@ export const getRegistrationDefaultValue = () => {
       ],
       national_identification: {
         national_identifier: '',
-        national_identifier_type: null,
+        national_identifier_type: 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX',
         country_of_issue: '',
         registration_authority: ''
       }
@@ -52,7 +52,7 @@ export const getRegistrationDefaultValue = () => {
     website: '',
     business_category: '',
     vasp_categories: [],
-    established_on: undefined,
+    established_on: '',
     organization_name: '',
     trixo: {
       primary_national_jurisdiction: '',

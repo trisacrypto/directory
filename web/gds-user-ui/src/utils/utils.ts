@@ -40,6 +40,6 @@ export const getDomain = (url: string | URL) => {
     return _url?.hostname?.replace('www.', '');
   } catch (error) {
     console.error('[error]', error);
-    throw new Error('Invalid URL format');
+    return null;
   }
 };

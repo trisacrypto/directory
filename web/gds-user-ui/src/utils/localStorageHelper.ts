@@ -119,13 +119,13 @@ export const setStepperFromLocalStorage = ({ step, status, data }: any) => {
   try {
     const getStepper: any = JSON.parse(localStorage.getItem('trs_stepper') || '{}');
     if (getStepper) {
-      if ((step && !status) || !data) {
+      if (step && !status && !data) {
         getStepper.currentStep = step;
       }
       if (step && status) {
+        getStepper.currentStep = step;
         getStepper.steps.map((s: any, index: any) => {
           if (s.key === step) {
-            console.log();
             return (getStepper.steps[index].status = status);
           }
         });
