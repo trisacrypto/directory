@@ -31,10 +31,11 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     getValues
   } = useFormContext();
   const commonName = watch(`${name}.common_name`);
-  const trisaEndpoint = watch(`${name}.trisa_endpoint`);
+  const trisaEndpoint = watch(`${name}.endpoint`);
   const [commonNameWarning, setCommonNameWarning] = React.useState<string | undefined>('');
   React.useEffect(() => {
-    const trisaEndpointUri = trisaEndpoint.split(':')[0];
+    const trisaEndpointUri = trisaEndpoint?.split(':')[0];
+
     const warningMessage =
       trisaEndpointUri === commonName
         ? undefined

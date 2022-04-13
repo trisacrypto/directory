@@ -1,7 +1,9 @@
 import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
+import _ from 'lodash';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
+const commonNameRegex = /^[A-Za-z0-9\s]+\.[A-Za-z0-9\s]+$/;
 
 export const validationSchema = [
   yup.object().shape({
@@ -67,8 +69,8 @@ export const validationSchema = [
         })
       ),
       national_identification: yup.object().shape({
-        national_identifier: yup.string().required(),
-        national_identifier_type: yup.string(),
+        national_identifier: yup.string(),
+        national_identifier_type: yup.string().required('National identification type is required'),
         country_of_issue: yup.string(),
         registration_authority: yup
           .string()
@@ -128,16 +130,25 @@ export const validationSchema = [
       common_name: yup
         .string()
         .matches(
-          /^([A-Za-z0-9\s.]+)$/,
+          commonNameRegex,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+      endpoint: yup
+        .string()
+        .test(
+          'uniqueMainetEndpoint',
+          'TestNet and MainNet endpoints should not be the same',
+          (value, ctx: any): any => {
+            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
+          }
+        )
+        .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup
         .string()
         .matches(
-          /^([A-Za-z0-9\s.]+)$/,
+          commonNameRegex,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     })
