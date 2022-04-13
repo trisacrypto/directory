@@ -30,28 +30,22 @@ export const validationSchema = [
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
   yup.object().shape({
-    entity: yup.object().shape({
-      name: yup.object().shape({
-        name_identifiers: yup.array().of(
-          yup.object().shape({
+    name: yup.object().shape({
+      name_identifiers: yup.array().of(
+        yup
+          .object()
+          .shape({
             legal_person_name: yup.string(),
             legal_person_name_identifier_type: yup.string()
           })
-        ),
-        local_name_identifiers: yup.array().of(
-          yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
+          .when('legal_person_name_identifier_type_defined', {
+            is: (legal_person_name_type: string) => legal_person_name_type.length > 0,
+            then: yup.object().shape({
+              legal_person_name_identifier_type: yup.string().required()
+            })
           })
-        ),
-        phonetic_name_identifiers: yup.array().of(
-          yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
-          })
-        )
-      }),
-      geographic_addresses: yup.array().of(
+      ),
+      local_name_identifiers: yup.array().of(
         yup.object().shape({
           address_type: yup.string().required(),
           address_line: yup.array(),

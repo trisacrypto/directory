@@ -35,7 +35,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       px={5}>
       <Stack width={'100%'}>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Review 1: Basic Details</Heading>
+          <Heading fontSize={24}>Section 1: Basic Details</Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -57,13 +57,13 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td>Date of Incorporation/ Establishmend</Td>
+                <Td>Date of Incorporation/ Establishment</Td>
                 <Td>{basicDetail.established_on}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>VASP Category</Td>
-                <Td>{basicDetail.vasp_categories}</Td>
+                <Td>{basicDetail?.vasp_categories?.join(' ')}</Td>
                 <Td></Td>
               </Tr>
             </Tbody>
