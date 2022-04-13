@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { Heading, Link, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
@@ -5,17 +6,33 @@ import { getCountriesOptions } from 'constants/countries';
 import { getNationalIdentificationOptions } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
+import { getValueByPathname } from 'utils/utils';
 
 interface NationalIdentificationProps {}
 
 const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
-  const { register, control, watch } = useFormContext();
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+    setValue
+  } = useFormContext();
   const nationalIdentificationOptions = getNationalIdentificationOptions();
   const countries = getCountriesOptions();
   const NationalIdentificationType = watch(
     'entity.national_identification.national_identifier_type'
   );
 
+  // eslint-disable-next-line prefer-const
+  let inputRegRef = useRef<any>();
+
+  useEffect(() => {
+    if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
+      setValue('entity.national_identification.registration_authority', '');
+      inputRegRef?.current?.clear();
+    }
+  }, [NationalIdentificationType]);
   return (
     <FormLayout>
       <Heading size="md">National Identification</Heading>
@@ -29,6 +46,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       <InputFormControl
         label="Identification Number"
         controlId="identification_number"
+        isInvalid={!!errors?.entity?.national_identification?.national_identifier}
         formHelperText="An identifier issued by an appropriate issuing authority"
         {...register('entity.national_identification.national_identifier')}
       />
@@ -39,6 +57,20 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
           <SelectFormControl
             ref={field.ref}
             options={nationalIdentificationOptions}
+            isInvalid={
+              !!getValueByPathname(
+                errors,
+                'entity.national_identification.national_identifier_type'
+              )
+            }
+            formHelperText={
+              getValueByPathname(errors, 'entity.national_identification.national_identifier_type')
+                ? getValueByPathname(
+                    errors,
+                    'entity.national_identification.national_identifier_type'
+                  ).message
+                : null
+            }
             value={nationalIdentificationOptions.find((option) => option.value === field.value)}
             onChange={(newValue: any) => field.onChange(newValue.value)}
             label="Identification Type"
@@ -64,6 +96,8 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       <InputFormControl
         label="Registration Authority"
         controlId="registration_authority"
+        inputRef={inputRegRef && undefined}
+        isInvalid={!!errors?.entity?.national_identification?.registration_authority}
         isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && false}
         isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
         formHelperText="If the identifier is an LEI number, enter the ID used in the GLEIF Registration Authorities List."

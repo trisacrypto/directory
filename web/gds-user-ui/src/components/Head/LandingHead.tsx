@@ -52,9 +52,9 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                 minWidth={306}
                 minHeight={65}
                 as="a"
-                href="/#join">
+                href="/certificate/registration">
                 {' '}
-                Why Join TRISA{' '}
+                Start Registration{' '}
               </Button>
               <Button
                 bg={'white'}

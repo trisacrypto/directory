@@ -3,7 +3,7 @@ import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
-import React from 'react';
+import React, { useState, FC, useEffect } from 'react';
 import {
   Control,
   Controller,
@@ -12,6 +12,7 @@ import {
   useFieldArray,
   useFormContext
 } from 'react-hook-form';
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 
 type NameIdentifierProps = {
   name: string;
@@ -20,17 +21,19 @@ type NameIdentifierProps = {
   register?: RegisterOptions;
   control?: Control<FieldValues, any>;
   heading?: string;
+  type?: string;
 };
 
 const NameIdentifier: React.ForwardRefExoticComponent<
   NameIdentifierProps & React.RefAttributes<unknown>
 > = React.forwardRef((props, ref) => {
-  const { name, controlId, description, heading } = props;
   const {
     register,
     control,
     formState: { errors }
   } = useFormContext();
+  const { name, controlId, description, heading, type } = props;
+
   const { fields, remove, append } = useFieldArray({ name, control });
 
   const nameIdentiferTypeOptions = getNameIdentiferTypeOptions();
@@ -42,6 +45,18 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       });
     }
   }));
+
+  const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
+  useEffect(() => {
+    const getStepperData = loadDefaultValueFromLocalStorage();
+    console.log('from NameIdentifier', getStepperData.organization_name);
+    const getOrganizationName = getStepperData.organization_name;
+    setBasicDetailOrganizationName(getOrganizationName);
+  });
+
+  const getLegalNameDefaultValue = (index: number, value: any) => {
+    return index === 0 && type && type === 'legal' ? value : '';
+  };
 
   return (
     <Stack align="start" width="100%">
@@ -62,6 +77,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                       controlId={`${name}[${index}].legal_person_name`}
                       isRequired={index === 0}
                       isInvalid={!!errors[name]?.[index]?.legal_person_name}
+                      value={getLegalNameDefaultValue(index, basicDetailOrganizationName)}
+                      // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
@@ -73,6 +90,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                         <SelectFormControl
                           controlId={controlId!}
                           name={f.name}
+                          isDisabled={(index === 0 && type && type === 'legal') || false}
                           formatOptionLabel={(data: any) => <>{data.label} Name</>}
                           options={getNameIdentiferTypeOptions()}
                           onChange={(newValue: any) => f.onChange(newValue.value)}
@@ -88,7 +106,11 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                 <Box
                   paddingBottom={{ base: 2, md: 0 }}
                   alignSelf={{ base: 'flex-end', md: 'initial' }}>
-                  <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+                  <DeleteButton
+                    onDelete={() => remove(index)}
+                    tooltip={{ label: 'Remove line' }}
+                    isDisabled={index === 0}
+                  />
                 </Box>
               </HStack>
             </React.Fragment>

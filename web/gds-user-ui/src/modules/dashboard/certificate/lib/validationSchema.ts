@@ -1,13 +1,18 @@
+import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
+import _ from 'lodash';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
+const commonNameRegex = /^[A-Za-z0-9\s]+\.[A-Za-z0-9\s]+$/;
 
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().url().trim().required(),
     established_on: yup
       .date()
-      .nullable(true)
+      .nullable()
+      .transform((curr, orig) => (orig === '' ? null : curr))
+      .required('Invalid date')
       .test('is-invalidate-date', 'Invalid date / year must be 4 digit ', (value) => {
         if (value) {
           const getYear = value.getFullYear();
@@ -18,8 +23,9 @@ export const validationSchema = [
           }
         }
         return false;
-      }),
-    organization_name: yup.string().trim().required(),
+      })
+      .notRequired(),
+    organization_name: yup.string().trim().required('Organization name is required'),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
@@ -42,15 +48,42 @@ export const validationSchema = [
       local_name_identifiers: yup.array().of(
         yup.object().shape({
           address_type: yup.string().required(),
-          address_line: yup.array().of(yup.string().required()),
+          address_line: yup.array(),
+          'address_line[0]': yup
+            .string()
+            .test('test-0', 'addresse line 0', (value: any, ctx: any): any => {
+              return ctx && ctx.parent && ctx.parent.address_line[0];
+            }),
+          'address_line[2]': yup
+            .string()
+            .test('test-0', 'addresse line 0', (value: any, ctx: any): any => {
+              return ctx && ctx.parent && ctx.parent.address_line[2];
+            }),
           country: yup.string().required()
         })
       ),
       national_identification: yup.object().shape({
         national_identifier: yup.string(),
-        national_identifier_type: yup.string(),
+        national_identifier_type: yup.string().required('National identification type is required'),
         country_of_issue: yup.string(),
-        registration_authority: yup.string()
+        registration_authority: yup
+          .string()
+          .test(
+            'registrationAuthority',
+            'Registration Authority cannot be left empty',
+            (value, ctx) => {
+              console.log('ctex', ctx.parent.national_identifier_type);
+              console.log('ctex value', typeof value);
+              if (
+                ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
+                !value
+              ) {
+                return false;
+              }
+
+              return true;
+            }
+          )
       })
     })
   }),
@@ -88,11 +121,30 @@ export const validationSchema = [
     trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      common_name: yup
+        .string()
+        .matches(
+          commonNameRegex,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
-      common_name: yup.string()
+      endpoint: yup
+        .string()
+        .test(
+          'uniqueMainetEndpoint',
+          'TestNet and MainNet endpoints should not be the same',
+          (value, ctx: any): any => {
+            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
+          }
+        )
+        .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+      common_name: yup
+        .string()
+        .matches(
+          commonNameRegex,
+          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+        )
     })
   }),
   yup.object().shape({
@@ -111,11 +163,21 @@ export const validationSchema = [
       kyc_threshold: yup.number(),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
-      applicable_regulations: yup.array().of(
-        yup.object().shape({
-          name: yup.string()
-        })
-      ),
+      applicable_regulations: yup
+        .array()
+        .of(
+          yup.object().shape({
+            name: yup.string()
+          })
+        )
+        .transform((value, originalValue) => {
+          if (originalValue) {
+            return originalValue.filter((item: any) => item.name.length > 0);
+          }
+          return value;
+
+          // remove empty items
+        }),
       compliance_threshold: yup.number(),
       compliance_threshold_currency: yup.string(),
       must_safeguard_pii: yup.boolean(),

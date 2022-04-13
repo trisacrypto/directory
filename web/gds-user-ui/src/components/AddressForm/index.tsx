@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Grid, GridItem, VStack, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
@@ -18,8 +19,18 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
   const countries = getCountriesOptions();
   const addressTypes = addressTypeOptions();
   const {
-    formState: { errors }
+    watch,
+    formState: { errors },
+    setValue
   } = useFormContext();
+
+  const getFirstAddressType = watch('entity.geographic_addresses[0].address_type');
+
+  useEffect(() => {
+    if (!getFirstAddressType) {
+      setValue(`entity.geographic_addresses[0].address_type`, 'ADDRESS_TYPE_CODE_BIZZ');
+    }
+  }, [getFirstAddressType]);
 
   return (
     <>
@@ -72,6 +83,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                 <SelectFormControl
                   name={field.name}
                   ref={field.ref}
+                  defaultValue="ADDRESS_TYPE_CODE_BIZZ"
                   isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_type`)}
                   value={addressTypes.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}

@@ -1,5 +1,5 @@
 import { SimpleDashboardLayout } from 'layouts';
-import { Box, Heading, HStack, VStack, useToast } from '@chakra-ui/react';
+import { Box, Heading, HStack, VStack, useToast, Text, Link, Flex } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
@@ -11,14 +11,15 @@ import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
 import { hasStepError, getStepDatas } from 'utils/utils';
-
+import HomeButton from 'components/ui/HomeButton';
 import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
+import { link } from 'fs';
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
 } from 'utils/localStorageHelper';
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
-
+import { colors } from 'utils/theme';
 const Certificate: React.FC = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
@@ -60,6 +61,8 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
+
+  console.log('getCurrentFormValue', getCurrentFormValue());
 
   function handleNextStepClick() {
     if (currentStep === lastStep) {
@@ -108,18 +111,34 @@ const Certificate: React.FC = () => {
       <>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <Heading size="lg" mb="24px">
-              Certificate Registration
-            </Heading>
+            <Flex justifyContent={'space-between'}>
+              <Heading size="lg" mb="24px">
+                Certificate Registration
+              </Heading>
+              <Box>
+                <HomeButton link={'/'} />
+              </Box>
+            </Flex>
+
             <VStack spacing={3}>
               <Card maxW="100%" bg={'white'}>
                 <Card.Body>
-                  This multi-section form is an important step in the registration and certificate
-                  issuance process. The information you provide will be used to verify the legal
-                  entity that you represent and, where appropriate, will be available to verified
-                  TRISA members to facilitate compliance decisions. To assist in completing the
-                  registration form, the form is broken into multiple sections. No information is
-                  sent until you complete Section 6 - Review & Submit.
+                  <Text>
+                    This multi-section form is an important step in the registration and certificate
+                    issuance process. The information you provide will be used to verify the legal
+                    entity that you represent and, where appropriate, will be available to verified
+                    TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
+                    <Link href="/getting-started" color={'blue'} fontWeight={'bold'}>
+                      Getting Started Help Guide.{' '}
+                    </Link>
+                  </Text>
+                  <Text pt={4}>
+                    To assist in completing the registration form, the form is divided into multiple
+                    sections.{' '}
+                    <Text as={'span'} fontWeight={'bold'}>
+                      No information is sent until you complete Section 6 - Review & Submit.{' '}
+                    </Text>
+                  </Text>
                 </Card.Body>
               </Card>
 

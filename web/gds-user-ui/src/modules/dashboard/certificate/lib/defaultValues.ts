@@ -7,7 +7,7 @@ export const getRegistrationDefaultValue = () => {
         name_identifiers: [
           {
             legal_person_name: '',
-            legal_person_name_identifier_type: ''
+            legal_person_name_identifier_type: 'LEGAL_PERSON_NAME_TYPE_CODE_LEGL'
           }
         ],
         local_name_identifiers: [],
@@ -21,8 +21,8 @@ export const getRegistrationDefaultValue = () => {
         }
       ],
       national_identification: {
-        national_identifier: '',
-        national_identifier_type: null,
+        national_identifier: undefined,
+        national_identifier_type: 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX',
         country_of_issue: '',
         registration_authority: ''
       }
@@ -57,21 +57,16 @@ export const getRegistrationDefaultValue = () => {
     trixo: {
       primary_national_jurisdiction: '',
       primary_regulator: '',
-      other_jurisdictions: [
-        {
-          country: '',
-          regulator_name: ''
-        }
-      ],
+      other_jurisdictions: [],
       financial_transfers_permitted: '',
       has_required_regulatory_program: '',
       conducts_customer_kyc: null,
       kyc_threshold: 0,
       kyc_threshold_currency: 'USD',
       must_comply_travel_rule: null,
-      applicable_regulations: [],
-      compliance_threshold: 0,
-      compliance_threshold_currency: '',
+      applicable_regulations: [{ name: 'FATF Recommendation 16' }],
+      compliance_threshold: 3000,
+      compliance_threshold_currency: 'USD',
       must_safeguard_pii: null,
       safeguards_pii: null
     }

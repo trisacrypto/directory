@@ -25,7 +25,11 @@ const Addresses: React.FC<AddressesPropsProps> = () => {
   return (
     <FormLayout>
       <Heading size="md">Addresses</Heading>
-      <Text size="sm">Enter at least one geographic address</Text>
+      <Text size="sm">
+        At least one geographic address is required. Enter the primary geographic address of the the
+        organization. Organizations may enter additional addresses if operating in multiple
+        jurisdictions.
+      </Text>
       <VStack width="100%" align="start" spacing={10}>
         {fields.map((field, index) => {
           return (
@@ -40,12 +44,12 @@ const Addresses: React.FC<AddressesPropsProps> = () => {
                 />
               </Box>
               <Box alignSelf="flex-end" w={10} pb="25.1px">
-                {index ? (
+                {index > 0 && (
                   <DeleteButton
                     onDelete={() => remove(index)}
                     tooltip={{ label: 'Delete the address line' }}
                   />
-                ) : null}
+                )}
               </Box>
             </HStack>
           );

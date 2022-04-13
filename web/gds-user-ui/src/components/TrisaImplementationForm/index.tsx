@@ -4,23 +4,38 @@ import InputFormControl from 'components/ui/InputFormControl';
 import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
+import { getDomain } from 'utils/utils';
+import _ from 'lodash/fp';
 
 type TrisaImplementationFormProps = {
   headerText: string;
   name: string;
+  type: 'TestNet' | 'MainNet';
 };
 
-const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({ headerText, name }) => {
+const env = {
+  TestNet: 'testnet',
+  MainNet: 'trisa'
+};
+
+const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
+  headerText,
+  name,
+  type
+}) => {
   const {
     register,
     formState: { errors },
-    watch
+    watch,
+    setError,
+    getValues
   } = useFormContext();
   const commonName = watch(`${name}.common_name`);
-  const trisaEndpoint = watch(`${name}.trisa_endpoint`);
+  const trisaEndpoint = watch(`${name}.endpoint`);
   const [commonNameWarning, setCommonNameWarning] = React.useState<string | undefined>('');
   React.useEffect(() => {
-    const trisaEndpointUri = trisaEndpoint.split(':')[0];
+    const trisaEndpointUri = trisaEndpoint?.split(':')[0];
+
     const warningMessage =
       trisaEndpointUri === commonName
         ? undefined
@@ -28,12 +43,29 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({ heade
     setCommonNameWarning(warningMessage);
   }, [commonName, trisaEndpoint]);
 
+  const getCommonNameFormHelperText = () => {
+    if (errors[name]?.common_name) {
+      return errors[name]?.common_name.message;
+    }
+    if (commonNameWarning) {
+      return (
+        <Text color="yellow.500">
+          <WarningIcon /> {commonNameWarning}
+        </Text>
+      );
+    }
+
+    return 'The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.';
+  };
+
+  const domain = getValues('website') && getDomain(getValues('website'));
+
   return (
     <FormLayout>
       <Heading size="md">{headerText}</Heading>
       <InputFormControl
         label="TRISA Endpoint"
-        placeholder="trisa.example.com:443"
+        placeholder={`${env[type]}.${domain}:443`}
         formHelperText={
           errors[name]?.endpoint
             ? errors[name]?.endpoint?.message
@@ -46,17 +78,9 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({ heade
 
       <InputFormControl
         label="Certificate Common Name"
-        placeholder="trisa.example.com"
+        placeholder={`${env[type]}.${domain}`}
         isInvalid={!!errors[name]?.common_name}
-        formHelperText={
-          commonNameWarning ? (
-            <Text color="yellow.500">
-              <WarningIcon /> {commonNameWarning}
-            </Text>
-          ) : (
-            'The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.'
-          )
-        }
+        formHelperText={getCommonNameFormHelperText()}
         controlId="certificateCommonName"
         {...register(`${name}.common_name`)}
       />
