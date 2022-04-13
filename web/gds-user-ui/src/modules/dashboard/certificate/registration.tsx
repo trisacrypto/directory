@@ -62,6 +62,8 @@ const Certificate: React.FC = () => {
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
 
+  console.log('getCurrentFormValue', getCurrentFormValue());
+
   function handleNextStepClick() {
     if (currentStep === lastStep) {
       if (hasStepError(steps)) {

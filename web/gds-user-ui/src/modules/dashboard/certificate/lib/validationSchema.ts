@@ -158,11 +158,21 @@ export const validationSchema = [
       kyc_threshold: yup.number(),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
-      applicable_regulations: yup.array().of(
-        yup.object().shape({
-          name: yup.string()
-        })
-      ),
+      applicable_regulations: yup
+        .array()
+        .of(
+          yup.object().shape({
+            name: yup.string()
+          })
+        )
+        .transform((value, originalValue) => {
+          if (originalValue) {
+            return originalValue.filter((item: any) => item.name.length > 0);
+          }
+          return value;
+
+          // remove empty items
+        }),
       compliance_threshold: yup.number(),
       compliance_threshold_currency: yup.string(),
       must_safeguard_pii: yup.boolean(),
