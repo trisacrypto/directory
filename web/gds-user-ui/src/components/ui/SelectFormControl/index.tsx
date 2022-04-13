@@ -14,12 +14,24 @@ interface _FormControlProps extends Props {
   label?: string;
   name?: string;
   placeholder?: string;
+  isDisabled?: boolean;
   options?: OptionsOrGroups<unknown, GroupBase<unknown>>;
 }
 
 const SelectFormControl = React.forwardRef<any, _FormControlProps>(
   (
-    { label, formHelperText, controlId, placeholder, name, options, isMulti, isInvalid, ...rest },
+    {
+      label,
+      formHelperText,
+      controlId,
+      placeholder,
+      name,
+      isDisabled,
+      options,
+      isMulti,
+      isInvalid,
+      ...rest
+    },
     ref
   ) => {
     const bgColorMode = useColorModeValue('#E3EBEF', undefined);
@@ -40,6 +52,7 @@ const SelectFormControl = React.forwardRef<any, _FormControlProps>(
           placeholder={placeholder}
           chakraStyles={chakraStyles}
           options={options}
+          isDisabled={isDisabled}
           isMulti={isMulti as any}
           {...rest}
           ref={ref}

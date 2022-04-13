@@ -1,7 +1,7 @@
+import React, { useState, FC, useEffect } from 'react';
 import { HStack } from '@chakra-ui/react';
 import Button from 'components/ui/FormButton';
 import FormLayout from 'layouts/FormLayout';
-import React from 'react';
 import NameIdentifier from '../NameIdentifier';
 
 const NameIdentifiers: React.FC = () => {
@@ -26,7 +26,8 @@ const NameIdentifiers: React.FC = () => {
       <NameIdentifier
         name="entity.name.name_identifiers"
         heading="Name identifiers"
-        description="The name and type of name by which the legal person is known."
+        type={'legal'}
+        description="Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetics names where appropriate."
         ref={nameIdentifiersFieldArrayRef}
       />
 

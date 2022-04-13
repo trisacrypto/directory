@@ -57,7 +57,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     return 'The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.';
   };
 
-  const domain = getDomain(getValues('website'));
+  const domain = getValues('website') && getDomain(getValues('website'));
 
   return (
     <FormLayout>
