@@ -49,6 +49,10 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     setBasicDetailOrganizationName(getOrganizationName);
   });
 
+  const getLegalNameDefaultValue = (index: number, value: any) => {
+    return index === 0 && type && type === 'legal' ? value : '';
+  };
+
   return (
     <Stack align="start" width="100%">
       {fields &&
@@ -66,9 +70,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      value={
-                        index === 0 && type && type === 'legal' ? basicDetailOrganizationName : ''
-                      }
+                      value={getLegalNameDefaultValue(index, basicDetailOrganizationName)}
                       // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
@@ -99,7 +101,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <DeleteButton
                     onDelete={() => remove(index)}
                     tooltip={{ label: 'Remove line' }}
-                    isDisabled={index > 0}
+                    isDisabled={index === 0}
                   />
                 </Box>
               </HStack>

@@ -24,6 +24,7 @@ interface _FormControlProps extends FormControlProps {
   hasBtn?: boolean;
   value?: string;
   setBtnName?: string;
+  inputRef?: React.RefObject<HTMLInputElement>;
 
   handleFn?: () => void;
 }
@@ -40,6 +41,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
       type = 'text',
       hasBtn,
       value,
+      inputRef,
       setBtnName,
       handleFn,
       onChange,
@@ -62,7 +64,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
             borderRadius={0}
             type={type}
             value={value}
-            ref={ref}
+            ref={inputRef || ref}
             onChange={onChange}
             isDisabled={isDisabled}
             isRequired={isRequired}

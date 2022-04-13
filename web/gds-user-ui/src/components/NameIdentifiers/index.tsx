@@ -27,7 +27,7 @@ const NameIdentifiers: React.FC = () => {
         name="entity.name.name_identifiers"
         heading="Name identifiers"
         type={'legal'}
-        description="The name and type of name by which the legal person is known."
+        description="Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetics names where appropriate."
         ref={nameIdentifiersFieldArrayRef}
       />
 

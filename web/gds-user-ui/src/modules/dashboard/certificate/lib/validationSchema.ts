@@ -1,3 +1,4 @@
+import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
@@ -66,10 +67,27 @@ export const validationSchema = [
         })
       ),
       national_identification: yup.object().shape({
-        national_identifier: yup.string(),
+        national_identifier: yup.string().required(),
         national_identifier_type: yup.string(),
         country_of_issue: yup.string(),
-        registration_authority: yup.string()
+        registration_authority: yup
+          .string()
+          .test(
+            'registrationAuthority',
+            'Registration Authority cannot be left empty',
+            (value, ctx) => {
+              console.log('ctex', ctx.parent.national_identifier_type);
+              console.log('ctex value', typeof value);
+              if (
+                ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
+                !value
+              ) {
+                return false;
+              }
+
+              return true;
+            }
+          )
       })
     })
   }),

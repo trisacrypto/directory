@@ -14,7 +14,7 @@ const DeleteButton: React.FC<DeleteButtonProps> = ({ tooltip, onDelete, isDisabl
     <Tooltip label="Delete" openDelay={TOOLTIPS_DELAY} {...tooltip}>
       <Button
         onClick={onDelete}
-        visibility={isDisabled ? 'visible' : 'hidden'}
+        visibility={isDisabled ? 'hidden' : 'visible'}
         variant="ghost"
         _hover={{ background: 'red.100', color: 'red.500' }}
         _focus={{ background: 'red.100', color: 'red.500' }}
