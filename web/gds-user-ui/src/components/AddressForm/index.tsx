@@ -83,6 +83,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                 <SelectFormControl
                   name={field.name}
                   ref={field.ref}
+                  defaultValue="ADDRESS_TYPE_CODE_BIZZ"
                   isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_type`)}
                   value={addressTypes.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}

@@ -6,6 +6,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { getNationalIdentificationOptions } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
+import { getValueByPathname } from 'utils/utils';
 
 interface NationalIdentificationProps {}
 
@@ -56,6 +57,20 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
           <SelectFormControl
             ref={field.ref}
             options={nationalIdentificationOptions}
+            isInvalid={
+              !!getValueByPathname(
+                errors,
+                'entity.national_identification.national_identifier_type'
+              )
+            }
+            formHelperText={
+              getValueByPathname(errors, 'entity.national_identification.national_identifier_type')
+                ? getValueByPathname(
+                    errors,
+                    'entity.national_identification.national_identifier_type'
+                  ).message
+                : null
+            }
             value={nationalIdentificationOptions.find((option) => option.value === field.value)}
             onChange={(newValue: any) => field.onChange(newValue.value)}
             label="Identification Type"
