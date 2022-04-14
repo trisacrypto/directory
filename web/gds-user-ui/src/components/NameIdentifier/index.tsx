@@ -53,7 +53,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const getOrganizationName = getStepperData.organization_name;
-    setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
+    setBasicDetailOrganizationName(getOrganizationName);
   });
 
   const getLegalNameDefaultValue = (index: number, value: any) => {
