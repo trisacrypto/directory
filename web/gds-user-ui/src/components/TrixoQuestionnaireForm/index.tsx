@@ -16,13 +16,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
   const currencies = getCurrenciesOptions();
   const getHasRequiredRegulatoryProgram = watch('trixo.has_required_regulatory_program');
-  const getMustComplyRegulations = getValues('trixo.must_comply_travel_rule');
+  const getMustComplyRegulations = watch('trixo.must_comply_travel_rule');
 
   console.log('getMustComplyRegulations', getMustComplyRegulations);
   console.log('getHasRequiredRegulatoryProgram', getHasRequiredRegulatoryProgram);
   const getCountryFromLegalAddress = getValues('entity.geographic_addresses[0].country');
+  console.log('getCountryFromLegalAddress', getCountryFromLegalAddress);
   useEffect(() => {
-    if (!getCountryFromLegalAddress) {
+    if (getCountryFromLegalAddress) {
       setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
     }
   }, [getCountryFromLegalAddress]);

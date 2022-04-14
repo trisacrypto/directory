@@ -53,12 +53,14 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const getOrganizationName = getStepperData.organization_name;
-    setBasicDetailOrganizationName(getOrganizationName);
-  });
+    // setBasicDetailOrganizationName(getOrganizationName);
+    if (currentStep === 2) {
+      setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
+    }
+  }, [currentStep]);
 
   const getLegalNameDefaultValue = (index: number, value: any) => {
-    if (type && type === 'legal' && currentStep === 1) {
-      setValue(`entity.name.name_identifiers[0].legal_person_name`, value);
+    if (type && type === 'legal') {
     }
   };
 
@@ -79,9 +81,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      onValueChange={
-                        index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
-                      }
+                      // onValueChange={
+                      //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
+                      // }
                       // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />

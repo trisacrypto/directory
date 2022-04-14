@@ -53,6 +53,7 @@ const Certificate: React.FC = () => {
   }
 
   function getCurrentFormValue() {
+    console.log('current', current);
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
@@ -61,8 +62,6 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
-
-  console.log('getCurrentFormValue', getCurrentFormValue());
 
   function handleNextStepClick() {
     if (currentStep === lastStep) {
