@@ -2,7 +2,9 @@ import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
-const commonNameRegex = /^[A-Za-z0-9\s]+\.[A-Za-z0-9\s]+$/;
+const commonNameRegex =
+  /^([a-z0-9]+([-a-z0-9]*[a-z0-9]+)?\.){0,}([a-z0-9]+([-a-z0-9]*[a-z0-9]+)?){1,63}(\.[a-z0-9]{2,7})+$/;
+
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().url().trim().required(),
