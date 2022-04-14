@@ -1,7 +1,7 @@
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, HStack, VStack, useToast, Text, Link, Flex } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
-import TestNetCertificateProgressBar from 'components/testnetProgress/TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
@@ -49,7 +49,7 @@ const Certificate: React.FC = () => {
 
   function isFormCompleted() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
-    return fieldsNames.every((n) => getFieldValue(n).toString());
+    return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
 
   function getCurrentFormValue() {

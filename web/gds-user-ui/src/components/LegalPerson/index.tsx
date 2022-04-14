@@ -5,17 +5,23 @@ import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
 import NationalIdentification from '../NameIdentification';
 import Address from 'components/Addresses';
+import { useSelector } from 'react-redux';
+import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
+import { getStepStatus } from 'utils/utils';
+import { SectionStatus } from 'components/SectionStatus';
 
 type LegalPersonProps = {};
 
 const LegalPerson: React.FC<LegalPersonProps> = () => {
+  const steps = useSelector(getSteps);
+  const currentStep = useSelector(getCurrentStep);
+  const stepStatus = getStepStatus(steps, currentStep);
+
   return (
     <Stack spacing={7} mt="2rem">
       <HStack>
         <Heading size="md">Section 2: Legal Person</Heading>
-        <Box>
-          <Icon as={InfoIcon} color="#F29C36" w={7} h={7} /> (not saved)
-        </Box>
+        {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
       <FormLayout>
         <Text>

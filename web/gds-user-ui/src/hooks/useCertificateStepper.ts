@@ -1,3 +1,5 @@
+import { getSteps, getLastStep } from './../application/store/selectors/stepper';
+import { getCurrentStep } from 'application/store/selectors/stepper';
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
@@ -10,7 +12,7 @@ import {
 } from 'application/store/stepper.slice';
 import { setStepperFromLocalStorage, addStepToLocalStorage } from 'utils/localStorageHelper';
 import { findStepKey } from 'utils/utils';
-import { LSTATUS } from 'components/testnetProgress/CertificateStepLabel';
+import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
 
 interface TState {
@@ -22,12 +24,12 @@ interface TState {
   formValues?: any;
 }
 
-// 'todo' this hook should be improve
+// 'TODO:' this hook should be improve
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
-  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
+  const currentStep: number = useSelector(getCurrentStep);
+  const steps: TStep[] = useSelector(getSteps);
+  const lastStep: number = useSelector(getLastStep);
 
   const nextStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
