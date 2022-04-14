@@ -6,7 +6,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { getNationalIdentificationOptions } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
-import { getValueByPathname } from 'utils/utils';
+import { getRegistrationAuthoritiesOptions, getValueByPathname } from 'utils/utils';
 
 interface NationalIdentificationProps {}
 
@@ -16,10 +16,12 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
     control,
     watch,
     formState: { errors },
-    setValue
+    setValue,
+    clearErrors
   } = useFormContext();
   const nationalIdentificationOptions = getNationalIdentificationOptions();
   const countries = getCountriesOptions();
+  const registrationAuthority = getRegistrationAuthoritiesOptions();
   const NationalIdentificationType = watch(
     'entity.national_identification.national_identifier_type'
   );
@@ -30,6 +32,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
   useEffect(() => {
     if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
       setValue('entity.national_identification.registration_authority', '');
+      clearErrors('entity.national_identification.registration_authority');
       inputRegRef?.current?.clear();
     }
   }, [NationalIdentificationType]);
@@ -79,21 +82,46 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
         )}
       />
 
-      {/* <Controller
+      {NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && (
+        <Controller
+          control={control}
+          name="entity.national_identification.country_of_issue"
+          shouldUnregister
+          render={({ field }) => (
+            <SelectFormControl
+              ref={field.ref}
+              options={countries}
+              value={countries.find((option) => option.value === field.value)}
+              onChange={(newValue: any) => field.onChange(newValue.value)}
+              label="Country of Issue"
+              controlId="country_of_issue"
+            />
+          )}
+        />
+      )}
+
+      <Controller
         control={control}
-        name="entity.national_identification.country_of_issue"
+        name="entity.national_identification.registration_authority"
         render={({ field }) => (
           <SelectFormControl
             ref={field.ref}
-            options={countries}
-            value={countries.find((option) => option.value === field.value)}
+            options={registrationAuthority}
+            value={registrationAuthority.find((option) => option.value === field.value)}
             onChange={(newValue: any) => field.onChange(newValue.value)}
-            label="Country of Issue"
-            controlId="country_of_issue"
+            label="Registration Authority"
+            controlId="registration_authority"
+            isInvalid={!!errors?.entity?.national_identification?.registration_authority}
+            isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+            formHelperText={
+              errors?.entity?.national_identification?.registration_authority?.message ||
+              'If the identifier is an LEI number, enter the ID used in the GLEIF Registration Authorities List.'
+            }
           />
         )}
-      /> */}
-      <InputFormControl
+      />
+
+      {/* <InputFormControl
         label="Registration Authority"
         controlId="registration_authority"
         inputRef={inputRegRef && undefined}
@@ -102,7 +130,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
         isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
         formHelperText="If the identifier is an LEI number, enter the ID used in the GLEIF Registration Authorities List."
         {...register('entity.national_identification.registration_authority')}
-      />
+      /> */}
     </FormLayout>
   );
 };
