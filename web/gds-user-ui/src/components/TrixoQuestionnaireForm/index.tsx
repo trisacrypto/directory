@@ -27,13 +27,6 @@ const TrixoQuestionnaireForm: React.FC = () => {
     }
   }, [getCountryFromLegalAddress]);
 
-  const getCountryFromLegalAddress = getValues('entity.geographic_addresses[0].country');
-  useEffect(() => {
-    if (getCountryFromLegalAddress) {
-      setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
-    }
-  }, [getCountryFromLegalAddress]);
-
   return (
     <FormLayout spacing={4}>
       <Controller
