@@ -36,6 +36,7 @@ const useCertificateStepper = () => {
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
     }
+    // only for status update
     if (state?.isFormCompleted || !state?.errors) {
       console.log('nextStep 1');
       setStepperFromLocalStorage({ step: currentStep, status: LSTATUS.COMPLETE });
@@ -96,9 +97,9 @@ const useCertificateStepper = () => {
   };
   const previousStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
-    // if (state?.formValues) {
-    //   dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
-    // }
+    if (state?.formValues) {
+      dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
+    }
     // do not allow to go back to the first step
     const step = currentStep;
     if (currentStep === 1) {
@@ -108,7 +109,8 @@ const useCertificateStepper = () => {
     dispatch(setCurrentStep({ currentStep: step - 1 }));
     // if the current status is already completed, do not change the status
     const found = findStepKey(steps, currentStep);
-    if (found[0].status !== LSTATUS.COMPLETE) {
+    console.log('found previous', found);
+    if (found.length > 0 && found[0].status !== LSTATUS.COMPLETE) {
       dispatch(setStepStatus({ step, status: LSTATUS.INCOMPLETE }));
     }
   };

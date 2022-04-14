@@ -32,6 +32,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     register,
     control,
     formState: { errors },
+    watch,
     setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
@@ -47,22 +48,13 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       });
     }
   }));
-
+  const getOrganizationName = watch('organization_name');
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const getOrganizationName = getStepperData.organization_name;
-    // setBasicDetailOrganizationName(getOrganizationName);
     if (currentStep === 2) {
       setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
     }
-  }, [currentStep]);
-
-  const getLegalNameDefaultValue = (index: number, value: any) => {
-    if (type && type === 'legal') {
-    }
-  };
+  }, [getOrganizationName]);
 
   return (
     <Stack align="start" width="100%">

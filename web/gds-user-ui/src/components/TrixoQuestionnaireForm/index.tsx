@@ -20,7 +20,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
   console.log('getMustComplyRegulations', getMustComplyRegulations);
   console.log('getHasRequiredRegulatoryProgram', getHasRequiredRegulatoryProgram);
-  const getCountryFromLegalAddress = getValues('entity.geographic_addresses[0].country');
+  const getCountryFromLegalAddress = watch('entity.country_of_registration');
   console.log('getCountryFromLegalAddress', getCountryFromLegalAddress);
   useEffect(() => {
     if (getCountryFromLegalAddress) {
