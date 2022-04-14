@@ -131,25 +131,16 @@ export const validationSchema = [
       common_name: yup
         .string()
         .matches(
-          commonNameRegex,
+          /^([A-Za-z0-9\s.]+)$/,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup
-        .string()
-        .test(
-          'uniqueMainetEndpoint',
-          'TestNet and MainNet endpoints should not be the same',
-          (value, ctx: any): any => {
-            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
-          }
-        )
-        .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup
         .string()
         .matches(
-          commonNameRegex,
+          /^([A-Za-z0-9\s.]+)$/,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     })
