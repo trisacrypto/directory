@@ -30,7 +30,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   const {
     register,
     control,
-    formState: { errors }
+    formState: { errors },
+    setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
 
@@ -49,14 +50,13 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
-    console.log('from NameIdentifier', getStepperData.organization_name);
     const getOrganizationName = getStepperData.organization_name;
-    setBasicDetailOrganizationName(getOrganizationName);
+    setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
   });
 
-  const getLegalNameDefaultValue = (index: number, value: any) => {
-    return index === 0 && type && type === 'legal' ? value : '';
-  };
+  // const getLegalNameDefaultValue = (index: number, value: any) => {
+  //   return index === 0 && type && type === 'legal' ? value : '';
+  // };
 
   return (
     <Stack align="start" width="100%">
@@ -77,7 +77,6 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                       controlId={`${name}[${index}].legal_person_name`}
                       isRequired={index === 0}
                       isInvalid={!!errors[name]?.[index]?.legal_person_name}
-                      value={getLegalNameDefaultValue(index, basicDetailOrganizationName)}
                       // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
