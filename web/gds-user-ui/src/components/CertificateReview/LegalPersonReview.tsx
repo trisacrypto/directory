@@ -111,7 +111,6 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
 
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
-    console.log('[getStepperData]', getStepperData);
     const stepData = {
       ...getStepperData.entity
     };
