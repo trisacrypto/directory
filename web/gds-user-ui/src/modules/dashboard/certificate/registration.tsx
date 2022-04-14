@@ -49,7 +49,7 @@ const Certificate: React.FC = () => {
 
   function isFormCompleted() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
-    return fieldsNames.every((n) => getFieldValue(n).toString());
+    return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
 
   function getCurrentFormValue() {

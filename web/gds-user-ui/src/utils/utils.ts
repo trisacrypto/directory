@@ -17,6 +17,14 @@ export const getStepData = (steps: any, key: number): TStep | undefined => {
   return undefined;
 };
 
+export const getStepStatus = (steps: any, key: number): StepStatus | undefined => {
+  const s = findStepKey(steps, key);
+  if (s && s?.length === 1) {
+    return s[0].status;
+  }
+  return undefined;
+};
+
 export const hasStepError = (steps: any): boolean => {
   const s = steps.filter((step: any) => step.status === 'error');
   return s.length > 0;

@@ -1,16 +1,22 @@
 import { InfoIcon } from '@chakra-ui/icons';
 import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
+import { SectionStatus } from 'components/SectionStatus';
 import TrixoQuestionnaireForm from 'components/TrixoQuestionnaireForm';
 import FormLayout from 'layouts/FormLayout';
+import { useSelector } from 'react-redux';
+import { getStepStatus } from 'utils/utils';
 
 const TrixoQuestionnaire: React.FC = () => {
+  const steps = useSelector(getSteps);
+  const currentStep = useSelector(getCurrentStep);
+  const stepStatus = getStepStatus(steps, currentStep);
+
   return (
     <Stack spacing={4} mt="2rem">
       <HStack>
         <Heading size="md">Section 5: TRIXO Questionnaire</Heading>
-        <Box>
-          <Icon as={InfoIcon} color="#F29C36" w={7} h={7} /> (not saved)
-        </Box>
+        {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
       <FormLayout>
         <Text>
