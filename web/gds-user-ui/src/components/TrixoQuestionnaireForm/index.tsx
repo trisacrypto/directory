@@ -8,12 +8,20 @@ import { getCountriesOptions } from 'constants/countries';
 import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'constants/trixo';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
+import { useEffect } from 'react';
 
 const TrixoQuestionnaireForm: React.FC = () => {
-  const { register, control } = useFormContext();
+  const { register, control, getValues, setValue, watch } = useFormContext();
   const countries = getCountriesOptions();
   const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
   const currencies = getCurrenciesOptions();
+
+  const getCountryFromLegalAddress = getValues('entity.geographic_addresses[0].country');
+  useEffect(() => {
+    if (getCountryFromLegalAddress) {
+      setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
+    }
+  }, [getCountryFromLegalAddress]);
 
   return (
     <FormLayout spacing={4}>

@@ -13,7 +13,8 @@ import {
   useFormContext
 } from 'react-hook-form';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
-
+import { RootStateOrAny, useSelector } from 'react-redux';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 type NameIdentifierProps = {
   name: string;
   description: string;
@@ -47,16 +48,19 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
+  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const getOrganizationName = getStepperData.organization_name;
-    setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
+    setBasicDetailOrganizationName(getOrganizationName);
   });
 
-  // const getLegalNameDefaultValue = (index: number, value: any) => {
-  //   return index === 0 && type && type === 'legal' ? value : '';
-  // };
+  const getLegalNameDefaultValue = (index: number, value: any) => {
+    if (type && type === 'legal' && currentStep === 1) {
+      setValue(`entity.name.name_identifiers[0].legal_person_name`, value);
+    }
+  };
 
   return (
     <Stack align="start" width="100%">
@@ -75,8 +79,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      isRequired={index === 0}
-                      isInvalid={!!errors[name]?.[index]?.legal_person_name}
+                      onValueChange={
+                        index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
+                      }
                       // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />

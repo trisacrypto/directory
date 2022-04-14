@@ -2,7 +2,7 @@ import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
-
+const commonNameRegex = /^[A-Za-z0-9\s]+\.[A-Za-z0-9\s]+$/;
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().url().trim().required(),
@@ -22,7 +22,7 @@ export const validationSchema = [
         }
         return false;
       })
-      .notRequired(),
+      .required(),
     organization_name: yup.string().trim().required('Organization name is required'),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
@@ -128,16 +128,25 @@ export const validationSchema = [
       common_name: yup
         .string()
         .matches(
-          /^([A-Za-z0-9\s.]+)$/,
+          commonNameRegex,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+      endpoint: yup
+        .string()
+        .test(
+          'uniqueMainetEndpoint',
+          'TestNet and MainNet endpoints should not be the same',
+          (value, ctx: any): any => {
+            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
+          }
+        )
+        .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
       common_name: yup
         .string()
         .matches(
-          /^([A-Za-z0-9\s.]+)$/,
+          commonNameRegex,
           'Common name should not contain special characters, no spaces and must have a dot(.) in it'
         )
     })
@@ -154,7 +163,7 @@ export const validationSchema = [
       ),
       financial_transfers_permitted: yup.string(),
       has_required_regulatory_program: yup.string(),
-      conducts_customer_kyc: yup.boolean(),
+      conducts_customer_kyc: yup.boolean().default(false),
       kyc_threshold: yup.number(),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
@@ -175,8 +184,8 @@ export const validationSchema = [
         }),
       compliance_threshold: yup.number(),
       compliance_threshold_currency: yup.string(),
-      must_safeguard_pii: yup.boolean(),
-      safeguards_pii: yup.boolean()
+      must_safeguard_pii: yup.boolean().default(false),
+      safeguards_pii: yup.boolean().default(false)
     })
   })
 ];
