@@ -28,6 +28,7 @@ interface _FormControlProps extends FormControlProps {
   inputRef?: React.RefObject<HTMLInputElement>;
   onValueChange?: any;
   handleFn?: () => void;
+  isHidden?: boolean;
 }
 
 const InputFormControl = React.forwardRef<any, _FormControlProps>(

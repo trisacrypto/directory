@@ -15,10 +15,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const countries = getCountriesOptions();
   const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
   const currencies = getCurrenciesOptions();
+  const getHasRequiredRegulatoryProgram = watch('trixo.has_required_regulatory_program');
+  const getMustComplyRegulations = getValues('trixo.must_comply_travel_rule');
 
+  console.log('getMustComplyRegulations', getMustComplyRegulations);
+  console.log('getHasRequiredRegulatoryProgram', getHasRequiredRegulatoryProgram);
   const getCountryFromLegalAddress = getValues('entity.geographic_addresses[0].country');
   useEffect(() => {
-    if (getCountryFromLegalAddress) {
+    if (!getCountryFromLegalAddress) {
       setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
     }
   }, [getCountryFromLegalAddress]);
@@ -40,7 +44,6 @@ const TrixoQuestionnaireForm: React.FC = () => {
           />
         )}
       />
-
       <InputFormControl
         controlId="nameOfPrimaryRegulator"
         label="Name of Primary Regulator"
@@ -53,7 +56,6 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
         <OtherJuridictions name={'trixo.other_jurisdictions'} />
       </VStack>
-
       <Controller
         control={control}
         name="trixo.financial_transfers_permitted"
@@ -69,7 +71,6 @@ const TrixoQuestionnaireForm: React.FC = () => {
           />
         )}
       />
-
       <VStack align="start">
         <Heading size="md">CDD & Travel Rule Policies</Heading>
 
@@ -107,40 +108,42 @@ const TrixoQuestionnaireForm: React.FC = () => {
           />
         </VStack>
       </VStack>
-
-      <VStack align="start" w="100%">
-        <Text>At what threshold and currency does your organization conduct KYC?</Text>
-        <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
-          <GridItem>
-            <InputFormControl
-              type="number"
-              label=""
-              controlId="kyc_threshold"
-              {...register('trixo.kyc_threshold')}
-            />
-          </GridItem>
-          <GridItem>
-            <Controller
-              control={control}
-              name="trixo.kyc_threshold_currency"
-              render={({ field }) => (
-                <SelectFormControl
-                  ref={field.ref}
-                  name={field.name}
-                  options={currencies}
-                  value={currencies.find((option) => option.value === field.value)}
-                  onChange={(newValue: any) => field.onChange(newValue.value)}
-                  controlId="trixo.kyc_threshold_currency"
-                />
-              )}
-            />
-          </GridItem>
-        </Grid>
-        <Text fontSize="sm" color="whiteAlpha.600" mt="0 !important">
-          Threshold to conduct KYC before permitting the customer to send/receive virtual asset
-          transfers
-        </Text>
-      </VStack>
+      {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
+        <VStack align="start" w="100%">
+          <Text>At what threshold and currency does your organization conduct KYC?</Text>
+          <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
+            <GridItem>
+              <InputFormControl
+                type="number"
+                label=""
+                controlId="kyc_threshold"
+                {...register('trixo.kyc_threshold')}
+              />
+            </GridItem>
+            <GridItem>
+              <Controller
+                control={control}
+                name="trixo.kyc_threshold_currency"
+                render={({ field }) => (
+                  <SelectFormControl
+                    ref={field.ref}
+                    name={field.name}
+                    options={currencies}
+                    value={currencies.find((option) => option.value === field.value)}
+                    onChange={(newValue: any) => field.onChange(newValue.value)}
+                    controlId="trixo.kyc_threshold_currency"
+                  />
+                )}
+              />
+            </GridItem>
+          </Grid>
+          <Text fontSize="sm" color="whiteAlpha.600" mt="0 !important">
+            Threshold to conduct KYC before permitting the customer to send/receive virtual asset
+            transfers
+          </Text>
+        </VStack>
+      )}
+      ;
       <VStack>
         <Text>
           Is your organization required to comply with the application of the Travel Rule standards
@@ -160,41 +163,41 @@ const TrixoQuestionnaireForm: React.FC = () => {
         </Text>
         <Regulations register={register} name={`trixo.applicable_regulations`} control={control} />
       </VStack>
-
-      <VStack align="start" w="100%">
-        <Text>What is the minimum threshold for Travel Rule compliance?</Text>
-        <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
-          <GridItem>
-            <InputFormControl
-              type="number"
-              label=""
-              controlId="compliance_threshold"
-              {...register('trixo.compliance_threshold')}
-            />
-          </GridItem>
-          <GridItem>
-            <Controller
-              control={control}
-              name="trixo.compliance_threshold_currency"
-              render={({ field }) => (
-                <SelectFormControl
-                  ref={field.ref}
-                  name={field.name}
-                  options={currencies}
-                  value={currencies.find((option) => option.value === field.value)}
-                  onChange={(newValue: any) => field.onChange(newValue.value)}
-                  controlId="trixo.compliance_threshold_currency"
-                />
-              )}
-            />
-          </GridItem>
-        </Grid>
-        <Text fontSize="sm" mt="0 !important">
-          The minimum threshold above which your organization is required to collect/send Travel
-          Rule information.
-        </Text>
-      </VStack>
-
+      {getMustComplyRegulations && (
+        <VStack align="start" w="100%">
+          <Text>What is the minimum threshold for Travel Rule compliance?</Text>
+          <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
+            <GridItem>
+              <InputFormControl
+                type="number"
+                label=""
+                controlId="compliance_threshold"
+                {...register('trixo.compliance_threshold')}
+              />
+            </GridItem>
+            <GridItem>
+              <Controller
+                control={control}
+                name="trixo.compliance_threshold_currency"
+                render={({ field }) => (
+                  <SelectFormControl
+                    ref={field.ref}
+                    name={field.name}
+                    options={currencies}
+                    value={currencies.find((option) => option.value === field.value)}
+                    onChange={(newValue: any) => field.onChange(newValue.value)}
+                    controlId="trixo.compliance_threshold_currency"
+                  />
+                )}
+              />
+            </GridItem>
+          </Grid>
+          <Text fontSize="sm" mt="0 !important">
+            The minimum threshold above which your organization is required to collect/send Travel
+            Rule information.
+          </Text>
+        </VStack>
+      )}
       <VStack align="start" w="100%" spacing={4}>
         <Heading size="md">Data Protection Policies</Heading>
         <VStack align="start" w="100%">
