@@ -1,10 +1,8 @@
 import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
-import _ from 'lodash';
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
 const commonNameRegex = /^[A-Za-z0-9\s]+\.[A-Za-z0-9\s]+$/;
-
 export const validationSchema = [
   yup.object().shape({
     website: yup.string().url().trim().required(),
@@ -24,28 +22,34 @@ export const validationSchema = [
         }
         return false;
       })
-      .notRequired(),
+      .required(),
     organization_name: yup.string().trim().required('Organization name is required'),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
   yup.object().shape({
-    name: yup.object().shape({
-      name_identifiers: yup.array().of(
-        yup
-          .object()
-          .shape({
+    entity: yup.object().shape({
+      name: yup.object().shape({
+        name_identifiers: yup.array().of(
+          yup.object().shape({
             legal_person_name: yup.string(),
             legal_person_name_identifier_type: yup.string()
           })
-          .when('legal_person_name_identifier_type_defined', {
-            is: (legal_person_name_type: string) => legal_person_name_type.length > 0,
-            then: yup.object().shape({
-              legal_person_name_identifier_type: yup.string().required()
-            })
+        ),
+        local_name_identifiers: yup.array().of(
+          yup.object().shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
           })
-      ),
-      local_name_identifiers: yup.array().of(
+        ),
+        phonetic_name_identifiers: yup.array().of(
+          yup.object().shape({
+            legal_person_name: yup.string(),
+            legal_person_name_identifier_type: yup.string()
+          })
+        )
+      }),
+      geographic_addresses: yup.array().of(
         yup.object().shape({
           address_type: yup.string().required(),
           address_line: yup.array(),
@@ -63,8 +67,8 @@ export const validationSchema = [
         })
       ),
       national_identification: yup.object().shape({
-        national_identifier: yup.string(),
-        national_identifier_type: yup.string().required('National identification type is required'),
+        national_identifier: yup.string().required(),
+        national_identifier_type: yup.string(),
         country_of_issue: yup.string(),
         registration_authority: yup
           .string()
@@ -159,7 +163,7 @@ export const validationSchema = [
       ),
       financial_transfers_permitted: yup.string(),
       has_required_regulatory_program: yup.string(),
-      conducts_customer_kyc: yup.boolean(),
+      conducts_customer_kyc: yup.boolean().default(false),
       kyc_threshold: yup.number(),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
@@ -180,8 +184,8 @@ export const validationSchema = [
         }),
       compliance_threshold: yup.number(),
       compliance_threshold_currency: yup.string(),
-      must_safeguard_pii: yup.boolean(),
-      safeguards_pii: yup.boolean()
+      must_safeguard_pii: yup.boolean().default(false),
+      safeguards_pii: yup.boolean().default(false)
     })
   })
 ];

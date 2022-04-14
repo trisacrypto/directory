@@ -59,16 +59,16 @@ export const getRegistrationDefaultValue = () => {
       primary_regulator: '',
       other_jurisdictions: [],
       financial_transfers_permitted: '',
-      has_required_regulatory_program: '',
-      conducts_customer_kyc: null,
+      has_required_regulatory_program: 'Yes',
+      conducts_customer_kyc: false,
       kyc_threshold: 0,
       kyc_threshold_currency: 'USD',
-      must_comply_travel_rule: null,
+      must_comply_travel_rule: false,
       applicable_regulations: [{ name: 'FATF Recommendation 16' }],
       compliance_threshold: 3000,
       compliance_threshold_currency: 'USD',
-      must_safeguard_pii: null,
-      safeguards_pii: null
+      must_safeguard_pii: false,
+      safeguards_pii: false
     }
   };
 };
