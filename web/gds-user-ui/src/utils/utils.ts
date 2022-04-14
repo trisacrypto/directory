@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import registrationAuthority from './registration-authority.json';
+
 export const findStepKey = (steps: any, key: number) =>
   steps.filter((step: any) => step.key === key);
 
@@ -50,4 +52,8 @@ export const getDomain = (url: string | URL) => {
     console.error('[error]', error);
     return null;
   }
+};
+
+export const getRegistrationAuthoritiesOptions = () => {
+  return [...Array.from(new Set(registrationAuthority))].map((v) => ({ value: v, label: v }));
 };
