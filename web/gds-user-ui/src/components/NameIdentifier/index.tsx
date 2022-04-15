@@ -33,7 +33,10 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     control,
     formState: { errors },
     watch,
+<<<<<<< HEAD
     getValues,
+=======
+>>>>>>> origin/main
     setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;

@@ -130,10 +130,14 @@ export default function VaspVerification() {
                 <chakra.dd mt={2}>
                   <UnorderedList color={'#1F4CED'}>
                     <ListItem>
-                      <Link>How TRISA Works</Link>
+                      <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
+                        Learn How TRISA Works
+                      </Link>
                     </ListItem>
                     <ListItem>
-                      <Link>What is IVMS101?</Link>
+                      <Link isExternal href="https://intervasp.org/">
+                        What is IVMS101?
+                      </Link>
                     </ListItem>
                   </UnorderedList>
                 </chakra.dd>
