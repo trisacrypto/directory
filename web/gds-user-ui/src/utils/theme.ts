@@ -1,5 +1,4 @@
 import { extendTheme, ThemeConfig } from '@chakra-ui/react';
-import { link } from 'fs';
 
 const config: ThemeConfig = {
   initialColorMode: 'light',
@@ -26,6 +25,10 @@ export const colors = {
   }
 };
 
-const customTheme = extendTheme({ colors, config });
+const fonts = {
+  body: 'Open Sans, sans-serif'
+};
+
+const customTheme = extendTheme({ colors, config, fonts });
 
 export default customTheme;
