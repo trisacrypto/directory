@@ -64,3 +64,7 @@ export const BUSINESS_CATEGORY = {
 export const getBusinessCategoryOptions = () => {
   return Object.entries(BUSINESS_CATEGORY).map(([k, v]) => ({ value: k, label: v }));
 };
+
+export const getBusinessCategiryLabel = (category: string) => {
+  return vaspCategories.find((c) => c.value === category)?.label;
+};
