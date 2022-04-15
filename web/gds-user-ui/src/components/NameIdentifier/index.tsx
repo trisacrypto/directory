@@ -54,13 +54,11 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   useEffect(() => {
-    if (currentStep === 2) {
-      setValue(
-        `entity.name.name_identifiers[0].legal_person_name`,
-        getFirstLegalName || getOrganizationName
-      );
-    }
-  }, [getOrganizationName, currentStep, setValue, getFirstLegalName]);
+    setValue(
+      `entity.name.name_identifiers[0].legal_person_name`,
+      getFirstLegalName || getOrganizationName
+    );
+  }, [getOrganizationName, setValue, getFirstLegalName]);
 
   return (
     <Stack align="start" width="100%">
