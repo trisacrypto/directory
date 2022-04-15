@@ -33,6 +33,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     control,
     formState: { errors },
     watch,
+    getValues,
     setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
@@ -48,13 +49,18 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       });
     }
   }));
+
   const getOrganizationName = watch('organization_name');
+  const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   useEffect(() => {
     if (currentStep === 2) {
-      setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
+      setValue(
+        `entity.name.name_identifiers[0].legal_person_name`,
+        getFirstLegalName || getOrganizationName
+      );
     }
-  }, [getOrganizationName]);
+  }, [getOrganizationName, currentStep, setValue, getFirstLegalName]);
 
   return (
     <Stack align="start" width="100%">
