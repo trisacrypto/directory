@@ -18,7 +18,7 @@ const CountryOfRegistration: React.FC<CountryOfRegistrationProps> = () => {
         render={({ field }) => (
           <SelectFormControl
             ref={field.ref}
-            label="Business Category"
+            label=""
             placeholder="Select a country"
             controlId="entity.country_of_registration"
             options={countries}
