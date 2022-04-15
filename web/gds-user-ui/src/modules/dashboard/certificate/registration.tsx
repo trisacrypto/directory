@@ -97,6 +97,7 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
+    setCertificateFormValueToLocalStorage(methods.getValues());
     previousStep();
   };
 
@@ -145,37 +146,42 @@ const Certificate: React.FC = () => {
                 <TestNetCertificateProgressBar />
                 <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
               </Box>
-              {!hasReachSubmitStep && (
-                <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
-                  <FormButton
-                    onClick={handlePreviousStep}
-                    isDisabled={currentStep === 1}
-                    borderRadius={5}
-                    type="button"
-                    w="100%"
-                    maxW="13rem">
-                    Previous
-                  </FormButton>
-                  {/* <FormButton
-                    borderRadius={5}
-                    w="100%"
-                    maxW="13rem"
-                    backgroundColor="#FF7A59"
-                    type="submit"
-                    _hover={{ backgroundColor: '#f07253' }}>
-                    Save & Next
-                  </FormButton> */}
-                  <FormButton
-                    borderRadius={5}
-                    w="100%"
-                    maxW="13rem"
-                    backgroundColor="#FF7A59"
-                    type="submit"
-                    _hover={{ backgroundColor: '#f07253' }}>
-                    {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
-                  </FormButton>
-                </HStack>
-              )}
+              <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
+                {!hasReachSubmitStep && (
+                  <>
+                    <FormButton
+                      onClick={handlePreviousStep}
+                      isDisabled={currentStep === 1}
+                      borderRadius={5}
+                      type="button"
+                      w="100%"
+                      maxW="13rem">
+                      Previous & Save
+                    </FormButton>
+                    <FormButton
+                      borderRadius={5}
+                      w="100%"
+                      maxW="13rem"
+                      backgroundColor="#FF7A59"
+                      type="submit"
+                      _hover={{ backgroundColor: '#f07253' }}>
+                      {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
+                    </FormButton>
+                    {/* display a review button when user a jump on step for edition */}
+                    {currentStep !== lastStep && (
+                      <FormButton
+                        borderRadius={5}
+                        w="100%"
+                        maxW="13rem"
+                        backgroundColor="#FF7A59"
+                        type="submit"
+                        _hover={{ backgroundColor: '#f07253' }}>
+                        Review Summary
+                      </FormButton>
+                    )}
+                  </>
+                )}
+              </HStack>
             </VStack>
           </form>
         </FormProvider>
