@@ -26,7 +26,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
         isInvalid={get(errors, `${name}.name`)}
         {...register(`${name}.name`)}
       />
-      {console.log(get(errors, `${name}.email`))}
+
       <InputFormControl
         label="Email Address"
         formHelperText={
