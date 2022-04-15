@@ -31,13 +31,15 @@ type TSearchDirectory = {
   result: any;
   error: string;
   query: string;
+  handleClose?: () => void;
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
   isLoading,
   result,
   error,
-  query
+  query,
+  handleClose
 }) => {
   const [search, setSearch] = useState<string>('');
   const customName = result?.name ? `${result.name} ${query}` : '';
@@ -96,7 +98,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       <SearchIcon />
                     </Button>
                   </InputRightElement>
-                  {error && <ErrorMessage message={error} />}
+                  {error && <ErrorMessage message={error} handleClose={handleClose} />}
                 </FormControl>
               </form>
             </Box>
