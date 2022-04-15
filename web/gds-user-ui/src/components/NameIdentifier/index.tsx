@@ -50,15 +50,14 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
-  const getOrganizationName = watch('organization_name');
+  const getOrganizationName = getValues('organization_name');
   const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  useEffect(() => {
-    setValue(
-      `entity.name.name_identifiers[0].legal_person_name`,
-      getFirstLegalName || getOrganizationName
-    );
-  }, [getOrganizationName, setValue, getFirstLegalName]);
+  // useEffect(() => {
+  //   if (type && type === 'legal') {
+  //     setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
+  //   }
+  // }, [getOrganizationName]);
 
   return (
     <Stack align="start" width="100%">
@@ -77,6 +76,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
+                      placeholder={getOrganizationName}
                       // onValueChange={
                       //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
                       // }
