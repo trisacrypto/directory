@@ -50,14 +50,22 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
-  const getOrganizationName = watch('organization_name');
+  const getOrganizationName = getValues('organization_name');
   const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
+  const setLegalname = () => {
+    let legalname = '';
+    if (getFirstLegalName && getFirstLegalName.length > 0) {
+      legalname = getFirstLegalName;
+    }
+    if (getOrganizationName && getOrganizationName.length > 0) {
+      legalname = getOrganizationName;
+    }
+    setValue('entity.name.name_identifiers[0].legal_person_name', legalname);
+    setValue('organization_name', legalname);
+  };
   useEffect(() => {
-    setValue(
-      `entity.name.name_identifiers[0].legal_person_name`,
-      getFirstLegalName || getOrganizationName
-    );
+    setLegalname();
   }, [getOrganizationName, setValue, getFirstLegalName]);
 
   return (
