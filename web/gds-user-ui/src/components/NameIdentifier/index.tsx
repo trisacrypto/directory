@@ -32,6 +32,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     register,
     control,
     formState: { errors },
+    watch,
     setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
@@ -47,20 +48,13 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       });
     }
   }));
-
+  const getOrganizationName = watch('organization_name');
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const [basicDetailOrganizationName, setBasicDetailOrganizationName] = React.useState<any>({});
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const getOrganizationName = getStepperData.organization_name;
-    setBasicDetailOrganizationName(getOrganizationName);
-  });
-
-  const getLegalNameDefaultValue = (index: number, value: any) => {
-    if (type && type === 'legal' && currentStep === 1) {
-      setValue(`entity.name.name_identifiers[0].legal_person_name`, value);
+    if (currentStep === 2) {
+      setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
     }
-  };
+  }, [getOrganizationName]);
 
   return (
     <Stack align="start" width="100%">
@@ -79,9 +73,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      onValueChange={
-                        index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
-                      }
+                      // onValueChange={
+                      //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
+                      // }
                       // isDisabled={(index === 0 && type && type === 'legal') || false}
                       {...register(`${name}[${index}].legal_person_name`)}
                     />

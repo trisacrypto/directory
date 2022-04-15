@@ -13,7 +13,7 @@ import _ from 'lodash';
 import { hasStepError, getStepDatas } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
-import { link } from 'fs';
+
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
@@ -43,6 +43,10 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
+  const { formState } = methods;
+
+  const dirtyFields = formState.dirtyFields;
+
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
   }
@@ -53,6 +57,7 @@ const Certificate: React.FC = () => {
   }
 
   function getCurrentFormValue() {
+    console.log('current', current);
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
@@ -61,8 +66,6 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
-
-  console.log('getCurrentFormValue', getCurrentFormValue());
 
   function handleNextStepClick() {
     if (currentStep === lastStep) {
@@ -98,6 +101,9 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
+    if (dirtyFields.length > 0) {
+      setCertificateFormValueToLocalStorage(methods.getValues());
+    }
     previousStep();
   };
 
@@ -146,37 +152,42 @@ const Certificate: React.FC = () => {
                 <TestNetCertificateProgressBar />
                 <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
               </Box>
-              {!hasReachSubmitStep && (
-                <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
-                  <FormButton
-                    onClick={handlePreviousStep}
-                    isDisabled={currentStep === 1}
-                    borderRadius={5}
-                    type="button"
-                    w="100%"
-                    maxW="13rem">
-                    Previous
-                  </FormButton>
-                  {/* <FormButton
-                    borderRadius={5}
-                    w="100%"
-                    maxW="13rem"
-                    backgroundColor="#FF7A59"
-                    type="submit"
-                    _hover={{ backgroundColor: '#f07253' }}>
-                    Save & Next
-                  </FormButton> */}
-                  <FormButton
-                    borderRadius={5}
-                    w="100%"
-                    maxW="13rem"
-                    backgroundColor="#FF7A59"
-                    type="submit"
-                    _hover={{ backgroundColor: '#f07253' }}>
-                    {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
-                  </FormButton>
-                </HStack>
-              )}
+              <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
+                {!hasReachSubmitStep && (
+                  <>
+                    <FormButton
+                      onClick={handlePreviousStep}
+                      isDisabled={currentStep === 1}
+                      borderRadius={5}
+                      type="button"
+                      w="100%"
+                      maxW="13rem">
+                      Save & Previous
+                    </FormButton>
+                    <FormButton
+                      borderRadius={5}
+                      w="100%"
+                      maxW="13rem"
+                      backgroundColor="#FF7A59"
+                      type="submit"
+                      _hover={{ backgroundColor: '#f07253' }}>
+                      {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
+                    </FormButton>
+                    {/* add review button when reach to final step */}
+                    {/* {currentStep !== lastStep && (
+                      <FormButton
+                        borderRadius={5}
+                        w="100%"
+                        maxW="13rem"
+                        backgroundColor="#FF7A59"
+                        type="submit"
+                        _hover={{ backgroundColor: '#f07253' }}>
+                        Review Summary
+                      </FormButton>
+                    )} */}
+                  </>
+                )}
+              </HStack>
             </VStack>
           </form>
         </FormProvider>
