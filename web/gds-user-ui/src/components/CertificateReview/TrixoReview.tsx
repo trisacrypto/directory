@@ -35,7 +35,6 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
     const stepData = {
       ...getStepperData.trixo
     };
-    console.log('trixo step data', stepData);
     setTrixo(stepData);
   }, [steps]);
   return (
@@ -66,34 +65,58 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
           <Table
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2)': { maxWidth: '75%' },
               Tr: { borderStyle: 'hidden' }
             }}>
             <Tbody>
               <Tr>
                 <Td>Primary National Jurisdiction</Td>
                 <Td>{trixo?.primary_national_jurisdiction}</Td>
-                <Td></Td>
               </Tr>
               <Tr>
                 <Td>Name of Primary Regulator</Td>
                 <Td>{trixo?.primary_regulator}</Td>
-                <Td></Td>
               </Tr>
               <Tr>
                 <Td>Other Jurisdictions</Td>
                 <Td>
-                  {trixo?.other_jurisdictions?.map((o: any, i: any) => {
-                    return (
-                      <Text as={'span'} key={i}>
-                        Country : {o.country} regulator name : {o.regulator_name}
-                      </Text>
-                    );
-                  })}
+                  {trixo?.other_jurisdictions?.length > 0
+                    ? trixo?.other_jurisdictions?.map((o: any, i: any) => {
+                        if (o?.regulator_name?.length > 0) {
+                          return (
+                            <>
+                              <Tr>
+                                <Td>{o.country}</Td>
+                                <Td>{o.regulator_name}</Td>
+                              </Tr>
+                            </>
+                          );
+                        }
+                      })
+                    : 'N/A'}
+                </Td>
+              </Tr>
+              <Tr>
+                <Td>
+                  Is your organization permitted to send and/or receive transfers of virtual assets
+                  in the jurisdictions in which it operates?
+                </Td>
+                <Td>
+                  {' '}
+                  <Tag
+                    size={'sm'}
+                    key={'sm'}
+                    variant="subtle"
+                    colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
+                    <TagLabel fontWeight={'bold'}>
+                      {trixo.financial_transfers_permitted ? 'Yes' : 'NO'}
+                    </TagLabel>
+                  </Tag>
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>CDD & Travel Rule Policies</Td>
+                <Td fontWeight={'semibold'}>CDD & Travel Rule Policies</Td>
                 <Td></Td>
                 <Td></Td>
               </Tr>
@@ -133,6 +156,16 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                   </Tag>
                 </Td>
                 <Td></Td>
+              </Tr>{' '}
+              <Tr>
+                <Td>At what threshold and currency does your organization conduct KYC?</Td>
+                <Td>
+                  <Tr>
+                    <Td>{trixo.kyc_threshold}</Td>
+                    <Td>{trixo.kyc_threshold_currency}</Td>
+                  </Tr>
+                </Td>
+                <Td></Td>
               </Tr>
               <Tr>
                 <Td>
@@ -153,12 +186,33 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>What is the minimum threshold for Travel Rule compliance?</Td>
-                <Td>{`${trixo.kyc_threshold} ${trixo.kyc_threshold_currency}`}</Td>
+                <Td>Applicable Regulations</Td>
+                <Td>
+                  <Tr>
+                    <Td>
+                      {trixo?.applicable_regulations?.map((reg: any) => {
+                        if (reg?.name.length > 0) {
+                          return <React.Fragment>{reg.name}</React.Fragment>;
+                        }
+                      })}
+                    </Td>
+                    <Td></Td>
+                  </Tr>
+                </Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>Data Protection Policies</Td>
+                <Td>What is the minimum threshold for Travel Rule compliance?</Td>
+                <Td>
+                  <Tr>
+                    <Td>{trixo.compliance_threshold}</Td>
+                    <Td>{trixo.compliance_threshold_currency}</Td>
+                  </Tr>
+                </Td>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td fontWeight={'semibold'}>Data Protection Policies</Td>
                 <Td></Td>
                 <Td></Td>
               </Tr>
