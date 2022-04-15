@@ -13,3 +13,11 @@ export const NATIONAL_IDENTIFICATION = {
 
 export const getNationalIdentificationOptions = () =>
   Object.entries(NATIONAL_IDENTIFICATION).map(([k, v]) => ({ value: k, label: v }));
+
+export const getNationalIdentificationLabel = (nationalIdentifierTypeCode: any) => {
+  return Object.entries(NATIONAL_IDENTIFICATION).map(([k, v]) => {
+    if (k === nationalIdentifierTypeCode) {
+      return v;
+    }
+  });
+};
