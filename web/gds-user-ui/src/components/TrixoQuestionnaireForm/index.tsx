@@ -18,10 +18,8 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getHasRequiredRegulatoryProgram = watch('trixo.has_required_regulatory_program');
   const getMustComplyRegulations = watch('trixo.must_comply_travel_rule');
 
-  console.log('getMustComplyRegulations', getMustComplyRegulations);
-  console.log('getHasRequiredRegulatoryProgram', getHasRequiredRegulatoryProgram);
   const getCountryFromLegalAddress = watch('entity.country_of_registration');
-  console.log('getCountryFromLegalAddress', getCountryFromLegalAddress);
+
   useEffect(() => {
     if (getCountryFromLegalAddress) {
       setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);

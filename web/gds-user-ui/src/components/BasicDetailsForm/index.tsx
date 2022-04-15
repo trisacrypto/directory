@@ -16,20 +16,21 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
     control,
     formState: { errors },
     getValues,
+    watch,
     setValue
   } = useFormContext();
 
-  const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
+  // const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
 
-  const setLegalName = () => {
-    if (getFirstLegalName && getFirstLegalName.length > 0) {
-      setValue('organization', getFirstLegalName);
-    }
-  };
+  // const setLegalName = () => {
+  //   if (getFirstLegalName && getFirstLegalName.length > 0) {
+  //     setValue('organization', getFirstLegalName);
+  //   }
+  // };
 
-  useEffect(() => {
-    setLegalName();
-  }, [getFirstLegalName]);
+  // useEffect(() => {
+  //   setLegalName();
+  // }, [getFirstLegalName]);
   return (
     <>
       <VStack spacing={4} w="100%">
