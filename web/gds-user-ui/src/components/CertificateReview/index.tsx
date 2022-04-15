@@ -11,7 +11,7 @@ import TrixoReview from './TrixoReview';
 import FormLayout from 'layouts/FormLayout';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { hasStepError } from 'utils/utils';
+import { hasStepError, mapTrixoFormForBff } from 'utils/utils';
 import ReviewSubmit from 'components/ReviewSubmit';
 import { registrationRequest } from 'modules/dashboard/certificate/service';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
@@ -42,8 +42,10 @@ const CertificateReview = () => {
         formValue.trisa_endpoint = getMainnetObj.endpoint;
         formValue.common_name = getMainnetObj.common_name;
       }
-
-      const response = await registrationRequest(network, formValue);
+      // clean form value before send to server
+      // const formValueForBff = mapTrixoFormForBff(formValue);
+      // console.log('formValueForBff', formValueForBff);
+      const response = await registrationRequest(network, mapTrixoFormForBff(formValue));
 
       if (response.id || response.status === ' "SUBMITTED"') {
         if (network === 'testnet') {
