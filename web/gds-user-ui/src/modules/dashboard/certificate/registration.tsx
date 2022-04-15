@@ -13,7 +13,7 @@ import _ from 'lodash';
 import { hasStepError, getStepDatas } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
-import { link } from 'fs';
+
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
@@ -42,6 +42,10 @@ const Certificate: React.FC = () => {
     resolver,
     mode: 'onChange'
   });
+
+  const { formState } = methods;
+
+  const dirtyFields = formState.dirtyFields;
 
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
@@ -97,7 +101,9 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
-    setCertificateFormValueToLocalStorage(methods.getValues());
+    if (dirtyFields.length > 0) {
+      setCertificateFormValueToLocalStorage(methods.getValues());
+    }
     previousStep();
   };
 
@@ -156,7 +162,7 @@ const Certificate: React.FC = () => {
                       type="button"
                       w="100%"
                       maxW="13rem">
-                      Previous & Save
+                      Save & Previous
                     </FormButton>
                     <FormButton
                       borderRadius={5}
@@ -167,8 +173,8 @@ const Certificate: React.FC = () => {
                       _hover={{ backgroundColor: '#f07253' }}>
                       {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
                     </FormButton>
-                    {/* display a review button when user a jump on step for edition */}
-                    {currentStep !== lastStep && (
+                    {/* add review button when reach to final step */}
+                    {/* {currentStep !== lastStep && (
                       <FormButton
                         borderRadius={5}
                         w="100%"
@@ -178,7 +184,7 @@ const Certificate: React.FC = () => {
                         _hover={{ backgroundColor: '#f07253' }}>
                         Review Summary
                       </FormButton>
-                    )}
+                    )} */}
                   </>
                 )}
               </HStack>
