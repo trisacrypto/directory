@@ -49,6 +49,10 @@ const HomePage: React.FC = () => {
         isLoading={isLoading}
         result={result}
         error={error}
+        handleClose={() => {
+          setResult(false);
+          setError('');
+        }}
         query={search}
       />
     </LandingLayout>

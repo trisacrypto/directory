@@ -128,7 +128,7 @@ const Certificate: React.FC = () => {
                     issuance process. The information you provide will be used to verify the legal
                     entity that you represent and, where appropriate, will be available to verified
                     TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
-                    <Link href="/getting-started" color={'blue'} fontWeight={'bold'}>
+                    <Link isExternal href="/getting-started" color={'blue'} fontWeight={'bold'}>
                       Getting Started Help Guide.{' '}
                     </Link>
                   </Text>
