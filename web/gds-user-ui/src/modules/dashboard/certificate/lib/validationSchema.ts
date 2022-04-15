@@ -104,7 +104,7 @@ export const validationSchema = [
         .object()
         .shape({
           name: yup.string().required(),
-          email: yup.string().email().required(),
+          email: yup.string().email().required('Email is required'),
           phone: yup.string()
         })
         .required(),
@@ -117,7 +117,7 @@ export const validationSchema = [
         .object()
         .shape({
           name: yup.string().required(),
-          email: yup.string().email().required(),
+          email: yup.string().email().required('Email is required'),
           phone: yup.string()
         })
         .required()
