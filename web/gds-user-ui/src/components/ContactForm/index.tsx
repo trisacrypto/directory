@@ -26,10 +26,14 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
         isInvalid={get(errors, `${name}.name`)}
         {...register(`${name}.name`)}
       />
-
+      {console.log(get(errors, `${name}.email`))}
       <InputFormControl
         label="Email Address"
-        formHelperText="Please use the email address associated with your organization."
+        formHelperText={
+          get(errors, `${name}.email`)
+            ? get(errors, `${name}.email`).message
+            : 'Please use the email address associated with your organization.'
+        }
         controlId="fullName"
         type="email"
         isInvalid={get(errors, `${name}.email`)}
