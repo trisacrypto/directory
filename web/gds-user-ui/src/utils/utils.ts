@@ -1,3 +1,4 @@
+import { left } from '@popperjs/core';
 import _ from 'lodash';
 import registrationAuthority from './registration-authority.json';
 
@@ -56,4 +57,28 @@ export const getDomain = (url: string | URL) => {
 
 export const getRegistrationAuthoritiesOptions = () => {
   return [...Array.from(new Set(registrationAuthority))].map((v) => ({ value: v, label: v }));
+};
+
+export const mapTrixoFormForBff = (data: any) => {
+  const { trixo } = data;
+  const { applicable_regulations, other_jurisdictions } = trixo;
+
+  const cleanAppRegulation = applicable_regulations.reduce((acc: any, value: any) => {
+    if (value.name.length > 0) {
+      acc.push(value.name);
+    }
+    return acc;
+  }, []);
+  const cleanOtherJurisdiction = other_jurisdictions.filter(
+    (o: any) => o?.country?.length > 0 && o?.regulator_name?.length > 0
+  );
+
+  return {
+    ...data,
+    trixo: {
+      ...trixo,
+      applicable_regulations: cleanAppRegulation.length > 0 ? cleanAppRegulation : [],
+      other_jurisdictions: cleanOtherJurisdiction.length > 0 ? cleanOtherJurisdiction : []
+    }
+  };
 };

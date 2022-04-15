@@ -1,10 +1,11 @@
 import React, { FC, useEffect } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Tag } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { getBusinessCategiryLabel, vaspCategories } from 'constants/basic-details';
 interface BasicDetailsReviewProps {}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
@@ -63,7 +64,15 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td>VASP Category</Td>
-                <Td>{basicDetail?.vasp_categories?.join(' ')}</Td>
+                <Td>
+                  {basicDetail?.vasp_categories?.map((categ: any) => {
+                    return (
+                      <Tag key={categ} color={'white'} bg={'blue.400'} ml={2}>
+                        {getBusinessCategiryLabel(categ)}
+                      </Tag>
+                    );
+                  })}
+                </Td>
                 <Td></Td>
               </Tr>
             </Tbody>
