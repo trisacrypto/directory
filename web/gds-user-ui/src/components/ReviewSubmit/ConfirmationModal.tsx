@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   chakra,
@@ -16,11 +17,12 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
-
+import ModalAlert from 'components/ui/ModalAlert';
 interface ConfirmationModalProps {}
 const ConfirmationModal = (props: any) => {
   const { onClose } = useDisclosure();
   const { hasCopied, onCopy } = useClipboard(props.pkcs12password);
+  const [isAlerted, setIsAlerted] = React.useState(false);
   const handleOnClose = () => {
     // should ask user to confirm before closing
     onClose();

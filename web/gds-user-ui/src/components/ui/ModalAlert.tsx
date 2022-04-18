@@ -10,7 +10,9 @@ import {
   useDisclosure,
   AlertDialogCloseButton
 } from '@chakra-ui/react';
-export default function AlertModal() {
+
+interface ModalProps {}
+const ModalAlert = (props: any) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef: any = React.useRef();
 
@@ -26,16 +28,11 @@ export default function AlertModal() {
         <AlertDialogOverlay />
 
         <AlertDialogContent>
-          <AlertDialogHeader>Discard Changes?</AlertDialogHeader>
-          <AlertDialogCloseButton />
-          <AlertDialogBody>
-            Are you sure you want to discard all of your notes? 44 words will be deleted.
-          </AlertDialogBody>
+          <AlertDialogHeader>{props.header}</AlertDialogHeader>
+          <AlertDialogBody>{props.message}</AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose}>
-              No
-            </Button>
-            <Button colorScheme="red" ml={3}>
+            <Button onClick={onClose}>No</Button>
+            <Button colorScheme="green" ml={3} onClick={props.handleOnYesClose}>
               Yes
             </Button>
           </AlertDialogFooter>
@@ -43,4 +40,6 @@ export default function AlertModal() {
       </AlertDialog>
     </>
   );
-}
+};
+
+export default ModalAlert;
