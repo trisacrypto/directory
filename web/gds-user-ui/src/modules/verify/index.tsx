@@ -5,7 +5,7 @@ import UserEmailConfirmation from 'components/Section/UserEmailConfirmation';
 import LandingLayout from 'layouts/LandingLayout';
 import useQuery from 'hooks/useQuery';
 import { verifyService } from './verifiy.service';
-
+import AlertMessage from 'components/ui/AlertMessage';
 const VerifyPage: React.FC = () => {
   const query = useQuery();
   const [isLoading, setIsLoading] = useState(false);
@@ -19,19 +19,24 @@ const VerifyPage: React.FC = () => {
     (async () => {
       try {
         setIsLoading(true);
-        const params = { vaspID, token, registered_directory };
-        const reponse = await verifyService(params);
-        console.log('request', reponse);
-        if (!reponse.error) {
-          setResult(reponse);
+        if (vaspID && token && registered_directory) {
+          const params = { vaspID, token, registered_directory };
+          const reponse = await verifyService(params);
+          console.log('request', reponse);
+          if (!reponse.error) {
+            setResult(reponse);
+          } else {
+            // setError(false)
+          }
         } else {
-          // setError(false)
+          setError('Invalid params');
         }
       } catch (e: any) {
-        console.log('error', e.response.data);
-        if (!e.reponse.data.success) {
-          setResult(false);
+        console.log('error', e.response);
+        if (!e.reponse?.data?.success) {
+          setError('could not verify contact');
         } else {
+          // log error
           console.log('sorry something went wrong , please try again');
         }
       } finally {
@@ -43,11 +48,7 @@ const VerifyPage: React.FC = () => {
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
       {result && <UserEmailConfirmation message={result.message} />}
-      {!error && (
-        <Heading justifyItems={'center'} justifyContent="center" py={'10%'} color={'red'}>
-          {'Invalid Token or unknown Registered directory '}
-        </Heading>
-      )}
+      {error && <AlertMessage message={error} status="error" />}
     </LandingLayout>
   );
 };
