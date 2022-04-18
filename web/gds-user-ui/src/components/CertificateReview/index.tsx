@@ -68,6 +68,10 @@ const CertificateReview = () => {
         // });
       }
     } catch (err: any) {
+<<<<<<< HEAD
+=======
+      console.log('err', err?.response?.data);
+>>>>>>> origin/main
       if (!err.response.data.success) {
         toast({
           position: 'top-right',

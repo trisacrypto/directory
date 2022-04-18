@@ -96,10 +96,17 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
         <ConfirmationModal
           isOpen={isOpen}
           onClose={onClose}
+<<<<<<< HEAD
           id={result?.id}
           pkcs12password={result?.pkcs12password}
           message={result?.message}
           status={result?.status}
+=======
+          id={result.id}
+          pkcs12password={result.pkcs12password}
+          message={result.message}
+          status={result.status}
+>>>>>>> origin/main
           size={'xl'}
         />
       )}
