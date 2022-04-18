@@ -6,7 +6,9 @@ interface TParams {
 }
 export const verifyService = async (query: TParams) => {
   const response = await axiosInstance.get(
-    `/verify?vaspID=${query.vaspID}&token=${query.token}&registered_directory=${query.registered_directory}`
+    `/verify?vaspID=${query.vaspID}&token=${encodeURIComponent(query.token)}&registered_directory=${
+      query.registered_directory
+    }`
   );
   return response.data;
 };

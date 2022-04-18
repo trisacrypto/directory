@@ -69,6 +69,7 @@ const CertificateReview = () => {
       }
     } catch (err: any) {
       console.log('err', err?.response?.data);
+
       if (!err.response.data.success) {
         toast({
           position: 'top-right',

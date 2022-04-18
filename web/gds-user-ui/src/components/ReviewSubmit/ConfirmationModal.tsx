@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   chakra,
@@ -16,11 +17,12 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
-
+import ModalAlert from 'components/ui/ModalAlert';
 interface ConfirmationModalProps {}
 const ConfirmationModal = (props: any) => {
   const { onClose } = useDisclosure();
   const { hasCopied, onCopy } = useClipboard(props.pkcs12password);
+  const [isAlerted, setIsAlerted] = React.useState(false);
   const handleOnClose = () => {
     // should ask user to confirm before closing
     onClose();
@@ -88,12 +90,12 @@ const ConfirmationModal = (props: any) => {
                   <Text as={'span'} fontWeight={'semibold'}>
                     Message from server:
                   </Text>{' '}
-                  {props.message.toUpperCase()}
+                  {props.message?.toUpperCase()}
                 </Text>
               </ModalBody>
 
               <ModalFooter>
-                <Button onClick={handleOnClose}>Understood</Button>
+                <Button onClick={onClose}>Understood</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
