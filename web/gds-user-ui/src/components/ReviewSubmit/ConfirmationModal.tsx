@@ -93,7 +93,7 @@ const ConfirmationModal = (props: any) => {
               </ModalBody>
 
               <ModalFooter>
-                <Button onClick={handleOnClose}>Understood</Button>
+                <Button onClick={onClose}>Understood</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>

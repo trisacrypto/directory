@@ -21,7 +21,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
     if (isSent) {
       onOpen();
     }
-  }, [isTestNetSent, isMainNetSent]);
+  }, [isSent]);
   return (
     <>
       <VStack align="start" mt="2rem">
