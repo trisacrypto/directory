@@ -6,7 +6,10 @@ import { Controller, useFormContext } from 'react-hook-form';
 
 type CountryOfRegistrationProps = {};
 const CountryOfRegistration: React.FC<CountryOfRegistrationProps> = () => {
-  const { control } = useFormContext();
+  const {
+    control,
+    formState: { errors }
+  } = useFormContext();
   const countries = getCountriesOptions();
 
   return (
@@ -20,6 +23,8 @@ const CountryOfRegistration: React.FC<CountryOfRegistrationProps> = () => {
             ref={field.ref}
             label=""
             placeholder="Select a country"
+            isInvalid={!!errors.entity.country_of_registration}
+            formHelperText={errors.entity.country_of_registration?.message}
             controlId="entity.country_of_registration"
             options={countries}
             name={field.name}
