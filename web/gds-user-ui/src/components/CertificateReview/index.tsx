@@ -24,7 +24,7 @@ const CertificateReview = () => {
   );
   const [isTestNetSent, setIsTestNetSent] = useState(false);
   const [isMainNetSent, setIsMainNetSent] = useState(false);
-
+  const [result, setResult] = useState('');
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
@@ -50,21 +50,25 @@ const CertificateReview = () => {
       if (response.id || response.status === ' "SUBMITTED"') {
         if (network === 'testnet') {
           setIsTestNetSent(true);
+          localStorage.setItem('isTestNetSent', 'true');
         }
         if (network === 'mainnet') {
           setIsMainNetSent(true);
+          localStorage.setItem('isMainNetSent', 'true');
         }
-        toast({
-          position: 'top-right',
-          title: 'Success',
-          description: response.message,
-          status: 'success',
-          duration: 5000,
-          isClosable: true
-        });
+        setResult(response);
+
+        // toast({
+        //   position: 'top-right',
+        //   title: 'Success',
+        //   description: response.message,
+        //   status: 'success',
+        //   duration: 5000,
+        //   isClosable: true
+        // });
       }
     } catch (err: any) {
-      console.log('err', err.response.data);
+      console.log('err', err?.response?.data);
       if (!err.response.data.success) {
         toast({
           position: 'top-right',
@@ -106,6 +110,7 @@ const CertificateReview = () => {
           onSubmitHandler={handleSubmitRegister}
           isTestNetSent={isTestNetSent}
           isMainNetSent={isMainNetSent}
+          result={result}
         />
       )}
     </>
