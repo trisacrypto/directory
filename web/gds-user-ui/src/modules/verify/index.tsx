@@ -4,11 +4,11 @@ import UserEmailVerification from 'components/Section/UserEmailVerification';
 import UserEmailConfirmation from 'components/Section/UserEmailConfirmation';
 import LandingLayout from 'layouts/LandingLayout';
 import useQuery from 'hooks/useQuery';
-import { verifyService } from './verifiy.service';
+import { verifyService } from './verify.service';
 import AlertMessage from 'components/ui/AlertMessage';
 const VerifyPage: React.FC = () => {
   const query = useQuery();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>();
   const [result, setResult] = useState<any>(null);
   const vaspID = query.get('vaspID');
@@ -18,23 +18,22 @@ const VerifyPage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        setIsLoading(true);
         if (vaspID && token && registered_directory) {
           const params = { vaspID, token, registered_directory };
           const reponse = await verifyService(params);
-          console.log('request', reponse);
+
           if (!reponse.error) {
             setResult(reponse);
           } else {
+            console.log('Something went wrong');
             // setError(false)
           }
         } else {
           setError('Invalid params');
         }
       } catch (e: any) {
-        console.log('error', e.response);
-        if (!e.reponse?.data?.success) {
-          setError('could not verify contact');
+        if (!e.response?.data?.success) {
+          setError(e.response?.data?.error);
         } else {
           // log error
           console.log('sorry something went wrong , please try again');
@@ -47,7 +46,7 @@ const VerifyPage: React.FC = () => {
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {result && <UserEmailConfirmation message={result.message} />}
+      {result && <AlertMessage message={result.message} status="success" />}
       {error && <AlertMessage message={error} status="error" />}
     </LandingLayout>
   );
