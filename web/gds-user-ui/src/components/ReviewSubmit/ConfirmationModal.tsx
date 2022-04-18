@@ -88,12 +88,12 @@ const ConfirmationModal = (props: any) => {
                   <Text as={'span'} fontWeight={'semibold'}>
                     Message from server:
                   </Text>{' '}
-                  {props.message.toUpperCase()}
+                  {props.message?.toUpperCase()}
                 </Text>
               </ModalBody>
 
               <ModalFooter>
-                <Button onClick={handleOnClose}>Understood</Button>
+                <Button onClick={onClose}>Understood</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>

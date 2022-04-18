@@ -11,13 +11,18 @@ import {
   Heading,
   Text,
   useColorModeValue,
-  Image
+  Image,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription
 } from '@chakra-ui/react';
 
 import { colors } from '../../utils/theme';
 interface AuthEmailConfirmationProps {
   message?: string;
 }
+import AlertMessage from '../ui/AlertMessage';
 const AuthEmailConfirmation: React.FC<AuthEmailConfirmationProps> = (props) => {
   return (
     <Flex
@@ -30,8 +35,7 @@ const AuthEmailConfirmation: React.FC<AuthEmailConfirmationProps> = (props) => {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={6} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack>
-          <Heading fontSize={'xl'}>Thank you for verifying your email address. </Heading>
-          <Text color={useColorModeValue('gray.600', 'white')}>{props.message}</Text>
+          <AlertMessage message={props.message} status="success" title={'Contact Verified'} />
         </Stack>
         <Stack spacing={8} direction={['column', 'row']} py="10">
           <Button
