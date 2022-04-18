@@ -139,7 +139,7 @@ func (i *ContactIterator) Next() bool {
 
 	// Filter checks - contact must exist
 	current := i.contacts[i.index]
-	if current.contact == nil {
+	if current.contact == nil || current.contact.IsZero() {
 		return i.Next()
 	}
 
@@ -200,7 +200,7 @@ func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 
 // SetContactVerification token and verified status on the Contact record.
 func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
-	if contact == nil {
+	if contact == nil || contact.IsZero() {
 		return errors.New("cannot set verification on nil contact")
 	}
 
@@ -267,7 +267,7 @@ func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
 func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err error) {
 	// Contact must be non-nil.
-	if contact == nil {
+	if contact == nil || contact.IsZero() {
 		return errors.New("cannot append entry to nil contact")
 	}
 

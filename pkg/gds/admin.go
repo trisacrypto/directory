@@ -1357,6 +1357,13 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		}
 		contact = update
 		emailUpdated = true
+
+		if contact.IsZero() {
+			log.Warn().Msg("cannot create empty contact on update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
+		}
+
 	} else {
 		// Otherwise replace the existing contact info
 		contact.Name = update.Name

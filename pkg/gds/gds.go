@@ -159,6 +159,20 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		log.Warn().Err(err).Msg("ignoring validation error")
 	}
 
+	// Set any zero valued contacts to nil to ensure empty records aren't created.
+	if vasp.Contacts.Administrative != nil && vasp.Contacts.Administrative.IsZero() {
+		vasp.Contacts.Administrative = nil
+	}
+	if vasp.Contacts.Technical != nil && vasp.Contacts.Technical.IsZero() {
+		vasp.Contacts.Technical = nil
+	}
+	if vasp.Contacts.Billing != nil && vasp.Contacts.Billing.IsZero() {
+		vasp.Contacts.Billing = nil
+	}
+	if vasp.Contacts.Legal != nil && vasp.Contacts.Legal.IsZero() {
+		vasp.Contacts.Legal = nil
+	}
+
 	// Retrieve email address from one of the supplied contacts.
 	var email string
 	if email = getContactEmail(vasp); email == "" {
