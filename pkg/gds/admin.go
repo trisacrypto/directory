@@ -1366,6 +1366,12 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 			contact.Email = update.Email
 			emailUpdated = true
 		}
+
+		if contact.IsZero() {
+			log.Warn().Msg("invalid contact record after update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
+		}
 	}
 
 	// New VASP record must be valid
