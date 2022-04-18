@@ -1,7 +1,7 @@
 /* eslint-disable prefer-reflect */
 
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, HStack, Icon, Stack, Text, useToast } from '@chakra-ui/react';
+import { Box, Heading, HStack, Icon, Stack, Text, useToast, useDisclosure } from '@chakra-ui/react';
 
 import BasicDetailsReview from './BasicDetailsReview';
 import LegalPersonReview from './LegalPersonReview';
@@ -22,6 +22,7 @@ const CertificateReview = () => {
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [isTestNetSent, setIsTestNetSent] = useState(false);
   const [isMainNetSent, setIsMainNetSent] = useState(false);
   const [result, setResult] = useState('');

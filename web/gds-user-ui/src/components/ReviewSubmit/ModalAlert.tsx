@@ -13,17 +13,15 @@ import {
 
 interface ModalProps {}
 const ModalAlert = (props: any) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef: any = React.useRef();
 
   return (
     <>
-      <Button onClick={onOpen}>Discard</Button>
       <AlertDialog
         motionPreset="slideInBottom"
         leastDestructiveRef={cancelRef}
-        onClose={onClose}
-        isOpen={isOpen}
+        onClose={props.onClose}
+        isOpen={props.isOpen}
         isCentered>
         <AlertDialogOverlay />
 
@@ -31,8 +29,10 @@ const ModalAlert = (props: any) => {
           <AlertDialogHeader>{props.header}</AlertDialogHeader>
           <AlertDialogBody>{props.message}</AlertDialogBody>
           <AlertDialogFooter>
-            <Button onClick={onClose}>No</Button>
-            <Button colorScheme="green" ml={3} onClick={props.handleOnYesClose}>
+            <Button ref={cancelRef} onClick={props.onClose}>
+              No
+            </Button>
+            <Button colorScheme="green" ml={3} onClick={props.handleYesBtn}>
               Yes
             </Button>
           </AlertDialogFooter>
