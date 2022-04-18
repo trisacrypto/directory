@@ -88,7 +88,7 @@ const ConfirmationModal = (props: any) => {
                   <Text as={'span'} fontWeight={'semibold'}>
                     Message from server:
                   </Text>{' '}
-                  {props.message.toUpperCase()}
+                  {props.message?.toUpperCase()}
                 </Text>
               </ModalBody>
 

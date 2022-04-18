@@ -21,7 +21,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
     if (isSent) {
       onOpen();
     }
-  }, [isSent]);
+  }, [isTestNetSent, isMainNetSent]);
   return (
     <>
       <VStack align="start" mt="2rem">
@@ -96,10 +96,10 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
         <ConfirmationModal
           isOpen={isOpen}
           onClose={onClose}
-          id={result.id}
-          pkcs12password={result.pkcs12password}
-          message={result.message}
-          status={result.status}
+          id={result?.id}
+          pkcs12password={result?.pkcs12password}
+          message={result?.message}
+          status={result?.status}
           size={'xl'}
         />
       )}
