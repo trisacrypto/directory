@@ -59,8 +59,8 @@ func (c *MockCredentials) make(expires time.Time) (tks string, err error) {
 	}
 
 	claims := &tokens.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expires.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expires),
 		},
 	}
 

@@ -231,9 +231,9 @@ func (s *Server) setupHandlers() {
 
 func generateToken() (string, error) {
 	var token *jwt.Token
-	claims := jwt.StandardClaims{
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Minute * 10).Unix(),
+	claims := jwt.RegisteredClaims{
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 10)),
 	}
 	if token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims); token == nil {
 		return "", fmt.Errorf("could not generate jwt token")
