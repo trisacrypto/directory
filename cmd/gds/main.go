@@ -1420,6 +1420,9 @@ func loadProfile(c *cli.Context) (err error) {
 
 // helper function to create the GRPC client with default options
 func initClient(c *cli.Context) (err error) {
+	if profile.Directory == nil {
+		return cli.Exit("current profile does not contain directory configuration", 1)
+	}
 	if client, err = profile.Directory.Connect(); err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -1427,6 +1430,9 @@ func initClient(c *cli.Context) (err error) {
 }
 
 func initAdminClient(c *cli.Context) (err error) {
+	if profile.Admin == nil {
+		return cli.Exit("current profile does not contain admin configuration", 1)
+	}
 	if adminClient, err = profile.Admin.Connect(); err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -1434,6 +1440,9 @@ func initAdminClient(c *cli.Context) (err error) {
 }
 
 func initMembersClient(c *cli.Context) (err error) {
+	if profile.Members == nil {
+		return cli.Exit("current profile does not contain members configuration", 1)
+	}
 	if membersClient, err = profile.Members.Connect(); err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -1442,7 +1451,6 @@ func initMembersClient(c *cli.Context) (err error) {
 
 // helper function to print JSON response and exit
 func printJSON(msg interface{}) (err error) {
-
 	var data []byte
 	switch m := msg.(type) {
 	case proto.Message:

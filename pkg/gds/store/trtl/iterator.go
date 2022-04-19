@@ -279,7 +279,12 @@ func (i *trtlStreamingIterator) Error() error {
 }
 
 func (i *trtlStreamingIterator) Release() {
-	i.cursor.CloseSend()
+	// If the cursor is nil it's likely that the connection erred and i.err is not nil.
+	// Release() should be called safely before Error() to ensure any resources are
+	// cleaned up (e.g. canceling the context).
+	if i.cursor != nil {
+		i.cursor.CloseSend()
+	}
 	i.cancel()
 }
 
