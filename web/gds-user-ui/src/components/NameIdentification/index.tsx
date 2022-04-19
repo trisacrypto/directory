@@ -3,7 +3,10 @@ import { Heading, Link, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
-import { getNationalIdentificationOptions } from 'constants/national-identification';
+import {
+  getNationalIdentificationOptions,
+  disabledIdentifiers
+} from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import { getRegistrationAuthoritiesOptions, getValueByPathname } from 'utils/utils';
@@ -82,26 +85,30 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
         )}
       />
 
-      <Controller
-        control={control}
-        name="entity.national_identification.country_of_issue"
-        render={({ field }) => (
-          <SelectFormControl
-            ref={field.ref}
-            options={countries}
-            value={countries.find((option) => option.value === field.value)}
-            onChange={(newValue: any) => field.onChange(newValue.value)}
-            isInvalid={!!errors?.entity?.national_identification?.country_of_issue}
-            isDisabled={
-              NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' ||
-              NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_RAID'
-            }
-            label="Country of Issue"
-            controlId="country_of_issue"
-            formHelperText={errors?.entity?.national_identification?.country_of_issue?.message}
+      {disabledIdentifiers.includes(NationalIdentificationType) && (
+        <>
+          <Controller
+            control={control}
+            name="entity.national_identification.country_of_issue"
+            render={({ field }) => (
+              <SelectFormControl
+                ref={field.ref}
+                options={countries}
+                value={countries.find((option) => option.value === field.value)}
+                onChange={(newValue: any) => field.onChange(newValue.value)}
+                isInvalid={!!errors?.entity?.national_identification?.country_of_issue}
+                isDisabled={!disabledIdentifiers.includes(NationalIdentificationType)}
+                label="Country of Issue"
+                controlId="country_of_issue"
+                formHelperText={
+                  errors?.entity?.national_identification?.country_of_issue?.message ||
+                  'Country of Issue is reserved for National Identifiers of Natural Persons'
+                }
+              />
+            )}
           />
-        )}
-      />
+        </>
+      )}
 
       <Controller
         control={control}
