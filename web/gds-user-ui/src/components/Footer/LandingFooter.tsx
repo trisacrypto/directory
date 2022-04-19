@@ -1,7 +1,18 @@
 import React from 'react';
 import { Flex, Text, Link, useColorModeValue } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
+import useAxios from 'hooks/useAxios';
+import { getAppVersionNumber } from 'application/config';
 const Footer = (): React.ReactElement => {
+  // const { data, error, isLoading } = useAxios({
+  //   url: 'https://api.intervasp.org/v1/directory/search',
+  //   method: 'GET',
+  //   params: {
+  //     query: 'common_name=Trisa',
+  //     limit: 1
+  //   }
+  // });
+  const appVersion = getAppVersionNumber();
   return (
     <Flex
       bg={useColorModeValue(colors.system.gray, 'transparent')}
@@ -36,8 +47,12 @@ const Footer = (): React.ReactElement => {
           <Link href="https://trisa.io" color={colors.system.cyan}>
             TRISA
           </Link>{' '}
-          .
         </Text>
+        {appVersion && (
+          <Text width="100%" textAlign="center" color="white" fontSize="sm">
+            Build version : {appVersion}
+          </Text>
+        )}
       </Flex>
     </Flex>
   );
