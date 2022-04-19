@@ -31,6 +31,7 @@ export const validationSchema = [
   }),
   yup.object().shape({
     entity: yup.object().shape({
+      country_of_registration: yup.string().required('Country of registration is required'),
       name: yup.object().shape({
         name_identifiers: yup.array().of(
           yup.object().shape({

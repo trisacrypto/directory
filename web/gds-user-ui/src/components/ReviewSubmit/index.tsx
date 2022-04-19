@@ -18,21 +18,21 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
+  const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
+  const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
   useEffect(() => {
-    const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
-    const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
     if (getTestnetFromLocalStorage === 'true') {
       setTestnet(true);
     }
     if (getMainnetFromLocalStorage === 'true') {
       setMainnet(true);
     }
-  }, []);
+  }, [getTestnetFromLocalStorage, getMainnetFromLocalStorage]);
   useEffect(() => {
     if (isSent) {
       onOpen();
     }
-  }, [isSent]);
+  }, [isTestNetSent, isMainNetSent]);
   return (
     <>
       <VStack align="start" mt="2rem">
