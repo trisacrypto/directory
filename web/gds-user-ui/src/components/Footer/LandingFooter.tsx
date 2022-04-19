@@ -32,7 +32,7 @@ const Footer = (): React.ReactElement => {
             {' '}
             CipherTrace
           </Link>{' '}
-          CipherTrace on behalf of{' '}
+          on behalf of{' '}
           <Link href="https://trisa.io" color={colors.system.cyan}>
             TRISA
           </Link>{' '}
