@@ -138,7 +138,6 @@ services:
       - GDS_BFF_DATABASE_CERT_PATH
       - GDS_BFF_DATABASE_POOL_PATH
     profiles:
-      - bff
       - api
       - testnet
       - mainnet
@@ -271,8 +270,8 @@ services:
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
     profiles:
-      - gds-mainnet
-      - api-mainnet
+      - gds
+      - api
       - mainnet
       - all
 
@@ -311,8 +310,8 @@ services:
       - TRTL_BACKUP_KEEP=1
     profiles:
       - db
-      - gds-mainnet
-      - api-mainnet
+      - gds
+      - api
       - mainnet
       - all
 

@@ -115,7 +115,7 @@ func (creds *Credentials) Dump() (path string, err error) {
 // Update the credentials with new access and refresh tokens. Credentials are checked
 // and if they're ok they are dumped to the cache on disk.
 func (creds *Credentials) Update(accessToken, refreshToken string) (err error) {
-	var atc, rtc *jwt.StandardClaims
+	var atc, rtc *jwt.RegisteredClaims
 	if atc, err = parseToken(accessToken); err != nil {
 		return fmt.Errorf("could not parse access token: %s", err)
 	}
@@ -127,14 +127,14 @@ func (creds *Credentials) Update(accessToken, refreshToken string) (err error) {
 	creds.AccessToken = accessToken
 	creds.RefreshToken = refreshToken
 	creds.Subject = atc.Subject
-	creds.IssuedAt = time.Unix(atc.IssuedAt, 0)
-	creds.ExpiresAt = time.Unix(atc.ExpiresAt, 0)
-	creds.RefreshBy = time.Unix(rtc.ExpiresAt, 0)
+	creds.IssuedAt = atc.IssuedAt.Time
+	creds.ExpiresAt = atc.ExpiresAt.Time
+	creds.RefreshBy = rtc.ExpiresAt.Time
 
-	if rtc.NotBefore > 0 {
-		creds.NotBefore = time.Unix(rtc.NotBefore, 0)
+	if rtc.NotBefore != nil && !rtc.NotBefore.IsZero() {
+		creds.NotBefore = rtc.NotBefore.Time
 	} else {
-		creds.NotBefore = time.Unix(rtc.IssuedAt, 0)
+		creds.NotBefore = rtc.IssuedAt.Time
 	}
 
 	if err = creds.Check(); err != nil {
@@ -148,13 +148,13 @@ func (creds *Credentials) Update(accessToken, refreshToken string) (err error) {
 	return nil
 }
 
-func parseToken(tks string) (_ *jwt.StandardClaims, err error) {
-	claims := &jwt.StandardClaims{}
+func parseToken(tks string) (_ *jwt.RegisteredClaims, err error) {
+	claims := &jwt.RegisteredClaims{}
 	if _, _, err = new(jwt.Parser).ParseUnverified(tks, claims); err != nil {
 		return nil, err
 	}
 
-	if claims.IssuedAt == 0 || claims.ExpiresAt == 0 {
+	if claims.IssuedAt.IsZero() || claims.ExpiresAt.IsZero() {
 		return nil, ErrInvalidClaims
 	}
 
