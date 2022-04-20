@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flex, Text, Link, useColorModeValue } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import useAxios from 'hooks/useAxios';
-import { getAppVersionNumber } from 'application/config';
+import { getAppVersionNumber, getBffAndGdsVersion, getAppGitVersion } from 'application/config';
+
 const Footer = (): React.ReactElement => {
   // const { data, error, isLoading } = useAxios({
   //   url: 'https://api.intervasp.org/v1/directory/search',
@@ -12,7 +13,30 @@ const Footer = (): React.ReactElement => {
   //     limit: 1
   //   }
   // });
-  const appVersion = getAppVersionNumber();
+  const [appVersion, setAppVersion] = useState<any>();
+  const [gitRevision, setGitRevision] = useState<any>();
+  const [bffAndGdsVersion, setBffAndGdsVersion] = useState<any>();
+  const fetchAsyncBffAndGdsVersion = async () => {
+    const request = await getBffAndGdsVersion();
+    if (request) {
+      setBffAndGdsVersion(request.version);
+    }
+  };
+
+  useEffect(() => {
+    // console.log(data);
+    const getAppVersion = getAppVersionNumber();
+    const getGitRevision = getAppGitVersion();
+    setAppVersion(getAppVersion);
+    setGitRevision(getGitRevision);
+    fetchAsyncBffAndGdsVersion();
+  }, []);
+  //  log this out in the console
+  if (appVersion || gitRevision || bffAndGdsVersion) {
+    console.log('appVersion', appVersion);
+    console.log('gitRevision', gitRevision);
+    console.log('bffAndGdsVersion', bffAndGdsVersion);
+  }
   return (
     <Flex
       bg={useColorModeValue(colors.system.gray, 'transparent')}
@@ -48,11 +72,12 @@ const Footer = (): React.ReactElement => {
             TRISA
           </Link>{' '}
         </Text>
-        {appVersion && (
-          <Text width="100%" textAlign="center" color="white" fontSize="sm">
-            Build version : {appVersion}
-          </Text>
-        )}
+
+        <Text width="100%" textAlign="center" color="white" fontSize="12" pt={1}>
+          {appVersion && <Text as="span">App version {appVersion} - </Text>}
+          {gitRevision && <Text as="span">Git Revision {gitRevision} - </Text>}
+          {bffAndGdsVersion && <Text as="span">BFF & GDS version {bffAndGdsVersion} </Text>}
+        </Text>
       </Flex>
     </Flex>
   );
