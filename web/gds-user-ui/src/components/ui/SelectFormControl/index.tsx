@@ -9,7 +9,7 @@ import { ChakraStylesConfig, GroupBase, OptionsOrGroups, Select, Props } from 'c
 import React from 'react';
 
 interface _FormControlProps extends Props {
-  formHelperText?: string;
+  formHelperText?: any;
   controlId: string;
   label?: string;
   name?: string;
