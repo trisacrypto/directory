@@ -38,6 +38,12 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       clearErrors('entity.national_identification.registration_authority');
       inputRegRef?.current?.clear();
     }
+    if (
+      NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
+      !disabledIdentifiers.includes(NationalIdentificationType)
+    ) {
+      setValue('entity.national_identification.registration_authority', 'RA777777');
+    }
   }, [NationalIdentificationType]);
   return (
     <FormLayout>
@@ -84,7 +90,6 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
           />
         )}
       />
-
       {disabledIdentifiers.includes(NationalIdentificationType) && (
         <>
           <Controller
@@ -109,27 +114,30 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
           />
         </>
       )}
-
-      <Controller
-        control={control}
-        name="entity.national_identification.registration_authority"
-        render={({ field }) => (
-          <SelectFormControl
-            ref={field.ref}
-            options={registrationAuthority}
-            value={registrationAuthority.find((option) => option.value === field.value)}
-            onChange={(newValue: any) => field.onChange(newValue.value)}
-            label="Registration Authority"
-            controlId="registration_authority"
-            isInvalid={!!errors?.entity?.national_identification?.registration_authority}
-            isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
-            formHelperText={
-              errors?.entity?.national_identification?.registration_authority?.message ||
-              'Specify the Registration Authority ID from the GLEIF Registration Authorities List.'
-            }
+      {NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && (
+        <>
+          <Controller
+            control={control}
+            name="entity.national_identification.registration_authority"
+            render={({ field }) => (
+              <SelectFormControl
+                ref={field.ref}
+                options={registrationAuthority}
+                value={registrationAuthority.find((option) => option.value === field.value)}
+                onChange={(newValue: any) => field.onChange(newValue.value)}
+                label="Registration Authority"
+                controlId="registration_authority"
+                isInvalid={!!errors?.entity?.national_identification?.registration_authority}
+                isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+                formHelperText={
+                  errors?.entity?.national_identification?.registration_authority?.message ||
+                  'For identifiers other than LEI specify the registration authority from the following list. See <a href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list">GLEIF Registration Authorities</a> for more details on how to look up a registration authority. If in doubt, use RA777777 - "General Government Entities" which specifies the default registration authority for your country of registration..'
+                }
+              />
+            )}
           />
-        )}
-      />
+        </>
+      )}
 
       {/* <InputFormControl
         label="Registration Authority"

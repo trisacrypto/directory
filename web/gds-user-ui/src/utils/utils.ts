@@ -56,7 +56,11 @@ export const getDomain = (url: string | URL) => {
 };
 
 export const getRegistrationAuthoritiesOptions = () => {
-  return [...Array.from(new Set(registrationAuthority))].map((v) => ({ value: v, label: v }));
+  return [...Array.from(new Set(registrationAuthority))].map((v: any) => ({
+    value: v.option,
+    label: v.organization || v.option,
+    isDisabled: !!v.isDisabled
+  }));
 };
 
 export const mapTrixoFormForBff = (data: any) => {

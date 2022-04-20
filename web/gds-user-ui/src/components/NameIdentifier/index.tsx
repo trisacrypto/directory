@@ -111,7 +111,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <DeleteButton
                     onDelete={() => remove(index)}
                     tooltip={{ label: 'Remove line' }}
-                    isDisabled={index === 0}
+                    isDisabled={type === 'legal' && index === 0}
                   />
                 </Box>
               </HStack>
