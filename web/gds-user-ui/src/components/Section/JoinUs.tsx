@@ -1,5 +1,4 @@
-import React, { FC } from 'react';
-import { Stack, Container, Box, Flex, Text, Button, SimpleGrid } from '@chakra-ui/react';
+import { Stack, Container, Box, Flex, Text, Button, SimpleGrid, Heading } from '@chakra-ui/react';
 import { getIcon } from 'components/Icon';
 import { colors } from 'utils/theme';
 
@@ -27,15 +26,15 @@ const datas = [
 ];
 export default function JoinUsSection() {
   return (
-    <Flex bg={colors.system.gray} position={'relative'} width="100%" fontFamily={colors.font}>
+    <Flex bg={colors.system.gray} position={'relative'} width="100%" py={12}>
       <Container maxW={'5xl'} zIndex={10} position={'relative'} id={'join'}>
         <Stack>
-          <Stack flex={1} color={'white'} justify={{ lg: 'center' }} py={{ base: 4, md: 10 }}>
+          <Stack flex={1} justify={{ lg: 'center' }}>
             <Box mb={{ base: 10, md: 25 }} color="white">
-              <Text fontWeight={600} pb={6} fontSize={'2xl'}>
+              <Heading fontWeight={600} pb={6} fontSize={'2xl'} color="#fff">
                 Why Join TRISA
-              </Text>
-              <Text fontSize={'xl'}>
+              </Heading>
+              <Text color="#fff" fontSize={{ base: '16px', md: '17px' }}>
                 TRISA is a global, open source, peer-to-peer and secure Travel Rule architecture and
                 network designed to be accessible and interoperable. Become a TRISA-certified VASP
                 today. Learn how TRISA works.
@@ -46,20 +45,27 @@ export default function JoinUsSection() {
               {datas.map((data) => (
                 <Box key={data.title} mb={20}>
                   <Text pb={4}>{getIcon(data.icon)}</Text>
-                  <Text fontSize={'xl'} color={'white'} mb={2}>
+                  <Text
+                    fontSize={{ base: '16px', md: '17px' }}
+                    color={'white'}
+                    fontWeight="700"
+                    mb={2}>
                     {data.title}
                   </Text>
-                  <Text fontSize={'xl'}>{data.content}</Text>
+                  <Text fontSize={{ base: '16px', md: '17px' }} color="#fff">
+                    {data.content}
+                  </Text>
                 </Box>
               ))}
             </SimpleGrid>
             <Box alignItems="center" textAlign="center">
               <Button
                 bg="#FF7A59"
-                w="306px"
-                h="64px"
                 color="white"
                 borderColor="white"
+                py={6}
+                maxWidth={256}
+                width="100%"
                 border="2px"
                 _hover={{ bg: '#FF7A77' }}
                 as={'a'}
