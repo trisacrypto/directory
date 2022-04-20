@@ -133,16 +133,16 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                   errors?.entity?.national_identification?.registration_authority?.message || (
                     <Text>
                       For identifiers other than LEI specify the registration authority from the
-                      following list. See for more details on how to look up a registration
-                      authority. If in doubt, use RA777777 - "General Government Entities" which
-                      specifies the default registration authority for your country of
-                      registration..'
+                      following list. See{' '}
                       <Link
                         href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
                         color="blue.500"
                         isExternal>
                         GLEIF Registration Authorities
-                      </Link>
+                      </Link>{' '}
+                      for more details on how to look up a registration authority. If in doubt, use
+                      RA777777 - "General Government Entities" which specifies the default
+                      registration authority for your country of registration..'
                     </Text>
                   )
                 }
