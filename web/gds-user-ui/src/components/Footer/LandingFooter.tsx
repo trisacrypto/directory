@@ -35,7 +35,7 @@ const Footer = (): React.ReactElement => {
           on behalf of{' '}
           <Link href="https://trisa.io" color={colors.system.cyan}>
             TRISA
-          </Link>{' '}
+          </Link>
           .
         </Text>
       </Flex>
