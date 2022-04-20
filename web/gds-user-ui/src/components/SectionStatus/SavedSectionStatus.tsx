@@ -5,7 +5,17 @@ import { Box } from '@chakra-ui/react';
 const SavedSectionStatus: React.FC = () => {
   return (
     <Box>
-      <Icon as={CheckCircleIcon} w={7} h={7} color="green.300" /> (saved)
+      <Icon
+        as={CheckCircleIcon}
+        w={7}
+        h={7}
+        sx={{
+          path: {
+            fill: 'green.400'
+          }
+        }}
+      />{' '}
+      (saved)
     </Box>
   );
 };

@@ -142,7 +142,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                       </Link>{' '}
                       for more details on how to look up a registration authority. If in doubt, use
                       RA777777 - "General Government Entities" which specifies the default
-                      registration authority for your country of registration..'
+                      registration authority for your country of registration.
                     </Text>
                   )
                 }

@@ -1,4 +1,4 @@
-export const countries = {
+export const COUNTRIES = {
   AF: 'Afghanistan',
   AX: 'Aland Islands',
   AL: 'Albania',
@@ -247,5 +247,5 @@ export const countries = {
 };
 
 export const getCountriesOptions = () => {
-  return Object.entries(countries).map(([k, v]) => ({ value: k, label: v }));
+  return Object.entries(COUNTRIES).map(([k, v]) => ({ value: k, label: v }));
 };

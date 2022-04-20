@@ -1,5 +1,17 @@
 import React, { FC, useEffect } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Tag } from '@chakra-ui/react';
+import {
+  Stack,
+  Box,
+  Text,
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Button,
+  Tag,
+  Divider
+} from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
@@ -7,6 +19,7 @@ import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
+import { COUNTRIES } from 'constants/countries';
 interface LegalReviewProps {}
 // NOTE: need some clean up.
 const isValidIvmsAddress = (address: any) => {
@@ -128,7 +141,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
       px={5}>
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Section 2: Legal Person</Heading>
+          <Heading fontSize={20}>Section 2: Legal Person</Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -144,77 +157,87 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
         <Stack fontSize={18}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold', paddingLeft: 0 },
               Tr: { borderStyle: 'hidden' }
             }}>
-            <Tbody>
+            <Tbody
+              sx={{
+                '*': {
+                  fontSize: '1rem'
+                }
+              }}>
               <Tr>
-                <Td>Name Identifiers</Td>
-                <Td></Td>
-                <Td></Td>
+                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3}>
+                  <Text mb={1}>Name Identifiers</Text>
+                  <Divider />
+                </Td>
               </Tr>
               <Tr>
-                <Td fontStyle={'italic'}>
+                <Td fontStyle={'italic'} pt={0}>
                   The name and type of name by which the legal person is known.
                 </Td>
-                renderAddress(address)
                 <Td>
                   <Tr>
                     {legalPerson.name?.name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
-                          <>
-                            <Td>{nameIdentifier.legal_person_name}</Td>
-                            <Td>
+                          <React.Fragment key={index}>
+                            <Td paddingLeft={0} border="none">
+                              {nameIdentifier.legal_person_name || 'N/A'}
+                            </Td>
+                            <Td paddingLeft={0} border="none">
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
                             </Td>
-                          </>
+                          </React.Fragment>
                         );
                       }
                     )}
                   </Tr>
-                  <Tr>
+                  <>
                     {legalPerson.name?.local_name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
-                          <>
-                            <Td>{nameIdentifier.legal_person_name}</Td>
-                            <Td>
+                          <React.Fragment key={index}>
+                            <Td paddingLeft={0} pt={0} border="none">
+                              {nameIdentifier.legal_person_name}
+                            </Td>
+                            <Td paddingLeft={0} pt={0} border="none">
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
                             </Td>
-                          </>
+                          </React.Fragment>
                         );
                       }
                     )}
-                  </Tr>
-                  <Tr>
+                  </>
+                  <>
                     {legalPerson.name?.phonetic_name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
-                          <>
-                            <Td>{nameIdentifier.legal_person_name}</Td>
-                            <Td>
+                          <React.Fragment key={index}>
+                            <Td paddingLeft={0} pt={0} border="none">
+                              {nameIdentifier.legal_person_name}
+                            </Td>
+                            <Td paddingLeft={0} pt={0} border="none">
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
                             </Td>
-                          </>
+                          </React.Fragment>
                         );
                       }
                     )}
-                  </Tr>
+                  </>
                 </Td>
-                <Td></Td>
               </Tr>
               <Tr>
-                <Td>Addresses</Td>
+                <Td pt={0}>Addresses</Td>
                 <Td>
                   <Tr>
-                    <Td>
+                    <Td paddingLeft={0} pt={0}>
                       {legalPerson?.geographic_addresses?.map((address: any, index: number) => (
                         <React.Fragment key={index}>{renderAddress(address)}</React.Fragment>
                       ))}
@@ -224,51 +247,48 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                         }
                       )} */}
                     </Td>
-                    <Td>{legalPerson?.geographic_addresses?.[0] && 'Legal Person'}</Td>
+                    <Td pt={0}>{legalPerson?.geographic_addresses?.[0] && 'Legal Person'}</Td>
                   </Tr>
                 </Td>
-                <Td></Td>
-              </Tr>
-              {/* <Tr>
-                <Td>Customer Number</Td>
-                <Td></Td>
-                <Td></Td>
-              </Tr> */}
-              <Tr>
-                <Td>Country of Registration</Td>
-                <Td>{legalPerson?.country_of_registration || 'N/A'}</Td>
-                <Td></Td>
               </Tr>
               <Tr>
-                <Td>National Identification</Td>
-                <Td></Td>
-                <Td></Td>
+                <Td pt={0}>Country of Registration</Td>
+                <Td paddingLeft={0} pt={0}>
+                  {(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}
+                </Td>
               </Tr>
               <Tr>
-                <Td>Identification Number</Td>
-                <Td>{legalPerson?.national_identification?.national_identifier}</Td>
-                <Td></Td>
+                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3}>
+                  <Text mb={1}>National Identification</Text>
+                  <Divider />
+                </Td>
               </Tr>
               <Tr>
-                <Td>Identification Type</Td>
-                <Td>
+                <Td pt={0}>Identification Number</Td>
+                <Td paddingLeft={0}>{legalPerson?.national_identification?.national_identifier}</Td>
+              </Tr>
+              <Tr>
+                <Td pt={0}>Identification Type</Td>
+                <Td pt={0}>
                   <Tag color={'white'} bg={'blue.400'} size={'lg'}>
                     {getNationalIdentificationLabel(
                       legalPerson?.national_identification?.national_identifier_type
                     )}
                   </Tag>
                 </Td>
-                <Td></Td>
               </Tr>
               <Tr>
                 <Td>Country of Issue</Td>
-                <Td>{legalPerson?.national_identification?.country_of_issue || 'N/A'}</Td>
-                <Td></Td>
+                <Td>
+                  {(COUNTRIES as any)[legalPerson?.national_identification?.country_of_issue] ||
+                    'N/A'}
+                </Td>
               </Tr>
               <Tr>
-                <Td>Reg Authority</Td>
-                <Td>{legalPerson?.national_identification?.registration_authority || 'N/A'}</Td>
-                <Td></Td>
+                <Td pt={0}>Reg Authority</Td>
+                <Td pt={0}>
+                  {legalPerson?.national_identification?.registration_authority || 'N/A'}
+                </Td>
               </Tr>
             </Tbody>
           </Table>
