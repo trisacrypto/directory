@@ -300,12 +300,12 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	tm := a.GetTokenManager()
 
 	claims := &tokens.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Id:        uuid.NewString(),
-			Audience:  "http://localhost",
-			IssuedAt:  time.Now().Unix(),
-			NotBefore: time.Now().Unix(),
-			ExpiresAt: time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.NewString(),
+			Audience:  jwt.ClaimStrings{"http://localhost"},
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -354,7 +354,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
 	// Mismatched access and refresh tokens
-	claims.Id = uuid.NewString()
+	claims.ID = uuid.NewString()
 	otherToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	other, err := tm.Sign(otherToken)
 	require.NoError(err)

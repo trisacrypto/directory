@@ -18,7 +18,9 @@ import {
   Table,
   Tr,
   Td,
-  Th
+  Th,
+  Heading,
+  HStack
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
@@ -46,18 +48,19 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
   return (
     <Flex
+      py={12}
       width="100%"
       position={'relative'}
       fontFamily={colors.font}
       color={useColorModeValue('black', 'white')}
       minH={400}>
       <Container maxW={'5xl'} zIndex={10} fontFamily={colors.font} mb={10} id={'search'}>
-        <Stack py={5}>
+        <Stack>
           <Box mb={{ base: 5 }} color={useColorModeValue('black', 'white')}>
-            <Text fontWeight={600} pb={4} fontSize={'2xl'}>
+            <Heading fontWeight={600} pb={4} fontSize={'2xl'}>
               Search the Directory Service
-            </Text>
-            <Text fontSize={'lg'}>
+            </Heading>
+            <Text fontSize={{ base: '16px', md: '17px' }}>
               Enter the VASP Common Name or VASP ID. Not a TRISA Member?
               <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
                 Join the TRISA network today.
@@ -69,25 +72,19 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             <Text fontSize={'lg'} color={'black'} fontWeight={'bold'}>
               Directory Search
             </Text>
-            <Box width={'70%'}>
+            <Box width={{ md: '70%', sm: '90%' }}>
               <form onSubmit={(e) => handleSubmit(e, search)}>
                 <FormControl color={'gray.500'}>
-                  <Input
-                    size="md"
-                    pr="4.5rem"
-                    type={'gray.100'}
-                    isRequired
-                    placeholder="Common name or VASP ID"
-                    name="search"
-                    onChange={(event) => setSearch(event.currentTarget.value)}
-                  />
-
-                  <FormHelperText ml={1} color={'#1F4CED'} cursor={'help'}>
-                    <Tooltip label="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.">
-                      What’s a Common name or VASP ID?
-                    </Tooltip>
-                  </FormHelperText>
-                  <InputRightElement width="2.5rem" color={'black'}>
+                  <HStack>
+                    <Input
+                      size="md"
+                      pr="4.5rem"
+                      type={'gray.100'}
+                      isRequired
+                      placeholder="Common name or VASP ID"
+                      name="search"
+                      onChange={(event) => setSearch(event.currentTarget.value)}
+                    />
                     <Button
                       h="2.5rem"
                       size="sm"
@@ -97,7 +94,25 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       spinnerPlacement="start">
                       <SearchIcon />
                     </Button>
-                  </InputRightElement>
+                  </HStack>
+
+                  <FormHelperText ml={1} color={'#1F4CED'} cursor={'help'}>
+                    <Tooltip label="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.">
+                      What’s a Common name or VASP ID?
+                    </Tooltip>
+                  </FormHelperText>
+                  {/* <InputRightElement width="2.5rem" color={'black'}>
+                    <Button
+                      h="2.5rem"
+                      size="sm"
+                      isLoading={isLoading}
+                      variant="outline"
+                      type="submit"
+                      spinnerPlacement="start">
+                      <SearchIcon />
+                    </Button>
+                  </InputRightElement> */}
+
                   {error && <ErrorMessage message={error} handleClose={handleClose} />}
                 </FormControl>
               </form>

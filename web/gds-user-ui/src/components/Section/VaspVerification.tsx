@@ -13,7 +13,8 @@ import {
   UnorderedList,
   ListItem,
   Button,
-  GridItem
+  GridItem,
+  useMediaQuery
 } from '@chakra-ui/react';
 
 import { colors } from '../../utils/theme';
@@ -23,6 +24,7 @@ type Props = StyleProps &
     children: React.ReactNode;
     title?: string;
     colSpan: number;
+    dataContent?: string;
   };
 
 interface ILineProps {
@@ -30,19 +32,35 @@ interface ILineProps {
   title?: string;
 }
 
-const Line: React.FC<Props> = ({ children, colSpan, title, ...rest }: any) => {
+const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest }: any) => {
+  const [isMobile] = useMediaQuery('(max-width: 768px)');
   return (
     <GridItem ml={4} colSpan={colSpan}>
-      <chakra.dt fontSize="lg" fontWeight="medium" lineHeight="6" {...rest}>
+      <chakra.dt fontSize="lg" fontWeight="medium" lineHeight="6" mt={2} {...rest}>
         {title}
       </chakra.dt>
-      <chakra.dd mt={2}>{children}</chakra.dd>
+      <chakra.dd
+        mt={2}
+        data-content={dataContent}
+        mb={{ base: 4, sm: 0 }}
+        fontSize={{ base: '1rem' }}
+        padding={2}
+        {...(isMobile && {
+          _before: {
+            content: 'attr(data-content)',
+            display: 'block',
+            fontWeight: 'bold',
+            fontSize: 'lg'
+          }
+        })}>
+        {children}
+      </chakra.dd>
     </GridItem>
   );
 };
 export default function VaspVerification() {
   return (
-    <Flex color={'black'} fontFamily={'Open Sans'} fontSize={'xl'} px={40} py={4}>
+    <Flex color={'black'} fontFamily={'Open Sans'} fontSize={'xl'}>
       <Container maxW={'5xl'}>
         <Stack flex={1} justify={{ lg: 'center' }}>
           <Box my={{ base: 4 }} color="black">
@@ -53,7 +71,7 @@ export default function VaspVerification() {
             </Text>
           </Box>
           <Box bg={'gray.100'} p={5}>
-            <Text fontSize={'xl'} color={'black'}>
+            <Text fontSize={'1rem'} color={'black'}>
               TRISA’s verification form includes five sections and may require information from
               several parties in your organization.
             </Text>
@@ -63,8 +81,8 @@ export default function VaspVerification() {
               display={{ md: 'grid' }}
               gridTemplateColumns={{ md: 'repeat(5,1fr)' }}
               color={'black'}
-              gridColumnGap={10}
-              gridRowGap={10}>
+              gap={10}
+              alignItems="center">
               <>
                 <Line title="Sections & Details" fontWeight={'bold'} colSpan={3}>
                   {''}
@@ -79,32 +97,42 @@ export default function VaspVerification() {
                 category.
               </Line>
 
-              <Line colSpan={2}>Business or Compliance Office</Line>
+              <Line colSpan={2} dataContent="Who to ask">
+                Business or Compliance Office
+              </Line>
 
               <Line title="2 Legal Person" fontWeight={'bold'} colSpan={3}>
                 Information that identifies your organization as a Legal Person. This section
                 represents the IVMS 101 data structure for legal persons and is strongly suggested
                 for use as KYC information exchanged in TRISA transfers.
               </Line>
-              <Line colSpan={2}>Business or Compliance Office</Line>
+              <Line colSpan={2} dataContent="Who to ask">
+                Business or Compliance Office
+              </Line>
 
               <Line title="3 Contacts" fontWeight={'bold'} colSpan={3}>
                 Contact information for representatives of your organization. Contacts include
                 Technical, Legal/Compliance, Administrative, and Billing persons.
               </Line>
-              <Line colSpan={2}>Business or Compliance Office</Line>
+              <Line colSpan={2} dataContent="Who to ask">
+                Business or Compliance Office
+              </Line>
 
               <Line title="4 TRISA Implementation" fontWeight={'bold'} colSpan={3}>
                 Technical information about your endpoint for certificate issuance. Each VASP is
                 required to establish a TRISA endpoint for inter-VASP communication.
               </Line>
-              <Line colSpan={2}>Technical Officer</Line>
+              <Line colSpan={2} dataContent="Who to ask">
+                Technical Officer
+              </Line>
               <Line title="5 TRIXO Questionnaire" fontWeight={'bold'} colSpan={3}>
                 information to ensure that required compliance information exchanges are conducted
                 correctly and safely. This includes information about jurisdiction and national
                 regulator, CDD and Travel Rule policies, and data protection policies.
               </Line>
-              <Line colSpan={2}>Compliance Officer</Line>
+              <Line colSpan={2} dataContent="Who to ask">
+                Compliance Officer
+              </Line>
             </Box>
             <Box
               display={{ md: 'grid' }}
@@ -116,7 +144,7 @@ export default function VaspVerification() {
                 <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
                   Final Confirmation
                 </chakra.dt>
-                <chakra.dd mt={2}>
+                <chakra.dd mt={2} fontSize="1rem">
                   Upon submission, a member of TRISA’s verification team will review the form and
                   conduct a final due diligence phone call for physical verfication. Once the VASP
                   verification and due diligence is complete, TRISA will issue certificates to the
@@ -129,12 +157,12 @@ export default function VaspVerification() {
                 </chakra.dt>
                 <chakra.dd mt={2}>
                   <UnorderedList color={'#1F4CED'}>
-                    <ListItem>
+                    <ListItem fontSize="1rem">
                       <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
                         Learn How TRISA Works
                       </Link>
                     </ListItem>
-                    <ListItem>
+                    <ListItem fontSize="1rem">
                       <Link isExternal href="https://intervasp.org/">
                         What is IVMS101?
                       </Link>

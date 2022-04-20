@@ -22,7 +22,7 @@ const ModalAlert = (props: any) => {
         leastDestructiveRef={cancelRef}
         onClose={props.onClose}
         isOpen={props.isOpen}
-        isCentered>
+        closeOnOverlayClick={false}>
         <AlertDialogOverlay />
 
         <AlertDialogContent>

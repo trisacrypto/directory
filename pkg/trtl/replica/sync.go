@@ -23,6 +23,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -258,7 +259,7 @@ func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.Clien
 
 	// Add mTLS credentials if required
 	if r.mtls.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var certPool *x509.CertPool
 		if certPool, err = r.mtls.GetCertPool(); err != nil {

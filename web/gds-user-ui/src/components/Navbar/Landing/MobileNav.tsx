@@ -8,28 +8,27 @@ import {
   Flex,
   Box,
   Stack,
-  IconButton,
-} from "@chakra-ui/react";
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
-import React, { useRef, ReactElement } from "react";
+  IconButton
+} from '@chakra-ui/react';
+import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
+import React, { useRef, ReactElement } from 'react';
 
-import { NavItem } from "./NavItem";
-import Logo from "../../ui/Logo";
+import { NavItem } from './NavItem';
+import Logo from '../../ui/Logo';
 export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const openMenuRef = useRef(null);
   const closeMenuRef = useRef(null);
 
   return (
-    <Box >
+    <Box>
       <Flex
         justifyContent="space-between"
         padding={{ sm: 4, md: 8 }}
         alignItems="center"
         bg="white"
         boxShadow="md"
-        {...props}
-      >
+        {...props}>
         <Logo />
 
         <Flex direction="row">
@@ -40,19 +39,14 @@ export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
             onClick={onOpen}
             bg="none"
             _focus={{
-              borderColor: "unset",
+              borderColor: 'unset'
             }}
           />
         </Flex>
       </Flex>
 
       <Box position="relative">
-        <Drawer
-          isOpen={isOpen}
-          placement="right"
-          onClose={onClose}
-          finalFocusRef={openMenuRef}
-        >
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={openMenuRef}>
           <DrawerOverlay>
             <DrawerContent>
               <IconButton
@@ -66,21 +60,17 @@ export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
                 mb={12}
                 bg="none"
                 _focus={{
-                  borderColor: "unset",
+                  borderColor: 'unset'
                 }}
               />
 
               <DrawerBody p={0}>
                 <Stack spacing={0}>
-                  <NavItem
-                    to="Dashboard"
-                    pageName="Dashboard"
-                    disabled={true}
-                  />
+                  <NavItem to="Dashboard" pageName="Dashboard" disabled={true} />
                   <NavItem to="home" pageName="Home" />
                   <NavItem to="about" pageName="about us" />
                   <NavItem to="documentation" pageName="Documentation" />
-                  <NavItem to="login" pageName="Log in"  />
+                  <NavItem to="login" pageName="Log in" />
                 </Stack>
               </DrawerBody>
             </DrawerContent>

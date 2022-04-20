@@ -72,11 +72,11 @@ func checkCache() (err error) {
 func refreshTokens() (err error) {
 	signKey := []byte("supersecret")
 	claims := apiClaims{
-		jwt.StandardClaims{
+		jwt.RegisteredClaims{
 			Subject:   "/account/42/user/42",
 			Issuer:    "https://iot.sectigo.com/",
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(10 * time.Minute).Unix(),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
 		},
 		[]string{"ROLE_USER"},
 		false,
@@ -88,8 +88,8 @@ func refreshTokens() (err error) {
 
 	// Create refresh token
 	claims.Scopes = []string{"ROLE_REFRESH_TOKEN"}
-	claims.StandardClaims.Id = "5a7c98da-9f06-4a36-90b7-8bcaba091e13"
-	claims.StandardClaims.ExpiresAt = time.Now().Add(2 * time.Hour).Unix()
+	claims.RegisteredClaims.ID = "5a7c98da-9f06-4a36-90b7-8bcaba091e13"
+	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(2 * time.Hour))
 	token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	if testRefreshToken, err = token.SignedString(signKey); err != nil {
 		return err
@@ -99,7 +99,7 @@ func refreshTokens() (err error) {
 }
 
 type apiClaims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	Scopes     []string `json:"scopes"`
 	FirstLogin bool     `json:"first-login"`
 }

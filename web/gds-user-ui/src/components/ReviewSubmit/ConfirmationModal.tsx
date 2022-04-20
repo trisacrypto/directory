@@ -132,18 +132,18 @@ const ConfirmationModal = (props: any) => {
               </ModalFooter>
             </ModalContent>
           </Modal>
+          {isAlerted && (
+            <ModalAlert
+              header={'Confirm'}
+              message={<AlertContent />}
+              handleYesBtn={handleYesBtn}
+              isOpen={isAlertOpen}
+              onOpen={onAlertOpen}
+              onClose={onAlertClose}
+            />
+          )}
         </Box>
       </Flex>
-      {isAlerted && (
-        <ModalAlert
-          header={'Confirm'}
-          message={<AlertContent />}
-          handleYesBtn={handleYesBtn}
-          isOpen={isAlertOpen}
-          onOpen={onAlertOpen}
-          onClose={onAlertClose}
-        />
-      )}
     </>
   );
 };

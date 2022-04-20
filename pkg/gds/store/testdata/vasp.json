@@ -30,9 +30,7 @@
         ],
         "national_identification": {
             "national_identifier": "5493004YBI24IF4TIP92",
-            "national_identifier_type": 9,
-            "country_of_issue": "US",
-            "registration_authority": "RA000744"
+            "national_identifier_type": 9
         },
         "country_of_registration": "US"
     },

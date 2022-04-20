@@ -48,7 +48,7 @@ type TokenManager struct {
 // Claims implements custom claims for the GDS application to hold user data provided
 // from external openid sources. It also embeds the standard JWT claims.
 type Claims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	Domain  string `json:"hd,omitempty"`
 	Email   string `json:"email,omitempty"`
 	Name    string `json:"name,omitempty"`
@@ -150,12 +150,12 @@ func (tm *TokenManager) CreateAccessToken(creds interface{}) (_ *jwt.Token, err 
 	// Create the claims for the access token, using access token defaults.
 	now := time.Now()
 	claims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			Id:        uuid.NewString(), // ID is randomly generated and shared between access and refresh tokens.
-			Audience:  tm.audience,
-			IssuedAt:  now.Unix(),
-			NotBefore: now.Unix(),
-			ExpiresAt: now.Add(accessTokenDuration).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.NewString(), // ID is randomly generated and shared between access and refresh tokens.
+			Audience:  jwt.ClaimStrings{tm.audience},
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(accessTokenDuration)),
 		},
 	}
 
@@ -201,14 +201,14 @@ func (tm *TokenManager) CreateRefreshToken(accessToken *jwt.Token) (refreshToken
 	// means the refresh token can also be parsed with standard claims.
 	// TODO: should we make this a refresh-specific audience or subject?
 	claims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			Id:        accessClaims.Id, // ID is randomly generated and shared between access and refresh tokens.
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        accessClaims.ID, // ID is randomly generated and shared between access and refresh tokens.
 			Audience:  accessClaims.Audience,
 			Issuer:    accessClaims.Issuer,
 			Subject:   accessClaims.Subject,
 			IssuedAt:  accessClaims.IssuedAt,
-			NotBefore: time.Unix(accessClaims.ExpiresAt, 0).Add(accessRefreshOverlap).Unix(),
-			ExpiresAt: time.Unix(accessClaims.IssuedAt, 0).Add(refreshTokenDuration).Unix(),
+			NotBefore: jwt.NewNumericDate(accessClaims.ExpiresAt.Add(accessRefreshOverlap)),
+			ExpiresAt: jwt.NewNumericDate(accessClaims.IssuedAt.Add(refreshTokenDuration)),
 		},
 	}
 

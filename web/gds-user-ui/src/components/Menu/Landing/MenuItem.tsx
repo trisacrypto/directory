@@ -9,7 +9,7 @@ interface MenuItemProps {
 const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.Element => {
   return (
     <Text
-      mb={{ base: isLast ? 0 : 8, sm: 0 }}
+      mb={{ base: isLast ? 0 : 4, sm: 0 }}
       mr={{ base: 0, sm: isLast ? 0 : 8 }}
       display="block"
       {...rest}>

@@ -46,7 +46,9 @@ const VerifyPage: React.FC = () => {
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {result && <AlertMessage message={result.message} status="success" />}
+      {result && (
+        <AlertMessage message={result.message} status="success" title="Contact Verified " />
+      )}
       {error && <AlertMessage message={error} status="error" />}
     </LandingLayout>
   );

@@ -225,7 +225,7 @@ const protectAuthenticateMaxAge = time.Minute * 10
 // the double cookie tokens for CSRF protection. The front-end should call this before
 // posting credentials from Google.
 func (s *Admin) ProtectAuthenticate(c *gin.Context) {
-	expiresAt := time.Now().Add(protectAuthenticateMaxAge).Unix()
+	expiresAt := time.Now().Add(protectAuthenticateMaxAge)
 	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
 		log.Error().Err(err).Msg("could not set cookies")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
@@ -245,7 +245,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 		in        *admin.AuthRequest
 		out       *admin.AuthReply
 		claims    *idtoken.Payload
-		expiresAt int64
+		expiresAt time.Time
 	)
 
 	// Parse incoming JSON data from the client request
@@ -322,33 +322,33 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 	return fmt.Errorf("%s is not in the configured authorized domains", domains)
 }
 
-func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expiresAt int64, err error) {
+func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expiresAt time.Time, err error) {
 	var accessToken, refreshToken *jwt.Token
 
 	// Create the access and refresh tokens from the claims
 	if accessToken, err = s.tokens.CreateAccessToken(creds); err != nil {
 		log.Error().Err(err).Msg("could not create access token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
 		log.Error().Err(err).Msg("could not create refresh token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	// Sign the tokens and return the response
 	out = new(admin.AuthReply)
 	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
 		log.Error().Err(err).Msg("could not sign access token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
 		log.Error().Err(err).Msg("could not sign refresh token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt = refreshToken.Claims.(*tokens.Claims).ExpiresAt
+	expiresAt = refreshToken.Claims.(*tokens.Claims).ExpiresAt.Time
 	return out, expiresAt, nil
 }
 
@@ -364,7 +364,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 		tks           string
 		in            *admin.AuthRequest
 		out           *admin.AuthReply
-		expiresAt     int64
+		expiresAt     time.Time
 		accessClaims  *tokens.Claims
 		refreshClaims *tokens.Claims
 	)
@@ -408,7 +408,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 
 	// Ensure the refresh token and admin token match
 	// TODO: verify the in.Credential is a refresh token using the subject or audience
-	if accessClaims.Id != refreshClaims.Id {
+	if accessClaims.ID != refreshClaims.ID {
 		log.Warn().Msg("mismatched access and refresh token pair")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
@@ -1357,6 +1357,13 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		}
 		contact = update
 		emailUpdated = true
+
+		if contact.IsZero() {
+			log.Warn().Msg("cannot create empty contact on update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
+		}
+
 	} else {
 		// Otherwise replace the existing contact info
 		contact.Name = update.Name
@@ -1365,6 +1372,12 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		if contact.Email != update.Email {
 			contact.Email = update.Email
 			emailUpdated = true
+		}
+
+		if contact.IsZero() {
+			log.Warn().Msg("invalid contact record after update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
 		}
 	}
 

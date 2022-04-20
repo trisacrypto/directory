@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flex, Heading, Stack, Text, HStack, Button } from '@chakra-ui/react';
+import { Flex, Heading, Stack, Text, HStack, Button, VStack } from '@chakra-ui/react';
 
 interface LandingHeaderProps {
   hasBtn?: boolean;
@@ -10,62 +10,67 @@ interface LandingHeaderProps {
 const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, hasBtn }): any => {
   return (
     <Flex
-      bgGradient="linear(270deg,#24a9df,#1aebb4)"
+      bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 33.85%, rgba(27, 206, 159, 0.55) 96.72%);"
       color="white"
       width="100%"
-      height={286}
+      minHeight={286}
       justifyContent="center"
       direction="column"
-      padding={4}
+      paddingY={{ base: 16, md: 20 }}
       fontSize={'xl'}>
       <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
         {isHomePage && (
           <>
-            <Heading fontWeight={600} fontSize={{ md: '4xl', sm: 'xl', lg: '3xl' }}>
+            <Heading fontWeight={700} fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }} color="#fff">
               TRISA Global Directory Service
             </Heading>
-            <Text fontSize={{ base: '30px', md: '2xl', sm: 'lg' }}>
+            <Text as="h3" fontSize={{ base: '1.2rem', md: 28, sm: 'lg' }} color="#fff">
               Become Travel Rule compliant. <br />
               Apply to Become a TRISA certified Virtual Asset Service Provider.
             </Text>
           </>
         )}
         {isStartPage && (
-          <>
-            <Heading fontWeight={600} fontSize={{ md: '4xl', sm: '2xl' }}>
+          <VStack spacing={4}>
+            <Heading fontWeight={600} fontSize={{ md: '4xl', sm: '2xl' }} color="#fff">
               Complete TRISA’s VASP Verfication Process
             </Heading>
-            <Text fontSize={{ base: '30px', md: '2xl', sm: 'lg' }}>
-              All TRISA members must complete TRISA’s VASP verification <br />
-              and due diligence process to become a Verified VASP.
+            <Text fontSize={{ base: 'lg', md: 'xl', sm: 'lg' }} color="#fff" maxW="700px" mx="auto">
+              All TRISA members must complete TRISA’s VASP verification and due diligence process to
+              become a Verified VASP.
             </Text>
-          </>
+          </VStack>
         )}
 
         {hasBtn && (
           <>
-            <Stack justifyContent={'center'} pt={4} spacing={4} direction={['column', 'row']}>
+            <Stack
+              justifyContent={'center'}
+              alignItems="center"
+              pt={4}
+              spacing={4}
+              direction={['column', 'row']}>
               <Button
                 bg={'white'}
+                border="3px solid #555151D4"
                 color={'black'}
-                p={2}
-                minWidth={306}
-                minHeight={65}
+                py={6}
+                maxWidth={256}
+                width="100%"
                 as="a"
                 href="/certificate/registration">
-                {' '}
-                Start Registration{' '}
+                Start Registration
               </Button>
               <Button
                 bg={'white'}
+                border="3px solid #555151D4"
                 color={'black'}
-                p={2}
-                minWidth={306}
-                minHeight={65}
+                py={6}
+                maxWidth={256}
+                width="100%"
                 as="a"
                 href="/#search">
-                {' '}
-                Search Directory{' '}
+                Search Directory
               </Button>
             </Stack>
           </>

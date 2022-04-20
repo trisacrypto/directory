@@ -1,5 +1,21 @@
 import React from 'react';
-import { Box, Flex, FlexProps, useColorModeValue, Link, Container, HStack } from '@chakra-ui/react';
+import {
+  DrawerBody,
+  Box,
+  Flex,
+  FlexProps,
+  useColorModeValue,
+  Link,
+  Container,
+  Stack,
+  VStack,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  useDisclosure,
+  DrawerCloseButton
+} from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
 import MenuItem from 'components/Menu/Landing/MenuItem';
@@ -7,42 +23,65 @@ import { colors } from 'utils/theme';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
-  const toggleMenu = () => setShow(!show);
   const iconColor = useColorModeValue('black', 'white');
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <Flex
       width="100%"
       position={'relative'}
-      p={8}
+      p={{ base: 4, md: 8 }}
       bg={'transparent'}
       color={colors.system.blue}
       {...props}>
       <Container maxW={'5xl'}>
-        <Box display={{ base: 'block', md: 'none' }} onClick={toggleMenu}>
-          {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
-        </Box>
-
-        <Box
-          display={{ base: show ? 'block' : 'none', md: 'block' }}
-          flexBasis={{ base: '100%', md: 'auto' }}>
-          <Flex
-            align="center"
-            justify={['center', 'space-between', 'space-between', 'space-between']}
-            direction={['column', 'row', 'row', 'row']}
-            pt={[4, 4, 0, 0]}>
+        <Box flexBasis={{ base: '100%', md: 'auto' }}>
+          <Flex align="center" justify={{ md: 'space-between' }}>
             <Box>
               <Link href="/">
-                <Logo w="100px" color={['colors.system.blue']} />
+                <Logo w={{ base: '100px', md: '200px' }} color={['colors.system.blue']} />
               </Link>
             </Box>
-            <HStack>
-              <MenuItem to="/#about">About TRISA </MenuItem>
-              {/* <MenuItem to="/about">About Us</MenuItem> */}
+            <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
+              {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
+            </Box>
+
+            <Stack ml="auto" display={{ base: 'none', sm: 'flex' }} direction={['column', 'row']}>
+              <MenuItem to="/#about">About TRISA</MenuItem>
               <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-              {/* <MenuItem to="/login" isLast>
-            Login
-          </MenuItem> */}
-            </HStack>
+            </Stack>
+
+            {/* mobile drawer */}
+            <Drawer placement="right" onClose={onClose} isOpen={isOpen} size="xs">
+              <DrawerOverlay />
+              <DrawerContent bg="#262626">
+                <DrawerCloseButton
+                  left={'15px'}
+                  color="#fff"
+                  sx={{
+                    '.chakra-icon path': {
+                      fill: '#fff'
+                    }
+                  }}
+                />
+                <DrawerBody mt="50px" px={0}>
+                  <VStack
+                    alignItems="start"
+                    sx={{
+                      p: {
+                        color: '#fff',
+                        paddingY: 2,
+                        m: '0 !important',
+                        w: '100%',
+                        pl: '25px'
+                      }
+                    }}>
+                    <MenuItem to="/#about">About TRISA </MenuItem>
+                    <MenuItem to="https://trisa.dev">Documentation </MenuItem>
+                  </VStack>
+                </DrawerBody>
+              </DrawerContent>
+            </Drawer>
           </Flex>
         </Box>
       </Container>

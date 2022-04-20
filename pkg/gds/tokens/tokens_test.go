@@ -61,13 +61,13 @@ func (s *TokenTestSuite) TestTokenManager() {
 
 	// Check access token claims
 	ac := accessToken.Claims.(*tokens.Claims)
-	require.NotZero(ac.Id)
-	require.Equal("http://localhost:3000", ac.Audience)
+	require.NotZero(ac.ID)
+	require.Equal(jwt.ClaimStrings{"http://localhost:3000"}, ac.Audience)
 	require.Empty(ac.Issuer, "issuer is a duplicate of audience")
 	require.Equal("102374163855881761273", ac.Subject)
-	require.True(time.Unix(ac.IssuedAt, 0).Before(now))
-	require.True(time.Unix(ac.NotBefore, 0).Before(now))
-	require.True(time.Unix(ac.ExpiresAt, 0).After(now))
+	require.True(ac.IssuedAt.Before(now))
+	require.True(ac.NotBefore.Before(now))
+	require.True(ac.ExpiresAt.After(now))
 	require.Equal(creds["hd"], ac.Domain)
 	require.Equal(creds["email"], ac.Email)
 	require.Equal(creds["name"], ac.Name)
@@ -81,23 +81,23 @@ func (s *TokenTestSuite) TestTokenManager() {
 	// Check refresh token claims
 	// Check access token claims
 	rc := refreshToken.Claims.(*tokens.Claims)
-	require.Equal(ac.Id, rc.Id, "access and refresh tokens must have same jid")
+	require.Equal(ac.ID, rc.ID, "access and refresh tokens must have same jid")
 	require.Equal(ac.Audience, rc.Audience)
 	require.Equal(ac.Issuer, rc.Issuer)
 	require.Equal(ac.Subject, rc.Subject)
-	require.True(time.Unix(rc.IssuedAt, 0).Equal(time.Unix(ac.IssuedAt, 0)))
-	require.True(time.Unix(rc.NotBefore, 0).After(now))
-	require.True(time.Unix(rc.ExpiresAt, 0).After(time.Unix(rc.NotBefore, 0)))
+	require.True(rc.IssuedAt.Equal(ac.IssuedAt.Time))
+	require.True(rc.NotBefore.After(now))
+	require.True(rc.ExpiresAt.After(rc.NotBefore.Time))
 	require.Empty(rc.Domain)
 	require.Empty(rc.Email)
 	require.Empty(rc.Name)
 	require.Empty(rc.Picture)
 
 	// Verify relative nbf and exp claims of access and refresh tokens
-	require.True(time.Unix(ac.IssuedAt, 0).Equal(time.Unix(rc.IssuedAt, 0)), "access and refresh tokens do not have same iss timestamp")
-	require.Equal(45*time.Minute, time.Unix(rc.NotBefore, 0).Sub(time.Unix(ac.IssuedAt, 0)), "refresh token nbf is not 45 minutes after access token iss")
-	require.Equal(15*time.Minute, time.Unix(ac.ExpiresAt, 0).Sub(time.Unix(rc.NotBefore, 0)), "refresh token active does not overlap active token active by 15 minutes")
-	require.Equal(60*time.Minute, time.Unix(rc.ExpiresAt, 0).Sub(time.Unix(ac.ExpiresAt, 0)), "refresh token does not expire 1 hour after access token")
+	require.True(ac.IssuedAt.Equal(rc.IssuedAt.Time), "access and refresh tokens do not have same iss timestamp")
+	require.Equal(45*time.Minute, rc.NotBefore.Sub(ac.IssuedAt.Time), "refresh token nbf is not 45 minutes after access token iss")
+	require.Equal(15*time.Minute, ac.ExpiresAt.Sub(rc.NotBefore.Time), "refresh token active does not overlap active token active by 15 minutes")
+	require.Equal(60*time.Minute, rc.ExpiresAt.Sub(ac.ExpiresAt.Time), "refresh token does not expire 1 hour after access token")
 
 	// Sign the access token
 	atks, err := tm.Sign(accessToken)
@@ -184,13 +184,13 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	// Manually create a token to validate with the token manager
 	now := time.Now()
 	claims := &tokens.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Id:        uuid.NewString(),                  // id not validated
-			Audience:  "http://foo.example.com",          // wrong audience
-			Subject:   "102374163855881761273",           // sub not validated
-			IssuedAt:  now.Add(-1 * time.Hour).Unix(),    // iat not validated
-			NotBefore: now.Add(15 * time.Minute).Unix(),  // nbf is validated and is after now
-			ExpiresAt: now.Add(-30 * time.Minute).Unix(), // exp is validated and is before now
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.NewString(),                               // id not validated
+			Audience:  jwt.ClaimStrings{"http://foo.example.com"},     // wrong audience
+			Subject:   "102374163855881761273",                        // sub not validated
+			IssuedAt:  jwt.NewNumericDate(now.Add(-1 * time.Hour)),    // iat not validated
+			NotBefore: jwt.NewNumericDate(now.Add(15 * time.Minute)),  // nbf is validated and is after now
+			ExpiresAt: jwt.NewNumericDate(now.Add(-30 * time.Minute)), // exp is validated and is before now
 		},
 		Domain:  "rotational.io",
 		Email:   "kate@rotational.io",
@@ -225,7 +225,7 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	require.EqualError(err, "token is not valid yet")
 
 	// Test time-based validation: exp
-	claims.NotBefore = now.Add(-1 * time.Hour).Unix()
+	claims.NotBefore = jwt.NewNumericDate(now.Add(-1 * time.Hour))
 	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
 	require.NoError(err, "could not sign token with good keys")
 
@@ -236,15 +236,15 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	require.True(strings.HasPrefix(err.Error(), "token is expired"))
 
 	// Test audience verification
-	claims.ExpiresAt = now.Add(1 * time.Hour).Unix()
+	claims.ExpiresAt = jwt.NewNumericDate(now.Add(1 * time.Hour))
 	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
 	require.NoError(err, "could not sign token with good keys")
 
 	_, err = tm.Verify(tks)
-	require.EqualError(err, "invalid audience \"http://foo.example.com\"")
+	require.EqualError(err, `invalid audience ["http://foo.example.com"]`)
 
 	// Token is finally valid
-	claims.Audience = "http://localhost:3000"
+	claims.Audience = jwt.ClaimStrings{"http://localhost:3000"}
 	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
 	require.NoError(err, "could not sign token with good keys")
 	_, err = tm.Verify(tks)
@@ -313,9 +313,9 @@ func (s *TokenTestSuite) TestParseExpiredToken() {
 
 	// Modify claims to be expired
 	claims := accessToken.Claims.(*tokens.Claims)
-	claims.IssuedAt = time.Unix(claims.IssuedAt, 0).Add(-24 * time.Hour).Unix()
-	claims.ExpiresAt = time.Unix(claims.ExpiresAt, 0).Add(-24 * time.Hour).Unix()
-	claims.NotBefore = time.Unix(claims.NotBefore, 0).Add(-24 * time.Hour).Unix()
+	claims.IssuedAt = jwt.NewNumericDate(claims.IssuedAt.Add(-24 * time.Hour))
+	claims.ExpiresAt = jwt.NewNumericDate(claims.ExpiresAt.Add(-24 * time.Hour))
+	claims.NotBefore = jwt.NewNumericDate(claims.NotBefore.Add(-24 * time.Hour))
 	accessToken.Claims = claims
 
 	// Create signed token
@@ -333,7 +333,7 @@ func (s *TokenTestSuite) TestParseExpiredToken() {
 	require.NotEmpty(pclaims, "parsing returned empty claims without error")
 
 	// Check claims
-	require.Equal(claims.Id, pclaims.Id)
+	require.Equal(claims.ID, pclaims.ID)
 	require.Equal(claims.ExpiresAt, pclaims.ExpiresAt)
 	require.Equal(creds["sub"], claims.Subject)
 	require.Equal(creds["hd"], claims.Domain)

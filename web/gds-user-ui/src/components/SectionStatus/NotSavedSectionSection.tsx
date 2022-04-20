@@ -5,7 +5,17 @@ import { Box } from '@chakra-ui/react';
 const NotSavedSectionStatus: React.FC = () => {
   return (
     <Box>
-      <Icon as={InfoIcon} color="#F29C36" w={7} h={7} /> (not saved)
+      <Icon
+        as={InfoIcon}
+        w={7}
+        h={7}
+        sx={{
+          path: {
+            fill: '#F29C36'
+          }
+        }}
+      />{' '}
+      (not saved)
     </Box>
   );
 };

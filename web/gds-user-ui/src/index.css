@@ -3,3 +3,30 @@
 @import '@fontsource/open-sans/400.css';
 @import '@fontsource/open-sans/600.css';
 @import '@fontsource/open-sans/700.css';
+
+/* robot slab font */
+@import '@fontsource/roboto-slab'; /* Defaults to weight 400 */
+
+* {
+  color: #221f1f;
+  /* border: 1px solid red !important; */
+}
+
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Roboto Slab', serif !important;
+}
+
+p {
+  font-family: 'Open sans', sans-serif;
+}

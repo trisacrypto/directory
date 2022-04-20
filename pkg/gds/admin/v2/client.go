@@ -750,8 +750,8 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 	}
 
 	// Manually check if the access token has not expired
-	now := time.Now().Unix()
-	if accessClaims.ExpiresAt != 0 && now > accessClaims.ExpiresAt {
+	now := time.Now()
+	if !accessClaims.ExpiresAt.IsZero() && accessClaims.ExpiresAt.Before(now) {
 		// access token is expired, check if refresh is not expired
 		if s.refreshToken != "" {
 			refreshClaims := new(tokens.Claims)
@@ -759,7 +759,7 @@ func (s *APIv2) checkAuthentication(ctx context.Context) (err error) {
 				return fmt.Errorf("could not parse refresh token")
 			}
 
-			if now <= refreshClaims.ExpiresAt {
+			if refreshClaims.ExpiresAt.After(now) {
 				// refresh token is not expired, attempt a refresh
 				return s.Refresh(ctx)
 			}

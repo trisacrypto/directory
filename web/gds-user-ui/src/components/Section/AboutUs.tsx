@@ -3,12 +3,9 @@ import {
   SimpleGrid,
   Image,
   Flex,
-  Heading,
   Text,
   Stack,
   StackDivider,
-  Fade,
-  LinkBox,
   useColorModeValue
 } from '@chakra-ui/react';
 
@@ -25,11 +22,14 @@ export default function AboutTrisaSection() {
               color={useColorModeValue('black', 'white')}
               fontWeight={600}
               pb={6}
-              fontSize={'2xl'}>
+              fontSize={'2xl'}
+              fontFamily="Roboto Slab">
               About TRISA
             </Text>
 
-            <Text color={useColorModeValue('black', 'white')} fontSize={'xl'}>
+            <Text
+              color={useColorModeValue('black', 'white')}
+              fontSize={{ base: '16px', md: '17px' }}>
               The Travel Rule Information Sharing Architecture (TRISA) is a global, open source,
               secure, and peer-to-peer protocol for Travel Rule compliance. TRISA helps Virtual
               Asset Service Providers (VASPs) comply with the Travel Rule for cross-border
@@ -46,7 +46,7 @@ export default function AboutTrisaSection() {
               }></Stack>
           </Stack>
           <Flex>
-            <Image rounded={'md'} alt={'trisa network'} src={trisaNetworkSvg} />
+            <Image alt={'trisa network'} src={trisaNetworkSvg} />
           </Flex>
         </SimpleGrid>
       </Container>

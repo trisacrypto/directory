@@ -377,7 +377,10 @@ func TestContactExtra(t *testing.T) {
 
 func TestEmailLog(t *testing.T) {
 	// Test that the email log functions are working as expected
-	contact := &pb.Contact{}
+	contact := &pb.Contact{
+		Name:  "Test Contact",
+		Email: "test@example.com",
+	}
 
 	// Audit log should initially be empty
 	emailLog, err := GetEmailLog(contact)

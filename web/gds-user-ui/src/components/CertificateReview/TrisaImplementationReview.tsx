@@ -17,7 +17,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
       mainnet: getStepperData.trisa_endpoint_mainnet,
       testnet: getStepperData.trisa_endpoint_testnet
     };
-    console.log('trisa step data', stepData);
+
     setTrisa(stepData);
   }, [steps]);
   return (
@@ -27,12 +27,11 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
       color={'#252733'}
       maxHeight={367}
       bg={'white'}
-      fontSize={18}
-      p={5}
-      px={5}>
+      fontSize={'1rem'}
+      p={5}>
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Section 4: TRISA Implementation</Heading>
+          <Heading fontSize={20}>Section 4: TRISA Implementation</Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -45,33 +44,33 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             Edit{' '}
           </Button>
         </Box>
-        <Stack fontSize={18}>
+        <Stack fontSize={'1rem'}>
           <Table
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
               Tr: { borderStyle: 'hidden' }
             }}>
-            <Tbody>
+            <Tbody
+              sx={{
+                ' td': {
+                  fontSize: '1rem'
+                }
+              }}>
               <Tr>
                 <Td>TestNet TRISA Endpoint</Td>
-                <Td>{trisa?.testnet?.endpoint}</Td>
-                <Td></Td>
+                <Td pl={0}>{trisa?.testnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td>TestNet Certificate Common Name</Td>
-                <Td>{trisa?.testnet?.common_name}</Td>
-                <Td></Td>
+                <Td pl={0}>{trisa?.testnet?.common_name || 'N/A'}</Td>
               </Tr>
-              <Divider bg={'black'} height={0.5} />
               <Tr>
                 <Td>MainNet TRISA Endpoint</Td>
-                <Td>{trisa?.mainnet?.endpoint}</Td>
-                <Td></Td>
+                <Td pl={0}>{trisa?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td>MainNet Certificate Common Name</Td>
-                <Td>{trisa?.mainnet?.common_name}</Td>
-                <Td></Td>
+                <Td pl={0}>{trisa?.mainnet?.common_name || 'N/A'}</Td>
               </Tr>
             </Tbody>
           </Table>
