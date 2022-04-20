@@ -1,11 +1,27 @@
 import React, { FC, useEffect } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Tag } from '@chakra-ui/react';
+import {
+  Stack,
+  Box,
+  Text,
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Button,
+  Tag,
+  Link
+} from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { getBusinessCategiryLabel, vaspCategories } from 'constants/basic-details';
+import {
+  BUSINESS_CATEGORY,
+  getBusinessCategiryLabel,
+  vaspCategories
+} from 'constants/basic-details';
 interface BasicDetailsReviewProps {}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
@@ -36,7 +52,9 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       px={5}>
       <Stack width={'100%'}>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Section 1: Basic Details</Heading>
+          <Heading fontSize={20} fontFamily="Open Sans">
+            Section 1: Basic Details
+          </Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -45,16 +63,29 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            {' '}
-            Edit{' '}
+            Edit
           </Button>
         </Box>
         <Stack fontSize={18}>
           <Table sx={{ 'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' } }}>
-            <Tbody>
+            <Tbody
+              sx={{
+                '*': {
+                  fontSize: '1rem'
+                }
+              }}>
               <Tr>
-                <Td>Website</Td>
-                <Td>{basicDetail.website}</Td>
+                <Td borderBottom={'none'}>Website</Td>
+                <Td borderBottom={'none'}>
+                  <Link href={basicDetail.website} isExternal>
+                    {basicDetail.website}
+                  </Link>
+                </Td>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td>Business Category</Td>
+                <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category]}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
@@ -67,7 +98,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 <Td>
                   {basicDetail?.vasp_categories?.map((categ: any) => {
                     return (
-                      <Tag key={categ} color={'white'} bg={'blue.400'} ml={2}>
+                      <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
                         {getBusinessCategiryLabel(categ)}
                       </Tag>
                     );

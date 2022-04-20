@@ -86,3 +86,7 @@ export const mapTrixoFormForBff = (data: any) => {
     }
   };
 };
+
+export const hasValue = (obj: Record<string, any>) => {
+  return obj && Object.values(obj).some(Boolean);
+};

@@ -83,7 +83,6 @@ const CertificateReview = () => {
         <Stack spacing={7}>
           <HStack pt={10}>
             <Heading size="md"> Review </Heading>
-            <Box>{/* <Icon as={InfoIcon} color="#F29C36" w={7} h={7} /> (not saved) */}</Box>
           </HStack>
           <FormLayout>
             <Text>

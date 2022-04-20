@@ -58,7 +58,7 @@ export const getRegistrationDefaultValue = () => {
       primary_national_jurisdiction: '',
       primary_regulator: '',
       other_jurisdictions: [],
-      financial_transfers_permitted: '',
+      financial_transfers_permitted: false,
       has_required_regulatory_program: 'Yes',
       conducts_customer_kyc: false,
       kyc_threshold: 0,

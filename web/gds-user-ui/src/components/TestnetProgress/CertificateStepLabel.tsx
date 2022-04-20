@@ -113,7 +113,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
             <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
               <HStack>
                 <Box pt={3}>
-                  <Icon as={getLabel(1)?.icon} color={getLabel(1)?.color} />
+                  <Icon
+                    as={getLabel(1)?.icon}
+                    sx={{
+                      path: {
+                        fill: getLabel(1)?.color
+                      }
+                    }}
+                  />
                 </Box>
                 <Text
                   pt={2}
@@ -128,7 +135,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Box w="70px" h="1" bg={getLabel(2)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
-                <Icon as={getLabel(2)?.icon} color={getLabel(2)?.color} />
+                <Icon
+                  as={getLabel(2)?.icon}
+                  sx={{
+                    path: {
+                      fill: getLabel(1)?.color
+                    }
+                  }}
+                />
               </Box>
               <Text
                 pt={2}
@@ -143,7 +157,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Box w="70px" h="1" bg={getLabel(3)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
-                <Icon as={getLabel(3)?.icon} color={getLabel(3)?.color} />
+                <Icon
+                  as={getLabel(3)?.icon}
+                  sx={{
+                    path: {
+                      fill: getLabel(1)?.color
+                    }
+                  }}
+                />
               </Box>
               <Text
                 pt={2}
@@ -158,7 +179,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Box w="70px" h="1" bg={getLabel(4)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
-                <Icon as={getLabel(4)?.icon} color={getLabel(4)?.color} />
+                <Icon
+                  as={getLabel(4)?.icon}
+                  sx={{
+                    path: {
+                      fill: getLabel(1)?.color
+                    }
+                  }}
+                />
               </Box>
               <Text
                 pt={2}
@@ -173,7 +201,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Box w="70px" h="1" bg={getLabel(5)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
-                <Icon as={getLabel(5)?.icon} color={getLabel(5)?.color} />
+                <Icon
+                  as={getLabel(5)?.icon}
+                  sx={{
+                    path: {
+                      fill: getLabel(1)?.color
+                    }
+                  }}
+                />
               </Box>
               <Text
                 pt={2}
@@ -188,7 +223,14 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
           <Box w="70px" h="1" bg={getLabel(6)?.color} width={'100%'}>
             <HStack>
               <Box pt={3}>
-                <Icon as={getLabel(6)?.icon} color={getLabel(6)?.color} />
+                <Icon
+                  as={getLabel(6)?.icon}
+                  sx={{
+                    path: {
+                      fill: getLabel(1)?.color
+                    }
+                  }}
+                />
               </Box>
               <Text
                 pt={2}

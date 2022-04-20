@@ -17,6 +17,7 @@ import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { COUNTRIES } from 'constants/countries';
 interface TrixoReviewProps {}
 
 const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
@@ -48,7 +49,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
       px={5}>
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={24}>Section 5: TRIXO Questionnaire</Heading>
+          <Heading fontSize={20}>Section 5: TRIXO Questionnaire</Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -61,7 +62,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
             Edit{' '}
           </Button>
         </Box>
-        <Stack fontSize={18}>
+        <Stack fontSize={'1rem'}>
           <Table
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
@@ -71,11 +72,11 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
             <Tbody>
               <Tr>
                 <Td>Primary National Jurisdiction</Td>
-                <Td>{trixo?.primary_national_jurisdiction}</Td>
+                <Td>{(COUNTRIES as any)[trixo?.primary_national_jurisdiction] || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td>Name of Primary Regulator</Td>
-                <Td>{trixo?.primary_regulator}</Td>
+                <Td>{trixo?.primary_regulator || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td>Other Jurisdictions</Td>
@@ -102,23 +103,19 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                   in the jurisdictions in which it operates?
                 </Td>
                 <Td>
-                  {' '}
                   <Tag
                     size={'sm'}
                     key={'sm'}
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo.financial_transfers_permitted ? 'Yes' : 'NO'}
+                      {trixo.financial_transfers_permitted ? 'YES' : 'NO'}
                     </TagLabel>
                   </Tag>
                 </Td>
-                <Td></Td>
               </Tr>
               <Tr>
                 <Td fontWeight={'semibold'}>CDD & Travel Rule Policies</Td>
-                <Td></Td>
-                <Td></Td>
               </Tr>
               <Tr>
                 <Td>
@@ -133,7 +130,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.has_required_regulatory_program)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo?.has_required_regulatory_program?.toUpperCase()}
+                      {trixo?.has_required_regulatory_program?.toUpperCase() || 'N/A'}
                     </TagLabel>
                   </Tag>
                 </Td>
@@ -150,19 +147,17 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     key={'sm'}
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
-                    <TagLabel fontWeight={'bold'}>
-                      {trixo?.financial_transfers_permitted?.toUpperCase()}
-                    </TagLabel>
+                    <TagLabel fontWeight={'bold'}>{trixo?.financial_transfers_permitted}</TagLabel>
                   </Tag>
                 </Td>
                 <Td></Td>
               </Tr>{' '}
               <Tr>
                 <Td>At what threshold and currency does your organization conduct KYC?</Td>
-                <Td>
+                <Td pl={0}>
                   <Tr>
-                    <Td>{trixo.kyc_threshold}</Td>
-                    <Td>{trixo.kyc_threshold_currency}</Td>
+                    <Td>{trixo.kyc_threshold || 'N/A'}</Td>
+                    <Td pl={0}>{trixo.kyc_threshold_currency || 'N/A'}</Td>
                   </Tr>
                 </Td>
                 <Td></Td>
@@ -189,10 +184,10 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td>Applicable Regulations</Td>
                 <Td>
                   <Tr>
-                    <Td>
+                    <Td pl={0}>
                       {trixo?.applicable_regulations?.map((reg: any) => {
                         if (reg?.name.length > 0) {
-                          return <React.Fragment>{reg.name}</React.Fragment>;
+                          return <React.Fragment>{reg.name || 'N/A'}</React.Fragment>;
                         }
                       })}
                     </Td>
@@ -203,23 +198,22 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>What is the minimum threshold for Travel Rule compliance?</Td>
-                <Td>
+                <Td pl={0}>
                   <Tr>
-                    <Td>{trixo.compliance_threshold}</Td>
-                    <Td>{trixo.compliance_threshold_currency}</Td>
+                    <Td>{trixo.compliance_threshold || 'N/A'}</Td>
+                    <Td pl={0}>{trixo.compliance_threshold_currency || 'N/A'}</Td>
                   </Tr>
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td fontWeight={'semibold'}>Data Protection Policies</Td>
-                <Td></Td>
-                <Td></Td>
+                <Td fontWeight={'semibold'} colSpan={3}>
+                  Data Protection Policies
+                </Td>
               </Tr>
               <Tr>
                 <Td>Is your organization required by law to safeguard PII?</Td>
                 <Td>
-                  {' '}
                   <Tag
                     size={'sm'}
                     key={'sm'}
@@ -238,7 +232,6 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                   VASPs under the Travel Rule?
                 </Td>
                 <Td>
-                  {' '}
                   <Tag
                     size={'sm'}
                     key={'sm'}
