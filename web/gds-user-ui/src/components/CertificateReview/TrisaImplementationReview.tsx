@@ -17,7 +17,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
       mainnet: getStepperData.trisa_endpoint_mainnet,
       testnet: getStepperData.trisa_endpoint_testnet
     };
-    console.log('trisa step data', stepData);
+
     setTrisa(stepData);
   }, [steps]);
   return (

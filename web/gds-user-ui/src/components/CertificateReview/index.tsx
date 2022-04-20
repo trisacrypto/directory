@@ -58,18 +58,9 @@ const CertificateReview = () => {
           localStorage.setItem('isMainNetSent', 'true');
         }
         setResult(response);
-
-        // toast({
-        //   position: 'top-right',
-        //   title: 'Success',
-        //   description: response.message,
-        //   status: 'success',
-        //   duration: 5000,
-        //   isClosable: true
-        // });
       }
     } catch (err: any) {
-      console.log('err', err?.response?.data);
+      // should send error to sentry
 
       if (!err.response.data.success) {
         toast({

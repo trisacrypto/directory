@@ -25,6 +25,7 @@ interface TState {
 }
 
 // 'TODO:' this hook should be improve
+
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
@@ -38,15 +39,14 @@ const useCertificateStepper = () => {
     }
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
-      console.log('nextStep 1');
       setStepperFromLocalStorage({ step: currentStep, status: LSTATUS.COMPLETE });
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
-    // if we got an error than means ,require element are not completed
+    // if we got an error that means require element are not completed
     if (state?.errors) {
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
-    // allow manually set the step status
+    // allow manually setting the step status
     if (state?.status) {
       const found = findStepKey(steps, currentStep);
       if (found.length === 1) {
@@ -60,7 +60,6 @@ const useCertificateStepper = () => {
           dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
         }
       } else {
-        console.log('test here');
         if (currentStep === lastStep && state.isFormCompleted) {
           // that mean we move to submit step
           dispatch(setSubmitStep({ submitStep: true }));
@@ -78,7 +77,6 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: lastStep }));
       }
     } else {
-      console.log('nextStep 2');
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
@@ -87,7 +85,6 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
-        console.log('test here');
         if (found[0].status === LSTATUS.INCOMPLETE) {
           dispatch(setStepStatus({ step: currentStep + 1, status: LSTATUS.PROGRESS }));
         }
@@ -109,7 +106,6 @@ const useCertificateStepper = () => {
     dispatch(setCurrentStep({ currentStep: step - 1 }));
     // if the current status is already completed, do not change the status
     const found = findStepKey(steps, currentStep);
-    console.log('found previous', found);
     if (found.length > 0 && found[0].status !== LSTATUS.COMPLETE) {
       dispatch(setStepStatus({ step, status: LSTATUS.INCOMPLETE }));
     }

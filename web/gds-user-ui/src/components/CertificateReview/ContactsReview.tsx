@@ -18,7 +18,6 @@ const ContactsReview = (props: ContactsProps) => {
     const stepData = {
       ...getStepperData.contacts
     };
-    console.log('contact step data', stepData);
     setContacts(stepData);
   }, [steps]);
   return (

@@ -79,8 +79,6 @@ export const validationSchema = [
             'registrationAuthority',
             'Registration Authority cannot be left empty',
             (value, ctx) => {
-              console.log('ctex', ctx.parent.national_identifier_type);
-              console.log('ctex value', typeof value);
               if (
                 ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
                 !value

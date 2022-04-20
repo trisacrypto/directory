@@ -3,7 +3,7 @@ import _ from 'lodash';
 import registrationAuthority from './registration-authority.json';
 
 export const findStepKey = (steps: any, key: number) =>
-  steps.filter((step: any) => step.key === key);
+  steps?.filter((step: any) => step.key === key);
 
 export const isValidUuid = (str: string) => {
   // Regular expression to check if string is a valid UUID
@@ -56,7 +56,11 @@ export const getDomain = (url: string | URL) => {
 };
 
 export const getRegistrationAuthoritiesOptions = () => {
-  return [...Array.from(new Set(registrationAuthority))].map((v) => ({ value: v, label: v }));
+  return [...Array.from(new Set(registrationAuthority))].map((v: any) => ({
+    value: v.option,
+    label: v.organization || v.option,
+    isDisabled: !!v.isDisabled
+  }));
 };
 
 export const mapTrixoFormForBff = (data: any) => {

@@ -50,7 +50,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
-  const getOrganizationName = getValues('organization_name');
+  const getOrganizationNameValue = getValues('organization_name');
   const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   // useEffect(() => {
@@ -58,6 +58,12 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   //     setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
   //   }
   // }, [getOrganizationName]);
+
+  const getOrganizationName = (index: number) => {
+    if (type === 'legal' && index === 0) {
+      return getOrganizationNameValue;
+    }
+  };
 
   return (
     <Stack align="start" width="100%">
@@ -76,7 +82,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      placeholder={getOrganizationName}
+                      placeholder={getOrganizationName(index) || ''}
                       // onValueChange={
                       //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
                       // }
@@ -111,7 +117,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <DeleteButton
                     onDelete={() => remove(index)}
                     tooltip={{ label: 'Remove line' }}
-                    isDisabled={index === 0}
+                    isDisabled={type === 'legal' && index === 0}
                   />
                 </Box>
               </HStack>

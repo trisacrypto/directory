@@ -8,7 +8,7 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
 interface LegalReviewProps {}
-
+// NOTE: need some clean up.
 const isValidIvmsAddress = (address: any) => {
   if (address) {
     return !!(address.country && address.address_type);
@@ -111,11 +111,9 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
 
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
-    console.log('[getStepperData]', getStepperData);
     const stepData = {
       ...getStepperData.entity
     };
-    console.log('legal step data', stepData);
     setLegalPerson(stepData);
   }, [steps]);
   return (
@@ -158,6 +156,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 <Td fontStyle={'italic'}>
                   The name and type of name by which the legal person is known.
                 </Td>
+                renderAddress(address)
                 <Td>
                   <Tr>
                     {legalPerson.name?.name_identifiers?.map(

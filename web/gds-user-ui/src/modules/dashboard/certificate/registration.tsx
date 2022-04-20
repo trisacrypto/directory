@@ -57,7 +57,7 @@ const Certificate: React.FC = () => {
   }
 
   function getCurrentFormValue() {
-    console.log('current', current);
+    // console.log('current', current);
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
