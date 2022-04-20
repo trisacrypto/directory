@@ -10,14 +10,6 @@ import {
 } from 'application/config';
 
 const Footer = (): React.ReactElement => {
-  // const { data, error, isLoading } = useAxios({
-  //   url: 'https://api.intervasp.org/v1/directory/search',
-  //   method: 'GET',
-  //   params: {
-  //     query: 'common_name=Trisa',
-  //     limit: 1
-  //   }
-  // });
   const [appVersion, setAppVersion] = useState<any>();
   const [gitRevision, setGitRevision] = useState<any>();
   const [bffAndGdsVersion, setBffAndGdsVersion] = useState<any>();
