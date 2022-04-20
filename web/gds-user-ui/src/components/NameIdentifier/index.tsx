@@ -82,7 +82,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
-                      placeholder={getOrganizationName(index)}
+                      placeholder={getOrganizationName(index) || ''}
                       // onValueChange={
                       //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
                       // }

@@ -3,7 +3,7 @@ import _ from 'lodash';
 import registrationAuthority from './registration-authority.json';
 
 export const findStepKey = (steps: any, key: number) =>
-  steps.filter((step: any) => step.key === key);
+  steps?.filter((step: any) => step.key === key);
 
 export const isValidUuid = (str: string) => {
   // Regular expression to check if string is a valid UUID
