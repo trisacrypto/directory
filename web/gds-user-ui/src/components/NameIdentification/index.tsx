@@ -130,8 +130,21 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 isInvalid={!!errors?.entity?.national_identification?.registration_authority}
                 isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
                 formHelperText={
-                  errors?.entity?.national_identification?.registration_authority?.message ||
-                  'For identifiers other than LEI specify the registration authority from the following list. See <a href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list">GLEIF Registration Authorities</a> for more details on how to look up a registration authority. If in doubt, use RA777777 - "General Government Entities" which specifies the default registration authority for your country of registration..'
+                  errors?.entity?.national_identification?.registration_authority?.message || (
+                    <Text>
+                      For identifiers other than LEI specify the registration authority from the
+                      following list. See{' '}
+                      <Link
+                        href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
+                        color="blue.500"
+                        isExternal>
+                        GLEIF Registration Authorities
+                      </Link>{' '}
+                      for more details on how to look up a registration authority. If in doubt, use
+                      RA777777 - "General Government Entities" which specifies the default
+                      registration authority for your country of registration..'
+                    </Text>
+                  )
                 }
               />
             )}
