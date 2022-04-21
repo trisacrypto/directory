@@ -8,8 +8,7 @@
 @import '@fontsource/roboto-slab'; /* Defaults to weight 400 */
 
 * {
-  color: #221f1f;
-  /* border: 1px solid red !important; */
+  /* color: #221f1f; */
 }
 
 .h1,
@@ -29,4 +28,8 @@ h6 {
 
 p {
   font-family: 'Open sans', sans-serif;
+}
+
+.chakra-alert__title {
+  color: '#fff !important';
 }
