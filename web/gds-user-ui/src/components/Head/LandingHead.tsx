@@ -10,7 +10,7 @@ interface LandingHeaderProps {
 const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, hasBtn }): any => {
   return (
     <Flex
-      bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 33.85%, rgba(27, 206, 159, 0.55) 96.72%);"
+      bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
       color="white"
       width="100%"
       minHeight={286}
@@ -21,10 +21,17 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
       <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
         {isHomePage && (
           <>
-            <Heading fontWeight={700} fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }} color="#fff">
+            <Heading
+              fontWeight={700}
+              fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }}
+              color="#fefefe">
               TRISA Global Directory Service
             </Heading>
-            <Text as="h3" fontSize={{ base: '1.2rem', md: 28, sm: 'lg' }} color="#fff">
+            <Text
+              as="h3"
+              fontFamily={'Open Sans, sans-serif !important'}
+              fontSize={{ base: '1rem', md: 24, sm: 'lg' }}
+              color="#fefefe">
               Become Travel Rule compliant. <br />
               Apply to Become a TRISA certified Virtual Asset Service Provider.
             </Text>
@@ -51,22 +58,32 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               spacing={4}
               direction={['column', 'row']}>
               <Button
-                bg={'white'}
-                border="3px solid #555151D4"
-                color={'black'}
+                bg={'transparent'}
+                borderRadius="0px"
+                border="2px solid #fff"
+                color={'#fff'}
                 py={6}
-                maxWidth={256}
+                maxWidth={'180px'}
                 width="100%"
                 as="a"
+                _hover={{
+                  background: '#24a9df',
+                  transition: '0.15s all ease'
+                }}
                 href="/certificate/registration">
                 Start Registration
               </Button>
               <Button
-                bg={'white'}
-                border="3px solid #555151D4"
-                color={'black'}
+                bg={'transparent'}
+                border="2px solid #fff"
+                borderRadius="0px"
+                color={'#fff'}
+                _hover={{
+                  background: '#24a9df',
+                  transition: '0.15s all ease'
+                }}
                 py={6}
-                maxWidth={256}
+                maxWidth={'180px'}
                 width="100%"
                 as="a"
                 href="/#search">

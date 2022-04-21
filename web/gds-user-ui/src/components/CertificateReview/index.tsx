@@ -18,6 +18,7 @@ import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 const CertificateReview = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const toast = useToast();
+
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep

@@ -64,9 +64,10 @@ export default function JoinUsSection() {
                 color="white"
                 borderColor="white"
                 py={6}
-                maxWidth={256}
+                maxWidth={'190px'}
                 width="100%"
-                border="2px"
+                borderRadius="0px"
+                border="2px solid #fff"
                 _hover={{ bg: '#FF7A77' }}
                 as={'a'}
                 href={'/getting-started'}>
