@@ -162,8 +162,8 @@ export const validationSchema = [
           regulator_name: yup.string()
         })
       ),
-      financial_transfers_permitted: yup.string(),
-      has_required_regulatory_program: yup.string(),
+      financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
+      has_required_regulatory_program: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
       conducts_customer_kyc: yup.boolean().default(false),
       kyc_threshold: yup.number(),
       kyc_threshold_currency: yup.string(),
