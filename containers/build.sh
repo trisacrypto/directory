@@ -81,6 +81,14 @@ if [ -z "$REACT_APP_TRISATEST_ANALYTICS_ID" ]; then
     exit 1
 fi
 
+if [ -z "$REACT_APP_GIT_REVISION" ]; then
+    export REACT_APP_GIT_REVISION=$(git rev-parse --short HEAD)
+fi
+
+if [ -z "$REACT_APP_VERSION_NUMBER" ]; then
+    export REACT_APP_VERSION_NUMBER="$(git describe --exact-match --abbrev=0).dev"
+fi
+
 # Build the primary backend images
 docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile $REPO
 docker build -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile $REPO
@@ -94,6 +102,8 @@ docker build \
     -t trisa/gds-user-ui:$TAG -f $DIR/gds-user-ui/Dockerfile \
     --build-arg REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/ \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
 
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net

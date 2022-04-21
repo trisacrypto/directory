@@ -15,6 +15,8 @@ RUN yarn install --frozen-lockfile --check-files
 # Set production environment variable for build context
 ARG REACT_APP_TRISA_BASE_URL="https://bff.vaspdirectory.net/v1/"
 ARG REACT_APP_ANALYTICS_ID=""
+ARG REACT_APP_VERSION_NUMBER=""
+ARG REACT_APP_GIT_REVISION=""
 
 # Build app with react-scripts
 COPY web/gds-user-ui/ ./
