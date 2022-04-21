@@ -15,19 +15,27 @@ import {
 } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
-
 import { colors } from 'utils/theme';
-
-export default function CreateAccount() {
+import { useForm, SubmitHandler } from 'react-hook-form';
+interface CreateAccountProps {
+  handleSignUp: (event: React.FormEvent, type: string) => void;
+}
+const CreateAccount: React.FC<CreateAccountProps> = (props) => {
+  //  const {
+  //    register,
+  //    handleSubmit,
+  //    watch,
+  //    formState: { errors }
+  //  } = useForm<Inputs>();
   return (
     <Flex
-      minH={'100vh'}
       align={'center'}
       justify={'center'}
       fontFamily={'open sans'}
       fontSize={'xl'}
+      marginTop={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
-      <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
+      <Stack spacing={8} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack align={'center'}>
           <Heading fontSize={'4xl'}></Heading>
           <Text color={useColorModeValue('gray.600', 'white')}>
@@ -42,6 +50,7 @@ export default function CreateAccount() {
           <Button
             bg={'gray.100'}
             w="100%"
+            onClick={(event) => props.handleSignUp(event, 'google')}
             height={'64px'}
             color={'gray.600'}
             _hover={{
@@ -64,15 +73,16 @@ export default function CreateAccount() {
           bottom={5}>
           <Stack spacing={4}>
             <FormControl id="email">
-              <Input type="email" height={'64px'} placeholder="Email Adress" />
+              <Input type="email" name="email" height={'64px'} placeholder="Email Adress" />
             </FormControl>
             <FormControl id="password">
-              <Input type="password" height={'64px'} placeholder="Password" />
+              <Input type="password" name="password" height={'64px'} placeholder="Password" />
             </FormControl>
             <Stack spacing={10}>
               <Button
                 bg={colors.system.blue}
                 color={'white'}
+                onClick={(event) => props.handleSignUp(event, 'email')}
                 height={'64px'}
                 _hover={{
                   bg: '#10aaed'
@@ -92,4 +102,6 @@ export default function CreateAccount() {
       </Stack>
     </Flex>
   );
-}
+};
+
+export default CreateAccount;
