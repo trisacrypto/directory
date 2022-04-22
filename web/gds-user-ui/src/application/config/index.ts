@@ -1,6 +1,6 @@
 import axiosInstance from 'utils/axios';
 
-export const isProdEnv = process.env.NODE_ENV === 'production';
+export const isProdEnv = process.env.NODE_ENV === 'development';
 
 export const getAppVersionNumber = () => {
   if (isProdEnv) {

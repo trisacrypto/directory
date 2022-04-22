@@ -27,6 +27,7 @@
     "axios": "^0.26.1",
     "chakra-react-select": "^3.0.5",
     "framer-motion": "^6",
+    "ga-4-react": "^0.1.281",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",

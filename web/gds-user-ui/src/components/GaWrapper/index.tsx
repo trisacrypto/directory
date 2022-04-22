@@ -12,7 +12,6 @@ const GoogleAnalyticsWrapper: React.FC<IProps> = ({ children, isInitialized }) =
 
   React.useEffect(() => {
     if (isInitialized) {
-      console.log('location path', location.pathname);
       ReactGA.set({ page: location.pathname });
       ReactGA.send(location.pathname + location.search);
     }

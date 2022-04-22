@@ -5,10 +5,9 @@ import { isProdEnv } from 'application/config';
 
 const useAnalytics = () => {
   const [isInitialized, setIsInitialized] = React.useState<boolean>(false);
-  const trackingID: string | undefined = process.env.REACT_APP_ANALYTICS_ID;
+  const trackingID: any = process.env.REACT_APP_ANALYTICS_ID;
   useEffect(() => {
     //  initialize google analytics only in production environment
-
     if (isProdEnv && trackingID) {
       console.log('initializing google analytics');
       ReactGA.initialize(trackingID, {
