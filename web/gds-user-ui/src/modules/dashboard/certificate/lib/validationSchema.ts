@@ -33,22 +33,55 @@ export const validationSchema = [
     entity: yup.object().shape({
       country_of_registration: yup.string().required('Country of registration is required'),
       name: yup.object().shape({
-        name_identifiers: yup.array().of(
+        name_identifiers: yup.array(
           yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
+            legal_person_name: yup
+              .string()
+              .test(
+                'notEmptyIfIdentifierTypeExist',
+                'Legal name is required',
+                (value, ctx): any => {
+                  return !(ctx.parent.legal_person_name_identifier_type && !value);
+                }
+              ),
+            legal_person_name_identifier_type: yup.string().when('legal_person_name', {
+              is: (value: string) => !!value,
+              then: yup.string().required('Name Identifier Type is required')
+            })
           })
         ),
-        local_name_identifiers: yup.array().of(
+        local_name_identifiers: yup.array(
           yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
+            legal_person_name: yup
+              .string()
+              .test(
+                'notEmptyIfIdentifierTypeExist',
+                'Legal name is required',
+                (value, ctx): any => {
+                  return !(ctx.parent.legal_person_name_identifier_type && !value);
+                }
+              ),
+            legal_person_name_identifier_type: yup.string().when('legal_person_name', {
+              is: (value: string) => !!value,
+              then: yup.string().required('Name Identifier Type is required')
+            })
           })
         ),
-        phonetic_name_identifiers: yup.array().of(
+        phonetic_name_identifiers: yup.array(
           yup.object().shape({
-            legal_person_name: yup.string(),
-            legal_person_name_identifier_type: yup.string()
+            legal_person_name: yup
+              .string()
+              .test(
+                'notEmptyIfIdentifierTypeExist',
+                'Legal name is required',
+                (value, ctx): any => {
+                  return !(ctx.parent.legal_person_name_identifier_type && !value);
+                }
+              ),
+            legal_person_name_identifier_type: yup.string().when('legal_person_name', {
+              is: (value: string) => !!value,
+              then: yup.string().required('Name Identifier Type is required')
+            })
           })
         )
       }),

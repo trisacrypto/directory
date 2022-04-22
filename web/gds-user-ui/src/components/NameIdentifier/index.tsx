@@ -3,7 +3,7 @@ import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
-import React, { useState, FC, useEffect } from 'react';
+import React from 'react';
 import {
   Control,
   Controller,
@@ -12,9 +12,8 @@ import {
   useFieldArray,
   useFormContext
 } from 'react-hook-form';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
-import { RootStateOrAny, useSelector } from 'react-redux';
-import useCertificateStepper from 'hooks/useCertificateStepper';
+import { getValueByPathname } from 'utils/utils';
+
 type NameIdentifierProps = {
   name: string;
   description: string;
@@ -32,12 +31,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     register,
     control,
     formState: { errors },
-    watch,
-    getValues,
-    setValue
+    getValues
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
-
   const { fields, remove, append } = useFieldArray({ name, control });
 
   const nameIdentiferTypeOptions = getNameIdentiferTypeOptions();
@@ -51,22 +47,16 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   }));
 
   const getOrganizationNameValue = getValues('organization_name');
-  const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
-  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  // useEffect(() => {
-  //   if (type && type === 'legal') {
-  //     setValue(`entity.name.name_identifiers[0].legal_person_name`, getOrganizationName);
-  //   }
-  // }, [getOrganizationName]);
 
   const getOrganizationName = (index: number) => {
     if (type === 'legal' && index === 0) {
       return getOrganizationNameValue;
     }
   };
-
+  console.log('[a]');
   return (
     <Stack align="start" width="100%">
+      {console.log('[values]', fields)}
       {fields &&
         fields.map((field, index) => {
           return (
@@ -83,10 +73,10 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
                       placeholder={getOrganizationName(index) || ''}
-                      // onValueChange={
-                      //   index === 0 && getLegalNameDefaultValue(index, basicDetailOrganizationName)
-                      // }
-                      // isDisabled={(index === 0 && type && type === 'legal') || false}
+                      isInvalid={getValueByPathname(errors, `${name}[${index}].legal_person_name`)}
+                      formHelperText={
+                        getValueByPathname(errors, `${name}[${index}].legal_person_name`)?.message
+                      }
                       {...register(`${name}[${index}].legal_person_name`)}
                     />
                   </GridItem>
@@ -96,9 +86,13 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                       control={control}
                       render={({ field: f }) => (
                         <SelectFormControl
+                          onBlur={f.onBlur}
                           controlId={controlId!}
                           name={f.name}
+                          ref={f.ref}
                           isDisabled={(index === 0 && type && type === 'legal') || false}
+                          isInvalid={getValueByPathname(errors, f.name)}
+                          formHelperText={getValueByPathname(errors, f.name)?.message}
                           formatOptionLabel={(data: any) => <>{data.label} Name</>}
                           options={getNameIdentiferTypeOptions()}
                           onChange={(newValue: any) => f.onChange(newValue.value)}
