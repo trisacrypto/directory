@@ -132,7 +132,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
+        id: checkout
         uses: actions/checkout@v2
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
       - name: Set Environment
         id: vars
