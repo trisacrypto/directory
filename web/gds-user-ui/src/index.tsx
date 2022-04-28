@@ -7,7 +7,9 @@ import { ChakraProvider } from '@chakra-ui/react';
 import store from 'application/store';
 import { Provider } from 'react-redux';
 import customTheme from 'utils/theme';
+import initSentry from 'application/config/sentry';
 
+initSentry();
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
