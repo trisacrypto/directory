@@ -26,6 +26,8 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
 import ErrorMessage from 'components/ui/ErrorMessage';
+import countryCodeEmoji, { getCountryName } from 'utils/country';
+import { IsoCountryCode } from 'types/type';
 
 type TSearchDirectory = {
   handleSubmit: (e: FormEvent, query: string) => void;
@@ -174,7 +176,10 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                   {result?.country && (
                     <Tr>
                       <Td>Country</Td>
-                      <Td>{result.country}</Td>
+                      <Td>
+                        {countryCodeEmoji(result.country)}{' '}
+                        {getCountryName(result.country as IsoCountryCode)}
+                      </Td>
                     </Tr>
                   )}
                   {result.verified_on && (
