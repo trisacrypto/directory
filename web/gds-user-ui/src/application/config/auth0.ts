@@ -1,4 +1,4 @@
-import auth0 from 'auth0-js';
+import * as auth0 from 'auth0-js';
 const defaultConfig: auth0.AuthOptions = {
   domain: process.env.REACT_APP_AUTH0_DOMAIN?.toString() || '',
   clientID: process.env.REACT_APP_AUTH0_CLIENT_ID?.toString() || '',

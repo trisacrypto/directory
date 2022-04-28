@@ -16,7 +16,7 @@ const StartPage: React.FC = () => {
     if (type === 'email') {
       (async () => {
         const response = await auth0SignUpWithEmail({
-          email: 'masskoder+0077@gmail.com',
+          email: 'masskoder+007787@gmail.com',
           password: 'Local123@!',
           connection: 'Username-Password-Authentication'
         });
