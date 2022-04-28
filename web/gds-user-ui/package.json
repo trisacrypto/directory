@@ -49,6 +49,9 @@
     "yup": "^0.32.11"
   },
   "scripts": {
+    "cy:install": "cypress install",
+    "cy:run": "cypress run",
+    "cy:open": "cypress open",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -114,6 +117,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.13.0",
+    "cypress": "^9.6.0",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-standard": "^16.0.3",
