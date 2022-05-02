@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 
 const initSentry = () => {
-  return Sentry.init({
+  Sentry.init({
     dsn: process.env.REACT_APP_SENTRY_DSN,
     environment: process.env.NODE_ENV,
     integrations: [new BrowserTracing()],
