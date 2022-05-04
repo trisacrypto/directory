@@ -16,7 +16,6 @@ function* fetchVaspDetails({ payload: { id, history } }) {
         NProgress.done()
     } catch (error) {
         yield put(fetchVaspDetailsApiResponseError(error.message))
-        history.push('/not-found', { error: "Could not retrieve VASP record by ID" })
         NProgress.done()
     }
 }
