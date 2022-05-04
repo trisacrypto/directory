@@ -8,7 +8,7 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
-  const { auth0SignUpWithEmail, auth0SignWithSocial } = useCustomAuth0();
+  const { auth0SignIn, auth0SignWithSocial } = useCustomAuth0();
 
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
@@ -20,15 +20,15 @@ const StartPage: React.FC = () => {
     console.log('datanfromform', data);
     setIsloading(true);
     try {
-      const response: any = await auth0SignUpWithEmail({
+      const response: any = await auth0SignIn({
         email: data.username,
-        password: data.password,
-        connection: 'Username-Password-Authentication'
+        password: data.password
       });
       if (response) {
         console.log('response', response);
         setIsloading(false);
         if (response.emailVerified) {
+          // to implement later
         }
       }
     } catch (err: any) {

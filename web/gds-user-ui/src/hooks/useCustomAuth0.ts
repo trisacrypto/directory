@@ -8,7 +8,7 @@ const useCustomAuth0 = () => {
   const auth0Authorize = (options: any) => {
     authWeb.authorize(options);
   };
-  const auth0SignIn = (options: any, callback: any) => {
+  const auth0SignIn = (options: any) => {
     return new Promise((resolve, reject) => {
       authWeb.login(options, (err: any, authResult: any) => {
         if (err) {
