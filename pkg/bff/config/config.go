@@ -93,6 +93,10 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
+	if err = c.Sentry.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -102,6 +106,14 @@ func (c DatabaseConfig) Validate() error {
 		if c.CertPath == "" || c.PoolPath == "" {
 			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
 		}
+	}
+	return nil
+}
+
+func (c SentryConfig) Validate() error {
+	// If Sentry is enabled then the envionment must be set.
+	if c.UseSentry() && c.Environment == "" {
+		return errors.New("invalid configuration: envrionment must be configured when using sentry")
 	}
 	return nil
 }
