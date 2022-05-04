@@ -9,7 +9,15 @@ const useCustomAuth0 = () => {
     authWeb.authorize(options);
   };
   const auth0SignIn = (options: any, callback: any) => {
-    authWeb.login(options, callback);
+    return new Promise((resolve, reject) => {
+      authWeb.login(options, (err: any, authResult: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(authResult);
+        }
+      });
+    });
   };
   const auth0SignOut = (options: any) => {
     authWeb.logout(options);
