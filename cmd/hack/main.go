@@ -56,7 +56,12 @@ func main() {
 	// }
 
 	// JOB 3: reissue certificates for Sygna
-	if err = reissueSygnaCerts(); err != nil {
+	// if err = reissueSygnaCerts(); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// JOB 4: delete old Hodlnaut record in favor of new records
+	if err = replaceHodlenaut(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -449,5 +454,35 @@ func makeIdentityCertificate(path, pkcs12password string) (err error) {
 	}
 
 	fmt.Println(base64.StdEncoding.EncodeToString(data))
+	return nil
+}
+
+func replaceHodlenaut() (err error) {
+	var vasp *pb.VASP
+	vaspID := "ac3c0770-3c2a-46a1-ad00-ff30631868bb"
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return fmt.Errorf("could not retrieve hodlnaut record: %v", err)
+	}
+
+	// Find the cert reqs for the VASP and delete them all
+	var crids []string
+	if crids, err = models.GetCertReqIDs(vasp); err != nil {
+		return fmt.Errorf("could not retrieve cert req ids: %v", err)
+	}
+
+	deleted := 0
+	for _, crid := range crids {
+		if err = db.DeleteCertReq(crid); err != nil {
+			fmt.Printf("could not delete certreq %s: %v\n", crid, err)
+		}
+		deleted++
+	}
+	fmt.Printf("deleted %d certificate requests\n", deleted)
+
+	if err = db.DeleteVASP(vaspID); err != nil {
+		return fmt.Errorf("could not delete VASP: %v", err)
+	}
+
+	fmt.Printf("hodlnaut record with id %s deleted\n", vaspID)
 	return nil
 }
