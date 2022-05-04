@@ -2,7 +2,8 @@ import React from 'react';
 import { Story } from '@storybook/react';
 import CreateAccount from './CreateAccount';
 interface CreateAccountProps {
-  handleSignUp: (evt: any, type: any) => void;
+  handleSocialAuth: (event: React.FormEvent, type: string) => void;
+  handleSignUpWithEmail: (data: any) => void;
 }
 export default {
   title: 'Components/CreateAccount',
