@@ -21,12 +21,12 @@ import { colors } from 'utils/theme';
 export default function Login() {
   return (
     <Flex
-      minH={'100vh'}
       minWidth={'100vw'}
       align={'center'}
       justify={'center'}
       fontFamily={colors.font}
       fontSize={'xl'}
+      marginTop={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>

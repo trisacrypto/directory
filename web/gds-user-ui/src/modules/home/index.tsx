@@ -27,7 +27,6 @@ const HomePage: React.FC = () => {
         setError('');
         setResult(response);
         setSearch(searchQuery);
-        setError('');
       }
     } catch (e: any) {
       setIsLoading(false);

@@ -23,8 +23,9 @@ interface AlertMessageProps {
   message?: string;
   status?: any;
   title?: string;
+  hasBackBtn?: boolean;
 }
-const AlertMessage: React.FC<AlertMessageProps> = ({ status, title, message }) => {
+const AlertMessage: React.FC<AlertMessageProps> = ({ status, title, message, hasBackBtn }) => {
   return (
     <Flex
       align={'center'}
@@ -49,11 +50,13 @@ const AlertMessage: React.FC<AlertMessageProps> = ({ status, title, message }) =
           <AlertDescription maxWidth="sm" py={4}>
             {message}
           </AlertDescription>
-          <Box py={4}>
-            <Button as={'a'} href={'/'}>
-              Return to Directory
-            </Button>
-          </Box>
+          {hasBackBtn && (
+            <Box py={4}>
+              <Button as={'a'} href={'/'}>
+                Return to Directory
+              </Button>
+            </Box>
+          )}
         </Alert>
       </Stack>
     </Flex>
