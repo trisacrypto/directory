@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -24,6 +25,7 @@ type Config struct {
 	TestNet      DirectoryConfig
 	MainNet      DirectoryConfig
 	Database     DatabaseConfig
+	Sentry       SentryConfig
 	processed    bool
 }
 
@@ -40,6 +42,13 @@ type DatabaseConfig struct {
 	Insecure      bool   `split_words:"true" default:"false"`
 	CertPath      string `split_words:"true"`
 	PoolPath      string `split_words:"true"`
+}
+
+type SentryConfig struct {
+	DSN         string `envconfig:"SENTRY_DSN"`
+	Environment string `envconfig:"SENTRY_ENVIRONMENT"`
+	Release     string `envconfig:"SENTRY_RELEASE"`
+	Debug       bool   `default:"false"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -95,4 +104,16 @@ func (c DatabaseConfig) Validate() error {
 		}
 	}
 	return nil
+}
+
+// Get the configured version string or the current semantic version if not configured.
+func (c SentryConfig) GetRelease() string {
+	if c.Release == "" {
+		return fmt.Sprintf("gds-bff@%s", pkg.Version())
+	}
+	return c.Release
+}
+
+func (c SentryConfig) UseSentry() bool {
+	return c.DSN != ""
 }
