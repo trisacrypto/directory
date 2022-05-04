@@ -3,7 +3,7 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 interface TrisaImplementationReviewProps {}
 

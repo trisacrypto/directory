@@ -3,7 +3,7 @@ import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData, hasValue } from 'utils/utils';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 interface ContactsProps {
   data: any;

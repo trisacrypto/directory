@@ -15,7 +15,7 @@ import {
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { COUNTRIES } from 'constants/countries';
 interface TrixoReviewProps {}
