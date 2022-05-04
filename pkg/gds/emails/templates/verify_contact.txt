@@ -1,6 +1,6 @@
 Hello {{ .Name }},
 
-Thank you for submitting a TRISA network registration request. To begin the review process, please {{ .VerifyContactURL }}verify your email by clicking this link.
+Thank you for submitting a TRISA network registration request. To begin the review process, please {{ .VerifyContactURL }} verify your email by clicking this link.
 
 If you cannot click on the link, please copy and paste the link below into your browser address bar:
 

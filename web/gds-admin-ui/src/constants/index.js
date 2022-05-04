@@ -33,3 +33,5 @@ export const VERIFIED_CONTACT_STATUS_LABEL = {
 export const AUTH_SESSION_KEY = '__SESSION_TOKEN__'
 
 export const LEGAL_PERSON_NAME_IDENTIFIER_TYPE = ['Unspecified', 'Legal Name', 'Short Name', 'Trading Name']
+
+export const validEmailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/

@@ -29,8 +29,8 @@ RUN go test -timeout 180s ./...
 
 # Build binaries
 RUN go build -v -o /go/bin/gds ./cmd/gds
-RUN go build -v -o /go/bin/sectigo ./cmd/sectigo
 RUN go build -v -o /go/bin/gdsutil ./cmd/gdsutil
+RUN go build -v -o /go/bin/trtl ./cmd/trtl
 
 # Final Stage
 FROM ${FINAL_IMAGE} AS final
@@ -45,7 +45,7 @@ RUN set -x && apt-get update && \
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /go/bin/gds /usr/local/bin/gds
-COPY --from=builder /go/bin/sectigo /usr/local/bin/sectigo
 COPY --from=builder /go/bin/gdsutil /usr/local/bin/gdsutil
+COPY --from=builder /go/bin/trtl /usr/local/bin/trtl
 
 CMD [ "/usr/local/bin/gds", "serve" ]

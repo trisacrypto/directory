@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/sendgrid/rest"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -20,7 +23,9 @@ func PurgeMockEmails() {
 	MockEmails = nil
 }
 
-type mockSendGridClient struct{}
+type mockSendGridClient struct {
+	storage string
+}
 
 func WriteMIME(msg *sgmail.SGMailV3, path string) (err error) {
 	type emailMetadata struct {
@@ -137,6 +142,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 		}, errors.New("requires Personalization info")
 	}
 
+	var toAddress string
 	for _, p := range msg.Personalizations {
 		// Email needs to contain at least one To address
 		if len(p.To) == 0 {
@@ -155,17 +161,42 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 				}, errors.New("empty To address")
 			}
 
-			if _, err := sgmail.ParseEmail(t.Address); err != nil {
+			var mail *sgmail.Email
+			if mail, err = sgmail.ParseEmail(t.Address); err != nil {
 				return &rest.Response{
 					StatusCode: http.StatusBadRequest,
 					Body:       fmt.Sprintf("invalid To address: %s", t.Address),
 				}, err
 			}
+			toAddress = mail.Address
 		}
 	}
 
 	// "Send" the email
 	MockEmails = append(MockEmails, data)
+
+	if c.storage != "" {
+		// Save the email to disk for manual inspection
+		dir := filepath.Join(c.storage, toAddress)
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return &rest.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       fmt.Sprintf("could not create archive directory at %s", dir),
+			}, err
+		}
+
+		// Generate unique filename to avoid overwriting
+		ts := time.Now().Format(time.RFC3339)
+		h := fnv.New32()
+		h.Write(data)
+		path := filepath.Join(dir, fmt.Sprintf("%s-%d.mim", ts, h.Sum32()))
+		if err = WriteMIME(msg, path); err != nil {
+			return &rest.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       fmt.Sprintf("could not archive email to %s", path),
+			}, err
+		}
+	}
 
 	return &rest.Response{StatusCode: http.StatusOK}, nil
 }

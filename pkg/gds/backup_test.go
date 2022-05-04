@@ -42,10 +42,14 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 
 // Test that the backup manager periodically creates backups.
 func (s *gdsTestSuite) TestBackupManager() {
+	if s.stype == storeTrtl {
+		s.T().Skip("backup manager not supported for trtl store")
+	}
+
 	conf := gds.MockConfig()
 	conf.Backup = config.BackupConfig{
 		Enabled:  true,
-		Interval: time.Millisecond,
+		Interval: 100 * time.Millisecond,
 		Storage:  "testdata/backups",
 		Keep:     1,
 	}
@@ -55,22 +59,11 @@ func (s *gdsTestSuite) TestBackupManager() {
 	defer os.RemoveAll(s.svc.GetConf().Backup.Storage)
 	require := s.Require()
 
-	// Start the backup manager
-	stop := make(chan bool)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		s.svc.BackupManager(stop)
-	}()
-
-	// Wait for the backup manager to run through its loop. The shutdown check is at
-	// the beginning so there is a timing window here.
-	time.Sleep(s.svc.GetConf().Backup.Interval * 2)
-
-	// Make sure that the backup manager is stopped before we proceed
-	stop <- true
-	wg.Wait()
+	// Execute a single Backup; testing the looping functionality of the BackupManager
+	// will result in a race condition, so we assume that any runtime errors will
+	// primarily occur in the Backup function and that the BackupManager routine is ok.
+	err := s.svc.Backup("")
+	require.NoError(err, "could not execute backup")
 
 	// Backup should be created
 	backupDir := s.svc.GetConf().Backup.Storage

@@ -193,6 +193,9 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	var object *object.Object
 	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
+		if err == engine.ErrNotFound {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -621,6 +624,14 @@ func (h *TrtlService) Status(ctx context.Context, in *pb.HealthCheck) (out *pb.S
 		Status:  "ok",
 		Version: pkg.Version(),
 		Uptime:  h.uptime(),
+		Replica: &pb.ReplicaStatus{
+			Enabled:  h.parent.conf.Replica.Enabled,
+			Pid:      h.parent.conf.Replica.PID,
+			Region:   h.parent.conf.Replica.Region,
+			Name:     h.parent.conf.Replica.Name,
+			Interval: h.parent.conf.Replica.GossipInterval.String(),
+			Sigma:    h.parent.conf.Replica.GossipSigma.String(),
+		},
 	}
 
 	// If we're in maintenance mode return a maintenance mode

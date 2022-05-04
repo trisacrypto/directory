@@ -34,8 +34,11 @@ var testEnv = map[string]string{
 	"GDS_MEMBERS_INSECURE":                     "true",
 	"GDS_MEMBERS_CERTS":                        "fixtures/creds/gds.gz",
 	"GDS_MEMBERS_CERT_POOL":                    "fixtures/creds/pool.gz",
-	"GDS_DATABASE_URL":                         "fixtures/db",
+	"GDS_DATABASE_URL":                         "trtl://trtl.test:4436",
 	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
+	"GDS_DATABASE_INSECURE":                    "true",
+	"GDS_DATABASE_CERT_PATH":                   "fixtures/creds/certs.pem",
+	"GDS_DATABASE_POOL_PATH":                   "fixtures/creds/pool.zip",
 	"SECTIGO_USERNAME":                         "foo",
 	"SECTIGO_PASSWORD":                         "supersecret",
 	"SECTIGO_PROFILE":                          "17",
@@ -43,9 +46,10 @@ var testEnv = map[string]string{
 	"GDS_SERVICE_EMAIL":                        "test@example.com",
 	"GDS_ADMIN_EMAIL":                          "admin@example.com",
 	"SENDGRID_API_KEY":                         "bar1234",
-	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify-contact",
+	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify",
 	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_EMAIL_TESTING":                        "true",
+	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
 	"GDS_CERTMAN_INTERVAL":                     "60s",
 	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
 	"GDS_BACKUP_ENABLED":                       "true",
@@ -73,6 +77,7 @@ func TestConfig(t *testing.T) {
 
 	conf, err := config.New()
 	require.NoError(t, err)
+	require.False(t, conf.IsZero())
 
 	// Test configuration set from the environment
 	require.Equal(t, false, conf.Maintenance)
@@ -98,6 +103,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_MEMBERS_CERT_POOL"], conf.Members.CertPool)
 	require.Equal(t, testEnv["GDS_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
+	require.Equal(t, true, conf.Database.Insecure)
+	require.Equal(t, testEnv["GDS_DATABASE_CERT_PATH"], conf.Database.CertPath)
+	require.Equal(t, testEnv["GDS_DATABASE_POOL_PATH"], conf.Database.PoolPath)
 	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
 	require.Equal(t, testEnv["SECTIGO_PASSWORD"], conf.Sectigo.Password)
 	require.Equal(t, testEnv["SECTIGO_PROFILE"], conf.Sectigo.Profile)
@@ -107,6 +115,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
 	require.Equal(t, testEnv["GDS_VERIFY_CONTACT_URL"], conf.Email.VerifyContactBaseURL)
 	require.Equal(t, testEnv["GDS_ADMIN_REVIEW_URL"], conf.Email.AdminReviewBaseURL)
+	require.Equal(t, testEnv["GDS_EMAIL_STORAGE"], conf.Email.Storage)
 	require.True(t, conf.Email.Testing)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
 	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
@@ -156,6 +165,8 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS",
 		"GDS_MEMBERS_CERTS",
 		"GDS_MEMBERS_CERT_POOL",
+		"GDS_DATABASE_CERT_PATH",
+		"GDS_DATABASE_POOL_PATH",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -204,14 +215,22 @@ func TestRequiredConfig(t *testing.T) {
 
 func TestEmailConfigValidation(t *testing.T) {
 	conf := config.EmailConfig{
-		VerifyContactBaseURL: "http://localhost:3000/verify-contact",
+		VerifyContactBaseURL: "http://localhost:3000/verify",
 		AdminReviewBaseURL:   "http://localhost:3001/vasps",
 	}
 
 	err := conf.Validate()
-	require.EqualError(t, err, "admin review base URL must end in a /")
+	require.EqualError(t, err, "invalid configuration: admin review base URL must end in a /")
 
 	conf.AdminReviewBaseURL += "/"
+	err = conf.Validate()
+	require.NoError(t, err)
+
+	conf.Storage = "fixtures/emails"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
+
+	conf.Testing = true
 	err = conf.Validate()
 	require.NoError(t, err)
 }
@@ -265,6 +284,39 @@ func TestMembersConfigValidation(t *testing.T) {
 	conf.Insecure = false
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: serving mTLS requires the path to certs and the cert pool")
+}
+
+func TestDatabaseConfigValidation(t *testing.T) {
+	conf := config.DatabaseConfig{
+		URL:           "leveldb:///db",
+		ReindexOnBoot: false,
+		Insecure:      false,
+		CertPath:      "",
+		PoolPath:      "",
+	}
+
+	// Connecting to leveldb should not require extra validation
+	err := conf.Validate()
+	require.NoError(t, err, "could not validate leveldb configuration")
+
+	// If Insecure is set to true, certs and cert pool are not required.
+	conf.URL = "trtl://trtl.test.net:443"
+	conf.Insecure = true
+	err = conf.Validate()
+	require.NoError(t, err)
+
+	// If Insecure is false, then the certs and cert pool are required.
+	conf.Insecure = false
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+
+	conf.CertPath = "fixtures/certs.pem"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+
+	conf.PoolPath = "fixtures/pool.zip"
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified

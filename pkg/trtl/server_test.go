@@ -12,7 +12,6 @@ import (
 
 	"github.com/rotationalio/honu"
 	"github.com/rotationalio/honu/options"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
@@ -27,10 +26,7 @@ import (
 )
 
 const (
-	metaRegion = "tauceti"
-	metaOwner  = "taurian"
-	metaPID    = 8
-	bufSize    = 1024 * 1024
+	bufSize = 1024 * 1024
 )
 
 var (
@@ -68,6 +64,10 @@ type trtlTestSuite struct {
 func (s *trtlTestSuite) SetupSuite() {
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	// Load the fixtures then regenerate the test database if requested or required.
 	require.NoError(s.loadFixtures())
 	if _, err := os.Stat(dbtgz); *update || os.IsNotExist(err) {
@@ -83,6 +83,7 @@ func (s *trtlTestSuite) SetupSuite() {
 func (s *trtlTestSuite) TearDownSuite() {
 	require := s.Require()
 	require.NoError(s.cleanup())
+	logger.ResetLogger()
 }
 
 //===========================================================================
@@ -131,8 +132,8 @@ func (s *trtlTestSuite) EqualMeta(expectedKey []byte, expectedNamespace string, 
 	expectedMeta := &pb.Meta{
 		Key:       expectedKey,
 		Namespace: expectedNamespace,
-		Region:    metaRegion,
-		Owner:     fmt.Sprintf("%d:%s", metaPID, metaOwner),
+		Region:    s.conf.Replica.Region,
+		Owner:     fmt.Sprintf("%d:%s", s.conf.Replica.PID, s.conf.Replica.Name),
 		Version:   expectedVersion,
 		Parent:    expectedParent,
 	}
@@ -185,28 +186,8 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 	}
 
 	// Create the configuration without loading it from the environment
-	conf := config.Config{
-		Maintenance: false,
-		BindAddr:    ":4436",
-		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:  true,
-		Database: config.DatabaseConfig{
-			URL:           fmt.Sprintf("leveldb:///%s", s.tmpdb),
-			ReindexOnBoot: false,
-		},
-		Replica: config.ReplicaConfig{
-			Enabled: false, // Replica is tested in the replica package
-			PID:     metaPID,
-			Region:  metaRegion,
-			Name:    metaOwner,
-		},
-		MTLS: config.MTLSConfig{
-			Insecure: true,
-		},
-		Backup: config.BackupConfig{
-			Enabled: false,
-		},
-	}
+	conf := trtl.MockConfig()
+	conf.Database.URL = fmt.Sprintf("leveldb:///%s", s.tmpdb)
 
 	// Mark as processed since the config wasn't loaded from the environment
 	if conf, err = conf.Mark(); err != nil {

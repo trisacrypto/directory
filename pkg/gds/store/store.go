@@ -1,10 +1,10 @@
 /*
 Package store provides an interface to multiple types of embedded storage across
-multiple objects. Unlike a SQL interface, the TRISA directory service relies on embedded
-databases (e.g. like LevelDB) and replication using anti-entropy. It also manages
-multiple namespaces (object types) - VASP records, CertificateRequests, Peers, etc. In
-general an object store interface provides accesses to the objects, with one interface
-per namespace as follows:
+multiple objects. Unlike a SQL interface, the TRISA directory service relies on document
+databases or key/value stores such as leveldb or trtl. It also manages multiple
+namespaces (object types) - VASP records, CertificateRequests, Peers, etc. In general an
+object store interface provides accesses to the objects, with one interface per
+namespace as follows:
 
 	type ObjectStore interface {
 		List() *Iterator                               // Iterate over all objects
@@ -18,15 +18,6 @@ per namespace as follows:
 Ideally there would be a store per namespace, but in order to generalize the store to
 multiple embedded databases, the store interface affixes the object store methods with
 the namespace. E.g. ListVASPs, CreateCertReq, etc.
-
-For Replication, the replica needs special access to the store to list all objects
-including tombstones and to place objects without updating their metadata. For a
-namespace that can be replicated the interface is:
-
-	type ReplicatedObjectStore interface {
-		Scan(ns string) *Iterator          // Lists all objects including tombstones in the namespace
-		Place(ns string, o *Object) error  // Puts an object into the namespace without metadata changes
-	}
 */
 package store
 
@@ -41,6 +32,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store/iterator"
 	"github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -57,6 +49,10 @@ func Open(conf config.DatabaseConfig) (s Store, err error) {
 	switch dsn.Scheme {
 	case "leveldb":
 		if s, err = leveldb.Open(dsn.Path); err != nil {
+			return nil, err
+		}
+	case "trtl":
+		if s, err = trtl.Open(conf); err != nil {
 			return nil, err
 		}
 	default:

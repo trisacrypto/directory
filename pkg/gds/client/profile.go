@@ -21,6 +21,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Profile contains the client-side configuration to connect to a specifc GDS instance.
@@ -142,7 +143,7 @@ func (p *Profile) OpenLevelDB() (ldb *leveldb.DB, err error) {
 func (p *DirectoryProfile) Connect() (_ api.TRISADirectoryClient, err error) {
 	var opts []grpc.DialOption
 	if p.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		config := &tls.Config{}
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config)))
@@ -168,7 +169,7 @@ func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, er
 func (p *TrtlProfile) Connect() (conn *grpc.ClientConn, err error) {
 	var opts []grpc.DialOption
 	if p.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var sz *trust.Serializer
 		if sz, err = trust.NewSerializer(false); err != nil {
@@ -235,7 +236,7 @@ func (p *TrtlProfile) ConnectPeers() (_ peers.PeerManagementClient, err error) {
 func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
 	var opts []grpc.DialOption
 	if p.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		if p.CertPath == "" || p.PoolPath == "" {
 			return nil, errors.New("certs and certpool are required for mTLS connections")

@@ -20,21 +20,16 @@ func (s *trtlTestSuite) TestBackupManager() {
 	defer os.RemoveAll(backupDir)
 	require := s.Require()
 
-	// Restart the trtl service with the backup manager config. Since we are managing
-	// the backup manager independently from the trtl service, Enabled is set to false
-	// to prevent the parent trtl service from trying to shut down the backup manager
-	// and blocking indefinitely.
-	s.resetEnvironment()
-	s.conf.Backup = config.BackupConfig{
-		Enabled:  false,
+	// Restart the trtl service with the backup manager config.
+	conf := config.BackupConfig{
+		Enabled:  true,
 		Interval: time.Millisecond,
 		Storage:  backupDir,
 		Keep:     1,
 	}
-	s.setupServers()
 
 	// Create a backup manager that's separate from the trtl service
-	backup, err := trtl.NewBackupManager(s.trtl)
+	backup, err := trtl.NewBackupManager(conf, s.trtl.GetDB())
 	require.NoError(err)
 
 	// Start the backup manager
@@ -47,7 +42,7 @@ func (s *trtlTestSuite) TestBackupManager() {
 
 	// Wait for the backup manager to run through its loop. The shutdown check is at
 	// the beginning so there is a timing window here.
-	time.Sleep(s.conf.Backup.Interval * 2)
+	time.Sleep(conf.Interval * 3)
 
 	// Make sure that the backup manager is stopped
 	require.NoError(backup.Shutdown())
@@ -58,16 +53,16 @@ func (s *trtlTestSuite) TestBackupManager() {
 	files, err := ioutil.ReadDir(backupDir)
 	require.NoError(err)
 	require.Len(files, 1, "wrong number of backups created")
-	s.compareBackup(files[0].Name())
+	s.compareBackup(filepath.Join(conf.Storage, files[0].Name()))
 }
 
 // Compares the target backup DB to the current DB to verify that they contain the same
 // objects.
-func (s *trtlTestSuite) compareBackup(name string) {
+func (s *trtlTestSuite) compareBackup(path string) {
 	require := s.Require()
 
 	// Extract the backup DB
-	root, err := utils.ExtractGzip(filepath.Join(s.conf.Backup.Storage, name), "testdata/lastbackup", false)
+	root, err := utils.ExtractGzip(path, "testdata/lastbackup", false)
 	require.NoError(err)
 	defer os.RemoveAll(root)
 

@@ -1,0 +1,22 @@
+{
+    "technical": {
+        "name": "Panas Slobodyan",
+        "email": "panas@example.com",
+        "phone": "+380 44 884 5700"
+    },
+    "administrative": {
+        "name": "Olesya Prykhodko",
+        "email": "olesya@example.com",
+        "phone": "+380 44 905 9189"
+    },
+    "legal": {
+        "name": "Illya Shvets",
+        "email": "illya@example.com",
+        "phone": "+380 44 316 8744"
+    },
+    "billing": {
+        "name": "Marta Morozova",
+        "email": "marta@example.com",
+        "phone": "+380 44 717 8840"
+    }
+}

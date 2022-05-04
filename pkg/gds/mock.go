@@ -11,10 +11,12 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
+	trtlstore "github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"google.golang.org/grpc"
 )
 
 // NewMock creates and returns a mocked Service for testing, using values provided in
@@ -22,7 +24,7 @@ import (
 // only mocks at the top level of the service, lower level mocks such as mocking the
 // secret manager or email service must be implemented with configuration. Use
 // MockConfig to ensure a configuration is generated that fully mocks the service.
-func NewMock(conf config.Config) (s *Service, err error) {
+func NewMock(conf config.Config, trtlConn *grpc.ClientConn) (s *Service, err error) {
 	// Set the global level
 	zerolog.SetGlobalLevel(conf.GetLogLevel())
 
@@ -40,8 +42,16 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	if svc.secret, err = secrets.NewMock(conf.Secrets); err != nil {
 		return nil, err
 	}
-	if svc.db, err = store.Open(conf.Database); err != nil {
-		return nil, err
+
+	if trtlConn != nil {
+		// The Trtl store mock requires a bufconn connection
+		if svc.db, err = trtlstore.NewMock(trtlConn); err != nil {
+			return nil, err
+		}
+	} else {
+		if svc.db, err = store.Open(conf.Database); err != nil {
+			return nil, err
+		}
 	}
 
 	if svc.gds, err = NewGDS(svc); err != nil {
@@ -69,7 +79,7 @@ func NewMock(conf config.Config) (s *Service, err error) {
 	svc.admin = admin
 
 	if conf.Sectigo.Testing {
-		if err = mock.Start(); err != nil {
+		if err = mock.Start(conf.Sectigo.Profile); err != nil {
 			return nil, err
 		}
 	}
@@ -90,7 +100,7 @@ func MockConfig() config.Config {
 		SecretKey:   "supersecretsquirrel",
 		Maintenance: false,
 		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
-		ConsoleLog:  true,
+		ConsoleLog:  false,
 		GDS: config.GDSConfig{
 			Enabled:  false,
 			BindAddr: "",
@@ -127,7 +137,7 @@ func MockConfig() config.Config {
 			AdminEmail:           "GDS Admin <admin@gds.dev>",
 			SendGridAPIKey:       "notarealsendgridapikey",
 			DirectoryID:          "gds.dev",
-			VerifyContactBaseURL: "https://gds.dev/verify-contact",
+			VerifyContactBaseURL: "https://gds.dev/verify",
 			AdminReviewBaseURL:   "https://admin.gds.dev/vasps/",
 			Testing:              true,
 		},

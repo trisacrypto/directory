@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 // If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
@@ -50,7 +51,7 @@ func TestEmailBuilders(t *testing.T) {
 
 	setupMIMEDir(t)
 
-	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify-contact"}
+	vcdata := emails.VerifyContactData{Name: recipient, Token: "abcdef1234567890", VID: "42", BaseURL: "http://localhost:8080/verify", DirectoryID: "testnet.io"}
 	mail, err := emails.VerifyContactEmail(sender, senderEmail, recipient, recipientEmail, vcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.VerifyContactRE, mail.Subject)
@@ -87,16 +88,17 @@ func TestVerifyContactURL(t *testing.T) {
 		Name:    "Darlene Ulmsted",
 		Token:   "1234defg4321",
 		VID:     "42",
-		BaseURL: "http://localhost:8080/verify-contact",
+		BaseURL: "http://localhost:8080/verify",
 	}
 	link, err := url.Parse(data.VerifyContactURL())
 	require.NoError(t, err)
 	require.Equal(t, "http", link.Scheme)
 	require.Equal(t, "localhost:8080", link.Host)
-	require.Equal(t, "/verify-contact", link.Path)
+	require.Equal(t, "/verify", link.Path)
 	params := link.Query()
 	require.Equal(t, data.Token, params.Get("token"))
 	require.Equal(t, data.VID, params.Get("vaspID"))
+	require.Equal(t, data.DirectoryID, params.Get("registered_directory"))
 }
 
 func TestAdminReviewURL(t *testing.T) {
@@ -130,10 +132,15 @@ type EmailTestSuite struct {
 }
 
 func (suite *EmailTestSuite) SetupSuite() {
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	suite.conf = config.EmailConfig{
 		Testing:      true,
 		ServiceEmail: "service@example.com",
 		AdminEmail:   "admin@example.com",
+		Storage:      "fixtures/emails",
 	}
 }
 
@@ -143,6 +150,10 @@ func (suite *EmailTestSuite) BeforeTest(suiteName, testName string) {
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
 	emails.PurgeMockEmails()
+}
+
+func (suite *EmailTestSuite) TearDownSuite() {
+	logger.ResetLogger()
 }
 
 func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
@@ -157,7 +168,7 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	email, err := emails.New(suite.conf)
 	require.NoError(err)
 
-	data := emails.VerifyContactData{Name: recipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify-contact"}
+	data := emails.VerifyContactData{Name: recipient.Name, Token: "Hk79ZIhCSrYJtSaaMECZZKI1BtsCY9zDLPq9c1amyK2zJY6T", VID: "9e069e01-8515-4d57-b9a5-e249f7ab4fca", BaseURL: "http://localhost:3000/verify", DirectoryID: "testnet.io"}
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))

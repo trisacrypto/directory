@@ -41,15 +41,15 @@ func (tm *TokenManager) mockValidate(ctx context.Context, idToken string, audien
 		return nil, err
 	}
 
-	if claims.Audience != audience {
+	if len(claims.Audience) != 1 || claims.Audience[0] != audience {
 		return nil, errors.New("audience in token does not match given audience")
 	}
 
 	payload = &idtoken.Payload{
 		Issuer:   claims.Issuer,
-		Audience: claims.Audience,
-		Expires:  claims.ExpiresAt,
-		IssuedAt: claims.IssuedAt,
+		Audience: claims.Audience[0],
+		Expires:  claims.ExpiresAt.Unix(),
+		IssuedAt: claims.IssuedAt.Unix(),
 		Subject:  claims.Subject,
 		Claims:   make(map[string]interface{}),
 	}

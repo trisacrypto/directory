@@ -41,6 +41,10 @@ type trtlStoreTestSuite struct {
 func (s *trtlStoreTestSuite) SetupSuite() {
 	require := s.Require()
 
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	var err error
 	s.tmpdb, err = ioutil.TempDir("../testdata", "db-*")
 	require.NoError(err)
@@ -48,8 +52,8 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	conf := config.Config{
 		Maintenance: false,
 		BindAddr:    ":4436",
-		LogLevel:    logger.LevelDecoder(zerolog.DebugLevel),
-		ConsoleLog:  true,
+		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
+		ConsoleLog:  false,
 		Database: config.DatabaseConfig{
 			URL:           fmt.Sprintf("leveldb:///%s", s.tmpdb),
 			ReindexOnBoot: false,
@@ -101,6 +105,8 @@ func (s *trtlStoreTestSuite) TearDownSuite() {
 	s.tmpdb = ""
 	s.grpc = nil
 	s.trtl = nil
+
+	logger.ResetLogger()
 }
 
 func TestTrtlStore(t *testing.T) {
@@ -145,6 +151,11 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 	require.NotEmpty(id)
 
+	// Should not be able to create a duplicate VASP
+	id2, err := db.CreateVASP(alice)
+	require.EqualError(err, storeerrors.ErrDuplicateEntity.Error())
+	require.Empty(id2)
+
 	// Attempt to Retrieve the VASP
 	alicer, err := db.RetrieveVASP(id)
 	require.NoError(err)
@@ -181,23 +192,8 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Empty(alicer)
 
 	// Add a few more VASPs
-	for i := 0; i < 10; i++ {
-		vasp := &pb.VASP{
-			Entity: &ivms101.LegalPerson{
-				Name: &ivms101.LegalPersonName{
-					NameIdentifiers: []*ivms101.LegalPersonNameId{
-						{
-							LegalPersonName:               fmt.Sprintf("Test %d", i+1),
-							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
-						},
-					},
-				},
-			},
-			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
-		}
-		_, err := db.CreateVASP(vasp)
-		require.NoError(err)
-	}
+	err = createVASPs(db, 10, 1)
+	require.NoError(err)
 
 	// Test listing all of the VASPs
 	reqs, err := db.ListVASPs().All()
@@ -238,28 +234,16 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Equal(10, niters)
 
 	// Create enough VASPs to exceed the page size
-	for i := 0; i < 100; i++ {
-		vasp := &pb.VASP{
-			Entity: &ivms101.LegalPerson{
-				Name: &ivms101.LegalPersonName{
-					NameIdentifiers: []*ivms101.LegalPersonNameId{
-						{
-							LegalPersonName:               fmt.Sprintf("Test %d", i+1),
-							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
-						},
-					},
-				},
-			},
-			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
-		}
-		_, err := db.CreateVASP(vasp)
-		require.NoError(err)
-	}
+	err = createVASPs(db, 100, 11)
+	require.NoError(err)
 
 	// Test listing all of the VASPs
 	reqs, err = db.ListVASPs().All()
 	require.NoError(err)
 	require.Len(reqs, 110)
+
+	// Cleanup database
+	require.NoError(deleteVASPs(db), "could not cleanup database")
 }
 
 func (s *trtlStoreTestSuite) TestCertificateStore() {
@@ -389,4 +373,63 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	reqs, err = db.ListCertReqs().All()
 	require.NoError(err)
 	require.Len(reqs, 110)
+}
+
+func createVASPs(db *store.Store, num, startIndex int) error {
+	countries := []string{"TV", "KY", "CC", "LT", "EH", "SC", "NU"}
+	bcats := []pb.BusinessCategory{pb.BusinessCategoryBusiness, pb.BusinessCategoryNonCommercial, pb.BusinessCategoryPrivate}
+
+	for i := 0; i < num; i++ {
+		country := countries[i%len(countries)]
+		vasp := &pb.VASP{
+			Entity: &ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               fmt.Sprintf("Test VASP %04X", i+startIndex),
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+				CountryOfRegistration: country,
+			},
+			Website:          fmt.Sprintf("https://test%04X.net/", i+startIndex),
+			CommonName:       fmt.Sprintf("trisa%04d.test.net", i+startIndex),
+			BusinessCategory: bcats[i%len(bcats)],
+		}
+
+		if _, err := db.CreateVASP(vasp); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteVASPs(db *store.Store) error {
+	n := 0
+	iter := db.ListVASPs()
+	for iter.Next() {
+		vasp, err := iter.VASP()
+		if err != nil {
+			iter.Release()
+			return err
+		}
+
+		if err := db.DeleteVASP(vasp.Id); err != nil {
+			iter.Release()
+			return err
+		}
+
+		n++
+	}
+
+	iter.Release()
+	if err := iter.Error(); err != nil {
+		return err
+	}
+
+	// TODO: do better at managing empty indices
+	db.DeleteIndices()
+	fmt.Printf("deleted %d records\n", n)
+	return nil
 }

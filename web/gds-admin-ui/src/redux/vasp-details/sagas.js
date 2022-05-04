@@ -2,8 +2,10 @@ import NProgress from 'nprogress'
 import { call, put, takeEvery } from 'redux-saga/effects'
 import { getReviewNotes, deleteReviewNote as deleteNote } from 'services/review-notes'
 import updateTrixoForm from 'services/trixo'
-import { getVasp, updateVasp } from 'services/vasp'
+import { getVasp, putContact, removeContact, updateVasp } from 'services/vasp'
 import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError, updateBusinessInfosResponseSuccess, updateBusinessInfosResponseError, UpdateBusinessInfosActionTypes, updateTrisaImplementationDetailsResponseSuccess, updateTrisaImplementationDetailsResponseError, UpdateTrisaImplementationDetailsActionTypes, updateIvms101ResponseError, UpdateIvms101ActionTypes, updateIvms101ResponseSuccess } from '.'
+import { deleteContactResponseError, fetchVaspDetailsApiResponse, updateContactResponseError } from './actions'
+import { DeleteContactActionTypes, UpdateContactActionTypes } from './constants'
 
 
 function* fetchVaspDetails({ payload: { id, history } }) {
@@ -97,6 +99,33 @@ function* deleteReviewNote({ payload: { noteId, vaspId } }) {
     }
 }
 
+function* updateContact({ payload: { contactType, vaspId, data, setIsOpen } }) {
+    try {
+        const payload = { contact: data }
+        const response = yield call(putContact, vaspId, contactType, payload)
+        if (response && response.data) {
+            setIsOpen(false)
+            yield put(fetchVaspDetailsApiResponse(vaspId))
+        }
+    } catch (error) {
+        yield put(updateContactResponseError(error.message))
+    }
+}
+
+
+function* deleteContact({ payload: { contactType, vaspId, setIsOpen } }) {
+    try {
+        const response = yield call(removeContact, vaspId, contactType)
+        if (response && response.data) {
+            setIsOpen()
+            yield put(fetchVaspDetailsApiResponse(vaspId))
+        }
+    } catch (error) {
+        console.error('[error]', error.message)
+        yield put(deleteContactResponseError(error.message))
+    }
+}
+
 function* vaspDetailsSaga() {
     yield takeEvery(FetchVaspDetailsActionTypes.FETCH_VASP_DETAILS, fetchVaspDetails)
 }
@@ -123,6 +152,14 @@ export function* updateTrisaDetailsSaga() {
 
 export function* updateIvmsSaga() {
     yield takeEvery(UpdateIvms101ActionTypes.UPDATE_IVMS_101, updateIvms)
+}
+
+export function* updateContactSaga() {
+    yield takeEvery(UpdateContactActionTypes.UPDATE_CONTACT, updateContact)
+}
+
+export function* deleteContactSaga() {
+    yield takeEvery(DeleteContactActionTypes.DELETE_CONTACT, deleteContact)
 }
 
 export { vaspDetailsSaga }

@@ -239,15 +239,15 @@ func (c *Credentials) Validate() (err error) {
 		return errors.New("could not parse access token")
 	}
 
-	now := time.Now().Unix()
-	if accessClaims.ExpiresAt != 0 && now > accessClaims.ExpiresAt {
+	now := time.Now()
+	if !accessClaims.ExpiresAt.IsZero() && accessClaims.ExpiresAt.Before(now) {
 		// access token is expired, check if refresh is not expired
 		refreshClaims := new(tokens.Claims)
 		if token, _ := jwt.ParseWithClaims(c.RefreshToken, refreshClaims, nil); token == nil {
 			return errors.New("could not parse refresh token")
 		}
 
-		if refreshClaims.ExpiresAt != 0 && now > refreshClaims.ExpiresAt {
+		if !refreshClaims.ExpiresAt.IsZero() && refreshClaims.ExpiresAt.Before(now) {
 			// refresh token is also expired
 			return errors.New("tokens are both expired")
 		}

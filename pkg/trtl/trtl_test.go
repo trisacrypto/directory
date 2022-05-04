@@ -85,9 +85,9 @@ func (s *trtlTestSuite) TestGet() {
 
 	// Retrieve a value with return_meta=true.
 	expectedVersion := &pb.Version{
-		Pid:     metaPID,
+		Pid:     s.conf.Replica.PID,
 		Version: 1,
-		Region:  metaRegion,
+		Region:  s.conf.Replica.Region,
 	}
 	reply, err = client.Get(ctx, &pb.GetRequest{
 		Namespace: alice.Namespace,
@@ -158,14 +158,14 @@ func (s *trtlTestSuite) TestPut() {
 
 	// Put a value with return_meta=true.
 	expectedVersion := &pb.Version{
-		Pid:     metaPID,
+		Pid:     s.conf.Replica.PID,
 		Version: 3,
-		Region:  metaRegion,
+		Region:  s.conf.Replica.Region,
 	}
 	expectedParent := &pb.Version{
-		Pid:     metaPID,
+		Pid:     s.conf.Replica.PID,
 		Version: 2,
-		Region:  metaRegion,
+		Region:  s.conf.Replica.Region,
 	}
 	// TODO this test modifies the DB state so could cause subsequent tests to have unexpected results
 	reply, err = client.Put(ctx, &pb.PutRequest{
@@ -241,14 +241,14 @@ func (s *trtlTestSuite) TestDelete() {
 	require.True(withMeta.Success)
 
 	expectedVersion := &pb.Version{
-		Pid:     metaPID,
+		Pid:     s.conf.Replica.PID,
 		Version: 4,
-		Region:  metaRegion,
+		Region:  s.conf.Replica.Region,
 	}
 	expectedParent := &pb.Version{
-		Pid:     metaPID,
+		Pid:     s.conf.Replica.PID,
 		Version: 3,
-		Region:  metaRegion,
+		Region:  s.conf.Replica.Region,
 	}
 	s.EqualMeta(tempKey, tempNS, expectedVersion, expectedParent, withMeta.Meta)
 }
@@ -370,7 +370,7 @@ func (s *trtlTestSuite) TestIter() {
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
-	_, err := client.Iter(ctx, &pb.IterRequest{Namespace: "index"})
+	_, err := client.Iter(ctx, &pb.IterRequest{Namespace: "sequence"})
 	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")
 
 	// Test Invalid Options
@@ -539,7 +539,7 @@ func (s *trtlTestSuite) TestCursor() {
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Test cannot use reserved namespace
-	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "index"})
+	stream, err := client.Cursor(ctx, &pb.CursorRequest{Namespace: "sequence"})
 	require.NoError(err, "could not create cursor stream")
 	_, err = stream.Recv()
 	s.StatusError(err, codes.PermissionDenied, "cannot used reserved namespace")

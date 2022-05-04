@@ -1,3 +1,6 @@
+import registrationAuthority from 'assets/registration-authority.json'
+
+
 const normalizeFlatArrays = (data) => data && data.map(d => ({ name: d }))
 
 export const getTrixoFormInitialValues = (data = []) => {
@@ -72,7 +75,6 @@ export const getIvms101RecordInitialValues = (data) => {
         national_identification: {
             national_identifier: "",
             national_identifier_type: 0,
-            country_of_issue: "",
             registration_authority: ""
         },
         country_of_registration: ""
@@ -81,4 +83,21 @@ export const getIvms101RecordInitialValues = (data) => {
     return {
         ...Object.assign(defaultValues, data),
     }
+}
+
+export const getContactInitialValues = (data) => {
+    const initialValue = {
+        email: "",
+        extra: null,
+        name: "",
+        person: null,
+        phone: ""
+    }
+
+    return Object.assign(initialValue, data)
+}
+
+
+export const getRegistrationAuthorities = () => {
+    return [...new Set(registrationAuthority)]
 }

@@ -87,6 +87,8 @@
 @import "custom/plugins/rating";
 @import "custom/plugins/react-select"; // react select style
 @import "custom/plugins/react-table"; // react table style
+@import 'react-bootstrap-typeahead/css/Typeahead.css';
+
 
 .text-green{
     color: #00b98b;
@@ -123,4 +125,14 @@ a[disabled] {
 
 .task .table-responsive{
     height: 350px;
+}
+
+.btn-circle {
+    width: 20px;
+    height: 20px;
+    padding: 1px 0px;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.42857;
 }

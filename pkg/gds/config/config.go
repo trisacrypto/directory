@@ -70,6 +70,9 @@ type MembersConfig struct {
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
+	Insecure      bool   `split_words:"true" default:"false"`
+	CertPath      string `split_words:"true"`
+	PoolPath      string `split_words:"true"`
 }
 
 type EmailConfig struct {
@@ -77,9 +80,10 @@ type EmailConfig struct {
 	AdminEmail           string `envconfig:"GDS_ADMIN_EMAIL" default:"TRISA Admins <admin@trisa.io>"`
 	SendGridAPIKey       string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	DirectoryID          string `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
-	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify-contact"`
+	VerifyContactBaseURL string `envconfig:"GDS_VERIFY_CONTACT_URL" default:"https://vaspdirectory.net/verify"`
 	AdminReviewBaseURL   string `envconfig:"GDS_ADMIN_REVIEW_URL" default:"https://admin.vaspdirectory.net/vasps/"`
 	Testing              bool   `split_words:"true" default:"false"`
+	Storage              string `split_words:"true" default:""`
 }
 
 type CertManConfig struct {
@@ -147,6 +151,10 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
+	if err = c.Database.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Sectigo.Validate(); err != nil {
 		return err
 	}
@@ -199,9 +207,24 @@ func (c MembersConfig) Validate() error {
 	return nil
 }
 
+func (c DatabaseConfig) Validate() error {
+	// If the insecure flag isn't set then we must have certs when connecting to trtl.
+	if strings.HasPrefix(c.URL, "trtl://") && !c.Insecure {
+		if c.CertPath == "" || c.PoolPath == "" {
+			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+		}
+	}
+	return nil
+}
+
 func (c EmailConfig) Validate() error {
 	if c.AdminReviewBaseURL != "" && !strings.HasSuffix(c.AdminReviewBaseURL, "/") {
-		return errors.New("admin review base URL must end in a /")
+		return errors.New("invalid configuration: admin review base URL must end in a /")
 	}
+
+	if c.Storage != "" && !c.Testing {
+		return errors.New("invalid configuration: email archiving is only supported in testing mode")
+	}
+
 	return nil
 }

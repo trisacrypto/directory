@@ -26,6 +26,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/rotationalio/honu/object"
 	"github.com/segmentio/ksuid"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
@@ -104,6 +105,11 @@ func main() {
 					Name:    "out",
 					Aliases: []string{"o"},
 					Usage:   "write the fetched key to directory if specified, otherwise printed",
+				},
+				&cli.BoolFlag{
+					Name:    "honu",
+					Aliases: []string{"H"},
+					Usage:   "the data is honu encoded data",
 				},
 			},
 		},
@@ -403,6 +409,15 @@ func ldbGet(c *cli.Context) (err error) {
 		var data []byte
 		if data, err = ldb.Get(key, nil); err != nil {
 			return cli.Exit(err, 1)
+		}
+
+		if c.Bool("honu") {
+			// Extract the data from the honu metadata
+			obj := &object.Object{}
+			if err = proto.Unmarshal(data, obj); err != nil {
+				return cli.Exit(err, 1)
+			}
+			data = obj.Data
 		}
 
 		// Unmarshal the thing

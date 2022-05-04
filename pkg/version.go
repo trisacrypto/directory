@@ -8,11 +8,14 @@ import "fmt"
 // Version component constants for the current build.
 const (
 	VersionMajor         = 1
-	VersionMinor         = 2
+	VersionMinor         = 4
 	VersionPatch         = 0
 	VersionReleaseLevel  = ""
-	VersionReleaseNumber = 17
+	VersionReleaseNumber = 20
 )
+
+// Set the GitVersion via -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$(git rev-parse --short HEAD)'"
+var GitVersion string
 
 // Version returns the semantic version for the current build.
 func Version() string {
@@ -25,9 +28,14 @@ func Version() string {
 
 	if VersionReleaseLevel != "" {
 		if VersionReleaseNumber > 0 {
-			return fmt.Sprintf("%s-%s.%d", versionCore, VersionReleaseLevel, VersionReleaseNumber)
+			versionCore = fmt.Sprintf("%s-%s.%d", versionCore, VersionReleaseLevel, VersionReleaseNumber)
 		}
-		return fmt.Sprintf("%s-%s", versionCore, VersionReleaseLevel)
+		versionCore = fmt.Sprintf("%s-%s", versionCore, VersionReleaseLevel)
 	}
+
+	if GitVersion != "" {
+		versionCore = fmt.Sprintf("%s (%s)", versionCore, GitVersion)
+	}
+
 	return versionCore
 }

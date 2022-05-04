@@ -21,7 +21,7 @@ import (
 // Test that the certificate manger correctly moves certificates across the request
 // pipeline.
 func (s *gdsTestSuite) TestCertManager() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -139,7 +139,7 @@ func (s *gdsTestSuite) TestCertManager() {
 
 // Test that the certificate manager is able to process an end entity profile.
 func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
 	defer s.teardownCertManager()
 	defer s.loadReferenceFixtures()
 	require := s.Require()
@@ -180,7 +180,7 @@ func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
 
 // Test that the certificate manager is able to process a CipherTraceEE profile.
 func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	defer s.loadReferenceFixtures()
 	require := s.Require()
@@ -215,7 +215,7 @@ func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
 
 // Test that certificate submission fails if the user available balance is 0.
 func (s *gdsTestSuite) TestSubmitNoBalance() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -224,6 +224,7 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 	})
 
 	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
 	s.runCertManager(s.svc.GetConf().CertMan.Interval)
@@ -232,6 +233,11 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+	// Cert request should still be in the READY_TO_SUBMIT state
+	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
 	// Audit log should be updated
 	log, err := models.GetAuditLog(v)
@@ -244,11 +250,12 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 
 // Test that the certificate submission fails if there is no available password.
 func (s *gdsTestSuite) TestSubmitNoPassword() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
 	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
 	s.runCertManager(s.svc.GetConf().CertMan.Interval)
@@ -257,6 +264,11 @@ func (s *gdsTestSuite) TestSubmitNoPassword() {
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+	// Cert request should still be in the READY_TO_SUBMIT state
+	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
 	// Audit log should be updated
 	log, err := models.GetAuditLog(v)
@@ -269,8 +281,9 @@ func (s *gdsTestSuite) TestSubmitNoPassword() {
 
 // Test that the certificate submission fails if the batch request fails.
 func (s *gdsTestSuite) TestSubmitBatchError() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
 	defer s.teardownCertManager()
+	defer s.loadReferenceFixtures()
 	require := s.Require()
 
 	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
@@ -282,9 +295,13 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 	require.NoError(sm.CreateSecret(ctx, "password"))
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
-	mock.Handle(sectigo.CreateSingleCertBatchEP, func(c *gin.Context) {
-		c.Status(http.StatusNotFound)
-	})
+	// Certificate request with a missing country name
+	quebecCertReq.Params = map[string]string{
+		"organizationName":    "TRISA Member VASP",
+		"localityName":        "Menlo Park",
+		"stateOrProvinceName": "California",
+	}
+	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
 
 	// Run the CertManager for a tick
 	s.runCertManager(s.svc.GetConf().CertMan.Interval)
@@ -293,6 +310,11 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+	// Cert request should still be in the READY_TO_SUBMIT state
+	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
 	// Audit log should be updated
 	log, err := models.GetAuditLog(v)
@@ -305,7 +327,7 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 
 // Test that the certificate processing fails if the batch status request fails.
 func (s *gdsTestSuite) TestProcessBatchDetailError() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -338,7 +360,7 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 
 // Test that the certificate processing fails if there is still an active batch.
 func (s *gdsTestSuite) TestProcessActiveBatch() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -374,7 +396,7 @@ func (s *gdsTestSuite) TestProcessActiveBatch() {
 
 // Test that the certificate processing fails if the batch request is rejected.
 func (s *gdsTestSuite) TestProcessRejected() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -416,7 +438,7 @@ func (s *gdsTestSuite) TestProcessRejected() {
 
 // Test that the certificate processing fails if the batch request errors.
 func (s *gdsTestSuite) TestProcessBatchError() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -459,7 +481,7 @@ func (s *gdsTestSuite) TestProcessBatchError() {
 // Test that the certificate processing fails if the batch processing info request
 // returns an unhandled sectigo state.
 func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
-	s.setupCertManager()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -492,11 +514,12 @@ func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
 	require.Equal("automated", cert.AuditLog[3].Source)
 }
 
-func (s *gdsTestSuite) setupCertManager() {
+func (s *gdsTestSuite) setupCertManager(profile string) {
 	require := s.Require()
 	tmp, err := ioutil.TempDir("testdata", "certs-*")
 	require.NoError(err)
 	conf := gds.MockConfig()
+	conf.Sectigo.Profile = profile
 	conf.CertMan = config.CertManConfig{
 		Interval: time.Millisecond,
 		Storage:  tmp,
@@ -508,7 +531,7 @@ func (s *gdsTestSuite) setupCertManager() {
 
 func (s *gdsTestSuite) teardownCertManager() {
 	s.ResetConfig()
-	s.ResetFullFixtures()
+	s.ResetFixtures()
 	emails.PurgeMockEmails()
 	os.RemoveAll(s.svc.GetConf().CertMan.Storage)
 }

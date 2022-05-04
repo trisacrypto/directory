@@ -34,7 +34,7 @@ func (s *gdsTestSuite) TestRegister() {
 	// Load the fixtures and start the GDS server
 	s.LoadEmptyFixtures()
 	s.SetupGDS()
-	defer s.ResetEmptyFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
@@ -53,24 +53,28 @@ func (s *gdsTestSuite) TestRegister() {
 		admin = *refVASP.Contacts.Administrative
 	}
 	contacts.Administrative = &admin
+	contacts.Administrative.Name = "Admin Person"
 	contacts.Administrative.Email = "admin@example.com"
 
 	if refVASP.Contacts.Billing != nil {
 		billing = *refVASP.Contacts.Billing
 	}
 	contacts.Billing = &billing
+	contacts.Billing.Name = "Billing Person"
 	contacts.Billing.Email = "billing@example.com"
 
 	if refVASP.Contacts.Legal != nil {
 		legal = *refVASP.Contacts.Legal
 	}
 	contacts.Legal = &legal
+	contacts.Legal.Name = "Legal Person"
 	contacts.Legal.Email = "legal@example.com"
 
 	if refVASP.Contacts.Technical != nil {
 		technical = *refVASP.Contacts.Technical
 	}
 	contacts.Technical = &technical
+	contacts.Technical.Name = "Technical Person"
 	contacts.Technical.Email = "technical@example.com"
 
 	// Request contains an invalid endpoint
@@ -378,7 +382,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	// Load the fixtures and start the GDS server
 	s.LoadFullFixtures()
 	s.SetupGDS()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()

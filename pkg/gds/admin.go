@@ -225,8 +225,9 @@ const protectAuthenticateMaxAge = time.Minute * 10
 // the double cookie tokens for CSRF protection. The front-end should call this before
 // posting credentials from Google.
 func (s *Admin) ProtectAuthenticate(c *gin.Context) {
-	expiresAt := time.Now().Add(protectAuthenticateMaxAge).Unix()
+	expiresAt := time.Now().Add(protectAuthenticateMaxAge)
 	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
+		log.Error().Err(err).Msg("could not set cookies")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -244,7 +245,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 		in        *admin.AuthRequest
 		out       *admin.AuthReply
 		claims    *idtoken.Payload
-		expiresAt int64
+		expiresAt time.Time
 	)
 
 	// Parse incoming JSON data from the client request
@@ -321,33 +322,33 @@ func (s *Admin) checkAuthorizedDomain(claims *idtoken.Payload) error {
 	return fmt.Errorf("%s is not in the configured authorized domains", domains)
 }
 
-func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expiresAt int64, err error) {
+func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expiresAt time.Time, err error) {
 	var accessToken, refreshToken *jwt.Token
 
 	// Create the access and refresh tokens from the claims
 	if accessToken, err = s.tokens.CreateAccessToken(creds); err != nil {
 		log.Error().Err(err).Msg("could not create access token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
 		log.Error().Err(err).Msg("could not create refresh token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	// Sign the tokens and return the response
 	out = new(admin.AuthReply)
 	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
 		log.Error().Err(err).Msg("could not sign access token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
 		log.Error().Err(err).Msg("could not sign refresh token")
-		return nil, 0, err
+		return nil, time.Time{}, err
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
-	expiresAt = refreshToken.Claims.(*tokens.Claims).ExpiresAt
+	expiresAt = refreshToken.Claims.(*tokens.Claims).ExpiresAt.Time
 	return out, expiresAt, nil
 }
 
@@ -363,7 +364,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 		tks           string
 		in            *admin.AuthRequest
 		out           *admin.AuthReply
-		expiresAt     int64
+		expiresAt     time.Time
 		accessClaims  *tokens.Claims
 		refreshClaims *tokens.Claims
 	)
@@ -407,7 +408,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 
 	// Ensure the refresh token and admin token match
 	// TODO: verify the in.Credential is a refresh token using the subject or audience
-	if accessClaims.Id != refreshClaims.Id {
+	if accessClaims.ID != refreshClaims.ID {
 		log.Warn().Msg("mismatched access and refresh token pair")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
@@ -475,7 +476,7 @@ func (s *Admin) Summary(c *gin.Context) {
 
 	if err := iter.Error(); err != nil {
 		iter.Release()
-		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		log.Error().Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -500,7 +501,7 @@ func (s *Admin) Summary(c *gin.Context) {
 
 	if err := iter2.Error(); err != nil {
 		iter2.Release()
-		log.Warn().Err(err).Msg("could not iterate over certreqs in store")
+		log.Error().Err(err).Msg("could not iterate over certreqs in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -554,7 +555,7 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	}
 
 	if err := iter.Error(); err != nil {
-		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		log.Error().Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -700,7 +701,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	}
 
 	if err := iter.Error(); err != nil {
-		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		log.Error().Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -794,6 +795,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			// Add certificate serial number if it exists
 			if vasp.IdentityCertificate != nil {
 				snippet.CertificateSerial = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+				snippet.CertificateExpiration = vasp.IdentityCertificate.NotAfter
 			}
 
 			// Name is a computed value, ignore errors in finding the name.
@@ -813,7 +815,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Warn().Err(err).Msg("could not iterate over vasps in store")
+		log.Error().Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -1257,7 +1259,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 
 	// Retrieve the associated certificate requests
 	if certReqIDs, err = models.GetCertReqIDs(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not retrieve certificate request IDs for VASP")
+		log.Error().Err(err).Msg("could not retrieve certificate request IDs for VASP")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate requests for VASP"))
 		return
 	}
@@ -1265,7 +1267,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 	// Delete the certificate requests
 	for _, id := range certReqIDs {
 		if err = s.db.DeleteCertReq(id); err != nil {
-			log.Warn().Err(err).Str("certreq_id", id).Msg("could not delete certificate request")
+			log.Error().Err(err).Str("certreq_id", id).Msg("could not delete certificate request")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete associated certificate request"))
 			return
 		}
@@ -1355,6 +1357,13 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		}
 		contact = update
 		emailUpdated = true
+
+		if contact.IsZero() {
+			log.Warn().Msg("cannot create empty contact on update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
+		}
+
 	} else {
 		// Otherwise replace the existing contact info
 		contact.Name = update.Name
@@ -1363,6 +1372,12 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		if contact.Email != update.Email {
 			contact.Email = update.Email
 			emailUpdated = true
+		}
+
+		if contact.IsZero() {
+			log.Warn().Msg("invalid contact record after update")
+			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+			return
 		}
 	}
 
@@ -1376,14 +1391,14 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	if emailUpdated {
 		// The email address changed, so the contact needs to be verified
 		if err = models.SetContactVerification(contact, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
-			log.Warn().Err(err).Msg("could not set contact verification")
+			log.Error().Err(err).Msg("could not set contact verification")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update verification status for the indicated contact"))
 			return
 		}
 
 		// Send the verification email
 		if err = s.svc.email.SendVerifyContact(vasp, contact); err != nil {
-			log.Warn().Err(err).Msg("could not send verification email")
+			log.Error().Err(err).Msg("could not send verification email")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
 			return
 		}
@@ -1391,7 +1406,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 
 	// Commit the contact changes to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not update VASP in database")
+		log.Error().Err(err).Msg("could not update VASP in database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
 		return
 	}
@@ -1440,7 +1455,7 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 
 	// Commit the contact changes to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not update VASP in database")
+		log.Error().Err(err).Msg("could not update VASP in database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
 		return
 	}
@@ -1480,7 +1495,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 
 	// Retrieve author email
 	if claims, err = s.getClaims(c); err != nil {
-		log.Warn().Err(err).Msg("could not retrieve user claims")
+		log.Error().Err(err).Msg("could not retrieve user claims")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
 		return
 	}
@@ -1525,8 +1540,9 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 
 	// Persist the VASP record to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("error updating VASP record")
+		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+		return
 	}
 
 	c.JSON(http.StatusCreated, &admin.ReviewNote{
@@ -1561,7 +1577,7 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 
 	// Retrieve the slice of notes
 	if notes, err = models.GetReviewNotes(vasp); err != nil {
-		log.Warn().Err(err).Msg("error retrieving review notes")
+		log.Error().Err(err).Msg("error retrieving review notes")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve review notes"))
 		return
 	}
@@ -1625,7 +1641,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 
 	// Retrieve author email
 	if claims, err = s.getClaims(c); err != nil {
-		log.Warn().Err(err).Msg("could not retrieve user claims")
+		log.Error().Err(err).Msg("could not retrieve user claims")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
 		return
 	}
@@ -1639,7 +1655,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 
 	// Update the note
 	if note, err = models.UpdateReviewNote(vasp, noteID, claims.Email, in.Text); err != nil {
-		log.Warn().Err(err).Msg("error updating review note")
+		log.Error().Err(err).Msg("error updating review note")
 		if err == models.ErrorNotFound {
 			c.JSON(http.StatusNotFound, admin.ErrorResponse("review note not found"))
 		} else {
@@ -1650,8 +1666,9 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 
 	// Persist the VASP record to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("error updating VASP record")
+		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+		return
 	}
 
 	c.JSON(http.StatusOK, &admin.ReviewNote{
@@ -1697,8 +1714,9 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 
 	// Persist the VASP record to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("error updating VASP record")
+		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+		return
 	}
 
 	c.JSON(http.StatusOK, &admin.Reply{Success: true})
@@ -1817,8 +1835,9 @@ func (s *Admin) Review(c *gin.Context) {
 	// Retrieve user claims for access to provided user info
 	var claims *tokens.Claims
 	if claims, err = s.getClaims(c); err != nil {
-		log.Warn().Err(err).Msg("could not retrieve user claims")
+		log.Error().Err(err).Msg("could not retrieve user claims")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to retrieve user info"))
+		return
 	}
 
 	// Accept or reject the request
@@ -1839,8 +1858,9 @@ func (s *Admin) Review(c *gin.Context) {
 
 	// Persist the VASP record to the database
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Err(err).Msg("error updating VASP record")
+		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
+		return
 	}
 
 	name, _ := vasp.Name()
@@ -2021,7 +2041,7 @@ func (s *Admin) Resend(c *gin.Context) {
 	switch in.Action {
 	case admin.ResendVerifyContact:
 		if out.Sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
-			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
+			log.Error().Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
 			return
 		}
@@ -2029,7 +2049,7 @@ func (s *Admin) Resend(c *gin.Context) {
 
 	case admin.ResendReview:
 		if out.Sent, err = s.svc.email.SendReviewRequest(vasp); err != nil {
-			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend review request")
+			log.Error().Err(err).Int("sent", out.Sent).Msg("could not resend review request")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend review request: %s", err)))
 			return
 		}
@@ -2059,7 +2079,7 @@ func (s *Admin) Resend(c *gin.Context) {
 			return
 		}
 		if out.Sent, err = s.svc.email.SendRejectRegistration(vasp, in.Reason); err != nil {
-			log.Warn().Err(err).Int("sent", out.Sent).Msg("could not resend rejection emails")
+			log.Error().Err(err).Int("sent", out.Sent).Msg("could not resend rejection emails")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend rejection emails: %s", err)))
 			return
 		}
@@ -2072,7 +2092,7 @@ func (s *Admin) Resend(c *gin.Context) {
 	}
 
 	if err = s.db.UpdateVASP(vasp); err != nil {
-		log.Warn().Str("id", vasp.Id).Msg("error updating email logs on VASP")
+		log.Error().Str("id", vasp.Id).Msg("error updating email logs on VASP")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not update VASP record: %s", err)))
 		return
 	}

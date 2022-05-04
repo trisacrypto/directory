@@ -125,7 +125,7 @@ describe("<TrixoQuestionnaire />", () => {
             }
 
             render(<TrixoQuestionnaire data={data} />)
-            expect(screen.getByTestId("has-required-regulatory-program").textContent).toBe("Organization does program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.")
+            expect(screen.getByTestId("has-required-regulatory-program").textContent).toBe("Organization has program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.")
         })
 
         it("organization does not program", () => {
@@ -137,7 +137,7 @@ describe("<TrixoQuestionnaire />", () => {
             }
 
             render(<TrixoQuestionnaire data={data} />)
-            expect(screen.getByTestId("has-required-regulatory-program").textContent).toBe("Organization does not program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.")
+            expect(screen.getByTestId("has-required-regulatory-program").textContent).toBe("Organization has not program that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered.")
         })
 
         it("organization has a partially implemented program", () => {
