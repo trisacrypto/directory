@@ -34,7 +34,7 @@ interface CreateAccountProps {
 }
 interface IFormInputs {
   username: string;
-  password: number;
+  password: string;
 }
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
