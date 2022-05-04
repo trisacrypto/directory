@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactGa from 'react-ga';
+import ReactGA from 'react-ga4';
 import { useLocation } from 'react-router-dom';
 
 interface IProps {
@@ -12,7 +12,8 @@ const GoogleAnalyticsWrapper: React.FC<IProps> = ({ children, isInitialized }) =
 
   React.useEffect(() => {
     if (isInitialized) {
-      ReactGa.pageview(location.pathname);
+      ReactGA.set({ page: location.pathname });
+      ReactGA.send(location.pathname + location.search);
     }
   }, [isInitialized, location]);
 

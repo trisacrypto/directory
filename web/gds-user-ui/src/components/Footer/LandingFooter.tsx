@@ -1,7 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flex, Text, Link, useColorModeValue } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
+import useAxios from 'hooks/useAxios';
+import {
+  getAppVersionNumber,
+  getBffAndGdsVersion,
+  getAppGitVersion,
+  isProdEnv
+} from 'application/config';
+
 const Footer = (): React.ReactElement => {
+  const [appVersion, setAppVersion] = useState<any>();
+  const [gitRevision, setGitRevision] = useState<any>();
+  const [bffAndGdsVersion, setBffAndGdsVersion] = useState<any>();
+  const fetchAsyncBffAndGdsVersion = async () => {
+    const request = await getBffAndGdsVersion();
+    if (request) {
+      setBffAndGdsVersion(request.version);
+    }
+  };
+
+  useEffect(() => {
+    // console.log(data);
+    const getAppVersion = getAppVersionNumber();
+    const getGitRevision = getAppGitVersion();
+    setAppVersion(getAppVersion);
+    setGitRevision(getGitRevision);
+    fetchAsyncBffAndGdsVersion();
+  }, []);
+  //  log this out in the console
+  if (isProdEnv) {
+    console.log('appVersion', appVersion);
+    console.log('gitRevision', gitRevision);
+    console.log('bffAndGdsVersion', bffAndGdsVersion);
+  }
   return (
     <Flex
       bg={useColorModeValue(colors.system.gray, 'transparent')}
@@ -35,9 +67,16 @@ const Footer = (): React.ReactElement => {
           on behalf of{' '}
           <Link href="https://trisa.io" color={colors.system.cyan}>
             TRISA
-          </Link>
-          .
+          </Link>{' '}
         </Text>
+
+        {isProdEnv && (
+          <Text width="100%" textAlign="center" color="white" fontSize="12" pt={1}>
+            {appVersion && <Text as="span">App version {appVersion} - </Text>}
+            {gitRevision && <Text as="span">Git Revision {gitRevision} - </Text>}
+            {bffAndGdsVersion && <Text as="span">BFF & GDS version {bffAndGdsVersion} </Text>}
+          </Text>
+        )}
       </Flex>
     </Flex>
   );

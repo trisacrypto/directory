@@ -1,5 +1,7 @@
 import { left } from '@popperjs/core';
 import _ from 'lodash';
+import { StepStatus } from 'types/type';
+import { TStep } from './localStorageHelper';
 import registrationAuthority from './registration-authority.json';
 
 export const findStepKey = (steps: any, key: number) =>

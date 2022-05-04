@@ -1,3 +1,4 @@
+import { isoCountries } from './../utils/country';
 // define common type
 type TStep = {
   status: StepStatus;
@@ -6,3 +7,5 @@ type TStep = {
 };
 
 type StepStatus = 'complete' | 'progress' | 'incomplete';
+
+type IsoCountryCode = keyof typeof isoCountries;

@@ -132,7 +132,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
+        id: checkout
         uses: actions/checkout@v2
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
 
       - name: Docker Metadata
         id: meta
@@ -184,6 +192,7 @@ jobs:
           build-args: |
             REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/
             REACT_APP_ANALYTICS_ID=${{ secrets.REACT_APP_VASPDIRECTORY_ANALYTICS_ID }}
+            REACT_APP_VERSION_NUMBER=${{ steps.vars.outputs.tag }}
 
   # GDS Admin UI: admin.vaspdirectory.net
   gds-admin-ui:
