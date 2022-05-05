@@ -170,7 +170,7 @@ const Certificate: React.FC = () => {
                       backgroundColor="#FF7A59"
                       type="submit"
                       _hover={{ backgroundColor: '#f07253' }}>
-                      {currentStep === lastStep ? 'Finish & submit' : 'Save & Next'}
+                      {currentStep === lastStep ? 'Next' : 'Save & Next'}
                     </FormButton>
                     {/* add review button when reach to final step */}
                     {/* {currentStep !== lastStep && (
