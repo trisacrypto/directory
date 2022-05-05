@@ -6,11 +6,11 @@ import Error404 from 'assets/404-Error.svg';
 export default function NotFound() {
   const navigate = useNavigate();
   return (
-    <Stack direction="row" justifyContent="center" alignItems="center">
-      <Stack>
+    <Stack direction="row" justifyContent="center" alignItems="center" textAlign={'center'}>
+      <Stack fontSize="2xl">
         <Image src={Error404} width="350px" mx="auto" />
-        <Text fontSize="3xl" fontWeight="bold">
-          Page not found
+        <Text fontSize="4xl" fontWeight="bold">
+          Page Not Found
         </Text>
 
         <Text>Sorry, the page you are looking for doesn't exist or has been moved</Text>

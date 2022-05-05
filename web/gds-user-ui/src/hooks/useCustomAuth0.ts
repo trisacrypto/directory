@@ -8,12 +8,14 @@ const useCustomAuth0 = () => {
   const auth0Authorize = (options: any) => {
     authWeb.authorize(options);
   };
-  const auth0SignIn = (options: any) => {
+  const auth0SignIn = (options: auth0.CrossOriginLoginOptions) => {
     return new Promise((resolve, reject) => {
       authWeb.login(options, (err: any, authResult: any) => {
         if (err) {
+          console.log('error', err);
           reject(err);
         } else {
+          console.log('authResult', authResult);
           resolve(authResult);
         }
       });
@@ -35,7 +37,35 @@ const useCustomAuth0 = () => {
   };
 
   const auth0Logout = (options: any) => {
-    authWeb.logout(options);
+    authWeb.logout({
+      ...options,
+      returnTo: process.env.REACT_APP_AUTH0_LOGOUT_REDIRECT_URL || 'localhost:3000/auth/logout'
+    });
+  };
+
+  const resetPassword = (options: auth0.ChangePasswordOptions) => {
+    return new Promise((resolve, reject) => {
+      authWeb.changePassword(options, (err: any, authResult: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(authResult);
+        }
+      });
+    });
+  };
+
+  const auth0Hash = () => {
+    return new Promise((resolve, reject) => {
+      authWeb.parseHash((err: any, data: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log('auth0Hash', data);
+          resolve(data);
+        }
+      });
+    });
   };
 
   const auth0CheckSession = (options: any) => {
@@ -61,7 +91,6 @@ const useCustomAuth0 = () => {
       });
     });
   };
-
   const auth0SignWithSocial = (connection: string, options?: auth0.AuthorizeOptions) => {
     return authWeb.authorize({
       ...options,
@@ -70,7 +99,6 @@ const useCustomAuth0 = () => {
   };
 
   return {
-    authWeb,
     auth0Authorize,
     auth0SignIn,
     auth0SignOut,
@@ -78,7 +106,9 @@ const useCustomAuth0 = () => {
     auth0SignWithSocial,
     auth0CheckSession,
     auth0GetUser,
-    auth0Logout
+    auth0Logout,
+    auth0Hash,
+    resetPassword
   };
 };
 

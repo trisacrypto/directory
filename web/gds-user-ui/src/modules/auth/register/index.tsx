@@ -4,8 +4,10 @@ import Register from 'components/Section/CreateAccount';
 
 import LandingLayout from 'layouts/LandingLayout';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
+import { useNavigate } from 'react-router-dom';
 
 const StartPage: React.FC = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
   const [isPasswordError, setIsPasswordError] = useState(false);
@@ -29,7 +31,8 @@ const StartPage: React.FC = () => {
       if (response) {
         console.log('response', response);
         setIsloading(false);
-        if (response.emailVerified) {
+        if (!response.emailVerified) {
+          navigate('/auth/success');
         }
       }
     } catch (err: any) {

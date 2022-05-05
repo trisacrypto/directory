@@ -5,7 +5,7 @@ import useHashQuery from 'hooks/useHashQuery';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 import Cookies from 'universal-cookie';
 import AlertMessage from 'components/ui/AlertMessage';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
@@ -15,13 +15,11 @@ const CallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>('');
-  const location = useLocation();
   useEffect(() => {
     (async () => {
       try {
         const getUserInfo: any = accessToken && (await auth0GetUser(accessToken));
-        console.log('query te', accessToken);
-        console.log('user info', getUserInfo);
+
         setIsLoading(false);
         if (getUserInfo && getUserInfo?.email_verified) {
           cookies.set('access_token', accessToken, { path: '/' });
@@ -29,7 +27,7 @@ const CallbackPage: React.FC = () => {
           navigate('/dashboard');
         } else {
           setError(
-            "Your token seem incorrect or you didn't verify your email yet. Please retry again"
+            'Your account has not been verified. Please check your email to verify your account.'
           );
         }
       } catch (e: any) {
@@ -43,7 +41,7 @@ const CallbackPage: React.FC = () => {
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {error && <AlertMessage title="Incorrect Token" message={error} status="error" />}
+      {error && <AlertMessage title="Token not valid" message={error} status="error" />}
     </LandingLayout>
   );
 };
