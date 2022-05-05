@@ -187,7 +187,9 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     <Td pl={0}>
                       {trixo?.applicable_regulations?.map((reg: any) => {
                         if (reg?.name.length > 0) {
-                          return <React.Fragment>{reg.name || 'N/A'}</React.Fragment>;
+                          return (
+                            <React.Fragment key={reg.name}>{reg.name || 'N/A'}</React.Fragment>
+                          );
                         }
                       })}
                     </Td>
