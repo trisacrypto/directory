@@ -11,6 +11,8 @@ import (
 	"time"
 
 	ginzerolog "github.com/dn365/gin-zerolog"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -49,6 +51,19 @@ func New(conf config.Config) (s *Server, err error) {
 	// Set human readable logging if specified
 	if conf.ConsoleLog {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	// Configure Sentry
+	if conf.Sentry.UseSentry() {
+		if err = sentry.Init(sentry.ClientOptions{
+			Dsn:              conf.Sentry.DSN,
+			Environment:      conf.Sentry.Environment,
+			Release:          conf.Sentry.GetRelease(),
+			AttachStacktrace: true,
+			Debug:            conf.Sentry.Debug,
+		}); err != nil {
+			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		}
 	}
 
 	// Create the server and prepare to serve
@@ -160,6 +175,9 @@ func (s *Server) Serve() (err error) {
 func (s *Server) Shutdown() (err error) {
 	log.Info().Msg("gracefully shutting down")
 
+	// Flush the Sentry log before shutting down
+	defer sentry.Flush(2 * time.Second)
+
 	s.SetHealth(false)
 	s.srv.SetKeepAlivesEnabled(false)
 
@@ -201,7 +219,13 @@ func (s *Server) SetURL(url string) {
 func (s *Server) setupRoutes() (err error) {
 	// Application Middleware
 	s.router.Use(ginzerolog.Logger("gin"))
+
+	// Gin middleware needs to be added before Sentry for correct recovery handling
 	s.router.Use(gin.Recovery())
+	s.router.Use(sentrygin.New(sentrygin.Options{
+		Repanic:         true,
+		WaitForDelivery: false,
+	}))
 	s.router.Use(s.Available())
 
 	// Add CORS configuration

@@ -10,7 +10,7 @@ require (
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220418160907-785bb36dae6e // indirect
 	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
-	github.com/getsentry/sentry-go v0.13.0 // indirect
+	github.com/getsentry/sentry-go v0.13.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
