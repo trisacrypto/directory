@@ -61,6 +61,7 @@ const useCustomAuth0 = () => {
       });
     });
   };
+  const refreshAuth0 = () => {};
 
   const auth0SignWithSocial = (connection: string, options?: auth0.AuthorizeOptions) => {
     return authWeb.authorize({

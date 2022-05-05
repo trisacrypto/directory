@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
-import NotFound from 'components/NotFound';
+import NotFound from 'modules/notFound';
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
 const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
@@ -24,12 +24,11 @@ const AppRouter: React.FC = () => {
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/callback/" element={<HandleAuthCallback />} />
           <Route path="/auth/register" element={<RegisterPage />} />
-          <Route path="*" element={<Home />} />
 
           <Route element={<Home />} />
 
-          <Route element={<NotFound />} path="/error-404" />
-          <Route path="*" element={<Navigate to="/error-404" />} />
+          <Route element={<NotFound />} path="/404" />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </GoogleAnalyticsWrapper>
     </Suspense>
