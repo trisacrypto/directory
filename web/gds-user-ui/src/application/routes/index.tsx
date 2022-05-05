@@ -22,7 +22,7 @@ const AppRouter: React.FC = () => {
           <Route path="/certificate/registration" element={<CertificatePage />} />
           <Route path="/verify" element={<VerifyPage />} />
           <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/callback/" element={<HandleAuthCallback />} />
+          <Route path="/auth/callback" element={<HandleAuthCallback />} />
           <Route path="/auth/register" element={<RegisterPage />} />
 
           <Route element={<Home />} />
