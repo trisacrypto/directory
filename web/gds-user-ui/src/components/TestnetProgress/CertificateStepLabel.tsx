@@ -92,8 +92,8 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
       <Box
         position={'relative'}
         bg={'white'}
-        height={'96px'}
-        pt={5}
+        height={'100px'}
+        pt={4}
         boxShadow="0 24px 50px rgba(55,65, 81, 0.25) "
         borderColor={'#C1C9D2'}
         borderRadius={8}
