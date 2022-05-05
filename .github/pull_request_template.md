@@ -19,6 +19,7 @@ Describe how reviewers can test this change to be sure that it works correctly. 
 - [ ]  I have updated the dependencies list
 - [ ]  I have recompiled and included new protocol buffers to reflect changes I made
 - [ ]  I have added new test fixtures as needed to support added tests
+- [ ]   Check this box if a reviewer can merge this pull request after approval (leave it unchecked if you want to do it yourself)
 - [ ]  I have moved the associated ShortCut or Jira ticket to "Ready for Review"
 
 ### Reviewer(s) checklist
