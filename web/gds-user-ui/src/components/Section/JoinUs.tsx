@@ -1,4 +1,14 @@
-import { Stack, Container, Box, Flex, Text, Button, SimpleGrid, Heading } from '@chakra-ui/react';
+import {
+  Stack,
+  Container,
+  Box,
+  Flex,
+  Text,
+  Button,
+  SimpleGrid,
+  Heading,
+  Link
+} from '@chakra-ui/react';
 import { getIcon } from 'components/Icon';
 import { colors } from 'utils/theme';
 
@@ -16,7 +26,7 @@ const datas = [
   {
     icon: 'opensource',
     title: 'Open Source',
-    content: <>TRISA is open source and available to implement by any VASPs.</>
+    content: <>TRISA is open source and available to implement by any VASP.</>
   },
   {
     icon: 'plug',
@@ -37,7 +47,10 @@ export default function JoinUsSection() {
               <Text color="#fff" fontSize={{ base: '16px', md: '17px' }}>
                 TRISA is a global, open source, peer-to-peer and secure Travel Rule architecture and
                 network designed to be accessible and interoperable. Become a TRISA-certified VASP
-                today. Learn how TRISA works.
+                today.{' '}
+                <Link isExternal href="htps://trisa.io/getting-started-with-trisa/">
+                  Learn how TRISA works.
+                </Link>
               </Text>
             </Box>
 

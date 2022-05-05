@@ -6,7 +6,8 @@ import {
   Text,
   Stack,
   StackDivider,
-  useColorModeValue
+  useColorModeValue,
+  Link
 } from '@chakra-ui/react';
 
 import trisaNetworkSvg from 'assets/trisa_network.svg';
@@ -30,10 +31,18 @@ export default function AboutTrisaSection() {
             <Text
               color={useColorModeValue('black', 'white')}
               fontSize={{ base: '16px', md: '17px' }}>
-              The Travel Rule Information Sharing Architecture (TRISA) is a global, open source,
-              secure, and peer-to-peer protocol for Travel Rule compliance. TRISA helps Virtual
-              Asset Service Providers (VASPs) comply with the Travel Rule for cross-border
-              cryptocurrency transactions. TRISA is designed to be interoperable.
+              <Link isExternal href={'https://trisa.io'}>
+                The Travel Rule Information Sharing Architecture (TRISA){' '}
+              </Link>
+              is a global, open source, secure, and peer-to-peer protocol for{' '}
+              <Link
+                isExternal
+                href="https://www.fatf-gafi.org/publications/?hf=10&b=0&s=desc(fatf_releasedate)">
+                Travel Rule
+              </Link>{' '}
+              compliance. TRISA helps Virtual Asset Service Providers (VASPs) comply with the Travel
+              Rule for cross-border cryptocurrency transactions. TRISA is designed to be
+              interoperable.
               <br />
               <br />
               TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely

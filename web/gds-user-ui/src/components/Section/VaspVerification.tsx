@@ -126,9 +126,10 @@ export default function VaspVerification() {
                 Technical Officer
               </Line>
               <Line title="5 TRIXO Questionnaire" fontWeight={'bold'} colSpan={3}>
-                information to ensure that required compliance information exchanges are conducted
+                Information to ensure that required compliance information exchanges are conducted
                 correctly and safely. This includes information about jurisdiction and national
-                regulator, CDD and Travel Rule policies, and data protection policies.
+                regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection
+                policies.
               </Line>
               <Line colSpan={2} dataContent="Who to ask">
                 Compliance Officer
@@ -145,10 +146,11 @@ export default function VaspVerification() {
                   Final Confirmation
                 </chakra.dt>
                 <chakra.dd mt={2} fontSize="1rem">
-                  Upon submission, a member of TRISA’s verification team will review the form and
-                  conduct a final due diligence phone call for physical verfication. Once the VASP
-                  verification and due diligence is complete, TRISA will issue certificates to the
-                  VASP
+                  For MainNet certificate requests, a member of TRISA’s verification team will
+                  review your submission and conduct a final due diligence phone call for physical
+                  verification. When physical verification is complete, TRISA will issue MainNet
+                  certificates. Requests for TestNet certificates do not require physical
+                  verification.
                 </chakra.dd>
               </GridItem>
               <GridItem ml={4} colSpan={2} bg={'#eee'} mt={5} p={2}>

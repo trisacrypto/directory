@@ -127,7 +127,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   color={'#3C4257'}
                   fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                   fontSize={'0.8em'}>
-                  Basic Details
+                  1 Basic Details
                 </Text>
               </HStack>
             </Box>
@@ -149,7 +149,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(2) ? 'bold' : 'normal'}>
-                Legal Person
+                2 Legal Person
               </Text>
             </HStack>
           </Box>
@@ -171,7 +171,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(3) ? 'bold' : 'normal'}>
-                Contacts
+                3 Contacts
               </Text>
             </HStack>
           </Box>
@@ -193,7 +193,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(4) ? 'bold' : 'normal'}>
-                Trisa implementation
+                4 TRISA implementation
               </Text>
             </HStack>
           </Box>
@@ -215,7 +215,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(5) ? 'bold' : 'normal'}>
-                TRIXO Questionnaire
+                5 TRIXO Questionnaire
               </Text>
             </HStack>
           </Box>
@@ -237,7 +237,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(6) ? 'bold' : 'normal'}>
-                Submit & Review
+                6 Review & Submit
               </Text>
             </HStack>
           </Box>
