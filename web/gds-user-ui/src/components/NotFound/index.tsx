@@ -14,11 +14,11 @@ export default function NotFound() {
         </Text>
 
         <Text>Sorry, the page you are looking for doesn't exist or has been moved</Text>
-        {/* <Box pt={2}>
+        <Box pt={2}>
           <Button onClick={() => navigate('/')} bg={colors.system.blue} color={'white'}>
             Back Home
           </Button>
-        </Box> */}
+        </Box>
       </Stack>
     </Stack>
   );
