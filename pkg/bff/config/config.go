@@ -49,7 +49,7 @@ type SentryConfig struct {
 	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
 	Release          string  `envconfig:"SENTRY_RELEASE"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
-	SampleRate       float32 `split_words:"true" default:"1.0"`
+	SampleRate       float64 `split_words:"true" default:"1.0"`
 	Debug            bool    `default:"false"`
 }
 

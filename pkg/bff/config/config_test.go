@@ -78,7 +78,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["SENTRY_RELEASE"], conf.Sentry.Release)
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
-	require.Equal(t, float32(0.2), conf.Sentry.SampleRate)
+	require.Equal(t, 0.2, conf.Sentry.SampleRate)
 }
 
 func TestRequiredConfig(t *testing.T) {
