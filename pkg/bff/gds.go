@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
@@ -107,8 +108,15 @@ func (s *Server) Lookup(c *gin.Context) {
 		return rep, nil
 	}
 
+	ctx := c.Request.Context()
+	if s.conf.Sentry.TrackPerformance {
+		// Track Lookup request performance
+		span := sentry.StartSpan(ctx, "Lookup", sentry.TransactionName(req.String()))
+		defer span.Finish()
+	}
+
 	// Execute the parallel GDS lookup request, ensuring that flatten is true
-	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, true)
+	results, errs := s.ParallelGDSRequests(ctx, lookup, true)
 
 	// If there were multiple errors, return a 500
 	if len(errs) == 2 {
@@ -216,12 +224,18 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	// Make the GDS request
 	log.Debug().Str("network", network).Msg("issuing GDS register request")
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
 	var rep *gds.RegisterReply
 	defer cancel()
 
+	if s.conf.Sentry.TrackPerformance {
+		// Track Register request performance
+		span := sentry.StartSpan(ctx, "Register", sentry.TransactionName(req.String()))
+		defer span.Finish()
+	}
+
+	// Make the GDS request
 	switch network {
 	case testnet:
 		rep, err = s.testnet.Register(ctx, req)
@@ -302,6 +316,11 @@ func (s *Server) VerifyContact(c *gin.Context) {
 		rep *gds.VerifyContactReply
 	)
 
+	if s.conf.Sentry.TrackPerformance {
+		// Track VerifyContact request performance
+		span := sentry.StartSpan(ctx, "VerifyContact", sentry.TransactionName(req.String()))
+		defer span.Finish()
+	}
 	switch params.Directory {
 	case trisatest:
 		rep, err = s.testnet.VerifyContact(ctx, req)

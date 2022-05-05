@@ -45,10 +45,12 @@ type DatabaseConfig struct {
 }
 
 type SentryConfig struct {
-	DSN         string `envconfig:"SENTRY_DSN"`
-	Environment string `envconfig:"SENTRY_ENVIRONMENT"`
-	Release     string `envconfig:"SENTRY_RELEASE"`
-	Debug       bool   `default:"false"`
+	DSN              string  `envconfig:"SENTRY_DSN"`
+	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
+	Release          string  `envconfig:"SENTRY_RELEASE"`
+	TrackPerformance bool    `split_words:"true" default:"false"`
+	SampleRate       float32 `split_words:"true" default:"1.0"`
+	Debug            bool    `default:"false"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
