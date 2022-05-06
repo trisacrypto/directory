@@ -10,7 +10,8 @@ const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.E
   return (
     <Text
       mb={{ base: isLast ? 0 : 4, sm: 0 }}
-      mr={{ base: 0, sm: isLast ? 0 : 8 }}
+      mr={{ base: 0, sm: isLast ? 8 : 0 }}
+      pl={isLast ? 8 : 0}
       display="block"
       {...rest}>
       {to.startsWith('http') ? <a href={to}>{children}</a> : <Link href={to}>{children}</Link>}

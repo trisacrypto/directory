@@ -8,7 +8,7 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
-  const { auth0SignIn, auth0SignWithSocial } = useCustomAuth0();
+  const { auth0SignIn, auth0SignWithSocial, auth0Hash } = useCustomAuth0();
 
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
@@ -21,8 +21,10 @@ const StartPage: React.FC = () => {
     setIsloading(true);
     try {
       const response: any = await auth0SignIn({
-        email: data.username,
-        password: data.password
+        username: data.username,
+        password: data.password,
+        responseType: 'token id_token',
+        realm: 'Username-Password-Authentication'
       });
       if (response) {
         console.log('response', response);

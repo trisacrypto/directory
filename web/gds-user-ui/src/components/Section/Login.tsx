@@ -118,7 +118,7 @@ const Login: React.FC<LoginProps> = (props) => {
           </form>
           <Text textAlign="center">
             Not a TRISA Member?{' '}
-            <Link href="/register" color={colors.system.cyan}>
+            <Link href="/auth/register" color={colors.system.cyan}>
               {' '}
               Join the TRISA network today.{' '}
             </Link>

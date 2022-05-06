@@ -39,7 +39,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
           <Flex align="center" justify={{ md: 'space-between' }}>
             <Box>
               <Link href="/">
-                <Logo w={{ base: '100px', md: '200px' }} color={['colors.system.blue']} />
+                <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
               </Link>
             </Box>
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
@@ -49,6 +49,9 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
             <Stack ml="auto" display={{ base: 'none', sm: 'flex' }} direction={['column', 'row']}>
               <MenuItem to="/#about">About TRISA</MenuItem>
               <MenuItem to="https://trisa.dev">Documentation </MenuItem>
+              <MenuItem isLast to="/auth/login">
+                Login{' '}
+              </MenuItem>
             </Stack>
 
             {/* mobile drawer */}
@@ -78,6 +81,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                     }}>
                     <MenuItem to="/#about">About TRISA </MenuItem>
                     <MenuItem to="https://trisa.dev">Documentation </MenuItem>
+                    <MenuItem to="/auth/login">Login </MenuItem>
                   </VStack>
                 </DrawerBody>
               </DrawerContent>
