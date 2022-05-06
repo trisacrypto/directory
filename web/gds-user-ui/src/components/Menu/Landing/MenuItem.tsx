@@ -1,4 +1,4 @@
-import { Link, Text, textDecoration } from '@chakra-ui/react';
+import { Link, Text } from '@chakra-ui/react';
 
 interface MenuItemProps {
   children: React.ReactNode;
