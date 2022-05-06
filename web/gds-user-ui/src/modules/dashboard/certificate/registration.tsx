@@ -34,6 +34,8 @@ const Certificate: React.FC = () => {
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
+  console.log('[registration] tsr stepper', localStorage.getItem('trs_stepper'));
+  console.log('[registration] current step', currentStep);
 
   const resolver = yupResolver(getCurrentStepValidationSchema());
 

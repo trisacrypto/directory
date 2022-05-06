@@ -36,6 +36,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
       <VStack spacing={4} w="100%">
         <InputFormControl
           controlId="organization_name"
+          data-testid="organization_name"
           label="Organization Name"
           error="true"
           formHelperText={errors.organization_name?.message}
@@ -46,6 +47,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
 
         <InputFormControl
           controlId="website"
+          data-testid="website"
           label="Website"
           error="true"
           type="url"
@@ -57,6 +59,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
 
         <InputFormControl
           controlId="established_on"
+          data-testid="established_on"
           label="Date of Incorporation / Establishment"
           formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
@@ -69,6 +72,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
           name="business_category"
           render={({ field }) => (
             <SelectFormControl
+              data-testid="business_category"
               ref={field.ref}
               label="Business Category"
               placeholder="Select business category"
@@ -89,6 +93,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
               label="VASP Category"
               placeholder="Select VASP category"
               controlId="vasp_categories"
+              data-testid="vasp_categories"
               isMulti
               name={name}
               options={vaspCategories}

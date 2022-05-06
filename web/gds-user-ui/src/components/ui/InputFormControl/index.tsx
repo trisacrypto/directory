@@ -83,7 +83,9 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
         {!isInvalid ? (
           <FormHelperText>{formHelperText}</FormHelperText>
         ) : (
-          <FormErrorMessage>{formHelperText}</FormErrorMessage>
+          <FormErrorMessage role="alert" data-testid="error-message">
+            {formHelperText}
+          </FormErrorMessage>
         )}
       </CkFormControl>
     );

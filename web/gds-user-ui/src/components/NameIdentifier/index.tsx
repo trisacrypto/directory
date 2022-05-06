@@ -53,10 +53,9 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       return getOrganizationNameValue;
     }
   };
-  console.log('[a]');
+
   return (
     <Stack align="start" width="100%">
-      {console.log('[values]', fields)}
       {fields &&
         fields.map((field, index) => {
           return (
@@ -72,6 +71,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   <GridItem>
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
+                      data-testid="legal_person_name"
                       placeholder={getOrganizationName(index) || ''}
                       isInvalid={getValueByPathname(errors, `${name}[${index}].legal_person_name`)}
                       formHelperText={
@@ -88,6 +88,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                         <SelectFormControl
                           onBlur={f.onBlur}
                           controlId={controlId!}
+                          data-testid="legal_person_name_identifier_type"
                           name={f.name}
                           ref={f.ref}
                           isDisabled={(index === 0 && type && type === 'legal') || false}
