@@ -92,3 +92,23 @@ export const mapTrixoFormForBff = (data: any) => {
 export const hasValue = (obj: Record<string, any>) => {
   return obj && Object.values(obj).some(Boolean);
 };
+
+export const getColorScheme = (status: string) => {
+  if (status === 'yes' || status) {
+    return 'cyan';
+  } else {
+    return '#eee';
+  }
+};
+
+export function currencyFormatter(
+  amount: number | bigint,
+  { style = 'currency', currency = 'USD' }
+) {
+  const formatedAmount = new Intl.NumberFormat('en-US', {
+    style,
+    currency
+  });
+
+  return formatedAmount.format(amount);
+}
