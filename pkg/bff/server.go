@@ -61,6 +61,7 @@ func New(conf config.Config) (s *Server, err error) {
 			Release:          conf.Sentry.GetRelease(),
 			AttachStacktrace: true,
 			Debug:            conf.Sentry.Debug,
+			TracesSampleRate: conf.Sentry.SampleRate,
 		}); err != nil {
 			return nil, fmt.Errorf("could not initialize sentry: %w", err)
 		}
@@ -89,6 +90,10 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
 		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+	}
+
+	if s.conf.Sentry.TrackPerformance {
+		log.Debug().Float64("sample_rate", s.conf.Sentry.SampleRate).Msg("sentry performance tracking enabled")
 	}
 
 	// Create the router
@@ -216,6 +221,15 @@ func (s *Server) SetURL(url string) {
 	log.Debug().Str("url", url).Msg("server url set")
 }
 
+// Middleware that tracks request performance with Sentry.
+func (s *Server) TrackPerformance() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span := sentry.StartSpan(c.Request.Context(), c.Request.URL.Path)
+		defer span.Finish()
+		c.Next()
+	}
+}
+
 func (s *Server) setupRoutes() (err error) {
 	// Application Middleware
 	s.router.Use(ginzerolog.Logger("gin"))
@@ -226,6 +240,9 @@ func (s *Server) setupRoutes() (err error) {
 		Repanic:         true,
 		WaitForDelivery: false,
 	}))
+	if s.conf.Sentry.TrackPerformance {
+		s.router.Use(s.TrackPerformance())
+	}
 	s.router.Use(s.Available())
 
 	// Add CORS configuration
