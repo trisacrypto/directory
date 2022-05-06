@@ -46,7 +46,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleClose
 }) => {
   const [search, setSearch] = useState<string>('');
-  const customName = result?.name ? `${result.name} ${query}` : '';
 
   return (
     <Flex
@@ -150,7 +149,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       'td:first-child': { fontWeight: 'bold', width: '30%' },
                       'td:nth-child(2)': { width: '70%' }
                     }}>
-                    <Td colSpan={2}>{customName}</Td>
+                    <Td colSpan={2}>{result?.name}</Td>
                   </Tr>
                   <Tr>
                     <Td>
