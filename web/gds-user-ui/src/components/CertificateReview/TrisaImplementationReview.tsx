@@ -25,13 +25,14 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
-      maxHeight={367}
       bg={'white'}
       fontSize={'1rem'}
       p={5}>
       <Stack>
-        <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={20}>Section 4: TRISA Implementation</Heading>
+        <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
+          <Heading fontSize={20} mb="2rem">
+            Section 4: TRISA Implementation
+          </Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -40,8 +41,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            {' '}
-            Edit{' '}
+            Edit
           </Button>
         </Box>
         <Stack fontSize={'1rem'}>
@@ -54,10 +54,23 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
               sx={{
                 ' td': {
                   fontSize: '1rem'
+                },
+                'td:first-child': {
+                  width: '50%'
+                },
+                td: {
+                  borderBottom: 'none',
+                  paddingInlineStart: 0,
+                  paddingY: 2.5
                 }
               }}>
               <Tr>
-                <Td>TestNet TRISA Endpoint</Td>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                  TestNet
+                </Td>
+              </Tr>
+              <Tr>
+                <Td pt={'1rem !important'}>TestNet TRISA Endpoint</Td>
                 <Td pl={0}>{trisa?.testnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
@@ -65,7 +78,15 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                 <Td pl={0}>{trisa?.testnet?.common_name || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>MainNet TRISA Endpoint</Td>
+                <Td colSpan={2}></Td>
+              </Tr>
+              <Tr>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                  MainNet
+                </Td>
+              </Tr>
+              <Tr>
+                <Td pt={'1rem !important'}>MainNet TRISA Endpoint</Td>
                 <Td pl={0}>{trisa?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>

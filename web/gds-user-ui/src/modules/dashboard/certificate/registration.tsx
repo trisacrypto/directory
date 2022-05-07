@@ -119,7 +119,7 @@ const Certificate: React.FC = () => {
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <Flex justifyContent={'space-between'}>
-              <Heading size="lg" mb="24px">
+              <Heading size="lg" mb="24px" className="heading">
                 Certificate Registration
               </Heading>
               <Box>
