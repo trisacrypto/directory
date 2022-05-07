@@ -35,7 +35,7 @@ interface ILineProps {
 const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest }: any) => {
   const [isMobile] = useMediaQuery('(max-width: 768px)');
   return (
-    <GridItem ml={4} colSpan={colSpan}>
+    <GridItem colSpan={colSpan}>
       <chakra.dt fontSize="lg" fontWeight="medium" lineHeight="6" mt={2} {...rest}>
         {title}
       </chakra.dt>
@@ -44,7 +44,7 @@ const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest 
         data-content={dataContent}
         mb={{ base: 4, sm: 0 }}
         fontSize={{ base: '1rem' }}
-        padding={2}
+        padding={[2, 2, 0]}
         {...(isMobile && {
           _before: {
             content: 'attr(data-content)',
@@ -64,13 +64,13 @@ export default function VaspVerification() {
       <Container maxW={'5xl'}>
         <Stack flex={1} justify={{ lg: 'center' }}>
           <Box my={{ base: 4 }} color="black">
-            <Text fontFamily={'heading'} fontWeight={700} fontSize={'xl'}>
+            <Text fontSize={'1rem'} mt={3}>
               TRISA members must complete a comprehensive multi-part verification form and due
               diligence process. Once verified, TRISA will issue TestNet and MainNet certificates
               for secure Travel Rule compliance.
             </Text>
           </Box>
-          <Box bg={'gray.100'} p={5}>
+          <Box bg={'#E5EDF1'} p={6}>
             <Text fontSize={'1rem'} color={'black'}>
               TRISA’s verification form includes five sections and may require information from
               several parties in your organization.
@@ -103,8 +103,12 @@ export default function VaspVerification() {
 
               <Line title="2 Legal Person" fontWeight={'bold'} colSpan={3}>
                 Information that identifies your organization as a Legal Person. This section
-                represents the IVMS 101 data structure for legal persons and is strongly suggested
-                for use as KYC information exchanged in TRISA transfers.
+                represents the{' '}
+                <Link color="#1F4CED" href="https://intervasp.org/" isExternal>
+                  IVMS 101
+                </Link>{' '}
+                data structure for legal persons and is strongly suggested for use as KYC
+                information exchanged in TRISA transfers.
               </Line>
               <Line colSpan={2} dataContent="Who to ask">
                 Business or Compliance Office
@@ -141,7 +145,7 @@ export default function VaspVerification() {
               color={'black'}
               gridColumnGap={10}
               gridRowGap={10}>
-              <GridItem ml={4} colSpan={3} bg={'#eee'} mt={5} p={2}>
+              <GridItem colSpan={3} bg={'#E5EDF1'} mt={5} p={6}>
                 <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
                   Final Confirmation
                 </chakra.dt>
@@ -153,7 +157,7 @@ export default function VaspVerification() {
                   verification.
                 </chakra.dd>
               </GridItem>
-              <GridItem ml={4} colSpan={2} bg={'#eee'} mt={5} p={2}>
+              <GridItem colSpan={2} bg={'#E5EDF1'} mt={5} p={6}>
                 <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
                   Need to Learn More?
                 </chakra.dt>
@@ -174,7 +178,7 @@ export default function VaspVerification() {
               </GridItem>
             </Box>
           </Box>
-          <Stack direction={['column', 'row']} pt={20} mx={10} justifyContent={'center'}>
+          <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent={'center'}>
             {/* <Box>
               <Button
                 bg={colors.system.blue}
