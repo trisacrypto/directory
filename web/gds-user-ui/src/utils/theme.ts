@@ -15,7 +15,7 @@ export const colors = {
     900: '#171923'
   },
   system: {
-    blue: '#23A7E0',
+    blue: '#55ACD8',
     cyan: '#1BCE9F',
     orange: '#FF7A59',
     white: '#E3EBEF',
