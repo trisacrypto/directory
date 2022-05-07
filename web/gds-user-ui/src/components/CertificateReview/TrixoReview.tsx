@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   Stack,
   Box,
@@ -13,8 +13,8 @@ import {
   TagLabel
 } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData } from 'utils/utils';
+import { useSelector, RootStateOrAny } from 'react-redux';
+import { getColorScheme } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { COUNTRIES } from 'constants/countries';
@@ -24,13 +24,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trixo, setTrixo] = React.useState<any>({});
-  const getColorScheme = (status: string) => {
-    if (status === 'yes' || status) {
-      return 'cyan';
-    } else {
-      return '#eee';
-    }
-  };
+
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const stepData = {
