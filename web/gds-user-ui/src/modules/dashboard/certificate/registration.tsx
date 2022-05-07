@@ -153,7 +153,7 @@ const Certificate: React.FC = () => {
                 <TestNetCertificateProgressBar />
                 <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
               </Box>
-              <HStack width="100%" spacing={8} justifyContent={'center'} pt={4}>
+              <HStack width="100%" spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
                     <FormButton
