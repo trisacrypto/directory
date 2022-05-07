@@ -192,7 +192,7 @@ export default function VaspVerification() {
                 Download PDF
               </Button>
             </Box> */}
-            <Box pb={10}>
+            <Box pb={16}>
               <Button
                 bg={colors.system.blue}
                 px={8}
