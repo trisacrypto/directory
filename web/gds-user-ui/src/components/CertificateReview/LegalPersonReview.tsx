@@ -20,102 +20,9 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
 import { COUNTRIES } from 'constants/countries';
+import { renderAddress } from 'utils/address-utils';
 interface LegalReviewProps {}
 // NOTE: need some clean up.
-const isValidIvmsAddress = (address: any) => {
-  if (address) {
-    return !!(address.country && address.address_type);
-  }
-  return false;
-};
-
-const hasAddressLine = (address: any) => {
-  if (isValidIvmsAddress(address)) {
-    return Array.isArray(address.address_line) && address.address_line.length > 0;
-  }
-  return false;
-};
-
-const hasAddressField = (address: any) => {
-  if (isValidIvmsAddress(address) && !hasAddressLine(address)) {
-    return !!(address.street_name && (address.building_number || address.building_name));
-  }
-  return false;
-};
-
-const hasAddressFieldAndLine = (address: any) => {
-  if (hasAddressField(address) && hasAddressLine(address)) {
-    console.warn('[ERROR]', 'cannot render address');
-    return true;
-  }
-  return false;
-};
-
-export const renderLines = (address: any) => (
-  <address data-testid="addressLine">
-    {address.address_line.map(
-      (addressLine: any, index: number) => addressLine && <div key={index}>{addressLine} </div>
-    )}
-    <div>{address?.country}</div>
-  </address>
-);
-
-export const renderField = (address: any) => (
-  <address data-testid="addressField">
-    {address.sub_department ? (
-      <>
-        {address?.sub_department} <br />
-      </>
-    ) : null}
-    {address.department ? (
-      <>
-        {address?.department} <br />
-      </>
-    ) : null}
-    {address.building_number} {address?.street_name}
-    <br />
-    {address.post_box ? (
-      <>
-        P.O. Box: {address?.post_box} <br />
-      </>
-    ) : null}
-    {address.floor || address.room || address.building_name ? (
-      <>
-        {address?.floor} {address?.room} {address?.building_name} <br />
-      </>
-    ) : null}
-    {address.district_name ? (
-      <>
-        {address?.district_name} <br />
-      </>
-    ) : null}
-    {address.town_name || address.town_location_name || address.country_sub_division ? (
-      <>
-        {address?.town_name} {address?.town_location_name} {address?.country_sub_division}{' '}
-        {address?.post_code} <br />
-      </>
-    ) : null}
-    {address?.country}
-  </address>
-);
-
-const renderAddress = (address: any) => {
-  if (hasAddressFieldAndLine(address)) {
-    console.warn('[ERROR]', 'invalid address with both fields and lines');
-    return <div>Invalid Address</div>;
-  }
-
-  if (hasAddressLine(address)) {
-    return renderLines(address);
-  }
-
-  if (hasAddressField(address)) {
-    return renderField(address);
-  }
-
-  console.warn('[ERROR]', 'could not render address');
-  return <div>Unparseable Address</div>;
-};
 
 const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
@@ -139,8 +46,10 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
       p={5}
       px={5}>
       <Stack>
-        <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={20}>Section 2: Legal Person</Heading>
+        <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
+          <Heading fontSize={20} mb="2rem">
+            Section 2: Legal Person
+          </Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -149,15 +58,22 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            {' '}
-            Edit{' '}
+            Edit
           </Button>
         </Box>
         <Stack fontSize={18}>
           <Table
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold', paddingLeft: 0 },
-              Tr: { borderStyle: 'hidden' }
+              Tr: { borderStyle: 'hidden' },
+              'td:first-child': {
+                width: '50%'
+              },
+              td: {
+                borderBottom: 'none',
+                paddingInlineStart: 0,
+                paddingY: 2.5
+              }
             }}>
             <Tbody
               sx={{
@@ -166,9 +82,13 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 }
               }}>
               <Tr>
-                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3}>
-                  <Text mb={1}>Name Identifiers</Text>
-                  <Divider />
+                <Td
+                  fontSize={'1rem'}
+                  fontWeight="bold"
+                  colSpan={3}
+                  background="#E5EDF1"
+                  pl={'1rem !important'}>
+                  Name Identifiers
                 </Td>
               </Tr>
               <Tr>
@@ -257,10 +177,21 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3}>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td
+                  fontSize={'1rem'}
+                  pt={'2rem'}
+                  fontWeight="bold"
+                  colSpan={3}
+                  background="#E5EDF1"
+                  pl={'1rem !important'}>
                   <Text mb={1}>National Identification</Text>
-                  <Divider />
                 </Td>
+              </Tr>
+              <Tr>
+                <Td></Td>
               </Tr>
               <Tr>
                 <Td pt={0}>Identification Number</Td>

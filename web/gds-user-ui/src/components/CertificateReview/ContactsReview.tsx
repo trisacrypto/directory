@@ -31,8 +31,10 @@ const ContactsReview = (props: ContactsProps) => {
       p={5}
       px={5}>
       <Stack>
-        <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={20}>Section 3: Contacts</Heading>
+        <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
+          <Heading fontSize={20} mb="2rem">
+            Section 3: Contacts
+          </Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -48,7 +50,15 @@ const ContactsReview = (props: ContactsProps) => {
           <Table
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
-              Tr: { borderStyle: 'hidden' }
+              Tr: { borderStyle: 'hidden' },
+              'td:first-child': {
+                width: '50%'
+              },
+              td: {
+                borderBottom: 'none',
+                paddingInlineStart: 0,
+                paddingY: 2.5
+              }
             }}>
             <Tbody>
               {['technical', 'legal', 'administrative', 'billing'].map((contact, index) => (

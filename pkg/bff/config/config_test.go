@@ -33,6 +33,8 @@ var testEnv = map[string]string{
 	"SENTRY_ENVIRONMENT":               "test",
 	"SENTRY_RELEASE":                   "gds-bff@1.4",
 	"GDS_BFF_SENTRY_DEBUG":             "true",
+	"GDS_BFF_SENTRY_TRACK_PERFORMANCE": "true",
+	"GDS_BFF_SENTRY_SAMPLE_RATE":       "0.2",
 }
 
 func TestConfig(t *testing.T) {
@@ -75,6 +77,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["SENTRY_RELEASE"], conf.Sentry.Release)
 	require.Equal(t, true, conf.Sentry.Debug)
+	require.Equal(t, true, conf.Sentry.TrackPerformance)
+	require.Equal(t, 0.2, conf.Sentry.SampleRate)
 }
 
 func TestRequiredConfig(t *testing.T) {

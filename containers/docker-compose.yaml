@@ -137,6 +137,9 @@ services:
       - GDS_BFF_DATABASE_INSECURE=true
       - GDS_BFF_DATABASE_CERT_PATH
       - GDS_BFF_DATABASE_POOL_PATH
+      - GDS_BFF_SENTRY_TRACK_PERFORMANCE
+      - SENTRY_DSN
+      - SENTRY_ENVIRONMENT
     profiles:
       - api
       - testnet

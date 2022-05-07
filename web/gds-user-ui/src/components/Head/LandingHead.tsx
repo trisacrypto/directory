@@ -39,10 +39,19 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
         )}
         {isStartPage && (
           <VStack spacing={4}>
-            <Heading fontWeight={600} fontSize={{ md: '4xl', sm: '2xl' }} color="#fff">
+            <Heading
+              fontWeight={700}
+              fontFamily="Open Sans, sans-serif !important"
+              fontSize={{ md: '4xl', sm: '2xl' }}
+              color="#fff">
               Complete TRISA’s VASP Verfication Process
             </Heading>
-            <Text fontSize={{ base: 'lg', md: 'xl', sm: 'lg' }} color="#fff" maxW="700px" mx="auto">
+            <Text
+              fontSize={{ base: 'lg', md: 'xl', sm: 'lg' }}
+              fontWeight="400"
+              color="#fff"
+              maxW="700px"
+              mx="auto">
               All TRISA members must complete TRISA’s VASP verification and due diligence process to
               become a Verified VASP.
             </Text>
