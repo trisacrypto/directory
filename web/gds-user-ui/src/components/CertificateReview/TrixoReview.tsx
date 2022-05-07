@@ -14,17 +14,24 @@ import {
 } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { getColorScheme } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { COUNTRIES } from 'constants/countries';
+import { currencyFormatter } from 'utils/utils';
 interface TrixoReviewProps {}
 
 const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trixo, setTrixo] = React.useState<any>({});
-
+  const getColorScheme = (status: string | boolean) => {
+    console.log('[getColorScheme] status', status);
+    if (status === 'yes' || status === true) {
+      return 'green';
+    } else {
+      return 'orange';
+    }
+  };
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const stepData = {
@@ -32,6 +39,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
     };
     setTrixo(stepData);
   }, [steps]);
+
   return (
     <Box
       border="1px solid #DFE0EB"
@@ -42,8 +50,10 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
       p={5}
       px={5}>
       <Stack>
-        <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={20}>Section 5: TRIXO Questionnaire</Heading>
+        <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
+          <Heading fontSize={20} mb="2rem">
+            Section 5: TRIXO Questionnaire
+          </Heading>
           <Button
             bg={colors.system.blue}
             color={'white'}
@@ -61,7 +71,15 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
             sx={{
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
               'td:nth-child(2)': { maxWidth: '75%' },
-              Tr: { borderStyle: 'hidden' }
+              Tr: { borderStyle: 'hidden' },
+              'td:first-child': {
+                width: '50%'
+              },
+              td: {
+                borderBottom: 'none',
+                paddingInlineStart: 0,
+                paddingY: 2.5
+              }
             }}>
             <Tbody>
               <Tr>
@@ -103,13 +121,21 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo.financial_transfers_permitted ? 'YES' : 'NO'}
+                      {trixo?.financial_transfers_permitted?.toUpperCase()}
                     </TagLabel>
                   </Tag>
                 </Td>
               </Tr>
               <Tr>
-                <Td fontWeight={'semibold'}>CDD & Travel Rule Policies</Td>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                  CDD & Travel Rule Policies
+                </Td>
+              </Tr>
+              <Tr>
+                <Td></Td>
               </Tr>
               <Tr>
                 <Td>
@@ -140,17 +166,23 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     size={'sm'}
                     key={'sm'}
                     variant="subtle"
-                    colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
-                    <TagLabel fontWeight={'bold'}>{trixo?.financial_transfers_permitted}</TagLabel>
+                    colorScheme={getColorScheme(trixo?.financial_transfers_permitted)}>
+                    <TagLabel fontWeight={'bold'}>
+                      {trixo?.financial_transfers_permitted?.toUpperCase()}
+                    </TagLabel>
                   </Tag>
                 </Td>
                 <Td></Td>
-              </Tr>{' '}
+              </Tr>
               <Tr>
                 <Td>At what threshold and currency does your organization conduct KYC?</Td>
                 <Td pl={0}>
                   <Tr>
-                    <Td>{trixo.kyc_threshold || 'N/A'}</Td>
+                    <Td>
+                      {currencyFormatter(trixo.kyc_threshold, {
+                        currency: trixo.kyc_threshold_currency
+                      }) || 'N/A'}
+                    </Td>
                     <Td pl={0}>{trixo.kyc_threshold_currency || 'N/A'}</Td>
                   </Tr>
                 </Td>
@@ -196,16 +228,26 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td>What is the minimum threshold for Travel Rule compliance?</Td>
                 <Td pl={0}>
                   <Tr>
-                    <Td>{trixo.compliance_threshold || 'N/A'}</Td>
+                    <Td>
+                      {currencyFormatter(trixo.compliance_threshold, {
+                        currency: trixo.compliance_threshold_currency
+                      }) || 'N/A'}
+                    </Td>
                     <Td pl={0}>{trixo.compliance_threshold_currency || 'N/A'}</Td>
                   </Tr>
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td fontWeight={'semibold'} colSpan={3}>
+                <Td></Td>
+              </Tr>
+              <Tr>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
                   Data Protection Policies
                 </Td>
+              </Tr>
+              <Tr>
+                <Td></Td>
               </Tr>
               <Tr>
                 <Td>Is your organization required by law to safeguard PII?</Td>

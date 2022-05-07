@@ -51,8 +51,8 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       p={5}
       px={5}>
       <Stack width={'100%'}>
-        <Box display={'flex'} justifyContent="space-between" pt={4} ml={5}>
-          <Heading fontSize={20} fontFamily="Open Sans">
+        <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
+          <Heading fontSize={20} mb="2rem">
             Section 1: Basic Details
           </Heading>
           <Button
@@ -67,7 +67,18 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
           </Button>
         </Box>
         <Stack fontSize={18}>
-          <Table sx={{ 'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' } }}>
+          <Table
+            sx={{
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:first-child': {
+                width: '50%'
+              },
+              td: {
+                borderBottom: 'none',
+                paddingInlineStart: 0,
+                paddingY: 2.5
+              }
+            }}>
             <Tbody
               sx={{
                 '*': {
@@ -76,33 +87,43 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
               }}>
               <Tr>
                 <Td borderBottom={'none'}>Website</Td>
-                <Td borderBottom={'none'}>
-                  <Link href={basicDetail.website} isExternal>
-                    {basicDetail.website}
-                  </Link>
+                <Td borderBottom={'none'} whiteSpace="break-spaces" lineHeight={1.5}>
+                  {basicDetail.website ? (
+                    <Link href={basicDetail.website} isExternal>
+                      {basicDetail.website}
+                    </Link>
+                  ) : (
+                    'N/A'
+                  )}
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>Business Category</Td>
-                <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category]}</Td>
+                <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category] || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td>Date of Incorporation/ Establishment</Td>
-                <Td>{basicDetail.established_on}</Td>
+                <Td whiteSpace="break-spaces" lineHeight={1.5}>
+                  Date of Incorporation/ Establishment
+                </Td>
+                <Td>{basicDetail.established_on || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td>VASP Category</Td>
+                <Td whiteSpace="break-spaces" lineHeight={1.5}>
+                  VASP Category
+                </Td>
                 <Td>
-                  {basicDetail?.vasp_categories?.map((categ: any) => {
-                    return (
-                      <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
-                        {getBusinessCategiryLabel(categ)}
-                      </Tag>
-                    );
-                  })}
+                  {basicDetail?.vasp_categories && basicDetail?.vasp_categories.length
+                    ? basicDetail?.vasp_categories?.map((categ: any) => {
+                        return (
+                          <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
+                            {getBusinessCategiryLabel(categ)}
+                          </Tag>
+                        );
+                      })
+                    : 'N/A'}
                 </Td>
                 <Td></Td>
               </Tr>
