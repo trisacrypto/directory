@@ -21,6 +21,7 @@ const useCustomAuth0 = () => {
       });
     });
   };
+
   const auth0SignOut = (options: any) => {
     authWeb.logout(options);
   };
@@ -43,7 +44,7 @@ const useCustomAuth0 = () => {
     });
   };
 
-  const resetPassword = (options: auth0.ChangePasswordOptions) => {
+  const auth0ResetPassword = (options: auth0.ChangePasswordOptions) => {
     return new Promise((resolve, reject) => {
       authWeb.changePassword(options, (err: any, authResult: any) => {
         if (err) {
@@ -108,7 +109,7 @@ const useCustomAuth0 = () => {
     auth0GetUser,
     auth0Logout,
     auth0Hash,
-    resetPassword
+    auth0ResetPassword
   };
 };
 
