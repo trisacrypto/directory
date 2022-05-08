@@ -38,7 +38,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
             <Box>
-              <Link href="/">
+              <Link href="/" _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
                 <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
               </Link>
             </Box>
