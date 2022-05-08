@@ -178,7 +178,12 @@ export default function VaspVerification() {
               </GridItem>
             </Box>
           </Box>
-          <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent={'center'}>
+          <Stack
+            direction={['column', 'row']}
+            pt={20}
+            mx={10}
+            justifyContent={'center'}
+            textAlign={'center'}>
             {/* <Box>
               <Button
                 bg={colors.system.blue}
@@ -195,7 +200,7 @@ export default function VaspVerification() {
             <Box pb={16}>
               <Button
                 bg={colors.system.blue}
-                px={8}
+                px={4}
                 color={'white'}
                 as="a"
                 href="/certificate/registration"
