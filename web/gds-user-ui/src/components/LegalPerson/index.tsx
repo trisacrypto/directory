@@ -1,5 +1,4 @@
-import { InfoIcon } from '@chakra-ui/icons';
-import { Box, Heading, HStack, Icon, Stack, Text, Link } from '@chakra-ui/react';
+import { Heading, HStack, Icon, Stack, Text, Link } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
@@ -10,9 +9,7 @@ import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
 import { getStepStatus } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 
-type LegalPersonProps = {};
-
-const LegalPerson: React.FC<LegalPersonProps> = () => {
+const LegalPerson: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);

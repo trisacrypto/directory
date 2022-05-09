@@ -6,9 +6,7 @@ import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
 import { getStepStatus } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 
-type TBasicDetailsProps = {};
-
-const BasicDetails: React.FC<TBasicDetailsProps> = (props) => {
+const BasicDetails: React.FC = (props) => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
