@@ -17,7 +17,6 @@ const StartPage: React.FC = () => {
     }
   };
   const handleSignInWithEmail = async (data: any) => {
-    console.log('datanfromform', data);
     setIsloading(true);
     try {
       const response: any = await auth0SignIn({

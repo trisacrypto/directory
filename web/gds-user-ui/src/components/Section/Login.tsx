@@ -2,22 +2,23 @@ import {
   Flex,
   Box,
   FormControl,
-  FormLabel,
   Input,
-  Checkbox,
   Stack,
   Link,
   Button,
   Heading,
   Text,
-  useColorModeValue,
-  Image
+  useColorModeValue
 } from '@chakra-ui/react';
+import * as yup from 'yup';
 
 import { GoogleIcon } from 'components/Icon';
 
 import { colors } from 'utils/theme';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import InputFormControl from 'components/ui/InputFormControl';
+import { getValueByPathname } from 'utils/utils';
 
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
@@ -29,12 +30,24 @@ interface IFormInputs {
   username: string;
   password: string;
 }
+
+const defaultValues = {
+  username: '',
+  password: ''
+};
+
+const validationSchema = yup.object().shape({
+  username: yup.string().email('Email Address is not valid').required('Email Address is required'),
+  password: yup.string().required('Password is required')
+});
+
 const Login: React.FC<LoginProps> = (props) => {
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<IFormInputs>();
+  } = useForm<IFormInputs>({ resolver: yupResolver(validationSchema), defaultValues });
+
   return (
     <Flex
       minWidth={'100vw'}
@@ -75,29 +88,48 @@ const Login: React.FC<LoginProps> = (props) => {
           bg={useColorModeValue('white', 'transparent')}
           position={'relative'}
           bottom={5}>
-          <form onSubmit={handleSubmit(props.handleSignWithEmail)}>
+          <form onSubmit={handleSubmit(props.handleSignWithEmail)} noValidate>
             <Stack spacing={4}>
-              <FormControl id="email">
+              <InputFormControl
+                controlId=""
+                height={'64px'}
+                placeholder="Email Address"
+                type="email"
+                isInvalid={getValueByPathname(errors, 'username')}
+                formHelperText={getValueByPathname(errors, 'username')?.message}
+                {...register('username')}
+              />
+              {/* <FormControl id="email">
                 <Input
                   type="email"
                   {...register('username')}
                   height={'64px'}
                   placeholder="Email Address"
                 />
-              </FormControl>
-              <FormControl id="password">
+              </FormControl> */}
+              <InputFormControl
+                controlId=""
+                height={'64px'}
+                placeholder="Password"
+                type="password"
+                isInvalid={getValueByPathname(errors, 'password')}
+                formHelperText={getValueByPathname(errors, 'password')?.message}
+                {...register('password')}
+              />
+              {/* <FormControl id="password">
                 <Input
                   type="password"
                   {...register('password')}
                   height={'64px'}
                   placeholder="Password"
                 />
-              </FormControl>
-              <Stack spacing={8} direction={['column', 'row']} py="10">
+              </FormControl> */}
+              <Stack direction={['column', 'row']} py="5" justifyContent="space-between">
                 <Button
                   bg={colors.system.blue}
                   color={'white'}
-                  height={'57px'}
+                  px={2}
+                  py={4}
                   w={['full', '50%']}
                   type="submit"
                   _hover={{
@@ -108,19 +140,22 @@ const Login: React.FC<LoginProps> = (props) => {
                   }}>
                   Log In
                 </Button>
-
-                <Text lineHeight="57px">
-                  {' '}
-                  <Link href="/auth/forget"> Forgot password? </Link>
+                <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
+                  <Link
+                    href="/auth/forget"
+                    color="#1F4CED"
+                    fontFamily="Open sans, sans-serif"
+                    fontSize="1rem">
+                    Forgot password?
+                  </Link>
                 </Text>
               </Stack>
             </Stack>
           </form>
-          <Text textAlign="center">
+          <Text textAlign="center" fontSize="1rem">
             Not a TRISA Member?{' '}
-            <Link href="/auth/register" color={colors.system.cyan}>
-              {' '}
-              Join the TRISA network today.{' '}
+            <Link href="/auth/register" color={'#1F4CED'}>
+              Join the TRISA network today.
             </Link>
           </Text>
         </Box>
