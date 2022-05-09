@@ -63,6 +63,7 @@ const Login: React.FC<LoginProps> = (props) => {
         </Stack>
         <Stack align={'center'} justify={'center'} fontFamily={colors.font}>
           <Button
+            data-testid="signin-with-google"
             bg={'gray.100'}
             w="100%"
             height={'64px'}
@@ -91,6 +92,7 @@ const Login: React.FC<LoginProps> = (props) => {
           <form onSubmit={handleSubmit(props.handleSignWithEmail)} noValidate>
             <Stack spacing={4}>
               <InputFormControl
+                data-testid="email"
                 controlId=""
                 height={'64px'}
                 placeholder="Email Address"
@@ -99,15 +101,8 @@ const Login: React.FC<LoginProps> = (props) => {
                 formHelperText={getValueByPathname(errors, 'username')?.message}
                 {...register('username')}
               />
-              {/* <FormControl id="email">
-                <Input
-                  type="email"
-                  {...register('username')}
-                  height={'64px'}
-                  placeholder="Email Address"
-                />
-              </FormControl> */}
               <InputFormControl
+                data-testid="password"
                 controlId=""
                 height={'64px'}
                 placeholder="Password"
@@ -116,16 +111,9 @@ const Login: React.FC<LoginProps> = (props) => {
                 formHelperText={getValueByPathname(errors, 'password')?.message}
                 {...register('password')}
               />
-              {/* <FormControl id="password">
-                <Input
-                  type="password"
-                  {...register('password')}
-                  height={'64px'}
-                  placeholder="Password"
-                />
-              </FormControl> */}
               <Stack direction={['column', 'row']} py="5" justifyContent="space-between">
                 <Button
+                  data-testid="login-btn"
                   bg={colors.system.blue}
                   color={'white'}
                   px={2}
