@@ -4,8 +4,7 @@ import { getCountriesOptions } from 'constants/countries';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 
-type CountryOfRegistrationProps = {};
-const CountryOfRegistration: React.FC<CountryOfRegistrationProps> = () => {
+const CountryOfRegistration: React.FC = () => {
   const {
     control,
     formState: { errors }

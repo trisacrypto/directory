@@ -32,6 +32,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
     if (isSent) {
       onOpen();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTestNetSent, isMainNetSent]);
   return (
     <>

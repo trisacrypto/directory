@@ -24,6 +24,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
     if (getCountryFromLegalAddress) {
       setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getCountryFromLegalAddress]);
 
   return (

@@ -25,7 +25,6 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trixo, setTrixo] = React.useState<any>({});
   const getColorScheme = (status: string | boolean) => {
-    console.log('[getColorScheme] status', status);
     if (status === 'yes' || status === true) {
       return 'green';
     } else {
