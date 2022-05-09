@@ -49,7 +49,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
       isDisabled,
       isRequired,
       placeholder,
-      onValueChange
+      ...rest
     },
     ref
   ) => {
@@ -71,6 +71,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
             isRequired={isRequired}
             placeholder={placeholder}
             {...inputProps}
+            {...rest}
           />
           {hasBtn && (
             <InputRightElement width="4.5rem">
