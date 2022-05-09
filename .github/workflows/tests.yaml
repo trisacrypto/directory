@@ -3,9 +3,9 @@ on:
   push:
     branches:
       - main
-      - 'v*'
+      - "v*"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.x'
+          version: "3.x"
 
       - name: Install Dependencies
         run: |
@@ -101,9 +101,8 @@ jobs:
       - name: Run Tests
         working-directory: ./web/gds-admin-ui
         env:
-
-          REACT_APP_GDS_API_ENDPOINT : http://localhost:4434/v2
-          REACT_APP_GDS_IS_TESTNET : true
+          REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/v2
+          REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
@@ -112,8 +111,8 @@ jobs:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
 
-  gds_ui_test:
-    name: GDS UI Tests
+  gds_user_ui_test:
+    name: GDS User UI Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -125,24 +124,22 @@ jobs:
         with:
           node-version: 16.8.0
           cache: "yarn"
-          cache-dependency-path: ./web/gds-ui/yarn.lock
+          cache-dependency-path: ./web/gds-user-ui/yarn.lock
 
       - name: Install Dependencies
-        working-directory: ./web/gds-ui
+        working-directory: ./web/gds-user-ui
         run: yarn
 
       - name: Run Tests
-        working-directory: ./web/gds-ui
+        working-directory: ./web/gds-user-ui
         env:
-
-          REACT_APP_GDS_API_ENDPOINT : http://localhost:8080
-          REACT_APP_GDS_IS_TESTNET : true
+          REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
+          REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
         uses: codecov/codecov-action@v1.0.0
         with:
-
           token: ${{secrets.CODECOV_TOKEN}}
 
   lingui_gds_ui:
@@ -194,7 +191,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.x'
+          version: "3.x"
 
       - name: Install Dependencies
         run: |
@@ -215,4 +212,3 @@ jobs:
 
       - name: Build
         run: go build ./cmd/...
-

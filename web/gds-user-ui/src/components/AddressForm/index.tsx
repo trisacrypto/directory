@@ -30,6 +30,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
     if (!getFirstAddressType) {
       setValue(`entity.geographic_addresses[0].address_type`, 'ADDRESS_TYPE_CODE_BIZZ');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getFirstAddressType]);
 
   return (

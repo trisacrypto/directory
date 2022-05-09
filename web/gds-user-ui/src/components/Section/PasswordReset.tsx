@@ -25,18 +25,14 @@ interface PasswordResetProps {
   message?: string;
 }
 const PasswordReset: React.FC<PasswordResetProps> = (props) => {
-  const {
-    register,
-    handleSubmit,
-    resetField,
-    formState: { errors }
-  } = useForm();
+  const { register, handleSubmit, resetField } = useForm();
 
   useEffect(() => {
     if (props.message) {
       resetField('username');
     }
-  }, [props.message, resetField]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.message]);
 
   return (
     <Flex

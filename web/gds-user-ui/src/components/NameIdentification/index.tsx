@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Heading, Link, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
@@ -44,6 +44,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
     ) {
       setValue('entity.national_identification.registration_authority', 'RA777777');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [NationalIdentificationType]);
   return (
     <FormLayout>
@@ -151,17 +152,6 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
           />
         </>
       )}
-
-      {/* <InputFormControl
-        label="Registration Authority"
-        controlId="registration_authority"
-        inputRef={inputRegRef && undefined}
-        isInvalid={!!errors?.entity?.national_identification?.registration_authority}
-        isRequired={NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && false}
-        isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
-        formHelperText="Specify the Registration Authority ID from the GLEIF Registration Authorities List."
-        {...register('entity.national_identification.registration_authority')}
-      /> */}
     </FormLayout>
   );
 };

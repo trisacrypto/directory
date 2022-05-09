@@ -6,8 +6,7 @@ import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import AddressForm from '../AddressForm';
 
-type AddressesPropsProps = {};
-const Addresses: React.FC<AddressesPropsProps> = () => {
+const Addresses: React.FC = () => {
   const { control, register } = useFormContext();
   const { fields, remove, append } = useFieldArray({
     control,

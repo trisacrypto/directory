@@ -3,34 +3,15 @@ import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 import { Controller, useFormContext } from 'react-hook-form';
-import { Control, UseFormRegister } from 'react-hook-form/dist/types/form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { ValidationSchema, getDefaultValue } from './validation';
-import { useEffect } from 'react';
-type BasicDetailsFormProps = {};
 
-const BasicDetailsForm: React.FC<BasicDetailsFormProps> = () => {
+const BasicDetailsForm: React.FC = () => {
   const options = getBusinessCategoryOptions();
   const {
     register,
     control,
-    formState: { errors },
-    getValues,
-    watch,
-    setValue
+    formState: { errors }
   } = useFormContext();
 
-  // const getFirstLegalName = getValues('entity.name.name_identifiers')[0]?.legal_person_name;
-
-  // const setLegalName = () => {
-  //   if (getFirstLegalName && getFirstLegalName.length > 0) {
-  //     setValue('organization', getFirstLegalName);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   setLegalName();
-  // }, [getFirstLegalName]);
   return (
     <>
       <VStack spacing={4} w="100%">
