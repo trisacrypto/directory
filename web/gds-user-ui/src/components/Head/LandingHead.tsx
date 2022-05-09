@@ -96,7 +96,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                 width="100%"
                 as="a"
                 href="/#search">
-                Search Directory
+                Directory Lookup
               </Button>
             </Stack>
           </>

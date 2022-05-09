@@ -31,12 +31,13 @@ export default function AboutTrisaSection() {
             <Text
               color={useColorModeValue('black', 'white')}
               fontSize={{ base: '16px', md: '17px' }}>
-              <Link isExternal href={'https://trisa.io'}>
+              <Link isExternal color={colors.system.link} href={'https://trisa.io'}>
                 The Travel Rule Information Sharing Architecture (TRISA){' '}
               </Link>
               is a global, open source, secure, and peer-to-peer protocol for{' '}
               <Link
                 isExternal
+                color={colors.system.link}
                 href="https://www.fatf-gafi.org/publications/?hf=10&b=0&s=desc(fatf_releasedate)">
                 Travel Rule
               </Link>{' '}

@@ -68,7 +68,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
         <Stack fontSize={'1rem'}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               'td:nth-child(2)': { maxWidth: '75%' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
