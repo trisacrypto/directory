@@ -36,7 +36,7 @@ const PasswordReset: React.FC<PasswordResetProps> = (props) => {
     if (props.message) {
       resetField('username');
     }
-  }, [props.message]);
+  }, [props.message, resetField]);
 
   return (
     <Flex
