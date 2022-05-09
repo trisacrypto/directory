@@ -49,7 +49,7 @@ const ContactsReview = (props: ContactsProps) => {
         <Stack fontSize={'1rem'}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
                 width: '50%'

@@ -69,7 +69,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
         <Stack fontSize={18}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               'td:first-child': {
                 width: '50%'
               },

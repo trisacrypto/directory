@@ -47,7 +47,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
         <Stack fontSize={'1rem'}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold' },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               Tr: { borderStyle: 'hidden' }
             }}>
             <Tbody

@@ -15,7 +15,7 @@ const HomeButton: React.FC<HomeButtonProps & ButtonProps> = ({ link, ...props })
       _hover={{ background: 'black', color: 'white' }}
       _focus={{ background: 'red.100', color: 'red.500' }}
       borderRadius={0}>
-      <Icon as={AiOutlineHome} />
+      <Icon as={AiOutlineHome} fontSize={'24'} />
     </Button>
   );
 };

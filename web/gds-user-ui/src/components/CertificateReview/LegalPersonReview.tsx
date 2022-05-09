@@ -64,7 +64,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
         <Stack fontSize={18}>
           <Table
             sx={{
-              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'bold', paddingLeft: 0 },
+              'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold', paddingLeft: 0 },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
                 width: '50%'

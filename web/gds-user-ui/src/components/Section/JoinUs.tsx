@@ -31,7 +31,7 @@ const datas = [
   {
     icon: 'plug',
     title: 'Interoperable',
-    content: <>TRISA is designed to be interoperable with other Travel Rule solutuions.</>
+    content: <>TRISA is designed to be interoperable with other Travel Rule solutions.</>
   }
 ];
 export default function JoinUsSection() {
@@ -48,7 +48,10 @@ export default function JoinUsSection() {
                 TRISA is a global, open source, peer-to-peer and secure Travel Rule architecture and
                 network designed to be accessible and interoperable. Become a TRISA-certified VASP
                 today.{' '}
-                <Link isExternal href="htps://trisa.io/getting-started-with-trisa/">
+                <Link
+                  isExternal
+                  textDecoration={'underline'}
+                  href="htps://trisa.io/getting-started-with-trisa/">
                   Learn how TRISA works.
                 </Link>
               </Text>
