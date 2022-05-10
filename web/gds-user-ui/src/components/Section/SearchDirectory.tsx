@@ -137,10 +137,18 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             mx={'auto'}
             w={'2xl'}>
             <Box>
-              <Tabs>
-                <TabList border={'1px solid #eee'} fontWeight={'semibold'}>
-                  <Tab _focus={{ outline: 'none' }}>TESTNET DIRECTORY RECORD</Tab>
-                  <Tab _focus={{ outline: 'none' }}>MAINNET DIRECTORY RECORD</Tab>
+              <Tabs colorScheme="blue">
+                <TabList border={'1px solid #eee'}>
+                  <Tab
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
+                    TESTNET DIRECTORY RECORD
+                  </Tab>
+                  <Tab
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
+                    MAINNET DIRECTORY RECORD
+                  </Tab>
                 </TabList>
 
                 <Table
@@ -191,9 +199,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                         <Tr>
                           <Td>Country</Td>
                           <Td>
-                            {countryCodeEmoji(result[0]?.country)}
-                            {'  '}
                             {getCountryName(result[0]?.country as IsoCountryCode)}
+                            {'  '}
+                            {countryCodeEmoji(result[0]?.country) || 'N/A'}
                           </Td>
                         </Tr>
 
@@ -213,7 +221,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             'td:nth-child(2)': { width: '50%' }
                           }}>
                           <Td>Organization Name</Td>
-                          <Td colSpan={2}>{result[0]?.name}</Td>
+                          <Td colSpan={2}>{result[1]?.name || 'N/A'} </Td>
                         </Tr>
                         <Tr>
                           <Td>
@@ -240,9 +248,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                         <Tr>
                           <Td>Country</Td>
                           <Td>
-                            {countryCodeEmoji(result[1]?.country) || 'N/A'}
-                            {'  '}
                             {getCountryName(result[1]?.country as IsoCountryCode)}
+                            {'  '}
+                            {countryCodeEmoji(result[1]?.country) || 'N/A'}
                           </Td>
                         </Tr>
 
@@ -251,7 +259,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                           {result[1]?.verified_on ? (
                             <Td> VERIFIED ON {result[1]?.verified_on} </Td>
                           ) : (
-                            <Td>Not Found</Td>
+                            <Td>N/A</Td>
                           )}
                         </Tr>
                       </TabPanel>
