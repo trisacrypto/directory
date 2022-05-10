@@ -15,7 +15,7 @@ services:
     volumes:
       - ../fixtures:/data
     environment:
-      - GDS_DIRECTORY_ID=local.directory.dev
+      - GDS_DIRECTORY_ID=trisatest.net
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_MAINTENANCE=false
       - GDS_LOG_LEVEL=debug
@@ -25,7 +25,7 @@ services:
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:4434
       - GDS_ADMIN_MODE=release
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:4433
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
@@ -48,22 +48,23 @@ services:
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
-      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
-      - GDS_CERTMAN_INTERVAL=5m
+      - GDS_CERTMAN_INTERVAL=96h
       - GDS_CERTMAN_STORAGE=/data/certs
       - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
       - GDS_BACKUP_STORAGE=/data/backups
-      - GDS_BACKUP_KEEP=1
+      - GDS_BACKUP_KEEP=0
       - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
     profiles:
       - gds
       - api
+      - testnet
       - all
 
   trtl:
@@ -103,21 +104,7 @@ services:
       - db
       - gds
       - api
-      - all
-
-  envoy:
-    build:
-      context: ../
-      dockerfile: ./containers/grpc-proxy/Dockerfile
-    image: trisa/grpc-proxy
-    init: true
-    depends_on:
-      - gds
-    ports:
-      - 8080:8080
-    profiles:
-      - proxy
-      - api
+      - testnet
       - all
 
   gds-bff:
@@ -128,6 +115,7 @@ services:
     init: true
     depends_on:
       - gds
+      - gds-mainnet
     ports:
       - 4437:4437
     environment:
@@ -136,34 +124,48 @@ services:
       - GDS_BFF_MODE=release
       - GDS_BFF_LOG_LEVEL=debug
       - GDS_BFF_CONSOLE_LOG=true
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3000
+      - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_BFF_TESTNET_INSECURE=true
       - GDS_BFF_TESTNET_ENDPOINT=gds:4433
       - GDS_BFF_TESTNET_TIMEOUT=5s
       - GDS_BFF_MAINNET_INSECURE=true
       - GDS_BFF_MAINNET_ENDPOINT=gds-mainnet:8433
       - GDS_BFF_MAINNET_TIMEOUT=5s
+      - GDS_BFF_DATABASE_URL=trtl://trtl:4436/
+      - GDS_BFF_DATABASE_REINDEX_ON_BOOT=false
+      - GDS_BFF_DATABASE_INSECURE=true
+      - GDS_BFF_DATABASE_CERT_PATH
+      - GDS_BFF_DATABASE_POOL_PATH
+      - GDS_BFF_SENTRY_TRACK_PERFORMANCE
+      - SENTRY_DSN
+      - SENTRY_ENVIRONMENT
     profiles:
-      - bff
       - api
+      - testnet
+      - mainnet
       - all
 
-  gds-ui:
+  gds-user-ui:
     build:
       context: ../
-      dockerfile: ./containers/gds-ui/Dockerfile
+      dockerfile: ./containers/gds-user-ui/Dockerfile
       args:
-        REACT_APP_GDS_API_ENDPOINT: http://localhost:8080
-        REACT_APP_GDS_IS_TESTNET: "true"
+        REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
-    image: trisa/gds-ui
+        REACT_APP_VERSION_NUMBER: v1.4.1.dev
+        REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
+    image: trisa/gds-user-ui
     init: true
     depends_on:
-      - envoy
+      - gds-bff
     ports:
       - 3000:80
     profiles:
       - user
       - ui
+      - testnet
+      - mainnet
       - all
 
   gds-admin-ui:
@@ -174,7 +176,7 @@ services:
         REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/v2
         REACT_APP_GDS_IS_TESTNET: "true"
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
-    image: trisa/gds-admin-ui
+    image: trisa/gds-testnet-admin-ui
     depends_on:
       - gds
     init: true
@@ -183,6 +185,7 @@ services:
     profiles:
       - admin
       - ui
+      - testnet
       - all
 
   prometheus:
@@ -202,7 +205,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - 3002:3000
+      - 3003:3000
     volumes:
       - ./monitor/grafana:/var/lib/grafana
     profiles:
@@ -225,7 +228,7 @@ services:
     volumes:
       - ../fixtures:/data
     environment:
-      - GDS_DIRECTORY_ID=local.directory.dev
+      - GDS_DIRECTORY_ID=vaspdirectory.net
       - GDS_SECRET_KEY=supersecretsquirrel
       - GDS_MAINTENANCE=false
       - GDS_LOG_LEVEL=debug
@@ -235,7 +238,7 @@ services:
       - GDS_ADMIN_ENABLED=true
       - GDS_ADMIN_BIND_ADDR=:8434
       - GDS_ADMIN_MODE=release
-      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3001,http://localhost:3000
+      - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3002
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
       - GDS_ADMIN_AUDIENCE=http://localhost:8433
       - GDS_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
@@ -258,8 +261,8 @@ services:
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
-      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify-contact
-      - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
+      - GDS_VERIFY_CONTACT_URL=http://localhost:3000/verify
+      - GDS_ADMIN_REVIEW_URL=http://localhost:3002/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
       - GDS_CERTMAN_INTERVAL=96h
@@ -272,8 +275,9 @@ services:
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
     profiles:
-      - gds-mainnet
-      - api-mainnet
+      - gds
+      - api
+      - mainnet
       - all
 
   trtl-mainnet:
@@ -310,7 +314,28 @@ services:
       - TRTL_BACKUP_STORAGE=/data/backups
       - TRTL_BACKUP_KEEP=1
     profiles:
-      - db-mainnet
+      - db
+      - gds
+      - api
+      - mainnet
+      - all
+
+  gds-admin-ui-mainnet:
+    build:
+      context: ../
+      dockerfile: ./containers/gds-admin-ui/Dockerfile
+      args:
+        REACT_APP_GDS_API_ENDPOINT: http://localhost:8434/v2
+        REACT_APP_GDS_IS_TESTNET: "false"
+        REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
+    image: trisa/gds-admin-ui
+    depends_on:
       - gds-mainnet
-      - api-mainnet
+    init: true
+    ports:
+      - 3002:80
+    profiles:
+      - admin
+      - ui
+      - mainnet
       - all

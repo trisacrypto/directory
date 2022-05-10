@@ -3,9 +3,9 @@ on:
   push:
     branches:
       - main
-      - 'v*'
+      - "v*"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
 
 jobs:
@@ -18,8 +18,9 @@ jobs:
         with:
           go-version: 1.16
 
+      # TODO: update to v0.3.0 when it is fixed
       - name: Install Staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+        run: go install honnef.co/go/tools/cmd/staticcheck@v0.2.2
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -30,9 +31,12 @@ jobs:
   test:
     name: Go Test
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOBIN: ${{ github.workspace }}/go/bin
     defaults:
       run:
-        working-directory: ./directory
+        working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -42,26 +46,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          path: ./directory
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.x'
+          version: "3.x"
 
       - name: Install Dependencies
         run: |
           go version
-          go get -u github.com/kevinburke/go-bindata/...
+          go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
       - name: Clone TRISA repository
-        uses: actions/checkout@main
+        uses: actions/checkout@v2
         with:
           repository: trisacrypto/trisa
           ref: main
-          path: trisa
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/trisa
 
       - name: Code Generation
         run: go generate ./...
@@ -74,8 +78,8 @@ jobs:
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./directory/coverage.txt
- 
+          file: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory/coverage.txt
+
   gds_admin_test:
     name: GDS Admin UI Tests
     runs-on: ubuntu-latest
@@ -92,14 +96,13 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./web/gds-admin-ui
-        run: yarn 
+        run: yarn
 
       - name: Run Tests
         working-directory: ./web/gds-admin-ui
-        env: 
-        
-          REACT_APP_GDS_API_ENDPOINT : http://localhost:4434/v2 
-          REACT_APP_GDS_IS_TESTNET : true
+        env:
+          REACT_APP_GDS_API_ENDPOINT: http://localhost:4434/v2
+          REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
@@ -107,11 +110,11 @@ jobs:
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-  
-  gds_ui_test:
-    name: GDS UI Tests
+
+  gds_user_ui_test:
+    name: GDS User UI Tests
     runs-on: ubuntu-latest
-  
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -121,24 +124,22 @@ jobs:
         with:
           node-version: 16.8.0
           cache: "yarn"
-          cache-dependency-path: ./web/gds-ui/yarn.lock
+          cache-dependency-path: ./web/gds-user-ui/yarn.lock
 
       - name: Install Dependencies
-        working-directory: ./web/gds-ui
-        run: yarn 
+        working-directory: ./web/gds-user-ui
+        run: yarn
 
       - name: Run Tests
-        working-directory: ./web/gds-ui
-        env: 
-         
-          REACT_APP_GDS_API_ENDPOINT : http://localhost:8080 
-          REACT_APP_GDS_IS_TESTNET : true
+        working-directory: ./web/gds-user-ui
+        env:
+          REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
+          REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
         uses: codecov/codecov-action@v1.0.0
         with:
-        
           token: ${{secrets.CODECOV_TOKEN}}
 
   lingui_gds_ui:
@@ -157,21 +158,25 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./web/gds-ui
-        run: yarn 
+        run: yarn
 
-      - name: Extract 
+      - name: Extract
         working-directory: ./web/gds-ui
         run: yarn extract-c
 
       - name: Compile
         working-directory: ./web/gds-ui
         run: yarn compile
+
   build:
     name: Go Build
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOBIN: ${{ github.workspace }}/go/bin
     defaults:
       run:
-        working-directory: ./directory
+        working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -181,26 +186,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          path: ./directory
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.x'
+          version: "3.x"
 
       - name: Install Dependencies
         run: |
           go version
-          go get -u github.com/kevinburke/go-bindata/...
+          go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
       - name: Clone TRISA repository
-        uses: actions/checkout@main
+        uses: actions/checkout@v2
         with:
           repository: trisacrypto/trisa
           ref: main
-          path: trisa
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/trisa
 
       - name: Code Generation
         run: go generate ./...

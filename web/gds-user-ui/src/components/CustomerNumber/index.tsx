@@ -1,15 +1,13 @@
-import FormLayout from "layouts/FormLayout";
-import "react-phone-number-input/style.css";
-import PhoneInput, { Value as E164Number } from "react-phone-number-input";
-import { Heading, Input } from "@chakra-ui/react";
-import PhoneNumberInput from "components/ui/PhoneNumberInput";
+import FormLayout from 'layouts/FormLayout';
+import 'react-phone-number-input/style.css';
+import PhoneInput, { Value as E164Number } from 'react-phone-number-input';
+import { Heading, Input } from '@chakra-ui/react';
+import PhoneNumberInput from 'components/ui/PhoneNumberInput';
 
 type CustomerNumberProps = {};
 
 const CustomerNumber: React.FC<CustomerNumberProps> = () => {
-  const handlePhoneInputChange = (value: E164Number) => {
-    console.log("[Phone Input] value", value);
-  };
+  const handlePhoneInputChange = (value: E164Number) => {};
 
   return (
     <FormLayout>

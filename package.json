@@ -1,5 +1,6 @@
 {
-  "devDependencies": {
-    "eslint-plugin-cypress": "^2.12.1"
+  "dependencies": {
+    "@types/auth0-js": "^9.14.6",
+    "auth0-js": "^9.19.0"
   }
 }

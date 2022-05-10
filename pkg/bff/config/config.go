@@ -1,26 +1,32 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
 // Config uses envconfig to load the required settings from the environment, parse and
 // validate them in preparation for running the GDS BFF API service.
 type Config struct {
-	Maintenance bool                `split_words:"true" default:"false"`
-	BindAddr    string              `split_words:"true" default:":4437"`
-	Mode        string              `split_words:"true" default:"release"`
-	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
-	ConsoleLog  bool                `split_words:"true" default:"false"`
-	TestNet     DirectoryConfig
-	MainNet     DirectoryConfig
-	processed   bool
+	Maintenance  bool                `split_words:"true" default:"false"`
+	BindAddr     string              `split_words:"true" default:":4437"`
+	Mode         string              `split_words:"true" default:"release"`
+	LogLevel     logger.LevelDecoder `split_words:"true" default:"info"`
+	ConsoleLog   bool                `split_words:"true" default:"false"`
+	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
+	CookieDomain string              `split_words:"true"`
+	TestNet      DirectoryConfig
+	MainNet      DirectoryConfig
+	Database     DatabaseConfig
+	Sentry       SentryConfig
+	processed    bool
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
@@ -28,6 +34,23 @@ type DirectoryConfig struct {
 	Insecure bool          `split_words:"true" default:"true"`
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
+}
+
+type DatabaseConfig struct {
+	URL           string `split_words:"true" required:"true"`
+	ReindexOnBoot bool   `split_words:"true" default:"false"`
+	Insecure      bool   `split_words:"true" default:"false"`
+	CertPath      string `split_words:"true"`
+	PoolPath      string `split_words:"true"`
+}
+
+type SentryConfig struct {
+	DSN              string  `envconfig:"SENTRY_DSN"`
+	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
+	Release          string  `envconfig:"SENTRY_RELEASE"`
+	TrackPerformance bool    `split_words:"true" default:"false"`
+	SampleRate       float64 `split_words:"true" default:"1.0"`
+	Debug            bool    `default:"false"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -63,9 +86,48 @@ func (c Config) Mark() (Config, error) {
 }
 
 // Validate the config to make sure that it is usable to run the GDS BFF server.
-func (c Config) Validate() error {
+func (c Config) Validate() (err error) {
 	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
 	}
+
+	if err = c.Database.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Sentry.Validate(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (c DatabaseConfig) Validate() error {
+	// If the insecure flag isn't set then we must have certs when connecting to trtl.
+	if !c.Insecure {
+		if c.CertPath == "" || c.PoolPath == "" {
+			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+		}
+	}
+	return nil
+}
+
+func (c SentryConfig) Validate() error {
+	// If Sentry is enabled then the envionment must be set.
+	if c.UseSentry() && c.Environment == "" {
+		return errors.New("invalid configuration: envrionment must be configured when using sentry")
+	}
+	return nil
+}
+
+// Get the configured version string or the current semantic version if not configured.
+func (c SentryConfig) GetRelease() string {
+	if c.Release == "" {
+		return fmt.Sprintf("gds-bff@%s", pkg.Version())
+	}
+	return c.Release
+}
+
+func (c SentryConfig) UseSentry() bool {
+	return c.DSN != ""
 }

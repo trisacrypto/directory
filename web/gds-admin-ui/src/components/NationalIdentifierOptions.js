@@ -4,6 +4,7 @@ import React from 'react'
 function NationalIdentifierOptions() {
     return (
         <>
+            <option value=""></option>
             <option value="NATIONAL_IDENTIFIER_TYPE_CODE_ARNU">Alien Registration Number</option>
             <option value="NATIONAL_IDENTIFIER_TYPE_CODE_CCPT">Passport Number</option>
             <option value="NATIONAL_IDENTIFIER_TYPE_CODE_RAID">Registration Authority Identifier</option>

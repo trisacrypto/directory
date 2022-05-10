@@ -9,6 +9,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
+    "downlevelIteration": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -17,7 +18,8 @@
     "noImplicitAny": true,
     "noUnusedLocals": false,
     "jsx": "react-jsx",
-    "baseUrl": "src"
+    "baseUrl": "./src",
+    "types": ["cypress"]
   },
-  "include": ["src", "./custom.d.ts"]
+  "include": ["src", "src/custom.d.ts", "integration/**/*.spec.ts"]
 }

@@ -1,9 +1,31 @@
-import { Box, BoxProps } from "@chakra-ui/react";
+import {
+  Box,
+  BoxProps,
+  Heading,
+  HeadingProps,
+  Stack,
+  FlexProps,
+  StackProps
+} from '@chakra-ui/react';
 
-interface CardProps extends BoxProps {
-  children: React.ReactNode;
+const CardHeader: React.FC<HeadingProps> = ({ children, ...props }) => {
+  return (
+    <Heading size="sm" {...props}>
+      {children}
+    </Heading>
+  );
+};
+
+export const CardBody: React.FC<BoxProps> = (props) => {
+  return <Box {...props} />;
+};
+
+interface CardProps {
+  Header: React.FC<HeadingProps>;
+  Body: React.FC<any>;
 }
-const Card: React.FC<CardProps> = (props) => {
+
+const Card: React.FC<BoxProps> & CardProps = (props) => {
   const { children, ...rest } = props;
   return (
     <Box
@@ -11,11 +33,14 @@ const Card: React.FC<CardProps> = (props) => {
       borderRadius="10px"
       padding={{ base: 3, md: 9 }}
       fontFamily="Open Sans"
-      {...rest}
-    >
+      bg="white"
+      {...rest}>
       {children}
     </Box>
   );
 };
+
+Card.Header = CardHeader;
+Card.Body = CardBody;
 
 export default Card;

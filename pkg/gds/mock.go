@@ -100,7 +100,7 @@ func MockConfig() config.Config {
 		SecretKey:   "supersecretsquirrel",
 		Maintenance: false,
 		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
-		ConsoleLog:  true,
+		ConsoleLog:  false,
 		GDS: config.GDSConfig{
 			Enabled:  false,
 			BindAddr: "",
@@ -137,7 +137,7 @@ func MockConfig() config.Config {
 			AdminEmail:           "GDS Admin <admin@gds.dev>",
 			SendGridAPIKey:       "notarealsendgridapikey",
 			DirectoryID:          "gds.dev",
-			VerifyContactBaseURL: "https://gds.dev/verify-contact",
+			VerifyContactBaseURL: "https://gds.dev/verify",
 			AdminReviewBaseURL:   "https://admin.gds.dev/vasps/",
 			Testing:              true,
 		},

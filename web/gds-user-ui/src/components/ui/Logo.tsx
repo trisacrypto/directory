@@ -1,12 +1,11 @@
 import React from 'react';
 import { Box, Text } from '@chakra-ui/react';
+import TrisaLogo from 'assets/trisa_logo.svg';
 
 export default function Logo(props: any) {
   return (
     <Box {...props}>
-      <Text fontSize="lg" fontWeight="bold">
-        Trisa
-      </Text>
+      <img src={TrisaLogo} alt="Trisa logo" />
     </Box>
   );
 }

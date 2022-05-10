@@ -300,12 +300,12 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	tm := a.GetTokenManager()
 
 	claims := &tokens.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Id:        uuid.NewString(),
-			Audience:  "http://localhost",
-			IssuedAt:  time.Now().Unix(),
-			NotBefore: time.Now().Unix(),
-			ExpiresAt: time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.NewString(),
+			Audience:  jwt.ClaimStrings{"http://localhost"},
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -354,7 +354,7 @@ func (s *gdsTestSuite) TestReauthenticate() {
 	require.Equal(http.StatusUnauthorized, res.StatusCode)
 
 	// Mismatched access and refresh tokens
-	claims.Id = uuid.NewString()
+	claims.ID = uuid.NewString()
 	otherToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	other, err := tm.Sign(otherToken)
 	require.NoError(err)
@@ -647,7 +647,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 
 func (s *gdsTestSuite) TestUpdateVASP() {
 	s.LoadSmallFixtures()
-	defer s.ResetSmallFixtures()
+	defer s.ResetFixtures()
 
 	a := s.svc.GetAdmin()
 
@@ -702,7 +702,7 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 
 func (s *gdsTestSuite) TestDeleteVASP() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 	defer s.loadReferenceFixtures()
 
 	require := s.Require()
@@ -774,7 +774,7 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 // Test the ReplaceContact endpoint
 func (s *gdsTestSuite) TestReplaceContact() {
 	s.LoadSmallFixtures()
-	defer s.ResetSmallFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 	defer s.loadReferenceFixtures()
 
@@ -946,7 +946,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 // Test the DeleteContact endpoint
 func (s *gdsTestSuite) TestDeleteContact() {
 	s.LoadSmallFixtures()
-	defer s.ResetSmallFixtures()
+	defer s.ResetFixtures()
 	defer s.loadReferenceFixtures()
 
 	require := s.Require()
@@ -1012,7 +1012,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 // Test the CreateReviewNote endpoint.
 func (s *gdsTestSuite) TestCreateReviewNote() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1128,7 +1128,7 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 // Test the UpdateReviewNote endpoint.
 func (s *gdsTestSuite) TestUpdateReviewNote() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1211,7 +1211,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 // Test the DeleteReviewNote endpoint.
 func (s *gdsTestSuite) TestDeleteReviewNote() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1363,7 +1363,7 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 // Test the Review endpoint for the accept case.
 func (s *gdsTestSuite) TestReviewAccept() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1455,7 +1455,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 // Test the Review endpoint for the reject case.
 func (s *gdsTestSuite) TestReviewReject() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 
 	require := s.Require()
@@ -1578,7 +1578,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 // Test the Resend endpoint.
 func (s *gdsTestSuite) TestResend() {
 	s.LoadFullFixtures()
-	defer s.ResetFullFixtures()
+	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
 
 	require := s.Require()

@@ -1,3 +1,4 @@
+import { yupResolver } from '@hookform/resolvers/yup';
 import CountryOptions from 'components/CountryOptions';
 import Field from 'components/Field';
 import { ModalCloseButton, ModalContext } from 'components/Modal';
@@ -5,18 +6,36 @@ import NationalIdentifierOptions from 'components/NationalIdentifierOptions';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import React from 'react'
 import { Alert, Button, Form, FormGroup } from 'react-bootstrap'
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { getIvmsErrorState, getVaspDetailsLoadingState } from 'redux/selectors';
 import { clearIvms101ErrorMessage, updateIvms101Response } from 'redux/vasp-details';
-import { getIvms101RecordInitialValues } from 'utils/form-references';
+import { getIvms101RecordInitialValues, getRegistrationAuthorities } from 'utils/form-references';
 import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
+import * as yup from 'yup'
+import { Typeahead } from 'react-bootstrap-typeahead';
+
+
+const validationSchema = yup.object().shape({
+    national_identification: yup.object().shape({
+        registration_authority: yup.string().test("registrationAuthority", "Registration Authority cannot be left empty", function (value) {
+
+            if ((this.parent.national_identifier_type !== "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX") && value === '') {
+                return false
+            }
+
+            return true
+        })
+    })
+})
+
 
 function Ivms101RecordForm({ data }) {
-    const { register, control, handleSubmit, formState: { isDirty } } = useForm({
-        defaultValues: getIvms101RecordInitialValues(data)
+    const { register, control, handleSubmit, formState: { isDirty, errors, dirtyFields }, watch, setValue } = useForm({
+        defaultValues: getIvms101RecordInitialValues(data),
+        resolver: yupResolver(validationSchema)
     })
     const params = useParams()
     const [, setIsOpen] = React.useContext(ModalContext)
@@ -27,6 +46,9 @@ function Ivms101RecordForm({ data }) {
     const safeDispatch = useSafeDispatch(dispatch)
     const ivmsErrorState = useSelector(getIvmsErrorState)
     const isLoading = useSelector(getVaspDetailsLoadingState)
+    const nationalIdentifierType = watch("national_identification.national_identifier_type")
+    const isRegistrationAuthorityDisable = React.useCallback(() => nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX", [nationalIdentifierType])
+    let _typeahead = React.useRef()
 
     React.useEffect(() => {
         const timeout = setTimeout(() => {
@@ -38,7 +60,15 @@ function Ivms101RecordForm({ data }) {
         }
     })
 
+    React.useEffect(() => {
+        if (nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX") {
+            // setValue("national_identification.registration_authority", undefined)
+            _typeahead.current.clear()
+        }
+    }, [nationalIdentifierType, setValue])
+
     const onSubmit = async (data) => {
+        delete data.national_identification.country_of_issue
         const payload = {
             entity: data
         }
@@ -136,16 +166,38 @@ function Ivms101RecordForm({ data }) {
 
                 <FormGroup>
                     <Form.Label className='mt-3 fw-normal'>Identification Type</Form.Label>
-                    <Field.Select register={register} name={`national_identification.national_identifier_type`}>
+                    <Field.Select defaultValue="" register={register} name={`national_identification.national_identifier_type`}>
                         <NationalIdentifierOptions />
                     </Field.Select>
                 </FormGroup>
                 <FormGroup>
                     <Form.Label className='fw-normal mt-3'>Registration Authority</Form.Label>
-                    <Field.Input register={register} name={`national_identification.registration_authority`} />
-                    <Form.Text>If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.</Form.Text>
+                    <Controller
+                        control={control}
+                        name="national_identification.registration_authority"
+                        render={({ field }) => (
+                            <Typeahead
+                                id="national_identification.registration_authority"
+                                labelKey="national_identification.registration_authority"
+                                options={getRegistrationAuthorities()}
+                                isValid={!isRegistrationAuthorityDisable() && dirtyFields["national_identification"]?.registration_authority && !errors["national_identification"]?.registration_authority}
+                                isInvalid={!!errors["national_identification"]?.registration_authority}
+                                disabled={isRegistrationAuthorityDisable()}
+                                value={field.value}
+                                name={field.name}
+                                onBlur={field.onBlur}
+                                ref={_typeahead}
+                                onChange={(selected) => {
+                                    field.onChange(selected[0])
+                                }}
+                                defaultInputValue={field.value}
+                            />
+                        )}
+                    />
+                    {
+                        !!errors["national_identification"]?.registration_authority ? <Form.Control.Feedback type="invalid">{errors["national_identification"]?.registration_authority.message}</Form.Control.Feedback> : <Form.Text> If the identifier is an LEI number, the ID used in the GLEIF Registration Authorities List.</Form.Text>
+                    }
                 </FormGroup>
-
                 <div className='mt-3 text-end'>
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>

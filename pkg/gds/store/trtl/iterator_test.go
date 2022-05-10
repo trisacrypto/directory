@@ -6,6 +6,9 @@ import (
 
 	"github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *trtlStoreTestSuite) TestBatchIterator() {
@@ -344,4 +347,58 @@ func (s *trtlStoreTestSuite) TestStreamingIterator() {
 	require.Equal([]byte(page["y"]), iter.Value())
 	require.Nil(iter.Error())
 	iter.Release()
+}
+
+func (s *trtlStoreTestSuite) TestStreamingIteratorError() {
+	require := s.Require()
+	iter := trtl.NewTrtlStreamingIterator(&trtlErrorClient{}, "")
+
+	// Call interactive methods on iter should do nothing but not return an error.
+	for iter.Next() {
+		require.Nil(iter.Key())
+		require.Nil(iter.Value())
+	}
+
+	require.False(iter.Prev())
+	require.False(iter.Seek([]byte("foo")))
+
+	// Calling release should not panic
+	iter.Release()
+	require.Error(iter.Error(), "iter should be in an error state without panic")
+
+}
+
+// Implements pb.TrtlClient but returns an error
+type trtlErrorClient struct{}
+
+func (s *trtlErrorClient) Get(context.Context, *pb.GetRequest, ...grpc.CallOption) (*pb.GetReply, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Put(context.Context, *pb.PutRequest, ...grpc.CallOption) (*pb.PutReply, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Delete(context.Context, *pb.DeleteRequest, ...grpc.CallOption) (*pb.DeleteReply, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Iter(context.Context, *pb.IterRequest, ...grpc.CallOption) (*pb.IterReply, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Batch(context.Context, ...grpc.CallOption) (pb.Trtl_BatchClient, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Cursor(context.Context, *pb.CursorRequest, ...grpc.CallOption) (pb.Trtl_CursorClient, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Sync(context.Context, ...grpc.CallOption) (pb.Trtl_SyncClient, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
+func (s *trtlErrorClient) Status(context.Context, *pb.HealthCheck, ...grpc.CallOption) (*pb.ServerStatus, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
 }

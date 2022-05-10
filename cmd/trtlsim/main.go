@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	gprcInsecure "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -132,7 +133,7 @@ func New(endpoint string, insecure bool) *Simulator {
 func (s *Simulator) connect() (_ pb.TrtlClient, err error) {
 	var opts []grpc.DialOption
 	if s.Insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(gprcInsecure.NewCredentials()))
 	} else {
 		var sz *trust.Serializer
 		if sz, err = trust.NewSerializer(false); err != nil {

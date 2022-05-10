@@ -9,11 +9,18 @@ interface MenuItemProps {
 const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.Element => {
   return (
     <Text
-      mb={{ base: isLast ? 0 : 8, sm: 0 }}
-      mr={{ base: 0, sm: isLast ? 0 : 8 }}
+      mb={{ base: isLast ? 0 : 4, sm: 0 }}
+      mr={{ base: 2, sm: isLast ? 8 : 2 }}
+      pl={isLast ? 8 : 0}
       display="block"
       {...rest}>
-      {to.startsWith('http') ? <a href={to}>{children}</a> : <Link href={to}>{children}</Link>}
+      <Link
+        isExternal={!!to.startsWith('http')}
+        href={to}
+        _active={{ outline: 'none' }}
+        _focus={{ outline: 'none' }}>
+        {children}
+      </Link>
     </Text>
   );
 };

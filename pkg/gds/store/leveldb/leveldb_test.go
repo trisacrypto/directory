@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -23,6 +24,10 @@ type leveldbTestSuite struct {
 }
 
 func (s *leveldbTestSuite) SetupSuite() {
+	// Discard logging from the application to focus on test logs
+	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	logger.Discard()
+
 	path, err := ioutil.TempDir("", "gdsldbstore-*")
 	s.NoError(err)
 
@@ -36,6 +41,7 @@ func (s *leveldbTestSuite) TearDownSuite() {
 	// Delete the temp directory when done
 	err := os.RemoveAll(s.path)
 	s.NoError(err)
+	logger.ResetLogger()
 }
 
 func TestLevelDB(t *testing.T) {

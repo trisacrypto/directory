@@ -11,12 +11,16 @@ import (
 	"time"
 
 	ginzerolog "github.com/dn365/gin-zerolog"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
@@ -49,14 +53,28 @@ func New(conf config.Config) (s *Server, err error) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
+	// Configure Sentry
+	if conf.Sentry.UseSentry() {
+		if err = sentry.Init(sentry.ClientOptions{
+			Dsn:              conf.Sentry.DSN,
+			Environment:      conf.Sentry.Environment,
+			Release:          conf.Sentry.GetRelease(),
+			AttachStacktrace: true,
+			Debug:            conf.Sentry.Debug,
+			TracesSampleRate: conf.Sentry.SampleRate,
+		}); err != nil {
+			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		}
+	}
+
 	// Create the server and prepare to serve
 	s = &Server{
 		conf:  conf,
 		echan: make(chan error, 1),
 	}
 
-	// Connect to the TestNet and MainNet directory services if we're not in
-	// maintenance or testing mode (in testing mode, the connection will be manual).
+	// Connect to the TestNet and MainNet directory services and database if we're not
+	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
 		if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
 			return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
@@ -67,6 +85,15 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
 		}
 		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to GDS")
+
+		if s.db, err = db.Connect(s.conf.Database); err != nil {
+			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
+		}
+		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+	}
+
+	if s.conf.Sentry.TrackPerformance {
+		log.Debug().Float64("sample_rate", s.conf.Sentry.SampleRate).Msg("sentry performance tracking enabled")
 	}
 
 	// Create the router
@@ -95,6 +122,7 @@ type Server struct {
 	router  *gin.Engine
 	testnet gds.TRISADirectoryClient
 	mainnet gds.TRISADirectoryClient
+	db      *db.DB
 	started time.Time
 	healthy bool
 	url     string
@@ -152,6 +180,9 @@ func (s *Server) Serve() (err error) {
 func (s *Server) Shutdown() (err error) {
 	log.Info().Msg("gracefully shutting down")
 
+	// Flush the Sentry log before shutting down
+	defer sentry.Flush(2 * time.Second)
+
 	s.SetHealth(false)
 	s.srv.SetKeepAlivesEnabled(false)
 
@@ -161,6 +192,15 @@ func (s *Server) Shutdown() (err error) {
 
 	if err = s.srv.Shutdown(ctx); err != nil {
 		return err
+	}
+
+	// Shut down maintenance mode systems
+	if !s.conf.Maintenance {
+		if s.db != nil {
+			if err = s.db.Close(); err != nil {
+				log.Error().Err(err).Msg("could not shutdown trtl db connection")
+			}
+		}
 	}
 
 	log.Debug().Msg("successfully shutdown server")
@@ -181,11 +221,38 @@ func (s *Server) SetURL(url string) {
 	log.Debug().Str("url", url).Msg("server url set")
 }
 
+// Middleware that tracks request performance with Sentry.
+func (s *Server) TrackPerformance() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span := sentry.StartSpan(c.Request.Context(), c.Request.URL.Path)
+		defer span.Finish()
+		c.Next()
+	}
+}
+
 func (s *Server) setupRoutes() (err error) {
 	// Application Middleware
 	s.router.Use(ginzerolog.Logger("gin"))
+
+	// Gin middleware needs to be added before Sentry for correct recovery handling
 	s.router.Use(gin.Recovery())
+	s.router.Use(sentrygin.New(sentrygin.Options{
+		Repanic:         true,
+		WaitForDelivery: false,
+	}))
+	if s.conf.Sentry.TrackPerformance {
+		s.router.Use(s.TrackPerformance())
+	}
 	s.router.Use(s.Available())
+
+	// Add CORS configuration
+	s.router.Use(cors.New(cors.Config{
+		AllowOrigins:     s.conf.AllowOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Add the v1 API routes
 	v1 := s.router.Group("/v1")
@@ -196,6 +263,7 @@ func (s *Server) setupRoutes() (err error) {
 		// GDS public routes (no authentication required)
 		v1.GET("/lookup", s.Lookup)
 		v1.POST("/register/:network", s.Register)
+		v1.GET("/verify", s.VerifyContact)
 	}
 
 	// NotFound and NotAllowed routes
@@ -212,6 +280,11 @@ func (s *Server) setupRoutes() (err error) {
 func (s *Server) SetClients(testnet, mainnet gds.TRISADirectoryClient) {
 	s.testnet = testnet
 	s.mainnet = mainnet
+}
+
+// SetDB allows tests to set a bufconn client to a mock trtl server.
+func (s *Server) SetDB(db *db.DB) {
+	s.db = db
 }
 
 // GetConf returns a copy of the current configuration.

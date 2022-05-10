@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 )
@@ -200,5 +202,107 @@ func (s *bffTestSuite) TestRegister() {
 		require.EqualError(err, "[404] network should be either testnet or mainnet")
 		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+	}
+}
+
+func (s *bffTestSuite) TestVerifyEmail() {
+	require := s.Require()
+	params := &api.VerifyContactParams{}
+
+	// Test Bad Request (no parameters)
+	_, err := s.client.VerifyContact(context.TODO(), params)
+	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+
+	// Test Bad Request (only vaspID specified)
+	params.ID = uuid.NewString()
+	_, err = s.client.VerifyContact(context.TODO(), params)
+	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+
+	// Test Bad Request (only vaspID and token specified)
+	params.Token = "abcdefghijklmnopqrstuvwxyz"
+	_, err = s.client.VerifyContact(context.TODO(), params)
+	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+
+	// Test Bad Request (only unknown registered_directory specified)
+	params.Directory = "equitylo.rd"
+	_, err = s.client.VerifyContact(context.TODO(), params)
+	require.EqualError(err, "[400] unknown registered directory")
+
+	// Assert that to this point no GDS method has been called
+	require.Empty(s.testnet.Calls[mock.VerifyContactRPC], "expected no testnet calls")
+	require.Empty(s.mainnet.Calls[mock.VerifyContactRPC], "expected no mainnet calls")
+
+	// Test good requests to the registered directory
+	for i, directory := range []string{"trisatest.net", "vaspdirectory.net"} {
+		params.Directory = directory
+
+		// Identify the mock being used in this loop
+		var mgds *mock.GDS
+		switch i {
+		case 0:
+			mgds = s.testnet
+		case 1:
+			mgds = s.mainnet
+		}
+
+		// Reset the calls on the mocks to ensure the correct mock GDS is being called
+		expectedCalls := make(map[string]int)
+		s.testnet.Reset()
+		s.mainnet.Reset()
+
+		// Test invalid argument error
+		mgds.UseError(mock.VerifyContactRPC, codes.InvalidArgument, "incorrect vasp id")
+		_, err = s.client.VerifyContact(context.TODO(), params)
+		expectedCalls[directory]++
+		require.EqualError(err, "[400] incorrect vasp id")
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+
+		// Test not found error
+		mgds.UseError(mock.VerifyContactRPC, codes.NotFound, "could not lookup contact with token")
+		_, err = s.client.VerifyContact(context.TODO(), params)
+		expectedCalls[directory]++
+		require.EqualError(err, "[404] could not lookup contact with token")
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+
+		// Test aborted error
+		mgds.UseError(mock.VerifyContactRPC, codes.Aborted, "could not update verification status")
+		_, err = s.client.VerifyContact(context.TODO(), params)
+		expectedCalls[directory]++
+		require.EqualError(err, "[409] could not update verification status")
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+
+		// Test failed precondition error
+		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "something went wrong")
+		_, err = s.client.VerifyContact(context.TODO(), params)
+		expectedCalls[directory]++
+		require.EqualError(err, "[500] something went wrong")
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+
+		// Test internal error
+		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "boom hiss")
+		_, err = s.client.VerifyContact(context.TODO(), params)
+		expectedCalls[directory]++
+		require.EqualError(err, "[500] boom hiss")
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+
+		// Test a valid verify email response
+		mgds.OnVerifyContact = func(ctx context.Context, in *gds.VerifyContactRequest) (out *gds.VerifyContactReply, err error) {
+			return &gds.VerifyContactReply{
+				Status:  models.VerificationState_PENDING_REVIEW,
+				Message: "thank you for verifying your contact information",
+			}, nil
+		}
+
+		rep, err := s.client.VerifyContact(context.TODO(), params)
+		require.NoError(err, "unexpected error during good request")
+		require.NotEmpty(rep, "empty response returned")
+		require.Empty(rep.Error, "an error message was returned by the bff")
+		require.Equal("PENDING_REVIEW", rep.Status)
+		require.Equal("thank you for verifying your contact information", rep.Message)
 	}
 }

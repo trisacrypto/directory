@@ -11,3 +11,11 @@ export const getNameIdentiferTypeOptions = () => {
     value: k
   }));
 };
+
+export const getNameIdentiferTypeLabel = (value: any) => {
+  return Object.entries(NAME_IDENTIFIER_TYPE).map(([k, v]) => {
+    if (k === value) {
+      return v;
+    }
+  });
+};
