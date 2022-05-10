@@ -240,7 +240,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                         <Tr>
                           <Td>Country</Td>
                           <Td>
-                            {countryCodeEmoji(result[1]?.country || 'N/A')}
+                            {countryCodeEmoji(result[1]?.country) || 'N/A'}
                             {'  '}
                             {getCountryName(result[1]?.country as IsoCountryCode)}
                           </Td>
