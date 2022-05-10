@@ -298,10 +298,9 @@ func main() {
 		},
 		{
 			Name:     "register:reissue",
-			Usage:    "create a new certificate request for the VASP",
+			Usage:    "interactively reissue certificates for a VASP",
 			Category: "admin",
 			Action:   registerReissue,
-			Before:   openLevelDB,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:    "db",
@@ -330,6 +329,12 @@ func main() {
 					Usage:   "email of user reissuing certs for audit log",
 				},
 			},
+		},
+		{
+			Name:     "admin:reissue",
+			Usage:    "interactively reissue certificates for a VASP record",
+			Category: "admin",
+			Action:   interactiveReissue,
 		},
 		{
 			Name:     "admin:tokenkey",
