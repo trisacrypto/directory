@@ -138,7 +138,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             w={'2xl'}>
             <Box>
               <Tabs>
-                <TabList border={'1px solid #eee'}>
+                <TabList border={'1px solid #eee'} fontWeight={'semibold'}>
                   <Tab _focus={{ outline: 'none' }}>TESTNET DIRECTORY RECORD</Tab>
                   <Tab _focus={{ outline: 'none' }}>MAINNET DIRECTORY RECORD</Tab>
                 </TabList>
@@ -147,8 +147,8 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                   border={'1px solid #eee'}
                   css={{ borderCollapse: 'separate', borderSpacing: '0' }}
                   sx={{
-                    'td:first-child': { fontWeight: 'semibold', maxWidth: '50%' },
-                    'td:nth-child(2)': { maxWidth: '50%' },
+                    'td:first-child': { fontWeight: 'semibold', maxWidth: '30%' },
+                    'td:nth-child(2)': { maxWidth: '70%' },
                     Tr: { borderStyle: 'hidden' }
                   }}>
                   {/* <Thead bg={'#eee'} height={'50px'}>
@@ -160,8 +160,8 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       <TabPanel>
                         <Tr
                           sx={{
-                            'td:first-child': { fontWeight: 'bold', width: '30%' },
-                            'td:nth-child(2)': { width: '70%' }
+                            'td:first-child': { fontWeight: 'bold', width: '50%' },
+                            'td:nth-child(2)': { width: '50%' }
                           }}>
                           <Td>Organization Name</Td>
                           <Td colSpan={2}>{result[0]?.name}</Td>
