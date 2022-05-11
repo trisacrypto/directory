@@ -9,6 +9,20 @@ const passwordRegex =
 // .{8}                      Ensure string is of length 8.
 // $                         End anchor.
 export const validationSchema = yup.object().shape({
-  username: yup.string().email('Email is not valid').required(),
-  password: yup.string().matches(passwordRegex, 'password is not valid').required()
+  username: yup.string().email('Email is not valid').required('Email is required'),
+  password: yup
+    .string()
+    .matches(
+      passwordRegex,
+      `
+  *At least 8 characters in length 
+  * Contain at least 3 of the following 4
+  types of characters: 
+  * lower case letters (a-z) 
+  * upper case letters (A-Z) 
+  * numbers (i.e. 0-9) 
+  * special characters (e.g. !@#$%^&*)
+  `
+    )
+    .required('Password is required')
 });
