@@ -1,4 +1,5 @@
 import LandingLayout from './layouts/LandingLayout';
+import * as Sentry from '@sentry/react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRouter from 'application/routes';
 const App: React.FC = () => {
@@ -11,4 +12,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Sentry.withProfiler(App);
