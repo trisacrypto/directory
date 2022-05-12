@@ -26,7 +26,8 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  chakra
+  chakra,
+  TableContainer
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
@@ -108,17 +109,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       What’s a Common name or VASP ID?
                     </Tooltip>
                   </FormHelperText>
-                  {/* <InputRightElement width="2.5rem" color={'black'}>
-                    <Button
-                      h="2.5rem"
-                      size="sm"
-                      isLoading={isLoading}
-                      variant="outline"
-                      type="submit"
-                      spinnerPlacement="start">
-                      <SearchIcon />
-                    </Button>
-                  </InputRightElement> */}
 
                   {error && <ErrorMessage message={error} handleClose={handleClose} />}
                 </FormControl>
@@ -135,137 +125,106 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             alignContent="center"
             fontSize={'md'}
             mx={'auto'}
-            w={'2xl'}>
+            w={'100%'}>
             <Box>
               <Tabs colorScheme="blue">
                 <TabList border={'1px solid #eee'}>
                   <Tab
+                    sx={{ width: '100%' }}
                     _focus={{ outline: 'none' }}
                     _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
-                    TESTNET DIRECTORY RECORD
+                    <Text fontSize={['x-small', 'medium']}>TESTNET DIRECTORY RECORD</Text>
                   </Tab>
                   <Tab
+                    sx={{ width: '100%' }}
                     _focus={{ outline: 'none' }}
                     _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
-                    MAINNET DIRECTORY RECORD
+                    <Text fontSize={['x-small', 'medium']}>MAINNET DIRECTORY RECORD</Text>
                   </Tab>
                 </TabList>
+                <TabPanels>
+                  <TabPanel p={0} border="1px solid #eee">
+                    <TableContainer>
+                      <Table
+                        variant="simple"
+                        sx={{ 'td:first-child': { fontWeight: 'semibold', width: '50%' } }}>
+                        <Tbody>
+                          <Tr>
+                            <Td>Organization Name</Td>
+                            <Td colSpan={2}>{result[0]?.name}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>Common Name</Td>
+                            <Td>{result[0]?.common_name}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>TRISA Service Endpoint</Td>
+                            <Td>{result[0]?.endpoint}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>Registered Directory</Td>
+                            <Td>{result[0]?.registered_directory}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>TRISA Member ID</Td>
+                            <Td>{result[0]?.id}</Td>
+                          </Tr>
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </TabPanel>
+                  <TabPanel p={0} border="1px solid #eee">
+                    <TableContainer>
+                      <Table
+                        variant="simple"
+                        sx={{
+                          'td:first-child': { fontWeight: 'semibold', width: '50%' },
+                          'td:last-child': { width: '50%' }
+                        }}>
+                        <Tbody>
+                          <Tr>
+                            <Td>Organization Name</Td>
+                            <Td colSpan={2}>{result[1]?.name || 'N/A'} </Td>
+                          </Tr>
+                          <Tr>
+                            <Td>Common Name</Td>
+                            <Td>{result[1]?.common_name || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>TRISA Service Endpoint</Td>
+                            <Td>{result[1]?.endpoint || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>Registered Directory</Td>
+                            <Td>{result[1]?.registered_directory || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>TRISA Member ID</Td>
+                            <Td>{result[1]?.id || 'N/A'}</Td>
+                          </Tr>
 
-                <Table
-                  border={'1px solid #eee'}
-                  css={{ borderCollapse: 'separate', borderSpacing: '0' }}
-                  sx={{
-                    'td:first-child': { fontWeight: 'semibold', maxWidth: '30%' },
-                    'td:nth-child(2)': { maxWidth: '70%' },
-                    Tr: { borderStyle: 'hidden' }
-                  }}>
-                  {/* <Thead bg={'#eee'} height={'50px'}>
-                    <Th colSpan={2}>Global TRISA Directory Record</Th>
-                  </Thead> */}
+                          <Tr>
+                            <Td>Country</Td>
+                            <Td>
+                              {getCountryName(result[1]?.country as IsoCountryCode)}
+                              {'  '}
+                              {countryCodeEmoji(result[1]?.country) || 'N/A'}
+                            </Td>
+                          </Tr>
 
-                  <Tbody>
-                    <TabPanels>
-                      <TabPanel>
-                        <Tr
-                          sx={{
-                            'td:first-child': { fontWeight: 'bold', width: '50%' },
-                            'td:nth-child(2)': { width: '50%' }
-                          }}>
-                          <Td>Organization Name</Td>
-                          <Td colSpan={2}>{result[0]?.name}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>
-                            {/* <Flex minWidth={'100%'} flexWrap="nowrap">
-                        <Text minWidth="100%">Common Name</Text>
-                      </Flex> */}
-                            Common Name
-                          </Td>
-                          <Td>{result[0]?.common_name}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>TRISA Service Endpoint</Td>
-                          <Td>{result[0]?.endpoint}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>Registered Directory</Td>
-                          <Td>{result[0]?.registered_directory}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>TRISA Member ID</Td>
-                          <Td>{result[0]?.id}</Td>
-                        </Tr>
-
-                        <Tr>
-                          <Td>Country</Td>
-                          <Td>
-                            {getCountryName(result[0]?.country as IsoCountryCode)}
-                            {'  '}
-                            {countryCodeEmoji(result[0]?.country) || 'N/A'}
-                          </Td>
-                        </Tr>
-
-                        <Tr>
-                          <Td>TRISA Verification</Td>
-                          {result[0]?.verified_on ? (
-                            <Td> VERIFIED ON {result[0]?.verified_on} </Td>
-                          ) : (
-                            <Td>Not Found</Td>
-                          )}
-                        </Tr>
-                      </TabPanel>
-                      <TabPanel>
-                        <Tr
-                          sx={{
-                            'td:first-child': { fontWeight: 'bold', width: '50%' },
-                            'td:nth-child(2)': { width: '50%' }
-                          }}>
-                          <Td>Organization Name</Td>
-                          <Td colSpan={2}>{result[1]?.name || 'N/A'} </Td>
-                        </Tr>
-                        <Tr>
-                          <Td>
-                            {/* <Flex minWidth={'100%'} flexWrap="nowrap">
-                        <Text minWidth="100%">Common Name</Text>
-                      </Flex> */}
-                            Common Name
-                          </Td>
-                          <Td>{result[1]?.common_name || 'N/A'}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>TRISA Service Endpoint</Td>
-                          <Td>{result[1]?.endpoint || 'N/A'}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>Registered Directory</Td>
-                          <Td>{result[1]?.registered_directory || 'N/A'}</Td>
-                        </Tr>
-                        <Tr>
-                          <Td>TRISA Member ID</Td>
-                          <Td>{result[1]?.id || 'N/A'}</Td>
-                        </Tr>
-
-                        <Tr>
-                          <Td>Country</Td>
-                          <Td>
-                            {getCountryName(result[1]?.country as IsoCountryCode)}
-                            {'  '}
-                            {countryCodeEmoji(result[1]?.country) || 'N/A'}
-                          </Td>
-                        </Tr>
-
-                        <Tr>
-                          <Td>TRISA Verification</Td>
-                          {result[1]?.verified_on ? (
-                            <Td> VERIFIED ON {result[1]?.verified_on} </Td>
-                          ) : (
-                            <Td>N/A</Td>
-                          )}
-                        </Tr>
-                      </TabPanel>
-                    </TabPanels>
-                  </Tbody>
-                </Table>
+                          <Tr>
+                            <Td>TRISA Verification</Td>
+                            {result[1]?.verified_on ? (
+                              <Td> VERIFIED ON {result[1]?.verified_on} </Td>
+                            ) : (
+                              <Td>N/A</Td>
+                            )}
+                          </Tr>
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </TabPanel>
+                </TabPanels>
               </Tabs>
             </Box>
           </Box>

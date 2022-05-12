@@ -24,6 +24,9 @@ import { useForm } from 'react-hook-form';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { validationSchema } from 'modules/auth/register/register.validation';
+import { getValueByPathname } from 'utils/utils';
+import InputFormControl from 'components/ui/InputFormControl';
+
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
   handleSignUpWithEmail: (data: any) => void;
@@ -36,13 +39,21 @@ interface IFormInputs {
   username: string;
   password: string;
 }
+
+// const validationSchema = yup.object().shape({
+//   username: yup.string().email('Email is not valid').required('Email is required'),
+//   password: yup.string().required('Password is required')
+// });
+
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<IFormInputs>();
+  } = useForm<IFormInputs>({
+    resolver: yupResolver(validationSchema)
+  });
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
 
@@ -90,55 +101,48 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
           width={'100%'}
           position={'relative'}
           bottom={5}>
-          <form onSubmit={handleSubmit(props.handleSignUpWithEmail)}>
+          <form onSubmit={handleSubmit(props.handleSignUpWithEmail)} noValidate>
             <Stack spacing={4}>
-              <FormControl id="email" isInvalid={props.isUsernameError}>
-                <Input
-                  type="email"
-                  {...register('username')}
-                  height={'64px'}
-                  placeholder="Email Address"
-                />
-                {props.isUsernameError && (
-                  <FormErrorMessage>
-                    This username is already used , please change and retry,
-                  </FormErrorMessage>
-                )}
-              </FormControl>
-              <FormControl id="password" isInvalid={props.isPasswordError}>
-                <InputGroup>
-                  <Input
-                    type={show ? 'text' : 'password'}
-                    {...register('password')}
-                    height={'64px'}
-                    placeholder="Password"
-                  />
-                  <InputRightElement width="5.5rem" my={3}>
-                    <Button h="2.75rem" size="md" onClick={handleClick}>
-                      {show ? 'Hide' : 'Show'}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-                {!props.isPasswordError ? (
-                  <FormHelperText>
-                    * At least 8 characters in length * Contain at least 3 of the following 4 types
-                    of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers
-                    (i.e. 0-9) * special characters (e.g. !@#$%^&*)
-                  </FormHelperText>
-                ) : (
-                  <FormErrorMessage>
-                    * At least 8 characters in length * Contain at least 3 of the following 4 types
-                    of characters: * lower case letters (a-z) * upper case letters (A-Z) *
-                    numbers(i.e. 0-9) * special characters (e.g. !@#$%^&*)
-                  </FormErrorMessage>
-                )}
-              </FormControl>
+              <InputFormControl
+                controlId=""
+                {...register('username')}
+                paddingY={6}
+                data-testid="username-field"
+                placeholder="Email Address"
+                isInvalid={!!getValueByPathname(errors, 'username')}
+                formHelperText={getValueByPathname(errors, 'username')?.message}
+              />
+
+              <InputFormControl
+                controlId=""
+                {...register('password')}
+                paddingY={6}
+                data-testid="password-field"
+                placeholder="Password"
+                hasBtn
+                handleFn={handleClick}
+                setBtnName={show ? 'Hide' : 'Show'}
+                isInvalid={!!getValueByPathname(errors, 'password')}
+                type={show ? 'text' : 'password'}
+                formHelperText={
+                  getValueByPathname(errors, 'password') ? (
+                    getValueByPathname(errors, 'password')?.message
+                  ) : (
+                    <>
+                      * At least 8 characters in length * Contain at least 3 of the following 4
+                      types of characters: * lower case letters (a-z) * upper case letters (A-Z) *
+                      numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)
+                    </>
+                  )
+                }
+              />
               <Stack spacing={10}>
                 <Button
                   bg={colors.system.blue}
                   color={'white'}
-                  height={'64px'}
+                  py={6}
                   type="submit"
+                  borderRadius={'none'}
                   isLoading={props.isLoading}
                   _hover={{
                     bg: '#10aaed'
