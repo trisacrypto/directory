@@ -72,7 +72,8 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               'td:nth-child(2)': { maxWidth: '75%' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
-                width: '50%'
+                width: '50%',
+                paddingLeft: '1rem'
               },
               td: {
                 borderBottom: 'none',

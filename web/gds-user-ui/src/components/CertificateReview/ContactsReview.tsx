@@ -52,7 +52,8 @@ const ContactsReview = (props: ContactsProps) => {
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
-                width: '50%'
+                width: '50%',
+                paddingLeft: '1rem'
               },
               td: {
                 borderBottom: 'none',

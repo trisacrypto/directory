@@ -86,7 +86,9 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 }
               }}>
               <Tr>
-                <Td borderBottom={'none'}>Website</Td>
+                <Td borderBottom={'none'} pl={'1rem !important'}>
+                  Website
+                </Td>
                 <Td borderBottom={'none'} whiteSpace="break-spaces" lineHeight={1.5}>
                   {basicDetail.website ? (
                     <Link href={basicDetail.website} isExternal>
@@ -99,19 +101,19 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>Business Category</Td>
+                <Td pl={'1rem !important'}>Business Category</Td>
                 <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category] || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td whiteSpace="break-spaces" lineHeight={1.5}>
+                <Td pl={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
                   Date of Incorporation/ Establishment
                 </Td>
                 <Td>{basicDetail.established_on || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
-                <Td whiteSpace="break-spaces" lineHeight={1.5}>
+                <Td pl={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
                   VASP Category
                 </Td>
                 <Td>

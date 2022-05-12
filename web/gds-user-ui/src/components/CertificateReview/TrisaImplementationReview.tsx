@@ -56,7 +56,8 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                   fontSize: '1rem'
                 },
                 'td:first-child': {
-                  width: '50%'
+                  width: '50%',
+                  paddingLeft: '1rem'
                 },
                 td: {
                   borderBottom: 'none',
