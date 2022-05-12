@@ -180,7 +180,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
                           <Tr>
                             <Td>TRISA Verification</Td>
-                            {result[1]?.verified_on ? (
+                            {result[0]?.verified_on ? (
                               <Td> VERIFIED ON {result[0]?.verified_on} </Td>
                             ) : (
                               <Td>N/A</Td>
