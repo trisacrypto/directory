@@ -67,7 +67,8 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold', paddingLeft: 0 },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
-                width: '50%'
+                width: '50%',
+                paddingLeft: '1rem'
               },
               td: {
                 borderBottom: 'none',
@@ -82,12 +83,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 }
               }}>
               <Tr>
-                <Td
-                  fontSize={'1rem'}
-                  fontWeight="bold"
-                  colSpan={3}
-                  background="#E5EDF1"
-                  pl={'1rem !important'}>
+                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
                   Name Identifiers
                 </Td>
               </Tr>
@@ -153,7 +149,9 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={0}>Addresses</Td>
+                <Td pt={0} pl={'1rem !important'}>
+                  Addresses
+                </Td>
                 <Td>
                   <Tr>
                     <Td paddingLeft={0} pt={0}>
@@ -171,7 +169,9 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={0}>Country of Registration</Td>
+                <Td pt={0} pl={'1rem !important'}>
+                  Country of Registration
+                </Td>
                 <Td paddingLeft={0} pt={0}>
                   {(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}
                 </Td>
@@ -185,8 +185,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                   pt={'2rem'}
                   fontWeight="bold"
                   colSpan={3}
-                  background="#E5EDF1"
-                  pl={'1rem !important'}>
+                  background="#E5EDF1">
                   <Text mb={1}>National Identification</Text>
                 </Td>
               </Tr>
