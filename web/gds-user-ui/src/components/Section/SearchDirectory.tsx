@@ -169,6 +169,23 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>TRISA Member ID</Td>
                             <Td>{result[0]?.id}</Td>
                           </Tr>
+                          <Tr>
+                            <Td>Country</Td>
+                            <Td>
+                              {getCountryName(result[0]?.country as IsoCountryCode)}
+                              {'  '}
+                              {countryCodeEmoji(result[0]?.country) || 'N/A'}
+                            </Td>
+                          </Tr>
+
+                          <Tr>
+                            <Td>TRISA Verification</Td>
+                            {result[1]?.verified_on ? (
+                              <Td> VERIFIED ON {result[0]?.verified_on} </Td>
+                            ) : (
+                              <Td>N/A</Td>
+                            )}
+                          </Tr>
                         </Tbody>
                       </Table>
                     </TableContainer>
