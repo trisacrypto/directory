@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Button, Heading, VStack, Stack, Text, useDisclosure, Box, Flex } from '@chakra-ui/react';
+import {
+  Button,
+  Heading,
+  VStack,
+  Stack,
+  Text,
+  useDisclosure,
+  Box,
+  Flex,
+  Link
+} from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 interface ReviewSubmitProps {
@@ -62,7 +72,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             justifyContent="space-around"
             py={14}
             width="100%"
-            spacing={4}>
+            spacing={10}>
             <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
@@ -87,7 +97,11 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 </Text>
                 <Text>
                   If you would like to edit your registration form before submitting, please return
-                  to the Review page.
+                  to the{' '}
+                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                    Review page
+                  </Link>
+                  .
                 </Text>
               </Stack>
               <Stack
@@ -117,7 +131,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               </Stack>
             </Stack>
 
-            <Box bg={'white'}>
+            <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
                   MAINNET SUBMISSION
@@ -141,7 +155,10 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 </Text>
                 <Text>
                   If you would like to edit your registration form before submitting, please return
-                  to the Review page.
+                  to the{' '}
+                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                    Review page
+                  </Link>
                 </Text>
               </Stack>
               <Stack
@@ -169,7 +186,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   Submit MainNet Registration
                 </Button>
               </Stack>
-            </Box>
+            </Stack>
           </Stack>
 
           <Box alignItems={'center'} textAlign="center" mx={'auto'}>

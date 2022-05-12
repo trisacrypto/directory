@@ -1,7 +1,6 @@
 import { extendTheme, ThemeConfig } from '@chakra-ui/react';
-
+import { mode } from '@chakra-ui/theme-tools';
 const config: ThemeConfig = {
-  initialColorMode: 'light',
   useSystemColorMode: false
 };
 
@@ -29,6 +28,17 @@ const fonts = {
   body: 'Open Sans, sans-serif'
 };
 
-const customTheme = extendTheme({ colors, config, fonts });
+const customTheme = extendTheme({
+  colors,
+  config,
+  fonts,
+  styles: {
+    global: (props: any) => ({
+      body: {
+        bg: mode('#F7F8FC', 'dark')(props)
+      }
+    })
+  }
+});
 
 export default customTheme;
