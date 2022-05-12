@@ -10,6 +10,14 @@
 * {
   /* color: #221f1f; */
 }
+html, body{
+  height: '100%';
+  font-family: 'Open sans', sans-serif;
+}
+body {
+
+  background-color:'#F7F8FC' !important
+}
 
 .heading {
   font-family: 'Roboto Slab', serif !important;
@@ -22,3 +30,4 @@ p {
 .chakra-alert__title {
   color: '#fff !important';
 }
+
