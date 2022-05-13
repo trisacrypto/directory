@@ -24,11 +24,17 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
   } = useFormContext();
   const nationalIdentificationOptions = getNationalIdentificationOptions();
   const countries = getCountriesOptions();
-  const registrationAuthority = getRegistrationAuthoritiesOptions();
+
   const NationalIdentificationType = watch(
     'entity.national_identification.national_identifier_type'
   );
-
+  const getCountryOfRegistration = watch('entity.country_of_registration');
+  console.log('getCountryOfRegistration', getCountryOfRegistration);
+  const registrationAuthority = getRegistrationAuthoritiesOptions(getCountryOfRegistration);
+  const getRegistrationAuthority = () => {
+    // setValue('entity.national_identification.registration_authority', 'RA777777');
+    return getRegistrationAuthoritiesOptions(getCountryOfRegistration);
+  };
   // eslint-disable-next-line prefer-const
   let inputRegRef = useRef<any>();
 
@@ -123,7 +129,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
             render={({ field }) => (
               <SelectFormControl
                 ref={field.ref}
-                options={registrationAuthority}
+                options={getRegistrationAuthority()}
                 value={registrationAuthority.find((option) => option.value === field.value)}
                 onChange={(newValue: any) => field.onChange(newValue.value)}
                 label="Registration Authority"

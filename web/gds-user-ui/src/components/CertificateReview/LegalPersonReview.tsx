@@ -92,9 +92,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td fontStyle={'italic'} pt={0}>
-                  The name and type of name by which the legal person is known.
-                </Td>
+                <Td pt={0}>The name and type of name by which the legal person is known.</Td>
                 <Td>
                   <Tr>
                     {legalPerson.name?.name_identifiers?.map(

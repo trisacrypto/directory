@@ -78,7 +78,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
           <Stack direction={['column', 'row']} w={'100%'} pb={10}>
             <Text fontSize={'lg'} color={'black'} fontWeight={'semibold'} pt={1}>
-              Directory lookup
+              Directory Lookup
             </Text>
             <Box width={{ md: '70%', sm: '90%' }}>
               <form onSubmit={(e) => handleSubmit(e, search)}>

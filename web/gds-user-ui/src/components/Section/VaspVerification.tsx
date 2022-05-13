@@ -76,12 +76,12 @@ export default function VaspVerification() {
               several parties in your organization.
             </Text>
           </Box>
-          <Box mx={20} pt={10}>
+          <Box mx={20} pt={'10px'}>
             <Box
               display={{ md: 'grid' }}
               gridTemplateColumns={{ md: 'repeat(5,1fr)' }}
               color={'black'}
-              gap={10}
+              gap={'10px'}
               alignItems="center">
               <>
                 <Line title="Sections & Details" fontWeight={'bold'} colSpan={3}>

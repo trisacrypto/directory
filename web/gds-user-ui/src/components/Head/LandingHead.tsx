@@ -33,7 +33,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               fontSize={{ base: '1rem', md: 24, sm: 'lg' }}
               color="#fefefe">
               Become Travel Rule compliant. <br />
-              Apply to Become a TRISA certified Virtual Asset Service Provider.
+              Apply to Become a TRISA-certified Virtual Asset Service Provider.
             </Text>
           </>
         )}
