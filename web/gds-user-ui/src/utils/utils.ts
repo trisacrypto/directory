@@ -57,6 +57,8 @@ export const getDomain = (url: string | URL) => {
   }
 };
 
+export const getRegistrationAuthorities = () => [...new Set(registrationAuthority)];
+
 export const getRegistrationAuthoritiesOptions = (country?: any) => {
   const newArray = [...Array.from(new Set(registrationAuthority))];
   if (country) {
