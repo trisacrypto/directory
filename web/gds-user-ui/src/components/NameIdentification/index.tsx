@@ -9,9 +9,53 @@ import {
 } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
-import { getRegistrationAuthoritiesOptions, getValueByPathname } from 'utils/utils';
+import {
+  getRegistrationAuthorities,
+  getRegistrationAuthoritiesOptions,
+  getValueByPathname
+} from 'utils/utils';
 
 interface NationalIdentificationProps {}
+
+const RegistrationAuthorityFormHelperText = ({ option }: { option: string }) => {
+  const registrationAuthority = React.useMemo(() => {
+    const _authority = getRegistrationAuthorities().find(
+      (authority) => authority.option === option
+    );
+    return _authority;
+  }, [option]);
+
+  return (
+    <Text>
+      For identifiers other than LEI specify the registration authority from the following list. See{' '}
+      <Link
+        href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
+        color="blue.500"
+        isExternal>
+        GLEIF Registration Authorities
+      </Link>{' '}
+      for more details on how to look up a registration authority. If in doubt, use RA777777 -
+      "General Government Entities" which specifies the default registration authority for your
+      country of registration.
+      {registrationAuthority?.website && (
+        <Text color={'#1a202c'} fontSize="sm" mt={3}>
+          Webiste:{' '}
+          <Link color={'blue.400'} isExternal>
+            {registrationAuthority?.website}
+          </Link>
+        </Text>
+      )}
+      {registrationAuthority?.comments && (
+        <Text color={'#1a202c'} fontSize="sm" mt={2}>
+          Comments:{' '}
+          <Text fontStyle={'italic'} as="span">
+            {registrationAuthority?.comments}
+          </Text>
+        </Text>
+      )}
+    </Text>
+  );
+};
 
 const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
   const {
@@ -29,7 +73,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
     'entity.national_identification.national_identifier_type'
   );
   const getCountryOfRegistration = watch('entity.country_of_registration');
-  console.log('getCountryOfRegistration', getCountryOfRegistration);
+
   const registrationAuthority = getRegistrationAuthoritiesOptions(getCountryOfRegistration);
   const getRegistrationAuthority = () => {
     // setValue('entity.national_identification.registration_authority', 'RA777777');
@@ -138,19 +182,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
                 formHelperText={
                   errors?.entity?.national_identification?.registration_authority?.message || (
-                    <Text>
-                      For identifiers other than LEI specify the registration authority from the
-                      following list. See{' '}
-                      <Link
-                        href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
-                        color="blue.500"
-                        isExternal>
-                        GLEIF Registration Authorities
-                      </Link>{' '}
-                      for more details on how to look up a registration authority. If in doubt, use
-                      RA777777 - "General Government Entities" which specifies the default
-                      registration authority for your country of registration.
-                    </Text>
+                    <RegistrationAuthorityFormHelperText option={field.value} />
                   )
                 }
               />
