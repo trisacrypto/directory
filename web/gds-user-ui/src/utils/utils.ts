@@ -57,8 +57,18 @@ export const getDomain = (url: string | URL) => {
   }
 };
 
-export const getRegistrationAuthoritiesOptions = () => {
-  return [...Array.from(new Set(registrationAuthority))].map((v: any) => ({
+export const getRegistrationAuthoritiesOptions = (country?: any) => {
+  const newArray = [...Array.from(new Set(registrationAuthority))];
+  if (country) {
+    return newArray
+      .filter((v: any) => v.country === country)
+      .map((v: any) => ({
+        value: v.option,
+        label: v.organization || v.option,
+        isDisabled: !!v.isDisabled
+      }));
+  }
+  return newArray.map((v: any) => ({
     value: v.option,
     label: v.organization || v.option,
     isDisabled: !!v.isDisabled

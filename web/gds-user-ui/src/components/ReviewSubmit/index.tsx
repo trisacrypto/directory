@@ -148,7 +148,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 <Text>
                   A physical verification check in the form of a phone call{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    is not required
+                    is required
                   </Text>{' '}
                   for MainNet registration so your TestNet certificate will be issued upon review by
                   the validation team.
