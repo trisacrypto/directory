@@ -97,6 +97,12 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [NationalIdentificationType]);
+
+  useEffect(() => {
+    setValue('entity.national_identification.registration_authority', 'RA777777');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getCountryOfRegistration]);
+
   return (
     <FormLayout>
       <Heading size="md">National Identification</Heading>

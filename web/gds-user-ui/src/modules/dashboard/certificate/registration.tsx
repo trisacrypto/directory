@@ -20,6 +20,7 @@ import {
 } from 'utils/localStorageHelper';
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { colors } from 'utils/theme';
+import { isProdEnv } from 'application/config';
 const Certificate: React.FC = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
@@ -151,7 +152,7 @@ const Certificate: React.FC = () => {
 
               <Box width={'100%'}>
                 <TestNetCertificateProgressBar />
-                <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
+                {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
               <HStack width="100%" spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
@@ -162,12 +163,16 @@ const Certificate: React.FC = () => {
                       borderRadius={5}
                       type="button"
                       w="100%"
+                      _active={{ outline: 'none' }}
+                      _focus={{ outline: 'none' }}
                       maxW="13rem">
                       Save & Previous
                     </FormButton>
                     <FormButton
                       borderRadius={5}
                       w="100%"
+                      _active={{ outline: 'none' }}
+                      _focus={{ outline: 'none' }}
                       maxW="13rem"
                       backgroundColor="#FF7A59"
                       type="submit"
