@@ -158,7 +158,7 @@ export const validationSchema = [
   yup.object().shape({
     trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+      endpoint: yup.string().matches(trisaEndpointPattern, 'TRISA endpoint is not valid'),
       common_name: yup
         .string()
         .matches(
@@ -176,7 +176,7 @@ export const validationSchema = [
             return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
           }
         )
-        .matches(trisaEndpointPattern, 'trisa endpoint is not valid'),
+        .matches(trisaEndpointPattern, 'TRISA endpoint is not valid'),
       common_name: yup
         .string()
         .matches(
