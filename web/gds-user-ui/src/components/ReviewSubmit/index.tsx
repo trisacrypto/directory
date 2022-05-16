@@ -150,7 +150,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   <Text as="span" fontWeight={'bold'}>
                     is required
                   </Text>{' '}
-                  for MainNet registration so your TestNet certificate will be issued upon review by
+                  for MainNet registration so your MainNet certificate will be issued upon review by
                   the validation team.
                 </Text>
                 <Text>
