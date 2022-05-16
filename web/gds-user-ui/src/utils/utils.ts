@@ -71,9 +71,11 @@ export const getRegistrationAuthoritiesOptions = (country?: any) => {
       )
       .map((v: RegistrationAuthority) => {
         const label = v.organization ? `${v.option} - ${v.organization}` : `${v.option}`;
+        const l =
+          v.juridisction && v.juridisction !== v.country ? `${label} - ${v.juridisction}` : label;
         return {
           value: v.option,
-          label,
+          label: l,
           isDisabled: !!v.isDisabled
         };
       });
