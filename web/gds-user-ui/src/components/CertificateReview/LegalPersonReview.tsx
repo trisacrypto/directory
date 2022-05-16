@@ -182,7 +182,12 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                         }
                       )} */}
                     </Td>
-                    <Td pt={0}>({legalPerson?.geographic_addresses?.[0] && 'Legal Person'})</Td>
+                    {legalPerson?.geographic_addresses?.length === 1 && (
+                      <Td pt={0}>
+                        ({(addressType as any)[legalPerson?.geographic_addresses?.[0].address_type]}
+                        )
+                      </Td>
+                    )}
                   </Tr>
                 </Td>
               </Tr>
