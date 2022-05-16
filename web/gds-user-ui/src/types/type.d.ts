@@ -16,6 +16,8 @@ type RegistrationAuthority = {
   register: string;
   organization: string;
   website: string;
+  jurisdiction: string;
+  country_name: string;
   comments: string;
   isDisabled?: boolean;
 };

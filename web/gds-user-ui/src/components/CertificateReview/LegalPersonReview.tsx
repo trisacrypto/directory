@@ -21,6 +21,7 @@ import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
 import { COUNTRIES } from 'constants/countries';
 import { renderAddress } from 'utils/address-utils';
+import { addressType } from 'constants/address';
 interface LegalReviewProps {}
 // NOTE: need some clean up.
 
@@ -167,7 +168,10 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                       {legalPerson?.geographic_addresses?.map((address: any, index: number) => (
                         <React.Fragment key={index}>
                           {legalPerson?.geographic_addresses?.length > 1 && (
-                            <Text pb={1}> Address {index + 1} : </Text>
+                            <Text py={1} fontWeight={'bold'}>
+                              {' '}
+                              Address {index + 1} : {(addressType as any)[address.address_type]}
+                            </Text>
                           )}
                           {renderAddress(address)}
                         </React.Fragment>
@@ -178,7 +182,12 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                         }
                       )} */}
                     </Td>
-                    <Td pt={0}>({legalPerson?.geographic_addresses?.[0] && 'Legal Person'})</Td>
+                    {legalPerson?.geographic_addresses?.length === 1 && (
+                      <Td pt={0}>
+                        ({(addressType as any)[legalPerson?.geographic_addresses?.[0].address_type]}
+                        )
+                      </Td>
+                    )}
                   </Tr>
                 </Td>
               </Tr>
