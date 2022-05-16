@@ -51,7 +51,7 @@ export default function JoinUsSection() {
                 <Link
                   isExternal
                   textDecoration={'underline'}
-                  href="htps://trisa.io/getting-started-with-trisa/">
+                  href="https://trisa.io/getting-started-with-trisa/">
                   Learn how TRISA works.
                 </Link>
               </Text>

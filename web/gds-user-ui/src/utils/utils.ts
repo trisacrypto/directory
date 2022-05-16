@@ -1,8 +1,10 @@
 import { left } from '@popperjs/core';
 import _ from 'lodash';
-import { StepStatus } from 'types/type';
+import { RegistrationAuthority, StepStatus } from 'types/type';
 import { TStep } from './localStorageHelper';
 import registrationAuthority from './registration-authority.json';
+
+const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -63,16 +65,19 @@ export const getRegistrationAuthoritiesOptions = (country?: any) => {
   const newArray = [...Array.from(new Set(registrationAuthority))];
   if (country) {
     return newArray
-      .filter((v: any) => v.country === country)
-      .map((v: any) => ({
+      .filter(
+        (v: RegistrationAuthority) =>
+          v.country === country || v.option === DEFAULT_REGISTRATION_AUTHORITY
+      )
+      .map((v: RegistrationAuthority) => ({
         value: v.option,
-        label: v.organization || v.option,
+        label: `${v.option} - ${v.organization}`,
         isDisabled: !!v.isDisabled
       }));
   }
-  return newArray.map((v: any) => ({
+  return newArray.map((v: RegistrationAuthority) => ({
     value: v.option,
-    label: v.organization || v.option,
+    label: `${v.option} ${v.organization}`,
     isDisabled: !!v.isDisabled
   }));
 };

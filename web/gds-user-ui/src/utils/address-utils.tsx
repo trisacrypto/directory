@@ -28,16 +28,16 @@ const hasAddressFieldAndLine = (address: any) => {
 };
 
 export const renderLines = (address: any) => (
-  <address data-testid="addressLine">
+  <div data-testid="addressLine">
     {address.address_line.map(
       (addressLine: any, index: number) => addressLine && <div key={index}>{addressLine} </div>
     )}
     <div>{address?.country}</div>
-  </address>
+  </div>
 );
 
 export const renderField = (address: any) => (
-  <address data-testid="addressField">
+  <div data-testid="addressField">
     {address.sub_department ? (
       <>
         {address?.sub_department} <br />
@@ -72,7 +72,7 @@ export const renderField = (address: any) => (
       </>
     ) : null}
     {address?.country}
-  </address>
+  </div>
 );
 
 export const renderAddress = (address: any) => {

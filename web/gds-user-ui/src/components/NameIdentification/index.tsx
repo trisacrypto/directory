@@ -39,7 +39,7 @@ const RegistrationAuthorityFormHelperText = ({ option }: { option: string }) => 
       country of registration.
       {registrationAuthority?.website && (
         <Text color={'#1a202c'} fontSize="sm" mt={3}>
-          Webiste:{' '}
+          Website:{' '}
           <Link color={'blue.400'} isExternal>
             {registrationAuthority?.website}
           </Link>
@@ -84,8 +84,9 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
 
   useEffect(() => {
     if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
-      setValue('entity.national_identification.registration_authority', '');
+      setValue('entity.national_identification.registration_authority', 'RA777777');
       clearErrors('entity.national_identification.registration_authority');
+
       inputRegRef?.current?.clear();
     }
     if (
