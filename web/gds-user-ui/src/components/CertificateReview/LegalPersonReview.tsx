@@ -165,7 +165,12 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                   <Tr>
                     <Td paddingLeft={'0px !important'} pt={0}>
                       {legalPerson?.geographic_addresses?.map((address: any, index: number) => (
-                        <React.Fragment key={index}>{renderAddress(address)}</React.Fragment>
+                        <React.Fragment key={index}>
+                          {legalPerson?.geographic_addresses?.length > 1 && (
+                            <Text pb={1}> Address {index + 1} : </Text>
+                          )}
+                          {renderAddress(address)}
+                        </React.Fragment>
                       ))}
                       {/* {legalPerson?.geographic_addresses?.[0]?.address_line.map(
                         (line: any, i: any) => {
@@ -223,11 +228,8 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td>Country of Issue</Td>
-                <Td>
-                  {(COUNTRIES as any)[legalPerson?.national_identification?.country_of_issue] ||
-                    'N/A'}
-                </Td>
+                <Td>Country of Registration</Td>
+                <Td>{(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td pt={0}>Reg Authority</Td>
