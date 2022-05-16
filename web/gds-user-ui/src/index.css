@@ -10,13 +10,14 @@
 * {
   /* color: #221f1f; */
 }
-html, body{
+html,
+body {
   height: '100%';
   font-family: 'Open sans', sans-serif;
+  scroll-behavior: smooth;
 }
 body {
-
-  background-color:'#F7F8FC' !important
+  background-color: '#F7F8FC' !important;
 }
 
 .heading {
@@ -30,4 +31,3 @@ p {
 .chakra-alert__title {
   color: '#fff !important';
 }
-

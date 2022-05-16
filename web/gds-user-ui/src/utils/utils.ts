@@ -69,17 +69,23 @@ export const getRegistrationAuthoritiesOptions = (country?: any) => {
         (v: RegistrationAuthority) =>
           v.country === country || v.option === DEFAULT_REGISTRATION_AUTHORITY
       )
-      .map((v: RegistrationAuthority) => ({
-        value: v.option,
-        label: `${v.option} - ${v.organization}`,
-        isDisabled: !!v.isDisabled
-      }));
+      .map((v: RegistrationAuthority) => {
+        const label = v.organization ? `${v.option} - ${v.organization}` : `${v.option}`;
+        return {
+          value: v.option,
+          label,
+          isDisabled: !!v.isDisabled
+        };
+      });
   }
-  return newArray.map((v: RegistrationAuthority) => ({
-    value: v.option,
-    label: `${v.option} ${v.organization}`,
-    isDisabled: !!v.isDisabled
-  }));
+  return newArray.map((v: RegistrationAuthority) => {
+    const label = v.organization ? `${v.option} - ${v.organization}` : `${v.option}`;
+    return {
+      value: v.option,
+      label,
+      isDisabled: !!v.isDisabled
+    };
+  });
 };
 
 export const mapTrixoFormForBff = (data: any) => {
