@@ -99,9 +99,11 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                               {nameIdentifier.legal_person_name || 'N/A'}
                             </Td>
                             <Td paddingLeft={0} border="none">
+                              (
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
+                              )
                             </Td>
                           </React.Fragment>
                         );
@@ -117,9 +119,11 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                               {nameIdentifier.legal_person_name}
                             </Td>
                             <Td paddingLeft={0} pt={0} border="none">
+                              (
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
+                              )
                             </Td>
                           </React.Fragment>
                         );
@@ -135,9 +139,11 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                               {nameIdentifier.legal_person_name}
                             </Td>
                             <Td paddingLeft={0} pt={0} border="none">
+                              (
                               {getNameIdentiferTypeLabel(
                                 nameIdentifier.legal_person_name_identifier_type
                               )}
+                              )
                             </Td>
                           </React.Fragment>
                         );
@@ -162,7 +168,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                         }
                       )} */}
                     </Td>
-                    <Td pt={0}>{legalPerson?.geographic_addresses?.[0] && 'Legal Person'}</Td>
+                    <Td pt={0}>({legalPerson?.geographic_addresses?.[0] && 'Legal Person'})</Td>
                   </Tr>
                 </Td>
               </Tr>
@@ -171,7 +177,9 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                   Country of Registration
                 </Td>
                 <Td paddingLeft={0} pt={0}>
-                  {(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}
+                  <Tr>
+                    <Td> {(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}</Td>
+                  </Tr>
                 </Td>
               </Tr>
               <Tr>

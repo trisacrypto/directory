@@ -66,13 +66,13 @@ export const getRegistrationAuthoritiesOptions = (country?: any) => {
       .filter((v: any) => v.country === country)
       .map((v: any) => ({
         value: v.option,
-        label: v.organization || v.option,
+        label: `${v.option} - ${v.organization}`,
         isDisabled: !!v.isDisabled
       }));
   }
   return newArray.map((v: any) => ({
     value: v.option,
-    label: v.organization || v.option,
+    label: `${v.option} ${v.organization}`,
     isDisabled: !!v.isDisabled
   }));
 };

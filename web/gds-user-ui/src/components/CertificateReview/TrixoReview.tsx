@@ -97,12 +97,9 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     ? trixo?.other_jurisdictions?.map((o: any, i: any) => {
                         if (o?.regulator_name?.length > 0) {
                           return (
-                            <>
-                              <Tr>
-                                <Td>{o.country}</Td>
-                                <Td>{o.regulator_name}</Td>
-                              </Tr>
-                            </>
+                            <Text>
+                              {o.country} : {o.regulator_name}{' '}
+                            </Text>
                           );
                         }
                       })
@@ -177,14 +174,12 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               <Tr>
                 <Td>At what threshold and currency does your organization conduct KYC?</Td>
                 <Td pl={0}>
-                  <Tr>
-                    <Td>
-                      {currencyFormatter(trixo.kyc_threshold, {
-                        currency: trixo.kyc_threshold_currency
-                      }) || 'N/A'}
-                    </Td>
-                    <Td pl={0}>{trixo.kyc_threshold_currency || 'N/A'}</Td>
-                  </Tr>
+                  <Text>
+                    {currencyFormatter(trixo.kyc_threshold, {
+                      currency: trixo.kyc_threshold_currency
+                    }) || 'N/A'}{' '}
+                    {trixo.kyc_threshold_currency || 'N/A'}
+                  </Text>
                 </Td>
                 <Td></Td>
               </Tr>
@@ -209,32 +204,21 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               <Tr>
                 <Td>Applicable Regulations</Td>
                 <Td>
-                  <Tr>
-                    <Td pl={0}>
-                      {trixo?.applicable_regulations?.map((reg: any) => {
-                        if (reg?.name.length > 0) {
-                          return (
-                            <React.Fragment key={reg.name}>{reg.name || 'N/A'}</React.Fragment>
-                          );
-                        }
-                      })}
-                    </Td>
-                    <Td></Td>
-                  </Tr>
+                  {trixo?.applicable_regulations?.map((reg: any) => {
+                    if (reg?.name.length > 0) {
+                      return <Text>{reg.name || 'N/A'}</Text>;
+                    }
+                  })}
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>What is the minimum threshold for Travel Rule compliance?</Td>
                 <Td pl={0}>
-                  <Tr>
-                    <Td>
-                      {currencyFormatter(trixo.compliance_threshold, {
-                        currency: trixo.compliance_threshold_currency
-                      }) || 'N/A'}
-                    </Td>
-                    <Td pl={0}>{trixo.compliance_threshold_currency || 'N/A'}</Td>
-                  </Tr>
+                  {currencyFormatter(trixo.compliance_threshold, {
+                    currency: trixo.compliance_threshold_currency
+                  }) || 'N/A'}{' '}
+                  {trixo.compliance_threshold_currency || 'N/A'}
                 </Td>
                 <Td></Td>
               </Tr>
