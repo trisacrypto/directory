@@ -1,0 +1,142 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<BasicDetailsReview /> should match snapshot 1`] = `
+<div>
+  <div
+    class="css-lh1q29"
+  >
+    <div
+      class="chakra-stack css-1485kjp"
+    >
+      <div
+        class="css-18uk989"
+      >
+        <h2
+          class="chakra-heading css-13m0iy4"
+        >
+          Section 1: Basic Details
+        </h2>
+        <button
+          class="chakra-button css-qhu6kf"
+          type="button"
+        >
+          Edit
+        </button>
+      </div>
+      <div
+        class="chakra-stack css-16ztyi4"
+      >
+        <table
+          class="chakra-table css-161beip"
+          role="table"
+        >
+          <tbody
+            class="css-1sxjzw4"
+          >
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-1ljq7gd"
+                role="gridcell"
+              >
+                Website
+              </td>
+              <td
+                class="css-1vffylx"
+                role="gridcell"
+              >
+                <a
+                  class="chakra-link css-f4h6uy"
+                  href="http://kyc.com"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  http://kyc.com
+                </a>
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              />
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-16ezt52"
+                role="gridcell"
+              >
+                Business Category
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                Government Entity
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              />
+            </tr>
+            <tr
+              class="css-1egjslo"
+              role="row"
+            >
+              <td
+                class="css-16g2rc2"
+                role="gridcell"
+              >
+                Date of Incorporation/ Establishment
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                2022-04-22
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              />
+            </tr>
+            <tr
+              class="css-1egjslo"
+              role="row"
+            >
+              <td
+                class="css-16g2rc2"
+                role="gridcell"
+              >
+                VASP Category
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                <span
+                  class="css-12dplt7"
+                >
+                  Person-to-Person Exchange
+                </span>
+                <span
+                  class="css-12dplt7"
+                >
+                  Kiosk / Crypto ATM Operator
+                </span>
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+`;

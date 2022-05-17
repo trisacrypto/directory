@@ -261,7 +261,7 @@ describe('<Certificate />', () => {
         }
       };
       const trisaImplementationFormValidationMessages = [
-        'trisa endpoint is not valid',
+        'TRISA endpoint is not valid',
         'Common name should not contain special characters, no spaces and must have a dot(.) in it',
         'TestNet and MainNet endpoints should not be the same',
         'Common name should not contain special characters, no spaces and must have a dot(.) in it'
@@ -300,7 +300,7 @@ describe('<Certificate />', () => {
         }
       };
       const trixoQuestionnaireFormValidationMessages = [
-        'trisa endpoint is not valid',
+        'TRISA endpoint is not valid',
         'Common name should not contain special characters, no spaces and must have a dot(.) in it',
         'TestNet and MainNet endpoints should not be the same',
         'Common name should not contain special characters, no spaces and must have a dot(.) in it'
