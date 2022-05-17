@@ -17,6 +17,7 @@ ARG REACT_APP_TRISA_BASE_URL="https://bff.vaspdirectory.net/v1/"
 ARG REACT_APP_ANALYTICS_ID=""
 ARG REACT_APP_VERSION_NUMBER=""
 ARG REACT_APP_GIT_REVISION=""
+ARG REACT_APP_SENTRY_DSN=""
 
 # Build app with react-scripts
 COPY web/gds-user-ui/ ./

@@ -5,6 +5,8 @@ ARG FINAL_IMAGE=debian:buster-slim
 # Build stage
 FROM ${BUILDER_IMAGE} as builder
 
+ARG GIT_REVISION=""
+
 # Ensure ca-certificates are up to date
 RUN update-ca-certificates
 
@@ -28,8 +30,8 @@ COPY proto ./proto
 RUN go test -timeout 180s ./...
 
 # Build binaries
-RUN go build -v -o /go/bin/trtl ./cmd/trtl
-RUN go build -v -o /go/bin/gdsutil ./cmd/gdsutil
+RUN go build -v -o /go/bin/trtl -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/trtl
+RUN go build -v -o /go/bin/gdsutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/gdsutil
 
 # Final Stage
 FROM ${FINAL_IMAGE} AS final

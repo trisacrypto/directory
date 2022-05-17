@@ -22,6 +22,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -69,6 +75,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_REVISION=${{ steps.vars.outputs.revision }}
 
   # GDS Backend for Front-End Service
   gds-bff:
@@ -77,6 +85,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
 
       - name: Docker Metadata
         id: meta
@@ -125,6 +139,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_REVISION=${{ steps.vars.outputs.revision }}
 
   # GDS User UI: vaspdirectory.net
   gds-user-ui:
@@ -132,9 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        id: checkout
         uses: actions/checkout@v2
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
       - name: Set Environment
         id: vars
@@ -193,6 +207,8 @@ jobs:
             REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/
             REACT_APP_ANALYTICS_ID=${{ secrets.REACT_APP_VASPDIRECTORY_ANALYTICS_ID }}
             REACT_APP_VERSION_NUMBER=${{ steps.vars.outputs.tag }}
+            REACT_APP_GIT_REVISION=${{ steps.vars.outputs.revision }}
+            REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_SENTRY_DSN }}
 
   # GDS Admin UI: admin.vaspdirectory.net
   gds-admin-ui:
@@ -322,6 +338,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -369,6 +391,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_REVISION=${{ steps.vars.outputs.revision }}
 
   # Initialization container for trtl statefulsets
   trtl-init:
