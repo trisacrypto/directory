@@ -4,6 +4,8 @@ services:
     build:
       context: ../
       dockerfile: ./containers/gds/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
     image: trisa/gds
     init: true
     depends_on:
@@ -71,6 +73,8 @@ services:
     build:
       context: ../
       dockerfile: ./containers/trtl/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
     image: trisa/trtl
     init: true
     ports:
@@ -111,6 +115,8 @@ services:
     build:
       context: ../
       dockerfile: ./containers/bff/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
     image: trisa/gds-bff
     init: true
     depends_on:
@@ -153,8 +159,9 @@ services:
       args:
         REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
         REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
-        REACT_APP_VERSION_NUMBER: v1.4.1.dev
+        REACT_APP_VERSION_NUMBER: v1.5.0.dev
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
+        REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN}
     image: trisa/gds-user-ui
     init: true
     depends_on:
@@ -217,6 +224,8 @@ services:
     build:
       context: ../
       dockerfile: ./containers/gds/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
     image: trisa/gds
     init: true
     depends_on:
@@ -284,6 +293,8 @@ services:
     build:
       context: ../
       dockerfile: ./containers/trtl/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
     image: trisa/trtl
     init: true
     ports:

@@ -11,7 +11,6 @@ export type TPayload = {
 };
 
 export const loadStepperFromLocalStorage = () => {
-  console.log('from here');
   try {
     const getLocalStepper: any = localStorage.getItem('trs_stepper');
     if (getLocalStepper) {
