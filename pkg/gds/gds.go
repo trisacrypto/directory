@@ -294,7 +294,7 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 	case in.Id != "":
 		// TODO: add registered directory to lookup
 		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
-			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
@@ -307,9 +307,10 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		if len(vasps) != 1 {
 			// Don't warn when common name is not found, just when multiple results are returned
 			if len(vasps) > 1 {
-				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
+				log.Debug().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
+			} else {
+				log.Debug().Msg("could not lookup VASP by common name")
 			}
-			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 
@@ -398,7 +399,7 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 	case in.Id != "":
 		// TODO: add registered directory to retrieve
 		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
-			log.Warn().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
@@ -411,9 +412,10 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 		if len(vasps) != 1 {
 			if len(vasps) > 1 {
 				// Don't warn when common name is not found, just when multiple results are returned
-				log.Warn().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
+				log.Debug().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
+			} else {
+				log.Debug().Msg("could not lookup VASP by common name")
 			}
-			log.Debug().Msg("could not lookup VASP by common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
 

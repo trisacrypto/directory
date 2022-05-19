@@ -21,7 +21,7 @@ import (
 // Test that the certificate manger correctly moves certificates across the request
 // pipeline.
 func (s *gdsTestSuite) TestCertManager() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -35,7 +35,8 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Let the certificate manager submit the certificate request
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be changed to ISSUING_CERTIFICATE
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -69,7 +70,8 @@ func (s *gdsTestSuite) TestCertManager() {
 
 	// Let the certificate manager process the Sectigo response
 	sent := time.Now()
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err = s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// Secret manager should contain the certificate
 	secret, err := sm.GetLatestVersion(ctx, "cert")
@@ -139,7 +141,7 @@ func (s *gdsTestSuite) TestCertManager() {
 
 // Test that the certificate manager is able to process an end entity profile.
 func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
 	defer s.teardownCertManager()
 	defer s.loadReferenceFixtures()
 	require := s.Require()
@@ -163,8 +165,10 @@ func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
+	err = s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should contain the new certificate
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -180,7 +184,7 @@ func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
 
 // Test that the certificate manager is able to process a CipherTraceEE profile.
 func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	defer s.loadReferenceFixtures()
 	require := s.Require()
@@ -198,8 +202,10 @@ func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
+	err = s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should contain the new certificate
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -215,7 +221,7 @@ func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
 
 // Test that certificate submission fails if the user available balance is 0.
 func (s *gdsTestSuite) TestSubmitNoBalance() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -227,7 +233,8 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -250,7 +257,7 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 
 // Test that the certificate submission fails if there is no available password.
 func (s *gdsTestSuite) TestSubmitNoPassword() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -258,7 +265,8 @@ func (s *gdsTestSuite) TestSubmitNoPassword() {
 	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -281,7 +289,7 @@ func (s *gdsTestSuite) TestSubmitNoPassword() {
 
 // Test that the certificate submission fails if the batch request fails.
 func (s *gdsTestSuite) TestSubmitBatchError() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
 	defer s.teardownCertManager()
 	defer s.loadReferenceFixtures()
 	require := s.Require()
@@ -304,7 +312,8 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
 
 	// Run the CertManager for a tick
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
@@ -327,7 +336,7 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 
 // Test that the certificate processing fails if the batch status request fails.
 func (s *gdsTestSuite) TestProcessBatchDetailError() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -337,7 +346,11 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 	mock.Handle(sectigo.BatchDetailEP, func(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
+
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
@@ -352,7 +365,11 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 	mock.Handle(sectigo.BatchStatusEP, func(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err = s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
+
 	v, err = s.svc.GetStore().RetrieveVASP(foxtrotId)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
@@ -360,7 +377,7 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 
 // Test that the certificate processing fails if there is still an active batch.
 func (s *gdsTestSuite) TestProcessActiveBatch() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -375,7 +392,10 @@ func (s *gdsTestSuite) TestProcessActiveBatch() {
 			Failed:  0,
 		})
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -396,7 +416,7 @@ func (s *gdsTestSuite) TestProcessActiveBatch() {
 
 // Test that the certificate processing fails if the batch request is rejected.
 func (s *gdsTestSuite) TestProcessRejected() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -417,7 +437,10 @@ func (s *gdsTestSuite) TestProcessRejected() {
 			Failed:  1,
 		})
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -438,7 +461,7 @@ func (s *gdsTestSuite) TestProcessRejected() {
 
 // Test that the certificate processing fails if the batch request errors.
 func (s *gdsTestSuite) TestProcessBatchError() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -459,7 +482,10 @@ func (s *gdsTestSuite) TestProcessBatchError() {
 			Failed:  1,
 		})
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -481,7 +507,7 @@ func (s *gdsTestSuite) TestProcessBatchError() {
 // Test that the certificate processing fails if the batch processing info request
 // returns an unhandled sectigo state.
 func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -495,7 +521,10 @@ func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
 			Status:       sectigo.BatchStatusNotAcceptable,
 		})
 	})
-	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+
+	// Run cert manager for one loop
+	err := s.svc.HandleCertifcateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -514,19 +543,26 @@ func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
 	require.Equal("automated", cert.AuditLog[3].Source)
 }
 
-func (s *gdsTestSuite) setupCertManager(profile string) {
+func (s *gdsTestSuite) TestCertManagerLoop() {
+	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	s.runCertManager(s.svc.GetConf().CertMan.Interval)
+}
+
+func (s *gdsTestSuite) setupCertManager(profile string) (certDir string) {
 	require := s.Require()
-	tmp, err := ioutil.TempDir("testdata", "certs-*")
+	certDir, err := ioutil.TempDir("testdata", "certs-*")
 	require.NoError(err)
 	conf := gds.MockConfig()
 	conf.Sectigo.Profile = profile
 	conf.CertMan = config.CertManConfig{
 		Interval: time.Millisecond,
-		Storage:  tmp,
+		Storage:  certDir,
 	}
 	require.NoError(os.MkdirAll(conf.CertMan.Storage, 0755))
 	s.SetConfig(conf)
 	s.LoadFullFixtures()
+	return certDir
 }
 
 func (s *gdsTestSuite) teardownCertManager() {
