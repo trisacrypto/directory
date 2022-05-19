@@ -29,7 +29,7 @@ axiosInstance.interceptors.request.use(
       if (token) {
         cookies.set('token', token, { path: '/' });
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-        return axiosInstance.request(error.config);
+        return axiosInstance.request(originalRequest);
       }
     }
   }
