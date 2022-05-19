@@ -61,7 +61,7 @@
     "cy:open": "cypress open",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --coverage --watchAll=false --updateSnapshot",
+    "test": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public",
