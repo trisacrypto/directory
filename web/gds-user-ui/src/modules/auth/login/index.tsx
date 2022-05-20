@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Heading, Stack } from '@chakra-ui/react';
+import { Heading, Stack, useToast } from '@chakra-ui/react';
 import Login from 'components/Section/Login';
-
+import * as Sentry from '@sentry/browser';
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
@@ -9,7 +9,7 @@ const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
   const { auth0SignIn, auth0SignWithSocial, auth0Hash } = useCustomAuth0();
-
+  const toast = useToast();
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
     if (type === 'google') {
@@ -26,7 +26,6 @@ const StartPage: React.FC = () => {
         realm: 'Username-Password-Authentication'
       });
       if (response) {
-        console.log('response', response);
         setIsloading(false);
         if (response.emailVerified) {
           // to implement later
@@ -34,9 +33,20 @@ const StartPage: React.FC = () => {
       }
     } catch (err: any) {
       setIsloading(false);
-      setError(err.code);
+      if (err.code === 'access_denied') {
+        toast({
+          description: 'Invalid username or password',
+          status: 'error',
+          duration: 5000,
+          position: 'top',
+          isClosable: true
+        });
+
+        setError('Invalid username or password');
+      }
+
       // catch this error in sentry
-      console.log('error', err);
+      Sentry.captureException(err);
     }
   };
   return (

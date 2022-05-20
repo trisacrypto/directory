@@ -14,7 +14,6 @@ export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
       maxW={'100%'}
       bg={'white'}
       m="0 auto"
-      pb={20}
       fontFamily={'Open Sans'}
       position={'relative'}
       minHeight={'100vh'}>

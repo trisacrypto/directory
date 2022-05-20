@@ -49,9 +49,9 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
             <Stack ml="auto" display={{ base: 'none', sm: 'flex' }} direction={['column', 'row']}>
               <MenuItem to="/#about">About TRISA</MenuItem>
               <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-              {/* <MenuItem isLast to="/auth/login">
+              <MenuItem isLast to="/auth/login">
                 Login{' '}
-              </MenuItem> */}
+              </MenuItem>
             </Stack>
 
             {/* mobile drawer */}
