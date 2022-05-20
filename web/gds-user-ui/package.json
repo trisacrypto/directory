@@ -79,6 +79,11 @@
       "git add"
     ]
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run precommit"
+    }
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -135,6 +140,7 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.29.2",
     "eslint-plugin-react-hooks": "^4.3.0",
+    "husky": "^8.0.1",
     "jest-localstorage-mock": "^2.4.21",
     "prettier": "2.5.1",
     "redux-mock-store": "^1.5.4",
