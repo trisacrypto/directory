@@ -12,6 +12,7 @@ import {
 
 import trisaNetworkSvg from 'assets/trisa_network.svg';
 import { colors } from 'utils/theme';
+import { Trans } from '@lingui/react';
 
 export default function AboutTrisaSection() {
   return (
@@ -25,7 +26,7 @@ export default function AboutTrisaSection() {
               pb={6}
               fontSize={'2xl'}
               fontFamily="Roboto Slab">
-              About TRISA
+              <Trans id={'About TRISA'}>About TRISA</Trans>
             </Text>
 
             <Text

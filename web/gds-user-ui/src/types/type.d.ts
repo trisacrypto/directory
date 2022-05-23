@@ -21,3 +21,5 @@ type RegistrationAuthority = {
   comments: string;
   isDisabled?: boolean;
 };
+
+type Locales = 'en' | 'fr' | 'ja' | 'de' | 'zh';

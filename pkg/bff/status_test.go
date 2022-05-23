@@ -120,8 +120,13 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
-		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
-		MainNet:      config.DirectoryConfig{Endpoint: "bufcon"},
+		Auth0: config.AuthConfig{
+			Issuer:        "http://auth.localhost/",
+			Audience:      "http://localhost",
+			ProviderCache: 5 * time.Minute,
+		},
+		TestNet: config.DirectoryConfig{Endpoint: "bufcon"},
+		MainNet: config.DirectoryConfig{Endpoint: "bufcon"},
 		Database: config.DatabaseConfig{
 			URL:      "trtl:///",
 			Insecure: true,
