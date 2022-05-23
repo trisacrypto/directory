@@ -12,10 +12,9 @@ const useCustomAuth0 = () => {
     return new Promise((resolve, reject) => {
       authWeb.login(options, (err: any, authResult: any) => {
         if (err) {
-          console.log('error', err);
+          console.error('error', err);
           reject(err);
         } else {
-          console.log('authResult', authResult);
           resolve(authResult);
         }
       });
@@ -62,7 +61,6 @@ const useCustomAuth0 = () => {
         if (err) {
           reject(err);
         } else {
-          console.log('auth0Hash', data);
           resolve(data);
         }
       });

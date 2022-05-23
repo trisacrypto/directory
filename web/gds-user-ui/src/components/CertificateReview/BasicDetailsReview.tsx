@@ -1,27 +1,11 @@
-import React, { FC, useEffect } from 'react';
-import {
-  Stack,
-  Box,
-  Text,
-  Heading,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  Button,
-  Tag,
-  Link
-} from '@chakra-ui/react';
+import React, { useEffect } from 'react';
+import { Stack, Box, Heading, Table, Tbody, Tr, Td, Button, Tag, Link } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData } from 'utils/utils';
+import { useSelector, RootStateOrAny } from 'react-redux';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import {
-  BUSINESS_CATEGORY,
-  getBusinessCategiryLabel,
-  vaspCategories
-} from 'constants/basic-details';
+import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
+import { Trans } from '@lingui/react';
 interface BasicDetailsReviewProps {}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
@@ -53,7 +37,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       <Stack width={'100%'}>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
           <Heading fontSize={20} mb="2rem">
-            Section 1: Basic Details
+            <Trans id="Section 1: Basic Details">Section 1: Basic Details</Trans>
           </Heading>
           <Button
             bg={colors.system.blue}
@@ -63,7 +47,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            Edit
+            <Trans id="Edit">Edit</Trans>
           </Button>
         </Box>
         <Stack fontSize={18}>
@@ -87,7 +71,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
               }}>
               <Tr>
                 <Td borderBottom={'none'} pl={'1rem !important'}>
-                  Website
+                  <Trans id="Website">Website</Trans>
                 </Td>
                 <Td borderBottom={'none'} whiteSpace="break-spaces" lineHeight={1.5}>
                   {basicDetail.website ? (
@@ -101,20 +85,24 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td pl={'1rem !important'}>Business Category</Td>
+                <Td pl={'1rem !important'}>
+                  <Trans id="Business Category">Business Category</Trans>
+                </Td>
                 <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category] || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td pl={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
-                  Date of Incorporation/ Establishment
+                  <Trans id="Date of Incorporation / Establishment">
+                    Date of Incorporation / Establishment
+                  </Trans>
                 </Td>
                 <Td>{basicDetail.established_on || 'N/A'}</Td>
                 <Td></Td>
               </Tr>
               <Tr borderStyle={'hidden'}>
                 <Td pl={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
-                  VASP Category
+                  <Trans id="VASP Category">VASP Category</Trans>
                 </Td>
                 <Td>
                   {basicDetail?.vasp_categories && basicDetail?.vasp_categories.length

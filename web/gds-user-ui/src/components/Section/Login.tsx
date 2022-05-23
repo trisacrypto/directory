@@ -19,6 +19,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import InputFormControl from 'components/ui/InputFormControl';
 import { getValueByPathname } from 'utils/utils';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
@@ -59,7 +61,9 @@ const Login: React.FC<LoginProps> = (props) => {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>
-          <Heading fontSize={'xl'}>Log into your TRISA account.</Heading>
+          <Heading fontSize={'xl'}>
+            <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
+          </Heading>
         </Stack>
         <Stack align={'center'} justify={'center'} fontFamily={colors.font}>
           <Button
@@ -78,7 +82,7 @@ const Login: React.FC<LoginProps> = (props) => {
             }}>
             <GoogleIcon h={24} />
             <Text as={'span'} ml={3}>
-              Continue with google
+              <Trans id="Continue with google">Continue with google</Trans>
             </Text>
           </Button>
           <Text py={3}>or</Text>
@@ -95,7 +99,7 @@ const Login: React.FC<LoginProps> = (props) => {
                 data-testid="email"
                 controlId=""
                 height={'64px'}
-                placeholder="Email Address"
+                placeholder={t`Email Address`}
                 type="email"
                 isInvalid={getValueByPathname(errors, 'username')}
                 formHelperText={getValueByPathname(errors, 'username')?.message}
@@ -105,7 +109,7 @@ const Login: React.FC<LoginProps> = (props) => {
                 data-testid="password"
                 controlId=""
                 height={'64px'}
-                placeholder="Password"
+                placeholder={t`Password`}
                 type="password"
                 isInvalid={getValueByPathname(errors, 'password')}
                 formHelperText={getValueByPathname(errors, 'password')?.message}
@@ -126,7 +130,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   _focus={{
                     borderColor: 'transparent'
                   }}>
-                  Log In
+                  <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
                   <Link
@@ -134,16 +138,16 @@ const Login: React.FC<LoginProps> = (props) => {
                     color="#1F4CED"
                     fontFamily="Open sans, sans-serif"
                     fontSize="1rem">
-                    Forgot password?
+                    <Trans id="Forgot password?">Forgot password?</Trans>
                   </Link>
                 </Text>
               </Stack>
             </Stack>
           </form>
           <Text textAlign="center" fontSize="1rem">
-            Not a TRISA Member?{' '}
+            <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
             <Link href="/auth/register" color={'#1F4CED'}>
-              Join the TRISA network today.
+              <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
             </Link>
           </Text>
         </Box>

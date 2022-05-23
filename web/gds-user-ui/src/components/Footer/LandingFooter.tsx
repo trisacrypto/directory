@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useEffect, useState } from 'react';
 import { Flex, Text, Link, useColorModeValue } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
@@ -8,6 +9,7 @@ import {
   getAppGitVersion,
   isProdEnv
 } from 'application/config';
+import { Trans } from '@lingui/react';
 
 const Footer = (): React.ReactElement => {
   const [appVersion, setAppVersion] = useState<any>();
@@ -47,19 +49,21 @@ const Footer = (): React.ReactElement => {
       bottom={0}>
       <Flex width="100%" wrap="wrap">
         <Text width="100%" textAlign="center" color="white" fontSize="sm">
-          A component of{' '}
+          <Trans id="A component of">A component of</Trans>{' '}
           <Link href="https://trisa.io" color={colors.system.cyan}>
-            the TRISA architecture
+            <Trans id="the TRISA architecture">the TRISA architecture</Trans>
           </Link>{' '}
-          for Cryptocurrency Travel Rule compliance.
+          <Trans id="for Cryptocurrency Travel Rule compliance.">
+            for Cryptocurrency Travel Rule compliance.
+          </Trans>
         </Text>
         <Text width="100%" textAlign="center" color="white" fontSize="sm">
-          Created and maintained by{' '}
+          <Trans id="Created and maintained by">Created and maintained by</Trans>{' '}
           <Link href="https://rotational.io" color={colors.system.cyan}>
             {' '}
             Rotational Labs
           </Link>{' '}
-          in partnership with{' '}
+          <Trans id="in partnership with">in partnership with</Trans>{' '}
           <Link href="https://cyphertrace.com" color={colors.system.cyan}>
             {' '}
             CipherTrace

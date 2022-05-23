@@ -1,4 +1,5 @@
 /* eslint-disable react/display-name */
+import { Trans } from '@lingui/react';
 import { action } from '@storybook/addon-actions';
 import { StoryFnReactReturnType } from '@storybook/react/dist/ts3.9/client/preview/types';
 import { VFC, ReactNode, FC } from 'react';
@@ -111,6 +112,10 @@ export const withRHF =
     (
       <StorybookFormProvider defaultValues={defaultValues}>
         <Story />
-        {showSubmitButton && <button type="submit">Submit</button>}
+        {showSubmitButton && (
+          <button type="submit">
+            <Trans id="Submit">Submit</Trans>{' '}
+          </button>
+        )}
       </StorybookFormProvider>
     );
