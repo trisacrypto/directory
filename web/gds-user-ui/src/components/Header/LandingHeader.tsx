@@ -20,6 +20,7 @@ import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
 import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
+import LanguagesDropdown from 'components/LanguagesDropdown';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);

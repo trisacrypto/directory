@@ -308,7 +308,7 @@ export const isoCountries = {
  */
 export function getCountryName(countryCode: IsoCountryCode) {
   if (countryCode in isoCountries) {
-    return isoCountries[countryCode];
+    return isoCountries[countryCode] as string;
   } else {
     return countryCode;
   }
