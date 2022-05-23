@@ -18,6 +18,9 @@ var testEnv = map[string]string{
 	"GDS_BFF_CONSOLE_LOG":              "true",
 	"GDS_BFF_ALLOW_ORIGINS":            "https://vaspdirectory.net",
 	"GDS_BFF_COOKIE_DOMAIN":            "vaspdirectory.net",
+	"GDS_BFF_AUTH0_ISSUER":             "example.auth0.com",
+	"GDS_BFF_AUTH0_AUDIENCE":           "https://vaspdirectory.net",
+	"GDS_BFF_AUTH0_PROVIDER_CACHE":     "10m",
 	"GDS_BFF_TESTNET_INSECURE":         "true",
 	"GDS_BFF_TESTNET_ENDPOINT":         "localhost:8443",
 	"GDS_BFF_TESTNET_TIMEOUT":          "5s",
@@ -62,6 +65,9 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.ConsoleLog)
 	require.Len(t, conf.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
+	require.Equal(t, testEnv["GDS_BFF_AUTH0_ISSUER"], conf.Auth0.Issuer)
+	require.Equal(t, testEnv["GDS_BFF_AUTH0_AUDIENCE"], conf.Auth0.Audience)
+	require.Equal(t, 10*time.Minute, conf.Auth0.ProviderCache)
 	require.True(t, conf.TestNet.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_ENDPOINT"], conf.TestNet.Endpoint)
 	require.Equal(t, 5*time.Second, conf.TestNet.Timeout)
@@ -83,6 +89,8 @@ func TestConfig(t *testing.T) {
 
 func TestRequiredConfig(t *testing.T) {
 	required := []string{
+		"GDS_BFF_AUTH0_ISSUER",
+		"GDS_BFF_AUTH0_AUDIENCE",
 		"GDS_BFF_TESTNET_ENDPOINT",
 		"GDS_BFF_MAINNET_ENDPOINT",
 		"GDS_BFF_DATABASE_URL",
@@ -125,6 +133,69 @@ func TestRequiredConfig(t *testing.T) {
 
 	// Test required configuration
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_URL"], conf.Database.URL)
+}
+
+func TestAuthConfig(t *testing.T) {
+	conf := config.AuthConfig{
+		Issuer:        "example.auth0.com",
+		Audience:      "https://vaspdirectory.net",
+		ProviderCache: 0,
+	}
+
+	// Ensure that a provider cache is required
+	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 provider cache duration should be longer than 0")
+
+	conf.ProviderCache = 5 * time.Minute
+	require.NoError(t, conf.Validate(), "could not validate auth config")
+
+	// Test Domain only configuration (default config)
+	conf.Issuer = "example.auth0.com"
+	url, err := conf.IssuerURL()
+	require.NoError(t, err, "could not parse issuer url")
+	require.Equal(t, "https://example.auth0.com/", url.String())
+
+	// Test empty domain invalid configuration
+	conf.Issuer = ""
+	_, err = conf.IssuerURL()
+	require.EqualError(t, err, "invalid configuration: auth0 domain must be configured")
+	require.Error(t, conf.Validate())
+
+	// Test URL isuser without trailing slash
+	conf.Issuer = "https://example.auth0.com"
+	url, err = conf.IssuerURL()
+	require.NoError(t, err, "could not parse issuer url")
+	require.Equal(t, "https://example.auth0.com/", url.String())
+
+	// Test URL isuser without trailing slash
+	conf.Issuer = "https://example.auth0.com/"
+	url, err = conf.IssuerURL()
+	require.NoError(t, err, "could not parse issuer url")
+	require.Equal(t, "https://example.auth0.com/", url.String())
+
+	// Test HTTP URL isuser
+	conf.Issuer = "http://example.auth0.com/"
+	url, err = conf.IssuerURL()
+	require.NoError(t, err, "could not parse issuer url")
+	require.Equal(t, "http://example.auth0.com/", url.String())
+
+	// Test invalid url with scheme
+	conf.Issuer = "https:///foo"
+	_, err = conf.IssuerURL()
+	require.EqualError(t, err, "invalid configuration: could not parse issuer url")
+	require.Error(t, conf.Validate())
+
+	// Test invalid url with no domain
+	conf.Issuer = "https:///"
+	_, err = conf.IssuerURL()
+	require.EqualError(t, err, "invalid configuration: could not parse issuer url")
+	require.Error(t, conf.Validate())
+
+	// Test invalid url with extended path
+	// TODO: should this be invalid?
+	conf.Issuer = "https://example.auth0.com/foo"
+	_, err = conf.IssuerURL()
+	require.EqualError(t, err, "invalid configuration: could not parse issuer url")
+	require.Error(t, conf.Validate())
 }
 
 func TestDatabaseConfigValidation(t *testing.T) {

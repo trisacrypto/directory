@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	ginzerolog "github.com/dn365/gin-zerolog"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
@@ -19,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -90,10 +90,6 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
 		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
-	}
-
-	if s.conf.Sentry.TrackPerformance {
-		log.Debug().Float64("sample_rate", s.conf.Sentry.SampleRate).Msg("sentry performance tracking enabled")
 	}
 
 	// Create the router
@@ -221,18 +217,15 @@ func (s *Server) SetURL(url string) {
 	log.Debug().Str("url", url).Msg("server url set")
 }
 
-// Middleware that tracks request performance with Sentry.
-func (s *Server) TrackPerformance() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		span := sentry.StartSpan(c.Request.Context(), c.Request.URL.Path)
-		defer span.Finish()
-		c.Next()
-	}
-}
-
 func (s *Server) setupRoutes() (err error) {
+	// Instantiate authentication middleware
+	var authenticator gin.HandlerFunc
+	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
+		return err
+	}
+
 	// Application Middleware
-	s.router.Use(ginzerolog.Logger("gin"))
+	s.router.Use(logger.GinLogger("bff"))
 
 	// Gin middleware needs to be added before Sentry for correct recovery handling
 	s.router.Use(gin.Recovery())
@@ -243,6 +236,7 @@ func (s *Server) setupRoutes() (err error) {
 	if s.conf.Sentry.TrackPerformance {
 		s.router.Use(s.TrackPerformance())
 	}
+	s.router.Use(authenticator)
 	s.router.Use(s.Available())
 
 	// Add CORS configuration
