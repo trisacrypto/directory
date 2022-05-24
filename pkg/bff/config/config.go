@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +24,19 @@ type Config struct {
 	ConsoleLog   bool                `split_words:"true" default:"false"`
 	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
 	CookieDomain string              `split_words:"true"`
+	Auth0        AuthConfig
 	TestNet      DirectoryConfig
 	MainNet      DirectoryConfig
 	Database     DatabaseConfig
 	Sentry       SentryConfig
 	processed    bool
+}
+
+// AuthConfig handles Auth0 configuration and authentication
+type AuthConfig struct {
+	Issuer        string        `split_words:"true" required:"true"`
+	Audience      string        `split_words:"true" required:"true"`
+	ProviderCache time.Duration `split_words:"true" default:"5m"`
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
@@ -91,6 +101,10 @@ func (c Config) Validate() (err error) {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
 	}
 
+	if err = c.Auth0.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Database.Validate(); err != nil {
 		return err
 	}
@@ -130,4 +144,46 @@ func (c SentryConfig) GetRelease() string {
 
 func (c SentryConfig) UseSentry() bool {
 	return c.DSN != ""
+}
+
+func (c AuthConfig) Validate() error {
+	if _, err := c.IssuerURL(); err != nil {
+		return err
+	}
+
+	if c.ProviderCache == 0 {
+		return errors.New("invalid configuration: auth0 provider cache duration should be longer than 0")
+	}
+	return nil
+}
+
+func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
+	if c.Issuer == "" {
+		return nil, errors.New("invalid configuration: auth0 domain must be configured")
+	}
+
+	// Ensure the domain or url has a trailing slash
+	domain := c.Issuer
+	if !strings.HasSuffix(c.Issuer, "/") {
+		domain += "/"
+	}
+
+	// Attempt to parse the domain as a complete URL with a scheme.
+	if u, err = url.Parse(domain); err == nil {
+		// If a valid URL is passed in with the expected scheme and path, return it.
+		if u.Scheme != "" && u.Path == "/" && u.Host != "" {
+			return u, nil
+		}
+
+		// If an invalid URL is passed in with an unexpected scheme or path, error.
+		if u.Scheme != "" && (u.Path != "" || u.Host == "") {
+			return nil, errors.New("invalid configuration: could not parse issuer url")
+		}
+	}
+
+	// Default to the HTTPS scheme and reparse domain only configuration.
+	if u, err = url.Parse("https://" + domain); err != nil {
+		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
+	}
+	return u, nil
 }
