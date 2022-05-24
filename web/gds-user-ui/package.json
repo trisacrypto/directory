@@ -76,12 +76,13 @@
   "lint-staged": {
     "*.{js,ts,tsx,jsx,json,scss,css,md}": [
       "prettier --single-quote  --write",
+      "test --no-cache",
       "git add"
     ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "jest"
+      "pre-commit": "lint-staged"
     }
   },
   "eslintConfig": {
@@ -152,18 +153,8 @@
       "global": {
         "branches": 60,
         "functions": 100,
-        "lines": 50,
+        "lines": 60,
         "statements": 60
-      },
-      "./src/components/": {
-        "branches": 40,
-        "statements": 90
-      },
-      "./src/modules/": {
-        "branches": 100,
-        "functions": 100,
-        "lines": 50,
-        "statements": 90
       }
     }
   }
