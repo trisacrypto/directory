@@ -1,0 +1,15 @@
+{
+	"CustomClaims": {
+		"scope": "openid profile email",
+		"permissions": ["add:collaborators", "read:certificates", "read:collaborators", "read:vasp"],
+		"https://vaspdirectory.net/vasp": "eee784b5-49b3-452e-97d5-1b01e79f5e62",
+		"https://vaspdirectory.net/email": "rebecca@example.com"
+	},
+	"RegisteredClaims": {
+		"iss": "https://example.auth0.com/",
+		"sub": "auth0|9d56yPBwjRv1tp3gEIA",
+		"aud": ["https://api.example.net", "https://example.auth0.com/userinfo"],
+		"exp": 1653341676,
+		"iat": 1653255276
+	}
+}

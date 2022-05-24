@@ -101,7 +101,7 @@ func FilePID(path string) ReplicaStrategy {
 		// Read the file
 		var data []byte
 		if data, nerr = ioutil.ReadFile(path); nerr != nil {
-			return in, fmt.Errorf("could not read %q: %s", path, nerr)
+			return in, fmt.Errorf("could not read file pid path %q: %s", path, nerr)
 		}
 
 		// Parse the PID from the file
@@ -139,7 +139,7 @@ func JSONConfig(path string) ReplicaStrategy {
 		// Attempt to read the file
 		var data []byte
 		if data, err = ioutil.ReadFile(path); err != nil {
-			return in, fmt.Errorf("could not read %q: %s", path, err)
+			return in, fmt.Errorf("could not read json config path %q: %s", path, err)
 		}
 
 		// Load the JSON

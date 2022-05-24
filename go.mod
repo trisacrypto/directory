@@ -7,9 +7,9 @@ require (
 	cloud.google.com/go/secretmanager v1.4.0
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/DataDog/zstd v1.5.0 // indirect
+	github.com/auth0/go-jwt-middleware/v2 v2.0.0
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220418160907-785bb36dae6e // indirect
-	github.com/dn365/gin-zerolog v0.0.0-20171227063204-b43714b00db1
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.1

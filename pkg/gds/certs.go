@@ -32,8 +32,6 @@ import (
 //
 // TODO: move completed certificate requests to archive so that the CertManger routine
 // isn't continuously handling a growing number of requests over time.
-//
-// TODO: notify admins if cert-manager errors since this will block integration.
 func (s *Service) CertManager(stop <-chan struct{}) {
 	// Check certificate download directory
 	certDir, err := s.getCertStorage()
@@ -47,75 +45,83 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 	log.Info().Dur("interval", s.conf.CertMan.Interval).Str("store", certDir).Msg("cert-manager process started")
 
 	for {
-		// Wait for next tick
-		<-ticker.C
-
-		// Retrieve all certificate requests from the database
-		var (
-			err       error
-			nrequests int
-			wg        sync.WaitGroup
-		)
-
-		careqs := s.db.ListCertReqs()
-		defer careqs.Release()
-		log.Debug().Msg("cert-manager checking certificate request pipelines")
-
-		for careqs.Next() {
-			var req *models.CertificateRequest
-			if req, err = careqs.CertReq(); err != nil {
-				log.Error().Err(err).Msg("could not parse certificate request from database")
-				continue
-			}
-
-			logctx := log.With().Str("id", req.Id).Str("common_name", req.CommonName).Logger()
-
-			switch req.Status {
-			case models.CertificateRequestState_READY_TO_SUBMIT:
-				wg.Add(1)
-				go func(logctx zerolog.Logger) {
-					defer wg.Done()
-					if err := s.submitCertificateRequest(req); err != nil {
-						// If certificate submission requests fail we want immediate notification
-						// so this is a CRITICAL severity that should alert us immediately.
-						// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
-						// this ensures that we issue a CRITICAL severity without stopping the server.
-						log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
-					} else {
-						logctx.Info().Msg("certificate request submitted")
-					}
-				}(logctx)
-			case models.CertificateRequestState_PROCESSING:
-				wg.Add(1)
-				go func(logctx zerolog.Logger) {
-					defer wg.Done()
-					if err := s.checkCertificateRequest(req); err != nil {
-						logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
-					} else {
-						logctx.Info().Msg("processing certificate request check complete")
-					}
-				}(logctx)
-			}
-
-			nrequests++
-		}
-
-		if err = careqs.Error(); err != nil {
-			log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
-			return
-		}
-
-		// Wait for all the certificate request processing to complete
-		wg.Wait()
-		log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
-
+		// Wait for next tick or a stop signal
 		select {
 		case <-stop:
 			log.Info().Msg("certificate manager received stop signal")
 			return
-		default:
+		case <-ticker.C:
+		}
+
+		if err := s.HandleCertifcateRequests(certDir); err != nil {
+			log.WithLevel(zerolog.PanicLevel).Err(err).Msg("could not handle certificate requests, certificate manager shutting down")
+			return
 		}
 	}
+}
+
+func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
+	// Retrieve all certificate requests from the database
+	var (
+		nrequests int
+		wg        sync.WaitGroup
+	)
+
+	careqs := s.db.ListCertReqs()
+	defer careqs.Release()
+	log.Debug().Msg("cert-manager checking certificate request pipelines")
+
+	for careqs.Next() {
+		var req *models.CertificateRequest
+		if req, err = careqs.CertReq(); err != nil {
+			log.Error().Err(err).Msg("could not parse certificate request from database")
+			continue
+		}
+
+		logctx := log.With().Str("id", req.Id).Str("common_name", req.CommonName).Logger()
+
+		switch req.Status {
+		case models.CertificateRequestState_READY_TO_SUBMIT:
+			wg.Add(1)
+			go func(logctx zerolog.Logger) {
+				defer wg.Done()
+				if err := s.submitCertificateRequest(req); err != nil {
+					// If certificate submission requests fail we want immediate notification
+					// so this is a CRITICAL severity that should alert us immediately.
+					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+					// this ensures that we issue a CRITICAL severity without stopping the server.
+					log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
+				} else {
+					logctx.Info().Msg("certificate request submitted")
+				}
+			}(logctx)
+		case models.CertificateRequestState_PROCESSING:
+			wg.Add(1)
+			go func(logctx zerolog.Logger) {
+				defer wg.Done()
+				if err := s.checkCertificateRequest(req); err != nil {
+					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
+				} else {
+					logctx.Info().Msg("processing certificate request check complete")
+				}
+			}(logctx)
+		}
+
+		nrequests++
+	}
+
+	// Wait for all the certificate request processing to complete
+	wg.Wait()
+
+	// Check if there was an error while processing certificate requests
+	if err = careqs.Error(); err != nil {
+		log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
+		return nil
+	}
+
+	// Conclude certificate handling successfully
+	log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
+	return nil
 }
 
 func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err error) {
@@ -144,38 +150,24 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	var params map[string]string
-
 	profile := s.certs.Profile()
+	var params map[string]string
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		params = r.Params
 		if params == nil {
-			// The certificate request was created before the profile params were generated,
-			// so use the old method of defining the params and issue a warning to note that
-			// the certificate request is from prior v1.3.
-			// TODO: Remove this code after all old certificate requests in vaspdirectory.net have been issued
-			log.Warn().Str("vasp", vasp.Id).Str("certreq", r.Id).
-				Msg("certificate request params are nil, falling back to pre v1.3 params")
-
-			params = make(map[string]string)
-			if params["organizationName"], err = vasp.Name(); err != nil {
-				params["organizationName"] = "TRISA Member VASP"
-			}
-			params["localityName"] = "Menlo Park"
-			params["stateOrProvinceName"] = "California"
-			params["countryName"] = "US"
+			log.Error().Str("vasp", vasp.Id).Str("certreq", r.Id).Msg("certificate request params are nil")
+			return errors.New("no params are available on the certificate request")
 		}
-
 	} else {
 		params = make(map[string]string)
 	}
+
 	params["commonName"] = r.CommonName
 	params["dNSName"] = r.CommonName
 	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
-
 	batchName := fmt.Sprintf("%s-certreq-%s)", s.conf.DirectoryID, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
