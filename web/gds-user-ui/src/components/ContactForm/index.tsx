@@ -51,8 +51,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
               value={value}
               name={inputName}
               isInvalid={get(errors, `${name}.phone`)}
-              label="Phone Number (optional)"
-              formHelperText="If supplied, use full phone number with country code."
+              label="Phone Number "
+              formHelperText={
+                get(errors, `${name}.phone`)
+                  ? get(errors, `${name}.phone`).message
+                  : 'If supplied, use full phone number with country code.'
+              }
               controlId="phoneNumber"
             />
           );
