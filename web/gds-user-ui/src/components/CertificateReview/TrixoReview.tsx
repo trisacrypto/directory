@@ -118,7 +118,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo?.financial_transfers_permitted?.toUpperCase()}
+                      {trixo?.financial_transfers_permitted?.toString().toUpperCase()}
                     </TagLabel>
                   </Tag>
                 </Td>
