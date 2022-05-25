@@ -31,14 +31,7 @@ const fonts = {
 const customTheme = extendTheme({
   colors,
   config,
-  fonts,
-  styles: {
-    global: (props: any) => ({
-      body: {
-        bg: mode('#F7F8FC', 'dark')(props)
-      }
-    })
-  }
+  fonts
 });
 
 export default customTheme;
