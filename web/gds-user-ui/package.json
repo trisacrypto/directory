@@ -120,6 +120,8 @@
   },
   "devDependencies": {
     "@hookform/devtools": "^4.1.0",
+    "@lingui/cli": "^3.13.3",
+    "@lingui/macro": "^3.13.3",
     "@storybook/addon-actions": "^6.4.19",
     "@storybook/addon-essentials": "^6.4.19",
     "@storybook/addon-interactions": "^6.4.19",
