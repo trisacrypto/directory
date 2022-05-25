@@ -150,7 +150,11 @@ export const validationSchema = [
         .shape({
           name: yup.string().required(),
           email: yup.string().email('Email is not valid').required('Email is required'),
-          phone: yup.string()
+          phone: yup
+            .string()
+            .required(
+              'A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.'
+            )
         })
         .required()
     })
