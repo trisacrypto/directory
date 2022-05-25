@@ -3,7 +3,8 @@ import _ from 'lodash';
 import { RegistrationAuthority, StepStatus } from 'types/type';
 import { TStep } from './localStorageHelper';
 import registrationAuthority from './registration-authority.json';
-
+import auth0 from 'auth0-js';
+import getAuth0Config from 'application/config/auth0';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 
 export const findStepKey = (steps: any, key: number) =>
@@ -139,3 +140,22 @@ export function currencyFormatter(
 
   return formatedAmount.format(amount);
 }
+
+export const getRefreshToken = () => {
+  const auth0Config = getAuth0Config();
+  const authWeb = new auth0.WebAuth(auth0Config);
+  return new Promise((resolve, reject) => {
+    authWeb.checkSession(
+      {
+        scope: 'read:current_user'
+      },
+      (err: any, authResult: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(authResult);
+        }
+      }
+    );
+  });
+};
