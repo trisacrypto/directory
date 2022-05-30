@@ -20,7 +20,6 @@ const StartPage: React.FC = () => {
     }
   };
   const handleSignUpWithEmail = async (data: any) => {
-    console.log('datanfromform', data);
     setIsloading(true);
     try {
       const response: any = await auth0SignUpWithEmail({
@@ -29,7 +28,6 @@ const StartPage: React.FC = () => {
         connection: 'Username-Password-Authentication'
       });
       if (response) {
-        console.log('response', response);
         setIsloading(false);
         if (!response.emailVerified) {
           navigate('/auth/success');
@@ -43,10 +41,10 @@ const StartPage: React.FC = () => {
       }
       if (err.code === 'invalid_signup') {
         setIsUsernameError(true);
-        console.log('username already exist');
+        console.error('username already exist');
       }
       // catch this error in sentry
-      console.log('error', err);
+      console.error('error', err);
     }
   };
   return (

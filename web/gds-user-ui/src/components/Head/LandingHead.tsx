@@ -1,5 +1,6 @@
 import React from 'react';
 import { Flex, Heading, Stack, Text, HStack, Button, VStack } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 
 interface LandingHeaderProps {
   hasBtn?: boolean;
@@ -25,15 +26,17 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               fontWeight={700}
               fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }}
               color="#fefefe">
-              TRISA Global Directory Service
+              <Trans id="TRISA Global Directory Service">TRISA Global Directory Service</Trans>
             </Heading>
             <Text
               as="h3"
               fontFamily={'Open Sans, sans-serif !important'}
               fontSize={{ base: '1rem', md: 24, sm: 'lg' }}
               color="#fefefe">
-              Become Travel Rule compliant. <br />
-              Apply to Become a TRISA-certified Virtual Asset Service Provider.
+              <Trans id="Become Travel Rule compliant.">Become Travel Rule compliant.</Trans> <br />
+              <Trans id="Apply to Become a TRISA-certified Virtual Asset Service Provider.">
+                Apply to Become a TRISA-certified Virtual Asset Service Provider.
+              </Trans>
             </Text>
           </>
         )}
@@ -44,7 +47,9 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               fontFamily="Open Sans, sans-serif !important"
               fontSize={{ md: '4xl', sm: '2xl' }}
               color="#fff">
-              Complete TRISA’s VASP Verfication Process
+              <Trans id="Complete TRISA’s VASP Verfication Process">
+                Complete TRISA’s VASP Verfication Process
+              </Trans>
             </Heading>
             <Text
               fontSize={{ base: 'lg', md: 'xl', sm: 'lg' }}
@@ -52,8 +57,10 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               color="#fff"
               maxW="700px"
               mx="auto">
-              All TRISA members must complete TRISA’s VASP verification and due diligence process to
-              become a Verified VASP.
+              <Trans id="All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP.">
+                All TRISA members must complete TRISA’s VASP verification and due diligence process
+                to become a Verified VASP.
+              </Trans>
             </Text>
           </VStack>
         )}
@@ -72,15 +79,13 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                 border="2px solid #fff"
                 color={'#fff'}
                 py={6}
-                maxWidth={'180px'}
-                width="100%"
                 as="a"
                 _hover={{
                   background: '#24a9df',
                   transition: '0.15s all ease'
                 }}
                 href="/certificate/registration">
-                Start Registration
+                <Trans id="Start Registration">Start Registration</Trans>
               </Button>
               <Button
                 bg={'transparent'}
@@ -92,11 +97,9 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                   transition: '0.15s all ease'
                 }}
                 py={6}
-                maxWidth={'180px'}
-                width="100%"
                 as="a"
                 href="/#search">
-                Directory Lookup
+                <Trans id="Directory Lookup">Directory Lookup</Trans>
               </Button>
             </Stack>
           </>

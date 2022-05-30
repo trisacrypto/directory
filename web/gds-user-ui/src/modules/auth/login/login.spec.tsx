@@ -1,5 +1,6 @@
 import userEvent from '@testing-library/user-event';
 import Login from 'components/Section/Login';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
 
 const mockSignWithEmail = jest.fn((values) => {
@@ -11,6 +12,12 @@ const mockSignWithSocial = jest.fn((values) => {
 });
 
 describe('<Login />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     render(
       <Login handleSignWithEmail={mockSignWithEmail} handleSignWithSocial={mockSignWithSocial} />

@@ -25,7 +25,7 @@ const VerifyPage: React.FC = () => {
           if (!reponse.error) {
             setResult(reponse);
           } else {
-            console.log('Something went wrong');
+            console.error('Something went wrong');
             // setError(false)
           }
         } else {
@@ -36,7 +36,7 @@ const VerifyPage: React.FC = () => {
           setError(e.response?.data?.error);
         } else {
           // log error
-          console.log('sorry something went wrong , please try again');
+          console.error('sorry something went wrong , please try again');
         }
       } finally {
         setIsLoading(false);

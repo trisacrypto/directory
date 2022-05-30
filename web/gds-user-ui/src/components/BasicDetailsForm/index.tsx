@@ -3,6 +3,9 @@ import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 import { Controller, useFormContext } from 'react-hook-form';
+import { t } from '@lingui/macro';
+import { useLanguageProvider } from 'contexts/LanguageContext';
+import { useEffect } from 'react';
 
 const BasicDetailsForm: React.FC = () => {
   const options = getBusinessCategoryOptions();
@@ -11,6 +14,9 @@ const BasicDetailsForm: React.FC = () => {
     control,
     formState: { errors }
   } = useFormContext();
+  const [language] = useLanguageProvider();
+
+  useEffect(() => {}, [language]);
 
   return (
     <>
@@ -18,7 +24,7 @@ const BasicDetailsForm: React.FC = () => {
         <InputFormControl
           controlId="organization_name"
           data-testid="organization_name"
-          label="Organization Name"
+          label={t`Organization Name`}
           error="true"
           formHelperText={errors.organization_name?.message}
           isInvalid={!!errors.organization_name}
@@ -29,7 +35,7 @@ const BasicDetailsForm: React.FC = () => {
         <InputFormControl
           controlId="website"
           data-testid="website"
-          label="Website"
+          label={t`Website`}
           error="true"
           type="url"
           formHelperText={errors.website?.message}
@@ -41,7 +47,7 @@ const BasicDetailsForm: React.FC = () => {
         <InputFormControl
           controlId="established_on"
           data-testid="established_on"
-          label="Date of Incorporation / Establishment"
+          label={t`Date of Incorporation / Establishment`}
           formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
           inputProps={{ placeholder: '21/01/2021', type: 'date' }}
@@ -55,8 +61,8 @@ const BasicDetailsForm: React.FC = () => {
             <SelectFormControl
               data-testid="business_category"
               ref={field.ref}
-              label="Business Category"
-              placeholder="Select business category"
+              label={t`Business Category`}
+              placeholder={t`Select business category`}
               controlId="business_category"
               options={getBusinessCategoryOptions()}
               name={field.name}
@@ -71,8 +77,8 @@ const BasicDetailsForm: React.FC = () => {
           name="vasp_categories"
           render={({ field: { value, onChange, name } }) => (
             <SelectFormControl
-              label="VASP Category"
-              placeholder="Select VASP category"
+              label={t`VASP Category`}
+              placeholder={t`Select VASP category`}
               controlId="vasp_categories"
               data-testid="vasp_categories"
               isMulti
@@ -80,7 +86,7 @@ const BasicDetailsForm: React.FC = () => {
               options={vaspCategories}
               onChange={(val: any) => onChange(val.map((c: any) => c.value))}
               value={value && vaspCategories.filter((c) => value.includes(c.value))}
-              formHelperText="Please select as many categories needed to represent the types of virtual asset services your organization provides."
+              formHelperText={t`Please select as many categories needed to represent the types of virtual asset services your organization provides.`}
             />
           )}
         />

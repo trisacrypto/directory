@@ -1,5 +1,9 @@
+import { t } from '@lingui/macro';
 import { BsCartXFill } from 'react-icons/bs';
 import * as yup from 'yup';
+import { setupI18n } from '@lingui/core';
+
+const _i18n = setupI18n();
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
 const commonNameRegex =
@@ -7,13 +11,17 @@ const commonNameRegex =
 
 export const validationSchema = [
   yup.object().shape({
-    website: yup.string().url().trim().required(),
+    website: yup
+      .string()
+      .url()
+      .trim()
+      .required(_i18n._(t`Website is a required field`)),
     established_on: yup
       .date()
       .nullable()
       .transform((curr, orig) => (orig === '' ? null : curr))
-      .required('Invalid date')
-      .test('is-invalidate-date', 'Invalid date / year must be 4 digit ', (value) => {
+      .required(_i18n._(t`Invalid date`))
+      .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
         if (value) {
           const getYear = value.getFullYear();
           if (getYear.toString().length !== 4) {
@@ -25,13 +33,18 @@ export const validationSchema = [
         return false;
       })
       .required(),
-    organization_name: yup.string().trim().required('Organization name is required'),
+    organization_name: yup
+      .string()
+      .trim()
+      .required(_i18n._(t`Organization name is required`)),
     business_category: yup.string().nullable(true),
     vasp_categories: yup.array().of(yup.string()).nullable(true)
   }),
   yup.object().shape({
     entity: yup.object().shape({
-      country_of_registration: yup.string().required('Country of registration is required'),
+      country_of_registration: yup
+        .string()
+        .required(_i18n._(t`Country of registration is required`)),
       name: yup.object().shape({
         name_identifiers: yup.array(
           yup.object().shape({
@@ -39,14 +52,14 @@ export const validationSchema = [
               .string()
               .test(
                 'notEmptyIfIdentifierTypeExist',
-                'Legal name is required',
+                _i18n._(t`Legal name is required`),
                 (value, ctx): any => {
                   return !(ctx.parent.legal_person_name_identifier_type && !value);
                 }
               ),
             legal_person_name_identifier_type: yup.string().when('legal_person_name', {
               is: (value: string) => !!value,
-              then: yup.string().required('Name Identifier Type is required')
+              then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
             })
           })
         ),
@@ -56,14 +69,14 @@ export const validationSchema = [
               .string()
               .test(
                 'notEmptyIfIdentifierTypeExist',
-                'Legal name is required',
+                _i18n._(t`Legal name is required`),
                 (value, ctx): any => {
                   return !(ctx.parent.legal_person_name_identifier_type && !value);
                 }
               ),
             legal_person_name_identifier_type: yup.string().when('legal_person_name', {
               is: (value: string) => !!value,
-              then: yup.string().required('Name Identifier Type is required')
+              then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
             })
           })
         ),
@@ -73,14 +86,14 @@ export const validationSchema = [
               .string()
               .test(
                 'notEmptyIfIdentifierTypeExist',
-                'Legal name is required',
+                _i18n._(t`Legal name is required`),
                 (value, ctx): any => {
                   return !(ctx.parent.legal_person_name_identifier_type && !value);
                 }
               ),
             legal_person_name_identifier_type: yup.string().when('legal_person_name', {
               is: (value: string) => !!value,
-              then: yup.string().required('Name Identifier Type is required')
+              then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
             })
           })
         )
@@ -110,7 +123,7 @@ export const validationSchema = [
           .string()
           .test(
             'registrationAuthority',
-            'Registration Authority cannot be left empty',
+            _i18n._(t`Registration Authority cannot be left empty`),
             (value, ctx) => {
               if (
                 ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
@@ -129,20 +142,23 @@ export const validationSchema = [
     contacts: yup.object().shape({
       administrative: yup.object().shape({
         name: yup.string(),
-        email: yup.string().email('Email is not valid'),
+        email: yup.string().email(_i18n._(t`Email is not valid`)),
         phone: yup.string()
       }),
       technical: yup
         .object()
         .shape({
           name: yup.string().required(),
-          email: yup.string().email('Email is not valid').required('Email is required'),
+          email: yup
+            .string()
+            .email(_i18n._(t`Email is not valid`))
+            .required(_i18n._(t`Email is required`)),
           phone: yup.string()
         })
         .required(),
       billing: yup.object().shape({
         name: yup.string(),
-        email: yup.string().email('Email is not valid'),
+        email: yup.string().email(_i18n._(t`Email is not valid`)),
         phone: yup.string()
       }),
       legal: yup
@@ -162,12 +178,14 @@ export const validationSchema = [
   yup.object().shape({
     trisa_endpoint: yup.string().trim(),
     trisa_endpoint_testnet: yup.object().shape({
-      endpoint: yup.string().matches(trisaEndpointPattern, 'TRISA endpoint is not valid'),
+      endpoint: yup.string().matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
       common_name: yup
         .string()
         .matches(
           commonNameRegex,
-          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+          _i18n._(
+            t`Common name should not contain special characters, no spaces and must have a dot(.) in it`
+          )
         )
     }),
     trisa_endpoint_mainnet: yup.object().shape({
@@ -175,17 +193,19 @@ export const validationSchema = [
         .string()
         .test(
           'uniqueMainetEndpoint',
-          'TestNet and MainNet endpoints should not be the same',
+          _i18n._(t`TestNet and MainNet endpoints should not be the same`),
           (value, ctx: any): any => {
             return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
           }
         )
-        .matches(trisaEndpointPattern, 'TRISA endpoint is not valid'),
+        .matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
       common_name: yup
         .string()
         .matches(
           commonNameRegex,
-          'Common name should not contain special characters, no spaces and must have a dot(.) in it'
+          _i18n._(
+            t`Common name should not contain special characters, no spaces and must have a dot(.) in it`
+          )
         )
     })
   }),

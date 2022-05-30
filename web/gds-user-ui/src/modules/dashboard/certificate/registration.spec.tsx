@@ -1,5 +1,6 @@
 /* eslint-disable require-await */
 import userEvent from '@testing-library/user-event';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
 import Certificate from './registration';
 
@@ -55,6 +56,11 @@ const certificateInitialValue = {
 };
 
 describe('<Certificate />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
   describe('<BasicDetails />', () => {
     it('should validate required field', async () => {
       const initialState = {
@@ -70,8 +76,8 @@ describe('<Certificate />', () => {
       };
       const basicDetailsValidationMessages = [
         'Organization name is required',
-        'website is a required field',
-        'Invalid date / year must be 4 digit '
+        'Website is a required field',
+        'Invalid date / year must be 4 digit'
       ];
 
       await act(async () => {
@@ -124,6 +130,12 @@ describe('<Certificate />', () => {
     });
 
     describe('Date of Incorporation / Establishment', () => {
+      beforeAll(() => {
+        act(() => {
+          dynamicActivate('en');
+        });
+      });
+
       it('date of corporation field should have valid date', async () => {
         await act(async () => {
           render(<Certificate />);
@@ -140,7 +152,7 @@ describe('<Certificate />', () => {
             .getAllByTestId('error-message')
             .map((err) => err.textContent);
 
-          expect(errorMessages).toContain('Invalid date / year must be 4 digit ');
+          expect(errorMessages).toContain('Invalid date / year must be 4 digit');
         });
         expect(establishedOnField).toHaveAttribute('aria-invalid', 'true');
       });
@@ -205,6 +217,12 @@ describe('<Certificate />', () => {
   });
 
   describe('<Contacts />', () => {
+    beforeAll(() => {
+      act(() => {
+        dynamicActivate('en');
+      });
+    });
+
     beforeEach(() => {
       localStorage.setItem('certificateForm', JSON.stringify(certificateInitialValue));
     });

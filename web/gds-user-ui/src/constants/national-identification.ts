@@ -1,14 +1,16 @@
+import { t } from '@lingui/macro';
+
 export const NATIONAL_IDENTIFICATION = {
-  NATIONAL_IDENTIFIER_TYPE_CODE_LEIX: 'Legal Entity Identifier (LEI)',
-  NATIONAL_IDENTIFIER_TYPE_CODE_TXID: 'Tax Identification Number',
-  NATIONAL_IDENTIFIER_TYPE_CODE_RAID: 'Registration Authority Identifier',
-  NATIONAL_IDENTIFIER_TYPE_CODE_MISC: 'Unspecified',
-  NATIONAL_IDENTIFIER_TYPE_CODE_FIIN: 'Foreign Investment Identity Number',
-  NATIONAL_IDENTIFIER_TYPE_CODE_SOCS: 'Social Security Number',
-  NATIONAL_IDENTIFIER_TYPE_CODE_CCPT: 'Passport Number',
-  NATIONAL_IDENTIFIER_TYPE_CODE_IDCD: 'Identity Card Number',
-  NATIONAL_IDENTIFIER_TYPE_CODE_DRLC: "Driver's License Number",
-  NATIONAL_IDENTIFIER_TYPE_CODE_ARNU: 'Alien Registration Number'
+  NATIONAL_IDENTIFIER_TYPE_CODE_LEIX: t`Legal Entity Identifier (LEI)`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_TXID: t`Tax Identification Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_RAID: t`Registration Authority Identifier`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_MISC: t`Unspecified`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_FIIN: t`Foreign Investment Identity Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_SOCS: t`Social Security Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_CCPT: t`Passport Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_IDCD: t`Identity Card Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_DRLC: t`Driver's License Number`,
+  NATIONAL_IDENTIFIER_TYPE_CODE_ARNU: t`Alien Registration Number`
 };
 
 export const disabledIdentifiers = [

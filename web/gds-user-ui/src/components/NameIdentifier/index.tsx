@@ -1,4 +1,5 @@
 import { Heading, Text, Stack, VStack, Grid, GridItem, HStack, Box } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
 import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
@@ -94,7 +95,11 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                           isDisabled={(index === 0 && type && type === 'legal') || false}
                           isInvalid={getValueByPathname(errors, f.name)}
                           formHelperText={getValueByPathname(errors, f.name)?.message}
-                          formatOptionLabel={(data: any) => <>{data.label} Name</>}
+                          formatOptionLabel={(data: any) => (
+                            <>
+                              {data.label} {t`Name`}
+                            </>
+                          )}
                           options={getNameIdentiferTypeOptions()}
                           onChange={(newValue: any) => f.onChange(newValue.value)}
                           value={nameIdentiferTypeOptions.find(
@@ -111,7 +116,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                   alignSelf={{ base: 'flex-end', md: 'initial' }}>
                   <DeleteButton
                     onDelete={() => remove(index)}
-                    tooltip={{ label: 'Remove line' }}
+                    tooltip={{ label: t`Remove line` }}
                     isDisabled={type === 'legal' && index === 0}
                   />
                 </Box>

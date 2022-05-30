@@ -21,7 +21,6 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
           type="button"
         >
           Edit
-           
         </button>
       </div>
       <div
@@ -42,8 +41,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                technical
-                 Contact
+                technical Contact
               </td>
               <td
                 class="css-xumdn4"
@@ -74,8 +72,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                Compliance / legal
-                 Contact
+                Compliance / legal Contact
               </td>
               <td
                 class="css-xumdn4"
@@ -106,8 +103,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                administrative
-                 Contact
+                administrative Contact
               </td>
               <td
                 class="css-xumdn4"
@@ -124,8 +120,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                billing
-                 Contact
+                billing Contact
               </td>
               <td
                 class="css-xumdn4"

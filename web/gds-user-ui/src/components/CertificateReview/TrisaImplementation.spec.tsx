@@ -1,4 +1,5 @@
-import { render } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render } from 'utils/test-utils';
 import TrisaImplementationReview from './TrisaImplementationReview';
 
 const defaultValues = {
@@ -20,6 +21,12 @@ const defaultValues = {
 };
 
 describe('<TrisaImplementationReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });

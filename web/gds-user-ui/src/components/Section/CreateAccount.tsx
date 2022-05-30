@@ -26,6 +26,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { validationSchema } from 'modules/auth/register/register.validation';
 import { getValueByPathname } from 'utils/utils';
 import InputFormControl from 'components/ui/InputFormControl';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
@@ -39,11 +41,6 @@ interface IFormInputs {
   username: string;
   password: string;
 }
-
-// const validationSchema = yup.object().shape({
-//   username: yup.string().email('Email is not valid').required('Email is required'),
-//   password: yup.string().required('Password is required')
-// });
 
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
@@ -70,10 +67,12 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
           <Heading fontSize={'4xl'}></Heading>
           <Text color={useColorModeValue('gray.600', 'white')}>
             <Text as={'span'} fontWeight={'bold'}>
-              Create your TRISA account.
+              <Trans id="Create your TRISA account.">Create your TRISA account.</Trans>
             </Text>{' '}
-            We recommend that a senior compliance officer initialally creates the account for the
-            VASP. Additional accounts can be created later.
+            <Trans id="We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later.">
+              We recommend that a senior compliance officer initialally creates the account for the
+              VASP. Additional accounts can be created later.
+            </Trans>
           </Text>
         </Stack>
         <Stack align={'center'} justify={'center'} fontFamily={'open sans'}>
@@ -89,7 +88,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
             }}>
             <GoogleIcon h={24} />
             <Text as={'span'} ml={3}>
-              Continue with google
+              <Trans id="Continue with google">Continue with google</Trans>
             </Text>
           </Button>
           <Text py={3}>Or</Text>
@@ -108,7 +107,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 {...register('username')}
                 paddingY={6}
                 data-testid="username-field"
-                placeholder="Email Address"
+                placeholder={t`Email Address`}
                 isInvalid={!!getValueByPathname(errors, 'username')}
                 formHelperText={getValueByPathname(errors, 'username')?.message}
               />
@@ -118,7 +117,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 {...register('password')}
                 paddingY={6}
                 data-testid="password-field"
-                placeholder="Password"
+                placeholder={t`Password`}
                 hasBtn
                 handleFn={handleClick}
                 setBtnName={show ? 'Hide' : 'Show'}
@@ -128,11 +127,11 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                   getValueByPathname(errors, 'password') ? (
                     getValueByPathname(errors, 'password')?.message
                   ) : (
-                    <>
+                    <Trans id="* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)">
                       * At least 8 characters in length * Contain at least 3 of the following 4
                       types of characters: * lower case letters (a-z) * upper case letters (A-Z) *
                       numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)
-                    </>
+                    </Trans>
                   )
                 }
               />
@@ -147,13 +146,13 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                   _hover={{
                     bg: '#10aaed'
                   }}>
-                  Create an Account
+                  <Trans id="Create an Account">Create an Account</Trans>
                 </Button>
                 <Text textAlign="center">
-                  Already have an account?{' '}
+                  <Trans id="Already have an account?">Already have an account?</Trans>{' '}
                   <Link href="/login" color={colors.system.cyan}>
                     {' '}
-                    Log in.
+                    <Trans id="Log in.">Log in.</Trans>
                   </Link>
                 </Text>
               </Stack>

@@ -4,6 +4,7 @@ import PhoneNumberInput from 'components/ui/PhoneNumberInput';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import get from 'lodash/get';
+import { t } from '@lingui/macro';
 
 type ContactFormProps = {
   title: string;
@@ -20,19 +21,19 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
       <Heading size="md">{title}</Heading>
       <Text fontStyle="italic">{description}</Text>
       <InputFormControl
-        label="Full Name"
-        formHelperText="Preferred name for email communication."
+        label={t`Full Name`}
+        formHelperText={t`Preferred name for email communication.`}
         controlId="fullName"
         isInvalid={get(errors, `${name}.name`)}
         {...register(`${name}.name`)}
       />
 
       <InputFormControl
-        label="Email Address"
+        label={t`Email Address`}
         formHelperText={
           get(errors, `${name}.email`)
             ? get(errors, `${name}.email`).message
-            : 'Please use the email address associated with your organization.'
+            : t`Please use the email address associated with your organization.`
         }
         controlId="fullName"
         type="email"

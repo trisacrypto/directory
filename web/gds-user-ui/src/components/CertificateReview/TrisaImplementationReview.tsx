@@ -5,6 +5,7 @@ import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { Trans } from '@lingui/react';
 interface TrisaImplementationReviewProps {}
 
 const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
@@ -31,7 +32,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
           <Heading fontSize={20} mb="2rem">
-            Section 4: TRISA Implementation
+            <Trans id="Section 4: TRISA Implementation">Section 4: TRISA Implementation</Trans>
           </Heading>
           <Button
             bg={colors.system.blue}
@@ -41,7 +42,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            Edit
+            <Trans id="Edit">Edit</Trans>
           </Button>
         </Box>
         <Stack fontSize={'1rem'}>
@@ -67,15 +68,21 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
               }}>
               <Tr>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
-                  TestNet
+                  <Trans id="TestNet">TestNet</Trans>
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'}>TestNet TRISA Endpoint</Td>
+                <Td pt={'1rem !important'}>
+                  <Trans id="TestNet TRISA Endpoint">TestNet TRISA Endpoint</Trans>
+                </Td>
                 <Td pl={0}>{trisa?.testnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>TestNet Certificate Common Name</Td>
+                <Td>
+                  <Trans id="TestNet Certificate Common Name">
+                    TestNet Certificate Common Name
+                  </Trans>
+                </Td>
                 <Td pl={0}>{trisa?.testnet?.common_name || 'N/A'}</Td>
               </Tr>
               <Tr>
@@ -83,7 +90,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
               </Tr>
               <Tr>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
-                  MainNet
+                  <Trans id="MainNet">MainNet</Trans>
                 </Td>
               </Tr>
               <Tr>
@@ -91,7 +98,11 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                 <Td pl={0}>{trisa?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>MainNet Certificate Common Name</Td>
+                <Td>
+                  <Trans id="MainNet Certificate Common Name">
+                    MainNet Certificate Common Name
+                  </Trans>
+                </Td>
                 <Td pl={0}>{trisa?.mainnet?.common_name || 'N/A'}</Td>
               </Tr>
             </Tbody>

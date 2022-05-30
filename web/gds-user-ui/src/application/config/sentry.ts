@@ -26,10 +26,12 @@ const initSentry = () => {
       tracesSampleRate: 1.0
     });
 
-    console.log("Sentry tracing initialized");
+    // eslint-disable-next-line no-console
+    console.log('Sentry tracing initialized');
   } else {
-    console.log("no Sentry configuration available");
-}
+    // eslint-disable-next-line no-console
+    console.log('no Sentry configuration available');
+  }
 };
 
 export default initSentry;

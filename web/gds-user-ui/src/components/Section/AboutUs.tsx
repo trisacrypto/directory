@@ -33,22 +33,30 @@ export default function AboutTrisaSection() {
               color={useColorModeValue('black', 'white')}
               fontSize={{ base: '16px', md: '17px' }}>
               <Link isExternal color={colors.system.link} href={'https://trisa.io'}>
-                The Travel Rule Information Sharing Architecture (TRISA){' '}
+                <Trans id="The Travel Rule Information Sharing Architecture (TRISA)">
+                  The Travel Rule Information Sharing Architecture (TRISA)
+                </Trans>{' '}
               </Link>
-              is a global, open source, secure, and peer-to-peer protocol for{' '}
-              <Link
-                isExternal
-                color={colors.system.link}
-                href="https://www.fatf-gafi.org/publications/?hf=10&b=0&s=desc(fatf_releasedate)">
-                Travel Rule
-              </Link>{' '}
-              compliance. TRISA helps Virtual Asset Service Providers (VASPs) comply with the Travel
-              Rule for cross-border cryptocurrency transactions. TRISA is designed to be
-              interoperable.
+              <Trans id="is a global, open source, secure, and peer-to-peer protocol for">
+                is a global, open source, secure, and peer-to-peer protocol for
+                <Link
+                  isExternal
+                  color={colors.system.link}
+                  href="https://www.fatf-gafi.org/publications/?hf=10&b=0&s=desc(fatf_releasedate)">
+                  Travel Rule
+                </Link>{' '}
+              </Trans>{' '}
+              <Trans id="compliance. TRISA helps Virtual Asset Service Providers (VASPs) comply with the Travel Rule for cross-border cryptocurrency transactions. TRISA is designed to be interoperable.">
+                compliance. TRISA helps Virtual Asset Service Providers (VASPs) comply with the
+                Travel Rule for cross-border cryptocurrency transactions. TRISA is designed to be
+                interoperable.
+              </Trans>
               <br />
               <br />
-              TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely
-              exchange Travel Rule compliance data with each other.
+              <Trans id="TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely exchange Travel Rule compliance data with each other.">
+                TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can
+                securely exchange Travel Rule compliance data with each other.
+              </Trans>
             </Text>
             <Stack
               spacing={4}
