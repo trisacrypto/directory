@@ -13,6 +13,7 @@ const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.E
       mr={{ base: 2, sm: isLast ? 8 : 2 }}
       pl={isLast ? 8 : 0}
       display="block"
+      as="div"
       {...rest}>
       <Link
         isExternal={!!to.startsWith('http')}

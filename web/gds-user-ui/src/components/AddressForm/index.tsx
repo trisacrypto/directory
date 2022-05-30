@@ -7,6 +7,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { Control, Controller, useFormContext, UseFormRegister } from 'react-hook-form';
 import _ from 'lodash';
 import { getValueByPathname } from 'utils/utils';
+import { t } from '@lingui/macro';
 
 type AddressFormProps = {
   control: Control;
@@ -37,21 +38,21 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
     <>
       <VStack spacing={3.5} align="start">
         <InputFormControl
-          formHelperText="Address line 1 e.g. building name/number, street name"
+          formHelperText={t`Address line 1 e.g. building name/number, street name`}
           controlId={`${name}[${rowIndex}].address_line[0]`}
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[0]`)}
           {...register(`${name}[${rowIndex}].address_line[0]`)}
         />
 
         <InputFormControl
-          formHelperText="Address line 2 e.g. apartment or suite number"
+          formHelperText={t`Address line 2 e.g. apartment or suite number`}
           controlId="address_2"
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[1]`)}
           {...register(`${name}[${rowIndex}].address_line[1]`)}
         />
 
         <InputFormControl
-          formHelperText="Address line 3 e.g. city, province, postal code"
+          formHelperText={t`Address line 3 e.g. city, province, postal code`}
           controlId="address_3"
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[2]`)}
           {...register(`${name}[${rowIndex}].address_line[2]`)}
@@ -70,7 +71,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                   isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].country`)}
                   value={countries.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
-                  formHelperText="Country"
+                  formHelperText={t`Country`}
                   controlId="country"
                 />
               )}
@@ -89,7 +90,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                   value={addressTypes.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
                   options={addressTypes}
-                  formHelperText="Address Type"
+                  formHelperText={t`Address Type`}
                   controlId="address_type"
                 />
               )}

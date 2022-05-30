@@ -1,5 +1,6 @@
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render, screen, waitFor } from 'utils/test-utils';
 import CreateAccount from './CreateAccount';
 
 const mockSignWithEmail = jest.fn((values) => {
@@ -11,6 +12,12 @@ const mockSignWithSocial = jest.fn((values) => {
 });
 
 describe('<CreateAccount />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   it('should submit form when fields are all filled', async () => {
     render(
       <CreateAccount

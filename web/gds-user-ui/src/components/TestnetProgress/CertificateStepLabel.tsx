@@ -5,6 +5,8 @@ import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { IconType } from 'react-icons/lib';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -103,11 +105,13 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
         px={5}
         fontFamily={'Open Sans'}>
         <Box pb={2} display={'flex'} justifyContent={'space-between'}>
-          <Heading fontSize={20}> Certificate Progress </Heading>
+          <Heading fontSize={20}>
+            <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
+          </Heading>
         </Box>
         <Grid templateColumns="repeat(6, 1fr)" gap={2}>
           <Tooltip
-            label={getLabel(1)?.hasError && 'Missing required element'}
+            label={getLabel(1)?.hasError && t`Missing required element`}
             placement="top"
             bg={'red'}>
             <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
@@ -127,7 +131,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   color={'#3C4257'}
                   fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                   fontSize={'0.8em'}>
-                  1 Basic Details
+                  1 <Trans id="Basic Details">Basic Details</Trans>
                 </Text>
               </HStack>
             </Box>
@@ -149,7 +153,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(2) ? 'bold' : 'normal'}>
-                2 Legal Person
+                2 <Trans id="Legal Person">Legal Person</Trans>
               </Text>
             </HStack>
           </Box>
@@ -171,7 +175,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(3) ? 'bold' : 'normal'}>
-                3 Contacts
+                3 <Trans id="Contacts">Contacts</Trans>
               </Text>
             </HStack>
           </Box>
@@ -193,7 +197,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(4) ? 'bold' : 'normal'}>
-                4 TRISA implementation
+                4 <Trans id="TRISA implementation">TRISA implementation</Trans>
               </Text>
             </HStack>
           </Box>
@@ -215,7 +219,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(5) ? 'bold' : 'normal'}>
-                5 TRIXO Questionnaire
+                5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
               </Text>
             </HStack>
           </Box>
@@ -237,7 +241,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 color={'#3C4257'}
                 fontSize={'0.8em'}
                 fontWeight={isActiveStep(6) ? 'bold' : 'normal'}>
-                6 Review & Submit
+                6 <Trans id="Review & Submit">Review & Submit</Trans>
               </Text>
             </HStack>
           </Box>

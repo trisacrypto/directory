@@ -90,7 +90,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-16g2rc2"
                 role="gridcell"
               >
-                Date of Incorporation/ Establishment
+                Date of Incorporation / Establishment
               </td>
               <td
                 class="css-xumdn4"

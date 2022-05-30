@@ -21,7 +21,7 @@ export const hasAddressField = (address: any) => {
 
 const hasAddressFieldAndLine = (address: any) => {
   if (hasAddressField(address) && hasAddressLine(address)) {
-    console.warn('[ERROR]', 'cannot render address');
+    console.error('[ERROR]', 'cannot render address');
     return true;
   }
   return false;
@@ -77,7 +77,7 @@ export const renderField = (address: any) => (
 
 export const renderAddress = (address: any) => {
   if (hasAddressFieldAndLine(address)) {
-    console.warn('[ERROR]', 'invalid address with both fields and lines');
+    console.error('[ERROR]', 'invalid address with both fields and lines');
     return <div>Invalid Address</div>;
   }
 
@@ -89,6 +89,6 @@ export const renderAddress = (address: any) => {
     return renderField(address);
   }
 
-  console.warn('[ERROR]', 'could not render address');
+  console.error('[ERROR]', 'could not render address');
   return <div>Unparseable Address</div>;
 };

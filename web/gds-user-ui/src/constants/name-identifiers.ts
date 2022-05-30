@@ -1,8 +1,10 @@
+import { t } from '@lingui/macro';
+
 export const NAME_IDENTIFIER_TYPE = {
-  LEGAL_PERSON_NAME_TYPE_CODE_LEGL: 'Legal',
-  LEGAL_PERSON_NAME_TYPE_CODE_SHRT: 'Short',
-  LEGAL_PERSON_NAME_TYPE_CODE_TRAD: 'Trading',
-  LEGAL_PERSON_NAME_TYPE_CODE_MISC: 'Misc'
+  LEGAL_PERSON_NAME_TYPE_CODE_LEGL: t`Legal`,
+  LEGAL_PERSON_NAME_TYPE_CODE_SHRT: t`Short`,
+  LEGAL_PERSON_NAME_TYPE_CODE_TRAD: t`Trading`,
+  LEGAL_PERSON_NAME_TYPE_CODE_MISC: t`Misc`
 };
 
 export const getNameIdentiferTypeOptions = () => {
