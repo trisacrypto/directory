@@ -6,6 +6,7 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { getDomain } from 'utils/utils';
 import _ from 'lodash/fp';
+import { t } from '@lingui/macro';
 
 type TrisaImplementationFormProps = {
   headerText: string;
@@ -39,7 +40,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     const warningMessage =
       trisaEndpointUri === commonName
         ? undefined
-        : 'common name should match the TRISA endpoint without the port';
+        : t`common name should match the TRISA endpoint without the port`;
     setCommonNameWarning(warningMessage);
   }, [commonName, trisaEndpoint]);
 
@@ -55,7 +56,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
       );
     }
 
-    return 'The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.';
+    return t`The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.`;
   };
 
   const domain = getValues('website') && getDomain(getValues('website'));
@@ -64,12 +65,12 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     <FormLayout>
       <Heading size="md">{headerText}</Heading>
       <InputFormControl
-        label="TRISA Endpoint"
+        label={t`TRISA Endpoint`}
         placeholder={`${env[type]}.${domain}:443`}
         formHelperText={
           errors[name]?.endpoint
             ? errors[name]?.endpoint?.message
-            : 'The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.'
+            : t`The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.`
         }
         controlId="trisaEndpoint"
         isInvalid={!!errors[name]?.endpoint}
@@ -77,7 +78,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
       />
 
       <InputFormControl
-        label="Certificate Common Name"
+        label={t`Certificate Common Name`}
         placeholder={`${env[type]}.${domain}`}
         isInvalid={!!errors[name]?.common_name}
         formHelperText={getCommonNameFormHelperText()}

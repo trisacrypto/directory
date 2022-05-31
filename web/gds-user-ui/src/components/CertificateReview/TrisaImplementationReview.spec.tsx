@@ -1,4 +1,5 @@
-import { render } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render } from 'utils/test-utils';
 import TrisaImplementationReview from './TrisaImplementationReview';
 
 const defaultValues = {
@@ -20,6 +21,12 @@ const defaultValues = {
 };
 
 describe('<TrisaImplementationReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });
@@ -29,6 +36,7 @@ describe('<TrisaImplementationReview />', () => {
 
     const { container } = render(<TrisaImplementationReview />);
 
+    console.log('[after all] localStorage', localStorage.__STORE__);
     expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     expect(Object.keys(localStorage.__STORE__).length).toBe(1);
 

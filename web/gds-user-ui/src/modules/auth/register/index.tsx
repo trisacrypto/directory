@@ -41,10 +41,10 @@ const StartPage: React.FC = () => {
       }
       if (err.code === 'invalid_signup') {
         setIsUsernameError(true);
-        console.log('username already exist');
+        console.error('username already exist');
       }
       // catch this error in sentry
-      console.log('error', err);
+      console.error('error', err);
     }
   };
   return (

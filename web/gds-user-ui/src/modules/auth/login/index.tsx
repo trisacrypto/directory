@@ -27,7 +27,6 @@ const StartPage: React.FC = () => {
         realm: 'Username-Password-Authentication'
       });
       if (response) {
-        console.log('response ', response);
         setIsloading(false);
         if (response.emailVerified) {
           // to implement later
@@ -41,7 +40,7 @@ const StartPage: React.FC = () => {
       setIsloading(false);
       setError(err.code);
       // catch this error in sentry
-      console.log('error', err);
+      console.error('error', err);
     }
   };
   return (

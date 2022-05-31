@@ -1,4 +1,5 @@
-import { render } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render } from 'utils/test-utils';
 import LegalPersonReview from './LegalPersonReview';
 
 const defaultValues = {
@@ -47,6 +48,12 @@ const defaultValues = {
 };
 
 describe('<LegalPersonReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });

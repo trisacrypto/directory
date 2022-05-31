@@ -21,6 +21,8 @@ import {
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { colors } from 'utils/theme';
 import { isProdEnv } from 'application/config';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 const Certificate: React.FC = () => {
   const { nextStep, previousStep } = useCertificateStepper();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
@@ -35,9 +37,6 @@ const Certificate: React.FC = () => {
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
-  console.log('[registration] tsr stepper', localStorage.getItem('trs_stepper'));
-  console.log('[registration] current step', currentStep);
-
   const resolver = yupResolver(getCurrentStepValidationSchema());
 
   const methods = useForm({
@@ -121,7 +120,7 @@ const Certificate: React.FC = () => {
           <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <Flex justifyContent={'space-between'}>
               <Heading size="lg" mb="24px" className="heading">
-                Certificate Registration
+                <Trans id="Certificate Registration">Certificate Registration</Trans>
               </Heading>
               <Box>{!isUserAuthenticated && <HomeButton link={'/'} />}</Box>
             </Flex>
@@ -130,19 +129,28 @@ const Certificate: React.FC = () => {
               <Card maxW="100%" bg={'white'}>
                 <Card.Body>
                   <Text>
-                    This multi-section form is an important step in the registration and certificate
-                    issuance process. The information you provide will be used to verify the legal
-                    entity that you represent and, where appropriate, will be available to verified
-                    TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
+                    <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
+                      This multi-section form is an important step in the registration and
+                      certificate issuance process. The information you provide will be used to
+                      verify the legal entity that you represent and, where appropriate, will be
+                      available to verified TRISA members to facilitate compliance decisions. If you
+                      need guidance, see the
+                    </Trans>{' '}
                     <Link isExternal href="/getting-started" color={'blue'} fontWeight={'bold'}>
-                      Getting Started Help Guide.{' '}
+                      <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
                     </Link>
                   </Text>
                   <Text pt={4}>
-                    To assist in completing the registration form, the form is divided into multiple
-                    sections.{' '}
+                    <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
+                      To assist in completing the registration form, the form is divided into
+                      multiple sections
+                    </Trans>
+                    .{' '}
                     <Text as={'span'} fontWeight={'bold'}>
-                      No information is sent until you complete Section 6 - Review & Submit.{' '}
+                      <Trans id="No information is sent until you complete Section 6 - Review & Submit">
+                        No information is sent until you complete Section 6 - Review & Submit
+                      </Trans>
+                      .{' '}
                     </Text>
                   </Text>
                 </Card.Body>
@@ -164,7 +172,7 @@ const Certificate: React.FC = () => {
                       _active={{ outline: 'none' }}
                       _focus={{ outline: 'none' }}
                       maxW="13rem">
-                      Save & Previous
+                      <Trans id="Save & Previous">Save & Previous</Trans>
                     </FormButton>
                     <FormButton
                       borderRadius={5}
@@ -175,7 +183,7 @@ const Certificate: React.FC = () => {
                       backgroundColor="#FF7A59"
                       type="submit"
                       _hover={{ backgroundColor: '#f07253' }}>
-                      {currentStep === lastStep ? 'Next' : 'Save & Next'}
+                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </FormButton>
                     {/* add review button when reach to final step */}
                     {/* {currentStep !== lastStep && (

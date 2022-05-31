@@ -1,4 +1,5 @@
-import { render } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render } from 'utils/test-utils';
 import ContactsReview from './ContactsReview';
 
 const defaultValues = {
@@ -11,6 +12,12 @@ const defaultValues = {
 };
 
 describe('<ContactsReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });

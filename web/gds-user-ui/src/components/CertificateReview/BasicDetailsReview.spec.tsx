@@ -1,5 +1,7 @@
-import { render, screen } from 'utils/test-utils';
+import { render, act } from 'utils/test-utils';
 import BasicDetailsReview from './BasicDetailsReview';
+import { i18n } from '@lingui/core';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
 
 const defaultValues = {
   entity: {
@@ -13,6 +15,12 @@ const defaultValues = {
 };
 
 describe('<BasicDetailsReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });

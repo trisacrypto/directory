@@ -14,6 +14,7 @@
     "@fontsource/roboto-slab": "^4.5.6",
     "@fortawesome/fontawesome-free": "^6.0.0",
     "@hookform/resolvers": "^2.8.8",
+    "@lingui/detect-locale": "^3.13.3",
     "@lingui/react": "^3.13.3",
     "@reduxjs/toolkit": "^1.7.2",
     "@sentry/react": "^6.19.7",
@@ -62,7 +63,7 @@
     "cy:open": "cypress open",
     "start": "yarn extract && react-scripts start",
     "build": "yarn compile && react-scripts build",
-    "test": "react-scripts test --coverage --watchAll=false",
+    "test": "react-scripts test --coverage --watchAll=false --silent",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public",
@@ -113,6 +114,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/core": "^7.18.0",
     "@hookform/devtools": "^4.1.0",
     "@lingui/cli": "^3.13.3",
     "@lingui/macro": "^3.13.3",
@@ -133,6 +135,7 @@
     "@types/redux-mock-store": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.13.0",
+    "babel-core": "^7.0.0-bridge.0",
     "cypress": "^9.6.0",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",

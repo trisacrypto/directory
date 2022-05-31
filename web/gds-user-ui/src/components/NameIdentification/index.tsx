@@ -14,6 +14,8 @@ import {
   getRegistrationAuthoritiesOptions,
   getValueByPathname
 } from 'utils/utils';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 
 interface NationalIdentificationProps {}
 
@@ -27,16 +29,22 @@ const RegistrationAuthorityFormHelperText = ({ option }: { option: string }) => 
 
   return (
     <Text>
-      For identifiers other than LEI specify the registration authority from the following list. See{' '}
+      <Trans id="For identifiers other than LEI specify the registration authority from the following list. See">
+        For identifiers other than LEI specify the registration authority from the following list.
+        See
+      </Trans>{' '}
       <Link
         href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
         color="blue.500"
         isExternal>
-        GLEIF Registration Authorities
+        <Trans id="GLEIF Registration Authorities">GLEIF Registration Authorities</Trans>
       </Link>{' '}
-      for more details on how to look up a registration authority. If in doubt, use RA777777 -
-      "General Government Entities" which specifies the default registration authority for your
-      country of registration.
+      <Trans
+        id={`for more details on how to look up a registration authority. If in doubt, use RA777777 - "General Government Entities" which specifies the default registration authority for your country of registration.`}>
+        for more details on how to look up a registration authority. If in doubt, use RA777777 -
+        "General Government Entities" which specifies the default registration authority for your
+        country of registration.
+      </Trans>
       {registrationAuthority?.website && (
         <Text color={'#1a202c'} fontSize="sm" mt={3}>
           Website:{' '}
@@ -105,19 +113,23 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
 
   return (
     <FormLayout>
-      <Heading size="md">National Identification</Heading>
+      <Heading size="md">
+        <Trans id="National Identification">National Identification</Trans>
+      </Heading>
       <Text>
-        Please supply a valid national identification number. TRISA recommends the use of LEI
-        numbers. For more information, please visit{' '}
+        <Trans id="Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit">
+          Please supply a valid national identification number. TRISA recommends the use of LEI
+          numbers. For more information, please visit
+        </Trans>{' '}
         <Link href="https://gleif.org" color="blue.500" isExternal>
           GLEIF.org
         </Link>
       </Text>
       <InputFormControl
-        label="Identification Number"
+        label={t`Identification Number`}
         controlId="identification_number"
         isInvalid={!!errors?.entity?.national_identification?.national_identifier}
-        formHelperText="An identifier issued by an appropriate issuing authority"
+        formHelperText={t`An identifier issued by an appropriate issuing authority`}
         {...register('entity.national_identification.national_identifier')}
       />
       <Controller
@@ -143,7 +155,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
             }
             value={nationalIdentificationOptions.find((option) => option.value === field.value)}
             onChange={(newValue: any) => field.onChange(newValue.value)}
-            label="Identification Type"
+            label={t`Identification Type`}
             controlId="identification_type"
           />
         )}
@@ -161,11 +173,11 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 onChange={(newValue: any) => field.onChange(newValue.value)}
                 isInvalid={!!errors?.entity?.national_identification?.country_of_issue}
                 isDisabled={!disabledIdentifiers.includes(NationalIdentificationType)}
-                label="Country of Issue"
+                label={t`Country of Issue`}
                 controlId="country_of_issue"
                 formHelperText={
                   errors?.entity?.national_identification?.country_of_issue?.message ||
-                  'Country of Issue is reserved for National Identifiers of Natural Persons'
+                  t`Country of Issue is reserved for National Identifiers of Natural Persons`
                 }
               />
             )}
@@ -183,7 +195,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 options={getRegistrationAuthority()}
                 value={registrationAuthority.find((option) => option.value === field.value)}
                 onChange={(newValue: any) => field.onChange(newValue.value)}
-                label="Registration Authority"
+                label={t`Registration Authority`}
                 controlId="registration_authority"
                 isInvalid={!!errors?.entity?.national_identification?.registration_authority}
                 isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
