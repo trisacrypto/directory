@@ -35,7 +35,7 @@ const StatCard = ({ title, number }: StatCardProps) => {
 };
 StatCard.defaultProps = {
   title: 'Verified VASPs',
-  number: 248
+  number: 0
 };
 
 export default StatCard;

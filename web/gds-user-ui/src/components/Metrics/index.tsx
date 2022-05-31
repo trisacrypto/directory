@@ -2,26 +2,29 @@ import React from 'react';
 import { Stack, Box, Text, Heading, HStack, Flex } from '@chakra-ui/react';
 import StatCard from 'components/StatCard';
 import StatusCard from 'components/StatusCard';
+import * as Sentry from '@sentry/react';
 interface MetricsProps {
-  datas?: any;
-  status: boolean;
+  data: any;
+  type: string;
 }
-const Metrics = ({ datas, status }: MetricsProps) => {
+const Metrics = ({ data, type }: MetricsProps) => {
   return (
-    <Flex pt={4}>
-      <HStack spacing="24">
-        <StatusCard isOnline={status} />
-
-        <StatCard title="Verified VASPs" number={248} />
-        <StatCard title="TestNet Cerificates" number={248} />
-        <StatCard title="MainNet Cerificates" number={248} />
-      </HStack>
-    </Flex>
+    <Stack>
+      <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4} my={5}>
+        <Stack>
+          <Heading fontSize={20}>{`${type} Network Metrics`}</Heading>
+        </Stack>
+      </Stack>
+      <Box textAlign={'center'} justifyContent="center" justifyItems={'center'}>
+        <HStack spacing="24">
+          <StatusCard isOnline={data?.status || false} />
+          <StatCard title="Verified VASPs" number={data?.vasps_count} />
+          <StatCard title="Cerificates" number={data?.certificates_issued} />
+          <StatCard title="New Members" number={data?.new_members} />
+        </HStack>
+      </Box>
+    </Stack>
   );
-};
-Metrics.defaultProps = {
-  title: 'Verified VASPs',
-  number: 248
 };
 
 export default Metrics;

@@ -14,7 +14,7 @@ const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
 const LoginPage = React.lazy(() => import('modules/auth/login'));
 const RegisterPage = React.lazy(() => import('modules/auth/register'));
 const HandleAuthCallback = React.lazy(() => import('modules/auth/callback'));
-
+import PrivateRoute from './PrivateRoute';
 const AppRouter: React.FC = () => {
   const { isInitialized } = useAnalytics();
   return (

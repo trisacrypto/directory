@@ -39,9 +39,7 @@ const useAuth = () => {
       return null;
     }
   };
-  const isUserAuthenticated = () => {
-    return !!accessToken;
-  };
+  const isUserAuthenticated = !!accessToken;
 
   return {
     user,

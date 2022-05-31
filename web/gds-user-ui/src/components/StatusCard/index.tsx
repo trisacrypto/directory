@@ -46,7 +46,6 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
       maxWidth={246}
       fontSize={18}
       p={5}
-      mt={10}
       px={5}>
       <Box textAlign={'center'}>
         <Heading fontSize={20}>Network Status</Heading>
