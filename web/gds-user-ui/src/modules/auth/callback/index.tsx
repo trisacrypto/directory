@@ -24,6 +24,7 @@ const CallbackPage: React.FC = () => {
         if (getUserInfo && getUserInfo?.email_verified) {
           cookies.set('access_token', accessToken, { path: '/' });
           cookies.set('user_locale', getUserInfo?.locale, { path: '/' });
+          console.log('getUserInfo', getUserInfo);
           navigate('/dashboard');
         } else {
           setError(

@@ -15,7 +15,6 @@ const useCustomAuth0 = () => {
           console.log('error', err);
           reject(err);
         } else {
-          console.log('authResult', authResult);
           resolve(authResult);
         }
       });
@@ -62,7 +61,6 @@ const useCustomAuth0 = () => {
         if (err) {
           reject(err);
         } else {
-          console.log('auth0Hash', data);
           resolve(data);
         }
       });
