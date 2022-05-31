@@ -20,7 +20,6 @@ const StartPage: React.FC = () => {
     }
   };
   const handleSignUpWithEmail = async (data: any) => {
-    console.log('datanfromform', data);
     setIsloading(true);
     try {
       const response: any = await auth0SignUpWithEmail({
@@ -29,7 +28,6 @@ const StartPage: React.FC = () => {
         connection: 'Username-Password-Authentication'
       });
       if (response) {
-        console.log('response', response);
         setIsloading(false);
         if (!response.emailVerified) {
           navigate('/auth/success');

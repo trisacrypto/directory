@@ -27,6 +27,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 275 }}
       pos="fixed"
+      px={2}
       h="full"
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
@@ -36,11 +37,12 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
-        {MenuItems.map((menu) => (
-          <NavItem key={menu.title} icon={menu.icon}>
+        {MenuItems.filter((m) => m.activated).map((menu) => (
+          <NavItem key={menu.title} icon={menu.icon} href={menu.path || '#'}>
             {menu.title}
           </NavItem>
         ))}
+
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
         <NavItem href="mailto:support@trisa.io" icon={MdContactSupport}>
           Support

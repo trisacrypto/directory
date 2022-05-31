@@ -30,7 +30,6 @@ const Certificate: React.FC = () => {
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
   const toast = useToast();
-
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];

@@ -8,6 +8,7 @@ import ResetPassword from 'modules/auth/reset';
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
 const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
+const OverviewPage = React.lazy(() => import('modules/dashboard/overview'));
 const VerifyPage = React.lazy(() => import('modules/verify'));
 const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
 const LoginPage = React.lazy(() => import('modules/auth/login'));
@@ -32,6 +33,7 @@ const AppRouter: React.FC = () => {
           <Route path="/auth/success" element={<SuccessAuth />} />
 
           <Route path="/dashboard/certificate/registration" element={<CertificatePage />} />
+          <Route path="/dashboard/overview" element={<OverviewPage />} />
 
           <Route element={<Home />} />
 

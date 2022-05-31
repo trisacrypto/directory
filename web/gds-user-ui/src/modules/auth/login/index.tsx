@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Heading, Stack } from '@chakra-ui/react';
 import Login from 'components/Section/Login';
-
+import useAuth from 'hooks/useAuth';
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
-  const { auth0SignIn, auth0SignWithSocial, auth0Hash } = useCustomAuth0();
+  const { auth0SignIn, auth0SignWithSocial, auth0Hash, auth0GetUser } = useCustomAuth0();
+  const { loginUser } = useAuth();
 
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
@@ -30,6 +31,10 @@ const StartPage: React.FC = () => {
         setIsloading(false);
         if (response.emailVerified) {
           // to implement later
+          // get user info
+
+          loginUser(response);
+        } else {
         }
       }
     } catch (err: any) {

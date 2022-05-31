@@ -13,12 +13,11 @@ const userSlice: any = createSlice({
   reducers: {
     login: (state: any, { payload }: any) => {
       state.user = payload.user;
+      state.isLoggedIn = true;
     },
     logout: (state: any) => {
       state.user = null;
-    },
-    isUserAuthenticated: (state: any) => {
-      return state.hasSession && state.isLoggedIn;
+      state.isLoggedIn = false;
     }
   }
 });
@@ -26,4 +25,5 @@ const userSlice: any = createSlice({
 export const userReducer = userSlice.reducer;
 export const { login, logout, isUserAuthenticated } = userSlice.actions;
 // selectors
-export const selectUser = (state: any) => state.user.user;
+export const userSelector = (state: any) => state.user.user;
+export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;
