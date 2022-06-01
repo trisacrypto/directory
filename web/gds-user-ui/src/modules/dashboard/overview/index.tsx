@@ -23,10 +23,10 @@ const Overview: React.FC = () => {
         setResult(response);
       } catch (e: any) {
         if (e.response.status === 401) {
-          navigate('/auth/login');
+          navigate('/auth/login?redirect=/dashboard/overview&q=tokenexpired');
         }
         if (e.response.status === 403) {
-          navigate('/auth/login');
+          navigate('/auth/login?redirect=/dashboard/overview&q=unauthorized');
         }
 
         console.log(e);

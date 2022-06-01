@@ -1,16 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { Heading, Stack } from '@chakra-ui/react';
+import { Heading, position, Stack, useToast } from '@chakra-ui/react';
 import Login from 'components/Section/Login';
 import useAuth from 'hooks/useAuth';
 import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
+import useSearchParams from 'hooks/useQueryParams';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
   const { auth0SignIn, auth0SignWithSocial, auth0Hash, auth0GetUser } = useCustomAuth0();
   const { loginUser } = useAuth();
-
+  const { q } = useSearchParams();
+  const toast = useToast();
+  useEffect(() => {
+    // rend tost if q is not empty
+    if (q) {
+      if (q === 'unauthorized') {
+        toast({
+          description:
+            'Your account does not have permission to access the Administrator interface. Contact the administrator of your organization for assistance',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top-right'
+        });
+      }
+      if (q === 'token_expired') {
+        toast({
+          description:
+            'Your session has expired. Please sign in again to continue using the Administrator interface',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top-right'
+        });
+      }
+    }
+  }, [q]);
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
     if (type === 'google') {
