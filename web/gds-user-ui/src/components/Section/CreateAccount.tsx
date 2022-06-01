@@ -26,7 +26,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { validationSchema } from 'modules/auth/register/register.validation';
 import { getValueByPathname } from 'utils/utils';
 import InputFormControl from 'components/ui/InputFormControl';
-
+import PasswordStrength from 'components/PasswordStrength';
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
   handleSignUpWithEmail: (data: any) => void;
@@ -50,12 +50,14 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    watch
   } = useForm<IFormInputs>({
     resolver: yupResolver(validationSchema)
   });
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
+  const watchPassword = watch('password');
 
   return (
     <Flex
@@ -125,15 +127,12 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 isInvalid={!!getValueByPathname(errors, 'password')}
                 type={show ? 'text' : 'password'}
                 formHelperText={
-                  getValueByPathname(errors, 'password') ? (
-                    getValueByPathname(errors, 'password')?.message
-                  ) : (
-                    <>
-                      * At least 8 characters in length * Contain at least 3 of the following 4
-                      types of characters: * lower case letters (a-z) * upper case letters (A-Z) *
-                      numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)
-                    </>
-                  )
+                  // getValueByPathname(errors, 'password') ? (
+                  //   getValueByPathname(errors, 'password')?.message
+                  // ) : (
+                  //   <PasswordStrength data={watchPassword} />
+                  // )
+                  watchPassword ? <PasswordStrength data={watchPassword} /> : null
                 }
               />
               <Stack spacing={10}>
