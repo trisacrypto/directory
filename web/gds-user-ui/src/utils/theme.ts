@@ -31,7 +31,15 @@ const fonts = {
 const customTheme = extendTheme({
   colors,
   config,
-  fonts
+  fonts,
+  styles: {
+    global: {
+      // This could also be "div, p"
+      '*, *::before, ::after': {
+        wordWrap: 'normal'
+      }
+    }
+  }
 });
 
 export default customTheme;
