@@ -8,19 +8,34 @@ import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import Metrics from 'components/Metrics';
 import useAuth from 'hooks/useAuth';
 import { getMetrics } from './overview.service';
+import { useLocation, useNavigate } from 'react-router-dom';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
-  const { user } = useAuth();
+  const { user, getUser } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    getUser();
+  }, []);
   useEffect(() => {
     (async () => {
       try {
         const response = await getMetrics();
         setResult(response);
       } catch (e: any) {
+        if (e.response.status === 401) {
+          navigate('/auth/login');
+        }
+        if (e.response.status === 403) {
+          navigate('/auth/login');
+        }
+
         console.log(e);
       }
     })();
   }, []);
+  if (!user) {
+    navigate('/');
+  }
   return (
     <DashboardLayout>
       <Heading marginBottom="69px">Overview</Heading>

@@ -12,7 +12,7 @@ const useAuth = () => {
   const loginUser = (u: TUser) => {
     dispatch(login(u));
   };
-  const accessToken = getCookie('session');
+  const accessToken = getCookie('session') || '';
 
   const logoutUser = () => {
     dispatch(logout());
@@ -32,11 +32,11 @@ const useAuth = () => {
         loginUser(u);
       } catch (error) {
         // log error in sentry
-        console.warn(error);
+        console.log(error);
         return null;
       }
     } else {
-      return null;
+      return accessToken;
     }
   };
   const isUserAuthenticated = !!accessToken;

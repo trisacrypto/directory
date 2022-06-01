@@ -22,7 +22,7 @@ msgstr "(Saved)"
 msgid "(not saved)"
 msgstr "(not saved)"
 
-#: src/components/Section/CreateAccount.tsx:130
+#: src/components/Section/CreateAccount.tsx:136
 msgid "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
 msgstr "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
 
@@ -69,7 +69,7 @@ msgid "A component of"
 msgstr "A component of"
 
 #: src/components/Header/LandingHeader.tsx:57
-#: src/components/Header/LandingHeader.tsx:93
+#: src/components/Header/LandingHeader.tsx:91
 #: src/components/Section/AboutUs.tsx:29
 msgid "About TRISA"
 msgstr "About TRISA"
@@ -144,7 +144,7 @@ msgstr "Alien Registration Number"
 msgid "All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP."
 msgstr "All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP."
 
-#: src/components/Section/CreateAccount.tsx:152
+#: src/components/Section/CreateAccount.tsx:158
 msgid "Already have an account?"
 msgstr "Already have an account?"
 
@@ -280,10 +280,14 @@ msgstr "Contact information for representatives of your organization. Contacts i
 msgid "Contacts"
 msgstr "Contacts"
 
+#: src/components/Section/CreateAccount.tsx:97
+msgid "Continue with Google"
+msgstr "Continue with Google"
+
 #: src/components/Section/CreateAccount.tsx:91
 #: src/components/Section/Login.tsx:85
-msgid "Continue with google"
-msgstr "Continue with google"
+#~ msgid "Continue with google"
+#~ msgstr "Continue with google"
 
 #: src/components/AddressForm/index.tsx:74
 #: src/components/Section/SearchDirectory.tsx:195
@@ -312,11 +316,11 @@ msgstr "Country of Registration"
 msgid "Country of registration is required"
 msgstr "Country of registration is required"
 
-#: src/components/Section/CreateAccount.tsx:149
+#: src/components/Section/CreateAccount.tsx:155
 msgid "Create an Account"
 msgstr "Create an Account"
 
-#: src/components/Section/CreateAccount.tsx:70
+#: src/components/Section/CreateAccount.tsx:76
 msgid "Create your TRISA account."
 msgstr "Create your TRISA account."
 
@@ -357,7 +361,7 @@ msgid "Directory Lookup"
 msgstr "Directory Lookup"
 
 #: src/components/Header/LandingHeader.tsx:60
-#: src/components/Header/LandingHeader.tsx:96
+#: src/components/Header/LandingHeader.tsx:94
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -400,7 +404,7 @@ msgid "Edit"
 msgstr "Edit"
 
 #: src/components/ContactForm/index.tsx:32
-#: src/components/Section/CreateAccount.tsx:110
+#: src/components/Section/CreateAccount.tsx:116
 #: src/components/Section/Login.tsx:102
 #: src/components/Section/PasswordReset.tsx:64
 msgid "Email Address"
@@ -471,7 +475,7 @@ msgstr "GLEIF Registration Authorities"
 msgid "Geographic"
 msgstr "Geographic"
 
-#: src/modules/dashboard/certificate/registration.tsx:142
+#: src/modules/dashboard/certificate/registration.tsx:140
 msgid "Getting Started Help Guide"
 msgstr "Getting Started Help Guide"
 
@@ -587,7 +591,7 @@ msgstr "Local Name Identifiers"
 msgid "Log In"
 msgstr "Log In"
 
-#: src/components/Section/CreateAccount.tsx:155
+#: src/components/Section/CreateAccount.tsx:161
 msgid "Log in."
 msgstr "Log in."
 
@@ -595,7 +599,7 @@ msgstr "Log in."
 msgid "Log into your TRISA account."
 msgstr "Log into your TRISA account."
 
-#: src/components/Header/LandingHeader.tsx:99
+#: src/components/Header/LandingHeader.tsx:97
 msgid "Login"
 msgstr "Login"
 
@@ -670,7 +674,7 @@ msgstr "National Identification"
 msgid "Need to Learn More?"
 msgstr "Need to Learn More?"
 
-#: src/modules/dashboard/certificate/registration.tsx:188
+#: src/modules/dashboard/certificate/registration.tsx:186
 msgid "Next"
 msgstr "Next"
 
@@ -678,7 +682,7 @@ msgstr "Next"
 msgid "No"
 msgstr "No"
 
-#: src/modules/dashboard/certificate/registration.tsx:152
+#: src/modules/dashboard/certificate/registration.tsx:150
 msgid "No information is sent until you complete Section 6 - Review & Submit"
 msgstr "No information is sent until you complete Section 6 - Review & Submit"
 
@@ -721,7 +725,7 @@ msgstr "Partially"
 msgid "Passport Number"
 msgstr "Passport Number"
 
-#: src/components/Section/CreateAccount.tsx:120
+#: src/components/Section/CreateAccount.tsx:126
 #: src/components/Section/Login.tsx:112
 msgid "Password"
 msgstr "Password"
@@ -834,11 +838,11 @@ msgstr "Review & Submit"
 msgid "Safeguards PII"
 msgstr "Safeguards PII"
 
-#: src/modules/dashboard/certificate/registration.tsx:188
+#: src/modules/dashboard/certificate/registration.tsx:186
 msgid "Save & Next"
 msgstr "Save & Next"
 
-#: src/modules/dashboard/certificate/registration.tsx:177
+#: src/modules/dashboard/certificate/registration.tsx:175
 msgid "Save & Previous"
 msgstr "Save & Previous"
 
@@ -929,6 +933,7 @@ msgid "Status"
 msgstr "Status"
 
 #: src/components/Section/PasswordReset.tsx:81
+#: src/hoc/withRHF.tsx:117
 msgid "Submit"
 msgstr "Submit"
 
@@ -1073,6 +1078,10 @@ msgstr "TestNet TRISA Endpoint"
 msgid "TestNet and MainNet endpoints should not be the same"
 msgstr "TestNet and MainNet endpoints should not be the same"
 
+#: src/modules/auth/reset/index.tsx:25
+msgid "Thank you. We have sent instructions to reset your password to {0}. The link to reset your password expires in 24 hours."
+msgstr "Thank you. We have sent instructions to reset your password to {0}. The link to reset your password expires in 24 hours."
+
 #: src/components/Section/AboutUs.tsx:36
 msgid "The Travel Rule Information Sharing Architecture (TRISA)"
 msgstr "The Travel Rule Information Sharing Architecture (TRISA)"
@@ -1100,7 +1109,7 @@ msgstr "The name and type of name by which the legal person is known."
 msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
 msgstr "The name of primary regulator or supervisory authority for your national jurisdiction"
 
-#: src/modules/dashboard/certificate/registration.tsx:134
+#: src/modules/dashboard/certificate/registration.tsx:132
 msgid "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 msgstr "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 
@@ -1112,11 +1121,11 @@ msgstr "This questionnaire is designed to help TRISA members understand the regu
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 
-#: src/modules/dashboard/certificate/registration.tsx:146
+#: src/modules/dashboard/certificate/registration.tsx:144
 msgid "To assist in completing the registration form, the form is divided into multiple sections"
 msgstr "To assist in completing the registration form, the form is divided into multiple sections"
 
-#: src/modules/auth/callback/index.tsx:45
+#: src/modules/auth/callback/index.tsx:56
 msgid "Token not valid"
 msgstr "Token not valid"
 
@@ -1140,7 +1149,7 @@ msgstr "VASP Category"
 msgid "VERIFIED ON"
 msgstr "VERIFIED ON"
 
-#: src/components/Section/CreateAccount.tsx:72
+#: src/components/Section/CreateAccount.tsx:78
 msgid "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
 msgstr "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
 
@@ -1199,7 +1208,7 @@ msgstr "Yes"
 msgid "Your account has been created successfully. Please check your email to verify your account."
 msgstr "Your account has been created successfully. Please check your email to verify your account."
 
-#: src/modules/auth/callback/index.tsx:31
+#: src/modules/auth/callback/index.tsx:42
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr "Your account has not been verified. Please check your email to verify your account."
 

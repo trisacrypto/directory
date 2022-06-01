@@ -16,12 +16,15 @@ const Metrics = ({ data, type }: MetricsProps) => {
         </Stack>
       </Stack>
       <Box textAlign={'center'} justifyContent="center" justifyItems={'center'}>
-        <HStack spacing="24">
-          <StatusCard isOnline={data?.status || false} />
-          <StatCard title="Verified VASPs" number={data?.vasps_count} />
-          <StatCard title="Cerificates" number={data?.certificates_issued} />
-          <StatCard title="New Members" number={data?.new_members} />
-        </HStack>
+        <Sentry.ErrorBoundary
+          fallback={<Text color={'red'}>{`An error has occurred to load ${type} metric`}</Text>}>
+          <HStack spacing="24">
+            <StatusCard isOnline={data?.status || false} />
+            <StatCard title="Verified VASPs" number={data?.vasps_count} />
+            <StatCard title="Certificates" number={data?.certificates_issued} />
+            <StatCard title="New Members" number={data?.new_members} />
+          </HStack>
+        </Sentry.ErrorBoundary>
       </Box>
     </Stack>
   );

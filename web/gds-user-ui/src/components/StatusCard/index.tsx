@@ -49,18 +49,19 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
       px={5}>
       <Box textAlign={'center'}>
         <Heading fontSize={20}>Network Status</Heading>
-        <Stack
+        <Box
           fontSize={40}
           pt={3}
           fontWeight={'bold'}
-          textAlign={'center'}
+          alignItems={'center'}
+          mx={'auto'}
           justifyContent={'center'}>
           {isOnline ? (
-            <IoEllipse fontSize="2rem" fill={'#34A853'} />
+            <IoEllipse fontSize="2rem" fill={'#60C4CA'} />
           ) : (
             <IoEllipse fontSize="2rem" fill={'#C4C4C4'} />
           )}
-        </Stack>
+        </Box>
       </Box>
     </Flex>
   );

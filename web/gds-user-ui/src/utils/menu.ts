@@ -8,13 +8,13 @@ const Menu = [
     title: 'Overview',
     icon: FiCompass,
     activated: true,
-    path: 'overview'
+    path: '/overview'
   },
   {
     title: 'Certificate Management',
     icon: BiCertification,
     activated: true,
-    path: 'certificate'
+    path: '/certificate'
   },
   {
     title: 'Technical Resources',

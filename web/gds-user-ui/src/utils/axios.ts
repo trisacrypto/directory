@@ -24,6 +24,10 @@ axiosInstance.interceptors.request.use(
       return Promise.reject(error);
     }
 
+    if (error.response.status === 403) {
+      console.log('403');
+    }
+
     if (error.response.status === 401 && error.response.data.error === 'Unauthorized') {
       const token = getRefreshToken();
       if (token) {
