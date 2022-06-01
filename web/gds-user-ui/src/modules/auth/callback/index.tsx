@@ -6,11 +6,13 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import Cookies from 'universal-cookie';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
+import useAuth from 'hooks/useAuth';
 import { t } from '@lingui/macro';
 
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
   const { auth0GetUser } = useCustomAuth0();
+  const { loginUser } = useAuth();
   const accessToken = query.access_token;
   const cookies = new Cookies();
   const navigate = useNavigate();
@@ -25,7 +27,16 @@ const CallbackPage: React.FC = () => {
         if (getUserInfo && getUserInfo?.email_verified) {
           cookies.set('access_token', accessToken, { path: '/' });
           cookies.set('user_locale', getUserInfo?.locale, { path: '/' });
-          navigate('/dashboard');
+          const userInfo: TUser = {
+            isLoggedIn: true,
+            user: {
+              name: getUserInfo?.name,
+              pictureUrl: getUserInfo?.picture,
+              email: getUserInfo?.email
+            }
+          };
+          loginUser(userInfo);
+          navigate('/dashboard/overview');
         } else {
           setError(
             t`Your account has not been verified. Please check your email to verify your account.`

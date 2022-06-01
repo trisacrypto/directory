@@ -1,41 +1,72 @@
-import React from "react";
-import { Stack, Box, Text, Heading, HStack } from "@chakra-ui/react";
-
+import React from 'react';
+import { Stack, Box, Text, Heading, HStack, Flex } from '@chakra-ui/react';
+import { IoEllipse } from 'react-icons/io5';
 interface StatusCardProps {
-  testnetstatus: string;
-  mainnetstatus: string;
+  isOnline: boolean;
 }
 
-const StatusCard = ({ testnetstatus, mainnetstatus }: StatusCardProps) => {
+const StatusCard = ({ isOnline }: StatusCardProps) => {
+  //   return (
+  //     <Box
+  //       border="1px solid #DFE0EB"
+  //       fontFamily={"Open Sans"}
+  //       color={"#252733"}
+  //       height={167}
+  //       maxWidth={451}
+  //       fontSize={18}
+  //       p={5}
+  //       mt={10}
+  //       px={5}
+  //     >
+  //       <Stack>
+  //         <Heading fontSize={20}>Certification Status</Heading>
+  //         <HStack spacing={10}>
+  //           <Text>Testnet</Text>
+  //           <Text>{testnetstatus}</Text>
+  //         </HStack>
+  //         <HStack spacing={8}>
+  //           <Text>Mainnet</Text>
+  //           <Text>{mainnetstatus}</Text>
+  //         </HStack>
+  //       </Stack>
+  //     </Box>
+  //   );
+  // };
+  // StatusCard.defaultProps = {
+  //   testnetstatus: "In progress",
+  //   mainnetstatus: "Not Eligible yet ",
+  // };
   return (
-    <Box
+    <Flex
+      bg={'white'}
       border="1px solid #DFE0EB"
-      fontFamily={"Open Sans"}
-      color={"#252733"}
+      fontFamily={'Open Sans'}
+      color={'#252733'}
       height={167}
-      maxWidth={451}
+      maxWidth={246}
       fontSize={18}
       p={5}
-      mt={10}
-      px={5}
-    >
-      <Stack>
-        <Heading fontSize={20}>Certification Status</Heading>
-        <HStack spacing={10}>
-          <Text>Testnet</Text>
-          <Text>{testnetstatus}</Text>
-        </HStack>
-        <HStack spacing={8}>
-          <Text>Mainnet</Text>
-          <Text>{mainnetstatus}</Text>
-        </HStack>
-      </Stack>
-    </Box>
+      px={5}>
+      <Box textAlign={'center'}>
+        <Heading fontSize={20}>Network Status</Heading>
+        <Box
+          fontSize={40}
+          pt={3}
+          fontWeight={'bold'}
+          alignItems={'center'}
+          mx={'auto'}
+          justifyContent={'center'}>
+          {isOnline ? (
+            <IoEllipse fontSize="2rem" fill={'#60C4CA'} />
+          ) : (
+            <IoEllipse fontSize="2rem" fill={'#C4C4C4'} />
+          )}
+        </Box>
+      </Box>
+    </Flex>
   );
 };
 StatusCard.defaultProps = {
-  testnetstatus: "In progress",
-  mainnetstatus: "Not Eligible yet ",
+  isOnline: false
 };
-
 export default StatusCard;
