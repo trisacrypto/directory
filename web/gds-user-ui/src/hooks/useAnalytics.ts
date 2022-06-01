@@ -9,6 +9,7 @@ const useAnalytics = () => {
   useEffect(() => {
     //  initialize google analytics only in production environment
     if (isProdEnv && trackingID) {
+      // eslint-disable-next-line no-console
       console.log('initializing google analytics');
       ReactGA.initialize(trackingID, {
         gaOptions: {

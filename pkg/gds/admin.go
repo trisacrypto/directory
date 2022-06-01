@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	ginzerolog "github.com/dn365/gin-zerolog"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -29,6 +28,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -138,7 +138,7 @@ func (s *Admin) Shutdown() (err error) {
 
 func (s *Admin) setupRoutes() (err error) {
 	// Application Middleware
-	s.router.Use(ginzerolog.Logger("gin"))
+	s.router.Use(logger.GinLogger("gds_admin_v2"))
 	s.router.Use(gin.Recovery())
 	s.router.Use(s.Available())
 

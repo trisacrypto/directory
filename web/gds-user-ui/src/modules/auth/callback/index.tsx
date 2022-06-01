@@ -6,6 +6,7 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import Cookies from 'universal-cookie';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
+import { t } from '@lingui/macro';
 
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
@@ -27,7 +28,7 @@ const CallbackPage: React.FC = () => {
           navigate('/dashboard');
         } else {
           setError(
-            'Your account has not been verified. Please check your email to verify your account.'
+            t`Your account has not been verified. Please check your email to verify your account.`
           );
         }
       } catch (e: any) {
@@ -41,7 +42,7 @@ const CallbackPage: React.FC = () => {
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {error && <AlertMessage title="Token not valid" message={error} status="error" />}
+      {error && <AlertMessage title={t`Token not valid`} message={error} status="error" />}
     </LandingLayout>
   );
 };

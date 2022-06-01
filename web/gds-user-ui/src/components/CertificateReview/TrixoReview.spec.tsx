@@ -1,4 +1,5 @@
-import { render } from 'utils/test-utils';
+import { dynamicActivate } from 'utils/i18nLoaderHelper';
+import { act, render } from 'utils/test-utils';
 import LegalPersonReview from './LegalPersonReview';
 import TrixoReview from './TrixoReview';
 
@@ -22,6 +23,12 @@ const defaultValues = {
 };
 
 describe('<TrixoReview />', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
+  });
+
   beforeEach(() => {
     localStorage.clear();
   });

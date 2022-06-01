@@ -20,6 +20,8 @@ import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
 import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
+import { Trans } from '@lingui/react';
+import LanguagesDropdown from 'components/LanguagesDropdown';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
@@ -46,12 +48,18 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>
 
-            <Stack ml="auto" display={{ base: 'none', sm: 'flex' }} direction={['column', 'row']}>
-              <MenuItem to="/#about">About TRISA</MenuItem>
-              <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-              <MenuItem isLast to="/auth/login">
-                Login{' '}
+            <Stack
+              ml="auto"
+              alignItems={'center'}
+              display={{ base: 'none', sm: 'flex' }}
+              direction={['column', 'row']}>
+              <MenuItem to="/#about">
+                <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
+              <MenuItem to="https://trisa.dev">
+                <Trans id="Documentation">Documentation</Trans>
+              </MenuItem>
+              <LanguagesDropdown />
             </Stack>
 
             {/* mobile drawer */}
@@ -79,9 +87,15 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                         pl: '25px'
                       }
                     }}>
-                    <MenuItem to="/#about">About TRISA </MenuItem>
-                    <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-                    <MenuItem to="/auth/login">Login </MenuItem>
+                    <MenuItem to="/#about">
+                      <Trans id="About TRISA">About TRISA</Trans>{' '}
+                    </MenuItem>
+                    <MenuItem to="https://trisa.dev">
+                      <Trans id="Documentation">Documentation</Trans>
+                    </MenuItem>
+                    <MenuItem to="/auth/login">
+                      <Trans id="Login">Login</Trans>
+                    </MenuItem>
                   </VStack>
                 </DrawerBody>
               </DrawerContent>

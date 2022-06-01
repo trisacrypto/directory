@@ -93,6 +93,7 @@ func serve(c *cli.Context) (err error) {
 	if err = srv.Serve(); err != nil {
 		return cli.Exit(err, 1)
 	}
+
 	return nil
 }
 

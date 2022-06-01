@@ -9,9 +9,11 @@ import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'co
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useEffect } from 'react';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 
 const TrixoQuestionnaireForm: React.FC = () => {
-  const { register, control, getValues, setValue, watch } = useFormContext();
+  const { register, control, setValue, watch } = useFormContext();
   const countries = getCountriesOptions();
   const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
   const currencies = getCurrenciesOptions();
@@ -36,7 +38,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
           <SelectFormControl
             options={countries}
             controlId="primaryNationalJuridiction"
-            label="Primary National Jurisdiction"
+            label={t`Primary National Jurisdiction`}
             ref={field.ref}
             name={field.name}
             value={countries.find((option) => option.value === field.value)}
@@ -46,13 +48,19 @@ const TrixoQuestionnaireForm: React.FC = () => {
       />
       <InputFormControl
         controlId="nameOfPrimaryRegulator"
-        label="Name of Primary Regulator"
-        formHelperText="The name of primary regulator or supervisory authority for your national jurisdiction"
+        label={t`Name of Primary Regulator`}
+        formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
         {...register('trixo.primary_regulator')}
       />
       <VStack align="start">
-        <Heading size="md">Other Jurisdictions</Heading>
-        <Text>Please add any other regulatory jurisdictions your organization complies with.</Text>
+        <Heading size="md">
+          <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
+        </Heading>
+        <Text>
+          <Trans id="Please add any other regulatory jurisdictions your organization complies with.">
+            Please add any other regulatory jurisdictions your organization complies with.
+          </Trans>
+        </Text>
 
         <OtherJuridictions name={'trixo.other_jurisdictions'} />
       </VStack>
@@ -66,13 +74,15 @@ const TrixoQuestionnaireForm: React.FC = () => {
             options={financialTransfertsOptions}
             value={financialTransfertsOptions.find((option) => option.value === field.value)}
             onChange={(newValue: any) => field.onChange(newValue.value)}
-            label="Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
+            label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
             controlId="financial_transfers_permitted"
           />
         )}
       />
       <VStack align="start">
-        <Heading size="md">CDD & Travel Rule Policies</Heading>
+        <Heading size="md">
+          <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
+        </Heading>
 
         <Controller
           control={control}
@@ -87,10 +97,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               options={financialTransfertsOptions}
               value={financialTransfertsOptions.find((option) => option.value === field.value)}
               onChange={(newValue: any) => field.onChange(newValue.value)}
-              label=" Does your organization have a programme that sets minimum AML, CFT,
-            KYC/CDD and Sanctions standards per the requirements of the
-            jurisdiction(s) regulatory regimes where it is
-            licensed/approved/registered?"
+              label={t`Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?`}
               controlId="has_required_regulatory_program"
             />
           )}
@@ -98,11 +105,13 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
         <VStack>
           <Text>
-            Does your organization conduct KYC/CDD before permitting its customers to send/receive
-            virtual asset transfers?
+            <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+              Does your organization conduct KYC/CDD before permitting its customers to send/receive
+              virtual asset transfers?
+            </Trans>
           </Text>
           <SwitchFormControl
-            label="Conducts KYC before virtual asset transfers"
+            label={t`Conducts KYC before virtual asset transfers`}
             controlId="conducts_customer_kyc"
             {...register('trixo.conducts_customer_kyc')}
           />
@@ -110,7 +119,11 @@ const TrixoQuestionnaireForm: React.FC = () => {
       </VStack>
       {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
         <VStack align="start" w="100%">
-          <Text>At what threshold and currency does your organization conduct KYC?</Text>
+          <Text>
+            <Trans id="At what threshold and currency does your organization conduct KYC?">
+              At what threshold and currency does your organization conduct KYC?
+            </Trans>
+          </Text>
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
             <GridItem>
               <InputFormControl
@@ -137,35 +150,47 @@ const TrixoQuestionnaireForm: React.FC = () => {
               />
             </GridItem>
           </Grid>
-          <Text fontSize="sm" color="whiteAlpha.600" mt="0 !important">
-            Threshold to conduct KYC before permitting the customer to send/receive virtual asset
-            transfers
+          <Text fontSize="sm" color="gray.500" mt="0 !important">
+            <Trans id="Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers">
+              Threshold to conduct KYC before permitting the customer to send/receive virtual asset
+              transfers
+            </Trans>
           </Text>
         </VStack>
       )}
       ;
       <VStack>
         <Text>
-          Is your organization required to comply with the application of the Travel Rule standards
-          in the jurisdiction(s) where it is licensed/approved/registered?
+          <Trans id="Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?">
+            Is your organization required to comply with the application of the Travel Rule
+            standards in the jurisdiction(s) where it is licensed/approved/registered?
+          </Trans>
         </Text>
         <SwitchFormControl
-          label="Must comply with Travel Rule"
+          label={t`Must comply with Travel Rule`}
           controlId="trixo.must_comply_travel_rule"
           {...register('trixo.must_comply_travel_rule')}
         />
       </VStack>
       <VStack align="start" w="100%">
-        <Heading size="md">Applicable Regulations</Heading>
+        <Heading size="md">
+          <Trans id="Applicable Regulations">Applicable Regulations</Trans>
+        </Heading>
         <Text fontSize="sm">
-          Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.
-          "FATF Recommendation 16"
+          <Trans id='Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"'>
+            Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.
+            "FATF Recommendation 16"
+          </Trans>
         </Text>
         <Regulations register={register} name={`trixo.applicable_regulations`} control={control} />
       </VStack>
       {getMustComplyRegulations && (
         <VStack align="start" w="100%">
-          <Text>What is the minimum threshold for Travel Rule compliance?</Text>
+          <Text>
+            <Trans id="What is the minimum threshold for Travel Rule compliance?">
+              What is the minimum threshold for Travel Rule compliance?
+            </Trans>
+          </Text>
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
             <GridItem>
               <InputFormControl
@@ -193,28 +218,38 @@ const TrixoQuestionnaireForm: React.FC = () => {
             </GridItem>
           </Grid>
           <Text fontSize="sm" mt="0 !important">
-            The minimum threshold above which your organization is required to collect/send Travel
-            Rule information.
+            <Trans id="The minimum threshold above which your organization is required to collect/send Travel Rule information.">
+              The minimum threshold above which your organization is required to collect/send Travel
+              Rule information.
+            </Trans>
           </Text>
         </VStack>
       )}
       <VStack align="start" w="100%" spacing={4}>
-        <Heading size="md">Data Protection Policies</Heading>
+        <Heading size="md">
+          <Trans id="Data Protection Policies">Data Protection Policies</Trans>
+        </Heading>
         <VStack align="start" w="100%">
-          <Text>Is your organization required by law to safeguard PII?</Text>
+          <Text>
+            <Trans id="Is your organization required by law to safeguard PII?">
+              Is your organization required by law to safeguard PII?
+            </Trans>
+          </Text>
           <SwitchFormControl
-            label="Must safeguard PII"
+            label={t`Must safeguard PII`}
             controlId="must_safeguard_pii"
             {...register('trixo.must_safeguard_pii')}
           />
         </VStack>
         <VStack align="start" w="100%">
           <Text>
-            Does your organization secure and protect PII, including PII received from other VASPs
-            under the Travel Rule?
+            <Trans id="Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?">
+              Does your organization secure and protect PII, including PII received from other VASPs
+              under the Travel Rule?
+            </Trans>
           </Text>
           <SwitchFormControl
-            label="Safeguards PII"
+            label={t`Safeguards PII`}
             controlId="safeguards_pii"
             {...register('trixo.safeguards_pii')}
           />

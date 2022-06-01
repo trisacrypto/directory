@@ -1,4 +1,6 @@
 import { Grid, GridItem, VStack } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
 import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
@@ -26,12 +28,12 @@ const Regulations: React.FC<RegulationsProps> = ({ register, name, control }) =>
             />
           </GridItem>
           <GridItem display="flex" alignItems="center">
-            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
           </GridItem>
         </Grid>
       ))}
       <FormButton onClick={() => append({ name: '' })} borderRadius={5}>
-        Add Regulation
+        <Trans id="Add Regulation">Add Regulation</Trans>
       </FormButton>
     </VStack>
   );

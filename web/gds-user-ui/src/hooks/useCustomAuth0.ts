@@ -12,10 +12,9 @@ const useCustomAuth0 = () => {
     return new Promise((resolve, reject) => {
       authWeb.login(options, (err: any, authResult: any) => {
         if (err) {
-          console.log('error', err);
+          console.error('error', err);
           reject(err);
         } else {
-          console.log('authResult', authResult);
           resolve(authResult);
         }
       });
@@ -62,7 +61,6 @@ const useCustomAuth0 = () => {
         if (err) {
           reject(err);
         } else {
-          console.log('auth0Hash', data);
           resolve(data);
         }
       });
@@ -71,13 +69,19 @@ const useCustomAuth0 = () => {
 
   const auth0CheckSession = (options: any) => {
     return new Promise((resolve, reject) => {
-      authWeb.checkSession(options, (err: any, authResult: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(authResult);
+      authWeb.checkSession(
+        {
+          ...options,
+          scope: 'read:current_user'
+        },
+        (err: any, authResult: any) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(authResult);
+          }
         }
-      });
+      );
     });
   };
 
