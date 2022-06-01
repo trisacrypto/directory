@@ -1,10 +1,15 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import lazyLoaderPromise from 'components/CustomLazyLoader';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
 import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
+// const Home = React.lazy(() =>
+//   lazyLoaderPromise(() => import('modules/home'))
+// );
+
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
 const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
