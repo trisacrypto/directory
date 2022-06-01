@@ -15,7 +15,7 @@ const Overview: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => {
     getUser();
-  }, []);
+  });
   useEffect(() => {
     (async () => {
       try {
@@ -23,7 +23,7 @@ const Overview: React.FC = () => {
         setResult(response);
       } catch (e: any) {
         if (e.response.status === 401) {
-          navigate('/auth/login?redirect=/dashboard/overview&q=tokenexpired');
+          navigate('/auth/login?redirect=/dashboard/overview&q=token_expired');
         }
         if (e.response.status === 403) {
           navigate('/auth/login?redirect=/dashboard/overview&q=unauthorized');
