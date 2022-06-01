@@ -144,3 +144,16 @@ export const setStepperFromLocalStorage = ({ step, status, data }: any) => {
     return undefined;
   }
 };
+
+// load user data from localstorage if exist
+export const loadUserDataFromLocalStorage = () => {
+  try {
+    const getUserData: any = localStorage.getItem('userData');
+    if (getUserData) {
+      return JSON.parse(getUserData);
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+};
