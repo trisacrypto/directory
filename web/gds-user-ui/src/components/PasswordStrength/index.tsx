@@ -29,7 +29,7 @@ const PasswordStrength = (props: any) => {
     }
     // verify password contains at least one lowercase letter
     const lowerCaseLetters = /[a-z]/g;
-    if (lowerCaseLetters.test(data)) {
+    if (data.match(/^(?=.*[a-z]).*$/)) {
       setIsContainsOneLowerCase(true);
     } else {
       setIsContainsOneLowerCase(false);
@@ -69,7 +69,7 @@ const PasswordStrength = (props: any) => {
           At least 8 characters in length
         </Text>
       </Box>
-      <Box my={1}>
+      <Box mt={2}>
         <Text fontWeight="semibold">Contain at least 3 of the following 4 types of characters</Text>
       </Box>
       <Box>
@@ -83,7 +83,7 @@ const PasswordStrength = (props: any) => {
       <Box>
         <Text textAlign={'left'} color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}>
           <Text as={'span'} position={'relative'} top={2}>
-            <Icon w={6} h={6} as={MdClose} color={isContainsOneLowerCase ? 'green' : 'gray.200'} />{' '}
+            <Icon w={6} h={6} as={MdClose} color={isContainsOneUpperCase ? 'green' : 'gray.200'} />{' '}
           </Text>
           upper case letters (A-Z)
         </Text>
