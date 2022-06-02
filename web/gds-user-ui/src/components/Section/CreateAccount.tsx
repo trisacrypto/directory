@@ -23,10 +23,11 @@ import { colors } from 'utils/theme';
 import { useForm } from 'react-hook-form';
 
 import { yupResolver } from '@hookform/resolvers/yup';
-import { validationSchema } from 'modules/auth/register/register.validation';
+// import { validationSchema } from 'modules/auth/register/register.validation';
 import { getValueByPathname } from 'utils/utils';
 import InputFormControl from 'components/ui/InputFormControl';
 import PasswordStrength from 'components/PasswordStrength';
+import * as yup from 'yup';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 
@@ -42,6 +43,11 @@ interface IFormInputs {
   username: string;
   password: string;
 }
+
+const validationSchema = yup.object().shape({
+  username: yup.string().email('Email is not valid').required('Email is required'),
+  password: yup.string().required('Password is required')
+});
 
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
@@ -91,7 +97,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
             }}>
             <GoogleIcon h={24} />
             <Text as={'span'} ml={3}>
-              <Trans id="Continue with google">Continue with google</Trans>
+              <Trans id="Continue with Google">Continue with Google</Trans>
             </Text>
           </Button>
           <Text py={3}>Or</Text>
