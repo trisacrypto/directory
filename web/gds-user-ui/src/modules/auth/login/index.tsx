@@ -10,7 +10,8 @@ import * as Sentry from '@sentry/browser';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
-  const { auth0SignIn, auth0SignWithSocial, auth0Hash, auth0GetUser } = useCustomAuth0();
+  const { auth0SignIn, auth0SignWithSocial, auth0Hash } = useCustomAuth0();
+
   const { loginUser } = useAuth();
   const { q } = useSearchParams();
   const toast = useToast();
