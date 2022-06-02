@@ -49,7 +49,8 @@ const PasswordStrength = (props: any) => {
     }
 
     // verify password contains at least one special character
-    if (data.match(/^(?=.*[~`!@#$%^&*()--+={}\[\]|\\:;"'<>,.?/_₹]).*$/)) {
+    const specialCharacters = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
+    if (specialCharacters.test(data)) {
       setIsContainsOneSpecialChar(true);
     } else {
       setIsContainsOneSpecialChar(false);
