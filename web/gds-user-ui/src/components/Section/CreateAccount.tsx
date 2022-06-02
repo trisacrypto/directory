@@ -156,7 +156,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 </Button>
                 <Text textAlign="center">
                   <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-                  <Link href="/login" color={colors.system.cyan}>
+                  <Link href="/auth/login" color={colors.system.cyan}>
                     {' '}
                     <Trans id="Log in.">Log in.</Trans>
                   </Link>

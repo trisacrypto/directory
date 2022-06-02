@@ -9,16 +9,16 @@ interface MetricsProps {
 }
 const Metrics = ({ data, type }: MetricsProps) => {
   return (
-    <Stack>
-      <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4} my={5}>
+    <Flex my={5}>
+      {/* <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4} my={5}>
         <Stack>
           <Heading fontSize={20}>{`${type} Network Metrics`}</Heading>
         </Stack>
-      </Stack>
+      </Stack> */}
       <Box textAlign={'center'} justifyContent="center" justifyItems={'center'}>
         <Sentry.ErrorBoundary
           fallback={<Text color={'red'}>{`An error has occurred to load ${type} metric`}</Text>}>
-          <HStack spacing="24">
+          <HStack spacing="24" textAlign={'center'}>
             <StatusCard isOnline={data?.status || false} />
             <StatCard title="Verified VASPs" number={data?.vasps_count} />
             <StatCard title="Certificates" number={data?.certificates_issued} />
@@ -26,7 +26,7 @@ const Metrics = ({ data, type }: MetricsProps) => {
           </HStack>
         </Sentry.ErrorBoundary>
       </Box>
-    </Stack>
+    </Flex>
   );
 };
 
