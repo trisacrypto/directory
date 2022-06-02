@@ -15,23 +15,39 @@ type ContactFormProps = {
 const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) => {
   const { register, control, formState } = useFormContext();
   const { errors } = formState;
+
   const getPhoneMessageHint = () => {
     if (name === 'contacts.legal') {
-      return 'A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.';
+      return (
+        <div data-testid="legal-contact-phone-number-hint">
+          A business phone number is required to complete physical verification for MainNet
+          registration. Please provide a phone number where the Legal/ Compliance contact can be
+          contacted.
+        </div>
+      );
     }
-    return 'If supplied, use full phone number with country code.';
+    return (
+      <div data-testid="legal-contact-phone-number-hint">
+        If supplied, use full phone number with country code.
+      </div>
+    );
   };
 
   return (
     <FormLayout>
-      <Heading size="md">{title}</Heading>
-      <Text fontStyle="italic">{description}</Text>
+      <Heading size="md" data-testid="title">
+        {title}
+      </Heading>
+      <Text fontStyle="italic" data-testid="description">
+        {description}
+      </Text>
       <InputFormControl
         label={t`Full Name`}
         formHelperText={t`Preferred name for email communication.`}
         controlId="fullName"
         isInvalid={get(errors, `${name}.name`)}
         {...register(`${name}.name`)}
+        data-testid="fullName"
       />
 
       <InputFormControl
@@ -45,6 +61,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
         type="email"
         isInvalid={get(errors, `${name}.email`)}
         {...register(`${name}.email`)}
+        data-testid="email"
       />
 
       <Controller
@@ -65,6 +82,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
                   : getPhoneMessageHint()
               }
               controlId="phoneNumber"
+              data-testid="phoneNumber"
             />
           );
         }}

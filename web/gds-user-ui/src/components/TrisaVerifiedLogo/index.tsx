@@ -1,5 +1,5 @@
 import { Box, Stack, Text } from '@chakra-ui/react';
-import Card from 'components/Card';
+import Card from 'components/Card/Card';
 import { BsCheckCircleFill } from 'react-icons/bs';
 import FormButton from 'components/ui/FormButton';
 import TrisaLogo from 'components/Icon/TrisaLogo';

@@ -1,4 +1,3 @@
-import { Heading, Stack } from '@chakra-ui/react';
 import VaspVerification from 'components/Section/VaspVerification';
 
 import LandingLayout from 'layouts/LandingLayout';

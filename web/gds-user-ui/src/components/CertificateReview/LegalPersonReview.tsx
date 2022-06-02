@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';

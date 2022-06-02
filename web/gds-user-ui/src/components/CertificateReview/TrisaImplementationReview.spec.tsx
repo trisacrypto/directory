@@ -36,7 +36,6 @@ describe('<TrisaImplementationReview />', () => {
 
     const { container } = render(<TrisaImplementationReview />);
 
-    console.log('[after all] localStorage', localStorage.__STORE__);
     expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     expect(Object.keys(localStorage.__STORE__).length).toBe(1);
 

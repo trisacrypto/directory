@@ -61,4 +61,47 @@ describe('<CreateAccount />', () => {
       expect(screen.getAllByRole('alert')).toHaveLength(2);
     });
   });
+
+  it('should call google login function', async () => {
+    const mockHandleAuthFn = jest.fn();
+    const mockHandleSignUpWithEmail = jest.fn();
+
+    render(
+      <CreateAccount
+        handleSocialAuth={mockSignWithEmail}
+        handleSignUpWithEmail={mockSignWithSocial}
+      />,
+      { route: '/auth/login' }
+    );
+
+    const submitButton = screen.getByRole('button', { name: /continue with google/i });
+
+    userEvent.click(submitButton);
+
+    expect(mockSignWithSocial).toHaveBeenCalled();
+    expect(mockSignWithSocial).toHaveBeenCalledTimes(1);
+  });
+
+  describe('Show button', () => {
+    it('should show password when we click on show button', () => {
+      render(
+        <CreateAccount
+          handleSocialAuth={mockSignWithEmail}
+          handleSignUpWithEmail={mockSignWithSocial}
+        />,
+        { route: '/auth/login' }
+      );
+
+      const passwordInputEl = screen.getByPlaceholderText(/password/i) as HTMLInputElement;
+      userEvent.type(passwordInputEl, 'test password');
+
+      const showBtn = screen.getByRole('button', { name: /show/i });
+
+      userEvent.click(showBtn);
+      expect(passwordInputEl.type).toBe('text');
+
+      userEvent.click(showBtn);
+      expect(passwordInputEl.type).toBe('password');
+    });
+  });
 });

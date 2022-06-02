@@ -28,6 +28,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
+
   const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
   const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
   useEffect(() => {
@@ -114,6 +115,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   bgColor="#ff7a59f0"
                   color="#fff"
                   isDisabled={testnet}
+                  data-testid="testnet-submit-btn"
                   size="lg"
                   py="2.5rem"
                   whiteSpace="normal"
@@ -175,6 +177,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   isDisabled={mainnet}
                   whiteSpace="normal"
                   boxShadow="lg"
+                  data-testid="mainnet-submit-btn"
                   maxW="200px"
                   onClick={(e) => {
                     onSubmitHandler(e, 'mainnet');

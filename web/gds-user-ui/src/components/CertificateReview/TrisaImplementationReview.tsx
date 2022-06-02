@@ -2,7 +2,6 @@ import React, { FC, useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';

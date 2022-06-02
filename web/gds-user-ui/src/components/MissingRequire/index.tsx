@@ -1,5 +1,5 @@
 import { ListItem, UnorderedList } from '@chakra-ui/react';
-import Card, { CardBody } from 'components/Card';
+import Card from 'components/Card/Card';
 
 type MissingRequireProps = {
   missingFields: Record<string, string | number | null>;
@@ -10,13 +10,13 @@ const MissingRequire: React.FC<MissingRequireProps> = ({ missingFields }) => {
     <>
       <Card borderWidth="2px" borderStyle="solid" borderColor="red.500" color="red.500">
         <Card.CardHeader>Please complete all details</Card.CardHeader>
-        <CardBody>
+        <Card.CardBody>
           <UnorderedList mt={2}>
             {Object.entries(missingFields).map(([k, v], idx) => (
               <ListItem key={idx}>{v}</ListItem>
             ))}
           </UnorderedList>
-        </CardBody>
+        </Card.CardBody>
       </Card>
     </>
   );
