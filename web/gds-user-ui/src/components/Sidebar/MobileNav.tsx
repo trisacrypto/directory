@@ -108,8 +108,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
-            <MenuItem>Profile</MenuItem>
-            <MenuDivider />
+            {/* <MenuItem>Profile</MenuItem>
+            <MenuDivider /> */}
             <MenuItem>Sign out</MenuItem>
           </MenuList>
         </Menu>

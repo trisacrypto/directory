@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import LandingLayout from 'layouts/LandingLayout';
-import { Heading, Stack, Spinner } from '@chakra-ui/react';
+
+import { Heading, Stack, Spinner, Flex, Box } from '@chakra-ui/react';
 import useHashQuery from 'hooks/useHashQuery';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
-import Cookies from 'universal-cookie';
+import { getCookie, setCookie } from 'utils/cookies';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
@@ -14,7 +14,6 @@ const CallbackPage: React.FC = () => {
   const { auth0GetUser } = useCustomAuth0();
   const { loginUser } = useAuth();
   const accessToken = query.access_token;
-  const cookies = new Cookies();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>('');
@@ -25,8 +24,8 @@ const CallbackPage: React.FC = () => {
 
         setIsLoading(false);
         if (getUserInfo && getUserInfo?.email_verified) {
-          cookies.set('access_token', accessToken, { path: '/' });
-          cookies.set('user_locale', getUserInfo?.locale, { path: '/' });
+          setCookie('access_token', accessToken);
+          setCookie('user_locale', getUserInfo?.locale);
           const userInfo: TUser = {
             isLoggedIn: true,
             user: {
@@ -51,10 +50,18 @@ const CallbackPage: React.FC = () => {
   });
 
   return (
-    <LandingLayout>
-      {isLoading && <Spinner size={'2xl'} />}
+    <Box height={'100%'}>
+      {isLoading && (
+        <Box
+          textAlign={'center'}
+          justifyItems="center"
+          alignItems={'center'}
+          justifyContent="center">
+          <Spinner size={'xl'} />
+        </Box>
+      )}
       {error && <AlertMessage title={t`Token not valid`} message={error} status="error" />}
-    </LandingLayout>
+    </Box>
   );
 };
 

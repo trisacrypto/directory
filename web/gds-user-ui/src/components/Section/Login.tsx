@@ -120,6 +120,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   data-testid="login-btn"
                   bg={colors.system.blue}
                   color={'white'}
+                  isLoading={props.isLoading}
                   px={2}
                   py={4}
                   w={['full', '50%']}
