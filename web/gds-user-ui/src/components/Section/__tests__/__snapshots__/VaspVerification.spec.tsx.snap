@@ -257,7 +257,11 @@ exports[`<Line /> should match snapshot 1`] = `
           </div>
         </div>
         <div
+<<<<<<< HEAD
           class="chakra-stack css-15av81"
+=======
+          class="chakra-stack css-h28yq2"
+>>>>>>> sc-6068 GDS User UI : implement comply page
         >
           <div
             class="css-1tms7qa"
