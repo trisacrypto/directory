@@ -13,7 +13,6 @@ const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const { user, getUser } = useAuth();
   const navigate = useNavigate();
-
   useEffect(() => {
     (async () => {
       try {
@@ -31,7 +30,7 @@ const Overview: React.FC = () => {
         console.log(e);
       }
     })();
-  }, []);
+  });
 
   return (
     <DashboardLayout>
