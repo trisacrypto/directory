@@ -12,8 +12,7 @@ const MembershipGuideCard = ({
   stepNumber,
   header,
   description,
-  buttonText,
-  ...props
+  buttonText
 }: MembershipGuideCardProps) => (
   <Box textAlign="center" width="100%" maxWidth={300} minHeight="100%">
     <Stack gap={'1rem'} backgroundColor="#E5EDF1" p="1rem" height="100%">
