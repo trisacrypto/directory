@@ -45,7 +45,7 @@ const Footer = (): React.ReactElement => {
       alignItems="center"
       direction="column"
       padding={4}
-      position={'absolute'}
+      // position={'absolute'}
       bottom={0}>
       <Flex width="100%" wrap="wrap">
         <Text width="100%" textAlign="center" color="white" fontSize="sm">

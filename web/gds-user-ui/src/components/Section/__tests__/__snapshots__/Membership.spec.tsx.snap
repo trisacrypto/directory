@@ -1,0 +1,219 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<MembershipGuide /> should match snapshot 1`] = `
+<div>
+  <div
+    class="chakra-stack css-n21gh5"
+  >
+    <div
+      class="css-1u814me"
+    >
+      <div
+        class="chakra-stack css-1vqyy53"
+      >
+        <div
+          class="chakra-stack css-126kq63"
+        >
+          <h2
+            class="chakra-heading css-1y1itts"
+          >
+            Welcome to TRISA’s network of Certified VASPs.
+          </h2>
+          <p
+            class="chakra-text css-rltemf"
+          >
+            Learn about the three-step certificaton process
+          </p>
+          <p
+            class="chakra-text css-rltemf"
+          >
+            and create your account today.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="chakra-stack css-azkgv4"
+    >
+      <div
+        class="css-wsis5l"
+      >
+        <div
+          class="chakra-stack css-ly7s1u"
+        >
+          <div
+            class="chakra-stack css-owjkmg"
+          >
+            <p
+              class="chakra-text css-wz7pgp"
+              data-testid="step"
+            >
+              Step 
+              1
+            </p>
+            <p
+              class="chakra-text css-8cgwqi"
+              data-testid="header"
+            >
+              create your account
+            </p>
+            <p
+              class="chakra-text css-0"
+              data-testid="description"
+            >
+              Create your TRISA account with your VASP email address. Add collaborators in your organization.
+            </p>
+          </div>
+          <div
+            class="css-14d2w9n"
+          >
+            <button
+              class="chakra-button css-vx0ruo"
+              type="button"
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="css-wsis5l"
+      >
+        <div
+          class="chakra-stack css-ly7s1u"
+        >
+          <div
+            class="chakra-stack css-owjkmg"
+          >
+            <p
+              class="chakra-text css-wz7pgp"
+              data-testid="step"
+            >
+              Step 
+              2
+            </p>
+            <p
+              class="chakra-text css-8cgwqi"
+              data-testid="header"
+            >
+              complete VASP verification
+            </p>
+            <p
+              class="chakra-text css-0"
+              data-testid="description"
+            >
+              Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet.
+            </p>
+          </div>
+          <div
+            class="css-14d2w9n"
+          >
+            <button
+              class="chakra-button css-vx0ruo"
+              type="button"
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="css-wsis5l"
+      >
+        <div
+          class="chakra-stack css-ly7s1u"
+        >
+          <div
+            class="chakra-stack css-owjkmg"
+          >
+            <p
+              class="chakra-text css-wz7pgp"
+              data-testid="step"
+            >
+              Step 
+              3
+            </p>
+            <p
+              class="chakra-text css-8cgwqi"
+              data-testid="header"
+            >
+              Integrate and Comply
+            </p>
+            <p
+              class="chakra-text css-0"
+              data-testid="description"
+            >
+              Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production.
+            </p>
+          </div>
+          <div
+            class="css-14d2w9n"
+          >
+            <button
+              class="chakra-button css-vx0ruo"
+              type="button"
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="css-1hteoge"
+    >
+      <div
+        class="css-248241"
+      >
+        <p
+          class="chakra-text css-q7d5fr"
+        >
+          A component of
+           
+          <a
+            class="chakra-link css-1av0s05"
+            href="https://trisa.io"
+          >
+            the TRISA architecture
+          </a>
+           
+          for Cryptocurrency Travel Rule compliance.
+        </p>
+        <p
+          class="chakra-text css-q7d5fr"
+        >
+          Created and maintained by
+           
+          <a
+            class="chakra-link css-1av0s05"
+            href="https://rotational.io"
+          >
+             
+            Rotational Labs
+          </a>
+           
+          in partnership with
+           
+          <a
+            class="chakra-link css-1av0s05"
+            href="https://cyphertrace.com"
+          >
+             
+            CipherTrace
+          </a>
+           
+          on behalf of
+           
+          <a
+            class="chakra-link css-1av0s05"
+            href="https://trisa.io"
+          >
+            TRISA
+          </a>
+           
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
