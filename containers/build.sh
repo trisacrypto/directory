@@ -108,6 +108,11 @@ docker build \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
+    --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
+    --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_AUTH0_CLIENT_ID} \
+    --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.net/auth/callback \
+    --build-arg REACT_APP_AUTH0_SCOPE="openid profile email" \
+    --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net \
     $REPO
 
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
