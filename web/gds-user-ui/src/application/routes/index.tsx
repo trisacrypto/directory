@@ -5,6 +5,9 @@ import useAnalytics from 'hooks/useAnalytics';
 import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
+import HandleAuthCallback from 'modules/auth/callback';
+import Overview from 'modules/dashboard/overview';
+import CertificateRegistration from 'modules/dashboard/certificate/registration';
 const Home = React.lazy(() => import('modules/home'));
 const StartPage = React.lazy(() => import('modules/start'));
 const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
@@ -13,7 +16,6 @@ const VerifyPage = React.lazy(() => import('modules/verify'));
 const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
 const LoginPage = React.lazy(() => import('modules/auth/login'));
 const RegisterPage = React.lazy(() => import('modules/auth/register'));
-const HandleAuthCallback = React.lazy(() => import('modules/auth/callback'));
 import PrivateRoute from './PrivateRoute';
 const AppRouter: React.FC = () => {
   const { isInitialized } = useAnalytics();
@@ -32,8 +34,8 @@ const AppRouter: React.FC = () => {
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/success" element={<SuccessAuth />} />
 
-          <Route path="/dashboard/certificate/registration" element={<CertificatePage />} />
-          <Route path="/dashboard/overview" element={<OverviewPage />} />
+          <Route path="/dashboard/certificate/registration" element={<CertificateRegistration />} />
+          <Route path="/dashboard/overview" element={<Overview />} />
 
           <Route element={<Home />} />
 
