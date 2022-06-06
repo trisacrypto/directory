@@ -85,7 +85,7 @@ func TestAuthenticate(t *testing.T) {
 	_, err := auth.Authenticate(conf)
 	require.Error(t, err, "expected invalid issuer url error")
 
-	conf.Issuer = "example.auth0.com"
+	conf.Domain = "example.auth0.com"
 	conf.Audience = "http://localhost:3000"
 	authenticate, err := auth.Authenticate(conf)
 	require.NoError(t, err, "could not create valid authenticate middleware")

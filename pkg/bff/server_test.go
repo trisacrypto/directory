@@ -72,9 +72,10 @@ func (s *bffTestSuite) SetupSuite() {
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		Auth0: config.AuthConfig{
-			Issuer:        "http://auth.localhost/",
+			Domain:        "auth.localhost",
 			Audience:      "http://localhost",
 			ProviderCache: 5 * time.Minute,
+			Testing:       true,
 		},
 		TestNet: config.DirectoryConfig{
 			Insecure: true,
