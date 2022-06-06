@@ -22,11 +22,13 @@ import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import LanguagesDropdown from 'components/LanguagesDropdown';
+import { useLanguageProvider } from 'contexts/LanguageContext';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [locale] = useLanguageProvider();
 
   return (
     <Flex
@@ -56,7 +58,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               <MenuItem to="/#about">
                 <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
-              <MenuItem to="https://trisa.dev">
+              <MenuItem data-testid="documentation" to={`https://trisa.dev/${locale}`}>
                 <Trans id="Documentation">Documentation</Trans>
               </MenuItem>
               <LanguagesDropdown />
@@ -90,7 +92,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                     <MenuItem to="/#about">
                       <Trans id="About TRISA">About TRISA</Trans>{' '}
                     </MenuItem>
-                    <MenuItem to="https://trisa.dev">
+                    <MenuItem to={`https://trisa.dev/${locale}`}>
                       <Trans id="Documentation">Documentation</Trans>
                     </MenuItem>
                     <MenuItem to="/auth/login">
