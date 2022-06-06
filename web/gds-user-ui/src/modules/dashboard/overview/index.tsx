@@ -26,9 +26,10 @@ import { colors } from 'utils/theme';
 
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
-
+import OrganizationProfile from 'components/OrganizationProfile';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user, getUser } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
@@ -94,8 +95,8 @@ const Overview: React.FC = () => {
           </Tabs>
         </Box>
       </Box>
-
       {/* </Sentry.ErrorBoundary> */}
+      <OrganizationProfile data={result} />
     </DashboardLayout>
   );
 };

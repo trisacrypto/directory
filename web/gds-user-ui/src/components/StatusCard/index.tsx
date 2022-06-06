@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Box, Text, Heading, HStack, Flex } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, HStack, Flex, chakra } from '@chakra-ui/react';
 import { IoEllipse } from 'react-icons/io5';
 interface StatusCardProps {
   isOnline: boolean;
@@ -37,33 +37,36 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
   //   mainnetstatus: "Not Eligible yet ",
   // };
   return (
-    <Flex
+    <Box
       bg={'white'}
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
-      height={167}
-      maxWidth={246}
+      // minWidth={250}
+      // height={170}
       fontSize={18}
       p={5}
+      mt={10}
       px={5}>
-      <Box textAlign={'center'}>
-        <Heading fontSize={20}>Network Status</Heading>
-        <Box
+      <Stack textAlign={'center'}>
+        <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
+          Network Status
+        </chakra.h1>
+        <Stack
           fontSize={40}
-          pt={3}
-          fontWeight={'bold'}
+          pt={5}
           alignItems={'center'}
-          mx={'auto'}
-          justifyContent={'center'}>
+          textAlign={'center'}
+          justifyContent={'center'}
+          mx={'auto'}>
           {isOnline ? (
-            <IoEllipse fontSize="2rem" fill={'#60C4CA'} />
+            <IoEllipse fontSize="3rem" fill={'#60C4CA'} />
           ) : (
-            <IoEllipse fontSize="2rem" fill={'#C4C4C4'} />
+            <IoEllipse fontSize="3rem" fill={'#C4C4C4'} />
           )}
-        </Box>
-      </Box>
-    </Flex>
+        </Stack>
+      </Stack>
+    </Box>
   );
 };
 StatusCard.defaultProps = {

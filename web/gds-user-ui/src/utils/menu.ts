@@ -13,8 +13,7 @@ const Menu = [
   {
     title: 'Certificate Management',
     icon: BiCertification,
-    activated: true,
-    path: '/dashboard/certificate'
+    activated: true
   },
   {
     title: 'Technical Resources',

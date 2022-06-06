@@ -36,7 +36,7 @@ const useCustomAuth0 = () => {
     });
   };
 
-  const auth0Logout = (options: any) => {
+  const auth0Logout = (options: auth0.LoginOptions) => {
     authWeb.logout({
       ...options,
       returnTo: process.env.REACT_APP_AUTH0_LOGOUT_REDIRECT_URL || 'localhost:3000/auth/logout'

@@ -10,7 +10,7 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
   const { getUser } = useAuth();
   useEffect(() => {
     getUser();
-  });
+  }, []);
   return (
     <>
       <Sidebar {...props} />;

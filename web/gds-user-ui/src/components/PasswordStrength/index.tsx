@@ -13,9 +13,8 @@ import {
   useColorModeValue
 } from '@chakra-ui/react';
 
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdDone } from 'react-icons/md';
 const PasswordStrength = (props: any) => {
-  console.log('watch password', props.data);
   const [isContains9Characters, setIsContains9Characters] = useState<boolean>(false);
   const [isContainsOneLowerCase, setIsContainsOneLowerCase] = useState<boolean>(false);
   const [isContainsOneUpperCase, setIsContainsOneUpperCase] = useState<boolean>(false);
@@ -65,9 +64,14 @@ const PasswordStrength = (props: any) => {
       <Box>
         <Text textAlign={'left'} color={isContains9Characters ? 'gray.900' : 'gray.500'}>
           <Text as={'span'} position={'relative'} top={2}>
-            <Icon w={6} h={6} as={MdClose} color={isContains9Characters ? 'green' : 'gray.200'} />{' '}
+            <Icon
+              w={6}
+              h={6}
+              as={isContains9Characters ? MdDone : MdClose}
+              color={isContains9Characters ? 'green' : 'gray.200'}
+            />{' '}
           </Text>
-          At least 8 characters in length
+          At least 9 characters in length
         </Text>
       </Box>
       <Box mt={2}>
@@ -76,7 +80,12 @@ const PasswordStrength = (props: any) => {
       <Box>
         <Text textAlign={'left'} color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}>
           <Text as={'span'} position={'relative'} top={2}>
-            <Icon w={6} h={6} as={MdClose} color={isContainsOneLowerCase ? 'green' : 'gray.200'} />{' '}
+            <Icon
+              w={6}
+              h={6}
+              as={isContainsOneLowerCase ? MdDone : MdClose}
+              color={isContainsOneLowerCase ? 'green' : 'gray.200'}
+            />{' '}
           </Text>
           lower case letters (a-z)
         </Text>
@@ -84,7 +93,12 @@ const PasswordStrength = (props: any) => {
       <Box>
         <Text textAlign={'left'} color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}>
           <Text as={'span'} position={'relative'} top={2}>
-            <Icon w={6} h={6} as={MdClose} color={isContainsOneUpperCase ? 'green' : 'gray.200'} />{' '}
+            <Icon
+              w={6}
+              h={6}
+              as={isContainsOneUpperCase ? MdDone : MdClose}
+              color={isContainsOneUpperCase ? 'green' : 'gray.200'}
+            />{' '}
           </Text>
           upper case letters (A-Z)
         </Text>
@@ -92,7 +106,12 @@ const PasswordStrength = (props: any) => {
       <Box>
         <Text textAlign={'left'} color={isContainsOneNumber ? 'gray.900' : 'gray.500'}>
           <Text as={'span'} position={'relative'} top={2}>
-            <Icon w={6} h={6} as={MdClose} color={isContainsOneNumber ? 'green' : 'gray.200'} />{' '}
+            <Icon
+              w={6}
+              h={6}
+              as={isContainsOneNumber ? MdDone : MdClose}
+              color={isContainsOneNumber ? 'green' : 'gray.200'}
+            />{' '}
           </Text>
           numbers (i.e. 0-9)
         </Text>
@@ -103,7 +122,7 @@ const PasswordStrength = (props: any) => {
             <Icon
               w={6}
               h={6}
-              as={MdClose}
+              as={isContainsOneSpecialChar ? MdDone : MdClose}
               color={isContainsOneSpecialChar ? 'green' : 'gray.200'}
             />{' '}
           </Text>

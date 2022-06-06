@@ -14,7 +14,9 @@ import {
   DrawerContent,
   DrawerHeader,
   useDisclosure,
-  DrawerCloseButton
+  DrawerCloseButton,
+  Text,
+  Button
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -22,7 +24,7 @@ import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import LanguagesDropdown from 'components/LanguagesDropdown';
-
+import { NavLink } from 'react-router-dom';
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
@@ -40,26 +42,51 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
             <Box>
-              <Link href="/" _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
-              </Link>
+              <NavLink to={'/'}>
+                <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
+                  <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
+                </Link>
+              </NavLink>
             </Box>
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>
 
             <Stack
-              ml="auto"
+              isInline
+              align="center"
+              justify="flex-end"
+              ml={{ base: 'auto', md: 0 }}
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
+              <Stack pr={2}>
+                <LanguagesDropdown />
+              </Stack>
               <MenuItem to="/#about">
                 <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
               <MenuItem to="https://trisa.dev">
                 <Trans id="Documentation">Documentation</Trans>
               </MenuItem>
-              <LanguagesDropdown />
+              <Stack>
+                <NavLink to={'/auth/login'}>
+                  <Button
+                    bg="#FF7A59"
+                    color="white"
+                    borderColor="white"
+                    pl={'1.5rem'}
+                    pr={'1.5rem'}
+                    py={'0.375rem'}
+                    maxWidth={'190px'}
+                    width="100%"
+                    borderRadius="2px"
+                    border="1px solid #fff"
+                    _hover={{ bg: '#FF7A77' }}>
+                    <Trans id="Login">Login</Trans>
+                  </Button>
+                </NavLink>
+              </Stack>
             </Stack>
 
             {/* mobile drawer */}

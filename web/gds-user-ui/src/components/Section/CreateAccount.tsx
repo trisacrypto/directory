@@ -30,6 +30,7 @@ import PasswordStrength from 'components/PasswordStrength';
 import * as yup from 'yup';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
@@ -69,7 +70,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
       justify={'center'}
       fontFamily={'open sans'}
       fontSize={'xl'}
-      marginTop={'10vh'}
+      mb={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack align={'center'}>
@@ -156,10 +157,12 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 </Button>
                 <Text textAlign="center">
                   <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-                  <Link href="/auth/login" color={colors.system.cyan}>
-                    {' '}
-                    <Trans id="Log in.">Log in.</Trans>
-                  </Link>
+                  <RouterLink to={'/auth/login'}>
+                    <Link color={colors.system.cyan}>
+                      {' '}
+                      <Trans id="Log in.">Log in.</Trans>
+                    </Link>
+                  </RouterLink>
                 </Text>
               </Stack>
             </Stack>

@@ -21,7 +21,7 @@ const CallbackPage: React.FC = () => {
     (async () => {
       try {
         const getUserInfo: any = accessToken && (await auth0GetUser(accessToken));
-
+        console.log('getUserInfo', getUserInfo);
         setIsLoading(false);
         if (getUserInfo && getUserInfo?.email_verified) {
           setCookie('access_token', accessToken);

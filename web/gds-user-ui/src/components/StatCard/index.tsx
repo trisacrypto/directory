@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Box, Text, Heading } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, Flex, chakra } from '@chakra-ui/react';
 
 interface StatCardProps {
   title: string;
@@ -12,20 +12,17 @@ const StatCard = ({ title, number }: StatCardProps) => {
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
-      height={167}
-      width={'200px'}
+      textAlign={'center'}
+      // minWidth={250}
+      // height={170}
       fontSize={18}
       p={5}
       mt={10}
       px={5}>
-      <Stack textAlign={'center'}>
-        <Heading
-          fontSize={20}
-          sx={{
-            wordWrap: 'break-word'
-          }}>
+      <Stack>
+        <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
           {title}
-        </Heading>
+        </chakra.h1>
         <Text fontSize={40} pt={3} fontWeight={'bold'}>
           {number}
         </Text>

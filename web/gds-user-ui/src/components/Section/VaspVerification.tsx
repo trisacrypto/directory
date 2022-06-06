@@ -198,8 +198,7 @@ export default function VaspVerification() {
           </Box>
           <Stack
             direction={['column', 'row']}
-            pt={20}
-            mx={10}
+            py={20}
             justifyContent={'center'}
             textAlign={'center'}>
             {/* <Box>
