@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
 import CreateAccount from './CreateAccount';
-
+import { BrowserRouter as Router } from 'react-router-dom';
 const mockSignWithEmail = jest.fn((values) => {
   return Promise.resolve(values);
 });
@@ -20,10 +20,12 @@ describe('<CreateAccount />', () => {
 
   it('should submit form when fields are all filled', async () => {
     render(
-      <CreateAccount
-        handleSocialAuth={mockSignWithEmail}
-        handleSignUpWithEmail={mockSignWithSocial}
-      />
+      <Router>
+        <CreateAccount
+          handleSocialAuth={mockSignWithEmail}
+          handleSignUpWithEmail={mockSignWithSocial}
+        />
+      </Router>
     );
 
     const username = screen.getByTestId('username-field');
@@ -46,10 +48,12 @@ describe('<CreateAccount />', () => {
     const mockHandleSignUpWithEmail = jest.fn();
 
     render(
-      <CreateAccount
-        handleSocialAuth={mockSignWithEmail}
-        handleSignUpWithEmail={mockSignWithSocial}
-      />
+      <Router>
+        <CreateAccount
+          handleSocialAuth={mockSignWithEmail}
+          handleSignUpWithEmail={mockSignWithSocial}
+        />
+      </Router>
     );
 
     const submitButton = screen.getByRole('button', { name: /create an account/i });

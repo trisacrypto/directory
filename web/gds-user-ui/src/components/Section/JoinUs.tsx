@@ -13,7 +13,7 @@ import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { getIcon } from 'components/Icon';
 import { colors } from 'utils/theme';
-
+import { Link as RouterLink } from 'react-router-dom';
 const datas = [
   {
     icon: 'secure',
@@ -95,20 +95,20 @@ export default function JoinUsSection() {
               ))}
             </SimpleGrid>
             <Box alignItems="center" textAlign="center">
-              <Button
-                bg="#FF7A59"
-                color="white"
-                borderColor="white"
-                py={6}
-                maxWidth={'190px'}
-                width="100%"
-                borderRadius="0px"
-                border="2px solid #fff"
-                _hover={{ bg: '#FF7A77' }}
-                as={'a'}
-                href={'/getting-started'}>
-                <Trans id="Join Today">Join Today</Trans>
-              </Button>
+              <RouterLink to={'/getting-started'}>
+                <Button
+                  bg="#FF7A59"
+                  color="white"
+                  borderColor="white"
+                  py={6}
+                  maxWidth={'190px'}
+                  width="100%"
+                  borderRadius="0px"
+                  border="2px solid #fff"
+                  _hover={{ bg: '#FF7A77' }}>
+                  <Trans id="Join Today">Join Today</Trans>
+                </Button>
+              </RouterLink>
             </Box>
           </Stack>
           <Flex flex={1} />

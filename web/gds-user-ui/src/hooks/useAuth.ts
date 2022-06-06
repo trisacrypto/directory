@@ -12,7 +12,7 @@ const useAuth = () => {
   const loginUser = (u: TUser) => {
     dispatch(login(u));
   };
-  const accessToken = getCookie('session') || '';
+  const accessToken = getCookie('access_token') || '';
 
   const logoutUser = () => {
     dispatch(logout());

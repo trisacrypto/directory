@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import Login from 'components/Section/Login';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
-
+import { BrowserRouter as Router } from 'react-router-dom';
 const mockSignWithEmail = jest.fn((values) => {
   return Promise.resolve(values);
 });
@@ -20,7 +20,9 @@ describe('<Login />', () => {
 
   beforeEach(() => {
     render(
-      <Login handleSignWithEmail={mockSignWithEmail} handleSignWithSocial={mockSignWithSocial} />
+      <Router>
+        <Login handleSignWithEmail={mockSignWithEmail} handleSignWithSocial={mockSignWithSocial} />
+      </Router>
     );
   });
 
