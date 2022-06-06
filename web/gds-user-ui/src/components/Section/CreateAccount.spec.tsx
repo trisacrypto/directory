@@ -48,10 +48,12 @@ describe('<CreateAccount />', () => {
     const mockHandleSignUpWithEmail = jest.fn();
 
     render(
-      <CreateAccount
-        handleSocialAuth={mockSignWithEmail}
-        handleSignUpWithEmail={mockSignWithSocial}
-      />
+      <Router>
+        <CreateAccount
+          handleSocialAuth={mockSignWithEmail}
+          handleSignUpWithEmail={mockSignWithSocial}
+        />
+      </Router>
     );
 
     const submitButton = screen.getByRole('button', { name: /create an account/i });
