@@ -1,0 +1,6 @@
+{
+  "access_token": "eyJ...Ggg",
+  "expires_in": 86400,
+  "scope": "read:clients create:clients read:client_keys",
+  "token_type": "Bearer"
+}
