@@ -1,0 +1,277 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<Line /> should match snapshot 1`] = `
+<div>
+  <div
+    class="css-1nkacyh"
+  >
+    <div
+      class="chakra-container css-1a3ltpp"
+    >
+      <div
+        class="chakra-stack css-12m5edu"
+      >
+        <div
+          class="css-1y81stp"
+        >
+          <p
+            class="chakra-text css-1t2l67w"
+          >
+            TRISA members must complete a comprehensive multi-part verification form and due diligence process. Once verified, TRISA will issue TestNet and MainNet certificates for secure Travel Rule compliance.
+          </p>
+        </div>
+        <div
+          class="css-7egbnq"
+        >
+          <p
+            class="chakra-text css-1wbbpf0"
+          >
+            TRISA’s verification form includes five sections and may require information from several parties in your organization.
+          </p>
+        </div>
+        <div
+          class="css-cspnrf"
+        >
+          <div
+            class="css-1ipaw1x"
+          >
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                Sections & Details
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              />
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                Who to Ask
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              />
+            </div>
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                1 Basic Details
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              >
+                Information about the VASP such as website, incorporation date, business and VASP category.
+              </dd>
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ub76a4"
+              />
+              <dd
+                class="css-a3f1ip"
+                data-content="Who to ask"
+              >
+                Business or Compliance Office
+              </dd>
+            </div>
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                2 Legal Person
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              >
+                Information that identifies your organization as a Legal Person. This section represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.
+              </dd>
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ub76a4"
+              />
+              <dd
+                class="css-a3f1ip"
+                data-content="Who to ask"
+              >
+                Business or Compliance Office
+              </dd>
+            </div>
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                3 Contacts
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              >
+                Contact information for representatives of your organization. Contacts include Technical, Legal/Compliance, Administrative, and Billing persons.
+              </dd>
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ub76a4"
+              />
+              <dd
+                class="css-a3f1ip"
+                data-content="Who to ask"
+              >
+                Business or Compliance Office
+              </dd>
+            </div>
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                4 TRISA Implementation
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              >
+                Technical information about your endpoint for certificate issuance. Each VASP is required to establish a TRISA endpoint for inter-VASP communication.
+              </dd>
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ub76a4"
+              />
+              <dd
+                class="css-a3f1ip"
+                data-content="Who to ask"
+              >
+                Technical Officer
+              </dd>
+            </div>
+            <div
+              class="css-rklm6r"
+            >
+              <dt
+                class="css-1ejj06g"
+              >
+                5 TRIXO Questionnaire
+              </dt>
+              <dd
+                class="css-a3f1ip"
+              >
+                Information to ensure that required compliance information exchanges are conducted correctly and safely. This includes information about jurisdiction and national regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection policies.
+              </dd>
+            </div>
+            <div
+              class="css-tuh9u2"
+            >
+              <dt
+                class="css-1ub76a4"
+              />
+              <dd
+                class="css-a3f1ip"
+                data-content="Who to ask"
+              >
+                Compliance Officer
+              </dd>
+            </div>
+          </div>
+          <div
+            class="css-gus2rx"
+          >
+            <div
+              class="css-11j9xqf"
+            >
+              <dt
+                class="css-kn4i7c"
+              >
+                Final Confirmation
+              </dt>
+              <dd
+                class="css-1n004p3"
+              >
+                For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification.
+              </dd>
+            </div>
+            <div
+              class="css-gwmn0b"
+            >
+              <dt
+                class="css-kn4i7c"
+              >
+                Need to Learn More?
+              </dt>
+              <dd
+                class="css-rltemf"
+              >
+                <ul
+                  class="css-xuskyr"
+                  role="list"
+                >
+                  <li
+                    class="css-14d0z92"
+                  >
+                    <a
+                      class="chakra-link css-f4h6uy"
+                      href="https://trisa.io/getting-started-with-trisa/"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Learn How TRISA Works
+                    </a>
+                  </li>
+                  <li
+                    class="css-14d0z92"
+                  >
+                    <a
+                      class="chakra-link css-f4h6uy"
+                      href="https://intervasp.org/"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      What is IVMS101?
+                    </a>
+                  </li>
+                </ul>
+              </dd>
+            </div>
+          </div>
+        </div>
+        <div
+          class="chakra-stack css-15av81"
+        >
+          <div
+            class="css-1tms7qa"
+          >
+            <a
+              class="chakra-button css-1n03jlk"
+              href="/certificate/registration"
+            >
+              Start Registration Process
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
