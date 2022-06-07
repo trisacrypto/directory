@@ -20,9 +20,7 @@ describe('<Login />', () => {
 
   beforeEach(() => {
     render(
-      <Router>
-        <Login handleSignWithEmail={mockSignWithEmail} handleSignWithSocial={mockSignWithSocial} />
-      </Router>
+      <Login handleSignWithEmail={mockSignWithEmail} handleSignWithSocial={mockSignWithSocial} />
     );
   });
 
