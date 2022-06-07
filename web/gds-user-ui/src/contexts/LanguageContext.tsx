@@ -13,6 +13,7 @@ import { DEFAULT_LOCALE, dynamicActivate } from 'utils/i18nLoaderHelper';
 import { i18n } from '@lingui/core';
 import * as yup from 'yup';
 import { t } from '@lingui/macro';
+import { LANG_KEY } from 'constants/lang-key';
 
 yup.setLocale({
   string: {
@@ -32,7 +33,7 @@ type LanguageProviderProps = {
 };
 
 const DEFAULT_FALLBACK = () => DEFAULT_LOCALE;
-const detectedLanguage = detect(fromStorage('gds_lang'), DEFAULT_FALLBACK);
+const detectedLanguage = detect(fromStorage(LANG_KEY), DEFAULT_FALLBACK);
 
 const LanguageProvider = ({ children }: LanguageProviderProps) => {
   const [language, setLanguage] = useState<string | null>(detectedLanguage);
