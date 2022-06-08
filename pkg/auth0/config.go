@@ -12,6 +12,15 @@ const (
 	userAgent   = "TRISA GDS Auth0 Client v1.0"
 )
 
+const (
+	authContentType     = "application/x-www-form-urlencoded"
+	authGrantTypeKey    = "grant_type"
+	authGrantTypeVal    = "client_credentials"
+	authClientIdKey     = "client_id"
+	authClientSecretKey = "client_secret"
+	authAudienceKey     = "audience"
+)
+
 // Config stores the client ID and secrets for accessing auth0. It is possible to load
 // the configuration from the environment, but generally speaking the configuration is
 // created from process-specifc environment configs like the one in the BFF config.

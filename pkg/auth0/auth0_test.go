@@ -12,6 +12,31 @@ import (
 	"github.com/trisacrypto/directory/pkg/auth0"
 )
 
+func TestLive(t *testing.T) {
+	// These tests will only run if there is a valid configuration in the environment
+	conf, err := auth0.NewConfig()
+	if err != nil {
+		t.Skip("live tests require local environment configuration")
+	}
+
+	// Do not run the live tests if there is no access token cacheing
+	if conf.TokenCache == "" {
+		t.Skip("live tests require a token cache to prevent issuing multiple M2M tokens")
+	}
+
+	//  Log the situation for the tests
+	t.Logf("live tests starting with auth0 client %s, using token cache %s", conf.ClientID, conf.TokenCache)
+
+	// Create the client to start the live tests
+	client, err := auth0.New(conf)
+	require.NoError(t, err, "could not create auth0 client for live testing")
+
+	// TODO: don't call authenticate directly
+	err = client.Authenticate()
+	require.NoError(t, err, "could not authenticate the request")
+
+}
+
 func TestEndpoint(t *testing.T) {
 	client, err := auth0.New(auth0.Config{Domain: "example.auth0.com", Testing: true})
 	require.NoError(t, err, "could not create testing client")

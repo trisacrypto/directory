@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -63,6 +64,56 @@ func New(conf Config) (client *Auth0, err error) {
 	}
 
 	return client, nil
+}
+
+// Authenticate the client with the configured client ID and client secret, getting an
+// access token that can be used to make subsequent requests. In normal operations the
+// access token is stored in memory and used until it expires (by default, 24 hours).
+// The access token can also be cached to disk for testing or CLI programs because the
+// number of M2M tokens issued per month is limited by the paid plan.
+//
+// For more on accessing the management API with production access tokens, see:
+// https://auth0.com/docs/secure/tokens/access-tokens/get-management-api-access-tokens-for-production
+func (a *Auth0) Authenticate() (err error) {
+	// Create the form url-encoded payload
+	payload := url.Values{}
+	payload.Set(authGrantTypeKey, authGrantTypeVal)
+	payload.Set(authClientIdKey, a.conf.ClientID)
+	payload.Set(authClientSecretKey, a.conf.ClientSecret)
+	payload.Set(authAudienceKey, a.Endpoint("/api/v2/", nil))
+
+	var req *http.Request
+	endpoint := a.Endpoint("/oauth/token", nil)
+	if req, err = http.NewRequest(http.MethodPost, endpoint, strings.NewReader(payload.Encode())); err != nil {
+		return fmt.Errorf("could not build http request: %s", err)
+	}
+
+	req.Header.Set("Content-Type", authContentType)
+	req.Header.Set("Accept", contentType)
+	req.Header.Set("User-Agent", userAgent)
+
+	var rep *http.Response
+	if rep, err = a.client.Do(req); err != nil {
+		return fmt.Errorf("could not execute authentication request: %s", err)
+	}
+	defer rep.Body.Close()
+
+	// Check status code
+	if rep.StatusCode < 200 || rep.StatusCode >= 300 {
+		return fmt.Errorf("could not complete authentication received %s", rep.Status)
+	}
+
+	// Create new credentials and parse incoming credentials from request
+	a.creds = &Credentials{}
+	if err = a.creds.Load(rep.Body); err != nil {
+		return err
+	}
+
+	// If we have a cache for the access tokens, write it
+	if a.conf.TokenCache != "" {
+		a.creds.DumpCache(a.conf.TokenCache)
+	}
+	return nil
 }
 
 // Endpoint creates a valid URL from the specified path and query params using the base
