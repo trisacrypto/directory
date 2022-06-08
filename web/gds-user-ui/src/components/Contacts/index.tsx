@@ -33,7 +33,7 @@ const Contacts: React.FC = () => {
       <ContactForm
         name={`contacts.legal`}
         title={t`Legal/ Compliance Contact (required)`}
-        description={t`Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization.`}
+        description={t`Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.`}
       />
       <ContactForm
         name="contacts.technical"

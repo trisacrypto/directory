@@ -145,8 +145,8 @@ services:
       - GDS_BFF_DATABASE_POOL_PATH
       - GDS_BFF_SENTRY_TRACK_PERFORMANCE
       - SENTRY_DSN
-      - GDS_BFF_AUTH0_ISSUER='https://dev-bu-hbv3o.us.auth0.com'
-      - GDS_BFF_AUTH0_AUDIENCE='https://bff.vaspdirectory.net'
+      - GDS_BFF_AUTH0_ISSUER=dev-bu-hbv3o.us.auth0.com
+      - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
       - SENTRY_ENVIRONMENT
     profiles:
       - api

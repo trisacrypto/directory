@@ -15,6 +15,12 @@ type ContactFormProps = {
 const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) => {
   const { register, control, formState } = useFormContext();
   const { errors } = formState;
+  const getPhoneMessageHint = () => {
+    if (name === 'contacts.legal') {
+      return 'A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.';
+    }
+    return 'If supplied, use full phone number with country code.';
+  };
 
   return (
     <FormLayout>
@@ -56,7 +62,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
               formHelperText={
                 get(errors, `${name}.phone`)
                   ? get(errors, `${name}.phone`).message
-                  : 'If supplied, use full phone number with country code.'
+                  : getPhoneMessageHint()
               }
               controlId="phoneNumber"
             />
