@@ -59,6 +59,27 @@ var testEnv = map[string]string{
 	"GOOGLE_APPLICATION_CREDENTIALS":           "test.json",
 	"GOOGLE_PROJECT_NAME":                      "test",
 	"GDS_SECRETS_TESTING":                      "true",
+	"GDS_API_SENTRY_ENABLED":                   "true",
+	"GDS_API_SENTRY_DSN":                       "https://something.gds.api.sentry.io",
+	"GDS_API_SENTRY_ENVIRONMENT":               "test",
+	"GDS_API_SENTRY_RELEASE":                   "1.4",
+	"GDS_API_SENTRY_TRACK_PERFORMANCE":         "true",
+	"GDS_API_SENTRY_SAMPLE_RATE":               "0.1",
+	"GDS_API_SENTRY_DEBUG":                     "true",
+	"GDS_ADMIN_SENTRY_ENABLED":                 "true",
+	"GDS_ADMIN_SENTRY_DSN":                     "https://something.gds.admin.sentry.io",
+	"GDS_ADMIN_SENTRY_ENVIRONMENT":             "test",
+	"GDS_ADMIN_SENTRY_RELEASE":                 "1.4",
+	"GDS_ADMIN_SENTRY_TRACK_PERFORMANCE":       "true",
+	"GDS_ADMIN_SENTRY_SAMPLE_RATE":             "0.1",
+	"GDS_ADMIN_SENTRY_DEBUG":                   "true",
+	"GDS_MEMBERS_SENTRY_ENABLED":               "true",
+	"GDS_MEMBERS_SENTRY_DSN":                   "https://something.gds.members.sentry.io",
+	"GDS_MEMBERS_SENTRY_ENVIRONMENT":           "test",
+	"GDS_MEMBERS_SENTRY_RELEASE":               "1.4",
+	"GDS_MEMBERS_SENTRY_TRACK_PERFORMANCE":     "true",
+	"GDS_MEMBERS_SENTRY_SAMPLE_RATE":           "0.1",
+	"GDS_MEMBERS_SENTRY_DEBUG":                 "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -85,8 +106,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_SECRET_KEY"], conf.SecretKey)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.Equal(t, true, conf.ConsoleLog)
-	require.Equal(t, true, conf.GDS.Enabled)
-	require.Equal(t, testEnv["GDS_BIND_ADDR"], conf.GDS.BindAddr)
+	require.Equal(t, true, conf.API.Enabled)
+	require.Equal(t, testEnv["GDS_BIND_ADDR"], conf.API.BindAddr)
 	require.Equal(t, true, conf.Admin.Enabled)
 	require.Equal(t, testEnv["GDS_ADMIN_BIND_ADDR"], conf.Admin.BindAddr)
 	require.Equal(t, testEnv["GDS_ADMIN_MODE"], conf.Admin.Mode)
@@ -126,6 +147,27 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 7, conf.Backup.Keep)
 	require.Equal(t, testEnv["GOOGLE_APPLICATION_CREDENTIALS"], conf.Secrets.Credentials)
 	require.Equal(t, testEnv["GOOGLE_PROJECT_NAME"], conf.Secrets.Project)
+	require.Equal(t, true, conf.API.Sentry.Enabled)
+	require.Equal(t, testEnv["GDS_API_SENTRY_DSN"], conf.API.Sentry.DSN)
+	require.Equal(t, testEnv["GDS_API_SENTRY_ENVIRONMENT"], conf.API.Sentry.Environment)
+	require.Equal(t, true, conf.API.Sentry.TrackPerformance)
+	require.Equal(t, testEnv["GDS_API_SENTRY_RELEASE"], conf.API.Sentry.Release)
+	require.Equal(t, true, conf.API.Sentry.Debug)
+	require.Equal(t, .1, conf.API.Sentry.SampleRate)
+	require.Equal(t, true, conf.Admin.Sentry.Enabled)
+	require.Equal(t, testEnv["GDS_ADMIN_SENTRY_DSN"], conf.Admin.Sentry.DSN)
+	require.Equal(t, testEnv["GDS_ADMIN_SENTRY_ENVIRONMENT"], conf.Admin.Sentry.Environment)
+	require.Equal(t, true, conf.Admin.Sentry.TrackPerformance)
+	require.Equal(t, testEnv["GDS_ADMIN_SENTRY_RELEASE"], conf.Admin.Sentry.Release)
+	require.Equal(t, true, conf.Admin.Sentry.Debug)
+	require.Equal(t, .1, conf.Admin.Sentry.SampleRate)
+	require.Equal(t, true, conf.Members.Sentry.Enabled)
+	require.Equal(t, testEnv["GDS_MEMBERS_SENTRY_DSN"], conf.Members.Sentry.DSN)
+	require.Equal(t, testEnv["GDS_MEMBERS_SENTRY_ENVIRONMENT"], conf.Members.Sentry.Environment)
+	require.Equal(t, true, conf.Members.Sentry.TrackPerformance)
+	require.Equal(t, testEnv["GDS_MEMBERS_SENTRY_RELEASE"], conf.Members.Sentry.Release)
+	require.Equal(t, true, conf.Members.Sentry.Debug)
+	require.Equal(t, .1, conf.Members.Sentry.SampleRate)
 	require.True(t, conf.Secrets.Testing)
 }
 
@@ -315,6 +357,30 @@ func TestDatabaseConfigValidation(t *testing.T) {
 	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
 
 	conf.PoolPath = "fixtures/pool.zip"
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestSentryConfigValidation(t *testing.T) {
+	conf := config.SentryConfig{
+		Enabled:     true,
+		DSN:         "",
+		Environment: "test",
+		Release:     "1.4",
+		Debug:       true,
+	}
+
+	// If Sentry is enabled, then DSN is required.
+	err := conf.Validate()
+	require.EqualError(t, err, "invalid configuration: DSN must be configured when Sentry is enabled")
+
+	// If Sentry is enabled, then the environment is required
+	conf.DSN = "https://something.ingest.sentry.io"
+	conf.Environment = ""
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
+
+	conf.Environment = "test"
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

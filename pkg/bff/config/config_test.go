@@ -32,9 +32,9 @@ var testEnv = map[string]string{
 	"GDS_BFF_DATABASE_INSECURE":        "true",
 	"GDS_BFF_DATABASE_CERT_PATH":       "fixtures/creds/certs.pem",
 	"GDS_BFF_DATABASE_POOL_PATH":       "fixtures/creds/pool.zip",
-	"SENTRY_DSN":                       "https://something.ingest.sentry.io",
-	"SENTRY_ENVIRONMENT":               "test",
-	"SENTRY_RELEASE":                   "gds-bff@1.4",
+	"GDS_BFF_SENTRY_DSN":               "https://something.ingest.sentry.io",
+	"GDS_BFF_SENTRY_ENVIRONMENT":       "test",
+	"GDS_BFF_SENTRY_RELEASE":           "1.4",
 	"GDS_BFF_SENTRY_DEBUG":             "true",
 	"GDS_BFF_SENTRY_TRACK_PERFORMANCE": "true",
 	"GDS_BFF_SENTRY_SAMPLE_RATE":       "0.2",
@@ -79,9 +79,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Database.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_CERT_PATH"], conf.Database.CertPath)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_POOL_PATH"], conf.Database.PoolPath)
-	require.Equal(t, testEnv["SENTRY_DSN"], conf.Sentry.DSN)
-	require.Equal(t, testEnv["SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
-	require.Equal(t, testEnv["SENTRY_RELEASE"], conf.Sentry.Release)
+	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
+	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
+	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
 	require.Equal(t, 0.2, conf.Sentry.SampleRate)
@@ -227,20 +227,22 @@ func TestDatabaseConfigValidation(t *testing.T) {
 
 func TestSentryConfigValidation(t *testing.T) {
 	conf := config.SentryConfig{
+		Enabled:     true,
 		DSN:         "",
-		Environment: "",
+		Environment: "test",
 		Release:     "gds-bff@1.4",
 		Debug:       true,
 	}
 
-	// If DSN is empty, then Sentry is not enabled
+	// If Sentry is enabled, then the DSN is required.
 	err := conf.Validate()
-	require.NoError(t, err)
+	require.EqualError(t, err, "invalid configuration: DSN must be configured when Sentry is enabled")
 
 	// If Sentry is enabled, then the environment is required
 	conf.DSN = "https://something.ingest.sentry.io"
+	conf.Environment = ""
 	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: envrionment must be configured when using sentry")
+	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
 
 	conf.Environment = "test"
 	err = conf.Validate()

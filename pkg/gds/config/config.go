@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
@@ -21,7 +22,7 @@ type Config struct {
 	Maintenance bool                `split_words:"true" default:"false"`
 	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool                `split_words:"true" default:"false"`
-	GDS         GDSConfig
+	API         GDSConfig
 	Admin       AdminConfig
 	Members     MembersConfig
 	Database    DatabaseConfig
@@ -36,6 +37,7 @@ type Config struct {
 type GDSConfig struct {
 	Enabled  bool   `envconfig:"GDS_API_ENABLED" default:"true"`
 	BindAddr string `envconfig:"GDS_BIND_ADDR" default:":4433"`
+	Sentry   SentryConfig
 }
 
 type AdminConfig struct {
@@ -46,6 +48,7 @@ type AdminConfig struct {
 	CookieDomain string   `split_words:"true"`
 	Audience     string   `split_words:"true"`
 	Oauth        OauthConfig
+	Sentry       SentryConfig
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem
@@ -65,6 +68,7 @@ type MembersConfig struct {
 	Insecure bool   `split_words:"true" default:"false"`
 	Certs    string `split_words:"true"`
 	CertPool string `split_words:"true"`
+	Sentry   SentryConfig
 }
 
 type DatabaseConfig struct {
@@ -102,6 +106,16 @@ type SecretsConfig struct {
 	Credentials string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"false"`
 	Project     string `envconfig:"GOOGLE_PROJECT_NAME" required:"false"`
 	Testing     bool   `split_words:"true" default:"false"`
+}
+
+type SentryConfig struct {
+	Enabled          bool    `split_words:"true" default:"false"`
+	DSN              string  `split_words:"true"`
+	Release          string  `split_words:"true"`
+	Environment      string  `split_words:"true"`
+	TrackPerformance bool    `split_words:"true" default:"false"`
+	SampleRate       float64 `split_words:"true" default:"1.0"`
+	Debug            bool    `split_words:"true" default:"false"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
@@ -143,6 +157,10 @@ func (c Config) Mark() (Config, error) {
 }
 
 func (c Config) Validate() (err error) {
+	if err = c.API.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Admin.Validate(); err != nil {
 		return err
 	}
@@ -166,6 +184,20 @@ func (c Config) Validate() (err error) {
 	return nil
 }
 
+func (c GDSConfig) Validate() error {
+	if c.Enabled {
+		if c.BindAddr == "" {
+			return errors.New("invalid configuration: bind addr is required for enabled GDS")
+		}
+
+		if err := c.Sentry.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c AdminConfig) Validate() error {
 	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
@@ -173,6 +205,10 @@ func (c AdminConfig) Validate() error {
 
 	if c.Enabled {
 		if err := c.Oauth.Validate(); err != nil {
+			return err
+		}
+
+		if err := c.Sentry.Validate(); err != nil {
 			return err
 		}
 
@@ -203,7 +239,12 @@ func (c MembersConfig) Validate() error {
 		if c.Certs == "" || c.CertPool == "" {
 			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
 		}
+
+		if err := c.Sentry.Validate(); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -227,4 +268,31 @@ func (c EmailConfig) Validate() error {
 	}
 
 	return nil
+}
+
+func (c SentryConfig) Validate() error {
+	// If Sentry is enabled then the DSN and envionment must be set.
+	if c.Enabled {
+		if c.DSN == "" {
+			return errors.New("invalid configuration: DSN must be configured when Sentry is enabled")
+		}
+
+		if c.Environment == "" {
+			return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
+		}
+	}
+	return nil
+}
+
+// Returns True if sentry performance tracking is enabled.
+func (c SentryConfig) PerformanceTrackingEnabled() bool {
+	return c.Enabled && c.TrackPerformance
+}
+
+// Get the configured version or the current semantic version if not configured.
+func (c SentryConfig) GetReleaseVersion() string {
+	if c.Release == "" {
+		return pkg.Version()
+	}
+	return c.Release
 }

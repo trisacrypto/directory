@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -29,8 +30,24 @@ import (
 func NewGDS(svc *Service) (gds *GDS, err error) {
 	gds = &GDS{
 		svc:  svc,
-		conf: &svc.conf.GDS,
+		conf: &svc.conf.API,
 		db:   svc.db,
+	}
+
+	// Configure Sentry
+	if gds.conf.Sentry.Enabled {
+		if err = sentry.Init(sentry.ClientOptions{
+			Dsn:              gds.conf.Sentry.DSN,
+			Environment:      gds.conf.Sentry.Environment,
+			Release:          fmt.Sprintf("gds-api@%s", gds.conf.Sentry.GetReleaseVersion()),
+			AttachStacktrace: true,
+			Debug:            gds.conf.Sentry.Debug,
+			TracesSampleRate: gds.conf.Sentry.SampleRate,
+		}); err != nil {
+			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		}
+
+		log.Info().Bool("track_performance", gds.conf.Sentry.TrackPerformance).Float64("sample_rate", gds.conf.Sentry.SampleRate).Msg("GDS api sentry tracing is enabled")
 	}
 
 	// Initialize the gRPC server
@@ -93,6 +110,9 @@ func (s *GDS) Run(sock net.Listener) {
 
 // Shutdown the TRISA Directory Service gracefully
 func (s *GDS) Shutdown() (err error) {
+	// Flush the Sentry log before shutting down
+	defer sentry.Flush(2 * time.Second)
+
 	log.Debug().Msg("gracefully shutting down GDS server")
 	s.srv.GracefulStop()
 	log.Debug().Msg("successful shutdown of GDS server")

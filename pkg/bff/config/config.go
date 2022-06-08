@@ -55,9 +55,10 @@ type DatabaseConfig struct {
 }
 
 type SentryConfig struct {
-	DSN              string  `envconfig:"SENTRY_DSN"`
-	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
-	Release          string  `envconfig:"SENTRY_RELEASE"`
+	Enabled          bool    `split_words:"true" default:"false"`
+	DSN              string  `split_words:"true"`
+	Environment      string  `split_words:"true"`
+	Release          string  `split_words:"true"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
 	SampleRate       float64 `split_words:"true" default:"1.0"`
 	Debug            bool    `default:"false"`
@@ -128,10 +129,21 @@ func (c DatabaseConfig) Validate() error {
 
 func (c SentryConfig) Validate() error {
 	// If Sentry is enabled then the envionment must be set.
-	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when using sentry")
+	if c.Enabled {
+		if c.DSN == "" {
+			return errors.New("invalid configuration: DSN must be configured when Sentry is enabled")
+		}
+
+		if c.Environment == "" {
+			return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
+		}
 	}
 	return nil
+}
+
+// Returns True if sentry performance tracking is enabled.
+func (c SentryConfig) PerformanceTrackingEnabled() bool {
+	return c.Enabled && c.TrackPerformance
 }
 
 // Get the configured version string or the current semantic version if not configured.
@@ -140,10 +152,6 @@ func (c SentryConfig) GetRelease() string {
 		return fmt.Sprintf("gds-bff@%s", pkg.Version())
 	}
 	return c.Release
-}
-
-func (c SentryConfig) UseSentry() bool {
-	return c.DSN != ""
 }
 
 func (c AuthConfig) Validate() error {

@@ -643,7 +643,7 @@ func serve(c *cli.Context) (err error) {
 	}
 
 	if addr := c.String("addr"); addr != "" {
-		conf.GDS.BindAddr = addr
+		conf.API.BindAddr = addr
 	}
 
 	var srv *gds.Service

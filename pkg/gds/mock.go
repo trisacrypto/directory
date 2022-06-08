@@ -101,7 +101,7 @@ func MockConfig() config.Config {
 		Maintenance: false,
 		LogLevel:    logger.LevelDecoder(zerolog.WarnLevel),
 		ConsoleLog:  false,
-		GDS: config.GDSConfig{
+		API: config.GDSConfig{
 			Enabled:  false,
 			BindAddr: "",
 		},
