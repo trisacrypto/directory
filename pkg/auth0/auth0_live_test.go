@@ -2,9 +2,10 @@ package auth0_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/auth0"
 )
@@ -50,12 +51,25 @@ func (s *liveAuth0TestSuite) SetupSuite() {
 
 func (s *liveAuth0TestSuite) TestGetUser() {
 	require := s.Require()
-	userID := "auth0|507f1f77bcf86cd799439020"
+	userID := "auth0|62a014c5881f6b006f97ed30"
 
 	user, err := s.client.GetUser(context.TODO(), userID)
 	require.NoError(err, "could not fetch example user")
 	require.NotEmpty(user, "expected a valid user object back")
+	require.Equal(userID, user.ID)
+	require.Equal("leopold.wentzel@gmail.com", user.Email)
+}
 
-	fmt.Printf("%+v\n", user)
-	require.False(true)
+func (s *liveAuth0TestSuite) TestUpdateUser() {
+	require := s.Require()
+	update := &auth0.User{
+		AppMetadata: auth0.Metadata{
+			"organization": uuid.NewString(),
+			"checkpoint":   time.Now().Format(time.RFC1123Z),
+		},
+	}
+
+	user, err := s.client.UpdateUser(context.TODO(), "auth0|62a014c5881f6b006f97ed30", update)
+	require.NoError(err, "could not update user")
+	require.Equal(update.AppMetadata, user.AppMetadata)
 }

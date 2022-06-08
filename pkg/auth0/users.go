@@ -28,6 +28,9 @@ type User struct {
 	Blocked       bool     `json:"blocked,omitempty"`
 	GivenName     string   `json:"given_name,omitempty"`
 	FamilyName    string   `json:"family_name,omitempty"`
+	Password      string   `json:"password,omitempty"`
+	Connection    string   `json:"connection,omitempty"`
+	ClientID      string   `json:"client_id,omitempty"`
 }
 
 // Metadata is a variable JSON object that can store arbitrary values for the user.
@@ -37,9 +40,10 @@ type Metadata map[string]interface{}
 // Although Auth0 allows including or excluding specific fields, this method does not
 // allow the user to specify these queries and instead hard codes the exclusion of some
 // fields that are not available in the user struct.
+// See: https://auth0.com/docs/api/management/v2#!/Users/get_users_by_id
 func (a *Auth0) GetUser(ctx context.Context, userID string) (user *User, err error) {
 	// Perform pre-flight check on authenticated endpoint
-	if err = a.Preflight(); err != nil {
+	if err = a.Preflight(ctx); err != nil {
 		return nil, err
 	}
 
@@ -66,4 +70,45 @@ func (a *Auth0) GetUser(ctx context.Context, userID string) (user *User, err err
 		return nil, err
 	}
 	return user, nil
+}
+
+// UpdateUser via a patch method, which means only the information you want to change
+// should be specified. Note that there are many rules about what data is required for
+// updating. For example, to update email, username, or password you have to also supply
+// the connection property. In general this method should be mostly used to update the
+// app_metadata and user_metadata which uses a merge method rather than replacement.
+// NOTE: the update cannot have ID set on it, it must be supplied as the userID argument.
+// See: https://auth0.com/docs/api/management/v2#!/Users/patch_users_by_id
+func (a *Auth0) UpdateUser(ctx context.Context, userID string, update *User) (updated *User, err error) {
+	// A user ID is required to make the update
+	if userID == "" {
+		return nil, &APIError{StatusCode: 400, Status: "Invalid Request", Message: "A user ID is required to make an update request"}
+	}
+
+	if update.ID != "" {
+		return nil, &APIError{StatusCode: 400, Status: "Invalid Update", Message: "A user ID cannot be specified on the updates sent to the server"}
+	}
+
+	// Perform pre-flight check on authenticated endpoint
+	if err = a.Preflight(ctx); err != nil {
+		return nil, err
+	}
+
+	// Create the request for the users update endpoint
+	endpoint := a.Endpoint("/api/v2/users/%s", nil, userID)
+	var req *http.Request
+	if req, err = a.NewRequest(ctx, http.MethodPatch, endpoint, update); err != nil {
+		return nil, err
+	}
+
+	var rep *http.Response
+	if rep, err = a.Do(req); err != nil {
+		return nil, err
+	}
+	defer rep.Body.Close()
+
+	if err = json.NewDecoder(rep.Body).Decode(&updated); err != nil {
+		return nil, err
+	}
+	return updated, nil
 }

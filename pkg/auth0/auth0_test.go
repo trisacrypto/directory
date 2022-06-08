@@ -86,7 +86,7 @@ func TestAuthenticate(t *testing.T) {
 	require.Empty(t, client.Creds(), "expected zero-valued credentials for test")
 
 	// Execute valid authenticate request
-	err = client.Authenticate()
+	err = client.Authenticate(context.TODO())
 	require.NoError(t, err, "could not authenticate client")
 
 	// Credentials should be not empty and valued after authentication
@@ -263,7 +263,7 @@ func TestPreflightRequestRace(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := client.Preflight()
+			err := client.Preflight(context.TODO())
 			require.NoError(t, err, "could not perform preflight check")
 
 			_, err = client.NewRequest(context.TODO(), http.MethodGet, client.Endpoint("/api/v2/users", nil, nil), nil)
@@ -296,4 +296,29 @@ func WriteError(w http.ResponseWriter, statusCode int, err interface{}) {
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(e)
 	}
+}
+
+// MakeAuthenticatedClient is a helper function to create authenticated test clients
+func MakeAuthenticatedClient(testURL string) (client *auth0.Auth0, err error) {
+	var u *url.URL
+	if u, err = url.Parse(testURL); err != nil {
+		return nil, err
+	}
+
+	conf := auth0.Config{
+		Domain:       u.Host,
+		ClientID:     "hello",
+		ClientSecret: "world",
+		Testing:      true,
+	}
+
+	if client, err = auth0.New(conf); err != nil {
+		return nil, err
+	}
+
+	// Authenticate the client
+	if err = client.Creds().LoadFrom("testdata/example_token.json"); err != nil {
+		return nil, err
+	}
+	return client, nil
 }

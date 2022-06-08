@@ -75,7 +75,7 @@ func New(conf Config) (client *Auth0, err error) {
 //
 // For more on accessing the management API with production access tokens, see:
 // https://auth0.com/docs/secure/tokens/access-tokens/get-management-api-access-tokens-for-production
-func (a *Auth0) Authenticate() (err error) {
+func (a *Auth0) Authenticate(ctx context.Context) (err error) {
 	// Create the form url-encoded payload
 	payload := url.Values{}
 	payload.Set(authGrantTypeKey, authGrantTypeVal)
@@ -85,7 +85,7 @@ func (a *Auth0) Authenticate() (err error) {
 
 	var req *http.Request
 	endpoint := a.Endpoint("/oauth/token", nil)
-	if req, err = http.NewRequest(http.MethodPost, endpoint, strings.NewReader(payload.Encode())); err != nil {
+	if req, err = http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(payload.Encode())); err != nil {
 		return fmt.Errorf("could not build http request: %s", err)
 	}
 
@@ -172,11 +172,11 @@ func (a *Auth0) NewRequest(ctx context.Context, method, url string, data interfa
 
 // Preflight prepares to send a request that needs to be authenticated by checking the
 // credentials and sending any authentication requests that are required.
-func (a *Auth0) Preflight() error {
+func (a *Auth0) Preflight(ctx context.Context) error {
 	a.Lock()
 	defer a.Unlock()
 	if !a.creds.Valid() {
-		if err := a.Authenticate(); err != nil {
+		if err := a.Authenticate(ctx); err != nil {
 			return err
 		}
 	}
