@@ -41,15 +41,13 @@ type GDSConfig struct {
 }
 
 type AdminConfig struct {
-	Enabled                bool     `split_words:"true" default:"true"`
-	BindAddr               string   `split_words:"true" default:":4434"`
-	Mode                   string   `split_words:"true" default:"release"`
-	AllowOrigins           []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
-	CookieDomain           string   `split_words:"true"`
-	Audience               string   `split_words:"true"`
-	SentryTrackPerformance bool     `split_words:"true" default:"false"`
-	SentrySampleRate       float64  `split_words:"true" default:"1.0"`
-	Oauth                  OauthConfig
+	Enabled      bool     `split_words:"true" default:"true"`
+	BindAddr     string   `split_words:"true" default:":4434"`
+	Mode         string   `split_words:"true" default:"release"`
+	AllowOrigins []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
+	CookieDomain string   `split_words:"true"`
+	Audience     string   `split_words:"true"`
+	Oauth        OauthConfig
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem
@@ -64,13 +62,11 @@ type OauthConfig struct {
 }
 
 type MembersConfig struct {
-	Enabled                bool    `split_words:"true" default:"true"`
-	BindAddr               string  `split_words:"true" default:":4435"`
-	Insecure               bool    `split_words:"true" default:"false"`
-	Certs                  string  `split_words:"true"`
-	CertPool               string  `split_words:"true"`
-	SentryTrackPerformance bool    `split_words:"true" default:"false"`
-	SentrySampleRate       float64 `split_words:"true" default:"1.0"`
+	Enabled  bool   `split_words:"true" default:"true"`
+	BindAddr string `split_words:"true" default:":4435"`
+	Insecure bool   `split_words:"true" default:"false"`
+	Certs    string `split_words:"true"`
+	CertPool string `split_words:"true"`
 }
 
 type DatabaseConfig struct {
