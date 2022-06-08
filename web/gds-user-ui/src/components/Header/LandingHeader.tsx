@@ -26,6 +26,7 @@ import { Trans } from '@lingui/react';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
+import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
@@ -69,7 +70,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               <MenuItem to="/#about">
                 <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
-              <MenuItem data-testid="documentation" to={`https://trisa.dev/${locale}`}>
+              <MenuItem data-testid="documentation" to={`${TRISA_BASE_URL}/${locale}`}>
                 <Trans id="Documentation">Documentation</Trans>
               </MenuItem>
               <Stack>
@@ -120,7 +121,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                     <MenuItem to="/#about">
                       <Trans id="About TRISA">About TRISA</Trans>{' '}
                     </MenuItem>
-                    <MenuItem to={`https://trisa.dev/${locale}`}>
+                    <MenuItem to={`${TRISA_BASE_URL}/${locale}`}>
                       <Trans id="Documentation">Documentation</Trans>
                     </MenuItem>
                     <MenuItem to="/auth/login">

@@ -23,8 +23,8 @@ msgid "(not saved)"
 msgstr "(not saved)"
 
 #: src/components/Section/CreateAccount.tsx:136
-msgid "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
-msgstr "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
+#~ msgid "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
+#~ msgstr "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
 
 #: src/modules/auth/register/register.validation.ts:21
 msgid ""
@@ -280,7 +280,7 @@ msgstr "Contact information for representatives of your organization. Contacts i
 msgid "Contacts"
 msgstr "Contacts"
 
-#: src/components/Section/CreateAccount.tsx:97
+#: src/components/Section/CreateAccount.tsx:100
 msgid "Continue with Google"
 msgstr "Continue with Google"
 
@@ -320,7 +320,7 @@ msgstr "Country of registration is required"
 msgid "Create an Account"
 msgstr "Create an Account"
 
-#: src/components/Section/CreateAccount.tsx:76
+#: src/components/Section/CreateAccount.tsx:79
 msgid "Create your TRISA account."
 msgstr "Create your TRISA account."
 
@@ -404,7 +404,7 @@ msgid "Edit"
 msgstr "Edit"
 
 #: src/components/ContactForm/index.tsx:32
-#: src/components/Section/CreateAccount.tsx:116
+#: src/components/Section/CreateAccount.tsx:119
 #: src/components/Section/Login.tsx:102
 #: src/components/Section/PasswordReset.tsx:64
 msgid "Email Address"
@@ -725,7 +725,7 @@ msgstr "Partially"
 msgid "Passport Number"
 msgstr "Passport Number"
 
-#: src/components/Section/CreateAccount.tsx:126
+#: src/components/Section/CreateAccount.tsx:129
 #: src/components/Section/Login.tsx:112
 msgid "Password"
 msgstr "Password"
@@ -1149,7 +1149,7 @@ msgstr "VASP Category"
 msgid "VERIFIED ON"
 msgstr "VERIFIED ON"
 
-#: src/components/Section/CreateAccount.tsx:78
+#: src/components/Section/CreateAccount.tsx:81
 msgid "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
 msgstr "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
 

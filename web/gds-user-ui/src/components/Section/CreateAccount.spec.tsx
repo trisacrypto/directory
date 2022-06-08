@@ -20,12 +20,10 @@ describe('<CreateAccount />', () => {
 
   it('should submit form when fields are all filled', async () => {
     render(
-      <Router>
-        <CreateAccount
-          handleSocialAuth={mockSignWithEmail}
-          handleSignUpWithEmail={mockSignWithSocial}
-        />
-      </Router>
+      <CreateAccount
+        handleSocialAuth={mockSignWithEmail}
+        handleSignUpWithEmail={mockSignWithSocial}
+      />
     );
 
     const username = screen.getByTestId('username-field');
@@ -48,12 +46,11 @@ describe('<CreateAccount />', () => {
     const mockHandleSignUpWithEmail = jest.fn();
 
     render(
-      <Router>
-        <CreateAccount
-          handleSocialAuth={mockSignWithEmail}
-          handleSignUpWithEmail={mockSignWithSocial}
-        />
-      </Router>
+      <CreateAccount
+        handleSocialAuth={mockSignWithEmail}
+        handleSignUpWithEmail={mockSignWithSocial}
+      />,
+      { route: '/auth/login' }
     );
 
     const submitButton = screen.getByRole('button', { name: /create an account/i });
