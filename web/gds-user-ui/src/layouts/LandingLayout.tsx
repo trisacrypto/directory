@@ -1,7 +1,7 @@
 import React from 'react';
-import { Flex, FlexProps } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import LandingHeader from 'components/Header/LandingHeader';
-import LandingFooter from 'components/Footer/LandingFooter';
+import Footer from 'components/Footer/LandingFooter';
 type LandingLayoutProp = {
   children?: React.ReactNode;
 };
@@ -19,7 +19,7 @@ export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
       minHeight={'100vh'}>
       <LandingHeader />
       {props.children}
-      <LandingFooter />
+      <Footer />
     </Flex>
   );
 }
