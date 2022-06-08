@@ -1,10 +1,12 @@
 package gds
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
@@ -42,6 +44,22 @@ func New(conf config.Config) (s *Service, err error) {
 	// Set human readable logging if specified
 	if conf.ConsoleLog {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	// Configure Sentry
+	if conf.Sentry.UseSentry() {
+		if err = sentry.Init(sentry.ClientOptions{
+			Dsn:              conf.Sentry.DSN,
+			Environment:      conf.Sentry.Environment,
+			Release:          conf.Sentry.GetRelease(),
+			AttachStacktrace: true,
+			Debug:            conf.Sentry.Debug,
+			TracesSampleRate: conf.Sentry.SampleRate,
+		}); err != nil {
+			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		}
+
+		log.Info().Bool("track_performance", conf.Sentry.TrackPerformance).Float64("sample_rate", conf.Sentry.SampleRate).Msg("GDS sentry tracing is enabled")
 	}
 
 	// Create the server and prepare to serve

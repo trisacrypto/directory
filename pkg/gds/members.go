@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
@@ -64,22 +63,6 @@ func NewMembers(svc *Service) (members *Members, err error) {
 
 	// Add the unary interceptor to the gRPC server
 	opts = append(opts, grpc.UnaryInterceptor(svc.serverInterceptor))
-
-	// Configure Sentry
-	if members.conf.Sentry.Enabled {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              members.conf.Sentry.DSN,
-			Environment:      members.conf.Sentry.Environment,
-			Release:          fmt.Sprintf("gds-members-api@%s", members.conf.Sentry.GetReleaseVersion()),
-			AttachStacktrace: true,
-			Debug:            members.conf.Sentry.Debug,
-			TracesSampleRate: members.conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
-		}
-
-		log.Info().Bool("track_performance", members.conf.Sentry.TrackPerformance).Float64("sample_rate", members.conf.Sentry.SampleRate).Msg("members api sentry tracing is enabled")
-	}
 
 	// Initialize the gRPC server
 	members.srv = grpc.NewServer(opts...)

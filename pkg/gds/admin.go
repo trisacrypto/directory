@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -48,22 +47,6 @@ func NewAdmin(svc *Service) (a *Admin, err error) {
 	// Create the token manager
 	if a.tokens, err = tokens.New(a.conf.TokenKeys, a.conf.Audience); err != nil {
 		return nil, err
-	}
-
-	// Configure Sentry
-	if a.conf.Sentry.Enabled {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              a.conf.Sentry.DSN,
-			Environment:      a.conf.Sentry.Environment,
-			Release:          fmt.Sprintf("gds-admin-api@%s", a.conf.Sentry.GetReleaseVersion()),
-			AttachStacktrace: true,
-			Debug:            a.conf.Sentry.Debug,
-			TracesSampleRate: a.conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
-		}
-
-		log.Info().Bool("track_performance", a.conf.Sentry.TrackPerformance).Float64("sample_rate", a.conf.Sentry.SampleRate).Msg("GDS admin api sentry tracing is enabled")
 	}
 
 	// Create the router
@@ -156,7 +139,7 @@ func (s *Admin) Shutdown() (err error) {
 
 func (s *Admin) setupRoutes() (err error) {
 	var tracing gin.HandlerFunc
-	if s.conf.Sentry.TrackPerformance {
+	if s.svc.conf.Sentry.UsePerformanceTracking() {
 		tracing = utils.SentryTrackPerformance()
 	}
 

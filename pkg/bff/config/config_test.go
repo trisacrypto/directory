@@ -227,20 +227,18 @@ func TestDatabaseConfigValidation(t *testing.T) {
 
 func TestSentryConfigValidation(t *testing.T) {
 	conf := config.SentryConfig{
-		Enabled:     true,
 		DSN:         "",
-		Environment: "test",
+		Environment: "",
 		Release:     "gds-bff@1.4",
 		Debug:       true,
 	}
 
-	// If Sentry is enabled, then the DSN is required.
+	// If DSN is empty, then Sentry is not enabled
 	err := conf.Validate()
-	require.EqualError(t, err, "invalid configuration: DSN must be configured when Sentry is enabled")
+	require.NoError(t, err)
 
 	// If Sentry is enabled, then the environment is required
 	conf.DSN = "https://something.ingest.sentry.io"
-	conf.Environment = ""
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
 

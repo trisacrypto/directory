@@ -22,7 +22,7 @@ type Config struct {
 	Maintenance bool                `split_words:"true" default:"false"`
 	LogLevel    logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog  bool                `split_words:"true" default:"false"`
-	API         GDSConfig
+	GDS         GDSConfig
 	Admin       AdminConfig
 	Members     MembersConfig
 	Database    DatabaseConfig
@@ -31,24 +31,25 @@ type Config struct {
 	CertMan     CertManConfig
 	Backup      BackupConfig
 	Secrets     SecretsConfig
+	Sentry      SentryConfig
 	processed   bool
 }
 
 type GDSConfig struct {
 	Enabled  bool   `envconfig:"GDS_API_ENABLED" default:"true"`
 	BindAddr string `envconfig:"GDS_BIND_ADDR" default:":4433"`
-	Sentry   SentryConfig
 }
 
 type AdminConfig struct {
-	Enabled      bool     `split_words:"true" default:"true"`
-	BindAddr     string   `split_words:"true" default:":4434"`
-	Mode         string   `split_words:"true" default:"release"`
-	AllowOrigins []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
-	CookieDomain string   `split_words:"true"`
-	Audience     string   `split_words:"true"`
-	Oauth        OauthConfig
-	Sentry       SentryConfig
+	Enabled                bool     `split_words:"true" default:"true"`
+	BindAddr               string   `split_words:"true" default:":4434"`
+	Mode                   string   `split_words:"true" default:"release"`
+	AllowOrigins           []string `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3001"`
+	CookieDomain           string   `split_words:"true"`
+	Audience               string   `split_words:"true"`
+	SentryTrackPerformance bool     `split_words:"true" default:"false"`
+	SentrySampleRate       float64  `split_words:"true" default:"1.0"`
+	Oauth                  OauthConfig
 
 	// TokenKeys are the paths to RSA JWT signing keys in PEM encoded format. The
 	// environment variable should be a comma separated list of keyid:path/to/key.pem
@@ -63,12 +64,13 @@ type OauthConfig struct {
 }
 
 type MembersConfig struct {
-	Enabled  bool   `split_words:"true" default:"true"`
-	BindAddr string `split_words:"true" default:":4435"`
-	Insecure bool   `split_words:"true" default:"false"`
-	Certs    string `split_words:"true"`
-	CertPool string `split_words:"true"`
-	Sentry   SentryConfig
+	Enabled                bool    `split_words:"true" default:"true"`
+	BindAddr               string  `split_words:"true" default:":4435"`
+	Insecure               bool    `split_words:"true" default:"false"`
+	Certs                  string  `split_words:"true"`
+	CertPool               string  `split_words:"true"`
+	SentryTrackPerformance bool    `split_words:"true" default:"false"`
+	SentrySampleRate       float64 `split_words:"true" default:"1.0"`
 }
 
 type DatabaseConfig struct {
@@ -109,13 +111,12 @@ type SecretsConfig struct {
 }
 
 type SentryConfig struct {
-	Enabled          bool    `split_words:"true" default:"false"`
 	DSN              string  `split_words:"true"`
 	Release          string  `split_words:"true"`
 	Environment      string  `split_words:"true"`
+	Debug            bool    `split_words:"true" default:"false"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
 	SampleRate       float64 `split_words:"true" default:"1.0"`
-	Debug            bool    `split_words:"true" default:"false"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
@@ -157,7 +158,7 @@ func (c Config) Mark() (Config, error) {
 }
 
 func (c Config) Validate() (err error) {
-	if err = c.API.Validate(); err != nil {
+	if err = c.GDS.Validate(); err != nil {
 		return err
 	}
 
@@ -189,10 +190,6 @@ func (c GDSConfig) Validate() error {
 		if c.BindAddr == "" {
 			return errors.New("invalid configuration: bind addr is required for enabled GDS")
 		}
-
-		if err := c.Sentry.Validate(); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -205,10 +202,6 @@ func (c AdminConfig) Validate() error {
 
 	if c.Enabled {
 		if err := c.Oauth.Validate(); err != nil {
-			return err
-		}
-
-		if err := c.Sentry.Validate(); err != nil {
 			return err
 		}
 
@@ -239,10 +232,6 @@ func (c MembersConfig) Validate() error {
 		if c.Certs == "" || c.CertPool == "" {
 			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
 		}
-
-		if err := c.Sentry.Validate(); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -270,29 +259,28 @@ func (c EmailConfig) Validate() error {
 	return nil
 }
 
+// Returns True if Sentry is enabled.
+func (c SentryConfig) UseSentry() bool {
+	return c.DSN != ""
+}
+
+// Returns True if performance tracking is enabled.
+func (c SentryConfig) UsePerformanceTracking() bool {
+	return c.UseSentry() && c.TrackPerformance
+}
+
 func (c SentryConfig) Validate() error {
 	// If Sentry is enabled then the DSN and envionment must be set.
-	if c.Enabled {
-		if c.DSN == "" {
-			return errors.New("invalid configuration: DSN must be configured when Sentry is enabled")
-		}
-
-		if c.Environment == "" {
-			return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
-		}
+	if c.UseSentry() && c.Environment == "" {
+		return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
 	}
 	return nil
 }
 
-// Returns True if sentry performance tracking is enabled.
-func (c SentryConfig) PerformanceTrackingEnabled() bool {
-	return c.Enabled && c.TrackPerformance
-}
-
-// Get the configured version or the current semantic version if not configured.
-func (c SentryConfig) GetReleaseVersion() string {
+// Get the configured version string or the current semantic version if not configured.
+func (c SentryConfig) GetRelease() string {
 	if c.Release == "" {
-		return pkg.Version()
+		return fmt.Sprintf("gds@%s", pkg.Version())
 	}
 	return c.Release
 }

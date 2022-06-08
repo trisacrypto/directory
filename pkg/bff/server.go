@@ -55,7 +55,7 @@ func New(conf config.Config) (s *Server, err error) {
 	}
 
 	// Configure Sentry
-	if conf.Sentry.Enabled {
+	if conf.Sentry.UseSentry() {
 		if err = sentry.Init(sentry.ClientOptions{
 			Dsn:              conf.Sentry.DSN,
 			Environment:      conf.Sentry.Environment,
@@ -228,7 +228,7 @@ func (s *Server) setupRoutes() (err error) {
 	}
 
 	var tracing gin.HandlerFunc
-	if s.conf.Sentry.PerformanceTrackingEnabled() {
+	if s.conf.Sentry.UsePerformanceTracking() {
 		tracing = utils.SentryTrackPerformance()
 	}
 

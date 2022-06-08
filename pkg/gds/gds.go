@@ -30,24 +30,8 @@ import (
 func NewGDS(svc *Service) (gds *GDS, err error) {
 	gds = &GDS{
 		svc:  svc,
-		conf: &svc.conf.API,
+		conf: &svc.conf.GDS,
 		db:   svc.db,
-	}
-
-	// Configure Sentry
-	if gds.conf.Sentry.Enabled {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              gds.conf.Sentry.DSN,
-			Environment:      gds.conf.Sentry.Environment,
-			Release:          fmt.Sprintf("gds-api@%s", gds.conf.Sentry.GetReleaseVersion()),
-			AttachStacktrace: true,
-			Debug:            gds.conf.Sentry.Debug,
-			TracesSampleRate: gds.conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
-		}
-
-		log.Info().Bool("track_performance", gds.conf.Sentry.TrackPerformance).Float64("sample_rate", gds.conf.Sentry.SampleRate).Msg("GDS api sentry tracing is enabled")
 	}
 
 	// Initialize the gRPC server
