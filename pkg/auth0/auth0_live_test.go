@@ -1,6 +1,8 @@
 package auth0_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -44,4 +46,16 @@ func (s *liveAuth0TestSuite) SetupSuite() {
 
 	s.client, err = auth0.New(s.conf)
 	require.NoError(err, "could not initialize suite with auth0 client")
+}
+
+func (s *liveAuth0TestSuite) TestGetUser() {
+	require := s.Require()
+	userID := "auth0|507f1f77bcf86cd799439020"
+
+	user, err := s.client.GetUser(context.TODO(), userID)
+	require.NoError(err, "could not fetch example user")
+	require.NotEmpty(user, "expected a valid user object back")
+
+	fmt.Printf("%+v\n", user)
+	require.False(true)
 }

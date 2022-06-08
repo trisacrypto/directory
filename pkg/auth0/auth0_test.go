@@ -1,6 +1,7 @@
 package auth0_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -116,6 +118,44 @@ func TestEndpoint(t *testing.T) {
 	}
 }
 
+func TestNewRequest(t *testing.T) {
+	client, err := auth0.New(auth0.Config{Domain: "example.auth0.com", Testing: true})
+	require.NoError(t, err, "could not create testing client")
+
+	url := client.Endpoint("/api/v2/users", nil)
+	require.Equal(t, "http://example.auth0.com/api/v2/users", url)
+
+	_, err = client.NewRequest(context.TODO(), http.MethodGet, url, nil)
+	require.ErrorIs(t, err, auth0.ErrNotAuthenticated, "expected not authenticated error")
+
+	// Authenticate the client
+	err = client.Creds().LoadFrom("testdata/example_token.json")
+	require.NoError(t, err, "could not load credentials from fixture")
+
+	// Should be able to create a new authenticated request with no body
+	req, err := client.NewRequest(context.TODO(), http.MethodGet, url, nil)
+	require.NoError(t, err, "could not create authenticated request")
+	require.Equal(t, "Bearer eyJ...Ggg", req.Header.Get("Authorization"))
+	require.Equal(t, url, req.URL.String())
+	require.Equal(t, http.MethodGet, req.Method)
+	require.Equal(t, "application/json", req.Header.Get("Content-Type"))
+	require.Equal(t, "application/json", req.Header.Get("Accept"))
+	require.Equal(t, "TRISA GDS Auth0 Client v1.0", req.Header.Get("User-Agent"))
+	require.Equal(t, int64(0), req.ContentLength)
+
+	// Should be able to create a new authenticated request with a JSON body
+	data := map[string]string{"hello": "world", "color": "blue"}
+	req, err = client.NewRequest(context.TODO(), http.MethodPost, url, data)
+	require.NoError(t, err, "could not create authenticated request")
+	require.Equal(t, "Bearer eyJ...Ggg", req.Header.Get("Authorization"))
+	require.Equal(t, url, req.URL.String())
+	require.Equal(t, http.MethodPost, req.Method)
+	require.Equal(t, "application/json", req.Header.Get("Content-Type"))
+	require.Equal(t, "application/json", req.Header.Get("Accept"))
+	require.Equal(t, "TRISA GDS Auth0 Client v1.0", req.Header.Get("User-Agent"))
+	require.Equal(t, int64(33), req.ContentLength)
+}
+
 func TestDo(t *testing.T) {
 	// Create a test mux for various request paths
 	mux := http.NewServeMux()
@@ -190,6 +230,50 @@ func TestDoProtectTesting(t *testing.T) {
 
 	_, err = client.Do(req)
 	require.EqualError(t, err, `hostname "example.auth0.com" is not valid in testing mode`)
+}
+
+// Run multiple go routines trying to use the client concurrently
+func TestPreflightRequestRace(t *testing.T) {
+	var authCalls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authCalls++
+		// Collect the response to write
+		f, err := os.Open("testdata/example_token.json")
+		if err != nil {
+			WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+		defer f.Close()
+
+		// Everything is fine, write 200 response with token
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		io.Copy(w, f)
+	}))
+	defer srv.Close()
+
+	// Create the auth0 client for testing
+	testURL, _ := url.Parse(srv.URL)
+	client, err := auth0.New(auth0.Config{Domain: testURL.Host, ClientID: "hello", ClientSecret: "world", Testing: true})
+	require.NoError(t, err, "could not create auth0 client connecting to test server")
+
+	// Run three go routines performing preflight
+	var wg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := client.Preflight()
+			require.NoError(t, err, "could not perform preflight check")
+
+			_, err = client.NewRequest(context.TODO(), http.MethodGet, client.Endpoint("/api/v2/users", nil, nil), nil)
+			require.NoError(t, err, "could not create an authenticated request after preflight")
+		}()
+	}
+	wg.Wait()
+
+	// Ensure that authenticate was only called once
+	require.Equal(t, 1, authCalls, "authenticate called multiple times")
 }
 
 // WriteError is a helper method to write error responses in the test server.

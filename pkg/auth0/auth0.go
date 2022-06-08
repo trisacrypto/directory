@@ -8,6 +8,7 @@ package auth0
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -137,7 +138,7 @@ func (a *Auth0) Endpoint(path string, query map[string]string, sfa ...interface{
 // NewRequest creates an http request setting the default headers along with the
 // authentication header. If the client has not been authenticated, then an error is
 // returned. Ensure that preflight checks are run for authenticated requests.
-func (a *Auth0) NewRequest(method, url string, data interface{}) (req *http.Request, err error) {
+func (a *Auth0) NewRequest(ctx context.Context, method, url string, data interface{}) (req *http.Request, err error) {
 	a.RLock()
 	defer a.RUnlock()
 	if !a.creds.Valid() {
@@ -150,22 +151,36 @@ func (a *Auth0) NewRequest(method, url string, data interface{}) (req *http.Requ
 		if err = json.NewEncoder(body).Encode(data); err != nil {
 			return nil, err
 		}
-		if req, err = http.NewRequest(method, url, body); err != nil {
+		if req, err = http.NewRequestWithContext(ctx, method, url, body); err != nil {
 			return nil, err
 		}
 	} else {
 		// Create a request with an empty body
-		if req, err = http.NewRequest(method, url, nil); err != nil {
+		if req, err = http.NewRequestWithContext(ctx, method, url, nil); err != nil {
 			return nil, err
 		}
 	}
 
 	// Set Headers
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.creds.AccessToken))
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", contentType)
 	req.Header.Set("User-Agent", userAgent)
 
 	return req, nil
+}
+
+// Preflight prepares to send a request that needs to be authenticated by checking the
+// credentials and sending any authentication requests that are required.
+func (a *Auth0) Preflight() error {
+	a.Lock()
+	defer a.Unlock()
+	if !a.creds.Valid() {
+		if err := a.Authenticate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Do performs an auth0 client request and returns the response. If a non-200 status is
@@ -199,7 +214,7 @@ func (a *Auth0) Do(req *http.Request) (rep *http.Response, err error) {
 	return rep, nil
 }
 
-// Creds returns a copy of the credentials for testing purposes.
-func (a *Auth0) Creds() Credentials {
-	return *a.creds
+// Creds returns a pointer to the credentials for testing purposes.
+func (a *Auth0) Creds() *Credentials {
+	return a.creds
 }
