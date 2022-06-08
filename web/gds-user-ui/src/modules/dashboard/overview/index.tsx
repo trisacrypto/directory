@@ -23,7 +23,7 @@ import useAuth from 'hooks/useAuth';
 import { getMetrics } from './overview.service';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { colors } from 'utils/theme';
-
+import OverviewLoader from 'components/ContentLoader/Overview';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import OrganizationProfile from 'components/OrganizationProfile';
@@ -47,6 +47,8 @@ const Overview: React.FC = () => {
         }
 
         console.log(e);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, []);
@@ -54,49 +56,55 @@ const Overview: React.FC = () => {
   return (
     <DashboardLayout>
       <Heading marginBottom="69px">Overview</Heading>
-      <NeedsAttention />
-      <NetworkAnnouncements />
-      {/* <Sentry.ErrorBoundary
+      {isLoading ? (
+        <OverviewLoader />
+      ) : (
+        <>
+          <NeedsAttention />
+          <NetworkAnnouncements />
+          {/* <Sentry.ErrorBoundary
         fallback={<Text color={'red'}>An error has occurred to load testnet metric</Text>}> */}
-      {/* <Metrics data={result?.testnet} type="Testnet" />
+          {/* <Metrics data={result?.testnet} type="Testnet" />
       <Metrics data={result?.mainnet} type="Mainnet" /> */}
-      <Box fontSize={'md'} mx={'auto'} w={'100%'}>
-        <Box>
-          <Tabs mt={'10'} variant="enclosed">
-            <TabList border={'1px solid #eee'} pb={5}>
-              <Tab
-                bg={'#E5EDF1'}
-                sx={{ width: '100%' }}
-                _focus={{ outline: 'none' }}
-                _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                <Text fontSize={['x-small', 'medium']}>
-                  <Trans id="MainNet Network Metrics">MainNet Network Metrics</Trans>
-                </Text>
-              </Tab>
-              <Tab
-                bg={'#E5EDF1'}
-                fontWeight={'bold'}
-                sx={{ width: '100%' }}
-                _focus={{ outline: 'none' }}
-                _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                <Text fontSize={['x-small', 'medium']}>
-                  <Trans id="TestNet Network Metrics">TestNet Network Metrics</Trans>
-                </Text>
-              </Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel p={0} border="1px solid #E5EDF1">
-                <Metrics data={result?.testnet} type="Testnet" />
-              </TabPanel>
-              <TabPanel p={0} border="1px solid #E5EDF1">
-                <Metrics data={result?.mainnet} type="Mainnet" />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </Box>
-      </Box>
-      {/* </Sentry.ErrorBoundary> */}
-      <OrganizationProfile data={result} />
+          <Box fontSize={'md'} mx={'auto'} w={'100%'}>
+            <Box>
+              <Tabs mt={'10'} variant="enclosed">
+                <TabList border={'1px solid #eee'} pb={5}>
+                  <Tab
+                    bg={'#E5EDF1'}
+                    sx={{ width: '100%' }}
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
+                    <Text fontSize={['x-small', 'medium']}>
+                      <Trans id="MainNet Network Metrics">MainNet Network Metrics</Trans>
+                    </Text>
+                  </Tab>
+                  <Tab
+                    bg={'#E5EDF1'}
+                    fontWeight={'bold'}
+                    sx={{ width: '100%' }}
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
+                    <Text fontSize={['x-small', 'medium']}>
+                      <Trans id="TestNet Network Metrics">TestNet Network Metrics</Trans>
+                    </Text>
+                  </Tab>
+                </TabList>
+                <TabPanels>
+                  <TabPanel p={0} border="1px solid #E5EDF1">
+                    <Metrics data={result?.testnet} type="Testnet" />
+                  </TabPanel>
+                  <TabPanel p={0} border="1px solid #E5EDF1">
+                    <Metrics data={result?.mainnet} type="Mainnet" />
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+            </Box>
+          </Box>
+          {/* </Sentry.ErrorBoundary> */}
+          <OrganizationProfile data={result} />
+        </>
+      )}
     </DashboardLayout>
   );
 };
