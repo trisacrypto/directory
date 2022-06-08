@@ -3,38 +3,94 @@ package auth0_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/auth0"
 )
 
-func TestLive(t *testing.T) {
-	// These tests will only run if there is a valid configuration in the environment
-	conf, err := auth0.NewConfig()
-	if err != nil {
-		t.Skip("live tests require local environment configuration")
-	}
+func TestAuthenticate(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify the endpoint and method
+		if r.Method != http.MethodPost {
+			WriteError(w, http.StatusMethodNotAllowed, fmt.Errorf("expected POST got %q", r.Method))
+			return
+		}
 
-	// Do not run the live tests if there is no access token cacheing
-	if conf.TokenCache == "" {
-		t.Skip("live tests require a token cache to prevent issuing multiple M2M tokens")
-	}
+		if r.URL.Path != "/oauth/token" {
+			WriteError(w, http.StatusNotFound, fmt.Errorf("expected /oauth/token got %q", r.URL.Path))
+			return
+		}
 
-	//  Log the situation for the tests
-	t.Logf("live tests starting with auth0 client %s, using token cache %s", conf.ClientID, conf.TokenCache)
+		// Confirm the header
+		if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
+			WriteError(w, http.StatusUnsupportedMediaType, "unexpected content-type header")
+			return
+		}
 
-	// Create the client to start the live tests
-	client, err := auth0.New(conf)
-	require.NoError(t, err, "could not create auth0 client for live testing")
+		if err := r.ParseForm(); err != nil {
+			WriteError(w, http.StatusBadRequest, err)
+			return
+		}
 
-	// TODO: don't call authenticate directly
+		// Confirm the data that was sent in the request
+		if !r.PostForm.Has("grant_type") || r.PostForm.Get("grant_type") != "client_credentials" {
+			WriteError(w, http.StatusBadRequest, "missing or incorrect grant_type")
+			return
+		}
+
+		if !r.PostForm.Has("client_id") || r.PostForm.Get("client_id") != "hello" {
+			WriteError(w, http.StatusBadRequest, "missing or incorrect client_id")
+			return
+		}
+
+		if !r.PostForm.Has("client_secret") || r.PostForm.Get("client_secret") != "world" {
+			WriteError(w, http.StatusBadRequest, "missing or incorrect client_secret")
+			return
+		}
+
+		if !r.PostForm.Has("audience") || !strings.HasSuffix(r.PostForm.Get("audience"), "/api/v2/") {
+			WriteError(w, http.StatusBadRequest, "missing or incorrect audience")
+			return
+		}
+
+		// Collect the response to write
+		f, err := os.Open("testdata/example_token.json")
+		if err != nil {
+			WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+		defer f.Close()
+
+		// Everything is fine, write 200 response with token
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		io.Copy(w, f)
+	}))
+	defer srv.Close()
+
+	// Create the auth0 client for testing
+	testURL, _ := url.Parse(srv.URL)
+	client, err := auth0.New(auth0.Config{Domain: testURL.Host, ClientID: "hello", ClientSecret: "world", Testing: true})
+	require.NoError(t, err, "could not create auth0 client connecting to test server")
+
+	// Check that the credentials are zero-valued to start
+	require.Empty(t, client.Creds(), "expected zero-valued credentials for test")
+
+	// Execute valid authenticate request
 	err = client.Authenticate()
-	require.NoError(t, err, "could not authenticate the request")
+	require.NoError(t, err, "could not authenticate client")
 
+	// Credentials should be not empty and valued after authentication
+	creds := client.Creds()
+	require.NotEmpty(t, creds, "credentials zero-valued after successful authentication?")
+	require.True(t, creds.Valid(), "credentials should be valid after successful authentication")
 }
 
 func TestEndpoint(t *testing.T) {
@@ -77,9 +133,7 @@ func TestDo(t *testing.T) {
 	})
 	mux.HandleFunc("/crash", func(w http.ResponseWriter, r *http.Request) {
 		// Crashes the server returning text/html instead of JSON
-		w.Header().Add("Content-Type", "text/html")
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Internal Error")
+		WriteError(w, http.StatusInternalServerError, "Internal Error")
 	})
 
 	srv := httptest.NewServer(mux)
@@ -136,4 +190,26 @@ func TestDoProtectTesting(t *testing.T) {
 
 	_, err = client.Do(req)
 	require.EqualError(t, err, `hostname "example.auth0.com" is not valid in testing mode`)
+}
+
+// WriteError is a helper method to write error responses in the test server.
+func WriteError(w http.ResponseWriter, statusCode int, err interface{}) {
+	switch e := err.(type) {
+	case *auth0.APIError:
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(e)
+	case error:
+		w.Header().Add("Content-Type", "text/plain")
+		w.WriteHeader(statusCode)
+		fmt.Fprintln(w, e.Error())
+	case string:
+		w.Header().Add("Content-Type", "text/plain")
+		w.WriteHeader(statusCode)
+		fmt.Fprintln(w, e)
+	default:
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(e)
+	}
 }

@@ -198,3 +198,8 @@ func (a *Auth0) Do(req *http.Request) (rep *http.Response, err error) {
 
 	return rep, nil
 }
+
+// Creds returns a copy of the credentials for testing purposes.
+func (a *Auth0) Creds() Credentials {
+	return *a.creds
+}
