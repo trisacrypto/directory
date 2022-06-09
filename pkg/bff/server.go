@@ -22,6 +22,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
@@ -66,6 +67,8 @@ func New(conf config.Config) (s *Server, err error) {
 		}); err != nil {
 			return nil, fmt.Errorf("could not initialize sentry: %w", err)
 		}
+
+		log.Info().Bool("track_performance", conf.Sentry.TrackPerformance).Float64("sample_rate", conf.Sentry.SampleRate).Msg("sentry tracing is enabled")
 	}
 
 	// Create the server and prepare to serve
@@ -241,8 +244,8 @@ func (s *Server) setupRoutes() (err error) {
 	}
 
 	var tracing gin.HandlerFunc
-	if s.conf.Sentry.TrackPerformance {
-		tracing = s.TrackPerformance()
+	if s.conf.Sentry.UsePerformanceTracking() {
+		tracing = utils.SentryTrackPerformance()
 	}
 
 	// Application Middleware

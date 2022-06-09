@@ -55,9 +55,9 @@ type DatabaseConfig struct {
 }
 
 type SentryConfig struct {
-	DSN              string  `envconfig:"SENTRY_DSN"`
-	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
-	Release          string  `envconfig:"SENTRY_RELEASE"`
+	DSN              string  `split_words:"true"`
+	Environment      string  `split_words:"true"`
+	Release          string  `split_words:"true"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
 	SampleRate       float64 `split_words:"true" default:"1.0"`
 	Debug            bool    `default:"false"`
@@ -126,10 +126,20 @@ func (c DatabaseConfig) Validate() error {
 	return nil
 }
 
+// Returns True if Sentry is enabled.
+func (c SentryConfig) UseSentry() bool {
+	return c.DSN != ""
+}
+
+// Returns True if performance tracking is enabled.
+func (c SentryConfig) UsePerformanceTracking() bool {
+	return c.UseSentry() && c.TrackPerformance
+}
+
 func (c SentryConfig) Validate() error {
 	// If Sentry is enabled then the envionment must be set.
 	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when using sentry")
+		return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
 	}
 	return nil
 }
@@ -140,10 +150,6 @@ func (c SentryConfig) GetRelease() string {
 		return fmt.Sprintf("gds-bff@%s", pkg.Version())
 	}
 	return c.Release
-}
-
-func (c SentryConfig) UseSentry() bool {
-	return c.DSN != ""
 }
 
 func (c AuthConfig) Validate() error {
