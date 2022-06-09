@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
@@ -90,6 +91,10 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
 		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+
+		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
+			return nil, fmt.Errorf("could not conenct to auth0 management api: %s", err)
+		}
 	}
 
 	// Create the router
@@ -119,6 +124,7 @@ type Server struct {
 	testnet gds.TRISADirectoryClient
 	mainnet gds.TRISADirectoryClient
 	db      *db.DB
+	auth0   *management.Management
 	started time.Time
 	healthy bool
 	url     string

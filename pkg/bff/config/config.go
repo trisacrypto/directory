@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -187,4 +188,8 @@ func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
+}
+
+func (c AuthConfig) ClientCredentials() management.Option {
+	return management.WithClientCredentials(c.ClientID, c.ClientSecret)
 }
