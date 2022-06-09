@@ -17,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/replica"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -64,6 +65,13 @@ func New(conf config.Config) (s *Server, err error) {
 	// Set human readable logging if specified
 	if conf.ConsoleLog {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	// Configure Sentry
+	if conf.Sentry.UseSentry() {
+		if err = sentry.Init(conf.Sentry); err != nil {
+			return nil, err
+		}
 	}
 
 	// Create the server and prepare to serve
