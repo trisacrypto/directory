@@ -1,0 +1,10 @@
+{
+  "https://vaspdirectory.net/email": "leopold.wentzel@gmail.com",
+  "iss": "",
+  "sub": "test|abcdefg1234567890",
+  "aud": [],
+  "iat": 0,
+  "exp": 0,
+  "scope": "openid profile email",
+  "permissions": []
+}

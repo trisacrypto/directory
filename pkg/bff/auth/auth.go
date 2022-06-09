@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0"
+	"github.com/auth0/go-auth0/management"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
@@ -88,7 +90,8 @@ func NewClaims() validator.CustomClaims {
 // downstream processing. If no JWT token is present in the header, this middleware will
 // mark the request as unauthenticated but it does not perform any authorization. If the
 // JWT token is invalid this middleware will return a 403 Forbidden response.
-func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+//
+func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin.HandlerFunc, err error) {
 	// Parse the issuer url to ensure it is correctly configured.
 	var issuerURL *url.URL
 	if issuerURL, err = conf.IssuerURL(); err != nil {
@@ -98,7 +101,7 @@ func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 	// The caching provider fetches the JWKS (JSON Web Key Set) public keys used to
 	// validate JWT signatures to prove that they were issued by auth0. The JWKS are
 	// cached for the configured TTL (default 5 minutes) before being refetched.
-	provider := jwks.NewCachingProvider(issuerURL, conf.ProviderCache)
+	provider := jwks.NewCachingProvider(issuerURL, conf.ProviderCache, options...)
 
 	// Create the JWT validator from the configuration. The validator parses the JWT
 	// token, confirms it is not expired, configured for the correct audience, and has
@@ -191,19 +194,31 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 // be added to the claims to prevent calls to Auth0 on every RPC). If the user is not
 // authenticated before this step, a 401 is returned.
 func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+	// Connect to the management API
+	var manager *management.Management
+	if manager, err = management.New(conf.Domain, conf.ClientCredentials()); err != nil {
+		return nil, err
+	}
+
+	if err = manager.Client.Create(&management.Client{
+		Name:        auth0.String("GDS BFF User Management"),
+		Description: auth0.String("The BFF API requires Auth0 access to manage user roles, resources, and user-specific metadata."),
+	}); err != nil {
+		return nil, err
+	}
 
 	return func(c *gin.Context) {
 		claims, err := GetRegisteredClaims(c)
-		if err != nil {
-			c.Error(err)
+		if err != nil || claims.Subject == "" {
+			// c.Error will panic if err is nil so wrap in a guard
+			if err != nil {
+				c.Error(err)
+			}
 			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not identify authenticated user in request"))
 			return
 		}
 
-		if claims.Subject == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not identify auth0 user in claims"))
-			return
-		}
+		manager.User.Read(claims.Subject)
 
 		c.Next()
 	}, nil
