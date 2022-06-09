@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -94,9 +93,6 @@ func (s *GDS) Run(sock net.Listener) {
 
 // Shutdown the TRISA Directory Service gracefully
 func (s *GDS) Shutdown() (err error) {
-	// Flush the Sentry log before shutting down
-	defer sentry.Flush(2 * time.Second)
-
 	log.Debug().Msg("gracefully shutting down GDS server")
 	s.srv.GracefulStop()
 	log.Debug().Msg("successful shutdown of GDS server")

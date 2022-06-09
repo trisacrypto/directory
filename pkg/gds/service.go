@@ -194,6 +194,9 @@ func (s *Service) Serve() (err error) {
 func (s *Service) Shutdown() (err error) {
 	log.Info().Msg("gracefully shutting down")
 
+	// Flush the Sentry log before shutting down
+	defer sentry.Flush(2 * time.Second)
+
 	// Shutdown the TRISADirectory service gracefully
 	if err = s.gds.Shutdown(); err != nil {
 		log.Error().Err(err).Msg("could not shutdown TRISADirectory service")
