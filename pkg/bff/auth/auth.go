@@ -29,10 +29,11 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 
 // Claims extracts custom data from the JWT token provided by Auth0
 type Claims struct {
-	Scope       string   `json:"scope"`
-	Permissions []string `json:"permissions"`
-	VASP        string   `json:"https://vaspdirectory.net/vasp"`
-	Email       string   `json:"https://vaspdirectory.net/email"`
+	Scope       string            `json:"scope"`
+	Permissions []string          `json:"permissions"`
+	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
+	VASP        map[string]string `json:"https://vaspdirectory.net/vasp"`
+	Email       string            `json:"https://vaspdirectory.net/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.
@@ -181,6 +182,31 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// UserInfo is a middleware that requires an authenticated user's claims, it then
+// fetches the user profile including app_data from Auth0 and adds them to the Gin
+// context. This middleware is primarily used for endpoints that manage the user state,
+// not for endpoints that simply need access to resources or permissions (those should
+// be added to the claims to prevent calls to Auth0 on every RPC). If the user is not
+// authenticated before this step, a 401 is returned.
+func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+
+	return func(c *gin.Context) {
+		claims, err := GetRegisteredClaims(c)
+		if err != nil {
+			c.Error(err)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not identify authenticated user in request"))
+			return
+		}
+
+		if claims.Subject == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not identify auth0 user in claims"))
+			return
+		}
+
+		c.Next()
+	}, nil
 }
 
 // GetClaims fetches and parses the BFF claims from the gin context. Returns an error if

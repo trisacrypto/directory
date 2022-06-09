@@ -287,6 +287,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.POST("/register/:network", s.Register)
 		v1.GET("/verify", s.VerifyContact)
+		v1.POST("/users/login", s.Login)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
 	}
 
