@@ -18,6 +18,7 @@ const LoginPage = React.lazy(() => import('modules/auth/login'));
 const RegisterPage = React.lazy(() => import('modules/auth/register'));
 import PrivateRoute from './PrivateRoute';
 import MembershipGuide from 'components/Section/MembershipGuide';
+import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 const AppRouter: React.FC = () => {
   const { isInitialized } = useAnalytics();
   return (
@@ -35,6 +36,7 @@ const AppRouter: React.FC = () => {
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/success" element={<SuccessAuth />} />
           <Route path="/guide" element={<MembershipGuide />} />
+          <Route path="/comply" element={<IntegrateAndComply />} />
 
           <Route path="/dashboard/certificate/registration" element={<CertificateRegistration />} />
           <Route path="/dashboard/overview" element={<Overview />} />
