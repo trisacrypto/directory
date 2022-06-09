@@ -36,7 +36,7 @@ const Footer = (): React.ReactElement => {
     console.log('bffAndGdsVersion', bffAndGdsVersion);
   }
   return (
-    <footer>
+    <footer style={{ width: '100%' }}>
       <Stack
         bg={useColorModeValue(colors.system.gray, 'transparent')}
         color="white"

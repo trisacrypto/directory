@@ -44,7 +44,10 @@ const PasswordReset: React.FC<PasswordResetProps> = (props) => {
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         {props.message && <SuccessMessage message={props.message} handleClose={() => {}} />}
         <Stack align={'left'}>
-          <Heading fontSize={'xl'}>
+          <Heading fontSize="lg" mb={3}>
+            Follow the instructions below to reset your TRISA password
+          </Heading>
+          <Heading fontSize={'sm'}>
             <Trans id="Enter your email address">Enter your email address</Trans>
           </Heading>
         </Stack>
