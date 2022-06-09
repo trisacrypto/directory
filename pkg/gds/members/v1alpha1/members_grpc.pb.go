@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type TRISAMembersClient interface {
 	// List all verified VASP members in the Directory Service.
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListReply, error)
+	// Get a short summary of the verified VASP members in the Directory Service.
+	Summary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryReply, error)
 }
 
 type tRISAMembersClient struct {
@@ -39,12 +41,23 @@ func (c *tRISAMembersClient) List(ctx context.Context, in *ListRequest, opts ...
 	return out, nil
 }
 
+func (c *tRISAMembersClient) Summary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryReply, error) {
+	out := new(SummaryReply)
+	err := c.cc.Invoke(ctx, "/gds.members.v1alpha1.TRISAMembers/Summary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TRISAMembersServer is the server API for TRISAMembers service.
 // All implementations must embed UnimplementedTRISAMembersServer
 // for forward compatibility
 type TRISAMembersServer interface {
 	// List all verified VASP members in the Directory Service.
 	List(context.Context, *ListRequest) (*ListReply, error)
+	// Get a short summary of the verified VASP members in the Directory Service.
+	Summary(context.Context, *SummaryRequest) (*SummaryReply, error)
 	mustEmbedUnimplementedTRISAMembersServer()
 }
 
@@ -54,6 +67,9 @@ type UnimplementedTRISAMembersServer struct {
 
 func (UnimplementedTRISAMembersServer) List(context.Context, *ListRequest) (*ListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedTRISAMembersServer) Summary(context.Context, *SummaryRequest) (*SummaryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Summary not implemented")
 }
 func (UnimplementedTRISAMembersServer) mustEmbedUnimplementedTRISAMembersServer() {}
 
@@ -86,6 +102,24 @@ func _TRISAMembers_List_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TRISAMembers_Summary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TRISAMembersServer).Summary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gds.members.v1alpha1.TRISAMembers/Summary",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TRISAMembersServer).Summary(ctx, req.(*SummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TRISAMembers_ServiceDesc is the grpc.ServiceDesc for TRISAMembers service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +130,10 @@ var TRISAMembers_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "List",
 			Handler:    _TRISAMembers_List_Handler,
+		},
+		{
+			MethodName: "Summary",
+			Handler:    _TRISAMembers_Summary_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -34,8 +34,8 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 	}
 
 	// Test the case where the RPC returns two errors and flatten is true
-	s.testnet.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
-	s.mainnet.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
+	s.testnet.gds.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
+	s.mainnet.gds.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
 
 	results, errs = s.bff.ParallelGDSRequests(context.TODO(), rpc, true)
 	require.Len(results, 0, "results was not flattened")
@@ -53,7 +53,7 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 	require.NotNil(errs[1], "expected mainnet error to be not nil")
 
 	// Test the case where the RPC returns 1 error 1 result and flatten is true
-	s.mainnet.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (out *gds.ServiceState, err error) {
+	s.mainnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (out *gds.ServiceState, err error) {
 		return &gds.ServiceState{
 			Status: gds.ServiceState_HEALTHY,
 		}, nil
@@ -75,7 +75,7 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 	require.Nil(errs[1], "expected mainnet error to be nil")
 
 	// Test the case where the RPC returns 2 results and flatten is true
-	s.testnet.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (out *gds.ServiceState, err error) {
+	s.testnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (out *gds.ServiceState, err error) {
 		return &gds.ServiceState{
 			Status: gds.ServiceState_DANGER,
 		}, nil
@@ -97,7 +97,7 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 	require.Nil(errs[1], "expected mainnet error to be nil")
 
 	// Test the case where the RPC returns 1 error 1 result (but testnet this time) and flatten is true
-	s.mainnet.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
+	s.mainnet.gds.UseError(mock.StatusRPC, codes.Unavailable, "nobody is home")
 
 	results, errs = s.bff.ParallelGDSRequests(context.TODO(), rpc, true)
 	require.Len(results, 1, "results was not flattened")

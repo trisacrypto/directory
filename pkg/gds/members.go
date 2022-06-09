@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -247,5 +248,74 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 
 	// Request Complete
 	log.Info().Int("count", len(out.Vasps)).Bool("has_next_page", out.NextPageToken != "").Msg("vasp member list complete")
+	return out, nil
+}
+
+// Summary returns a summary of the VASP members in the Directory Service.
+func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api.SummaryReply, err error) {
+	// Get the since timestamp from the request
+	var since time.Time
+	if in.Since != "" {
+		if since, err = time.Parse(time.RFC3339, in.Since); err != nil {
+			log.Warn().Str("since", in.Since).Err(err).Msg("invalid since timestamp on summary request")
+			return nil, status.Error(codes.InvalidArgument, "since must be a valid RFC3339 timestamp")
+		}
+
+		if since.After(time.Now()) {
+			log.Warn().Str("since", in.Since).Err(err).Msg("since timestamp must be in the past")
+			return nil, status.Error(codes.InvalidArgument, "since timestamp must be in the past")
+		}
+	} else {
+		// Default to one month ago for new members
+		since = time.Now().Add(-time.Hour * 24 * 30)
+	}
+
+	// TODO: Add paramater to fetch details for a specific VASP
+
+	// Create response
+	out = &api.SummaryReply{}
+
+	// Create the VASPs iterator
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+
+	// Iterate over VASPs
+	for iter.Next() {
+		// Collect the VASP from the iterator
+		var vasp *pb.VASP
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
+			continue
+		}
+
+		// Only count verified VASPs
+		if vasp.VerificationStatus == pb.VerificationState_VERIFIED {
+			// Parse verified timestamp
+			var verified time.Time
+			if verified, err = time.Parse(time.RFC3339, vasp.VerifiedOn); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse verified timestamp")
+				continue
+			}
+
+			// Count if the VASP is a new member
+			if verified.After(since) {
+				out.NewMembers++
+			}
+
+			// Increment the total VASPs count
+			out.Vasps++
+		}
+
+		// Count issued certificates
+		if vasp.IdentityCertificate != nil && !vasp.IdentityCertificate.Revoked {
+			out.CertificatesIssued++
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		log.Error().Err(err).Msg("could not iterate over VASPs")
+		return nil, status.Error(codes.Internal, "could not iterate over directory service")
+	}
+
 	return out, nil
 }

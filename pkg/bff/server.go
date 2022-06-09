@@ -21,6 +21,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
@@ -76,15 +77,25 @@ func New(conf config.Config) (s *Server, err error) {
 	// Connect to the TestNet and MainNet directory services and database if we're not
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
-		if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
-			return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
+		if s.testnet.gds, err = ConnectGDS(conf.TestNet); err != nil {
+			return nil, fmt.Errorf("could not connect to the TestNet directory service: %s", err)
 		}
 		log.Debug().Str("endpoint", conf.TestNet.Endpoint).Str("network", "testnet").Msg("connected to GDS")
 
-		if s.mainnet, err = ConnectGDS(conf.MainNet); err != nil {
+		if s.mainnet.gds, err = ConnectGDS(conf.MainNet); err != nil {
 			return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
 		}
 		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to GDS")
+
+		if s.testnet.members, err = ConnectMembers(conf.TestNet); err != nil {
+			return nil, fmt.Errorf("could not connect to the TestNet members service: %s", err)
+		}
+		log.Debug().Str("endpoint", conf.TestNet.Endpoint).Str("network", "testnet").Msg("connected to members")
+
+		if s.mainnet.members, err = ConnectMembers(conf.MainNet); err != nil {
+			return nil, fmt.Errorf("could not connect to the MainNet members service: %s", err)
+		}
+		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to members")
 
 		if s.db, err = db.Connect(s.conf.Database); err != nil {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
@@ -111,13 +122,18 @@ func New(conf config.Config) (s *Server, err error) {
 	return s, nil
 }
 
+type NetworkClient struct {
+	gds     gds.TRISADirectoryClient
+	members members.TRISAMembersClient
+}
+
 type Server struct {
 	sync.RWMutex
 	conf    config.Config
 	srv     *http.Server
 	router  *gin.Engine
-	testnet gds.TRISADirectoryClient
-	mainnet gds.TRISADirectoryClient
+	testnet NetworkClient
+	mainnet NetworkClient
 	db      *db.DB
 	started time.Time
 	healthy bool
@@ -294,10 +310,16 @@ func (s *Server) setupRoutes() (err error) {
 // Accessors - used primarily for testing
 //===========================================================================
 
-// SetClients allows tests to set a bufconn client to a mock GDS server.
-func (s *Server) SetClients(testnet, mainnet gds.TRISADirectoryClient) {
-	s.testnet = testnet
-	s.mainnet = mainnet
+// SetGDSClients allows tests to set a bufconn client to a mock GDS server.
+func (s *Server) SetGDSClients(testnet, mainnet gds.TRISADirectoryClient) {
+	s.testnet.gds = testnet
+	s.mainnet.gds = mainnet
+}
+
+// SetMembersClients allows tests to set a bufconn client to a mock members server.
+func (s *Server) SetMembersClients(testnet, mainnet members.TRISAMembersClient) {
+	s.testnet.members = testnet
+	s.mainnet.members = mainnet
 }
 
 // SetDB allows tests to set a bufconn client to a mock trtl server.
@@ -316,13 +338,23 @@ func (s *Server) GetRouter() http.Handler {
 }
 
 // GetTestNet returns the TestNet directory client for testing purposes.
-func (s *Server) GetTestNet() gds.TRISADirectoryClient {
-	return s.testnet
+func (s *Server) GetTestNetGDS() gds.TRISADirectoryClient {
+	return s.testnet.gds
 }
 
 // GetMainNet returns the MainNet directory client for testing purposes.
-func (s *Server) GetMainNet() gds.TRISADirectoryClient {
-	return s.mainnet
+func (s *Server) GetMainNetGDS() gds.TRISADirectoryClient {
+	return s.mainnet.gds
+}
+
+// GetTestNet returns the TestNet members client for testing purposes.
+func (s *Server) GetTestNetMembers() members.TRISAMembersClient {
+	return s.testnet.members
+}
+
+// GetMainNet returns the MainNet members client for testing purposes.
+func (s *Server) GetMainNetMembers() members.TRISAMembersClient {
+	return s.mainnet.members
 }
 
 // GetURL returns the URL that the server can be reached if it has been started. This
