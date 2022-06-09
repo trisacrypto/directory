@@ -48,7 +48,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
               fontSize={{ md: '4xl', sm: '2xl' }}
               color="#fff">
               <Trans id="Complete TRISA’s VASP Verfication Process">
-                Complete TRISA’s VASP Verfication Process
+                Complete TRISA’s VASP Verification Process
               </Trans>
             </Heading>
             <Text
