@@ -134,7 +134,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-                  <RouterLink to={'/auth/reset'}>
+                  <RouterLink to={'/account/reset'}>
                     <Link color="#1F4CED" fontFamily="Open sans, sans-serif" fontSize="1rem">
                       <Trans id="Forgot password?">Forgot password?</Trans>
                     </Link>
@@ -145,9 +145,11 @@ const Login: React.FC<LoginProps> = (props) => {
           </form>
           <Text textAlign="center" fontSize="1rem">
             <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
-            <Link href="/auth/register" color={'#1F4CED'}>
-              <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
-            </Link>
+            <RouterLink to="/auth/register">
+              <Link color={'#1F4CED'}>
+                <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
+              </Link>
+            </RouterLink>
           </Text>
         </Box>
       </Stack>

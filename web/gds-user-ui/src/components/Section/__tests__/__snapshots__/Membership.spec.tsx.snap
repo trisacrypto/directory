@@ -319,7 +319,9 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
         </div>
       </div>
     </section>
-    <footer>
+    <footer
+      style="width: 100%;"
+    >
       <div
         class="chakra-stack css-1arqzha"
       >
