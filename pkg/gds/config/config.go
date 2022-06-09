@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
@@ -30,6 +31,7 @@ type Config struct {
 	CertMan     CertManConfig
 	Backup      BackupConfig
 	Secrets     SecretsConfig
+	Sentry      SentryConfig
 	processed   bool
 }
 
@@ -104,6 +106,15 @@ type SecretsConfig struct {
 	Testing     bool   `split_words:"true" default:"false"`
 }
 
+type SentryConfig struct {
+	DSN              string  `split_words:"true"`
+	Release          string  `split_words:"true"`
+	Environment      string  `split_words:"true"`
+	Debug            bool    `split_words:"true" default:"false"`
+	TrackPerformance bool    `split_words:"true" default:"false"`
+	SampleRate       float64 `split_words:"true" default:"1.0"`
+}
+
 // New creates a new Config object, loading environment variables and defaults.
 func New() (_ Config, err error) {
 	var conf Config
@@ -143,6 +154,10 @@ func (c Config) Mark() (Config, error) {
 }
 
 func (c Config) Validate() (err error) {
+	if err = c.GDS.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Admin.Validate(); err != nil {
 		return err
 	}
@@ -161,6 +176,16 @@ func (c Config) Validate() (err error) {
 
 	if err = c.Email.Validate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c GDSConfig) Validate() error {
+	if c.Enabled {
+		if c.BindAddr == "" {
+			return errors.New("invalid configuration: bind addr is required for enabled GDS")
+		}
 	}
 
 	return nil
@@ -204,6 +229,7 @@ func (c MembersConfig) Validate() error {
 			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
 		}
 	}
+
 	return nil
 }
 
@@ -227,4 +253,30 @@ func (c EmailConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// Returns True if Sentry is enabled.
+func (c SentryConfig) UseSentry() bool {
+	return c.DSN != ""
+}
+
+// Returns True if performance tracking is enabled.
+func (c SentryConfig) UsePerformanceTracking() bool {
+	return c.UseSentry() && c.TrackPerformance
+}
+
+func (c SentryConfig) Validate() error {
+	// If Sentry is enabled then the DSN and envionment must be set.
+	if c.UseSentry() && c.Environment == "" {
+		return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
+	}
+	return nil
+}
+
+// Get the configured version string or the current semantic version if not configured.
+func (c SentryConfig) GetRelease() string {
+	if c.Release == "" {
+		return fmt.Sprintf("gds@%s", pkg.Version())
+	}
+	return c.Release
 }
