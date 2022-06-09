@@ -36,7 +36,6 @@ const Overview: React.FC = () => {
     (async () => {
       try {
         const response = await getMetrics();
-        console.log('response', response);
         setResult(response.data);
       } catch (e: any) {
         if (e.response.status === 401) {
@@ -45,15 +44,13 @@ const Overview: React.FC = () => {
         if (e.response.status === 403) {
           navigate('/auth/login?redirect=/dashboard/overview&q=token_expired');
         }
-
-        console.log(e);
       }
     })();
   }, []);
 
   return (
     <DashboardLayout>
-      <Heading marginBottom="69px">Overview</Heading>
+      <Heading marginBottom="30px">Overview</Heading>
       <NeedsAttention />
       <NetworkAnnouncements />
       {/* <Sentry.ErrorBoundary
@@ -62,8 +59,8 @@ const Overview: React.FC = () => {
       <Metrics data={result?.mainnet} type="Mainnet" /> */}
       <Box fontSize={'md'} mx={'auto'} w={'100%'}>
         <Box>
-          <Tabs mt={'10'} variant="enclosed">
-            <TabList border={'1px solid #eee'} pb={5}>
+          <Tabs mt={'10'}>
+            <TabList>
               <Tab
                 bg={'#E5EDF1'}
                 sx={{ width: '100%' }}
