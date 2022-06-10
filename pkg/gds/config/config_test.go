@@ -59,6 +59,12 @@ var testEnv = map[string]string{
 	"GOOGLE_APPLICATION_CREDENTIALS":           "test.json",
 	"GOOGLE_PROJECT_NAME":                      "test",
 	"GDS_SECRETS_TESTING":                      "true",
+	"GDS_SENTRY_DSN":                           "https://something.ingest.sentry.io",
+	"GDS_SENTRY_ENVIRONMENT":                   "test",
+	"GDS_SENTRY_RELEASE":                       "1.4",
+	"GDS_SENTRY_DEBUG":                         "true",
+	"GDS_SENTRY_TRACK_PERFORMANCE":             "true",
+	"GDS_SENTRY_SAMPLE_RATE":                   "0.2",
 }
 
 func TestConfig(t *testing.T) {
@@ -126,6 +132,12 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 7, conf.Backup.Keep)
 	require.Equal(t, testEnv["GOOGLE_APPLICATION_CREDENTIALS"], conf.Secrets.Credentials)
 	require.Equal(t, testEnv["GOOGLE_PROJECT_NAME"], conf.Secrets.Project)
+	require.Equal(t, testEnv["GDS_SENTRY_DSN"], conf.Sentry.DSN)
+	require.Equal(t, testEnv["GDS_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
+	require.Equal(t, true, conf.Sentry.TrackPerformance)
+	require.Equal(t, testEnv["GDS_SENTRY_RELEASE"], conf.Sentry.Release)
+	require.Equal(t, true, conf.Sentry.Debug)
+	require.Equal(t, .2, conf.Sentry.SampleRate)
 	require.True(t, conf.Secrets.Testing)
 }
 
@@ -315,6 +327,28 @@ func TestDatabaseConfigValidation(t *testing.T) {
 	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
 
 	conf.PoolPath = "fixtures/pool.zip"
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestSentryConfigValidation(t *testing.T) {
+	conf := config.SentryConfig{
+		DSN:         "",
+		Environment: "",
+		Release:     "gds-bff@1.4",
+		Debug:       true,
+	}
+
+	// If DSN is empty, then Sentry is not enabled
+	err := conf.Validate()
+	require.NoError(t, err)
+
+	// If Sentry is enabled, then the environment is required
+	conf.DSN = "https://something.ingest.sentry.io"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
+
+	conf.Environment = "test"
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

@@ -1,7 +1,7 @@
-import React from "react";
-import { NavItem } from "./NavItem";
-import { HStack, Flex } from "@chakra-ui/react";
-import Logo from "../../ui/Logo";
+import React from 'react';
+import { NavItem } from './NavItem';
+import { HStack, Flex } from '@chakra-ui/react';
+import Logo from '../../ui/Logo';
 export const NavBar = ({ ...props }): React.ReactElement => {
   return (
     <Flex
@@ -11,16 +11,15 @@ export const NavBar = ({ ...props }): React.ReactElement => {
       paddingBottom={6}
       bg="white"
       boxShadow="md"
-      {...props}
-    >
+      {...props}>
       <Flex px={4} justifyContent="space-between">
-       <Logo />
+        <Logo />
 
         <HStack justify="center" alignItems="flex-start">
           <NavItem to="home" pageName="Home" />
           <NavItem to="about" pageName="about us" />
           <NavItem to="documentation" pageName="Documentation" />
-          <NavItem to="login" pageName="Log in"  />
+          <NavItem to="login" pageName="Log in" />
         </HStack>
       </Flex>
     </Flex>

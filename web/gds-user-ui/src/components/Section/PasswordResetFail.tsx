@@ -1,18 +1,5 @@
-import {
-  Flex,
-  Box,
-  FormControl,
-  FormLabel,
-  Input,
-  Checkbox,
-  Stack,
-  Link,
-  Button,
-  Heading,
-  Text,
-  useColorModeValue,
-  Image
-} from '@chakra-ui/react';
+import { Flex, Box, Stack, Heading, Text, useColorModeValue } from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
 
 import { colors } from '../../utils/theme';
 
@@ -42,9 +29,8 @@ export default function PasswordReset(props: PasswordResetProps) {
           bottom={5}>
           <Text textAlign="center">
             Not a TRISA Member?{' '}
-            <Link href="/register" color={colors.system.cyan}>
-              {' '}
-              Join the TRISA network today.{' '}
+            <Link to="/register" color={colors.system.cyan}>
+              Join the TRISA network today.
             </Link>
           </Text>
         </Box>

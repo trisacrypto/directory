@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -137,19 +138,48 @@ func (s *Admin) Shutdown() (err error) {
 }
 
 func (s *Admin) setupRoutes() (err error) {
-	// Application Middleware
-	s.router.Use(logger.GinLogger("gds_admin_v2"))
-	s.router.Use(gin.Recovery())
-	s.router.Use(s.Available())
+	var tracing gin.HandlerFunc
+	if s.svc.conf.Sentry.UsePerformanceTracking() {
+		tracing = utils.SentryTrackPerformance()
+	}
 
-	// Add CORS configuration
-	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     s.conf.AllowOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	// Application Middleware
+	// NOTE: ordering is very important to how middleware is handled.
+	middlewares := []gin.HandlerFunc{
+		// Logging should be outside so we can record the complete latency of requests.
+		// Note: logging panics will not recover.
+		logger.GinLogger("gds_admin_v2"),
+
+		// Panic recovery middleware; note: gin middleware needs to be added before sentry
+		gin.Recovery(),
+		sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		}),
+
+		// Tracing helps us with our peformance metrics and should be as early in the
+		// chain as possible. It is after recovery to ensure trace panics recover.
+		tracing,
+
+		// CORS configuration allows the front-end to make cross-origin requests.
+		cors.New(cors.Config{
+			AllowOrigins:     s.conf.AllowOrigins,
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}),
+
+		// Maintenance mode handling - does not require authentication
+		s.Available(),
+	}
+
+	// Add the middleware to the router
+	for _, middleware := range middlewares {
+		if middleware != nil {
+			s.router.Use(middleware)
+		}
+	}
 
 	// Route-specific middleware
 	authorize := admin.Authorization(s.tokens)

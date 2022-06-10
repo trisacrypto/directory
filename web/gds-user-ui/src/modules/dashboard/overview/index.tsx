@@ -23,7 +23,7 @@ import useAuth from 'hooks/useAuth';
 import { getMetrics } from './overview.service';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { colors } from 'utils/theme';
-
+import OverviewLoader from 'components/ContentLoader/Overview';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import OrganizationProfile from 'components/OrganizationProfile';
@@ -47,6 +47,10 @@ const Overview: React.FC = () => {
         if (e.response.status === 403) {
           navigate('/auth/login?redirect=/dashboard/overview&q=token_expired');
         }
+
+        console.log(e);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, []);
@@ -63,6 +67,14 @@ const Overview: React.FC = () => {
       <NeedsAttention />
       <NetworkAnnouncements />
       {/* <Sentry.ErrorBoundary
+      <Heading marginBottom="69px">Overview</Heading>
+      {isLoading ? (
+        <OverviewLoader />
+      ) : (
+        <>
+          <NeedsAttention />
+          <NetworkAnnouncements />
+          {/* <Sentry.ErrorBoundary
         fallback={<Text color={'red'}>An error has occurred to load testnet metric</Text>}> */}
       {/* <Metrics data={result?.testnet} type="Testnet" />
       <Metrics data={result?.mainnet} type="Mainnet" /> */}
