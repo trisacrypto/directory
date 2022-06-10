@@ -218,8 +218,14 @@ func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 			return
 		}
 
-		manager.User.Read(claims.Subject)
+		user, err := manager.User.Read(claims.Subject)
+		if err != nil {
+			c.Error(err)
+			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse("could not retrieve user data"))
+			return
+		}
 
+		c.Set(ContextUserInfo, user)
 		c.Next()
 	}, nil
 }
@@ -245,4 +251,14 @@ func GetRegisteredClaims(c *gin.Context) (*validator.RegisteredClaims, error) {
 	}
 	rclaims := claims.(validator.RegisteredClaims)
 	return &rclaims, nil
+}
+
+// GetUserInfo fetches the user info from the gin context. Returns an error if no user
+// exists on the context or if the user value is nil. Panics if user is incorrect type.
+func GetUserInfo(c *gin.Context) (*management.User, error) {
+	user, exists := c.Get(ContextUserInfo)
+	if !exists || user == nil {
+		return nil, ErrNoUserInfo
+	}
+	return user.(*management.User), nil
 }
