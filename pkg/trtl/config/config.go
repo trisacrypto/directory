@@ -10,6 +10,7 @@ import (
 	honuconfig "github.com/rotationalio/honu/config"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
@@ -28,6 +29,7 @@ type Config struct {
 	ReplicaStrategy ReplicaStrategyConfig `split_words:"true"`
 	MTLS            MTLSConfig            `split_words:"true"`
 	Backup          BackupConfig          `split_words:"true"`
+	Sentry          sentry.Config         `split_words:"true"`
 	processed       bool
 }
 
