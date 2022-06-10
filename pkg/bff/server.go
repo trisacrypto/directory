@@ -21,7 +21,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
