@@ -59,18 +59,19 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           </Heading>
         </Stack>
       </Stack>
-      <HStack py={5}>
+      <HStack>
         <Stack
           border={'1px solid #eee'}
           p={4}
           my={5}
+          px={7}
           w={'70%'}
           bg={'white'}
           minHeight={divHeight}
           id={'org'}
           ref={orgRef}>
-          <Box>
-            <Heading as={'h1'} fontSize={19} pb={10}>
+          <Box pb={5}>
+            <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
               {' '}
               Organizational Details{' '}
             </Heading>
@@ -140,13 +141,14 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         <Stack
           border={'1px solid #eee'}
           p={4}
+          px={5}
           my={5}
           w={'30%'}
           bg={'white'}
           minHeight={divHeight}
           id={'cnt'}>
           <Box>
-            <Heading as={'h1'} fontSize={19} pb={10}>
+            <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
               {' '}
               Contacts{' '}
             </Heading>
