@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/auth0/go-auth0"
 	"github.com/auth0/go-auth0/management"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
@@ -197,13 +196,6 @@ func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 	// Connect to the management API
 	var manager *management.Management
 	if manager, err = management.New(conf.Domain, conf.ClientCredentials()); err != nil {
-		return nil, err
-	}
-
-	if err = manager.Client.Create(&management.Client{
-		Name:        auth0.String("GDS BFF User Management"),
-		Description: auth0.String("The BFF API requires Auth0 access to manage user roles, resources, and user-specific metadata."),
-	}); err != nil {
 		return nil, err
 	}
 

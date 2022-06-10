@@ -97,8 +97,9 @@ func New(conf config.Config) (s *Server, err error) {
 		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
 
 		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
-			return nil, fmt.Errorf("could not conenct to auth0 management api: %s", err)
+			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
+		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
 	}
 
 	// Create the router
@@ -239,6 +240,12 @@ func (s *Server) setupRoutes() (err error) {
 		return err
 	}
 
+	// Instantiate user info middleware
+	var userinfo gin.HandlerFunc
+	if userinfo, err = auth.UserInfo(s.conf.Auth0); err != nil {
+		return err
+	}
+
 	var tracing gin.HandlerFunc
 	if s.conf.Sentry.UsePerformanceTracking() {
 		tracing = sentry.TrackPerformance()
@@ -296,7 +303,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.POST("/register/:network", s.Register)
 		v1.GET("/verify", s.VerifyContact)
-		v1.POST("/users/login", s.Login)
+		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
 	}
 
