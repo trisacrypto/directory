@@ -27,10 +27,13 @@ import { colors } from 'utils/theme';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import OrganizationProfile from 'components/OrganizationProfile';
+import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user, getUser } = useAuth();
+  const [stepperData, setStepperData] = React.useState<any>({});
+
   const navigate = useNavigate();
   useEffect(() => {
     (async () => {
@@ -47,6 +50,12 @@ const Overview: React.FC = () => {
       }
     })();
   }, []);
+  // load legal person & contact information
+  useEffect(() => {
+    const getStepperData = loadDefaultValueFromLocalStorage();
+
+    setStepperData(getStepperData);
+  }, []);
 
   return (
     <DashboardLayout>
@@ -59,7 +68,7 @@ const Overview: React.FC = () => {
       <Metrics data={result?.mainnet} type="Mainnet" /> */}
       <Box fontSize={'md'} mx={'auto'} w={'100%'}>
         <Box>
-          <Tabs mt={'10'}>
+          <Tabs my={'10'}>
             <TabList>
               <Tab
                 bg={'#E5EDF1'}
@@ -82,10 +91,10 @@ const Overview: React.FC = () => {
               </Tab>
             </TabList>
             <TabPanels>
-              <TabPanel p={0} border="1px solid #E5EDF1">
+              <TabPanel p={0}>
                 <Metrics data={result?.testnet} type="Testnet" />
               </TabPanel>
-              <TabPanel p={0} border="1px solid #E5EDF1">
+              <TabPanel p={0}>
                 <Metrics data={result?.mainnet} type="Mainnet" />
               </TabPanel>
             </TabPanels>
@@ -93,7 +102,7 @@ const Overview: React.FC = () => {
         </Box>
       </Box>
       {/* </Sentry.ErrorBoundary> */}
-      <OrganizationProfile data={result} />
+      <OrganizationProfile data={stepperData} />
     </DashboardLayout>
   );
 };
