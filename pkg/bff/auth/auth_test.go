@@ -2,30 +2,21 @@ package auth_test
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"gopkg.in/square/go-jose.v2"
 )
 
 func TestClaims(t *testing.T) {
@@ -148,56 +139,12 @@ func TestAuthenticatePublicKeys(t *testing.T) {
 	// Creates a test server that serves well known jwks keys instead of the Auth0
 	// tenant - used to mock Auth0 (not a live test) but checks the happy path.
 	// NOTE: this test is fragile, e.g. if Auth0 changes its implementation.
-	require.NoError(t, createTokenFixtures(), "could not create required token key fixtures")
-
-	// The test server returns the well known token to authenticate the token like Auth0 does.
-	mux := http.NewServeMux()
-	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadFile("testdata/openid-configuration.json")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err.Error())
-		}
-
-		config := make(map[string]interface{})
-		if err = json.Unmarshal(data, &config); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err.Error())
-		}
-
-		// Add the server URL to the openid paths
-		endpoints := []string{"issuer", "authorization_endpoint", "token_endpoint", "device_authorization_endpoint", "userinfo_endpoint", "mfa_challenge_endpoint", "jwks_uri", "registration_endpoint", "revocation_endpoint"}
-		for _, endpoint := range endpoints {
-			u := &url.URL{Scheme: "https", Host: r.Host, Path: config[endpoint].(string)}
-			config[endpoint] = u.String()
-		}
-
-		w.Header().Add("content-type", "application/json")
-		json.NewEncoder(w).Encode(&config)
-	})
-	mux.HandleFunc("/.well-known/jwks.json", func(w http.ResponseWriter, r *http.Request) {
-		f, err := os.Open("testdata/jwks.json")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err.Error())
-		}
-		defer f.Close()
-
-		w.Header().Add("content-type", "application/json")
-		io.Copy(w, f)
-	})
-
-	srv := httptest.NewTLSServer(mux)
+	srv, err := authtest.New()
+	require.NoError(t, err, "could not create authtest server")
 	defer srv.Close()
 
-	testURL, _ := url.Parse(srv.URL)
-	conf := config.AuthConfig{
-		Domain:   testURL.Host,
-		Audience: testURL.String(),
-	}
-
 	// Setup authentication middleware
-	authenticate, err := auth.Authenticate(conf, auth.WithHTTPClient(srv.Client()))
+	authenticate, err := auth.Authenticate(srv.Config(), auth.WithHTTPClient(srv.Client()))
 	require.NoError(t, err, "expected valid authenticate middleware")
 
 	// Create default handler
@@ -206,7 +153,7 @@ func TestAuthenticatePublicKeys(t *testing.T) {
 	}
 
 	// Create a valid token to authenticate
-	tks, err := createValidToken(srv.URL)
+	tks, err := srv.NewToken()
 	require.NoError(t, err, "could not create valid token")
 
 	// Execute request expecting success
@@ -394,145 +341,4 @@ func doRequest(s *gin.Engine, w *httptest.ResponseRecorder, c *gin.Context) (dat
 		return nil, 0, err
 	}
 	return data, rep.StatusCode, nil
-}
-
-// Create RSA key fixtures and well known keys testdata if they don't exist yet.
-func createTokenFixtures() (err error) {
-	// check if fixtures already exist.
-	if err = checkFixtures(); err == nil {
-		return nil
-	}
-
-	if err = generateKeyPairFixture(); err != nil {
-		return err
-	}
-
-	if err = generateJWKSFixture(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-const kid = "StyqeY8Kl4Eam28KsUs"
-
-var fixturePaths = []string{
-	"testdata/token_keys.pem",
-	"testdata/jwks.json",
-}
-
-// Returns an error if the expected fixtures are missing.
-func checkFixtures() error {
-	for _, path := range fixturePaths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return fmt.Errorf("required fixture %s does not exist", path)
-		}
-	}
-	return nil
-}
-
-func generateKeyPairFixture() (err error) {
-	// create an rsa token key pair for use with tokens
-	var keypair *rsa.PrivateKey
-	if keypair, err = rsa.GenerateKey(rand.Reader, 2048); err != nil {
-		return err
-	}
-
-	var f *os.File
-	if f, err = os.OpenFile("testdata/token_keys.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return err
-	}
-	defer f.Close()
-
-	block := &pem.Block{Type: "PRIVATE KEY"}
-	if block.Bytes, err = x509.MarshalPKCS8PrivateKey(keypair); err != nil {
-		return err
-	}
-
-	if err = pem.Encode(f, block); err != nil {
-		return err
-	}
-
-	block = &pem.Block{Type: "PUBLIC KEY"}
-	if block.Bytes, err = x509.MarshalPKIXPublicKey(&keypair.PublicKey); err != nil {
-		return err
-	}
-
-	if err = pem.Encode(f, block); err != nil {
-		return err
-	}
-	return nil
-}
-
-func generateJWKSFixture() (err error) {
-	var key *rsa.PrivateKey
-	if key, err = loadKeyFixture(); err != nil {
-		return err
-	}
-
-	webkeys := &jose.JSONWebKeySet{
-		Keys: []jose.JSONWebKey{
-			{
-				Key:       &key.PublicKey,
-				KeyID:     kid,
-				Algorithm: jwt.SigningMethodRS256.Alg(),
-			},
-		},
-	}
-
-	var data []byte
-	if data, err = json.Marshal(webkeys); err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile("testdata/jwks.json", data, 0644)
-}
-
-func loadKeyFixture() (_ *rsa.PrivateKey, err error) {
-	var data []byte
-	if data, err = ioutil.ReadFile("testdata/token_keys.pem"); err != nil {
-		return nil, err
-	}
-
-	var block *pem.Block
-	for {
-		block, data = pem.Decode(data)
-		if block == nil {
-			break
-		}
-
-		if block.Type == "PRIVATE KEY" {
-			key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-			return key.(*rsa.PrivateKey), nil
-		}
-	}
-	return nil, errors.New("could not find private key in pem data")
-}
-
-func createValidToken(iss string) (tks string, err error) {
-	var key *rsa.PrivateKey
-	if key, err = loadKeyFixture(); err != nil {
-		return "", err
-	}
-
-	var data []byte
-	if data, err = ioutil.ReadFile("testdata/token_claims_template.json"); err != nil {
-		return "", err
-	}
-
-	claims := make(jwt.MapClaims)
-	if err = json.Unmarshal(data, &claims); err != nil {
-		return "", err
-	}
-	claims["iss"] = iss + "/"
-	claims["aud"] = []string{iss}
-	claims["iat"] = jwt.NewNumericDate(time.Now())
-	claims["exp"] = jwt.NewNumericDate(time.Now().Add(10 * time.Minute))
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = kid
-	return token.SignedString(key)
 }
