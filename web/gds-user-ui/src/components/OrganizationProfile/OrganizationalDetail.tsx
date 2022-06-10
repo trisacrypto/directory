@@ -30,11 +30,11 @@ import { COUNTRIES } from 'constants/countries';
 import { addressType } from 'constants/address';
 import { renderAddress } from 'utils/address-utils';
 import { hasValue } from 'utils/utils';
-type OrganizationProfileProps = {
+type OrganizationalDetailProps = {
   data: any;
 };
 
-const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ data }) => {
+const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => {
   const getOrgDivEl: any = document.getElementById('org') as HTMLDivElement;
   const getCntDivEl: any = document.getElementById('cnt') as HTMLDivElement;
   const [divOrgHeight, setDivOrgHeight] = useState(getOrgDivEl);
@@ -188,4 +188,4 @@ const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ data }) => {
   );
 };
 
-export default OrganizationProfile;
+export default OrganizationalDetail;

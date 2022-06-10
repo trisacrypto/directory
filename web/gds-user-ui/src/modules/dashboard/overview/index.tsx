@@ -26,13 +26,16 @@ import { colors } from 'utils/theme';
 import OverviewLoader from 'components/ContentLoader/Overview';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
-import OrganizationProfile from 'components/OrganizationProfile';
+import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
+import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
+
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { user, getUser } = useAuth();
+  // const { user, getUser } = useAuth();
   const [stepperData, setStepperData] = React.useState<any>({});
+  const [trisaData, setTrisaData] = React.useState<any>({});
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -48,7 +51,7 @@ const Overview: React.FC = () => {
           navigate('/auth/login?redirect=/dashboard/overview&q=token_expired');
         }
 
-        console.log(e);
+        Sentry.captureException(e);
       } finally {
         setIsLoading(false);
       }
@@ -57,9 +60,16 @@ const Overview: React.FC = () => {
   // load legal person & contact information
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
+    const trisaDetailData = {
+      mainnet: getStepperData.trisa_endpoint_mainnet,
+      testnet: getStepperData.trisa_endpoint_testnet,
+      organization: result.organization
+    };
+
+    setTrisaData(trisaDetailData);
 
     setStepperData(getStepperData);
-  }, []);
+  }, [result]);
 
   return (
     <DashboardLayout>
@@ -114,7 +124,8 @@ const Overview: React.FC = () => {
         </Box>
       </Box>
       {/* </Sentry.ErrorBoundary> */}
-      <OrganizationProfile data={stepperData} />
+      <OrganizationalDetail data={stepperData} />
+      <TrisaDetail data={trisaData} />
     </DashboardLayout>
   );
 };
