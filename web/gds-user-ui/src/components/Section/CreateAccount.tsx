@@ -79,8 +79,8 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
             <Text as={'span'} fontWeight={'bold'}>
               <Trans id="Create your TRISA account.">Create your TRISA account.</Trans>
             </Text>{' '}
-            <Trans id="We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later.">
-              We recommend that a senior compliance officer initialally creates the account for the
+            <Trans id="We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later.">
+              We recommend that a senior compliance officer initially creates the account for the
               VASP. Additional accounts can be created later.
             </Trans>
           </Text>

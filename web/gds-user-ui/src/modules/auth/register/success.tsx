@@ -13,7 +13,7 @@ const VerifyPage: React.FC = () => {
       <AlertMessage
         message={successRegistrationMessage}
         status="success"
-        title={t`Success Registration`}
+        title={t`Account Registratin Complete`}
       />
     </LandingLayout>
   );
