@@ -9,8 +9,8 @@ const NetworkAnnouncements = (props: NetworkAnnouncementProps) => {
     <Flex
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      height={190}
-      fontSize={18}
+      maxHeight={190}
+      fontSize={'18px'}
       bg={'white'}
       p={5}
       mt={10}>
