@@ -150,6 +150,21 @@ func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out
 	return out, nil
 }
 
+func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/overview", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &OverviewReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 //===========================================================================
 // Helper Methods
 //===========================================================================
