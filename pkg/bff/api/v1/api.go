@@ -10,6 +10,7 @@ import (
 
 type BFFClient interface {
 	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
+	Overview(ctx context.Context) (out *OverviewReply, err error)
 	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
 	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
 	VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error)
@@ -42,6 +43,29 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// OverviewReply is returned on overview requests.
+type OverviewReply struct {
+	TestNet      NetworkOverview `json:"testnet"`
+	MainNet      NetworkOverview `json:"mainnet"`
+	Organization VaspDetails     `json:"organization"`
+}
+
+// NetworkOverview contains network-specific information.
+type NetworkOverview struct {
+	Status             string `json:"status"`
+	Vasps              int    `json:"vasps"`
+	CertificatesIssued int    `json:"certificates_issued"`
+	NewMembers         int    `json:"new_members"`
+}
+
+// VaspDetails contains VASP-specific information.
+type VaspDetails struct {
+	ID          string                 `json:"id"`
+	Status      string                 `json:"status"`
+	CountryCode string                 `json:"country_code"`
+	Certificate map[string]interface{} `json:"certificate"`
+}
 
 // LookupParams is converted into a GDS LookupRequest.
 type LookupParams struct {
