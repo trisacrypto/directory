@@ -63,7 +63,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
                 <Td pt={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
                   <Trans id="Last Updated">Last Updated</Trans>
                 </Td>
-                <Td pb={'2rem !important'}>{data?.organization?.last_updated || 'N/A'}</Td>
+                <Td >{data?.organization?.last_updated || 'N/A'}</Td>
               </Tr>
               <Tr pt={'1rem !important'}>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
