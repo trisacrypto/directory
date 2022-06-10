@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -21,8 +20,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
-	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
 
@@ -56,18 +55,9 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Configure Sentry
 	if conf.Sentry.UseSentry() {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              conf.Sentry.DSN,
-			Environment:      conf.Sentry.Environment,
-			Release:          conf.Sentry.GetRelease(),
-			AttachStacktrace: true,
-			Debug:            conf.Sentry.Debug,
-			TracesSampleRate: conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		if err = sentry.Init(conf.Sentry); err != nil {
+			return nil, err
 		}
-
-		log.Info().Bool("track_performance", conf.Sentry.TrackPerformance).Float64("sample_rate", conf.Sentry.SampleRate).Msg("sentry tracing is enabled")
 	}
 
 	// Create the server and prepare to serve
@@ -229,7 +219,7 @@ func (s *Server) setupRoutes() (err error) {
 
 	var tracing gin.HandlerFunc
 	if s.conf.Sentry.UsePerformanceTracking() {
-		tracing = utils.SentryTrackPerformance()
+		tracing = sentry.TrackPerformance()
 	}
 
 	// Application Middleware

@@ -30,6 +30,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -140,7 +141,7 @@ func (s *Admin) Shutdown() (err error) {
 func (s *Admin) setupRoutes() (err error) {
 	var tracing gin.HandlerFunc
 	if s.svc.conf.Sentry.UsePerformanceTracking() {
-		tracing = utils.SentryTrackPerformance()
+		tracing = sentry.TrackPerformance()
 	}
 
 	// Application Middleware
