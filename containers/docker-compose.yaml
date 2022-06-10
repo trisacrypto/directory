@@ -107,6 +107,9 @@ services:
       - TRTL_BACKUP_INTERVAL=1h
       - TRTL_BACKUP_STORAGE=/data/backups
       - TRTL_BACKUP_KEEP=1
+      - TRTL_SENTRY_DSN
+      - TRTL_SENTRY_ENVIRONMENT
+      - TRTL_SENTRY_TRACK_PERFORMANCE
     profiles:
       - db
       - gds

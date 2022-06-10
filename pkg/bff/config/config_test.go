@@ -225,28 +225,6 @@ func TestDatabaseConfigValidation(t *testing.T) {
 	require.NoError(t, err, "expected valid configuration")
 }
 
-func TestSentryConfigValidation(t *testing.T) {
-	conf := config.SentryConfig{
-		DSN:         "",
-		Environment: "",
-		Release:     "gds-bff@1.4",
-		Debug:       true,
-	}
-
-	// If DSN is empty, then Sentry is not enabled
-	err := conf.Validate()
-	require.NoError(t, err)
-
-	// If Sentry is enabled, then the environment is required
-	conf.DSN = "https://something.ingest.sentry.io"
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
-
-	conf.Environment = "test"
-	err = conf.Validate()
-	require.NoError(t, err, "expected valid configuration")
-}
-
 // Returns the current environment for the specified keys, or if no keys are specified
 // then returns the current environment for all keys in testEnv.
 func curEnv(keys ...string) map[string]string {
