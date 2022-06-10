@@ -65,7 +65,7 @@ func TestClaimsContext(t *testing.T) {
 
 	// Test context with values
 	c.Set(auth.ContextBFFClaims, vclaims.CustomClaims.(*auth.Claims))
-	c.Set(auth.ContextRegisteredClaims, vclaims.RegisteredClaims)
+	c.Set(auth.ContextRegisteredClaims, &vclaims.RegisteredClaims)
 
 	bclaims, err := auth.GetClaims(c)
 	require.NoError(t, err, "could not fetch bff claims")
@@ -238,7 +238,7 @@ func TestAuthorize(t *testing.T) {
 }
 
 func TestUserInfo(t *testing.T) {
-	t.Skip("not implemented fully yet")
+	t.Skip("cannot implement these tests unless auth0 is mocked, which will likely be very difficult")
 
 	// Setup UserInfo middleware
 	middleware, err := auth.UserInfo(config.AuthConfig{Domain: "example.auth0.com", ClientID: "example", ClientSecret: "supersecretsquirrel"})
@@ -255,11 +255,11 @@ func TestUserInfo(t *testing.T) {
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
-	require.Equal(t, "could not authorize request", rep["error"], "unexpected error returned from authorize")
+	require.Equal(t, "could not authorize request", rep["error"], "unexpected error returned from middleware")
 
-	// Test anonymous user on context
+	// Test claims without subject on the context
 	authenticate := func(c *gin.Context) {
-		c.Set(auth.ContextBFFClaims, &auth.AnonymousClaims)
+		c.Set(auth.ContextRegisteredClaims, &validator.RegisteredClaims{Subject: ""})
 		c.Next()
 	}
 
@@ -270,35 +270,9 @@ func TestUserInfo(t *testing.T) {
 	require.Contains(t, rep, "error", "response does not contain json error")
 	require.Equal(t, "this endpoint requires authentication", rep["error"], "unexpected error returned from authorize")
 
-	// Test user does not have permissions
+	// Test user does have registered claims on context
 	authenticate = func(c *gin.Context) {
-		c.Set(auth.ContextBFFClaims, &auth.Claims{Permissions: []string{"write:foo"}})
-		c.Next()
-	}
-
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
-	rep, code, err = doRequest(s, w, c)
-	require.NoError(t, err, "could not handle test request")
-	require.Equal(t, http.StatusUnauthorized, code)
-	require.Contains(t, rep, "error", "response does not contain json error")
-	require.Equal(t, "user does not have permission to perform this operation", rep["error"], "unexpected error returned from authorize")
-
-	// Test user does not have all permissions
-	authenticate = func(c *gin.Context) {
-		c.Set(auth.ContextBFFClaims, &auth.Claims{Permissions: []string{"read:foo"}})
-		c.Next()
-	}
-
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
-	rep, code, err = doRequest(s, w, c)
-	require.NoError(t, err, "could not handle test request")
-	require.Equal(t, http.StatusUnauthorized, code)
-	require.Contains(t, rep, "error", "response does not contain json error")
-	require.Equal(t, "user does not have permission to perform this operation", rep["error"], "unexpected error returned from authorize")
-
-	// Test user does have permissions
-	authenticate = func(c *gin.Context) {
-		c.Set(auth.ContextBFFClaims, &auth.Claims{Permissions: []string{"read:foo", "read:bar"}})
+		c.Set(auth.ContextRegisteredClaims, &validator.RegisteredClaims{Subject: "test|1234567890abcdefg"})
 		c.Next()
 	}
 
@@ -308,6 +282,8 @@ func TestUserInfo(t *testing.T) {
 	require.Equal(t, http.StatusOK, code)
 	require.Contains(t, rep, "success", "response does not contain a success field")
 	require.True(t, rep["success"].(bool), "success is not true")
+
+	// TODO: check that the user info on the context is as expected.
 }
 
 func createTestContext(method, target string, body io.Reader, handlers ...gin.HandlerFunc) (*gin.Context, *gin.Engine, *httptest.ResponseRecorder) {

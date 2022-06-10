@@ -249,8 +249,8 @@ func GetRegisteredClaims(c *gin.Context) (*validator.RegisteredClaims, error) {
 	if !exists {
 		return nil, ErrNoClaims
 	}
-	rclaims := claims.(validator.RegisteredClaims)
-	return &rclaims, nil
+	rclaims := claims.(*validator.RegisteredClaims)
+	return rclaims, nil
 }
 
 // GetUserInfo fetches the user info from the gin context. Returns an error if no user
