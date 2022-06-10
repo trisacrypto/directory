@@ -1,27 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Heading,
-  VStack,
-  Flex,
-  Input,
-  Stack,
-  Text,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  SimpleGrid,
-  List,
-  ListItem,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  HStack,
-  Tag
-} from '@chakra-ui/react';
+import { Heading, Stack, Table, Tbody, Tr, Td } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 type TrisaDetailProps = {
   data: any;
@@ -85,21 +63,21 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
                 <Td pt={'1rem !important'} whiteSpace="break-spaces" lineHeight={1.5}>
                   <Trans id="Last Updated">Last Updated</Trans>
                 </Td>
-                <Td>{data?.organization?.last_updated || 'N/A'}</Td>
+                <Td pb={'2rem !important'}>{data?.organization?.last_updated || 'N/A'}</Td>
               </Tr>
-              <Tr>
+              <Tr pt={'1rem !important'}>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
                   <Trans id="TestNet">TestNet</Trans>
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'}>
+                <Td pt={'1rem !important'} pl={'1rem !important'}>
                   <Trans id="Endpoint">Endpoint</Trans>
                 </Td>
                 <Td>{data?.testnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>
+                <Td pl={'1rem !important'}>
                   <Trans id="Common Name">Common Name</Trans>
                 </Td>
                 <Td>{data?.testnet?.common_name || 'N/A'}</Td>
@@ -113,16 +91,17 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'}>
+                <Td pt={'1rem !important'} pl={'1rem !important'}>
                   <Trans id="Endpoint">Endpoint</Trans>
+                  Endpoint
                 </Td>
-                <Td pl={0}>{data?.mainnet?.endpoint || 'N/A'}</Td>
+                <Td>{data?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>
+                <Td pl={'1rem !important'}>
                   <Trans id="Common Name">Common Name</Trans>
                 </Td>
-                <Td pl={0}>{data?.mainnet?.common_name || 'N/A'}</Td>
+                <Td>{data?.mainnet?.common_name || 'N/A'}</Td>
               </Tr>
             </Tbody>
           </Table>

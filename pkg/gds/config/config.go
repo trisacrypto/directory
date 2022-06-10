@@ -9,9 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Config uses envconfig to load required settings from the environment and validate
@@ -31,7 +31,7 @@ type Config struct {
 	CertMan     CertManConfig
 	Backup      BackupConfig
 	Secrets     SecretsConfig
-	Sentry      SentryConfig
+	Sentry      sentry.Config
 	processed   bool
 }
 
@@ -104,15 +104,6 @@ type SecretsConfig struct {
 	Credentials string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"false"`
 	Project     string `envconfig:"GOOGLE_PROJECT_NAME" required:"false"`
 	Testing     bool   `split_words:"true" default:"false"`
-}
-
-type SentryConfig struct {
-	DSN              string  `split_words:"true"`
-	Release          string  `split_words:"true"`
-	Environment      string  `split_words:"true"`
-	Debug            bool    `split_words:"true" default:"false"`
-	TrackPerformance bool    `split_words:"true" default:"false"`
-	SampleRate       float64 `split_words:"true" default:"1.0"`
 }
 
 // New creates a new Config object, loading environment variables and defaults.
@@ -253,30 +244,4 @@ func (c EmailConfig) Validate() error {
 	}
 
 	return nil
-}
-
-// Returns True if Sentry is enabled.
-func (c SentryConfig) UseSentry() bool {
-	return c.DSN != ""
-}
-
-// Returns True if performance tracking is enabled.
-func (c SentryConfig) UsePerformanceTracking() bool {
-	return c.UseSentry() && c.TrackPerformance
-}
-
-func (c SentryConfig) Validate() error {
-	// If Sentry is enabled then the DSN and envionment must be set.
-	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
-	}
-	return nil
-}
-
-// Get the configured version string or the current semantic version if not configured.
-func (c SentryConfig) GetRelease() string {
-	if c.Release == "" {
-		return fmt.Sprintf("gds@%s", pkg.Version())
-	}
-	return c.Release
 }
