@@ -41,11 +41,16 @@ type bffTestSuite struct {
 	suite.Suite
 	bff      *bff.Server
 	client   api.BFFClient
-	testnet  *mock.GDS
-	mainnet  *mock.GDS
+	testnet  mockNetwork
+	mainnet  mockNetwork
 	dbPath   string
 	trtl     *trtl.Server
 	trtlsock *bufconn.GRPCListener
+}
+
+type mockNetwork struct {
+	gds     *mock.GDS
+	members *mock.Members
 }
 
 func (s *bffTestSuite) SetupSuite() {
@@ -95,21 +100,35 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(err, "could not mark configuration")
 
 	// Create the GDS mocks for testnet and mainnet
-	s.testnet, err = mock.NewGDS(conf.TestNet)
+	s.testnet.gds, err = mock.NewGDS(conf.TestNet)
 	require.NoError(err, "could not create testnet mock")
 
-	s.mainnet, err = mock.NewGDS(conf.MainNet)
+	s.mainnet.gds, err = mock.NewGDS(conf.MainNet)
+	require.NoError(err, "could not create mainnet mock")
+
+	// Create the members mocks for testnet and mainnet
+	s.testnet.members, err = mock.NewMembers(conf.TestNet)
+	require.NoError(err, "could not create testnet mock")
+
+	s.mainnet.members, err = mock.NewMembers(conf.MainNet)
 	require.NoError(err, "could not create mainnet mock")
 
 	s.bff, err = bff.New(conf)
 	require.NoError(err, "could not create the bff")
 
 	// Add the GDS mock clients to the BFF server
-	tnClient, err := s.testnet.Client()
+	tnGDSClient, err := s.testnet.gds.Client()
 	require.NoError(err, "could not create testnet GDS client")
-	mnClient, err := s.mainnet.Client()
+	mnGDSClient, err := s.mainnet.gds.Client()
 	require.NoError(err, "could not create mainnet GDS client")
-	s.bff.SetClients(tnClient, mnClient)
+	s.bff.SetGDSClients(tnGDSClient, mnGDSClient)
+
+	// Add the members mock clients to the BFF server
+	tnMembersClient, err := s.testnet.members.Client()
+	require.NoError(err, "could not create testnet members client")
+	mnMembersClient, err := s.mainnet.members.Client()
+	require.NoError(err, "could not create mainnet members client")
+	s.bff.SetMembersClients(tnMembersClient, mnMembersClient)
 
 	// Direct connect the BFF server to the database
 	db, err := db.DirectConnect(s.trtlsock.Conn)
@@ -131,15 +150,19 @@ func (s *bffTestSuite) SetupSuite() {
 }
 
 func (s *bffTestSuite) AfterTest(suiteName, testName string) {
-	s.testnet.Reset()
-	s.mainnet.Reset()
+	s.testnet.gds.Reset()
+	s.mainnet.gds.Reset()
+	s.testnet.members.Reset()
+	s.mainnet.members.Reset()
 }
 
 func (s *bffTestSuite) TearDownSuite() {
 	require := s.Require()
 	require.NoError(s.bff.Shutdown(), "could not shutdown the BFF server after tests")
-	s.testnet.Shutdown()
-	s.mainnet.Shutdown()
+	s.testnet.gds.Shutdown()
+	s.mainnet.gds.Shutdown()
+	s.testnet.members.Shutdown()
+	s.mainnet.members.Shutdown()
 
 	// Shutdown and cleanup trtl
 	s.trtl.Shutdown()

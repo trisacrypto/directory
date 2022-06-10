@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Config uses envconfig to load the required settings from the environment, parse and
@@ -29,7 +29,7 @@ type Config struct {
 	TestNet      DirectoryConfig
 	MainNet      DirectoryConfig
 	Database     DatabaseConfig
-	Sentry       SentryConfig
+	Sentry       sentry.Config
 	processed    bool
 }
 
@@ -56,15 +56,6 @@ type DatabaseConfig struct {
 	Insecure      bool   `split_words:"true" default:"false"`
 	CertPath      string `split_words:"true"`
 	PoolPath      string `split_words:"true"`
-}
-
-type SentryConfig struct {
-	DSN              string  `envconfig:"SENTRY_DSN"`
-	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
-	Release          string  `envconfig:"SENTRY_RELEASE"`
-	TrackPerformance bool    `split_words:"true" default:"false"`
-	SampleRate       float64 `split_words:"true" default:"1.0"`
-	Debug            bool    `default:"false"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -128,26 +119,6 @@ func (c DatabaseConfig) Validate() error {
 		}
 	}
 	return nil
-}
-
-func (c SentryConfig) Validate() error {
-	// If Sentry is enabled then the envionment must be set.
-	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when using sentry")
-	}
-	return nil
-}
-
-// Get the configured version string or the current semantic version if not configured.
-func (c SentryConfig) GetRelease() string {
-	if c.Release == "" {
-		return fmt.Sprintf("gds-bff@%s", pkg.Version())
-	}
-	return c.Release
-}
-
-func (c SentryConfig) UseSentry() bool {
-	return c.DSN != ""
 }
 
 func (c AuthConfig) Validate() error {
