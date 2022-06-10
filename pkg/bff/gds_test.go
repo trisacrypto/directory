@@ -24,36 +24,36 @@ func (s *bffTestSuite) TestLookup() {
 	params.CommonName = "api.alice.vaspbot.net"
 
 	// Test NotFound returns a 404
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "tesnet not found"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
+	require.NoError(s.testnet.gds.UseError(mock.LookupRPC, codes.NotFound, "tesnet not found"))
+	require.NoError(s.mainnet.gds.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
 	_, err = s.client.Lookup(context.TODO(), params)
 	require.EqualError(err, "[404] no results returned for query", "expected a 404 error when both GDSes return not found")
 
 	// Test InternalError when both GDSes return Unavailable
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.Unavailable, "testnet cannot connect"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.Unavailable, "mainnet cannot connect"))
+	require.NoError(s.testnet.gds.UseError(mock.LookupRPC, codes.Unavailable, "testnet cannot connect"))
+	require.NoError(s.mainnet.gds.UseError(mock.LookupRPC, codes.Unavailable, "mainnet cannot connect"))
 	_, err = s.client.Lookup(context.TODO(), params)
 	require.EqualError(err, "[500] unable to execute Lookup request", "expected a 500 error when both GDSes return unavailable")
 
 	// Test one result from TestNet
-	require.NoError(s.testnet.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
-	require.NoError(s.mainnet.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
+	require.NoError(s.testnet.gds.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
+	require.NoError(s.mainnet.gds.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
 	rep, err := s.client.Lookup(context.TODO(), params)
 	require.NoError(err, "could not fetch expected result from testnet")
 	require.Len(rep.Results, 1, "expected one result back from server")
 	require.Equal("6a57fea4-8fb7-42f3-bf0c-55fecccd2e53", rep.Results[0]["id"])
 
 	// Test one result from MainNet
-	require.NoError(s.testnet.UseError(mock.LookupRPC, codes.NotFound, "testnet not found"))
-	require.NoError(s.mainnet.UseFixture(mock.LookupRPC, "testdata/mainnet/lookup_reply.json"))
+	require.NoError(s.testnet.gds.UseError(mock.LookupRPC, codes.NotFound, "testnet not found"))
+	require.NoError(s.mainnet.gds.UseFixture(mock.LookupRPC, "testdata/mainnet/lookup_reply.json"))
 	rep, err = s.client.Lookup(context.TODO(), params)
 	require.NoError(err, "could not fetch expected result from mainnet")
 	require.Len(rep.Results, 1, "expected one result back from server")
 	require.Equal("ca0cff66-719f-4a62-8086-be953699b27d", rep.Results[0]["id"])
 
 	// Test results from both TestNet and MainNet
-	require.NoError(s.testnet.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
-	require.NoError(s.mainnet.UseFixture(mock.LookupRPC, "testdata/mainnet/lookup_reply.json"))
+	require.NoError(s.testnet.gds.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
+	require.NoError(s.mainnet.gds.UseFixture(mock.LookupRPC, "testdata/mainnet/lookup_reply.json"))
 	rep, err = s.client.Lookup(context.TODO(), params)
 	require.NoError(err, "could not fetch expected result from mainnet and testnet")
 	require.Len(rep.Results, 2, "expected two results back from server")
@@ -127,55 +127,55 @@ func (s *bffTestSuite) TestRegister() {
 		var mgds *mock.GDS
 		switch network {
 		case "testnet":
-			mgds = s.testnet
+			mgds = s.testnet.gds
 		case "mainnet":
-			mgds = s.mainnet
+			mgds = s.mainnet.gds
 		}
 
 		// Reset the calls on the mocks to ensure the correct mock GDS is being called
 		expectedCalls := make(map[string]int)
-		s.testnet.Reset()
-		s.mainnet.Reset()
+		s.testnet.gds.Reset()
+		s.mainnet.gds.Reset()
 
 		// Test Invalid Argument Error
 		mgds.UseError(mock.RegisterRPC, codes.InvalidArgument, "the TRISA endpoint is not valid")
 		_, err = s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] the TRISA endpoint is not valid")
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test Already Exists error
 		mgds.UseError(mock.RegisterRPC, codes.AlreadyExists, "this VASP is already registered")
 		_, err = s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] this VASP is already registered")
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test Aborted error
 		mgds.UseError(mock.RegisterRPC, codes.Aborted, "a conflict occurred")
 		_, err = s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.EqualError(err, "[409] a conflict occurred")
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test Timeout error
 		mgds.UseError(mock.RegisterRPC, codes.DeadlineExceeded, "deadline exceeded")
 		_, err = s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test FailedPrecondition error
 		mgds.UseError(mock.RegisterRPC, codes.FailedPrecondition, "couldn't access database")
 		_, err = s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test a valid register reply
 		err = mgds.UseFixture(mock.RegisterRPC, fmt.Sprintf("testdata/%s/register_reply.json", network))
@@ -184,8 +184,8 @@ func (s *bffTestSuite) TestRegister() {
 		rep, err := s.client.Register(context.TODO(), req)
 		expectedCalls[network]++
 		require.NoError(err, "could not make register call with valid payload")
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Check the register response is valid
 		require.Empty(rep.Error, "an error message was returned from the server")
@@ -200,8 +200,8 @@ func (s *bffTestSuite) TestRegister() {
 		req.Network = "foo"
 		_, err = s.client.Register(context.TODO(), req)
 		require.EqualError(err, "[404] network should be either testnet or mainnet")
-		require.Equal(expectedCalls["testnet"], s.testnet.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
-		require.Equal(expectedCalls["mainnet"], s.mainnet.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
+		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 	}
 }
 
@@ -229,8 +229,8 @@ func (s *bffTestSuite) TestVerifyEmail() {
 	require.EqualError(err, "[400] unknown registered directory")
 
 	// Assert that to this point no GDS method has been called
-	require.Empty(s.testnet.Calls[mock.VerifyContactRPC], "expected no testnet calls")
-	require.Empty(s.mainnet.Calls[mock.VerifyContactRPC], "expected no mainnet calls")
+	require.Empty(s.testnet.gds.Calls[mock.VerifyContactRPC], "expected no testnet calls")
+	require.Empty(s.mainnet.gds.Calls[mock.VerifyContactRPC], "expected no mainnet calls")
 
 	// Test good requests to the registered directory
 	for i, directory := range []string{"trisatest.net", "vaspdirectory.net"} {
@@ -240,55 +240,55 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		var mgds *mock.GDS
 		switch i {
 		case 0:
-			mgds = s.testnet
+			mgds = s.testnet.gds
 		case 1:
-			mgds = s.mainnet
+			mgds = s.mainnet.gds
 		}
 
 		// Reset the calls on the mocks to ensure the correct mock GDS is being called
 		expectedCalls := make(map[string]int)
-		s.testnet.Reset()
-		s.mainnet.Reset()
+		s.testnet.gds.Reset()
+		s.mainnet.gds.Reset()
 
 		// Test invalid argument error
 		mgds.UseError(mock.VerifyContactRPC, codes.InvalidArgument, "incorrect vasp id")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		require.EqualError(err, "[400] incorrect vasp id")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test not found error
 		mgds.UseError(mock.VerifyContactRPC, codes.NotFound, "could not lookup contact with token")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		require.EqualError(err, "[404] could not lookup contact with token")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test aborted error
 		mgds.UseError(mock.VerifyContactRPC, codes.Aborted, "could not update verification status")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		require.EqualError(err, "[409] could not update verification status")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test failed precondition error
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "something went wrong")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		require.EqualError(err, "[500] something went wrong")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test internal error
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "boom hiss")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		require.EqualError(err, "[500] boom hiss")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test a valid verify email response
 		mgds.OnVerifyContact = func(ctx context.Context, in *gds.VerifyContactRequest) (out *gds.VerifyContactReply, err error) {
