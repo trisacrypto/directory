@@ -151,7 +151,7 @@ func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin
 			// NOTE: invalid type assertions will cause panics which will be recovered
 			claims := claims.(*validator.ValidatedClaims)
 			c.Set(ContextBFFClaims, claims.CustomClaims.(*Claims))
-			c.Set(ContextRegisteredClaims, claims.RegisteredClaims)
+			c.Set(ContextRegisteredClaims, &claims.RegisteredClaims)
 		}
 
 		// Continue handling the request with next middleware.

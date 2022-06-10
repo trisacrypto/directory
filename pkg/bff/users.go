@@ -61,7 +61,7 @@ func (s *Server) Login(c *gin.Context) {
 		}
 	}
 
-	// TODO: deal with user resources
+	// TODO: deal with user resources (will happen in a different story).
 
 	// Once work has been performed reply with success no content
 	c.Status(http.StatusNoContent)
