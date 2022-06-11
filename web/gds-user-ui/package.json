@@ -116,6 +116,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
+    "@faker-js/faker": "^7.2.0",
     "@hookform/devtools": "^4.1.0",
     "@lingui/cli": "^3.13.3",
     "@lingui/macro": "^3.13.3",

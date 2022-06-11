@@ -1,8 +1,5 @@
 export const isValidIvmsAddress = (address: any) => {
-  if (address) {
-    return !!(address.country && address.address_type);
-  }
-  return false;
+  return !!(address.country && address.address_type);
 };
 
 export const hasAddressLine = (address: any) => {
@@ -19,7 +16,7 @@ export const hasAddressField = (address: any) => {
   return false;
 };
 
-const hasAddressFieldAndLine = (address: any) => {
+export const hasAddressFieldAndLine = (address: any) => {
   if (hasAddressField(address) && hasAddressLine(address)) {
     console.error('[ERROR]', 'cannot render address');
     return true;

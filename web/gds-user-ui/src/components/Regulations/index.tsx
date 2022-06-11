@@ -4,15 +4,14 @@ import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
 import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
-import { Control, useFieldArray, UseFormRegister } from 'react-hook-form';
+import { Control, useFieldArray, UseFormRegister, useFormContext } from 'react-hook-form';
 
 type RegulationsProps = {
-  register: UseFormRegister<any>;
-  control: Control;
   name: string;
 };
 
-const Regulations: React.FC<RegulationsProps> = ({ register, name, control }) => {
+const Regulations: React.FC<RegulationsProps> = ({ name }) => {
+  const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     name,
     control

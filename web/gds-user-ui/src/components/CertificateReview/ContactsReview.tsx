@@ -1,12 +1,11 @@
-import React, { FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData, hasValue } from 'utils/utils';
+import { useSelector, RootStateOrAny } from 'react-redux';
+import { hasValue } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
-import { t } from '@lingui/macro';
 interface ContactsProps {
   data: any;
 }
