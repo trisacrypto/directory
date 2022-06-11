@@ -62,13 +62,17 @@ const PasswordStrength = (props: any) => {
   return (
     <Box>
       <Box>
-        <Text textAlign={'left'} color={isContains9Characters ? 'gray.900' : 'gray.500'}>
+        <Text
+          textAlign={'left'}
+          color={isContains9Characters ? 'gray.900' : 'gray.500'}
+          data-testid="contains9Characters__text">
           <Text as={'span'} position={'relative'} top={2}>
             <Icon
               w={6}
               h={6}
               as={isContains9Characters ? MdDone : MdClose}
               color={isContains9Characters ? 'green' : 'gray.200'}
+              data-testid="contains9Characters__icon"
             />{' '}
           </Text>
           At least 9 characters in length
@@ -78,26 +82,34 @@ const PasswordStrength = (props: any) => {
         <Text fontWeight="semibold">Contain at least 3 of the following 4 types of characters</Text>
       </Box>
       <Box>
-        <Text textAlign={'left'} color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}>
+        <Text
+          textAlign={'left'}
+          color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}
+          data-testid="containsOneLowerCase__text">
           <Text as={'span'} position={'relative'} top={2}>
             <Icon
               w={6}
               h={6}
               as={isContainsOneLowerCase ? MdDone : MdClose}
               color={isContainsOneLowerCase ? 'green' : 'gray.200'}
+              data-testid="containsOneLowerCase__icon"
             />{' '}
           </Text>
           lower case letters (a-z)
         </Text>
       </Box>
       <Box>
-        <Text textAlign={'left'} color={isContainsOneLowerCase ? 'gray.900' : 'gray.500'}>
+        <Text
+          textAlign={'left'}
+          color={isContainsOneUpperCase ? 'gray.900' : 'gray.500'}
+          data-testid="containsOneUpperCase__text">
           <Text as={'span'} position={'relative'} top={2}>
             <Icon
               w={6}
               h={6}
               as={isContainsOneUpperCase ? MdDone : MdClose}
               color={isContainsOneUpperCase ? 'green' : 'gray.200'}
+              data-testid="containsOneUpperCase__icon"
             />{' '}
           </Text>
           upper case letters (A-Z)
@@ -111,6 +123,7 @@ const PasswordStrength = (props: any) => {
               h={6}
               as={isContainsOneNumber ? MdDone : MdClose}
               color={isContainsOneNumber ? 'green' : 'gray.200'}
+              data-testid="containsOneNumber__icon"
             />{' '}
           </Text>
           numbers (i.e. 0-9)
@@ -124,6 +137,7 @@ const PasswordStrength = (props: any) => {
               h={6}
               as={isContainsOneSpecialChar ? MdDone : MdClose}
               color={isContainsOneSpecialChar ? 'green' : 'gray.200'}
+              data-testid="containsOneSpecialChar__icon"
             />{' '}
           </Text>
           special characters (e.g. !@#$%^&*)

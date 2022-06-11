@@ -4,7 +4,7 @@ import UserEmailVerification from 'components/Section/UserEmailVerification';
 import UserEmailConfirmation from 'components/Section/UserEmailConfirmation';
 import LandingLayout from 'layouts/LandingLayout';
 import useQuery from 'hooks/useQuery';
-import { verifyService } from './verify.service';
+import verifyService from './verify.service';
 import AlertMessage from 'components/ui/AlertMessage';
 const VerifyPage: React.FC = () => {
   const query = useQuery();
@@ -15,13 +15,13 @@ const VerifyPage: React.FC = () => {
   const token = query.get('token');
   const registered_directory = query.get('registered_directory');
   // to-do : should be improve later
+
   useEffect(() => {
     (async () => {
       try {
         if (vaspID && token && registered_directory) {
           const params = { vaspID, token, registered_directory };
           const reponse = await verifyService(params);
-
           if (!reponse.error) {
             setResult(reponse);
           } else {

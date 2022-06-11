@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   chakra,
@@ -13,36 +13,11 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
-  ModalCloseButton,
   useDisclosure,
   Button
 } from '@chakra-ui/react';
 import ModalAlert from 'components/ReviewSubmit/ModalAlert';
-interface ConfirmationModalProps {}
-
-const AlertContent = (props: any) => {
-  return (
-    <>
-      <Text>
-        <Text as={'span'}>
-          Yes, I understand that this is the only time the PKCS12 Password is displayed and I have
-          copied and securely saved the password. <br />
-          Click “No” if you have not copied the PKCS12 password yet and would like to view and copy
-          the password.
-          <br />
-          Click “Yes” if you have copied the PKCS12 password and have securely saved it.
-        </Text>{' '}
-      </Text>
-      <Text mt={4}>
-        <Text as={'span'} fontWeight={'semibold'}>
-          Note:
-        </Text>{' '}
-        If you lose the PKCS12 password, you will have to the start the registration process from
-        the beginning.
-      </Text>
-    </>
-  );
-};
+import AlertContent from './AlertContent';
 
 const ConfirmationModal = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
@@ -69,7 +44,9 @@ const ConfirmationModal = (props: any) => {
           <Modal closeOnOverlayClick={false} {...props}>
             <ModalOverlay />
             <ModalContent width={'100%'}>
-              <ModalHeader textAlign={'center'}>TRISA Registration Request Submitted!</ModalHeader>
+              <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
+                TRISA Registration Request Submitted!
+              </ModalHeader>
 
               <ModalBody pb={6}>
                 <Text pb={5} fontSize={'sm'}>

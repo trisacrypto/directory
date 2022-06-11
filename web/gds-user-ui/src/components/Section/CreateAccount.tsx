@@ -133,14 +133,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 setBtnName={show ? 'Hide' : 'Show'}
                 isInvalid={!!getValueByPathname(errors, 'password')}
                 type={show ? 'text' : 'password'}
-                formHelperText={
-                  // getValueByPathname(errors, 'password') ? (
-                  //   getValueByPathname(errors, 'password')?.message
-                  // ) : (
-                  //   <PasswordStrength data={watchPassword} />
-                  // )
-                  watchPassword ? <PasswordStrength data={watchPassword} /> : null
-                }
+                formHelperText={watchPassword ? <PasswordStrength data={watchPassword} /> : null}
               />
               <Stack spacing={10}>
                 <Button
