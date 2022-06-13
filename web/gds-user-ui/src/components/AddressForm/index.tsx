@@ -4,25 +4,25 @@ import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { addressTypeOptions } from 'constants/address';
 import { getCountriesOptions } from 'constants/countries';
-import { Control, Controller, useFormContext, UseFormRegister } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import _ from 'lodash';
 import { getValueByPathname } from 'utils/utils';
 import { t } from '@lingui/macro';
 
 type AddressFormProps = {
-  control: Control;
-  register: UseFormRegister<any>;
   name: string;
   rowIndex: number;
 };
 
-const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowIndex }) => {
+const AddressForm: React.FC<AddressFormProps> = ({ name, rowIndex }) => {
   const countries = getCountriesOptions();
   const addressTypes = addressTypeOptions();
   const {
     watch,
     formState: { errors },
-    setValue
+    setValue,
+    control,
+    register
   } = useFormContext();
 
   const getFirstAddressType = watch('entity.geographic_addresses[0].address_type');
@@ -42,6 +42,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
           controlId={`${name}[${rowIndex}].address_line[0]`}
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[0]`)}
           {...register(`${name}[${rowIndex}].address_line[0]`)}
+          data-testid="address_line[0]"
         />
 
         <InputFormControl
@@ -49,6 +50,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
           controlId="address_2"
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[1]`)}
           {...register(`${name}[${rowIndex}].address_line[1]`)}
+          data-testid="address_line[1]"
         />
 
         <InputFormControl
@@ -56,6 +58,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
           controlId="address_3"
           isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].address_line[2]`)}
           {...register(`${name}[${rowIndex}].address_line[2]`)}
+          data-testid="address_line[2]"
         />
 
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6} width="100%">
@@ -73,6 +76,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                   onChange={(newValue: any) => field.onChange(newValue.value)}
                   formHelperText={t`Country`}
                   controlId="country"
+                  data-testid="country"
                 />
               )}
             />
@@ -92,6 +96,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ register, control, name, rowI
                   options={addressTypes}
                   formHelperText={t`Address Type`}
                   controlId="address_type"
+                  data-testid="address_type"
                 />
               )}
             />

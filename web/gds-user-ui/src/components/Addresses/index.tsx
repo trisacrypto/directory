@@ -37,17 +37,12 @@ const Addresses: React.FC = () => {
       <VStack width="100%" align="start" spacing={10}>
         {fields.map((field, index) => {
           return (
-            <HStack key={field.id} width="100%" spacing={4}>
+            <HStack key={field.id} width="100%" spacing={4} data-testid="address-row">
               <Box flex={1}>
                 <Text>
                   <Trans id="Address">Address</Trans> {index + 1}
                 </Text>
-                <AddressForm
-                  rowIndex={index}
-                  name={'entity.geographic_addresses'}
-                  register={register}
-                  control={control}
-                />
+                <AddressForm rowIndex={index} name={'entity.geographic_addresses'} />
               </Box>
               <Box alignSelf="flex-end" w={10} pb="25.1px">
                 {index > 0 && (

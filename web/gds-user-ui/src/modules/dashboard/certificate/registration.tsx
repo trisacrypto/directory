@@ -10,7 +10,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError, getStepDatas } from 'utils/utils';
+import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
 
@@ -19,7 +19,6 @@ import {
   setCertificateFormValueToLocalStorage
 } from 'utils/localStorageHelper';
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
-import { colors } from 'utils/theme';
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';

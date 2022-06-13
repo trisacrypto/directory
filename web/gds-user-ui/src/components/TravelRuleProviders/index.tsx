@@ -1,5 +1,5 @@
-import { Link, ListItem, UnorderedList } from "@chakra-ui/react";
-import Card from "components/Card";
+import { Link, ListItem, UnorderedList } from '@chakra-ui/react';
+import Card from 'components/Card/Card';
 
 const TravelRuleProviders: React.FC = () => {
   return (
@@ -19,13 +19,13 @@ const TravelRuleProviders: React.FC = () => {
           </ListItem>
           <ListItem color="#1F4CED">
             <Link href="https://notabene.id/" isExternal>
-              NotaBene{" "}
+              NotaBene{' '}
             </Link>
             (not interoperable)
           </ListItem>
           <ListItem color="#1F4CED">
             <Link href="https://openvasp.org/" isExternal>
-              OpenVASP{" "}
+              OpenVASP{' '}
             </Link>
             (not interoperable)
           </ListItem>
