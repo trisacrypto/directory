@@ -1,7 +1,7 @@
 import { Flex, FlexProps, Icon, Link, Box, Text } from '@chakra-ui/react';
 import { ReactText } from 'react';
 import { IconType } from 'react-icons';
-import { Link as RouterLink } from 'react-router-dom';
+import { NavLink as RouterLink } from 'react-router-dom';
 interface NavItemProps extends FlexProps {
   icon?: IconType;
   href?: string;
@@ -35,12 +35,22 @@ const getLinkStyle: any = () => ({
   }
 });
 
+const getActiveLinkStyle = ({ isActive }: { isActive: boolean }) =>
+  isActive
+    ? {
+        borderLeft: '2px solid #DDE2FF',
+        background: 'hsla(231, 12%, 66%, 0.16)',
+        width: '100%'
+      }
+    : {};
+
 const NavItem = ({ icon, children, href = '#', selected, ...rest }: NavItemProps) => {
   return (
-    <RouterLink to={href}>
+    <RouterLink to={href} style={getActiveLinkStyle}>
       <Flex
         align="center"
         borderRadius="md"
+        w="100%"
         role="group"
         color={selected ? 'white' : '#8391a2'}
         fontSize="0.9375rem"
