@@ -34,10 +34,8 @@ func TrackPerformance(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		request := fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
 		span := sentry.StartSpan(c.Request.Context(), "http handler", sentry.TransactionName(request))
-		if tags != nil {
-			for k, v := range tags {
-				span.SetTag(k, v)
-			}
+		for k, v := range tags {
+			span.SetTag(k, v)
 		}
 		defer span.Finish()
 		c.Next()
@@ -51,10 +49,8 @@ func UseTags(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if hub := sentrygin.GetHubFromContext(c); hub != nil {
 			// Service-level tags
-			if tags != nil {
-				for k, v := range tags {
-					hub.Scope().SetTag(k, v)
-				}
+			for k, v := range tags {
+				hub.Scope().SetTag(k, v)
 			}
 
 			// Request-level tags
