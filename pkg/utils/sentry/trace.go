@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -28,11 +29,38 @@ func Init(conf Config) (err error) {
 	return nil
 }
 
-// Middleware that tracks request performance with Sentry.
-func TrackPerformance() gin.HandlerFunc {
+// Gin middleware that tracks HTTP request performance with Sentry.
+func TrackPerformance(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span := sentry.StartSpan(c.Request.Context(), c.Request.URL.Path)
+		request := fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
+		span := sentry.StartSpan(c.Request.Context(), "http handler", sentry.TransactionName(request))
+		if tags != nil {
+			for k, v := range tags {
+				span.SetTag(k, v)
+			}
+		}
 		defer span.Finish()
+		c.Next()
+	}
+}
+
+// Gin middleware that adds request-level tags to the current Sentry scope. This
+// also accepts a map of service-level tags to uniquely identify properties of the http
+// service for monolithic server setups.
+func UseTags(tags map[string]string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if hub := sentrygin.GetHubFromContext(c); hub != nil {
+			// Service-level tags
+			if tags != nil {
+				for k, v := range tags {
+					hub.Scope().SetTag(k, v)
+				}
+			}
+
+			// Request-level tags
+			hub.Scope().SetTag("path", c.Request.URL.Path)
+			hub.Scope().SetTag("method", c.Request.Method)
+		}
 		c.Next()
 	}
 }

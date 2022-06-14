@@ -227,15 +227,25 @@ func (s *Server) SetURL(url string) {
 }
 
 func (s *Server) setupRoutes() (err error) {
+	var (
+		authenticator gin.HandlerFunc
+		tags          gin.HandlerFunc
+		tracing       gin.HandlerFunc
+		bffTags       map[string]string
+	)
+
 	// Instantiate authentication middleware
-	var authenticator gin.HandlerFunc
 	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
 		return err
 	}
 
-	var tracing gin.HandlerFunc
+	if s.conf.Sentry.UseSentry() {
+		bffTags = map[string]string{"service": "bff"}
+		tags = sentry.UseTags(bffTags)
+	}
+
 	if s.conf.Sentry.UsePerformanceTracking() {
-		tracing = sentry.TrackPerformance()
+		tracing = sentry.TrackPerformance(bffTags)
 	}
 
 	// Application Middleware
@@ -251,6 +261,9 @@ func (s *Server) setupRoutes() (err error) {
 			Repanic:         true,
 			WaitForDelivery: false,
 		}),
+
+		// Add searchable tags to the sentry context.
+		tags,
 
 		// Tracing helps us with our peformance metrics and should be as early in the
 		// chain as possible. It is after recovery to ensure trace panics recover.
