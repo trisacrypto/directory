@@ -7,6 +7,10 @@ import { Provider } from 'react-redux';
 import { configureStore } from './redux/store';
 
 import reportWebVitals from './reportWebVitals';
+import initSentry from 'sentry';
+
+
+initSentry()
 
 ReactDOM.render(
   <React.StrictMode>
