@@ -34,6 +34,14 @@ const (
 	Scope        = "openid profile email"
 )
 
+// Server wraps an httptest.Server to provide a default handler for auth0 requests.
+type Server struct {
+	srv  *httptest.Server
+	mux  *http.ServeMux
+	URL  *url.URL
+	keys *rsa.PrivateKey
+}
+
 // New starts and returns a new Auth0 server using TLS. The caller should call close
 // when finished, to shut it down. The server can also issue tokens for authentication.
 func New() (s *Server, err error) {
@@ -52,14 +60,6 @@ func New() (s *Server, err error) {
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
 	return s, nil
-}
-
-// Server wraps an httptest.Server to provide a default handler for auth0 requests.
-type Server struct {
-	srv  *httptest.Server
-	mux  *http.ServeMux
-	URL  *url.URL
-	keys *rsa.PrivateKey
 }
 
 // Config returns an AuthConfig that can be used to setup middleware.

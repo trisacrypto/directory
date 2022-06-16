@@ -100,8 +100,9 @@ func TestAuthenticate(t *testing.T) {
 	}
 
 	// Test anonymous user (no authorization header in request)
-	c, s, w := createTestContext(http.MethodGet, "/", nil, authenticate, success)
-	rep, code, err := doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w := createTestContext(http.MethodGet, "/", nil, authenticate, success)
+	rep, code, err := doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusOK, code)
 	require.Contains(t, rep, "success", "response does not contain a success field")
@@ -112,9 +113,10 @@ func TestAuthenticate(t *testing.T) {
 	require.True(t, claims.IsAnonymous(), "expected anonymous claims on context")
 
 	// Test non-bearer token
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, success)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, success)
 	c.Request.Header.Set("authorization", "token foo")
-	_, code, err = doRequest(s, w, c)
+	_, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusOK, code)
 
@@ -126,9 +128,10 @@ func TestAuthenticate(t *testing.T) {
 	token, err := ioutil.ReadFile("testdata/invalid_token.txt")
 	require.NoError(t, err, "could not read invalid token fixture")
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, success)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, success)
 	c.Request.Header.Set("authorization", "Bearer "+string(token))
-	rep, code, err = doRequest(s, w, c)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusForbidden, code)
 	require.Contains(t, rep, "error", "expected error on JSON response")
@@ -157,9 +160,9 @@ func TestAuthenticatePublicKeys(t *testing.T) {
 	require.NoError(t, err, "could not create valid token")
 
 	// Execute request expecting success
-	c, s, w := createTestContext(http.MethodGet, "/", nil, authenticate, success)
+	c, mux, w := createTestContext(http.MethodGet, "/", nil, authenticate, success)
 	c.Request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tks))
-	rep, code, err := doRequest(s, w, c)
+	rep, code, err := doRequest(mux, w, c)
 
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusOK, code)
@@ -177,8 +180,9 @@ func TestAuthorize(t *testing.T) {
 	}
 
 	// Test unauthorized no claims on context
-	c, s, w := createTestContext(http.MethodGet, "/", nil, authorize, success)
-	rep, code, err := doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w := createTestContext(http.MethodGet, "/", nil, authorize, success)
+	rep, code, err := doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -190,8 +194,9 @@ func TestAuthorize(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -203,8 +208,9 @@ func TestAuthorize(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -216,8 +222,9 @@ func TestAuthorize(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -229,8 +236,9 @@ func TestAuthorize(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, authorize, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusOK, code)
 	require.Contains(t, rep, "success", "response does not contain a success field")
@@ -250,8 +258,9 @@ func TestUserInfo(t *testing.T) {
 	}
 
 	// Test userinfo no claims on context
-	c, s, w := createTestContext(http.MethodGet, "/", nil, middleware, success)
-	rep, code, err := doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w := createTestContext(http.MethodGet, "/", nil, middleware, success)
+	rep, code, err := doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -263,8 +272,9 @@ func TestUserInfo(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusUnauthorized, code)
 	require.Contains(t, rep, "error", "response does not contain json error")
@@ -276,8 +286,9 @@ func TestUserInfo(t *testing.T) {
 		c.Next()
 	}
 
-	c, s, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
-	rep, code, err = doRequest(s, w, c)
+	// Create context, gin.Engine, and http test writer to execute tests
+	c, srv, w = createTestContext(http.MethodGet, "/", nil, authenticate, middleware, success)
+	rep, code, err = doRequest(srv, w, c)
 	require.NoError(t, err, "could not handle test request")
 	require.Equal(t, http.StatusOK, code)
 	require.Contains(t, rep, "success", "response does not contain a success field")
@@ -301,8 +312,8 @@ func createTestContext(method, target string, body io.Reader, handlers ...gin.Ha
 	return c, r, w
 }
 
-func doRequest(s *gin.Engine, w *httptest.ResponseRecorder, c *gin.Context) (data map[string]interface{}, code int, err error) {
-	s.HandleContext(c)
+func doRequest(srv *gin.Engine, w *httptest.ResponseRecorder, c *gin.Context) (data map[string]interface{}, code int, err error) {
+	srv.HandleContext(c)
 
 	rep := w.Result()
 	defer rep.Body.Close()
