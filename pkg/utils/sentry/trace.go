@@ -33,7 +33,7 @@ func Init(conf Config) (err error) {
 func TrackPerformance(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		request := fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
-		span := sentry.StartSpan(c.Request.Context(), "http handler", sentry.TransactionName(request))
+		span := sentry.StartSpan(c.Request.Context(), "rest", sentry.TransactionName(request))
 		for k, v := range tags {
 			span.SetTag(k, v)
 		}
