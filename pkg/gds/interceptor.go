@@ -59,7 +59,7 @@ func (s *Service) serverInterceptor(ctx context.Context, in interface{}, info *g
 	// Call the handler to finalize the request and get the response.
 	var span *sentry.Span
 	if s.conf.Sentry.UsePerformanceTracking() {
-		span = sentry.StartSpan(ctx, "grpc handler", sentry.TransactionName(info.FullMethod))
+		span = sentry.StartSpan(ctx, "grpc", sentry.TransactionName(info.FullMethod))
 	}
 	out, err = handler(ctx, in)
 	if s.conf.Sentry.UsePerformanceTracking() {
