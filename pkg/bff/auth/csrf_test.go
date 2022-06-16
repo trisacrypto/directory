@@ -135,7 +135,7 @@ func readJSON(rep *http.Response) (gin.H, error) {
 }
 
 func TestGenerateCSRFToken(t *testing.T) {
-	// Generate 100 tokens and ensure that they do not equal the prevous tokens
+	// Generate 100 tokens and ensure that they do not equal the previous tokens
 	tokens := make([]string, 0, 100)
 	for i := 0; i < 100; i++ {
 		token, err := auth.GenerateCSRFToken()
