@@ -96,7 +96,11 @@ func TestVASPExtra(t *testing.T) {
 	require.Equal(t, "boats are cool", notes["boats"].Text)
 
 	// Attempt to append certificate request IDs
-	for _, cfid := range []string{"b5841869-105f-411c-8722-4045aad72717", "230d5e77-9983-4f1f-80ea-d379d56519af"} {
+	certReqs := []string{
+		"b5841869-105f-411c-8722-4045aad72717",
+		"230d5e77-9983-4f1f-80ea-d379d56519af",
+	}
+	for _, cfid := range certReqs {
 		err = AppendCertReqID(vasp, cfid)
 		require.NoError(t, err)
 	}
@@ -105,6 +109,25 @@ func TestVASPExtra(t *testing.T) {
 	ids, err := GetCertReqIDs(vasp)
 	require.NoError(t, err)
 	require.Len(t, ids, 2)
+	require.Equal(t, certReqs[0], ids[0])
+	require.Equal(t, certReqs[1], ids[1])
+
+	// Attempt to append certificate IDs
+	certs := []string{
+		"c9838f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8",
+		"f8f2349d-f8f8-4f8f-8f8f-f8f8f8f8f8f8",
+	}
+	for _, certID := range certs {
+		err = AppendCertID(vasp, certID)
+		require.NoError(t, err)
+	}
+
+	// Should be able to fetch the certificate IDs
+	ids, err = GetCertIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
+	require.Equal(t, certs[0], ids[0])
+	require.Equal(t, certs[1], ids[1])
 
 	// Verification token should be unchanged
 	token, err = GetAdminVerificationToken(vasp)

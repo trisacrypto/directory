@@ -17,7 +17,7 @@ const MembershipGuideText = [
   {
     stepNumber: 2,
     header: t`complete VASP verification`,
-    description: t`Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet.`,
+    description: t`Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.`,
     buttonText: t`Learn More`
   },
   {
@@ -56,12 +56,12 @@ const MembershipGuide = () => {
                   </Trans>
                 </Heading>
                 <Text as="p" mt={2}>
-                  <Trans id="Learn about the three-step certificaton process">
-                    Learn about the three-step certificaton process
+                  <Trans id="Learn about the three-step process to become a member and verified VASP.">
+                    Learn about the three-step process to become a member and verified VASP.
                   </Trans>
                 </Text>
                 <Text as="p" mt={2}>
-                  <Trans id="and create your account today.">and create your account today.</Trans>
+                  <Trans id="Create your account today.">Create your account today.</Trans>
                 </Text>
               </VStack>
             </Stack>
