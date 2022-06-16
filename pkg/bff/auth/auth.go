@@ -143,7 +143,7 @@ func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin
 			// context. If the token is not valid return a forbidden error.
 			if claims, err = auth0.ValidateToken(c.Request.Context(), tks); err != nil {
 				log.Warn().Err(err).Msg("invalid authorization token")
-				c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse("invalid authorization token"))
+				c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse(ErrInvalidAuthToken))
 				return
 			}
 
@@ -168,17 +168,17 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 		claims, err := GetClaims(c)
 		if err != nil {
 			c.Error(err)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not authorize request"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoAuthorization))
 			return
 		}
 
 		if claims.IsAnonymous() {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("this endpoint requires authentication"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrAuthRequired))
 			return
 		}
 
 		if !claims.HasAllPermissions(permissions...) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("user does not have permission to perform this operation"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoPermission))
 			return
 		}
 
@@ -206,14 +206,14 @@ func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 			if err != nil {
 				c.Error(err)
 			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not identify authenticated user in request"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoAuthUser))
 			return
 		}
 
 		user, err := manager.User.Read(claims.Subject)
 		if err != nil {
 			c.Error(err)
-			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse("could not retrieve user data"))
+			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))
 			return
 		}
 
