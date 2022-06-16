@@ -13,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -153,6 +154,10 @@ func (s *Server) Overview(c *gin.Context) {
 				Status:      testnet.Vasp.Status.String(),
 				CountryCode: testnet.Vasp.Country,
 			}
+		} else {
+			out.TestNet.MemberDetails = api.MemberDetails{
+				Status: pb.VerificationState_NO_VERIFICATION.String(),
+			}
 		}
 	}
 
@@ -173,6 +178,10 @@ func (s *Server) Overview(c *gin.Context) {
 				ID:          mainnet.Vasp.Id,
 				Status:      mainnet.Vasp.Status.String(),
 				CountryCode: mainnet.Vasp.Country,
+			}
+		} else {
+			out.MainNet.MemberDetails = api.MemberDetails{
+				Status: pb.VerificationState_NO_VERIFICATION.String(),
 			}
 		}
 	}
