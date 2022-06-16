@@ -3,6 +3,7 @@ package bff
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,8 @@ import (
 
 const (
 	// TODO: do not hard code this value but make it a configuration
-	DefaultRole = "Organization Collaborator"
+	DefaultRole        = "Organization Collaborator"
+	DoubleCookieMaxAge = 24 * time.Hour
 )
 
 // Login performs post-authentication checks and ensures that the user has the proper
@@ -62,6 +64,15 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	// TODO: deal with user resources (will happen in a different story).
+
+	// Protect the front-end by setting double cookie tokens for CSRF protection.
+	// TODO: should we set expires at to the expiration of the access token? What happens on refresh?
+	expiresAt := time.Now().Add(DoubleCookieMaxAge)
+	if err := auth.SetDoubleCookieToken(c, s.conf.CookieDomain, expiresAt); err != nil {
+		log.Error().Err(err).Msg("could not set double cookie csrf protection")
+		c.JSON(http.StatusInternalServerError, "could not set csrf protection")
+		return
+	}
 
 	// Once work has been performed reply with success no content
 	c.Status(http.StatusNoContent)
