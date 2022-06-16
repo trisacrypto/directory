@@ -57,7 +57,7 @@ type MembersRPC func(ctx context.Context, client members.TRISAMembersClient, net
 // storing the results and errors in a slice of length 2 ([testnet, mainnet]). If the
 // flatten bool is true, then nil values are removed from the slice (though this will
 // make which network returned the result ambiguous).
-func (s *Server) ParallelMembersRequests(ctx context.Context, rpc MembersRPC, flatten bool) (results []proto.Message, errs []error) {
+func (s *Server) ParallelMembersRequests(ctx context.Context, testnetRPC MembersRPC, mainnetRPC MembersRPC, flatten bool) (results []proto.Message, errs []error) {
 	// Create the results and errors slices
 	results = make([]proto.Message, 2)
 	errs = make([]error, 2)
@@ -68,15 +68,19 @@ func (s *Server) ParallelMembersRequests(ctx context.Context, rpc MembersRPC, fl
 	defer cancel()
 	wg.Add(2)
 
-	// Create a closure to execute the rpc
-	closure := func(client members.TRISAMembersClient, idx int, network string) {
+	// Create the closures to execute the rpcs
+	testnetClosure := func(client members.TRISAMembersClient, idx int, network string) {
 		defer wg.Done()
-		results[idx], errs[idx] = rpc(ctx, client, network)
+		results[idx], errs[idx] = testnetRPC(ctx, client, network)
+	}
+	mainnetClosure := func(client members.TRISAMembersClient, idx int, network string) {
+		defer wg.Done()
+		results[idx], errs[idx] = mainnetRPC(ctx, client, network)
 	}
 
 	// execute both requests
-	go closure(s.testnet.members, 0, testnet)
-	go closure(s.mainnet.members, 1, mainnet)
+	go testnetClosure(s.testnet.members, 0, testnet)
+	go mainnetClosure(s.mainnet.members, 1, mainnet)
 	wg.Wait()
 
 	// flatten rpc and error if requested

@@ -11,6 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -209,28 +210,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 			continue
 		}
 
-		// Build the directory information to return to the user
-		info := &api.VASPMember{
-			Id:                  vasp.Id,
-			RegisteredDirectory: vasp.RegisteredDirectory,
-			CommonName:          vasp.CommonName,
-			Endpoint:            vasp.TrisaEndpoint,
-			Website:             vasp.Website,
-			BusinessCategory:    vasp.BusinessCategory,
-			VaspCategories:      vasp.VaspCategories,
-			VerifiedOn:          vasp.VerifiedOn,
-		}
-
-		// Add other information to the VASP
-		if info.Name, err = vasp.Name(); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
-		}
-
-		if vasp.Entity != nil {
-			info.Country = vasp.Entity.CountryOfRegistration
-		}
-
-		out.Vasps = append(out.Vasps, info)
+		out.Vasps = append(out.Vasps, GetVASPMember(vasp))
 	}
 
 	if err = iter.Error(); err != nil {
@@ -270,10 +250,20 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 		since = time.Now().Add(-time.Hour * 24 * 30)
 	}
 
-	// TODO: Add paramater to fetch details for a specific VASP
-
 	// Create response
 	out = &api.SummaryReply{}
+
+	if in.Vasp != "" {
+		// Fetch the requested VASP if provided
+		var vasp *pb.VASP
+		if vasp, err = s.db.RetrieveVASP(in.Vasp); err != nil {
+			log.Warn().Err(err).Str("vasp_id", in.Vasp).Msg("VASP not found")
+			return nil, status.Error(codes.NotFound, "requested VASP not found")
+		}
+
+		// Add the VASP member details to the response
+		out.Vasp = GetVASPMember(vasp)
+	}
 
 	// Create the VASPs iterator
 	iter := s.db.ListVASPs()
@@ -318,4 +308,33 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	}
 
 	return out, nil
+}
+
+// GetVASPMember is a helper function to construct a VASPMember from a VASP record.
+func GetVASPMember(vasp *pb.VASP) *members.VASPMember {
+	var err error
+
+	info := &api.VASPMember{
+		Id:                  vasp.Id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		Website:             vasp.Website,
+		BusinessCategory:    vasp.BusinessCategory,
+		VaspCategories:      vasp.VaspCategories,
+		VerifiedOn:          vasp.VerifiedOn,
+		Status:              vasp.VerificationStatus,
+	}
+
+	// Try to add the name information
+	if info.Name, err = vasp.Name(); err != nil {
+		log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
+	}
+
+	// Add the country information if available
+	if vasp.Entity != nil {
+		info.Country = vasp.Entity.CountryOfRegistration
+	}
+
+	return info
 }

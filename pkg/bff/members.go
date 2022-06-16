@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -44,13 +45,18 @@ func ConnectMembers(conf config.DirectoryConfig) (_ members.TRISAMembersClient, 
 // GetSummaries makes parallel calls to the members service to get the summary
 // information for both testnet and mainnet. If an endpoint returned an error, then a
 // nil value is returned from this function for that endpoint instead of an error.
-func (s *Server) GetSummaries(ctx context.Context) (testnet *members.SummaryReply, mainnet *members.SummaryReply, err error) {
-	rpc := func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
-		return client.Summary(ctx, &members.SummaryRequest{})
+func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) (testnet *members.SummaryReply, mainnet *members.SummaryReply, err error) {
+	// Create the RPCs with the VASP ID parameters
+	makeRPC := func(req *members.SummaryRequest) MembersRPC {
+		return func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
+			return client.Summary(ctx, req)
+		}
 	}
+	testnetRPC := makeRPC(&members.SummaryRequest{Vasp: testnetID})
+	mainnetRPC := makeRPC(&members.SummaryRequest{Vasp: mainnetID})
 
 	// Perform the parallel requests
-	results, errs := s.ParallelMembersRequests(ctx, rpc, false)
+	results, errs := s.ParallelMembersRequests(ctx, testnetRPC, mainnetRPC, false)
 	if len(errs) != 2 || len(results) != 2 {
 		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
 	}
@@ -78,16 +84,27 @@ func (s *Server) GetSummaries(ctx context.Context) (testnet *members.SummaryRepl
 
 // Overview endpoint is an authenticated endpoint that requires the read:vasp permission.
 func (s *Server) Overview(c *gin.Context) {
-	// TODO: Retrieve the user claims and retrieve the VASP details
+	var err error
+
+	// Get the bff claims from the context
+	var claims *auth.Claims
+	if claims, err = auth.GetClaims(c); err != nil {
+		log.Error().Err(err).Msg("unable to retrieve bff claims from context")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Extract the VASP IDs from the claims
+	testnetID := claims.VASP["testnet"]
+	mainnetID := claims.VASP["mainnet"]
 
 	out := api.OverviewReply{
-		TestNet:      api.NetworkOverview{},
-		MainNet:      api.NetworkOverview{},
-		Organization: api.VaspDetails{},
+		OrgID:   claims.OrgID,
+		TestNet: api.NetworkOverview{},
+		MainNet: api.NetworkOverview{},
 	}
 
 	// Get the status for both testnet and mainnet
-	var err error
 	var testnetStatus, mainnetStatus *gds.ServiceState
 	if testnetStatus, mainnetStatus, err = s.GetStatuses(c); err != nil {
 		log.Error().Err(err).Msg("unable to retrieve status information")
@@ -110,7 +127,7 @@ func (s *Server) Overview(c *gin.Context) {
 
 	// Get the summaries for both testnet and mainnet
 	var testnet, mainnet *members.SummaryReply
-	testnet, mainnet, err = s.GetSummaries(context.Background())
+	testnet, mainnet, err = s.GetSummaries(context.Background(), testnetID, mainnetID)
 	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve summary information")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
@@ -122,12 +139,22 @@ func (s *Server) Overview(c *gin.Context) {
 		out.TestNet.Vasps = int(testnet.Vasps)
 		out.TestNet.CertificatesIssued = int(testnet.CertificatesIssued)
 		out.TestNet.NewMembers = int(testnet.NewMembers)
+		out.TestNet.MemberDetails = api.MemberDetails{
+			ID:          testnet.Vasp.Id,
+			Status:      testnet.Vasp.Status.String(),
+			CountryCode: testnet.Vasp.Country,
+		}
 	}
 
 	if mainnet != nil {
 		out.MainNet.Vasps = int(mainnet.Vasps)
 		out.MainNet.CertificatesIssued = int(mainnet.CertificatesIssued)
 		out.MainNet.NewMembers = int(mainnet.NewMembers)
+		out.MainNet.MemberDetails = api.MemberDetails{
+			ID:          mainnet.Vasp.Id,
+			Status:      mainnet.Vasp.Status.String(),
+			CountryCode: mainnet.Vasp.Country,
+		}
 	}
 
 	c.JSON(http.StatusOK, out)

@@ -62,6 +62,9 @@ message VASPMember {
 message SummaryRequest {
     // The start date for determining how many members are new - optional
     string since = 1;
+
+    // The VASP ID to retrieve details for - optional
+    string vasp = 2;
 }
 
 // SummaryReply returns summary info about the members in the Directory Service.
@@ -70,4 +73,7 @@ message SummaryReply {
     int32 vasps = 1;
     int32 certificates_issued = 2;
     int32 new_members = 3;
+
+    // Details for the requested VASP
+    VASPMember vasp = 4;
 }
