@@ -11,7 +11,6 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -311,7 +310,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 }
 
 // GetVASPMember is a helper function to construct a VASPMember from a VASP record.
-func GetVASPMember(vasp *pb.VASP) *members.VASPMember {
+func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
 	var err error
 
 	info := &api.VASPMember{
