@@ -175,6 +175,56 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 	return nil
 }
 
+// GetCertIDs returns the list of associated Certificate IDs for the VASP record.
+func GetCertIDs(vasp *pb.VASP) (_ []string, err error) {
+	// If the extra data is nil, return nil (no certificates).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetCertificates(), nil
+}
+
+// AppendCertID adds the certificate ID to the VASP if it's not already added.
+func AppendCertID(vasp *pb.VASP, certID string) (err error) {
+	// Entry must be non-nil.
+	if certID == "" {
+		return errors.New("cannot append empty certificate ID to extra")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.Certificates = make([]string, 0, 1)
+	}
+
+	// Do not allow duplicate certificates to be appended.
+	for _, containsID := range extra.Certificates {
+		if certID == containsID {
+			// Do not return an error.
+			return nil
+		}
+	}
+
+	// Append certificate ID to the slice.
+	extra.Certificates = append(extra.Certificates, certID)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Defaults to use for the certificate request parameters if they can't be inferred.
 const (
 	crDefaultOrganization        = "TRISA Member VASP"
