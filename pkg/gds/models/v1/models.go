@@ -266,6 +266,7 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 	}
 
 	// Populate the location information, if available.
+	// TODO: how do we extract this information without relying on address lines?
 	if len(vasp.Entity.GeographicAddresses) > 0 {
 		address := vasp.Entity.GeographicAddresses[0]
 		localityName = address.TownLocationName

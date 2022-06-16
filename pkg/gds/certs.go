@@ -150,18 +150,23 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err er
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
+	// Create the params for the Sectigo profile (e.g. TestNet vs MainNet certificate profile)
 	profile := s.certs.Profile()
 	var params map[string]string
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
+		// Extended params are available for the MainNet profile
 		params = r.Params
 		if params == nil {
 			log.Error().Str("vasp", vasp.Id).Str("certreq", r.Id).Msg("certificate request params are nil")
 			return errors.New("no params are available on the certificate request")
 		}
 	} else {
+		// Do not create extended paramters for TestNet profile
 		params = make(map[string]string)
 	}
 
+	// Update params with required values for both TestNet and MainNet
+	// TODO: allow additional "dNSName" for certs seperated by semicolon
 	params["commonName"] = r.CommonName
 	params["dNSName"] = r.CommonName
 	params["pkcs12Password"] = string(pkcs12Password)
