@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -34,9 +35,12 @@ type Config struct {
 
 // AuthConfig handles Auth0 configuration and authentication
 type AuthConfig struct {
-	Issuer        string        `split_words:"true" required:"true"`
+	Domain        string        `split_words:"true" required:"true"`
 	Audience      string        `split_words:"true" required:"true"`
 	ProviderCache time.Duration `split_words:"true" default:"5m"`
+	ClientID      string        `split_words:"true"`
+	ClientSecret  string        `split_words:"true"`
+	Testing       bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
@@ -125,36 +129,38 @@ func (c AuthConfig) Validate() error {
 	if c.ProviderCache == 0 {
 		return errors.New("invalid configuration: auth0 provider cache duration should be longer than 0")
 	}
+
+	// If testing is false then the client id and secret are required
+	if !c.Testing {
+		if c.ClientID == "" {
+			return errors.New("invalid configuration: auth0 client id is required in production")
+		}
+
+		if c.ClientSecret == "" {
+			return errors.New("invalid configuration: auth0 client secret is required in production")
+		}
+	}
+
 	return nil
 }
 
 func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
-	if c.Issuer == "" {
+	if c.Domain == "" {
 		return nil, errors.New("invalid configuration: auth0 domain must be configured")
 	}
 
-	// Ensure the domain or url has a trailing slash
-	domain := c.Issuer
-	if !strings.HasSuffix(c.Issuer, "/") {
-		domain += "/"
-	}
-
-	// Attempt to parse the domain as a complete URL with a scheme.
-	if u, err = url.Parse(domain); err == nil {
-		// If a valid URL is passed in with the expected scheme and path, return it.
-		if u.Scheme != "" && u.Path == "/" && u.Host != "" {
-			return u, nil
-		}
-
-		// If an invalid URL is passed in with an unexpected scheme or path, error.
-		if u.Scheme != "" && (u.Path != "" || u.Host == "") {
-			return nil, errors.New("invalid configuration: could not parse issuer url")
-		}
+	// Do not allow the domain to be a URL -- this is a very basic check
+	if strings.HasSuffix(c.Domain, "/") || strings.HasPrefix(c.Domain, "http://") || strings.HasPrefix(c.Domain, "https://") {
+		return nil, errors.New("invalid configuration: auth0 domain must not be a url or have a trailing slash")
 	}
 
 	// Default to the HTTPS scheme and reparse domain only configuration.
-	if u, err = url.Parse("https://" + domain); err != nil {
+	if u, err = url.Parse("https://" + c.Domain + "/"); err != nil {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
+}
+
+func (c AuthConfig) ClientCredentials() management.Option {
+	return management.WithClientCredentials(c.ClientID, c.ClientSecret)
 }
