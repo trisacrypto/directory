@@ -2,7 +2,6 @@ package bff
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -41,8 +40,6 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPC, flatten bool)
 	go closure(s.testnet, 0, testnet)
 	go closure(s.mainnet, 1, mainnet)
 	wg.Wait()
-
-	fmt.Println(results)
 
 	// flatten rpc and error if requested
 	if flatten {
