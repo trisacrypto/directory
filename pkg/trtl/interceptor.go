@@ -35,6 +35,11 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	start := time.Now()
 	panicked := true
 
+	// Set the service tag
+	if t.conf.Sentry.UseSentry() {
+		sentry.CurrentHub().Scope().SetTag("service", "trtl")
+	}
+
 	// Recover from panics in the handler.
 	defer func() {
 		if r := recover(); r != nil || panicked {
@@ -74,7 +79,7 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	// Call the handler to finalize the request and get the response.
 	var span *sentry.Span
 	if t.conf.Sentry.UsePerformanceTracking() {
-		span = sentry.StartSpan(ctx, info.FullMethod)
+		span = sentry.StartSpan(ctx, "grpc handler", sentry.TransactionName(info.FullMethod))
 	}
 	out, err = handler(ctx, in)
 	if t.conf.Sentry.UsePerformanceTracking() {
