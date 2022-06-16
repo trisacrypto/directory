@@ -6,6 +6,8 @@
         "@hookform/devtools": "^4.1.0",
         "@hookform/resolvers": "^2.8.5",
         "@react-pdf/renderer": "^2.0.21",
+        "@sentry/react": "^7.1.1",
+        "@sentry/tracing": "^7.1.1",
         "@testing-library/jest-dom": "^5.11.4",
         "@testing-library/react": "^11.1.0",
         "@testing-library/user-event": "^12.1.10",

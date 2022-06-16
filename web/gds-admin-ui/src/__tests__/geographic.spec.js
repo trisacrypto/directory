@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Industrial
+                    Clothing
                      
                     <br />
-                    Kids
+                    Automotive
                      
                     <br />
                     23
                      
-                    Bradtke Mills
+                    Daniel Courts
                     <br />
-                    South Bend
+                    Union City
                      
                     
                      
                     MA
                      
-                    83602
+                    72763-4767
                       
                     <br />
                     US

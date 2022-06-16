@@ -19,7 +19,3 @@
 fixtures/
 .env
 .secrets
-
-# API Testing
-.access_token_cached
-api.py
