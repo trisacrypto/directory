@@ -139,10 +139,20 @@ func (s *Server) Overview(c *gin.Context) {
 		out.TestNet.Vasps = int(testnet.Vasps)
 		out.TestNet.CertificatesIssued = int(testnet.CertificatesIssued)
 		out.TestNet.NewMembers = int(testnet.NewMembers)
-		out.TestNet.MemberDetails = api.MemberDetails{
-			ID:          testnet.Vasp.Id,
-			Status:      testnet.Vasp.Status.String(),
-			CountryCode: testnet.Vasp.Country,
+
+		if testnetID != "" {
+			// Check if we received the VASP details from the testnet
+			if testnet.Vasp == nil {
+				log.Error().Msg("expected VASP details from testnet Summary RPC")
+				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve testnet VASP details")))
+				return
+			}
+
+			out.TestNet.MemberDetails = api.MemberDetails{
+				ID:          testnet.Vasp.Id,
+				Status:      testnet.Vasp.Status.String(),
+				CountryCode: testnet.Vasp.Country,
+			}
 		}
 	}
 
@@ -150,10 +160,20 @@ func (s *Server) Overview(c *gin.Context) {
 		out.MainNet.Vasps = int(mainnet.Vasps)
 		out.MainNet.CertificatesIssued = int(mainnet.CertificatesIssued)
 		out.MainNet.NewMembers = int(mainnet.NewMembers)
-		out.MainNet.MemberDetails = api.MemberDetails{
-			ID:          mainnet.Vasp.Id,
-			Status:      mainnet.Vasp.Status.String(),
-			CountryCode: mainnet.Vasp.Country,
+
+		if mainnetID != "" {
+			// Check if we received the VASP details from the mainnet
+			if mainnet.Vasp == nil {
+				log.Error().Msg("could not retrieve mainnet VASP details")
+				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve mainnet VASP details")))
+				return
+			}
+
+			out.MainNet.MemberDetails = api.MemberDetails{
+				ID:          mainnet.Vasp.Id,
+				Status:      mainnet.Vasp.Status.String(),
+				CountryCode: mainnet.Vasp.Country,
+			}
 		}
 	}
 
