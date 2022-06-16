@@ -139,9 +139,19 @@ func (s *Admin) Shutdown() (err error) {
 }
 
 func (s *Admin) setupRoutes() (err error) {
-	var tracing gin.HandlerFunc
+	var (
+		tags      gin.HandlerFunc
+		tracing   gin.HandlerFunc
+		adminTags map[string]string
+	)
+
+	if s.svc.conf.Sentry.UseSentry() {
+		adminTags = map[string]string{"service": "admin"}
+		tags = sentry.UseTags(adminTags)
+	}
+
 	if s.svc.conf.Sentry.UsePerformanceTracking() {
-		tracing = sentry.TrackPerformance()
+		tracing = sentry.TrackPerformance(adminTags)
 	}
 
 	// Application Middleware
@@ -157,6 +167,9 @@ func (s *Admin) setupRoutes() (err error) {
 			Repanic:         true,
 			WaitForDelivery: false,
 		}),
+
+		// Add searchable tags to the sentry context.
+		tags,
 
 		// Tracing helps us with our peformance metrics and should be as early in the
 		// chain as possible. It is after recovery to ensure trace panics recover.
