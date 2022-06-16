@@ -115,19 +115,26 @@ func (s *bffTestSuite) SetupSuite() {
 	s.bff, err = bff.New(conf)
 	require.NoError(err, "could not create the bff")
 
-	// Add the GDS mock clients to the BFF server
+	// Create the mock testnet client
+	testnetClient := &bff.GDSClient{}
 	tnGDSClient, err := s.testnet.gds.Client()
 	require.NoError(err, "could not create testnet GDS client")
-	mnGDSClient, err := s.mainnet.gds.Client()
-	require.NoError(err, "could not create mainnet GDS client")
-	s.bff.SetGDSClients(tnGDSClient, mnGDSClient)
-
-	// Add the members mock clients to the BFF server
 	tnMembersClient, err := s.testnet.members.Client()
 	require.NoError(err, "could not create testnet members client")
+	testnetClient.SetGDS(tnGDSClient)
+	testnetClient.SetMembers(tnMembersClient)
+
+	// Create the mock mainnet client
+	mainnetClient := &bff.GDSClient{}
+	mnGDSClient, err := s.mainnet.gds.Client()
+	require.NoError(err, "could not create mainnet GDS client")
 	mnMembersClient, err := s.mainnet.members.Client()
 	require.NoError(err, "could not create mainnet members client")
-	s.bff.SetMembersClients(tnMembersClient, mnMembersClient)
+	mainnetClient.SetGDS(mnGDSClient)
+	mainnetClient.SetMembers(mnMembersClient)
+
+	// Add the mock clients to the mock
+	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
 	// Direct connect the BFF server to the database
 	db, err := db.DirectConnect(s.trtlsock.Conn)

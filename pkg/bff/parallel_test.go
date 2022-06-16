@@ -21,13 +21,13 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 
 	// Setup the test to execute requests against the status endpoint
 	require := s.Require()
-	rpc := func(ctx context.Context, client gds.TRISADirectoryClient, network string) (rep proto.Message, err error) {
+	rpc := func(ctx context.Context, client *GDSClient, network string) (rep proto.Message, err error) {
 		// NOTE: for the tests to pass, this must return nil, err and rep, nil instead
 		// of directly returning the results from client.Status(). That's because the
 		// rep nil will be (*api.ServiceState)(nil) not (protoreflect.Message)(nil) and
 		// the non-interface type will not be flattened without a more extensive type
 		// check or the use of reflection.
-		if rep, err = client.Status(ctx, &gds.HealthCheck{}); err != nil {
+		if rep, err = client.GetGDS().Status(ctx, &gds.HealthCheck{}); err != nil {
 			return nil, err
 		}
 		return rep, nil

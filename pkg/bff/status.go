@@ -88,8 +88,8 @@ func (s *Server) Status(c *gin.Context) {
 // GetStatuses makes parallel calls to the directory service to get the status
 // information for both testnet and mainnet.
 func (s *Server) GetStatuses(ctx context.Context) (testnet *gds.ServiceState, mainnet *gds.ServiceState, err error) {
-	rpc := func(ctx context.Context, client gds.TRISADirectoryClient, network string) (rep proto.Message, err error) {
-		return client.Status(ctx, &gds.HealthCheck{})
+	rpc := func(ctx context.Context, client *GDSClient, network string) (rep proto.Message, err error) {
+		return client.gds.Status(ctx, &gds.HealthCheck{})
 	}
 
 	// Perform the parallel requests

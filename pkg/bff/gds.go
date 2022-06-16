@@ -81,9 +81,9 @@ func (s *Server) Lookup(c *gin.Context) {
 	req := &gds.LookupRequest{Id: params.ID, CommonName: params.CommonName}
 
 	// Create an RPC func for making a parallel GDS request
-	lookup := func(ctx context.Context, client gds.TRISADirectoryClient, network string) (_ proto.Message, err error) {
+	lookup := func(ctx context.Context, client *GDSClient, network string) (_ proto.Message, err error) {
 		var rep *gds.LookupReply
-		if rep, err = client.Lookup(ctx, req); err != nil {
+		if rep, err = client.gds.Lookup(ctx, req); err != nil {
 			// If the code is not found then do not return an error, just no result.
 			serr, _ := status.FromError(err)
 			if serr.Code() != codes.NotFound {

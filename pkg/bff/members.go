@@ -45,12 +45,12 @@ func ConnectMembers(conf config.DirectoryConfig) (_ members.TRISAMembersClient, 
 // information for both testnet and mainnet. If an endpoint returned an error, then a
 // nil value is returned from this function for that endpoint instead of an error.
 func (s *Server) GetSummaries(ctx context.Context) (testnet *members.SummaryReply, mainnet *members.SummaryReply, err error) {
-	rpc := func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
-		return client.Summary(ctx, &members.SummaryRequest{})
+	rpc := func(ctx context.Context, client *GDSClient, network string) (rep proto.Message, err error) {
+		return client.members.Summary(ctx, &members.SummaryRequest{})
 	}
 
 	// Perform the parallel requests
-	results, errs := s.ParallelMembersRequests(ctx, rpc, false)
+	results, errs := s.ParallelGDSRequests(ctx, rpc, false)
 	if len(errs) != 2 || len(results) != 2 {
 		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
 	}

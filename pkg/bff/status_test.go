@@ -125,6 +125,8 @@ func (s *bffTestSuite) TestGetStatuses() {
 	// Test both statuses were returned
 	testnet, mainnet, err := s.bff.GetStatuses(context.TODO())
 	require.NoError(err, "could not get statuses")
+	require.NotNil(testnet)
+	require.NotNil(mainnet)
 	require.Equal(gds.ServiceState_HEALTHY, testnet.Status, "testnet statuses did not match")
 	require.Equal(gds.ServiceState_UNHEALTHY, mainnet.Status, "mainnet statuses did not match")
 
@@ -132,6 +134,7 @@ func (s *bffTestSuite) TestGetStatuses() {
 	s.mainnet.gds.OnStatus = errored
 	testnet, mainnet, err = s.bff.GetStatuses(context.TODO())
 	require.NoError(err, "could not get statuses")
+	require.NotNil(testnet)
 	require.Equal(gds.ServiceState_HEALTHY, testnet.Status, "testnet status did not match")
 	require.Nil(mainnet, "mainnet status should be nil")
 
@@ -141,6 +144,7 @@ func (s *bffTestSuite) TestGetStatuses() {
 	testnet, mainnet, err = s.bff.GetStatuses(context.TODO())
 	require.NoError(err, "could not get statuses")
 	require.Nil(testnet, "testnet status should be nil")
+	require.NotNil(mainnet)
 	require.Equal(gds.ServiceState_UNHEALTHY, mainnet.Status, "mainnet summaries did not match")
 
 	// Test both statuses were not returned
