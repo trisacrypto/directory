@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	. "github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -515,7 +514,7 @@ func TestNewCertificate(t *testing.T) {
 		Id: "b5841869-105f-411c-8722-4045aad72717",
 	}
 
-	certReq := &models.CertificateRequest{
+	certReq := &CertificateRequest{
 		Id: "c8f8f8f8-f8f8-f8f8-f8f8-f8f8f8f8f8f8",
 	}
 
@@ -539,7 +538,7 @@ func TestNewCertificate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, certReq.Id, cert.Request)
 	require.Equal(t, vasp.Id, cert.Vasp)
-	require.Equal(t, models.CertificateState_ISSUED, cert.Status)
+	require.Equal(t, CertificateState_ISSUED, cert.Status)
 	require.True(t, proto.Equal(vasp.IdentityCertificate, cert.Details))
 }
 
