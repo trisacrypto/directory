@@ -8,7 +8,7 @@ import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import { t } from '@lingui/macro';
-
+import { logUserInBff } from 'modules/auth/login/auth.service';
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
   const { auth0GetUser } = useCustomAuth0();
@@ -26,6 +26,8 @@ const CallbackPage: React.FC = () => {
         if (getUserInfo && getUserInfo?.email_verified) {
           setCookie('access_token', accessToken);
           setCookie('user_locale', getUserInfo?.locale);
+          const getUser = await logUserInBff();
+          console.log('getUser', getUser);
           const userInfo: TUser = {
             isLoggedIn: true,
             user: {
