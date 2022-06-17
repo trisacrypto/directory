@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	. "github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -295,6 +296,40 @@ func TestReviewNotes(t *testing.T) {
 	require.Equal(t, "jetskis are loud", notes["jetskis"].Text)
 }
 
+func TestCertIDs(t *testing.T) {
+	vasp := &pb.VASP{}
+
+	// No extra, Get should return nil
+	ids, err := GetCertIDs(vasp)
+	require.NoError(t, err)
+	require.Empty(t, ids)
+
+	// Cannot append an empty ID
+	err = AppendCertID(vasp, "")
+	require.EqualError(t, err, "cannot append empty certificate ID to extra")
+
+	// Append an ID from empty
+	err = AppendCertID(vasp, "1df61840-7033-40fb-8ce9-538c87e242f5")
+	require.NoError(t, err)
+	ids, err = GetCertIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 1)
+
+	// Append an ID with data already inside
+	err = AppendCertID(vasp, "9676bf6a-ffdb-4185-8fa5-87cdae6f6eef")
+	require.NoError(t, err)
+	ids, err = GetCertIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
+
+	// Do not allow duplicate IDs
+	err = AppendCertID(vasp, "9676bf6a-ffdb-4185-8fa5-87cdae6f6eef")
+	require.NoError(t, err)
+	ids, err = GetCertIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 2)
+}
+
 func TestCertReqIDs(t *testing.T) {
 	vasp := &pb.VASP{}
 
@@ -473,6 +508,39 @@ func TestVeriedContacts(t *testing.T) {
 
 	contacts = VerifiedContacts(vasp)
 	require.Len(t, contacts, 2)
+}
+
+func TestNewCertificate(t *testing.T) {
+	vasp := &pb.VASP{
+		Id: "b5841869-105f-411c-8722-4045aad72717",
+	}
+
+	certReq := &models.CertificateRequest{
+		Id: "c8f8f8f8-f8f8-f8f8-f8f8-f8f8f8f8f8f8",
+	}
+
+	// Should not be able to create a certificate with a nil vasp
+	_, err := NewCertificate(nil, certReq)
+	require.Error(t, err)
+
+	// Should not be able to create a certificate with a nil request
+	_, err = NewCertificate(vasp, nil)
+	require.Error(t, err)
+
+	// Should not be able to create a certificate without an identity certificate on the vasp
+	_, err = NewCertificate(vasp, certReq)
+	require.Error(t, err)
+
+	// Certificate correctly created
+	vasp.IdentityCertificate = &pb.Certificate{
+		Data: []byte("cert data"),
+	}
+	cert, err := NewCertificate(vasp, certReq)
+	require.NoError(t, err)
+	require.Equal(t, certReq.Id, cert.Request)
+	require.Equal(t, vasp.Id, cert.Vasp)
+	require.Equal(t, models.CertificateState_ISSUED, cert.Status)
+	require.True(t, proto.Equal(vasp.IdentityCertificate, cert.Details))
 }
 
 func TestNewCertificateRequest(t *testing.T) {

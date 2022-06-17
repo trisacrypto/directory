@@ -35,6 +35,11 @@ type MockState struct {
 	RetrieveCertReqInvoked bool
 	UpdateCertReqInvoked   bool
 	DeleteCertReqInvoked   bool
+	ListCertInvoked        bool
+	CreateCertInvoked      bool
+	RetrieveCertInvoked    bool
+	UpdateCertInvoked      bool
+	DeleteCertInvoked      bool
 	ReindexInvoked         bool
 	BackupInvoked          bool
 }
@@ -59,11 +64,16 @@ type MockDB struct {
 	OnDeleteVASP      func(id string) error
 	OnListVASPs       func() iterator.DirectoryIterator
 	OnSearchVASPs     func(query map[string]interface{}) ([]*pb.VASP, error)
-	OnListCertReqs    func() iterator.CertificateIterator
+	OnListCertReqs    func() iterator.CertificateRequestIterator
 	OnCreateCertReq   func(r *models.CertificateRequest) (string, error)
 	OnRetrieveCertReq func(id string) (*models.CertificateRequest, error)
 	OnUpdateCertReq   func(r *models.CertificateRequest) error
 	OnDeleteCertReq   func(id string) error
+	OnListCerts       func() iterator.CertificateIterator
+	OnCreateCert      func(c *models.Certificate) (string, error)
+	OnRetrieveCert    func(id string) (*models.Certificate, error)
+	OnUpdateCert      func(c *models.Certificate) error
+	OnDeleteCert      func(id string) error
 	OnReindex         func() error
 	OnBackup          func(string) error
 }
@@ -123,7 +133,7 @@ func (m *MockDB) SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error) {
 	return m.OnSearchVASPs(query)
 }
 
-func (m *MockDB) ListCertReqs() iterator.CertificateIterator {
+func (m *MockDB) ListCertReqs() iterator.CertificateRequestIterator {
 	state.ListCertReqsInvoked = true
 	return m.OnListCertReqs()
 }
@@ -146,6 +156,31 @@ func (m *MockDB) UpdateCertReq(r *models.CertificateRequest) error {
 func (m *MockDB) DeleteCertReq(id string) error {
 	state.DeleteCertReqInvoked = true
 	return m.OnDeleteCertReq(id)
+}
+
+func (m *MockDB) ListCerts() iterator.CertificateIterator {
+	state.ListCertInvoked = true
+	return m.OnListCerts()
+}
+
+func (m *MockDB) CreateCert(c *models.Certificate) (string, error) {
+	state.CreateCertInvoked = true
+	return m.OnCreateCert(c)
+}
+
+func (m *MockDB) RetrieveCert(id string) (*models.Certificate, error) {
+	state.RetrieveCertInvoked = true
+	return m.OnRetrieveCert(id)
+}
+
+func (m *MockDB) UpdateCert(c *models.Certificate) error {
+	state.UpdateCertInvoked = true
+	return m.OnUpdateCert(c)
+}
+
+func (m *MockDB) DeleteCert(id string) error {
+	state.DeleteCertInvoked = true
+	return m.OnDeleteCert(id)
 }
 
 func (m *MockDB) Reindex() error {

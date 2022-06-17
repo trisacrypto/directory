@@ -38,6 +38,24 @@ func TestWire(t *testing.T) {
 	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", vasp.Id)
 	require.NoError(t, vasp.Validate(false))
 
+	// Test unmarshal certificates
+	in, err = ioutil.ReadFile("testdata/certs/34d3f5f8-f9f8-4f8f-8f8f-f9f8f9f8f8f8.json")
+	require.NoError(t, err)
+	out, err = RemarshalJSON(NamespaceCerts, in)
+	require.NoError(t, err)
+	msg, err = UnmarshalProto(NamespaceCerts, out)
+	require.NoError(t, err)
+	cert, ok := msg.(*models.Certificate)
+	require.True(t, ok)
+
+	// Make sure Ceritificate is valid
+	require.Equal(t, "34d3f5f8-f9f8-4f8f-8f8f-f9f8f9f8f8f8", cert.Id)
+	require.Equal(t, "6764da6f-f9f8-4f8f-8f8f-f9f8f9f8f8f8", cert.Request)
+	require.Equal(t, "723f46ac-f9f8-4f8f-8f8f-f9f8f9f8f8f8", cert.Vasp)
+	require.Equal(t, models.CertificateState_ISSUED, cert.Status)
+	require.NotNil(t, cert.Details)
+	require.Equal(t, "2021-01-27T18:29:07Z", cert.Details.NotBefore)
+
 	// Test unmarshal certificate requests
 	in, err = ioutil.ReadFile("testdata/certreqs/87657b4d-e72c-4526-9332-c8fc56adb367.json")
 	require.NoError(t, err)

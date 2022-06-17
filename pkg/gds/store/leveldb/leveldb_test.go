@@ -15,6 +15,7 @@ import (
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 type leveldbTestSuite struct {
@@ -140,6 +141,100 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 }
 
 func (s *leveldbTestSuite) TestCertificateStore() {
+	// Load the VASP record from testdata
+	data, err := ioutil.ReadFile("../testdata/cert.json")
+	s.NoError(err)
+
+	cert := &models.Certificate{}
+	err = protojson.Unmarshal(data, cert)
+	s.NoError(err)
+
+	// Verify the certificate is loaded correctly
+	s.Empty(cert.Id)
+	s.NotEmpty(cert.Request)
+	s.NotEmpty(cert.Vasp)
+	s.Equal(models.CertificateState_ISSUED, cert.Status)
+	s.NotEmpty(cert.Details)
+	s.NotEmpty(cert.Details.NotBefore)
+	s.NotEmpty(cert.Details.NotAfter)
+
+	// Attempt to Create the Cert
+	id, err := s.db.CreateCert(cert)
+	s.NoError(err)
+
+	// Attempt to Retrieve the Cert
+	crr, err := s.db.RetrieveCert(id)
+	s.NoError(err)
+	s.Equal(id, crr.Id)
+	s.Equal(cert.Request, crr.Request)
+	s.Equal(cert.Vasp, crr.Vasp)
+	s.Equal(cert.Status, crr.Status)
+	s.True(proto.Equal(cert.Details, crr.Details))
+
+	// Attempt to save a certificate with an ID on it
+	icrr := &models.Certificate{
+		Id:      uuid.New().String(),
+		Request: crr.Request,
+		Vasp:    crr.Vasp,
+		Status:  models.CertificateState_ISSUED,
+		Details: crr.Details,
+	}
+	_, err = s.db.CreateCert(icrr)
+	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
+
+	// Update the Cert
+	crr.Status = models.CertificateState_REVOKED
+	err = s.db.UpdateCert(crr)
+	s.NoError(err)
+
+	crr, err = s.db.RetrieveCert(id)
+	s.NoError(err)
+	s.Equal(id, crr.Id)
+	s.Equal(models.CertificateState_REVOKED, crr.Status)
+
+	// Attempt to update a certificate with no Id on it
+	cert.Id = ""
+	s.ErrorIs(s.db.UpdateCert(cert), storeerrors.ErrIncompleteRecord)
+
+	// Delete the Cert
+	err = s.db.DeleteCert(id)
+	s.NoError(err)
+	crr, err = s.db.RetrieveCert(id)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	s.Empty(crr)
+
+	// Add a few more certificates
+	for i := 0; i < 10; i++ {
+		crr := &models.Certificate{
+			Request: uuid.New().String(),
+			Vasp:    uuid.New().String(),
+			Status:  models.CertificateState_ISSUED,
+			Details: &pb.Certificate{
+				SerialNumber: []byte(uuid.New().String()),
+			},
+		}
+		_, err := s.db.CreateCert(crr)
+		s.NoError(err)
+	}
+
+	// Test listing all of the certificates
+	certs, err := s.db.ListCerts().All()
+	s.NoError(err)
+	s.Len(certs, 10)
+
+	// Test iterating over all the certificates
+	var niters int
+	iter := s.db.ListCerts()
+	for iter.Next() {
+		s.NotEmpty(iter.Cert())
+		niters++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+	s.Equal(10, niters)
+}
+
+func (s *leveldbTestSuite) TestCertificateRequestStore() {
 	// Load the VASP record from testdata
 	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)

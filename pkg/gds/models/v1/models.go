@@ -225,6 +225,35 @@ func AppendCertID(vasp *pb.VASP, certID string) (err error) {
 	return nil
 }
 
+// NewCertificate creates and returns a certificate associated with a VASP. This will
+// error if the VASP does not contain an identity certificate.
+func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest) (cert *Certificate, err error) {
+	// VASP must be not nil.
+	if vasp == nil {
+		return nil, errors.New("must supply a VASP object for certificate creation")
+	}
+
+	// Certificate request must be not nil.
+	if certRequest == nil {
+		return nil, errors.New("must supply a certificate request for certificate creation")
+	}
+
+	// VASP must contain an identity certificate.
+	if vasp.IdentityCertificate == nil {
+		return nil, errors.New("VASP must contain an identity certificate")
+	}
+
+	cert = &Certificate{
+		Id:      uuid.New().String(),
+		Request: certRequest.Id,
+		Vasp:    vasp.Id,
+		Status:  CertificateState_ISSUED,
+		Details: vasp.IdentityCertificate,
+	}
+
+	return cert, nil
+}
+
 // Defaults to use for the certificate request parameters if they can't be inferred.
 const (
 	crDefaultOrganization        = "TRISA Member VASP"
