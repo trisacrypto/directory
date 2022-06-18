@@ -42,6 +42,7 @@ const Overview: React.FC = () => {
     (async () => {
       try {
         const response = await getMetrics();
+        console.log('response', response);
         setResult(response.data);
       } catch (e: any) {
         if (e.response.status === 401) {
