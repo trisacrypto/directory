@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"encoding/hex"
 	"testing"
 	"time"
 
@@ -518,28 +519,33 @@ func TestNewCertificate(t *testing.T) {
 		Id: "c8f8f8f8-f8f8-f8f8-f8f8-f8f8f8f8f8f8",
 	}
 
+	serial := "30783132333435363738"
+	serialBytes, err := hex.DecodeString(serial)
+	require.NoError(t, err)
+	pub := &pb.Certificate{
+		SerialNumber: serialBytes,
+	}
+
 	// Should not be able to create a certificate with a nil vasp
-	_, err := NewCertificate(nil, certReq)
+	_, err = NewCertificate(nil, certReq, pub)
 	require.Error(t, err)
 
 	// Should not be able to create a certificate with a nil request
-	_, err = NewCertificate(vasp, nil)
+	_, err = NewCertificate(vasp, nil, pub)
 	require.Error(t, err)
 
-	// Should not be able to create a certificate without an identity certificate on the vasp
-	_, err = NewCertificate(vasp, certReq)
+	// Should not be able to create a certificate with nil certificate data
+	_, err = NewCertificate(vasp, certReq, nil)
 	require.Error(t, err)
 
 	// Certificate correctly created
-	vasp.IdentityCertificate = &pb.Certificate{
-		Data: []byte("cert data"),
-	}
-	cert, err := NewCertificate(vasp, certReq)
+	cert, err := NewCertificate(vasp, certReq, pub)
 	require.NoError(t, err)
+	require.Equal(t, serial, cert.Id)
 	require.Equal(t, certReq.Id, cert.Request)
 	require.Equal(t, vasp.Id, cert.Vasp)
 	require.Equal(t, CertificateState_ISSUED, cert.Status)
-	require.True(t, proto.Equal(vasp.IdentityCertificate, cert.Details))
+	require.True(t, proto.Equal(pub, cert.Details))
 }
 
 func TestNewCertificateRequest(t *testing.T) {

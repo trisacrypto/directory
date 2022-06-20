@@ -421,7 +421,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 
 	// Create the certificate record
 	var cert *models.Certificate
-	if cert, err = models.NewCertificate(vasp, r); err != nil {
+	if cert, err = models.NewCertificate(vasp, r, vasp.IdentityCertificate); err != nil {
 		log.Error().Err(err).Msg("could not create certificate record")
 		return
 	}

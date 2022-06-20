@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -225,9 +226,8 @@ func AppendCertID(vasp *pb.VASP, certID string) (err error) {
 	return nil
 }
 
-// NewCertificate creates and returns a certificate associated with a VASP. This will
-// error if the VASP does not contain an identity certificate.
-func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest) (cert *Certificate, err error) {
+// NewCertificate creates and returns a certificate associated with a VASP.
+func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Certificate) (cert *Certificate, err error) {
 	// VASP must be not nil.
 	if vasp == nil {
 		return nil, errors.New("must supply a VASP object for certificate creation")
@@ -238,17 +238,17 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest) (cert *Certi
 		return nil, errors.New("must supply a certificate request for certificate creation")
 	}
 
-	// VASP must contain an identity certificate.
-	if vasp.IdentityCertificate == nil {
-		return nil, errors.New("VASP must contain an identity certificate")
+	// Certificate data must be not nil.
+	if data == nil {
+		return nil, errors.New("must supply certificate data for certificate creation")
 	}
 
 	cert = &Certificate{
-		Id:      uuid.New().String(),
+		Id:      hex.EncodeToString(data.SerialNumber),
 		Request: certRequest.Id,
 		Vasp:    vasp.Id,
 		Status:  CertificateState_ISSUED,
-		Details: vasp.IdentityCertificate,
+		Details: data,
 	}
 
 	return cert, nil
