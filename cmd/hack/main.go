@@ -70,10 +70,14 @@ func main() {
 	// }
 
 	// JOB 5: update Hodlnaut records once again because le sigh.
-	if err = updateHodlnautP2(); err != nil {
+	// if err = updateHodlnautP2(); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// Job 6: reissue trisa.rotational.io certificates
+	if err = reissueRotational(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func makeIdentityCertificate(path, pkcs12password string) (err error) {
@@ -632,5 +636,72 @@ func updateHodlnautP2() (err error) {
 		return err
 	}
 	fmt.Printf("%s with cert req %s udpated\n", vasp.CommonName, certreq.Id)
+	return nil
+}
+
+func reissueRotational() (err error) {
+	var (
+		vasp           *pb.VASP
+		certreq        *models.CertificateRequest
+		pkcs12password string
+	)
+
+	// Step 0: Get Rotational's VASP ID from the Admin UI
+	vaspID := "0ffe693f-9752-45cb-830f-7dbae12d6baf"
+
+	// Step 1: Fetch the VASP record
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return fmt.Errorf("could not find rotational VASP record: %s", err)
+	}
+
+	// Step 2: Create a CertificateRequest
+	if certreq, err = models.NewCertificateRequest(vasp); err != nil {
+		return fmt.Errorf("could not create certificate request: %s", err)
+	}
+
+	// Step 2b: mark the certificate request as ready to submit for CertMan
+	if err = models.UpdateCertificateRequestStatus(
+		certreq,
+		models.CertificateRequestState_READY_TO_SUBMIT,
+		"manually reissuing certificates",
+		"support@rotational.io",
+	); err != nil {
+		return fmt.Errorf("could not mark certificate request ready to submit: %s", err)
+	}
+
+	// Step 3: Create a PKCS12 password and print it out
+	var sm *secrets.SecretManager
+	if sm, err = secrets.New(conf.Secrets); err != nil {
+		return fmt.Errorf("could not connect to secret manager: %s", err)
+	}
+
+	secretType := "password"
+	pkcs12password = secrets.CreateToken(16)
+	fmt.Printf("PKCS12 Password is: %q\n", pkcs12password)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
+		return fmt.Errorf("could not create password secret: %s", err)
+	}
+	if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
+		return fmt.Errorf("could not create password version: %s", err)
+	}
+
+	// Save certificate request to database
+	if err = db.UpdateCertReq(certreq); err != nil {
+		return fmt.Errorf("could not save certreq: %s", err)
+	}
+
+	// Step 4: Save certificate request on VASP
+	if err = models.AppendCertReqID(vasp, certreq.Id); err != nil {
+		return fmt.Errorf("could not append certreq to VASP: %s", err)
+	}
+
+	if err = db.UpdateVASP(vasp); err != nil {
+		return fmt.Errorf("Could not save vasp: %s", err)
+	}
+
 	return nil
 }
