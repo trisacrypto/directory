@@ -218,22 +218,34 @@ func TestVerifyContact(t *testing.T) {
 
 func TestOverview(t *testing.T) {
 	fixture := &api.OverviewReply{
+		OrgID: "ba2202bf-635e-414e-a7bc-86f309dc95e0",
 		TestNet: api.NetworkOverview{
 			Status:             "online",
 			Vasps:              8,
 			CertificatesIssued: 7,
 			NewMembers:         3,
+			MemberDetails: api.MemberDetails{
+				ID:          "8b2e9e78-baca-4c34-a382-8b285503c901",
+				Status:      "VERIFIED",
+				CountryCode: "FK",
+				Certificate: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
 		},
 		MainNet: api.NetworkOverview{
 			Status:             "pending",
 			Vasps:              12,
 			CertificatesIssued: 21,
 			NewMembers:         5,
-		},
-		Organization: api.VaspDetails{
-			ID:          "ba2202bf-635e-414e-a7bc-86f309dc95e0",
-			Status:      "reviewed",
-			CountryCode: "FK",
+			MemberDetails: api.MemberDetails{
+				ID:          "c34c9e78-baca-4c34-a382-8b285503c901",
+				Status:      "SUBMITTED",
+				CountryCode: "FK",
+				Certificate: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
 		},
 	}
 
@@ -255,7 +267,9 @@ func TestOverview(t *testing.T) {
 	out, err := client.Overview(context.TODO())
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
+	require.Equal(t, fixture.OrgID, out.OrgID)
 	require.Equal(t, fixture.TestNet.Status, out.TestNet.Status)
+	require.Equal(t, fixture.TestNet.MemberDetails, out.TestNet.MemberDetails)
 	require.Equal(t, fixture.MainNet.CertificatesIssued, out.MainNet.CertificatesIssued)
-	require.Equal(t, fixture.Organization.ID, out.Organization.ID)
+	require.Equal(t, fixture.MainNet.MemberDetails, out.MainNet.MemberDetails)
 }
