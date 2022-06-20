@@ -60,6 +60,7 @@ func (s *gdsTestSuite) TestMembersSummary() {
 	// Test with default parameters
 	out, err := client.Summary(ctx, &members.SummaryRequest{})
 	require.NoError(err, "default summary request failed")
+	require.Nil(out.MemberInfo, "VASP should not be populated if not provided in request")
 	require.Equal(int32(5), out.Vasps, "unexpected total vasp count from Summary; have the fixtures changed?")
 	require.Equal(int32(5), out.CertificatesIssued, "unexpected certificates issued count from Summary; have the fixtures changed?")
 	require.Equal(int32(0), out.NewMembers, "unexpected new members count from Summary; have the fixtures changed?")
@@ -82,14 +83,14 @@ func (s *gdsTestSuite) TestMembersSummary() {
 		Status:              charlie.VerificationStatus,
 	}
 	out, err = client.Summary(ctx, &members.SummaryRequest{
-		Vasp: charlie.Id,
+		MemberId: charlie.Id,
 	})
 	require.NoError(err, "summary request with VASP failed")
-	require.True(proto.Equal(details, out.Vasp), "VASP details mismatch")
+	require.True(proto.Equal(details, out.MemberInfo), "VASP details mismatch")
 
 	// Test with a non-existent VASP
 	_, err = client.Summary(ctx, &members.SummaryRequest{
-		Vasp: "invalid",
+		MemberId: "invalid",
 	})
 	s.StatusError(err, codes.NotFound, "requested VASP not found")
 

@@ -46,18 +46,23 @@ func ConnectMembers(conf config.DirectoryConfig) (_ members.TRISAMembersClient, 
 // GetSummaries makes parallel calls to the members service to get the summary
 // information for both testnet and mainnet. If an endpoint returned an error, then a
 // nil value is returned from this function for that endpoint instead of an error.
-func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) (testnet *members.SummaryReply, mainnet *members.SummaryReply, err error) {
-	// Create the RPCs with the VASP ID parameters
-	makeRPC := func(req *members.SummaryRequest) MembersRPC {
-		return func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
-			return client.Summary(ctx, req)
+func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) (testsum *members.SummaryReply, mainsum *members.SummaryReply, err error) {
+	// Create the RPC which can do both testnet and mainnet calls
+	rpc := func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
+		req := &members.SummaryRequest{}
+		switch network {
+		case testnet:
+			req.MemberId = testnetID
+		case mainnet:
+			req.MemberId = mainnetID
+		default:
+			return nil, fmt.Errorf("unknown network: %s", network)
 		}
+		return client.Summary(ctx, req)
 	}
-	testnetRPC := makeRPC(&members.SummaryRequest{Vasp: testnetID})
-	mainnetRPC := makeRPC(&members.SummaryRequest{Vasp: mainnetID})
 
 	// Perform the parallel requests
-	results, errs := s.ParallelMembersRequests(ctx, testnetRPC, mainnetRPC, false)
+	results, errs := s.ParallelMembersRequests(ctx, rpc, false)
 	if len(errs) != 2 || len(results) != 2 {
 		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
 	}
@@ -65,22 +70,22 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 	// Parse the results
 	var ok bool
 	if errs[0] != nil {
-		testnet = nil
+		testsum = nil
 	} else if results[0] == nil {
 		return nil, nil, fmt.Errorf("nil testnet result returned from parallel requests")
-	} else if testnet, ok = results[0].(*members.SummaryReply); !ok {
+	} else if testsum, ok = results[0].(*members.SummaryReply); !ok {
 		return nil, nil, fmt.Errorf("unexpected testnet status result type returned from parallel requests: %T", results[0])
 	}
 
 	if errs[1] != nil {
-		mainnet = nil
+		mainsum = nil
 	} else if results[1] == nil {
 		return nil, nil, fmt.Errorf("nil mainnet status result returned from parallel requests")
-	} else if mainnet, ok = results[1].(*members.SummaryReply); !ok {
+	} else if mainsum, ok = results[1].(*members.SummaryReply); !ok {
 		return nil, nil, fmt.Errorf("unexpected mainnet status result type returned from parallel requests: %T", results[1])
 	}
 
-	return testnet, mainnet, nil
+	return testsum, mainsum, nil
 }
 
 // Overview endpoint is an authenticated endpoint that requires the read:vasp permission.
@@ -96,8 +101,8 @@ func (s *Server) Overview(c *gin.Context) {
 	}
 
 	// Extract the VASP IDs from the claims
-	testnetID := claims.VASP["testnet"]
-	mainnetID := claims.VASP["mainnet"]
+	testnetID := claims.VASP[testnet]
+	mainnetID := claims.VASP[mainnet]
 
 	out := api.OverviewReply{
 		OrgID:   claims.OrgID,
@@ -128,7 +133,7 @@ func (s *Server) Overview(c *gin.Context) {
 
 	// Get the summaries for both testnet and mainnet
 	var testnet, mainnet *members.SummaryReply
-	testnet, mainnet, err = s.GetSummaries(context.Background(), testnetID, mainnetID)
+	testnet, mainnet, err = s.GetSummaries(c.Request.Context(), testnetID, mainnetID)
 	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve summary information")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
@@ -143,20 +148,16 @@ func (s *Server) Overview(c *gin.Context) {
 
 		if testnetID != "" {
 			// Check if we received the VASP details from the testnet
-			if testnet.Vasp == nil {
+			if testnet.MemberInfo == nil {
 				log.Error().Msg("expected VASP details from testnet Summary RPC")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve testnet VASP details")))
 				return
 			}
 
 			out.TestNet.MemberDetails = api.MemberDetails{
-				ID:          testnet.Vasp.Id,
-				Status:      testnet.Vasp.Status.String(),
-				CountryCode: testnet.Vasp.Country,
-			}
-		} else {
-			out.TestNet.MemberDetails = api.MemberDetails{
-				Status: pb.VerificationState_NO_VERIFICATION.String(),
+				ID:          testnet.MemberInfo.Id,
+				Status:      testnet.MemberInfo.Status.String(),
+				CountryCode: testnet.MemberInfo.Country,
 			}
 		}
 	}
@@ -168,16 +169,16 @@ func (s *Server) Overview(c *gin.Context) {
 
 		if mainnetID != "" {
 			// Check if we received the VASP details from the mainnet
-			if mainnet.Vasp == nil {
+			if mainnet.MemberInfo == nil {
 				log.Error().Msg("could not retrieve mainnet VASP details")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve mainnet VASP details")))
 				return
 			}
 
 			out.MainNet.MemberDetails = api.MemberDetails{
-				ID:          mainnet.Vasp.Id,
-				Status:      mainnet.Vasp.Status.String(),
-				CountryCode: mainnet.Vasp.Country,
+				ID:          mainnet.MemberInfo.Id,
+				Status:      mainnet.MemberInfo.Status.String(),
+				CountryCode: mainnet.MemberInfo.Country,
 			}
 		} else {
 			out.MainNet.MemberDetails = api.MemberDetails{

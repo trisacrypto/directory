@@ -231,6 +231,8 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 }
 
 // Summary returns a summary of the VASP members in the Directory Service.
+// Note: Any VASP can call this endpoint with any VASP ID, therefore we need to avoid
+// returning sensitive VASP details here such as IVMS info.
 func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api.SummaryReply, err error) {
 	// Get the since timestamp from the request
 	var since time.Time
@@ -252,16 +254,16 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	// Create response
 	out = &api.SummaryReply{}
 
-	if in.Vasp != "" {
+	if in.MemberId != "" {
 		// Fetch the requested VASP if provided
 		var vasp *pb.VASP
-		if vasp, err = s.db.RetrieveVASP(in.Vasp); err != nil {
-			log.Warn().Err(err).Str("vasp_id", in.Vasp).Msg("VASP not found")
+		if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+			log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 			return nil, status.Error(codes.NotFound, "requested VASP not found")
 		}
 
 		// Add the VASP member details to the response
-		out.Vasp = GetVASPMember(vasp)
+		out.MemberInfo = GetVASPMember(vasp)
 	}
 
 	// Create the VASPs iterator
