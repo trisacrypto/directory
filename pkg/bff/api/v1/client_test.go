@@ -189,7 +189,7 @@ func TestRegister(t *testing.T) {
 	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
 }
 
-func TestVerifyEmail(t *testing.T) {
+func TestVerifyContact(t *testing.T) {
 	fixture := &api.VerifyContactReply{
 		Status:  "PENDING_REVIEW",
 		Message: "thank you for verifying your email",
@@ -214,4 +214,48 @@ func TestVerifyEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, fixture.Status, out.Status)
 	require.Equal(t, fixture.Message, out.Message)
+}
+
+func TestOverview(t *testing.T) {
+	fixture := &api.OverviewReply{
+		TestNet: api.NetworkOverview{
+			Status:             "online",
+			Vasps:              8,
+			CertificatesIssued: 7,
+			NewMembers:         3,
+		},
+		MainNet: api.NetworkOverview{
+			Status:             "pending",
+			Vasps:              12,
+			CertificatesIssued: 21,
+			NewMembers:         5,
+		},
+		Organization: api.VaspDetails{
+			ID:          "ba2202bf-635e-414e-a7bc-86f309dc95e0",
+			Status:      "reviewed",
+			CountryCode: "FK",
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/overview", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Overview(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	require.Equal(t, fixture.TestNet.Status, out.TestNet.Status)
+	require.Equal(t, fixture.MainNet.CertificatesIssued, out.MainNet.CertificatesIssued)
+	require.Equal(t, fixture.Organization.ID, out.Organization.ID)
 }
