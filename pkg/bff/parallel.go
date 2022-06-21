@@ -15,7 +15,7 @@ import (
 // call and log with the associated network.
 type RPC func(ctx context.Context, client *GDSClient, network string) (proto.Message, error)
 
-// ParallelGDSRequest makes concurrent requests to both the testnet and the mainnet,
+// ParallelGDSRequests makes concurrent requests to both the testnet and the mainnet,
 // storing the results and errors in a slice of length 2 ([testnet, mainnet]). If the
 // flatten bool is true, then nil values are removed from the slice (though this will
 // make which network returned the result ambiguous).
