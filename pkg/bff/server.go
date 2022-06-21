@@ -245,8 +245,8 @@ func (s *Server) setupRoutes() (err error) {
 	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
 		return err
 	}
-  
-  // Instantiate user info middleware
+
+	// Instantiate user info middleware
 	var userinfo gin.HandlerFunc
 	if userinfo, err = auth.UserInfo(s.conf.Auth0); err != nil {
 		return err
@@ -256,7 +256,7 @@ func (s *Server) setupRoutes() (err error) {
 		bffTags = map[string]string{"service": "bff"}
 		tags = sentry.UseTags(bffTags)
 	}
-  
+
 	if s.conf.Sentry.UsePerformanceTracking() {
 		tracing = sentry.TrackPerformance(bffTags)
 	}
@@ -318,6 +318,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
+		v1.GET("/certificates", auth.Authorize("read:vasp"), s.ListCertificates)
 	}
 
 	// NotFound and NotAllowed routes
