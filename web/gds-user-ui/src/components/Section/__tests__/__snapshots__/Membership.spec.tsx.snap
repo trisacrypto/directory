@@ -180,12 +180,12 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               <p
                 class="chakra-text css-rltemf"
               >
-                Learn about the three-step certificaton process
+                Learn about the three-step process to become a member and verified VASP.
               </p>
               <p
                 class="chakra-text css-rltemf"
               >
-                and create your account today.
+                Create your account today.
               </p>
             </div>
           </div>
@@ -260,7 +260,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                   class="chakra-text css-0"
                   data-testid="description"
                 >
-                  Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet.
+                  Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.
                 </p>
               </div>
               <div
