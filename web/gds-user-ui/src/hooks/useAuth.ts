@@ -7,7 +7,7 @@ const useAuth = () => {
   const dispatch = useDispatch();
   const user = useSelector(userSelector);
   const isLoggedIn = useSelector(isLoggedInSelector);
-  const { auth0GetUser } = useCustomAuth0();
+  const { auth0GetUser, auth0CheckSession } = useCustomAuth0();
 
   const loginUser = (u: TUser) => {
     dispatch(login(u));
@@ -39,7 +39,7 @@ const useAuth = () => {
       return accessToken;
     }
   };
-  const isUserAuthenticated = !!accessToken;
+  const isUserAuthenticated = !!isLoggedIn;
 
   return {
     user,

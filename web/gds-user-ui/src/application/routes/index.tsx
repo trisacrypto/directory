@@ -16,13 +16,13 @@ const VerifyPage = React.lazy(() => import('modules/verify'));
 const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
 const LoginPage = React.lazy(() => import('modules/auth/login'));
 const RegisterPage = React.lazy(() => import('modules/auth/register'));
-import PrivateRoute from './PrivateRoute';
+
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 const AppRouter: React.FC = () => {
   const { isInitialized } = useAnalytics();
   return (
-    <Suspense fallback="loading...">
+    <Suspense fallback="Loading">
       <GoogleAnalyticsWrapper isInitialized={isInitialized}>
         <Routes>
           <Route path="/" element={<Home />} />
