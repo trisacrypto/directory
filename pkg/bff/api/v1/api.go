@@ -46,21 +46,22 @@ type StatusReply struct {
 
 // OverviewReply is returned on overview requests.
 type OverviewReply struct {
-	TestNet      NetworkOverview `json:"testnet"`
-	MainNet      NetworkOverview `json:"mainnet"`
-	Organization VaspDetails     `json:"organization"`
+	OrgID   string          `json:"org_id"`
+	TestNet NetworkOverview `json:"testnet"`
+	MainNet NetworkOverview `json:"mainnet"`
 }
 
 // NetworkOverview contains network-specific information.
 type NetworkOverview struct {
-	Status             string `json:"status"`
-	Vasps              int    `json:"vasps"`
-	CertificatesIssued int    `json:"certificates_issued"`
-	NewMembers         int    `json:"new_members"`
+	Status             string        `json:"status"`
+	Vasps              int           `json:"vasps"`
+	CertificatesIssued int           `json:"certificates_issued"`
+	NewMembers         int           `json:"new_members"`
+	MemberDetails      MemberDetails `json:"member_details"`
 }
 
-// VaspDetails contains VASP-specific information.
-type VaspDetails struct {
+// MemberDetails contains VASP-specific information.
+type MemberDetails struct {
 	ID          string                 `json:"id"`
 	Status      string                 `json:"status"`
 	CountryCode string                 `json:"country_code"`

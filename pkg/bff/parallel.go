@@ -68,7 +68,7 @@ func (s *Server) ParallelMembersRequests(ctx context.Context, rpc MembersRPC, fl
 	defer cancel()
 	wg.Add(2)
 
-	// Create a closure to execute the rpc
+	// Create the closures to execute the rpcs
 	closure := func(client members.TRISAMembersClient, idx int, network string) {
 		defer wg.Done()
 		results[idx], errs[idx] = rpc(ctx, client, network)
