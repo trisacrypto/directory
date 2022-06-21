@@ -165,6 +165,21 @@ func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	return out, nil
 }
 
+func (s *APIv1) Certificates(ctx context.Context) (out *CertificatesReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/certificates", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &CertificatesReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 //===========================================================================
 // Helper Methods
 //===========================================================================
