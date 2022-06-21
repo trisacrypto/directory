@@ -16,6 +16,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
 // Test that the certificate manger correctly moves certificates across the request
@@ -51,22 +52,22 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.Equal("automated", log[4].Source)
 
 	// Certificate request should be updated
-	cert, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	certReq, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
 	require.NoError(err)
-	require.Greater(int(cert.AuthorityId), 0)
-	require.Greater(int(cert.BatchId), 0)
-	require.NotEmpty(cert.BatchName)
-	require.NotEmpty(cert.BatchStatus)
-	require.Greater(int(cert.OrderNumber), 0)
-	require.NotEmpty(cert.CreationDate)
-	require.NotEmpty(cert.Profile)
-	require.Empty(cert.RejectReason)
-	require.Equal(models.CertificateRequestState_PROCESSING, cert.Status)
+	require.Greater(int(certReq.AuthorityId), 0)
+	require.Greater(int(certReq.BatchId), 0)
+	require.NotEmpty(certReq.BatchName)
+	require.NotEmpty(certReq.BatchStatus)
+	require.Greater(int(certReq.OrderNumber), 0)
+	require.NotEmpty(certReq.CreationDate)
+	require.NotEmpty(certReq.Profile)
+	require.Empty(certReq.RejectReason)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.Status)
 	// Audit log should contain one additional entry for PROCESSING
-	require.Len(cert.AuditLog, 3)
-	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.AuditLog[2].PreviousState)
-	require.Equal(models.CertificateRequestState_PROCESSING, cert.AuditLog[2].CurrentState)
-	require.Equal("automated", cert.AuditLog[2].Source)
+	require.Len(certReq.AuditLog, 3)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, certReq.AuditLog[2].PreviousState)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.AuditLog[2].CurrentState)
+	require.Equal("automated", certReq.AuditLog[2].Source)
 
 	// Let the certificate manager process the Sectigo response
 	sent := time.Now()
@@ -98,6 +99,12 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.NotEmpty(idCert.Data)
 	require.NotEmpty(idCert.Chain)
 
+	// VASP should contain the certificate ID in the extra
+	certIDs, err := models.GetCertIDs(v)
+	require.NoError(err)
+	require.Len(certIDs, 1)
+	require.NotEmpty(certIDs[0])
+
 	// VASP state should be changed to VERIFIED
 	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
 	// Audit log should contain one additional entry for VERIFIED
@@ -107,6 +114,15 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, log[5].PreviousState)
 	require.Equal(pb.VerificationState_VERIFIED, log[5].CurrentState)
 	require.Equal("automated", log[5].Source)
+
+	// Certificate record should be created in the database
+	cert, err := s.svc.GetStore().RetrieveCert(certIDs[0])
+	require.NoError(err)
+	require.Equal(certIDs[0], cert.Id)
+	require.Equal(certReq.Id, cert.Request)
+	require.Equal(v.Id, cert.Vasp)
+	require.Equal(models.CertificateState_ISSUED, cert.Status)
+	require.True(proto.Equal(idCert, cert.Details))
 
 	// Email should be sent to one of the contacts
 	messages := []*emailMeta{
@@ -122,21 +138,22 @@ func (s *gdsTestSuite) TestCertManager() {
 	s.CheckEmails(messages)
 
 	// Certificate request should be updated
-	cert, err = s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	certReq, err = s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
 	require.NoError(err)
-	require.Equal(models.CertificateRequestState_COMPLETED, cert.Status)
+	require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+	require.Equal(cert.Id, certReq.Certificate)
 	// Audit log should contain additional entries for DOWNLOADING, DOWNLOADED, and
 	// COMPLETED
-	require.Len(cert.AuditLog, 6)
-	require.Equal(models.CertificateRequestState_PROCESSING, cert.AuditLog[3].PreviousState)
-	require.Equal(models.CertificateRequestState_DOWNLOADING, cert.AuditLog[3].CurrentState)
-	require.Equal("automated", cert.AuditLog[3].Source)
-	require.Equal(models.CertificateRequestState_DOWNLOADING, cert.AuditLog[4].PreviousState)
-	require.Equal(models.CertificateRequestState_DOWNLOADED, cert.AuditLog[4].CurrentState)
-	require.Equal("automated", cert.AuditLog[4].Source)
-	require.Equal(models.CertificateRequestState_DOWNLOADED, cert.AuditLog[5].PreviousState)
-	require.Equal(models.CertificateRequestState_COMPLETED, cert.AuditLog[5].CurrentState)
-	require.Equal("automated", cert.AuditLog[5].Source)
+	require.Len(certReq.AuditLog, 6)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.AuditLog[3].PreviousState)
+	require.Equal(models.CertificateRequestState_DOWNLOADING, certReq.AuditLog[3].CurrentState)
+	require.Equal("automated", certReq.AuditLog[3].Source)
+	require.Equal(models.CertificateRequestState_DOWNLOADING, certReq.AuditLog[4].PreviousState)
+	require.Equal(models.CertificateRequestState_DOWNLOADED, certReq.AuditLog[4].CurrentState)
+	require.Equal("automated", certReq.AuditLog[4].Source)
+	require.Equal(models.CertificateRequestState_DOWNLOADED, certReq.AuditLog[5].PreviousState)
+	require.Equal(models.CertificateRequestState_COMPLETED, certReq.AuditLog[5].CurrentState)
+	require.Equal("automated", certReq.AuditLog[5].Source)
 }
 
 // Test that the certificate manager is able to process an end entity profile.

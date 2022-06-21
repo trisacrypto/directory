@@ -19,7 +19,7 @@ message Certificate {
     string vasp = 3;
 
     // Current status of the certificate
-    string status = 4;
+    CertificateState status = 4;
 
     // Certificate details
     trisa.gds.models.v1beta1.Certificate details = 5;

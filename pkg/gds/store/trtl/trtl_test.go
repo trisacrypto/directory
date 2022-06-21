@@ -19,6 +19,7 @@ import (
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	storeerrors "github.com/trisacrypto/directory/pkg/gds/store/errors"
 )
@@ -250,6 +251,142 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require := s.Require()
 
 	// Load the VASP record from testdata
+	data, err := ioutil.ReadFile("../testdata/cert.json")
+	s.NoError(err)
+
+	cert := &models.Certificate{}
+	err = protojson.Unmarshal(data, cert)
+	s.NoError(err)
+
+	// Verify the certificate is loaded correctly
+	s.Empty(cert.Id)
+	s.NotEmpty(cert.Request)
+	s.NotEmpty(cert.Vasp)
+	s.Equal(models.CertificateState_ISSUED, cert.Status)
+	s.NotEmpty(cert.Details)
+	s.NotEmpty(cert.Details.NotAfter)
+	s.NotEmpty(cert.Details.NotBefore)
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	// Initially there should be no Certs
+	iter := db.ListCerts()
+	require.False(iter.Next())
+
+	// Should get a not found error trying to retrieve a Cert that doesn't exist
+	_, err = db.RetrieveCert("12345")
+	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
+
+	// Attempt to Create the Cert
+	id, err := db.CreateCert(cert)
+	s.NoError(err)
+
+	// Attempt to Retrieve the Cert
+	crr, err := db.RetrieveCert(id)
+	s.NoError(err)
+	s.NotNil(crr)
+	s.Equal(id, crr.Id)
+	s.Equal(cert.Request, crr.Request)
+	s.Equal(cert.Vasp, crr.Vasp)
+	s.Equal(cert.Status, crr.Status)
+	s.True(proto.Equal(cert.Details, crr.Details))
+
+	// Attempt to save a certificate with an ID on it
+	icrr := &models.Certificate{
+		Id:      uuid.New().String(),
+		Request: cert.Request,
+		Vasp:    crr.Vasp,
+		Status:  models.CertificateState_ISSUED,
+		Details: cert.Details,
+	}
+	_, err = db.CreateCert(icrr)
+	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
+
+	// Sleep for a second to roll over the clock for the modified time stamp
+	time.Sleep(1 * time.Second)
+
+	// Update the Cert
+	crr.Status = models.CertificateState_REVOKED
+	err = db.UpdateCert(crr)
+	s.NoError(err)
+
+	crr, err = db.RetrieveCert(id)
+	s.NoError(err)
+	s.Equal(id, crr.Id)
+	s.Equal(models.CertificateState_REVOKED, crr.Status)
+
+	// Attempt to update a certificate request with no Id on it
+	cert.Id = ""
+	s.ErrorIs(db.UpdateCert(cert), storeerrors.ErrIncompleteRecord)
+
+	// Delete the Cert
+	err = db.DeleteCert(id)
+	s.NoError(err)
+	crr, err = db.RetrieveCert(id)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	s.Empty(crr)
+
+	// Add a few more certificate requests
+	for i := 0; i < 10; i++ {
+		crr := &models.Certificate{
+			Request: uuid.New().String(),
+			Vasp:    uuid.New().String(),
+			Status:  models.CertificateState_ISSUED,
+			Details: &pb.Certificate{
+				SerialNumber: []byte(uuid.New().String()),
+			},
+		}
+		_, err := db.CreateCert(crr)
+		s.NoError(err)
+	}
+
+	// Test listing all of the certificates
+	certs, err := db.ListCerts().All()
+	s.NoError(err)
+	s.Len(certs, 10)
+
+	// Test Prev() and Next() interactions
+	iter = db.ListCerts()
+	require.False(iter.Prev(), "should move behind the first Cert")
+	require.True(iter.Next(), "should move to the first Cert")
+	first, err := iter.Cert()
+	require.NoError(err)
+	require.NotNil(first)
+	require.True(iter.Next(), "should move to the second Cert")
+	second, err := iter.Cert()
+	require.NoError(err)
+	require.NotNil(second)
+	require.NotEqual(first.Id, second.Id)
+
+	// Create enough Certs to exceed the page size
+	for i := 0; i < 100; i++ {
+		crr := &models.Certificate{
+			Request: uuid.New().String(),
+			Vasp:    uuid.New().String(),
+			Status:  models.CertificateState_EXPIRED,
+			Details: &pb.Certificate{
+				SerialNumber: []byte(uuid.New().String()),
+			},
+		}
+		_, err := db.CreateCert(crr)
+		s.NoError(err)
+	}
+
+	// Test listing all of the Cert
+	certs, err = db.ListCerts().All()
+	require.NoError(err)
+	require.Len(certs, 110)
+}
+
+func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
+	require := s.Require()
+
+	// Load the VASP record from testdata
 	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
@@ -430,6 +567,5 @@ func deleteVASPs(db *store.Store) error {
 
 	// TODO: do better at managing empty indices
 	db.DeleteIndices()
-	fmt.Printf("deleted %d records\n", n)
 	return nil
 }

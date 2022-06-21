@@ -1,0 +1,56 @@
+{
+    "id": "34d3f5f8-f9f8-4f8f-8f8f-f9f8f9f8f8f8",
+    "request": "6764da6f-f9f8-4f8f-8f8f-f9f8f9f8f8f8",
+    "vasp": "723f46ac-f9f8-4f8f-8f8f-f9f8f9f8f8f8",
+    "status": "ISSUED",
+    "details": {
+        "version":  "3",
+        "serial_number":  "",
+        "signature":  "",
+        "signature_algorithm":  "SHA384-RSA",
+        "public_key_algorithm":  "RSA",
+        "subject":  {
+          "common_name":  "api.bob.vaspbot.net",
+          "serial_number":  "",
+          "organization":  [
+            "CipherTrace Inc"
+          ],
+          "organizational_unit":  [],
+          "street_address":  [],
+          "locality":  [
+            "Menlo Park"
+          ],
+          "province":  [
+            "California"
+          ],
+          "postal_code":  [],
+          "country":  [
+            "US"
+          ]
+        },
+        "issuer":  {
+          "common_name":  "CipherTrace Issuing CA",
+          "serial_number":  "",
+          "organization":  [
+            "CipherTrace Inc"
+          ],
+          "organizational_unit":  [],
+          "street_address":  [],
+          "locality":  [
+            "Menlo Park"
+          ],
+          "province":  [
+            "California"
+          ],
+          "postal_code":  [],
+          "country":  [
+            "US"
+          ]
+        },
+        "not_before":  "2021-01-27T18:29:07Z",
+        "not_after":  "2022-02-27T18:29:06Z",
+        "revoked":  false,
+        "data":  "",
+        "chain":  ""
+    }
+}

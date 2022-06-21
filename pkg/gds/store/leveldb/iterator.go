@@ -17,6 +17,10 @@ type vaspIterator struct {
 	iterWrapper
 }
 
+type certIterator struct {
+	iterWrapper
+}
+
 type certReqIterator struct {
 	iterWrapper
 }
@@ -73,6 +77,33 @@ func (i *vaspIterator) Id() string {
 func (i *vaspIterator) SeekId(vaspID string) bool {
 	key := vaspKey(vaspID)
 	return i.iter.Seek(key)
+}
+
+func (i *certIterator) Cert() (*models.Certificate, error) {
+	r := new(models.Certificate)
+	if err := proto.Unmarshal(i.iter.Value(), r); err != nil {
+		log.Error().Err(err).Str("type", wire.NamespaceCerts).Str("key", string(i.iter.Key())).Msg("corrupted data encountered")
+		return nil, err
+	}
+	return r, nil
+}
+
+func (i *certIterator) All() (certs []*models.Certificate, err error) {
+	certs = make([]*models.Certificate, 0)
+	defer i.iter.Release()
+	for i.iter.Next() {
+		c := new(models.Certificate)
+		if err = proto.Unmarshal(i.iter.Value(), c); err != nil {
+			return nil, err
+		}
+		certs = append(certs, c)
+	}
+
+	if err = i.iter.Error(); err != nil {
+		return nil, err
+	}
+
+	return certs, nil
 }
 
 func (i *certReqIterator) CertReq() (*models.CertificateRequest, error) {
