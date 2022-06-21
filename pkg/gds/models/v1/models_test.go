@@ -519,7 +519,8 @@ func TestNewCertificate(t *testing.T) {
 		Id: "c8f8f8f8-f8f8-f8f8-f8f8-f8f8f8f8f8f8",
 	}
 
-	serial := "30783132333435363738"
+	// The serial number must be a capital hex-encoded value to mirror the sectigo format
+	serial := "ABC83132333435363738"
 	serialBytes, err := hex.DecodeString(serial)
 	require.NoError(t, err)
 	pub := &pb.Certificate{

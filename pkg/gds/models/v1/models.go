@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -244,7 +243,7 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	}
 
 	cert = &Certificate{
-		Id:      hex.EncodeToString(data.SerialNumber),
+		Id:      fmt.Sprintf("%X", data.SerialNumber), // capital hex encoded serial number to match sectigo
 		Request: certRequest.Id,
 		Vasp:    vasp.Id,
 		Status:  CertificateState_ISSUED,
