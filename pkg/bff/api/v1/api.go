@@ -11,6 +11,7 @@ import (
 type BFFClient interface {
 	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
 	Overview(ctx context.Context) (out *OverviewReply, err error)
+	Certificates(ctx context.Context) (out *CertificatesReply, err error)
 	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
 	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
 	VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error)
@@ -66,6 +67,21 @@ type MemberDetails struct {
 	Status      string                 `json:"status"`
 	CountryCode string                 `json:"country_code"`
 	Certificate map[string]interface{} `json:"certificate"`
+}
+
+// CertificatesReply is returned on certificates requests.
+type CertificatesReply struct {
+	TestNet []Certificate `json:"testnet"`
+	MainNet []Certificate `json:"mainnet"`
+}
+
+// Certificate contains details about a certificate issued to a VASP.
+type Certificate struct {
+	SerialNumber string                 `json:"serial_number"`
+	IssuedAt     string                 `json:"issued_at"`
+	ExpiresAt    string                 `json:"expires_at"`
+	Revoked      bool                   `json:"revoked"`
+	Details      map[string]interface{} `json:"details"`
 }
 
 // LookupParams is converted into a GDS LookupRequest.

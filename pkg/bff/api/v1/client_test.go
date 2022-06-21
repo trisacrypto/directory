@@ -273,3 +273,51 @@ func TestOverview(t *testing.T) {
 	require.Equal(t, fixture.MainNet.CertificatesIssued, out.MainNet.CertificatesIssued)
 	require.Equal(t, fixture.MainNet.MemberDetails, out.MainNet.MemberDetails)
 }
+
+func TestCertificates(t *testing.T) {
+	fixture := &api.CertificatesReply{
+		TestNet: []api.Certificate{
+			{
+				SerialNumber: "ABC83132333435363738",
+				IssuedAt:     time.Now().AddDate(-1, -1, 0).Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(0, -1, 0).Format(time.RFC3339),
+				Revoked:      true,
+				Details: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
+		},
+		MainNet: []api.Certificate{
+			{
+				SerialNumber: "DEF83132333435363738",
+				IssuedAt:     time.Now().Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(1, 0, 0).Format(time.RFC3339),
+				Revoked:      false,
+				Details: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/certificates", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Certificates(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	require.Equal(t, fixture.TestNet, out.TestNet)
+	require.Equal(t, fixture.MainNet, out.MainNet)
+}
