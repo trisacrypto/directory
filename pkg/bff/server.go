@@ -72,11 +72,11 @@ func New(conf config.Config) (s *Server, err error) {
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
 		if s.testnet, err = ConnectNetwork(s.conf.TestNet); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not connect to testnet: %s", err)
 		}
 
 		if s.mainnet, err = ConnectNetwork(s.conf.MainNet); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not connect to mainnet: %s", err)
 		}
 
 		if s.db, err = db.Connect(s.conf.Database); err != nil {
@@ -253,8 +253,8 @@ func (s *Server) setupRoutes() (err error) {
 	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
 		return err
 	}
-  
-  // Instantiate user info middleware
+
+	// Instantiate user info middleware
 	var userinfo gin.HandlerFunc
 	if userinfo, err = auth.UserInfo(s.conf.Auth0); err != nil {
 		return err
@@ -264,7 +264,7 @@ func (s *Server) setupRoutes() (err error) {
 		bffTags = map[string]string{"service": "bff"}
 		tags = sentry.UseTags(bffTags)
 	}
-  
+
 	if s.conf.Sentry.UsePerformanceTracking() {
 		tracing = sentry.TrackPerformance(bffTags)
 	}
