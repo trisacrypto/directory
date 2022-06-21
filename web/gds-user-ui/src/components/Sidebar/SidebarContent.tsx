@@ -24,7 +24,6 @@ const activeLinkStyle: CSSProperties = {};
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
   const location = useLocation();
-  console.log('[location]', location);
 
   return (
     <Box
