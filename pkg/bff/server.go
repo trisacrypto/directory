@@ -19,6 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
@@ -102,6 +103,13 @@ func New(conf config.Config) (s *Server, err error) {
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
 	}
 
+	if conf.Auth0.Testing {
+		// Setup the auth mock server
+		if s.mockAuth, err = authtest.New(); err != nil {
+			return nil, fmt.Errorf("could not create auth mock server: %s", err)
+		}
+	}
+
 	// Create the router
 	gin.SetMode(conf.Mode)
 	s.router = gin.New()
@@ -128,17 +136,18 @@ type NetworkClient struct {
 
 type Server struct {
 	sync.RWMutex
-	conf    config.Config
-	srv     *http.Server
-	router  *gin.Engine
-	testnet NetworkClient
-	mainnet NetworkClient
-	db      *db.DB
-	auth0   *management.Management
-	started time.Time
-	healthy bool
-	url     string
-	echan   chan error
+	conf     config.Config
+	srv      *http.Server
+	router   *gin.Engine
+	testnet  NetworkClient
+	mainnet  NetworkClient
+	db       *db.DB
+	mockAuth *authtest.Server
+	auth0    *management.Management
+	started  time.Time
+	healthy  bool
+	url      string
+	echan    chan error
 }
 
 // Serve API requests on the specified address.
@@ -215,6 +224,10 @@ func (s *Server) Shutdown() (err error) {
 		}
 	}
 
+	if s.mockAuth != nil {
+		s.mockAuth.Close()
+	}
+
 	log.Debug().Msg("successfully shutdown server")
 	return nil
 }
@@ -241,9 +254,16 @@ func (s *Server) setupRoutes() (err error) {
 		bffTags       map[string]string
 	)
 
-	// Instantiate authentication middleware
-	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
-		return err
+	if s.conf.Auth0.Testing {
+		// Instantiate the mock authentication middleware
+		if authenticator, err = auth.Authenticate(s.mockAuth.Config(), auth.WithHTTPClient(s.mockAuth.Client())); err != nil {
+			return err
+		}
+	} else {
+		// Instantiate authentication middleware
+		if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
+			return err
+		}
 	}
 
 	// Instantiate user info middleware
@@ -317,6 +337,8 @@ func (s *Server) setupRoutes() (err error) {
 		v1.POST("/register/:network", s.Register)
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
+
+		// Members authenticated routes
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
 		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
 	}
@@ -376,6 +398,10 @@ func (s *Server) GetTestNetMembers() members.TRISAMembersClient {
 // GetMainNet returns the MainNet members client for testing purposes.
 func (s *Server) GetMainNetMembers() members.TRISAMembersClient {
 	return s.mainnet.members
+}
+
+func (s *Server) GetMockAuth() *authtest.Server {
+	return s.mockAuth
 }
 
 // GetURL returns the URL that the server can be reached if it has been started. This

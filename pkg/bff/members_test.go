@@ -2,8 +2,14 @@ package bff_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http/httptest"
 
+	"github.com/gin-gonic/gin"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -79,11 +85,68 @@ func (s *bffTestSuite) TestGetSummaries() {
 	require.Nil(mainnet, "mainnet summary should be nil")
 }
 
+func createTestContext(method, target string, body io.Reader, handlers ...gin.HandlerFunc) (*gin.Context, *gin.Engine, *httptest.ResponseRecorder) {
+	fmt.Println("createTestContext", method, target)
+	gin.SetMode(gin.TestMode)
+	req := httptest.NewRequest(method, target, body)
+	req.Header.Set("content-type", "application/json")
+
+	w := httptest.NewRecorder()
+	c, r := gin.CreateTestContext(w)
+	c.Request = req
+
+	if len(handlers) > 1 {
+		r.Handle(method, target, handlers...)
+	}
+	return c, r, w
+}
+
+func doRequest(srv *gin.Engine, w *httptest.ResponseRecorder, c *gin.Context) (data map[string]interface{}, code int, err error) {
+	srv.HandleContext(c)
+
+	rep := w.Result()
+	defer rep.Body.Close()
+
+	data = make(map[string]interface{})
+	var raw []byte
+	if raw, err = ioutil.ReadAll(rep.Body); err != nil {
+		return nil, 0, err
+	}
+
+	if err = json.Unmarshal(raw, &data); err != nil {
+		fmt.Println(string(raw))
+		return nil, 0, err
+	}
+	return data, rep.StatusCode, nil
+}
+
 func (s *bffTestSuite) TestOverview() {
-	// TODO: need to mock authentication before these tests will work.
-	s.T().Skip("not implemented yet")
+	require := s.Require()
 
 	// Test 401 with no access token
+	_, err := s.client.Overview(context.TODO())
+	require.ErrorContains(err, "401", "should return 401 with no token")
+
 	// Test 401 authenticated user without read:vasp permission
+	token, err := s.bff.GetMockAuth().NewToken()
+	require.NoError(err, "could not create token")
+
+	// Try to set the token in the context for the client method
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", s.bff.GetURL()+"/v1/overview", nil)
+	c.Request.Header.Set("Authorization", "Bearer "+token)
+	_, err = s.client.Overview(c)
+	require.ErrorContains(err, "401", "should return 401 with no read:vasp permission")
+
+	// Try to set the token in the context with an HTTP request
+	c, srv, r := createTestContext("GET", s.bff.GetURL()+"/v1/overview", nil, nil)
+	c.Request.Header.Set("Authorization", "Bearer "+token)
+	_, code, err := doRequest(srv, r, c)
+	require.NoError(err, "could not get overview")
+	require.Equal(401, code, "should return 401")
+
+	// Test 401 authenticated user with the wrong permission scope
+
 	// Test 200 response with authenticated user with read:vasp permission
 }

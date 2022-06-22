@@ -104,7 +104,7 @@ func (s *Server) Overview(c *gin.Context) {
 	testnetID := claims.VASP[testnet]
 	mainnetID := claims.VASP[mainnet]
 
-	out := api.OverviewReply{
+	out := &api.OverviewReply{
 		OrgID:   claims.OrgID,
 		TestNet: api.NetworkOverview{},
 		MainNet: api.NetworkOverview{},
