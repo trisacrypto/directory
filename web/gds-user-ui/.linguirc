@@ -4,7 +4,8 @@
     "en",
     "fr",
     "ja",
-    "zh"
+    "zh",
+    "ru"
   ],
   "format": "po",
   "sourceLocale": "en",

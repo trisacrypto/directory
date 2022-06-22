@@ -21,7 +21,11 @@ const languages = {
   ja: {
     flag: '🇯🇵',
     title: '日本語'
-  }
+  },
+  ru: {
+    flag: '-',
+    title: 'Dash'
+  },
 };
 
 const LanguageOptions = () => {
