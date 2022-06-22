@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	"github.com/trisacrypto/directory/pkg/bff/db"
 	. "github.com/trisacrypto/directory/pkg/bff/db"
 )
 
@@ -20,7 +19,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 	require := s.Require()
 
 	// Announcements should implement the Collection interface
-	require.Equal(db.NamespaceAnnouncements, s.db.Announcements().Namespace())
+	require.Equal(NamespaceAnnouncements, s.db.Announcements().Namespace())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -71,7 +70,44 @@ func (s *dbTestSuite) TestAnnouncements() {
 	// The Posts should be returned in the expected order
 	// NOTE: we will get a random order of our posts if we don't sleep 1 second between Post
 	for i, post := range recent.Announcements {
-		expected := fmt.Sprintf("Post %d", i+1)
+		expected := fmt.Sprintf("Post %d", 10-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to limit the number of results returned
+	recent, err = s.db.Announcements().Recent(ctx, 5, time.Time{})
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 5, "expected 5 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 10-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to set the not before timestamp
+	nbf, _ := time.Parse("2006-01-02", "2022-03-31")
+	recent, err = s.db.Announcements().Recent(ctx, 10000, nbf)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 3, "expected 3 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 10-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to set the not before timestamp AND max results
+	recent, err = s.db.Announcements().Recent(ctx, 2, nbf)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 2, "expected 2 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 10-i)
 		require.Equal(expected, post.Title, "posts seem to be out of order")
 	}
 }

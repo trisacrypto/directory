@@ -10,6 +10,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	trtl "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
@@ -80,7 +81,13 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore ti
 	defer cursor.CloseSend()
 
 	// Consume the cursor
-	// TODO: add max results and not before filtering
+	// TODO: this filtering method is NOT ideal since it scans in ascending time order
+	// rather than reverse time order (trtl doesn't support reverse ordering). This
+	// means as the number of announcements in the collection grows, this method will
+	// get slower and slower. Worse, we're loading everything in memory so we might
+	// overload the pod. We need to either figure out a different key-value storage
+	// and ordering mechanism or implement reverse seek in trtl.
+	results := make([]*api.Announcement, 0)
 	for {
 		var pair *trtl.KVPair
 		if pair, err = cursor.Recv(); err != nil {
@@ -96,12 +103,32 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore ti
 
 		var post *api.Announcement
 		if post, err = a.Decode(pair.Value); err != nil {
-			return nil, fmt.Errorf("could not decode announcement from database: %s", err)
+			// If we can't decode the announcement log the error and continue
+			log.Error().Err(err).Str("key", ParseKSUID(pair.Key)).Msg("could not decode announcement from database")
+			continue
 		}
 
-		out.Announcements = append(out.Announcements, post)
+		var date time.Time
+		if date, err = time.Parse("2006-01-02", post.PostDate); err != nil {
+			// If we can't decode the post date log the error and continue
+			log.Error().Err(err).Str("key", ParseKSUID(pair.Key)).Msg("could not parse the post date")
+		}
+
+		if date.Before(notBefore) {
+			// Filter on the not before date
+			continue
+		}
+
+		results = append(results, post)
 	}
 
+	// Reverse the results and apply the max results limit
+	for i := len(results) - 1; i >= 0; i-- {
+		if len(out.Announcements) >= maxResults {
+			break
+		}
+		out.Announcements = append(out.Announcements, results[i])
+	}
 	return out, nil
 }
 
@@ -176,4 +203,13 @@ func (a *Announcements) Decode(data []byte) (out *api.Announcement, err error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// ParseKSUID from bytes into a string, returning the nil ksuid if an error occurs.
+func ParseKSUID(key []byte) string {
+	kid, err := ksuid.FromBytes(key)
+	if err != nil {
+		return ksuid.Nil.String()
+	}
+	return kid.String()
 }
