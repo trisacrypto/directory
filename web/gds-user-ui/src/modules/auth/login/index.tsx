@@ -7,6 +7,7 @@ import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
+
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');

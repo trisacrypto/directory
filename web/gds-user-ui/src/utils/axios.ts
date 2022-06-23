@@ -8,11 +8,16 @@ const axiosInstance = axios.create({
   }
 });
 axiosInstance.defaults.withCredentials = true;
-axiosInstance.interceptors.request.use(
+axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error) => {
+    console.log('[AxiosError]', error);
+
+    if (error && !error.response) {
+      return Promise.reject<any>(new Error('Network connection error'));
+    }
     const originalRequest = error.config;
     // retry 3 time if request failed
 
