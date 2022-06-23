@@ -188,18 +188,20 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 			Testing:       true,
 		},
 		TestNet: config.NetworkConfig{
-			GDS: config.DirectoryConfig{
+			Directory: config.DirectoryConfig{
 				Endpoint: "bufcon",
 			},
 			Members: config.MembersConfig{
+				Insecure: true,
 				Endpoint: "bufcon",
 			},
 		},
 		MainNet: config.NetworkConfig{
-			GDS: config.DirectoryConfig{
+			Directory: config.DirectoryConfig{
 				Endpoint: "bufcon",
 			},
 			Members: config.MembersConfig{
+				Insecure: true,
 				Endpoint: "bufcon",
 			},
 		},

@@ -23,6 +23,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
+	"google.golang.org/grpc"
 )
 
 func init() {
@@ -110,15 +111,26 @@ func New(conf config.Config) (s *Server, err error) {
 // ConnectNetwork creates a unified client to the TRISA Directory Service and TRISA
 // members service specified in the configuration. This method is used to connect to
 // both the TestNet and the MainNet so we can maintain separate clients for each.
-func ConnectNetwork(conf config.DirectoryConfig) (_ GlobalDirectoryClient, err error) {
+func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) {
 	client := &GDSClient{}
 
-	if client.ConnectGDS(conf) != nil {
+	if client.ConnectGDS(conf.Directory) != nil {
 		return nil, fmt.Errorf("could not connect to directory service: %s", err)
 	}
 
-	if client.ConnectMembers(conf) != nil {
-		return nil, fmt.Errorf("could not connect to members service: %s", err)
+	if conf.Members.Insecure {
+		if client.ConnectMembers(conf.Members) != nil {
+			return nil, fmt.Errorf("could not connect to insecure members service: %s", err)
+		}
+	} else {
+		var mtls grpc.DialOption
+		if mtls, err = conf.Members.MTLS.DialOption(conf.Members.Endpoint); err != nil {
+			return nil, fmt.Errorf("could not create dial option for mTLS: %s", err)
+		}
+
+		if client.ConnectMembers(conf.Members, mtls) != nil {
+			return nil, fmt.Errorf("could not connect to members service with mTLS: %s", err)
+		}
 	}
 
 	return client, nil

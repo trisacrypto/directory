@@ -49,8 +49,8 @@ type AuthConfig struct {
 // NetworkConfig contains sub configurations for connecting to specific GDS and members
 // services.
 type NetworkConfig struct {
-	GDS     DirectoryConfig
-	Members MembersConfig
+	Directory DirectoryConfig
+	Members   MembersConfig
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
@@ -62,7 +62,7 @@ type DirectoryConfig struct {
 
 // MembersConfig is a configuration for connecting to a members service.
 type MembersConfig struct {
-	Insecure bool          `split_words:"true" default:"true"`
+	Insecure bool          `split_words:"true" default:"false"`
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
 	MTLS     MTLSConfig
@@ -76,8 +76,8 @@ type DatabaseConfig struct {
 }
 
 type MTLSConfig struct {
-	CertPath string `split_words:"true"`
-	PoolPath string `split_words:"true"`
+	CertPath string `split_words:"true" required:"true"`
+	PoolPath string `split_words:"true" required:"true"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -148,7 +148,7 @@ func (c MembersConfig) Validate() error {
 	// If insecure is false then we must have certs to connect to the members service.
 	if !c.Insecure {
 		if err := c.MTLS.Validate(); err != nil {
-			return fmt.Errorf("invalid members mTLS configuration: %w", err)
+			return fmt.Errorf("invalid members configuration: %w", err)
 		}
 	}
 	return nil
@@ -158,7 +158,7 @@ func (c DatabaseConfig) Validate() error {
 	// If the insecure flag isn't set then we must have certs when connecting to trtl.
 	if !c.Insecure {
 		if err := c.MTLS.Validate(); err != nil {
-			return fmt.Errorf("invalid database mTLS configuration: %w", err)
+			return fmt.Errorf("invalid database configuration: %w", err)
 		}
 	}
 	return nil
@@ -216,7 +216,7 @@ func (c MTLSConfig) Validate() error {
 }
 
 // DialOption returns a configured dial option which can be directly used in a
-// grpc.Dial or grpc.DialContext call to connect to a client with mTLS.
+// grpc.Dial or grpc.DialContext call to connect using mTLS.
 func (c MTLSConfig) DialOption(endpoint string) (opt grpc.DialOption, err error) {
 	var (
 		sz    *trust.Serializer
