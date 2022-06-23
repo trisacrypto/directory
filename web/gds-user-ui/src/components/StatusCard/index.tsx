@@ -2,7 +2,7 @@ import React from 'react';
 import { Stack, Box, Text, Heading, HStack, Flex, chakra } from '@chakra-ui/react';
 import { IoEllipse } from 'react-icons/io5';
 interface StatusCardProps {
-  isOnline: boolean;
+  isOnline: string;
 }
 
 const StatusCard = ({ isOnline }: StatusCardProps) => {
@@ -59,7 +59,7 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
           textAlign={'center'}
           justifyContent={'center'}
           mx={'auto'}>
-          {isOnline ? (
+          {isOnline?.toUpperCase() === 'HEALTH' ? (
             <IoEllipse fontSize="3rem" fill={'#60C4CA'} />
           ) : (
             <IoEllipse fontSize="3rem" fill={'#C4C4C4'} />
