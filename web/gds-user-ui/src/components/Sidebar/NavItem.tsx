@@ -69,7 +69,10 @@ const NavItem = ({ icon, children, href = '#', selected, ...rest }: NavItemProps
             as={icon}
           />
         )}
-        <Box>
+        <Box
+          _groupHover={{
+            color: 'white'
+          }}>
           <Text>{children}</Text>
         </Box>
       </Flex>
