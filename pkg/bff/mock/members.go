@@ -20,7 +20,7 @@ const (
 	SummaryRPC = "Summary"
 )
 
-func NewMembers(conf config.DirectoryConfig) (m *Members, err error) {
+func NewMembers(conf config.MembersConfig) (m *Members, err error) {
 	m = &Members{
 		srv:   grpc.NewServer(),
 		sock:  bufconn.New(bufSize),

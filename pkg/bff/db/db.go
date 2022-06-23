@@ -2,18 +2,14 @@ package db
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net/url"
 	"sync"
 
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	trtl "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
-	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
@@ -29,37 +25,11 @@ func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 	if conf.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
-		var sz *trust.Serializer
-		if sz, err = trust.NewSerializer(false); err != nil {
-			return nil, err
+		var mtls grpc.DialOption
+		if mtls, err = conf.MTLS.DialOption(conf.URL); err != nil {
+			return nil, fmt.Errorf("could not create mTLS dial option: %s", err)
 		}
-
-		var pool trust.ProviderPool
-		if pool, err = sz.ReadPoolFile(conf.PoolPath); err != nil {
-			return nil, err
-		}
-
-		var provider *trust.Provider
-		if provider, err = sz.ReadFile(conf.CertPath); err != nil {
-			return nil, err
-		}
-
-		var cert tls.Certificate
-		if cert, err = provider.GetKeyPair(); err != nil {
-			return nil, err
-		}
-
-		var certPool *x509.CertPool
-		if certPool, err = pool.GetCertPool(false); err != nil {
-			return nil, err
-		}
-
-		tlsConf := &tls.Config{
-			ServerName:   dsn.Hostname(),
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      certPool,
-		}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
+		opts = append(opts, mtls)
 	}
 
 	db = &DB{}

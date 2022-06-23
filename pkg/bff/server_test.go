@@ -82,15 +82,29 @@ func (s *bffTestSuite) SetupSuite() {
 			ProviderCache: 5 * time.Minute,
 			Testing:       true,
 		},
-		TestNet: config.DirectoryConfig{
-			Insecure: true,
-			Endpoint: "bufnet",
-			Timeout:  1 * time.Second,
+		TestNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
+			Members: config.MembersConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
 		},
-		MainNet: config.DirectoryConfig{
-			Insecure: true,
-			Endpoint: "bufnet",
-			Timeout:  1 * time.Second,
+		MainNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
+			Members: config.MembersConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
 		},
 		Database: config.DatabaseConfig{
 			URL:      "trtl://bufnet/",
@@ -100,17 +114,17 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(err, "could not mark configuration")
 
 	// Create the GDS mocks for testnet and mainnet
-	s.testnet.gds, err = mock.NewGDS(conf.TestNet)
+	s.testnet.gds, err = mock.NewGDS(conf.TestNet.Directory)
 	require.NoError(err, "could not create testnet mock")
 
-	s.mainnet.gds, err = mock.NewGDS(conf.MainNet)
+	s.mainnet.gds, err = mock.NewGDS(conf.MainNet.Directory)
 	require.NoError(err, "could not create mainnet mock")
 
 	// Create the members mocks for testnet and mainnet
-	s.testnet.members, err = mock.NewMembers(conf.TestNet)
+	s.testnet.members, err = mock.NewMembers(conf.TestNet.Members)
 	require.NoError(err, "could not create testnet mock")
 
-	s.mainnet.members, err = mock.NewMembers(conf.MainNet)
+	s.mainnet.members, err = mock.NewMembers(conf.MainNet.Members)
 	require.NoError(err, "could not create mainnet mock")
 
 	s.bff, err = bff.New(conf)
@@ -118,13 +132,13 @@ func (s *bffTestSuite) SetupSuite() {
 
 	// Create the mock testnet client
 	testnetClient := &bff.GDSClient{}
-	require.NoError(testnetClient.ConnectGDS(conf.TestNet, s.testnet.gds.DialOpts()...), "could not connect to testnet GDS")
-	require.NoError(testnetClient.ConnectMembers(conf.TestNet, s.testnet.members.DialOpts()...), "could not connect to testnet members")
+	require.NoError(testnetClient.ConnectGDS(conf.TestNet.Directory, s.testnet.gds.DialOpts()...), "could not connect to testnet GDS")
+	require.NoError(testnetClient.ConnectMembers(conf.TestNet.Members, s.testnet.members.DialOpts()...), "could not connect to testnet members")
 
 	// Create the mock mainnet client
 	mainnetClient := &bff.GDSClient{}
-	require.NoError(mainnetClient.ConnectGDS(conf.MainNet, s.mainnet.gds.DialOpts()...), "could not connect to mainnet GDS")
-	require.NoError(mainnetClient.ConnectMembers(conf.MainNet, s.mainnet.members.DialOpts()...), "could not connect to mainnet members")
+	require.NoError(mainnetClient.ConnectGDS(conf.MainNet.Directory, s.mainnet.gds.DialOpts()...), "could not connect to mainnet GDS")
+	require.NoError(mainnetClient.ConnectMembers(conf.MainNet.Members, s.mainnet.members.DialOpts()...), "could not connect to mainnet members")
 
 	// Add the mock clients to the mock
 	s.bff.SetGDSClients(testnetClient, mainnetClient)

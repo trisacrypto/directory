@@ -50,7 +50,7 @@ func (c *GDSClient) ConnectGDS(conf config.DirectoryConfig, opts ...grpc.DialOpt
 // ConnectMembers creates a gRPC client to the TRISA Members Service specified in the
 // configuration using the provided dial options.
 // TODO: Connect using mTLS.
-func (c *GDSClient) ConnectMembers(conf config.DirectoryConfig, opts ...grpc.DialOption) (err error) {
+func (c *GDSClient) ConnectMembers(conf config.MembersConfig, opts ...grpc.DialOption) (err error) {
 	if len(opts) == 0 {
 		opts = make([]grpc.DialOption, 0)
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
