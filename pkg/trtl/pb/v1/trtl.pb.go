@@ -1182,8 +1182,8 @@ type Options struct {
 	unknownFields protoimpl.UnknownFields
 
 	ReturnMeta   bool   `protobuf:"varint,1,opt,name=return_meta,json=returnMeta,proto3" json:"return_meta,omitempty"`         // generally, return the version information for the object in the response
-	IterNoKeys   bool   `protobuf:"varint,2,opt,name=iter_no_keys,json=iterNoKeys,proto3" json:"iter_no_keys,omitempty"`       // do not include keys in an Iter or Batch response, to reduce data transfer load
-	IterNoValues bool   `protobuf:"varint,3,opt,name=iter_no_values,json=iterNoValues,proto3" json:"iter_no_values,omitempty"` // do not include values in an Iter or Batch response, to reduce data transfer load
+	IterNoKeys   bool   `protobuf:"varint,2,opt,name=iter_no_keys,json=iterNoKeys,proto3" json:"iter_no_keys,omitempty"`       // do not include keys in an Iter or Cursor response, to reduce data transfer load
+	IterNoValues bool   `protobuf:"varint,3,opt,name=iter_no_values,json=iterNoValues,proto3" json:"iter_no_values,omitempty"` // do not include values in an Iter or Cursor response, to reduce data transfer load
 	PageToken    string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`             // specify the page token to fetch the next page of results
 	PageSize     int32  `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`               // specify the number of results per page, cannot change between page requests
 }
