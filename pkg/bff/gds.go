@@ -2,7 +2,6 @@ package bff
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,15 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -30,29 +25,6 @@ const (
 	trisatest     = "trisatest.net"
 	vaspdirectory = "vaspdirectory.net"
 )
-
-// ConnectGDS creates a gRPC client to the TRISA Directory Service specified in the
-// configuration. This method is used to connect to both the TestNet and the MainNet and
-// to connect to mock GDS services in testing using buffconn.
-func ConnectGDS(conf config.DirectoryConfig) (_ gds.TRISADirectoryClient, err error) {
-	// Create the Dial options with required credentials
-	var opts []grpc.DialOption
-	if conf.Insecure {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
-	defer cancel()
-
-	// Connect the directory client (non-blocking)
-	var cc *grpc.ClientConn
-	if cc, err = grpc.DialContext(ctx, conf.Endpoint, opts...); err != nil {
-		return nil, err
-	}
-	return gds.NewTRISADirectoryClient(cc), nil
-}
 
 // Lookup makes a request on behalf of the user to both the TestNet and MainNet GDS
 // servers, returning 1-2 results (e.g. either or both GDS responses). If no results
@@ -81,7 +53,7 @@ func (s *Server) Lookup(c *gin.Context) {
 	req := &gds.LookupRequest{Id: params.ID, CommonName: params.CommonName}
 
 	// Create an RPC func for making a parallel GDS request
-	lookup := func(ctx context.Context, client gds.TRISADirectoryClient, network string) (_ proto.Message, err error) {
+	lookup := func(ctx context.Context, client GlobalDirectoryClient, network string) (_ proto.Message, err error) {
 		var rep *gds.LookupReply
 		if rep, err = client.Lookup(ctx, req); err != nil {
 			// If the code is not found then do not return an error, just no result.
@@ -224,9 +196,9 @@ func (s *Server) Register(c *gin.Context) {
 
 	switch network {
 	case testnet:
-		rep, err = s.testnet.gds.Register(ctx, req)
+		rep, err = s.testnet.Register(ctx, req)
 	case mainnet:
-		rep, err = s.mainnet.gds.Register(ctx, req)
+		rep, err = s.mainnet.Register(ctx, req)
 	default:
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
 		return
@@ -304,9 +276,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	switch params.Directory {
 	case trisatest:
-		rep, err = s.testnet.gds.VerifyContact(ctx, req)
+		rep, err = s.testnet.VerifyContact(ctx, req)
 	case vaspdirectory:
-		rep, err = s.mainnet.gds.VerifyContact(ctx, req)
+		rep, err = s.mainnet.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not verify contact"))

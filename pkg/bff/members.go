@@ -2,7 +2,6 @@ package bff
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 
@@ -10,50 +9,18 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
-	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/proto"
 )
-
-// ConnectMembers creates a gRPC client to the TRISA Members Service specified in the
-// configuration. This method is used to connect to both the TestNet and the MainNet and
-// to connect to mock GDS services in testing using buffconn.
-func ConnectMembers(conf config.DirectoryConfig, opts ...grpc.DialOption) (_ members.TRISAMembersClient, err error) {
-	if len(opts) == 0 {
-		// If no options are provided then default to insecure
-		opts = make([]grpc.DialOption, 0)
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	}
-
-	// Create the Dial options with required credentials
-	if conf.Insecure {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
-	defer cancel()
-
-	// Connect the directory client (non-blocking)
-	var cc *grpc.ClientConn
-	if cc, err = grpc.DialContext(ctx, conf.Endpoint, opts...); err != nil {
-		return nil, err
-	}
-	return members.NewTRISAMembersClient(cc), nil
-}
 
 // GetSummaries makes parallel calls to the members service to get the summary
 // information for both testnet and mainnet. If an endpoint returned an error, then a
 // nil value is returned from this function for that endpoint instead of an error.
 func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) (testsum *members.SummaryReply, mainsum *members.SummaryReply, err error) {
 	// Create the RPC which can do both testnet and mainnet calls
-	rpc := func(ctx context.Context, client members.TRISAMembersClient, network string) (rep proto.Message, err error) {
+	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
 		req := &members.SummaryRequest{}
 		switch network {
 		case testnet:
@@ -67,7 +34,7 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 	}
 
 	// Perform the parallel requests
-	results, errs := s.ParallelMembersRequests(ctx, rpc, false)
+	results, errs := s.ParallelGDSRequests(ctx, rpc, false)
 	if len(errs) != 2 || len(results) != 2 {
 		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
 	}

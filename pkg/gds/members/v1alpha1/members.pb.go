@@ -140,6 +140,8 @@ func (x *ListReply) GetNextPageToken() string {
 
 // VASPMember is a lightweight data structure containing enough information to
 // facilitate p2p exchanges or more detailed lookups against the Directory Service.
+// Note: This should not contain any sensitive VASP information since it is returned on
+// the publicly accessible List and Summary APIs.
 type VASPMember struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

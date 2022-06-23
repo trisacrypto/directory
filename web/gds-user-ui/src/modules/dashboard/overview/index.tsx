@@ -42,6 +42,7 @@ const Overview: React.FC = () => {
     (async () => {
       try {
         const response = await getMetrics();
+        console.log('response', response);
         setResult(response.data);
       } catch (e: any) {
         if (e.response.status === 401) {
@@ -56,7 +57,9 @@ const Overview: React.FC = () => {
         setIsLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   // load legal person & contact information
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
