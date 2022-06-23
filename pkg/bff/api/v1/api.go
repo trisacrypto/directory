@@ -9,12 +9,14 @@ import (
 //===========================================================================
 
 type BFFClient interface {
-	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
-	Overview(ctx context.Context) (out *OverviewReply, err error)
-	Certificates(ctx context.Context) (out *CertificatesReply, err error)
-	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
-	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
-	VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error)
+	Status(context.Context, *StatusParams) (*StatusReply, error)
+	Overview(context.Context) (*OverviewReply, error)
+	Announcements(context.Context) (*AnnouncementsReply, error)
+	MakeAnnouncement(context.Context, *Announcement) error
+	Certificates(context.Context) (*CertificatesReply, error)
+	Lookup(context.Context, *LookupParams) (*LookupReply, error)
+	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
+	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 }
 
 //===========================================================================
@@ -67,6 +69,22 @@ type MemberDetails struct {
 	Status      string                 `json:"status"`
 	CountryCode string                 `json:"country_code"`
 	Certificate map[string]interface{} `json:"certificate"`
+}
+
+// AnnouncementsReply contains up to the last 10 network announcements that were made in
+// the past month. It does not require pagination since only relevant results are returned.
+type AnnouncementsReply struct {
+	Announcements []*Announcement `json:"announcements"`
+	LastUpdated   string          `json:"last_updated,omitempty"`
+}
+
+// Announcement represents a single network announcementthat can be posted to the
+// endpoint or returned in the announcements reply.
+type Announcement struct {
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	PostDate string `json:"post_date,omitempty"` // Ignored on POST only available on GET
+	Author   string `json:"author,omitempty"`    // Ignored on POST only available on GET
 }
 
 // CertificatesReply is returned on certificates requests.

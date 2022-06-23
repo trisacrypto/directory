@@ -159,6 +159,10 @@ func TestRegister(t *testing.T) {
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v1/register/mainnet", r.URL.Path)
 
+		in := &api.RegisterRequest{}
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err, "could not decode register request")
+
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(fixture)
@@ -320,4 +324,116 @@ func TestCertificates(t *testing.T) {
 	require.Equal(t, fixture, out)
 	require.Equal(t, fixture.TestNet, out.TestNet)
 	require.Equal(t, fixture.MainNet, out.MainNet)
+}
+
+func TestAnnoucements(t *testing.T) {
+	fixture := &api.AnnouncementsReply{
+		Announcements: []*api.Announcement{
+			{
+				Title:    "Upcoming TRISA Working Group Call",
+				Body:     "Join us on Thursday Apr 28 for the TRISA Working Group.",
+				PostDate: "2022-04-20",
+				Author:   "admin@trisa.io",
+			},
+			{
+				Title:    "Routine Maintenance Scheduled",
+				Body:     "The GDS will be undergoing routine maintenance on Apr 7.",
+				PostDate: "2022-04-01",
+				Author:   "admin@trisa.io",
+			},
+			{
+				Title:    "Beware the Ides of March",
+				Body:     "I have a bad feeling about tomorrow.",
+				PostDate: "2022-03-14",
+				Author:   "julius@caesar.com",
+			},
+		},
+		LastUpdated: "2022-04-21T12:05:23Z",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/announcements", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Announcements(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	require.Len(t, out.Announcements, 3)
+	require.Equal(t, "2022-04-21T12:05:23Z", out.LastUpdated)
+}
+
+func TestMakeAnnoucement(t *testing.T) {
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/announcements", r.URL.Path)
+
+		in := &api.Announcement{}
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err, "could not decode register request")
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.Announcement{
+		Title: "The Happenings",
+		Body:  "Things are going on, we're all very busy, and you should join us!",
+	}
+
+	err = client.MakeAnnouncement(context.TODO(), req)
+	require.NoError(t, err)
+}
+
+func TestMakeAnnoucementErrors(t *testing.T) {
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/announcements", r.URL.Path)
+
+		in := &api.Announcement{}
+		err := json.NewDecoder(r.Body).Decode(in)
+		require.NoError(t, err, "could not decode register request")
+
+		switch in.Title {
+		case "200":
+			w.Header().Add("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+		case "400":
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+		default:
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.Announcement{Title: "200"}
+	err = client.MakeAnnouncement(context.TODO(), req)
+	require.EqualError(t, err, "expected no content, received 200 OK")
+
+	req = &api.Announcement{Title: "400"}
+	err = client.MakeAnnouncement(context.TODO(), req)
+	require.EqualError(t, err, "400 Bad Request")
 }
