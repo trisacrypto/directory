@@ -21,10 +21,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
-	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
-	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 )
 
 func init() {
@@ -112,26 +110,18 @@ func New(conf config.Config) (s *Server, err error) {
 // ConnectNetwork creates a unified client to the TRISA Directory Service and TRISA
 // members service specified in the configuration. This method is used to connect to
 // both the TestNet and the MainNet so we can maintain separate clients for each.
-func ConnectNetwork(conf config.DirectoryConfig) (client *GDSClient, err error) {
-	client = &GDSClient{}
+func ConnectNetwork(conf config.DirectoryConfig) (_ GlobalDirectoryClient, err error) {
+	client := &GDSClient{}
 
-	if client.gds, err = ConnectGDS(conf); err != nil {
+	if client.ConnectGDS(conf) != nil {
 		return nil, fmt.Errorf("could not connect to directory service: %s", err)
 	}
 
-	if client.members, err = ConnectMembers(conf); err != nil {
+	if client.ConnectMembers(conf) != nil {
 		return nil, fmt.Errorf("could not connect to members service: %s", err)
 	}
 
 	return client, nil
-}
-
-// GDSClient is a unified client which contains sub-clients for interacting with the
-// directory service and members service. This helps reduce common client code when
-// making parallel requests to both the TestNet and MainNet.
-type GDSClient struct {
-	gds     gds.TRISADirectoryClient
-	members members.TRISAMembersClient
 }
 
 type Server struct {
@@ -139,8 +129,8 @@ type Server struct {
 	conf    config.Config
 	srv     *http.Server
 	router  *gin.Engine
-	testnet *GDSClient
-	mainnet *GDSClient
+	testnet GlobalDirectoryClient
+	mainnet GlobalDirectoryClient
 	db      *db.DB
 	auth0   *management.Management
 	started time.Time
@@ -362,40 +352,10 @@ func (s *Server) GetRouter() http.Handler {
 	return s.router
 }
 
-// GetTestNet returns the TestNet directory client for testing purposes.
-func (s *Server) GetTestNet() *GDSClient {
-	return s.testnet
-}
-
-// GetMainNet returns the MainNet directory client for testing purposes.
-func (s *Server) GetMainNet() *GDSClient {
-	return s.mainnet
-}
-
 // GetURL returns the URL that the server can be reached if it has been started. This
 // accessor is primarily used to create a test client.
 func (s *Server) GetURL() string {
 	s.RLock()
 	defer s.RUnlock()
 	return s.url
-}
-
-// Set the directory service client for testing purposes.
-func (c *GDSClient) SetGDS(client gds.TRISADirectoryClient) {
-	c.gds = client
-}
-
-// Set the members service client for testing purposes.
-func (c *GDSClient) SetMembers(client members.TRISAMembersClient) {
-	c.members = client
-}
-
-// Get the directory service client for testing purposes.
-func (c *GDSClient) GetGDS() gds.TRISADirectoryClient {
-	return c.gds
-}
-
-// Get the members service client for testing purposes.
-func (c *GDSClient) GetMembers() members.TRISAMembersClient {
-	return c.members
 }

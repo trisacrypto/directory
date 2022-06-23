@@ -27,13 +27,13 @@ func New(bufSize int) *GRPCListener {
 
 func (g *GRPCListener) Connect() (err error) {
 	ctx := context.Background()
-	if g.Conn, err = grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(g.dialer), grpc.WithTransportCredentials(insecure.NewCredentials())); err != nil {
+	if g.Conn, err = grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(g.Dialer), grpc.WithTransportCredentials(insecure.NewCredentials())); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (g *GRPCListener) dialer(context.Context, string) (net.Conn, error) {
+func (g *GRPCListener) Dialer(context.Context, string) (net.Conn, error) {
 	return g.Listener.Dial()
 }
 

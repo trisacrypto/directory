@@ -13,7 +13,7 @@ import (
 // sub-clients for the GDS and members services, and network name are passed into the
 // function, allowing the RPC to make any directory service or members service RPC
 // call and log with the associated network.
-type RPC func(ctx context.Context, client *GDSClient, network string) (proto.Message, error)
+type RPC func(ctx context.Context, client GlobalDirectoryClient, network string) (proto.Message, error)
 
 // ParallelGDSRequests makes concurrent requests to both the testnet and the mainnet,
 // storing the results and errors in a slice of length 2 ([testnet, mainnet]). If the
@@ -31,7 +31,7 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPC, flatten bool)
 	wg.Add(2)
 
 	// Create a closure to execute the rpc
-	closure := func(client *GDSClient, idx int, network string) {
+	closure := func(client GlobalDirectoryClient, idx int, network string) {
 		defer wg.Done()
 		results[idx], errs[idx] = rpc(ctx, client, network)
 	}
