@@ -23,9 +23,14 @@ import (
 // ConnectMembers creates a gRPC client to the TRISA Members Service specified in the
 // configuration. This method is used to connect to both the TestNet and the MainNet and
 // to connect to mock GDS services in testing using buffconn.
-func ConnectMembers(conf config.DirectoryConfig) (_ members.TRISAMembersClient, err error) {
+func ConnectMembers(conf config.DirectoryConfig, opts ...grpc.DialOption) (_ members.TRISAMembersClient, err error) {
+	if len(opts) == 0 {
+		// If no options are provided then default to insecure
+		opts = make([]grpc.DialOption, 0)
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
 	// Create the Dial options with required credentials
-	var opts []grpc.DialOption
 	if conf.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {

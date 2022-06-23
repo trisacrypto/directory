@@ -74,17 +74,18 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_SECRET"], conf.Auth0.ClientSecret)
 	require.True(t, conf.Auth0.Testing)
 	require.Equal(t, 10*time.Minute, conf.Auth0.ProviderCache)
-	require.True(t, conf.TestNet.Insecure)
-	require.Equal(t, testEnv["GDS_BFF_TESTNET_ENDPOINT"], conf.TestNet.Endpoint)
-	require.Equal(t, 5*time.Second, conf.TestNet.Timeout)
-	require.True(t, conf.MainNet.Insecure)
-	require.Equal(t, testEnv["GDS_BFF_MAINNET_ENDPOINT"], conf.MainNet.Endpoint)
-	require.Equal(t, 3*time.Second, conf.MainNet.Timeout)
+	require.True(t, conf.TestNet.GDS.Insecure)
+	require.True(t, conf.TestNet.Members.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_TESTNET_GDS_ENDPOINT"], conf.TestNet.GDS.Endpoint)
+	require.Equal(t, 5*time.Second, conf.TestNet.GDS.Timeout)
+	require.True(t, conf.MainNet.GDS.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_MAINNET_GDS_ENDPOINT"], conf.MainNet.GDS.Endpoint)
+	require.Equal(t, 3*time.Second, conf.MainNet.GDS.Timeout)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
 	require.Equal(t, true, conf.Database.Insecure)
-	require.Equal(t, testEnv["GDS_BFF_DATABASE_CERT_PATH"], conf.Database.CertPath)
-	require.Equal(t, testEnv["GDS_BFF_DATABASE_POOL_PATH"], conf.Database.PoolPath)
+	require.Equal(t, testEnv["GDS_BFF_DATABASE_CERT_PATH"], conf.Database.MTLS.CertPath)
+	require.Equal(t, testEnv["GDS_BFF_DATABASE_POOL_PATH"], conf.Database.MTLS.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
@@ -198,8 +199,10 @@ func TestDatabaseConfigValidation(t *testing.T) {
 		URL:           "trtl://trtl.test.net:443",
 		ReindexOnBoot: false,
 		Insecure:      false,
-		CertPath:      "",
-		PoolPath:      "",
+		MTLS: config.MTLSConfig{
+			CertPath: "",
+			PoolPath: "",
+		},
 	}
 
 	conf.Insecure = true
@@ -211,11 +214,11 @@ func TestDatabaseConfigValidation(t *testing.T) {
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
 
-	conf.CertPath = "fixtures/certs.pem"
+	conf.MTLS.CertPath = "fixtures/certs.pem"
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
 
-	conf.PoolPath = "fixtures/pool.zip"
+	conf.MTLS.PoolPath = "fixtures/pool.zip"
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

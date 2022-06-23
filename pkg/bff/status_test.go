@@ -183,8 +183,22 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 			ProviderCache: 5 * time.Minute,
 			Testing:       true,
 		},
-		TestNet: config.DirectoryConfig{Endpoint: "bufcon"},
-		MainNet: config.DirectoryConfig{Endpoint: "bufcon"},
+		TestNet: config.NetworkConfig{
+			GDS: config.DirectoryConfig{
+				Endpoint: "bufcon",
+			},
+			Members: config.MembersConfig{
+				Endpoint: "bufcon",
+			},
+		},
+		MainNet: config.NetworkConfig{
+			GDS: config.DirectoryConfig{
+				Endpoint: "bufcon",
+			},
+			Members: config.MembersConfig{
+				Endpoint: "bufcon",
+			},
+		},
 		Database: config.DatabaseConfig{
 			URL:      "trtl:///",
 			Insecure: true,

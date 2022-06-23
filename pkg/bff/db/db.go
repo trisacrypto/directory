@@ -31,12 +31,12 @@ func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 		}
 
 		var pool trust.ProviderPool
-		if pool, err = sz.ReadPoolFile(conf.PoolPath); err != nil {
+		if pool, err = sz.ReadPoolFile(conf.MTLS.PoolPath); err != nil {
 			return nil, err
 		}
 
 		var provider *trust.Provider
-		if provider, err = sz.ReadFile(conf.CertPath); err != nil {
+		if provider, err = sz.ReadFile(conf.MTLS.CertPath); err != nil {
 			return nil, err
 		}
 
