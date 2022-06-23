@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	maxAnnouncements    = 10
-	announcementsWindow = -1 * 31 * 24 * time.Hour
+	maxAnnouncements = 10
+	subMonths        = -1
 )
 
 func (s *Server) Announcements(c *gin.Context) {
-	// Only fetch the previous 10 announcements from the last 30 days
-	nbf := time.Now().Add(announcementsWindow)
+	// Only fetch the previous 10 announcements from the last month
+	nbf := time.Now().AddDate(0, subMonths, 0)
 	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf)
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch recent announcements")
