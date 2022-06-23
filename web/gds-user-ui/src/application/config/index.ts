@@ -25,3 +25,5 @@ export const getBffAndGdsVersion = async () => {
     }
   }
 };
+
+export const isDashLocale = () => process.env.REACT_APP_USE_DASH_LOCALE?.toLowerCase() === 'true';

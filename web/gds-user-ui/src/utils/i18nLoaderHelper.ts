@@ -1,5 +1,5 @@
 import { i18n } from '@lingui/core';
-import { en, fr, de, zh, ja } from 'make-plural/plurals';
+import { en, fr, de, zh, ja, ru } from 'make-plural/plurals';
 import { Locales } from 'types/type';
 
 export const DEFAULT_LOCALE: Locales = 'en';
