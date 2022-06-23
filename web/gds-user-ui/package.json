@@ -82,9 +82,13 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx,json,scss,css,md}": [
-      "prettier --single-quote  --write",
-      "git add"
+      "prettier --single-quote  --write"
     ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn precommit && yarn test --silent"
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -153,6 +157,14 @@
     "webpack": "^5.69.1"
   },
   "jest": {
-    "resetMocks": false
+    "resetMocks": false,
+    "coverageThreshold": {
+      "global": {
+        "branches": 40,
+        "functions": 30,
+        "lines": 40,
+        "statements": 40
+      }
+    }
   }
 }
