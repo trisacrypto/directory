@@ -57,7 +57,9 @@ const Overview: React.FC = () => {
         setIsLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   // load legal person & contact information
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
