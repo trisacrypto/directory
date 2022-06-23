@@ -15,19 +15,12 @@ import NavItem from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
-import { NavLink as RouterLink, useLocation } from 'react-router-dom';
-import { CSSProperties } from 'react';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
 }
 
-const activeLinkStyle: CSSProperties = {};
-
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
-  const location = useLocation();
-  console.log('[location]', location);
-
   return (
     <Box
       transition="3s ease"
