@@ -14,7 +14,9 @@ import {
   Button,
   Heading,
   VStack,
-  Container
+  Container,
+  Divider,
+  useBreakpointValue
 } from '@chakra-ui/react';
 
 import { colors } from 'utils/theme';
@@ -24,6 +26,17 @@ import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
 
 export default function IntegrateAndComply() {
+  const variant = useBreakpointValue({
+    md: {
+      content: "''",
+      position: 'absolute',
+      height: '100%',
+      width: '2px',
+      bg: 'gray.300',
+      left: '50%'
+    }
+  });
+
   return (
     <>
       <LandingHeader />
@@ -64,14 +77,9 @@ export default function IntegrateAndComply() {
       <Container maxW={'5xl'}>
         <Flex bg={'white'} color={'black'} fontFamily={'Open Sans'}>
           <Stack>
-            <Stack
-              flex={1}
-              justify={{ lg: 'center' }}
-              py={{ base: 4, md: 14 }}
-              // px={{ base: 10, md: 55 }}
-            >
-              <Box my={{ base: 4 }} color="black">
-                <Text fontFamily={'heading'} fontWeight={700} fontSize={'xl'}>
+            <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 14 }}>
+              <Box pl={5} my={{ base: 4 }} color="black">
+                <Text fontFamily={'heading'} fontSize={'xl'}>
                   Upon verification, VASPs must integrate with TRISA to begin exchanging Travel Rule
                   data with other verified TRISA members.
                 </Text>
@@ -87,8 +95,12 @@ export default function IntegrateAndComply() {
                   display={{ md: 'grid' }}
                   gridTemplateColumns={{ md: 'repeat(2,1fr)' }}
                   color={'black'}
-                  gridColumnGap={{ md: 20, lg: 80 }}
-                  gridRowGap={{ md: 10 }}>
+                  gridColumnGap={{ md: 20, lg: 54 }}
+                  gridRowGap={{ md: 6 }}
+                  position="relative"
+                  _after={{
+                    ...variant
+                  }}>
                   <Line title="Option 1. Set Up Your Own TRISA Node" fontWeight={'bold'}>
                     Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set
                     up and maintain their own TRISA server to exhange encrypted Travel Rule
@@ -96,13 +108,11 @@ export default function IntegrateAndComply() {
                     documentation, a reference implemenation, and “robot” VASPs for testing
                     purposes.
                   </Line>
-
                   <Line title="Option 2. Use a 3rd-party Solution" fontWeight={'bold'}>
                     TRISA is designed to be interoperable. There are several Travel Rule solutions
                     providers available on the market. If you are a customer, work with them to
                     integrate TRISA into your Travel Rule compliance workflow.
                   </Line>
-
                   <Line title="How to set up your own node?" fontWeight={'bold'}>
                     Talk to a member of your technical team to determine the requirements and
                     resources to integrate TRISA with your system. Have members of your technical
@@ -110,23 +120,24 @@ export default function IntegrateAndComply() {
                     can help your VASP set up your TRISA server and maintain it.
                   </Line>
                   <Line title="3rd Party Travel Rule Providers" fontWeight={'bold'}>
-                    <UnorderedList>
-                      <ListItem color={'#1F4CED'}>
+                    <UnorderedList color={'#1F4CED'}>
+                      <ListItem>
                         <Link>CipherTrace</Link>
                       </ListItem>
-                      <ListItem color={'#1F4CED'}>
+                      <ListItem>
                         <Link>Synga Bridge</Link>
                       </ListItem>
                       <ListItem>
-                        <Link color={'#1F4CED'}>NotaBene</Link> (not interoperable)
+                        <Link>NotaBene</Link> (not interoperable)
                       </ListItem>
                       <ListItem>
-                        <Link color={'#1F4CED'}>OpenVASP</Link> (not interoperable)
+                        <Link>VerifyVASP</Link> (not interoperable)
                       </ListItem>
                     </UnorderedList>
                   </Line>
-
-                  <Stack mt={20} bg={'gray.100'} py={5}>
+                </Stack>
+                <Stack direction={['column', 'row']} mt={5} spacing={10}>
+                  <Stack bg={'gray.100'} py={5} w="100%">
                     <Line title="Open Source Resources" fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
@@ -144,7 +155,7 @@ export default function IntegrateAndComply() {
                       </UnorderedList>
                     </Line>
                   </Stack>
-                  <Stack mt={20} bg={'gray.100'} py={5}>
+                  <Stack bg={'gray.100'} py={5} w="100%">
                     <Line title="Need to Learn More?" fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
@@ -162,7 +173,7 @@ export default function IntegrateAndComply() {
                   </Stack>
                 </Stack>
               </Box>
-              <Stack direction={['column', 'row']} pt={10} mx={10}>
+              <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent="center">
                 <Box>
                   <Button
                     bg={colors.system.blue}
@@ -173,7 +184,7 @@ export default function IntegrateAndComply() {
                     _focus={{
                       borderColor: 'transparent'
                     }}>
-                    Back to Getting Started
+                    Getting Started
                   </Button>
                 </Box>
               </Stack>
