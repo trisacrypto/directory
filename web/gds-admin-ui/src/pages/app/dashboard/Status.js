@@ -5,6 +5,7 @@ import { capitalizeFirstLetter, getRatios } from 'utils';
 import { Status as STATUS } from 'constants/index';
 import PropTypes from 'prop-types';
 import OvalLoader from 'components/OvalLoader';
+import roundUpToTwo from 'utils/roundUptoTwo';
 
 const Status = ({ statuses }) => {
     const colors = ['#0d6efd', '#dc3545', '#ffc107'];
@@ -43,7 +44,7 @@ const Status = ({ statuses }) => {
     }
 
     const getDonutChartData = () => statuses ? Object.values(getStatusesCounts()) : []
-    const statusPercents = () => Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, val * 100.0]))
+    const statusPercents = () => Object.fromEntries(Object.entries(statusRatios()).map(([key, val]) => [key, roundUpToTwo(val * 100)]))
 
     const getDonutChartLabels = () => {
         if (statuses && typeof statuses === "object") {
