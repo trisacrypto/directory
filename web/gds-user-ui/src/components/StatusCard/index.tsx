@@ -59,7 +59,7 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
           textAlign={'center'}
           justifyContent={'center'}
           mx={'auto'}>
-          {isOnline?.toUpperCase() === 'HEALTH' ? (
+          {isOnline.toUpperCase() === 'HEALTH' ? (
             <IoEllipse fontSize="3rem" fill={'#60C4CA'} />
           ) : (
             <IoEllipse fontSize="3rem" fill={'#C4C4C4'} />
@@ -70,6 +70,6 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
   );
 };
 StatusCard.defaultProps = {
-  isOnline: false
+  isOnline: 'HEALTH'
 };
 export default StatusCard;
