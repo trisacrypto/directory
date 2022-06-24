@@ -33,7 +33,6 @@ const LanguageOptions = () => {
           {v.flag} {k.toUpperCase() as string}
         </option>
       ))}
-      {console.log('[]', isDashLocale())}
       {isDashLocale() && <option value={'en-dh'}>- DH</option>}
     </>
   );
