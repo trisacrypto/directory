@@ -5,20 +5,21 @@ import (
 	"sync"
 	"time"
 
-	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
 
-// RPCFunc allows the BFF to issue arbitrary GDS client methods in parallel to both the
-// testnet and the mainnet. The GDS client and network are passed into the function,
-// allowing the RPC to make any GDS RPC call and log with the associated network.
-type RPCFunc func(ctx context.Context, client gds.TRISADirectoryClient, network string) (proto.Message, error)
+// RPC allows the BFF to issue arbitrary client methods in parallel to both the
+// testnet and the mainnet. The combined client object, which contains separate
+// sub-clients for the GDS and members services, and network name are passed into the
+// function, allowing the RPC to make any directory service or members service RPC
+// call and log with the associated network.
+type RPC func(ctx context.Context, client GlobalDirectoryClient, network string) (proto.Message, error)
 
-// ParallelGDSRequest makes concurrent requests to both the testnet and the mainnet,
+// ParallelGDSRequests makes concurrent requests to both the testnet and the mainnet,
 // storing the results and errors in a slice of length 2 ([testnet, mainnet]). If the
 // flatten bool is true, then nil values are removed from the slice (though this will
 // make which network returned the result ambiguous).
-func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPCFunc, flatten bool) (results []proto.Message, errs []error) {
+func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPC, flatten bool) (results []proto.Message, errs []error) {
 	// Create the results and errors slices
 	results = make([]proto.Message, 2)
 	errs = make([]error, 2)
@@ -30,7 +31,7 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPCFunc, flatten b
 	wg.Add(2)
 
 	// Create a closure to execute the rpc
-	closure := func(client gds.TRISADirectoryClient, idx int, network string) {
+	closure := func(client GlobalDirectoryClient, idx int, network string) {
 		defer wg.Done()
 		results[idx], errs[idx] = rpc(ctx, client, network)
 	}

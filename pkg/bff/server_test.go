@@ -41,11 +41,16 @@ type bffTestSuite struct {
 	suite.Suite
 	bff      *bff.Server
 	client   api.BFFClient
-	testnet  *mock.GDS
-	mainnet  *mock.GDS
+	testnet  mockNetwork
+	mainnet  mockNetwork
 	dbPath   string
 	trtl     *trtl.Server
 	trtlsock *bufconn.GRPCListener
+}
+
+type mockNetwork struct {
+	gds     *mock.GDS
+	members *mock.Members
 }
 
 func (s *bffTestSuite) SetupSuite() {
@@ -72,19 +77,34 @@ func (s *bffTestSuite) SetupSuite() {
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
 		Auth0: config.AuthConfig{
-			Issuer:        "http://auth.localhost/",
+			Domain:        "auth.localhost",
 			Audience:      "http://localhost",
 			ProviderCache: 5 * time.Minute,
+			Testing:       true,
 		},
-		TestNet: config.DirectoryConfig{
-			Insecure: true,
-			Endpoint: "bufnet",
-			Timeout:  1 * time.Second,
+		TestNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
+			Members: config.MembersConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
 		},
-		MainNet: config.DirectoryConfig{
-			Insecure: true,
-			Endpoint: "bufnet",
-			Timeout:  1 * time.Second,
+		MainNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
+			Members: config.MembersConfig{
+				Insecure: true,
+				Endpoint: "bufnet",
+				Timeout:  1 * time.Second,
+			},
 		},
 		Database: config.DatabaseConfig{
 			URL:      "trtl://bufnet/",
@@ -94,21 +114,34 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(err, "could not mark configuration")
 
 	// Create the GDS mocks for testnet and mainnet
-	s.testnet, err = mock.NewGDS(conf.TestNet)
+	s.testnet.gds, err = mock.NewGDS(conf.TestNet.Directory)
 	require.NoError(err, "could not create testnet mock")
 
-	s.mainnet, err = mock.NewGDS(conf.MainNet)
+	s.mainnet.gds, err = mock.NewGDS(conf.MainNet.Directory)
+	require.NoError(err, "could not create mainnet mock")
+
+	// Create the members mocks for testnet and mainnet
+	s.testnet.members, err = mock.NewMembers(conf.TestNet.Members)
+	require.NoError(err, "could not create testnet mock")
+
+	s.mainnet.members, err = mock.NewMembers(conf.MainNet.Members)
 	require.NoError(err, "could not create mainnet mock")
 
 	s.bff, err = bff.New(conf)
 	require.NoError(err, "could not create the bff")
 
-	// Add the GDS mock clients to the BFF server
-	tnClient, err := s.testnet.Client()
-	require.NoError(err, "could not create testnet GDS client")
-	mnClient, err := s.mainnet.Client()
-	require.NoError(err, "could not create mainnet GDS client")
-	s.bff.SetClients(tnClient, mnClient)
+	// Create the mock testnet client
+	testnetClient := &bff.GDSClient{}
+	require.NoError(testnetClient.ConnectGDS(conf.TestNet.Directory, s.testnet.gds.DialOpts()...), "could not connect to testnet GDS")
+	require.NoError(testnetClient.ConnectMembers(conf.TestNet.Members, s.testnet.members.DialOpts()...), "could not connect to testnet members")
+
+	// Create the mock mainnet client
+	mainnetClient := &bff.GDSClient{}
+	require.NoError(mainnetClient.ConnectGDS(conf.MainNet.Directory, s.mainnet.gds.DialOpts()...), "could not connect to mainnet GDS")
+	require.NoError(mainnetClient.ConnectMembers(conf.MainNet.Members, s.mainnet.members.DialOpts()...), "could not connect to mainnet members")
+
+	// Add the mock clients to the mock
+	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
 	// Direct connect the BFF server to the database
 	db, err := db.DirectConnect(s.trtlsock.Conn)
@@ -130,15 +163,19 @@ func (s *bffTestSuite) SetupSuite() {
 }
 
 func (s *bffTestSuite) AfterTest(suiteName, testName string) {
-	s.testnet.Reset()
-	s.mainnet.Reset()
+	s.testnet.gds.Reset()
+	s.mainnet.gds.Reset()
+	s.testnet.members.Reset()
+	s.mainnet.members.Reset()
 }
 
 func (s *bffTestSuite) TearDownSuite() {
 	require := s.Require()
 	require.NoError(s.bff.Shutdown(), "could not shutdown the BFF server after tests")
-	s.testnet.Shutdown()
-	s.mainnet.Shutdown()
+	s.testnet.gds.Shutdown()
+	s.mainnet.gds.Shutdown()
+	s.testnet.members.Shutdown()
+	s.mainnet.members.Shutdown()
 
 	// Shutdown and cleanup trtl
 	s.trtl.Shutdown()

@@ -8,13 +8,13 @@ const Menu = [
     title: 'Overview',
     icon: FiCompass,
     activated: true,
-    path: '/overview'
+    path: '/dashboard/overview'
   },
   {
     title: 'Certificate Management',
     icon: BiCertification,
     activated: true,
-    path: '/certificate'
+    path: '/dashboard/certificate-management'
   },
   {
     title: 'Technical Resources',
@@ -22,7 +22,8 @@ const Menu = [
   },
   {
     title: 'Collaborators',
-    icon: HiOutlineUserGroup
+    icon: HiOutlineUserGroup,
+    path: '/dashboard/overview'
   },
   {
     title: 'Member Directory',

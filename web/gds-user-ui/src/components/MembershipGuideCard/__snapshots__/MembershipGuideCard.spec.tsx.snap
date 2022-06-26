@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<MembershipGuideCard /> should match snapshot 1`] = `
+<div>
+  <div
+    class="css-wsis5l"
+  >
+    <div
+      class="chakra-stack css-ly7s1u"
+    >
+      <div
+        class="chakra-stack css-owjkmg"
+      >
+        <p
+          class="chakra-text css-wz7pgp"
+          data-testid="step"
+        >
+          Step 
+          2
+        </p>
+        <p
+          class="chakra-text css-8cgwqi"
+          data-testid="header"
+        >
+          Create Your Account
+        </p>
+        <p
+          class="chakra-text css-0"
+          data-testid="description"
+        >
+          Create your TRISA account with your VASP email address
+        </p>
+      </div>
+      <div
+        class="css-14d2w9n"
+      >
+        <button
+          class="chakra-button css-vx0ruo"
+          type="button"
+        >
+          Learn More
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

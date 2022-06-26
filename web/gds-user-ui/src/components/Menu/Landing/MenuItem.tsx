@@ -1,9 +1,9 @@
 import { Link, Text } from '@chakra-ui/react';
-
+import { Link as RouteLink } from 'react-router-dom';
 interface MenuItemProps {
   children: React.ReactNode;
   isLast?: boolean;
-  to: string;
+  to?: string;
 }
 
 const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.Element => {
@@ -11,17 +11,25 @@ const MenuItem = ({ children, isLast, to = '/', ...rest }: MenuItemProps): JSX.E
     <Text
       mb={{ base: isLast ? 0 : 4, sm: 0 }}
       mr={{ base: 2, sm: isLast ? 8 : 2 }}
-      pl={isLast ? 8 : 0}
+      px={2}
+      pl={isLast ? 5 : 0}
       display="block"
       as="div"
       {...rest}>
-      <Link
-        isExternal={!!to.startsWith('http')}
-        href={to}
-        _active={{ outline: 'none' }}
-        _focus={{ outline: 'none' }}>
-        {children}
-      </Link>
+      {to.startsWith('http') ? (
+        <Link href={to} isExternal _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
+          {children}
+        </Link>
+      ) : (
+        <RouteLink to={to}>
+          <Link
+            isExternal={!!to.startsWith('http')}
+            _active={{ outline: 'none' }}
+            _focus={{ outline: 'none' }}>
+            {children}
+          </Link>
+        </RouteLink>
+      )}
     </Text>
   );
 };

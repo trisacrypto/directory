@@ -7,11 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
-	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
+	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
+	"github.com/trisacrypto/trisa/pkg/trust"
+	"google.golang.org/grpc"
 )
 
 // Config uses envconfig to load the required settings from the environment, parse and
@@ -25,18 +29,28 @@ type Config struct {
 	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
 	CookieDomain string              `split_words:"true"`
 	Auth0        AuthConfig
-	TestNet      DirectoryConfig
-	MainNet      DirectoryConfig
+	TestNet      NetworkConfig
+	MainNet      NetworkConfig
 	Database     DatabaseConfig
-	Sentry       SentryConfig
+	Sentry       sentry.Config
 	processed    bool
 }
 
 // AuthConfig handles Auth0 configuration and authentication
 type AuthConfig struct {
-	Issuer        string        `split_words:"true" required:"true"`
+	Domain        string        `split_words:"true" required:"true"`
 	Audience      string        `split_words:"true" required:"true"`
 	ProviderCache time.Duration `split_words:"true" default:"5m"`
+	ClientID      string        `split_words:"true"`
+	ClientSecret  string        `split_words:"true"`
+	Testing       bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
+}
+
+// NetworkConfig contains sub configurations for connecting to specific GDS and members
+// services.
+type NetworkConfig struct {
+	Directory DirectoryConfig
+	Members   MembersConfig
 }
 
 // DirectoryConfig is a generic configuration for connecting to a GDS service.
@@ -46,21 +60,24 @@ type DirectoryConfig struct {
 	Timeout  time.Duration `split_words:"true" default:"10s"`
 }
 
+// MembersConfig is a configuration for connecting to a members service.
+type MembersConfig struct {
+	Insecure bool          `split_words:"true" default:"false"`
+	Endpoint string        `split_words:"true" required:"true"`
+	Timeout  time.Duration `split_words:"true" default:"10s"`
+	MTLS     MTLSConfig
+}
+
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
 	Insecure      bool   `split_words:"true" default:"false"`
-	CertPath      string `split_words:"true"`
-	PoolPath      string `split_words:"true"`
+	MTLS          MTLSConfig
 }
 
-type SentryConfig struct {
-	DSN              string  `envconfig:"SENTRY_DSN"`
-	Environment      string  `envconfig:"SENTRY_ENVIRONMENT"`
-	Release          string  `envconfig:"SENTRY_RELEASE"`
-	TrackPerformance bool    `split_words:"true" default:"false"`
-	SampleRate       float64 `split_words:"true" default:"1.0"`
-	Debug            bool    `default:"false"`
+type MTLSConfig struct {
+	CertPath string `split_words:"true" required:"true"`
+	PoolPath string `split_words:"true" required:"true"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -105,6 +122,10 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
+	if err = c.TestNet.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Database.Validate(); err != nil {
 		return err
 	}
@@ -116,34 +137,31 @@ func (c Config) Validate() (err error) {
 	return nil
 }
 
-func (c DatabaseConfig) Validate() error {
-	// If the insecure flag isn't set then we must have certs when connecting to trtl.
+func (c NetworkConfig) Validate() error {
+	if err := c.Members.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c MembersConfig) Validate() error {
+	// If insecure is false then we must have certs to connect to the members service.
 	if !c.Insecure {
-		if c.CertPath == "" || c.PoolPath == "" {
-			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
+		if err := c.MTLS.Validate(); err != nil {
+			return fmt.Errorf("invalid members configuration: %w", err)
 		}
 	}
 	return nil
 }
 
-func (c SentryConfig) Validate() error {
-	// If Sentry is enabled then the envionment must be set.
-	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when using sentry")
+func (c DatabaseConfig) Validate() error {
+	// If the insecure flag isn't set then we must have certs when connecting to trtl.
+	if !c.Insecure {
+		if err := c.MTLS.Validate(); err != nil {
+			return fmt.Errorf("invalid database configuration: %w", err)
+		}
 	}
 	return nil
-}
-
-// Get the configured version string or the current semantic version if not configured.
-func (c SentryConfig) GetRelease() string {
-	if c.Release == "" {
-		return fmt.Sprintf("gds-bff@%s", pkg.Version())
-	}
-	return c.Release
-}
-
-func (c SentryConfig) UseSentry() bool {
-	return c.DSN != ""
 }
 
 func (c AuthConfig) Validate() error {
@@ -154,36 +172,73 @@ func (c AuthConfig) Validate() error {
 	if c.ProviderCache == 0 {
 		return errors.New("invalid configuration: auth0 provider cache duration should be longer than 0")
 	}
+
+	// If testing is false then the client id and secret are required
+	if !c.Testing {
+		if c.ClientID == "" {
+			return errors.New("invalid configuration: auth0 client id is required in production")
+		}
+
+		if c.ClientSecret == "" {
+			return errors.New("invalid configuration: auth0 client secret is required in production")
+		}
+	}
+
 	return nil
 }
 
 func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
-	if c.Issuer == "" {
+	if c.Domain == "" {
 		return nil, errors.New("invalid configuration: auth0 domain must be configured")
 	}
 
-	// Ensure the domain or url has a trailing slash
-	domain := c.Issuer
-	if !strings.HasSuffix(c.Issuer, "/") {
-		domain += "/"
-	}
-
-	// Attempt to parse the domain as a complete URL with a scheme.
-	if u, err = url.Parse(domain); err == nil {
-		// If a valid URL is passed in with the expected scheme and path, return it.
-		if u.Scheme != "" && u.Path == "/" && u.Host != "" {
-			return u, nil
-		}
-
-		// If an invalid URL is passed in with an unexpected scheme or path, error.
-		if u.Scheme != "" && (u.Path != "" || u.Host == "") {
-			return nil, errors.New("invalid configuration: could not parse issuer url")
-		}
+	// Do not allow the domain to be a URL -- this is a very basic check
+	if strings.HasSuffix(c.Domain, "/") || strings.HasPrefix(c.Domain, "http://") || strings.HasPrefix(c.Domain, "https://") {
+		return nil, errors.New("invalid configuration: auth0 domain must not be a url or have a trailing slash")
 	}
 
 	// Default to the HTTPS scheme and reparse domain only configuration.
-	if u, err = url.Parse("https://" + domain); err != nil {
+	if u, err = url.Parse("https://" + c.Domain + "/"); err != nil {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
+}
+
+func (c AuthConfig) ClientCredentials() management.Option {
+	return management.WithClientCredentials(c.ClientID, c.ClientSecret)
+}
+
+func (c MTLSConfig) Validate() error {
+	if c.CertPath == "" || c.PoolPath == "" {
+		return errors.New("connecting over mTLS requires certs and cert pool")
+	}
+	return nil
+}
+
+// DialOption returns a configured dial option which can be directly used in a
+// grpc.Dial or grpc.DialContext call to connect using mTLS.
+func (c MTLSConfig) DialOption(endpoint string) (opt grpc.DialOption, err error) {
+	var (
+		sz    *trust.Serializer
+		certs *trust.Provider
+		pool  trust.ProviderPool
+	)
+
+	if sz, err = trust.NewSerializer(false); err != nil {
+		return nil, err
+	}
+
+	if certs, err = sz.ReadFile(c.CertPath); err != nil {
+		return nil, err
+	}
+
+	if pool, err = sz.ReadPoolFile(c.PoolPath); err != nil {
+		return nil, err
+	}
+
+	if opt, err = mtls.ClientCreds(endpoint, certs, pool); err != nil {
+		return nil, err
+	}
+
+	return opt, nil
 }

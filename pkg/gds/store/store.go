@@ -83,6 +83,7 @@ type Store interface {
 	Close() error
 	DirectoryStore
 	CertificateStore
+	CertificateRequestStore
 }
 
 // DirectoryStore describes how the service interacts with VASP identity records.
@@ -95,13 +96,22 @@ type DirectoryStore interface {
 	DeleteVASP(id string) error
 }
 
-// CertificateStore describes how the service interacts with Certificate requests.
-type CertificateStore interface {
-	ListCertReqs() iterator.CertificateIterator
+// CertificateRequestStore describes how the service interacts with Certificate requests.
+type CertificateRequestStore interface {
+	ListCertReqs() iterator.CertificateRequestIterator
 	CreateCertReq(r *models.CertificateRequest) (string, error)
 	RetrieveCertReq(id string) (*models.CertificateRequest, error)
 	UpdateCertReq(r *models.CertificateRequest) error
 	DeleteCertReq(id string) error
+}
+
+// CertificateStore describes how the service interacts with Certificate records.
+type CertificateStore interface {
+	ListCerts() iterator.CertificateIterator
+	CreateCert(c *models.Certificate) (string, error)
+	RetrieveCert(id string) (*models.Certificate, error)
+	UpdateCert(c *models.Certificate) error
+	DeleteCert(id string) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

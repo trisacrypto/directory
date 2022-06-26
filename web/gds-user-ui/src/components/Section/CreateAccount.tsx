@@ -26,9 +26,11 @@ import { yupResolver } from '@hookform/resolvers/yup';
 // import { validationSchema } from 'modules/auth/register/register.validation';
 import { getValueByPathname } from 'utils/utils';
 import InputFormControl from 'components/ui/InputFormControl';
+import PasswordStrength from 'components/PasswordStrength';
 import * as yup from 'yup';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
@@ -53,12 +55,14 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    watch
   } = useForm<IFormInputs>({
     resolver: yupResolver(validationSchema)
   });
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
+  const watchPassword = watch('password');
 
   return (
     <Flex
@@ -66,7 +70,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
       justify={'center'}
       fontFamily={'open sans'}
       fontSize={'xl'}
-      marginTop={'10vh'}
+      mb={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack align={'center'}>
@@ -75,8 +79,8 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
             <Text as={'span'} fontWeight={'bold'}>
               <Trans id="Create your TRISA account.">Create your TRISA account.</Trans>
             </Text>{' '}
-            <Trans id="We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later.">
-              We recommend that a senior compliance officer initialally creates the account for the
+            <Trans id="We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later.">
+              We recommend that a senior compliance officer initially creates the account for the
               VASP. Additional accounts can be created later.
             </Trans>
           </Text>
@@ -129,17 +133,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 setBtnName={show ? 'Hide' : 'Show'}
                 isInvalid={!!getValueByPathname(errors, 'password')}
                 type={show ? 'text' : 'password'}
-                formHelperText={
-                  getValueByPathname(errors, 'password') ? (
-                    getValueByPathname(errors, 'password')?.message
-                  ) : (
-                    <Trans id="* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)">
-                      * At least 8 characters in length * Contain at least 3 of the following 4
-                      types of characters: * lower case letters (a-z) * upper case letters (A-Z) *
-                      numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)
-                    </Trans>
-                  )
-                }
+                formHelperText={watchPassword ? <PasswordStrength data={watchPassword} /> : null}
               />
               <Stack spacing={10}>
                 <Button
@@ -156,10 +150,12 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
                 </Button>
                 <Text textAlign="center">
                   <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-                  <Link href="/login" color={colors.system.cyan}>
-                    {' '}
-                    <Trans id="Log in.">Log in.</Trans>
-                  </Link>
+                  <RouterLink to={'/auth/login'}>
+                    <Link color={colors.system.cyan}>
+                      {' '}
+                      <Trans id="Log in.">Log in.</Trans>
+                    </Link>
+                  </RouterLink>
                 </Text>
               </Stack>
             </Stack>

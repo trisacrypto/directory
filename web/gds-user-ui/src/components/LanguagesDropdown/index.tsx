@@ -1,4 +1,5 @@
 import { Select } from '@chakra-ui/react';
+import { isDashLocale } from 'application/config';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 
 const languages = {
@@ -29,9 +30,10 @@ const LanguageOptions = () => {
     <>
       {Object.entries(languages).map(([k, v]) => (
         <option key={k} value={k}>
-          {v.flag} {v.title}
+          {v.flag} {k.toUpperCase() as string}
         </option>
       ))}
+      {isDashLocale() && <option value={'en-dh'}>- DH</option>}
     </>
   );
 };

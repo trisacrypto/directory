@@ -6,8 +6,11 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,10 +21,28 @@ func (s *Service) serverInterceptor(ctx context.Context, in interface{}, info *g
 	start := time.Now()
 	panicked := true
 
+	// Set the service tag
+	if s.conf.Sentry.UseSentry() {
+		var service string
+		switch info.Server.(type) {
+		case api.TRISADirectoryServer:
+			service = "gds"
+		case members.TRISAMembersServer:
+			service = "members"
+		default:
+			log.WithLevel(zerolog.PanicLevel).Err(fmt.Errorf("unknown service type: %T", info.Server))
+			return nil, status.Error(codes.Unimplemented, "unknown service type for request")
+		}
+		sentry.CurrentHub().Scope().SetTag("service", service)
+	}
+
 	// Recover from panics in the handler.
 	// See: https://github.com/grpc-ecosystem/go-grpc-middleware/blob/4705cb37b9857ad51b4c96ff5a2f3c60afe442cf/recovery/interceptors.go#L21-L37
 	defer func() {
 		if r := recover(); r != nil || panicked {
+			if s.conf.Sentry.UseSentry() {
+				sentry.CurrentHub().Recover(r)
+			}
 			log.WithLevel(zerolog.PanicLevel).
 				Err(fmt.Errorf("%v", r)).
 				Str("stack_trace", string(debug.Stack())).
@@ -36,7 +57,14 @@ func (s *Service) serverInterceptor(ctx context.Context, in interface{}, info *g
 	}
 
 	// Call the handler to finalize the request and get the response.
+	var span *sentry.Span
+	if s.conf.Sentry.UsePerformanceTracking() {
+		span = sentry.StartSpan(ctx, "grpc", sentry.TransactionName(info.FullMethod))
+	}
 	out, err = handler(ctx, in)
+	if s.conf.Sentry.UsePerformanceTracking() {
+		span.Finish()
+	}
 	panicked = false
 
 	// Log with zerolog - checkout grpclog.LoggerV2 for default logging.

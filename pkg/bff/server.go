@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
+	"github.com/auth0/go-auth0/management"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
-	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
+	"google.golang.org/grpc"
 )
 
 func init() {
@@ -55,15 +56,8 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Configure Sentry
 	if conf.Sentry.UseSentry() {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              conf.Sentry.DSN,
-			Environment:      conf.Sentry.Environment,
-			Release:          conf.Sentry.GetRelease(),
-			AttachStacktrace: true,
-			Debug:            conf.Sentry.Debug,
-			TracesSampleRate: conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		if err = sentry.Init(conf.Sentry); err != nil {
+			return nil, err
 		}
 	}
 
@@ -76,20 +70,23 @@ func New(conf config.Config) (s *Server, err error) {
 	// Connect to the TestNet and MainNet directory services and database if we're not
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
-		if s.testnet, err = ConnectGDS(conf.TestNet); err != nil {
-			return nil, fmt.Errorf("could not connect to the TestNet: %s", err)
+		if s.testnet, err = ConnectNetwork(s.conf.TestNet); err != nil {
+			return nil, fmt.Errorf("could not connect to testnet: %s", err)
 		}
-		log.Debug().Str("endpoint", conf.TestNet.Endpoint).Str("network", "testnet").Msg("connected to GDS")
 
-		if s.mainnet, err = ConnectGDS(conf.MainNet); err != nil {
-			return nil, fmt.Errorf("could not connect to the MainNet: %s", err)
+		if s.mainnet, err = ConnectNetwork(s.conf.MainNet); err != nil {
+			return nil, fmt.Errorf("could not connect to mainnet: %s", err)
 		}
-		log.Debug().Str("endpoint", conf.MainNet.Endpoint).Str("network", "mainnet").Msg("connected to GDS")
 
 		if s.db, err = db.Connect(s.conf.Database); err != nil {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
 		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+
+		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
+			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
+		}
+		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
 	}
 
 	// Create the router
@@ -111,14 +108,43 @@ func New(conf config.Config) (s *Server, err error) {
 	return s, nil
 }
 
+// ConnectNetwork creates a unified client to the TRISA Directory Service and TRISA
+// members service specified in the configuration. This method is used to connect to
+// both the TestNet and the MainNet so we can maintain separate clients for each.
+func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) {
+	client := &GDSClient{}
+
+	if client.ConnectGDS(conf.Directory) != nil {
+		return nil, fmt.Errorf("could not connect to directory service: %s", err)
+	}
+
+	if conf.Members.Insecure {
+		if client.ConnectMembers(conf.Members) != nil {
+			return nil, fmt.Errorf("could not connect to insecure members service: %s", err)
+		}
+	} else {
+		var mtls grpc.DialOption
+		if mtls, err = conf.Members.MTLS.DialOption(conf.Members.Endpoint); err != nil {
+			return nil, fmt.Errorf("could not create dial option for mTLS: %s", err)
+		}
+
+		if client.ConnectMembers(conf.Members, mtls) != nil {
+			return nil, fmt.Errorf("could not connect to members service with mTLS: %s", err)
+		}
+	}
+
+	return client, nil
+}
+
 type Server struct {
 	sync.RWMutex
 	conf    config.Config
 	srv     *http.Server
 	router  *gin.Engine
-	testnet gds.TRISADirectoryClient
-	mainnet gds.TRISADirectoryClient
+	testnet GlobalDirectoryClient
+	mainnet GlobalDirectoryClient
 	db      *db.DB
+	auth0   *management.Management
 	started time.Time
 	healthy bool
 	url     string
@@ -218,15 +244,31 @@ func (s *Server) SetURL(url string) {
 }
 
 func (s *Server) setupRoutes() (err error) {
+	var (
+		authenticator gin.HandlerFunc
+		tags          gin.HandlerFunc
+		tracing       gin.HandlerFunc
+		bffTags       map[string]string
+	)
+
 	// Instantiate authentication middleware
-	var authenticator gin.HandlerFunc
 	if authenticator, err = auth.Authenticate(s.conf.Auth0); err != nil {
 		return err
 	}
 
-	var tracing gin.HandlerFunc
-	if s.conf.Sentry.TrackPerformance {
-		tracing = s.TrackPerformance()
+	// Instantiate user info middleware
+	var userinfo gin.HandlerFunc
+	if userinfo, err = auth.UserInfo(s.conf.Auth0); err != nil {
+		return err
+	}
+
+	if s.conf.Sentry.UseSentry() {
+		bffTags = map[string]string{"service": "bff"}
+		tags = sentry.UseTags(bffTags)
+	}
+
+	if s.conf.Sentry.UsePerformanceTracking() {
+		tracing = sentry.TrackPerformance(bffTags)
 	}
 
 	// Application Middleware
@@ -242,6 +284,9 @@ func (s *Server) setupRoutes() (err error) {
 			Repanic:         true,
 			WaitForDelivery: false,
 		}),
+
+		// Add searchable tags to the sentry context.
+		tags,
 
 		// Tracing helps us with our peformance metrics and should be as early in the
 		// chain as possible. It is after recovery to ensure trace panics recover.
@@ -281,7 +326,11 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.POST("/register/:network", s.Register)
 		v1.GET("/verify", s.VerifyContact)
+		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
+		v1.GET("/announcements", auth.Authorize("read:vasp"), s.Announcements)
+		v1.POST("/announcements", auth.Authorize("create:announcements"), s.MakeAnnouncement)
+		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
 	}
 
 	// NotFound and NotAllowed routes
@@ -294,8 +343,8 @@ func (s *Server) setupRoutes() (err error) {
 // Accessors - used primarily for testing
 //===========================================================================
 
-// SetClients allows tests to set a bufconn client to a mock GDS server.
-func (s *Server) SetClients(testnet, mainnet gds.TRISADirectoryClient) {
+// SetGDSClients allows tests to set a bufconn client to a mock GDS server.
+func (s *Server) SetGDSClients(testnet, mainnet *GDSClient) {
 	s.testnet = testnet
 	s.mainnet = mainnet
 }
@@ -313,16 +362,6 @@ func (s *Server) GetConf() config.Config {
 // GetRouter returns the Gin API router for testing purposes.
 func (s *Server) GetRouter() http.Handler {
 	return s.router
-}
-
-// GetTestNet returns the TestNet directory client for testing purposes.
-func (s *Server) GetTestNet() gds.TRISADirectoryClient {
-	return s.testnet
-}
-
-// GetMainNet returns the MainNet directory client for testing purposes.
-func (s *Server) GetMainNet() gds.TRISADirectoryClient {
-	return s.mainnet
 }
 
 // GetURL returns the URL that the server can be reached if it has been started. This

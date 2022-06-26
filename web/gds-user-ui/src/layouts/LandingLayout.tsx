@@ -1,26 +1,26 @@
 import React from 'react';
-import { Flex, FlexProps } from '@chakra-ui/react';
+import { Box, Stack } from '@chakra-ui/react';
 import LandingHeader from 'components/Header/LandingHeader';
-import LandingFooter from 'components/Footer/LandingFooter';
+import Footer from 'components/Footer/LandingFooter';
 type LandingLayoutProp = {
   children?: React.ReactNode;
 };
 
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
   return (
-    <Flex
-      direction="column"
+    <Stack
       align="center"
-      maxW={'100%'}
+      justifyContent="space-between"
+      minW={'100%'}
       bg={'white'}
       m="0 auto"
-      pb={20}
+      spacing={0}
       fontFamily={'Open Sans'}
       position={'relative'}
       minHeight={'100vh'}>
       <LandingHeader />
-      {props.children}
-      <LandingFooter />
-    </Flex>
+      <Box flexGrow={1}>{props.children}</Box>
+      <Footer />
+    </Stack>
   );
 }

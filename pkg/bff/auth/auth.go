@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
@@ -29,10 +30,11 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 
 // Claims extracts custom data from the JWT token provided by Auth0
 type Claims struct {
-	Scope       string   `json:"scope"`
-	Permissions []string `json:"permissions"`
-	VASP        string   `json:"https://vaspdirectory.net/vasp"`
-	Email       string   `json:"https://vaspdirectory.net/email"`
+	Scope       string            `json:"scope"`
+	Permissions []string          `json:"permissions"`
+	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
+	VASP        map[string]string `json:"https://vaspdirectory.net/vasp"`
+	Email       string            `json:"https://vaspdirectory.net/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.
@@ -87,7 +89,8 @@ func NewClaims() validator.CustomClaims {
 // downstream processing. If no JWT token is present in the header, this middleware will
 // mark the request as unauthenticated but it does not perform any authorization. If the
 // JWT token is invalid this middleware will return a 403 Forbidden response.
-func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+//
+func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin.HandlerFunc, err error) {
 	// Parse the issuer url to ensure it is correctly configured.
 	var issuerURL *url.URL
 	if issuerURL, err = conf.IssuerURL(); err != nil {
@@ -97,7 +100,7 @@ func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 	// The caching provider fetches the JWKS (JSON Web Key Set) public keys used to
 	// validate JWT signatures to prove that they were issued by auth0. The JWKS are
 	// cached for the configured TTL (default 5 minutes) before being refetched.
-	provider := jwks.NewCachingProvider(issuerURL, conf.ProviderCache)
+	provider := jwks.NewCachingProvider(issuerURL, conf.ProviderCache, options...)
 
 	// Create the JWT validator from the configuration. The validator parses the JWT
 	// token, confirms it is not expired, configured for the correct audience, and has
@@ -140,7 +143,7 @@ func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 			// context. If the token is not valid return a forbidden error.
 			if claims, err = auth0.ValidateToken(c.Request.Context(), tks); err != nil {
 				log.Warn().Err(err).Msg("invalid authorization token")
-				c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse("invalid authorization token"))
+				c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse(ErrInvalidAuthToken))
 				return
 			}
 
@@ -148,7 +151,7 @@ func Authenticate(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 			// NOTE: invalid type assertions will cause panics which will be recovered
 			claims := claims.(*validator.ValidatedClaims)
 			c.Set(ContextBFFClaims, claims.CustomClaims.(*Claims))
-			c.Set(ContextRegisteredClaims, claims.RegisteredClaims)
+			c.Set(ContextRegisteredClaims, &claims.RegisteredClaims)
 		}
 
 		// Continue handling the request with next middleware.
@@ -165,22 +168,58 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 		claims, err := GetClaims(c)
 		if err != nil {
 			c.Error(err)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("could not authorize request"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoAuthorization))
 			return
 		}
 
 		if claims.IsAnonymous() {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("this endpoint requires authentication"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrAuthRequired))
 			return
 		}
 
 		if !claims.HasAllPermissions(permissions...) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("user does not have permission to perform this operation"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoPermission))
 			return
 		}
 
 		c.Next()
 	}
+}
+
+// UserInfo is a middleware that requires an authenticated user's claims, it then
+// fetches the user profile including app_data from Auth0 and adds them to the Gin
+// context. This middleware is primarily used for endpoints that manage the user state,
+// not for endpoints that simply need access to resources or permissions (those should
+// be added to the claims to prevent calls to Auth0 on every RPC). If the user is not
+// authenticated before this step, a 401 is returned.
+func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+	// Connect to the management API
+	var manager *management.Management
+	if manager, err = management.New(conf.Domain, conf.ClientCredentials()); err != nil {
+		return nil, err
+	}
+
+	return func(c *gin.Context) {
+		claims, err := GetRegisteredClaims(c)
+		if err != nil || claims.Subject == "" {
+			// c.Error will panic if err is nil so wrap in a guard
+			if err != nil {
+				c.Error(err)
+			}
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrNoAuthUser))
+			return
+		}
+
+		user, err := manager.User.Read(claims.Subject)
+		if err != nil {
+			c.Error(err)
+			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))
+			return
+		}
+
+		c.Set(ContextUserInfo, user)
+		c.Next()
+	}, nil
 }
 
 // GetClaims fetches and parses the BFF claims from the gin context. Returns an error if
@@ -202,6 +241,16 @@ func GetRegisteredClaims(c *gin.Context) (*validator.RegisteredClaims, error) {
 	if !exists {
 		return nil, ErrNoClaims
 	}
-	rclaims := claims.(validator.RegisteredClaims)
-	return &rclaims, nil
+	rclaims := claims.(*validator.RegisteredClaims)
+	return rclaims, nil
+}
+
+// GetUserInfo fetches the user info from the gin context. Returns an error if no user
+// exists on the context or if the user value is nil. Panics if user is incorrect type.
+func GetUserInfo(c *gin.Context) (*management.User, error) {
+	user, exists := c.Get(ContextUserInfo)
+	if !exists || user == nil {
+		return nil, ErrNoUserInfo
+	}
+	return user.(*management.User), nil
 }

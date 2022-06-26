@@ -1,9 +1,9 @@
-import { Meta, Story } from "@storybook/react";
-import Card from ".";
+import { Meta, Story } from '@storybook/react';
+import Card from './Card';
 
 export default {
-  title: "components/Card",
-  component: Card,
+  title: 'components/Card',
+  component: Card
 } as Meta;
 
 const Template: Story = (args) => <Card {...args} />;

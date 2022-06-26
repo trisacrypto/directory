@@ -1,25 +1,25 @@
 import React, { FC } from 'react';
-import { Stack, Box, Text, Heading } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, Flex } from '@chakra-ui/react';
 
 interface NetworkAnnouncementProps {
   message: string;
 }
 const NetworkAnnouncements = (props: NetworkAnnouncementProps) => {
   return (
-    <Box
+    <Flex
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      height={190}
-      fontSize={18}
+      maxHeight={190}
+      fontSize={'18px'}
       bg={'white'}
       p={5}
       mt={10}>
       <Stack>
-        <Heading> Network announcements</Heading>
+        <Heading fontSize={'1.2rem'}> Network announcements</Heading>
 
         <Text>{props.message}</Text>
       </Stack>
-    </Box>
+    </Flex>
   );
 };
 

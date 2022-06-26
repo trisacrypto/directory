@@ -106,10 +106,14 @@ const TableRow: React.FC<{ row: Row }> = ({ row }) => {
                 as={IconButton}
                 icon={<BsThreeDots />}
                 background="transparent"
+                _active={{ outline: 'none' }}
+                _focus={{ outline: 'none' }}
                 borderRadius={50}
               />
               <MenuList>
-                <MenuItem>Download</MenuItem>
+                <MenuItem>Edit</MenuItem>
+                <MenuItem>Change Permissions</MenuItem>
+                <MenuItem>Deactivate</MenuItem>
               </MenuList>
             </Menu>
           </Td>

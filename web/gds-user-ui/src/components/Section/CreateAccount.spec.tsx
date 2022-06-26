@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
 import CreateAccount from './CreateAccount';
-
+import { BrowserRouter as Router } from 'react-router-dom';
 const mockSignWithEmail = jest.fn((values) => {
   return Promise.resolve(values);
 });
@@ -49,7 +49,8 @@ describe('<CreateAccount />', () => {
       <CreateAccount
         handleSocialAuth={mockSignWithEmail}
         handleSignUpWithEmail={mockSignWithSocial}
-      />
+      />,
+      { route: '/auth/login' }
     );
 
     const submitButton = screen.getByRole('button', { name: /create an account/i });
@@ -58,6 +59,49 @@ describe('<CreateAccount />', () => {
 
     await waitFor(() => {
       expect(screen.getAllByRole('alert')).toHaveLength(2);
+    });
+  });
+
+  it('should call google login function', async () => {
+    const mockHandleAuthFn = jest.fn();
+    const mockHandleSignUpWithEmail = jest.fn();
+
+    render(
+      <CreateAccount
+        handleSocialAuth={mockSignWithEmail}
+        handleSignUpWithEmail={mockSignWithSocial}
+      />,
+      { route: '/auth/login' }
+    );
+
+    const submitButton = screen.getByRole('button', { name: /continue with google/i });
+
+    userEvent.click(submitButton);
+
+    expect(mockSignWithSocial).toHaveBeenCalled();
+    expect(mockSignWithSocial).toHaveBeenCalledTimes(1);
+  });
+
+  describe('Show button', () => {
+    it('should show password when we click on show button', () => {
+      render(
+        <CreateAccount
+          handleSocialAuth={mockSignWithEmail}
+          handleSignUpWithEmail={mockSignWithSocial}
+        />,
+        { route: '/auth/login' }
+      );
+
+      const passwordInputEl = screen.getByPlaceholderText(/password/i) as HTMLInputElement;
+      userEvent.type(passwordInputEl, 'test password');
+
+      const showBtn = screen.getByRole('button', { name: /show/i });
+
+      userEvent.click(showBtn);
+      expect(passwordInputEl.type).toBe('text');
+
+      userEvent.click(showBtn);
+      expect(passwordInputEl.type).toBe('password');
     });
   });
 });

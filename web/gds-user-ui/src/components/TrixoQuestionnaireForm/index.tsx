@@ -182,7 +182,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
             "FATF Recommendation 16"
           </Trans>
         </Text>
-        <Regulations register={register} name={`trixo.applicable_regulations`} control={control} />
+        <Regulations name={`trixo.applicable_regulations`} />
       </VStack>
       {getMustComplyRegulations && (
         <VStack align="start" w="100%">

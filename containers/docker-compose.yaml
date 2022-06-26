@@ -63,6 +63,9 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
+      - GDS_SENTRY_DSN
+      - GDS_SENTRY_ENVIRONMENT
+      - GDS_SENTRY_TRACK_PERFORMANCE
     profiles:
       - gds
       - api
@@ -104,6 +107,9 @@ services:
       - TRTL_BACKUP_INTERVAL=1h
       - TRTL_BACKUP_STORAGE=/data/backups
       - TRTL_BACKUP_KEEP=1
+      - TRTL_SENTRY_DSN
+      - TRTL_SENTRY_ENVIRONMENT
+      - TRTL_SENTRY_TRACK_PERFORMANCE
     profiles:
       - db
       - gds
@@ -143,11 +149,13 @@ services:
       - GDS_BFF_DATABASE_INSECURE=true
       - GDS_BFF_DATABASE_CERT_PATH
       - GDS_BFF_DATABASE_POOL_PATH
+      - GDS_BFF_SENTRY_DSN
+      - GDS_BFF_SENTRY_ENVIRONMENT
       - GDS_BFF_SENTRY_TRACK_PERFORMANCE
-      - SENTRY_DSN
-      - GDS_BFF_AUTH0_ISSUER='https://dev-bu-hbv3o.us.auth0.com'
-      - GDS_BFF_AUTH0_AUDIENCE='https://bff.vaspdirectory.net'
-      - SENTRY_ENVIRONMENT
+      - GDS_BFF_AUTH0_DOMAIN=dev-bu-hbv3o.us.auth0.com
+      - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
+      - GDS_BFF_AUTH0_CLIENT_ID
+      - GDS_BFF_AUTH0_CLIENT_SECRET
     profiles:
       - api
       - testnet
@@ -164,6 +172,11 @@ services:
         REACT_APP_VERSION_NUMBER: v1.5.0.dev
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
         REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN}
+        REACT_APP_AUTH0_DOMAIN: ${REACT_APP_AUTH0_DOMAIN}
+        REACT_APP_AUTH0_CLIENT_ID: ${REACT_APP_AUTH0_CLIENT_ID}
+        REACT_APP_AUTH0_REDIRECT_URI: http://localhost:3000/auth/callback
+        REACT_APP_AUTH0_SCOPE: "openid profile email"
+        REACT_APP_AUTH0_AUDIENCE: https://bff.vaspdirectory.net
     image: trisa/gds-user-ui
     init: true
     depends_on:

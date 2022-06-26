@@ -21,7 +21,7 @@ import InputFormControl from 'components/ui/InputFormControl';
 import { getValueByPathname } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-
+import { Link as RouterLink } from 'react-router-dom';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
@@ -57,7 +57,7 @@ const Login: React.FC<LoginProps> = (props) => {
       justify={'center'}
       fontFamily={colors.font}
       fontSize={'xl'}
-      marginTop={'10vh'}
+      mb={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>
@@ -120,6 +120,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   data-testid="login-btn"
                   bg={colors.system.blue}
                   color={'white'}
+                  isLoading={props.isLoading}
                   px={2}
                   py={4}
                   w={['full', '50%']}
@@ -133,22 +134,22 @@ const Login: React.FC<LoginProps> = (props) => {
                   <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-                  <Link
-                    href="/auth/forget"
-                    color="#1F4CED"
-                    fontFamily="Open sans, sans-serif"
-                    fontSize="1rem">
-                    <Trans id="Forgot password?">Forgot password?</Trans>
-                  </Link>
+                  <RouterLink to={'/account/reset'}>
+                    <Link color="#1F4CED" fontFamily="Open sans, sans-serif" fontSize="1rem">
+                      <Trans id="Forgot password?">Forgot password?</Trans>
+                    </Link>
+                  </RouterLink>
                 </Text>
               </Stack>
             </Stack>
           </form>
           <Text textAlign="center" fontSize="1rem">
             <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
-            <Link href="/auth/register" color={'#1F4CED'}>
-              <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
-            </Link>
+            <RouterLink to="/auth/register">
+              <Link color={'#1F4CED'}>
+                <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
+              </Link>
+            </RouterLink>
           </Text>
         </Box>
       </Stack>
