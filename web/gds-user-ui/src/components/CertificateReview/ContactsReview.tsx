@@ -6,6 +6,7 @@ import { hasValue } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 interface ContactsProps {
   data: any;
 }
@@ -66,7 +67,7 @@ const ContactsReview = (props: ContactsProps) => {
               {['technical', 'legal', 'administrative', 'billing'].map((contact, index) => (
                 <Tr key={index}>
                   <Td textTransform="capitalize">
-                    {`${contact === 'legal' ? `Compliance / ${contact}` : contact} Contact`}
+                    {t`${contact === 'legal' ? `Compliance / ${contact}` : contact} Contact`}
                   </Td>
                   <Td>
                     {hasValue(contacts?.[contact]) ? (

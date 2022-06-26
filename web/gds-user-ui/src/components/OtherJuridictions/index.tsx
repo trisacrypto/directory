@@ -5,7 +5,8 @@ import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
-
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -36,7 +37,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
                     value={getCountriesOptions().find((option) => option.value === f.value)}
                     onChange={(newValue: any) => f.onChange(newValue.value)}
                     options={getCountriesOptions()}
-                    label="National Jurisdiction"
+                    label={t`National Jurisdiction`}
                     controlId="country"
                   />
                 )}
@@ -44,7 +45,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
             </GridItem>
             <GridItem>
               <InputFormControl
-                label="Regulator Name"
+                label={t`Regulator Name`}
                 controlId="regulator_name"
                 {...register(`${name}[${index}].regulator_name`)}
               />
@@ -57,7 +58,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
       ))}
 
       <FormButton onClick={handleAddJuridictionClick} borderRadius={5}>
-        Add Jurisdiction
+        <Trans id="Add Jurisdiction">Add Jurisdiction</Trans>
       </FormButton>
     </>
   );
