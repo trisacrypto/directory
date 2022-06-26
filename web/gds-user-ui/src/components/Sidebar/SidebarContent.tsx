@@ -43,7 +43,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
         {MenuItems.filter((m) => m.activated).map((menu) => (
-          <NavItem key={menu.title} icon={menu.icon} href={menu.path || '/#'}>
+          <NavItem key={menu.title} icon={menu.icon} href={menu.path || '/#'} path={menu.path}>
             {menu.title}
           </NavItem>
         ))}
