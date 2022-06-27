@@ -81,7 +81,7 @@
     "compile": "lingui compile",
     "extract-c": "lingui extract --clean",
     "dash": "node write-save-po-file.js",
-    "dash:compile": "node write-save-po-file.js && lingui compile"
+    "dash-compile": "node write-save-po-file.js && lingui compile"
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx,json,scss,css,md}": [
@@ -163,10 +163,10 @@
     "resetMocks": false,
     "coverageThreshold": {
       "global": {
-        "branches": 40,
+        "branches": 30,
         "functions": 30,
-        "lines": 40,
-        "statements": 40
+        "lines": 30,
+        "statements": 30
       }
     }
   }
