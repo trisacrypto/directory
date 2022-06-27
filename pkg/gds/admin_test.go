@@ -1613,7 +1613,6 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspErrored,
 	}
 	actual := &admin.ResendReply{}
-	sent := time.Now()
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -1630,7 +1629,6 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspErrored,
 	}
 	actual = &admin.ResendReply{}
-	sent = time.Now()
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -1647,7 +1645,6 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspRejected,
 	}
 	actual = &admin.ResendReply{}
-	sent = time.Now()
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
@@ -1660,6 +1657,7 @@ func (s *gdsTestSuite) TestResend() {
 	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
 	require.NoError(err)
 
+	sent := time.Now()
 	messages := []*emailMeta{
 		{
 			contact:   errored.Contacts.Billing,
