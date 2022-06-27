@@ -12,6 +12,8 @@ import {
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -51,20 +53,28 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
         <VStack mt="2rem">
           <Stack align="start" w="full">
             <Heading size="md" pt={2}>
-              Registration Submission
+              <Trans id="Registration Submission">Registration Submission</Trans>
             </Heading>
           </Stack>
 
           <FormLayout>
             <Text>
-              You must submit your registration for TestNet and MainNet separately.{' '}
+              <Trans id="You must submit your registration for TestNet and MainNet separately">
+                You must submit your registration for TestNet and MainNet separately
+              </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                Note:
+                <Trans id="Note">Note:</Trans>
               </Text>{' '}
-              You will receive two separate emails with confirmation links for each registration.
-              You must click on each confirmation link to complete the registration process.
+              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process">
+                You will receive two separate emails with confirmation links for each registration.
+                You must click on each confirmation link to complete the registration process
+              </Trans>
+              .
               <Text as="span" fontWeight="bold">
-                Failure to click either confirmation will result in an incomplete registration.
+                <Trans id="Failure to click either confirmation will result in an incomplete registration">
+                  Failure to click either confirmation will result in an incomplete registration
+                </Trans>
+                .
               </Text>
             </Text>
           </FormLayout>
@@ -77,30 +87,40 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
-                  TESTNET SUBMISSION
+                  <Trans id="TESTNET SUBMISSION">TESTNET SUBMISSION</Trans>
                 </Heading>
                 <Text>
-                  Click below to submit your{' '}
+                  <Trans id="Click below to submit your">Click below to submit your</Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    TestNet
+                    <Trans id="TestNet">TestNet</Trans>
                   </Text>{' '}
-                  registration. Upon submission, you will receive an email with a confirmation link.
-                  You must click the confirmation link to complete the registration process. Failure
-                  to click the confirmation link will result in an incomplete registration.
+                  <Trans id="registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration">
+                    registration. Upon submission, you will receive an email with a confirmation
+                    link. You must click the confirmation link to complete the registration process.
+                    Failure to click the confirmation link will result in an incomplete registration
+                  </Trans>
+                  .
                 </Text>
                 <Text>
-                  A physical verification check in the form of a phone call{' '}
+                  <Trans id="A physical verification check in the form of a phone call">
+                    A physical verification check in the form of a phone call
+                  </Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    is not required
+                    <Trans id="is not required">is not required</Trans>
                   </Text>{' '}
-                  for TestNet registration so your TestNet certificate will be issued upon review by
-                  the validation team.
+                  <Trans id="for TestNet registration so your TestNet certificate will be issued upon review by the validation team">
+                    for TestNet registration so your TestNet certificate will be issued upon review
+                    by the validation team
+                  </Trans>
+                  .
                 </Text>
                 <Text>
-                  If you would like to edit your registration form before submitting, please return
-                  to the{' '}
+                  <Trans id="If you would like to edit your registration form before submitting, please return to the">
+                    If you would like to edit your registration form before submitting, please
+                    return to the
+                  </Trans>{' '}
                   <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
-                    Review page
+                    <Trans id="Review page">Review page</Trans>
                   </Link>
                   .
                 </Text>
@@ -128,7 +148,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   _hover={{
                     bgColor: '#f55c35'
                   }}>
-                  Submit TestNet Registration
+                  {t`Submit TestNet Registration`}
                 </Button>
               </Stack>
             </Stack>
@@ -136,30 +156,39 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
-                  MAINNET SUBMISSION
+                  <Trans id="MAINNET SUBMISSION">MAINNET SUBMISSION</Trans>
                 </Heading>
                 <Text>
-                  Click below to submit your{' '}
+                  <Trans id="Click below to submit your">Click below to submit your</Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    MainNet
+                    <Trans id="MainNet">MainNet</Trans>
                   </Text>{' '}
-                  registration. Upon submission, you will receive an email with a confirmation link.
-                  You must click the confirmation link to complete the registration process. Failure
-                  to click the confirmation link will result in an incomplete registration.
+                  <Trans id="registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration">
+                    registration. Upon submission, you will receive an email with a confirmation
+                    link. You must click the confirmation link to complete the registration process.
+                    Failure to click the confirmation link will result in an incomplete registration
+                  </Trans>
+                  .
                 </Text>
                 <Text>
-                  A physical verification check in the form of a phone call{' '}
+                  <Trans id="A physical verification check in the form of a phone call">
+                    physical verification check in the form of a phone call
+                  </Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    is required
+                    <Trans id="is required"> is required</Trans>
                   </Text>{' '}
-                  for MainNet registration so your MainNet certificate will be issued upon review by
-                  the validation team.
+                  <Trans id=" for MainNet registration so your MainNet certificate will be issued upon review by the validation team">
+                    for MainNet registration so your MainNet certificate will be issued upon review
+                    by the validation team
+                  </Trans>
                 </Text>
                 <Text>
-                  If you would like to edit your registration form before submitting, please return
-                  to the{' '}
+                  <Trans id="If you would like to edit your registration form before submitting, please return to the">
+                    If you would like to edit your registration form before submitting, please
+                    return to the
+                  </Trans>{' '}
                   <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
-                    Review page
+                    <Trans id="Review page">Review page</Trans>
                   </Link>
                 </Text>
               </Stack>
@@ -186,7 +215,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   _hover={{
                     bgColor: '#189fda'
                   }}>
-                  Submit MainNet Registration
+                  {t`Submit MainNet Registration`}
                 </Button>
               </Stack>
             </Stack>
@@ -207,7 +236,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               _hover={{
                 bgColor: '#555151'
               }}>
-              Back to Review Page
+              {t`Back to Review Page`}
             </Button>
           </Box>
         </VStack>

@@ -93,7 +93,9 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'}>MainNet TRISA Endpoint</Td>
+                <Td pt={'1rem !important'}>
+                  <Trans id="MainNet TRISA Endpoint">MainNet TRISA Endpoint</Trans>
+                </Td>
                 <Td pl={0}>{trisa?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>

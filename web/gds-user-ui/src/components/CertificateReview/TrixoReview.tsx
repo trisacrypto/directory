@@ -19,6 +19,7 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { COUNTRIES } from 'constants/countries';
 import { currencyFormatter } from 'utils/utils';
 import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 interface TrixoReviewProps {}
 
 const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
@@ -52,7 +53,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
           <Heading fontSize={20} mb="2rem">
-            Section 5: TRIXO Questionnaire
+            <Trans id="Section 5: TRIXO Questionnaire">Section 5: TRIXO Questionnaire</Trans>
           </Heading>
           <Button
             bg={colors.system.blue}
@@ -63,7 +64,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               bg: '#10aaed'
             }}>
             {' '}
-            Edit{' '}
+            {t`Edit`}{' '}
           </Button>
         </Box>
         <Stack fontSize={'1rem'}>
