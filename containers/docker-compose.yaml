@@ -365,3 +365,16 @@ services:
       - ui
       - mainnet
       - all
+
+  auth0-debug:
+    build:
+      context: ../
+      dockerfile: ./containers/auth0-debug/Dockerfile
+    image: trisa/auth0-debug
+    ports:
+      - 3003:3003
+    profiles:
+      - all
+      - api
+      - testnet
+      - auth0
