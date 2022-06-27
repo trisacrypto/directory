@@ -4,7 +4,7 @@ import functools
 import http.server
 import socketserver
 
-DEFAULT_PORT=3000
+DEFAULT_PORT=3003
 BASE_PATH=os.path.join(os.path.dirname(__file__), "htdocs")
 
 DirectoryHTTPRequestHandler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=BASE_PATH)
