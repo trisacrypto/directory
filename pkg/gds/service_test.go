@@ -35,6 +35,7 @@ import (
 
 const (
 	vasps    = "vasps"
+	certs    = "certs"
 	certreqs = "certreqs"
 	index    = "index"
 	bufSize  = 1024 * 1024
@@ -203,15 +204,24 @@ func (s *gdsTestSuite) TestFixtures() {
 	expected := map[fixtureType]map[string]int{
 		empty: {},
 		small: {vasps: 2},
-		full:  {vasps: 14, certreqs: 10},
+		full:  {vasps: 14, certs: 3, certreqs: 10},
 	}
 
 	// Test the reference fixtures
-	require.Len(s.fixtures, 2)
+	require.Len(s.fixtures, 3)
 	require.Contains(s.fixtures, vasps)
+	require.Contains(s.fixtures, certs)
 	require.Contains(s.fixtures, certreqs)
 	require.Len(s.fixtures[vasps], expected[full][vasps])
+	require.Len(s.fixtures[certs], expected[full][certs])
 	require.Len(s.fixtures[certreqs], expected[full][certreqs])
+
+	// Validate VASP fixtures
+	for name, obj := range s.fixtures[vasps] {
+		vasp, ok := obj.(*pb.VASP)
+		require.True(ok, "could not marshal VASP record %s", name)
+		require.NoError(vasp.Validate(true), "VASP record %s is invalid", name)
+	}
 
 	for ftype := range expected {
 		switch s.stype {
@@ -281,6 +291,10 @@ func (s *gdsTestSuite) countLevelDBFixtures(db *leveldb.DB) (counts map[string]i
 			vasp := &pb.VASP{}
 			require.NoError(proto.Unmarshal(iter.Value(), vasp))
 			obj = vasp
+		case certs:
+			cert := &models.Certificate{}
+			require.NoError(proto.Unmarshal(iter.Value(), cert))
+			obj = cert
 		case certreqs:
 			certreq := &models.CertificateRequest{}
 			require.NoError(proto.Unmarshal(iter.Value(), certreq))
@@ -314,6 +328,17 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		require.NoError(proto.Unmarshal(iter.Value(), vasp))
 		counts[vasps]++
 		s.CompareFixture(vasps, string(iter.Key()), vasp, false)
+	}
+	require.NoError(iter.Error())
+	iter.Release()
+
+	iter, err = db.Iter(nil, options.WithNamespace(certs))
+	require.NoError(err, "could not create Honu certs iterator")
+	for iter.Next() {
+		cert := &models.Certificate{}
+		require.NoError(proto.Unmarshal(iter.Value(), cert))
+		counts[certs]++
+		s.CompareFixture(certs, string(iter.Key()), cert, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -384,6 +409,24 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 		}
 
 		require.True(proto.Equal(a, b), "vasps are not the same")
+
+	case certs:
+		var a *models.Certificate
+		var data models.Certificate
+		for _, f := range s.fixtures[namespace] {
+			ref := f.(*models.Certificate)
+			if ref.Id == key {
+				// Avoid modifying the object in the fixtures map
+				data = *ref
+				a = &data
+				break
+			}
+		}
+		require.NotNil(a, "unknown cert fixture %s", key)
+
+		b, ok := obj.(*models.Certificate)
+		require.True(ok, "obj is not a cert object")
+		require.True(proto.Equal(a, b), "certs are not the same")
 
 	case certreqs:
 		var a *models.CertificateRequest
@@ -506,7 +549,7 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 
 	// Create the reference fixtures map
 	s.fixtures = make(map[string]map[string]interface{})
-	for _, namespace := range []string{vasps, certreqs} {
+	for _, namespace := range []string{vasps, certs, certreqs} {
 		s.fixtures[namespace] = make(map[string]interface{})
 	}
 
@@ -533,6 +576,11 @@ func (s *gdsTestSuite) loadReferenceFixtures() {
 			err = protojson.Unmarshal(data, vasp)
 			require.NoError(err)
 			s.fixtures[vasps][key] = vasp
+		case certs:
+			cert := &models.Certificate{}
+			err = protojson.Unmarshal(data, cert)
+			require.NoError(err)
+			s.fixtures[certs][key] = cert
 		case certreqs:
 			cert := &models.CertificateRequest{}
 			err = protojson.Unmarshal(data, cert)
@@ -641,6 +689,7 @@ func (s *gdsTestSuite) generateDB(ftype fixtureType) {
 	require := s.Require()
 	require.NotEmpty(s.fixtures, "there are no reference fixtures to generate the db with")
 	require.NotEmpty(s.fixtures[vasps], "there are no reference vasps fixtures to generate the db with")
+	require.NotEmpty(s.fixtures[certs], "there are no reference certs fixtures to generate the db with")
 	require.NotEmpty(s.fixtures[certreqs], "there are no reference certreqs fixtures to generate the db with")
 
 	// No need to do anything with the empty database
@@ -687,6 +736,9 @@ func (s *gdsTestSuite) generateDB(ftype fixtureType) {
 				id, err := db.CreateVASP(vasp)
 				require.NoError(err, "could not insert VASP into store")
 				require.Equal(vasp.Id, id)
+			case certs:
+				err = db.UpdateCert(item.(*models.Certificate))
+				require.NoError(err, "could not insert certificate into store")
 			case certreqs:
 				err = db.UpdateCertReq(item.(*models.CertificateRequest))
 				require.NoError(err, "could not insert CertificateRequest into store")
@@ -735,6 +787,12 @@ func remarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 			return nil, err
 		}
 		return vasp, nil
+	case certs:
+		cert := &models.Certificate{}
+		if err = jsonpb.Unmarshal(data, cert); err != nil {
+			return nil, err
+		}
+		return cert, nil
 	case certreqs:
 		certreq := &models.CertificateRequest{}
 		if err = jsonpb.Unmarshal(data, certreq); err != nil {
