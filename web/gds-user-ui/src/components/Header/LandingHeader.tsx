@@ -24,7 +24,7 @@ import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import LanguagesDropdown from 'components/LanguagesDropdown';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 
