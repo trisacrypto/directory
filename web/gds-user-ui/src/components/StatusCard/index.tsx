@@ -6,36 +6,7 @@ interface StatusCardProps {
 }
 
 const StatusCard = ({ isOnline }: StatusCardProps) => {
-  //   return (
-  //     <Box
-  //       border="1px solid #DFE0EB"
-  //       fontFamily={"Open Sans"}
-  //       color={"#252733"}
-  //       height={167}
-  //       maxWidth={451}
-  //       fontSize={18}
-  //       p={5}
-  //       mt={10}
-  //       px={5}
-  //     >
-  //       <Stack>
-  //         <Heading fontSize={20}>Certification Status</Heading>
-  //         <HStack spacing={10}>
-  //           <Text>Testnet</Text>
-  //           <Text>{testnetstatus}</Text>
-  //         </HStack>
-  //         <HStack spacing={8}>
-  //           <Text>Mainnet</Text>
-  //           <Text>{mainnetstatus}</Text>
-  //         </HStack>
-  //       </Stack>
-  //     </Box>
-  //   );
-  // };
-  // StatusCard.defaultProps = {
-  //   testnetstatus: "In progress",
-  //   mainnetstatus: "Not Eligible yet ",
-  // };
+  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTH');
   return (
     <Box
       bg={'white'}
@@ -45,7 +16,6 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
       // minWidth={250}
       // height={170}
       fontSize={18}
-      p={5}
       mt={10}
       px={5}>
       <Stack textAlign={'center'}>
@@ -59,7 +29,7 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
           textAlign={'center'}
           justifyContent={'center'}
           mx={'auto'}>
-          {isOnline.toUpperCase() === 'HEALTH' ? (
+          {status ? (
             <IoEllipse fontSize="3rem" fill={'#60C4CA'} />
           ) : (
             <IoEllipse fontSize="3rem" fill={'#C4C4C4'} />
