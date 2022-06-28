@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -19,7 +20,7 @@ const (
 	SummaryRPC = "Summary"
 )
 
-func NewMembers(conf config.DirectoryConfig) (m *Members, err error) {
+func NewMembers(conf config.MembersConfig) (m *Members, err error) {
 	m = &Members{
 		srv:   grpc.NewServer(),
 		sock:  bufconn.New(bufSize),
@@ -63,6 +64,13 @@ func (g *Members) Client() (client members.TRISAMembersClient, err error) {
 		g.client = members.NewTRISAMembersClient(g.sock.Conn)
 	}
 	return g.client, nil
+}
+
+func (g *Members) DialOpts() (opts []grpc.DialOption) {
+	return []grpc.DialOption{
+		grpc.WithContextDialer(g.sock.Dialer),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 }
 
 func (g *Members) Shutdown() {

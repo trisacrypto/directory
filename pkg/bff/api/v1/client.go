@@ -165,6 +165,56 @@ func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	return out, nil
 }
 
+func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/announcements", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &AnnouncementsReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/announcements", in, nil); err != nil {
+		return err
+	}
+
+	// Execute the request and get a response, ensuring to check that a 200 response is returned.
+	var rep *http.Response
+	if rep, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+
+	// If this endpoint does not return a 204 then return an error since data is unhandled.
+	if rep.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("expected no content, received %s", rep.Status)
+	}
+	return nil
+}
+
+func (s *APIv1) Certificates(ctx context.Context) (out *CertificatesReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/certificates", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &CertificatesReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 //===========================================================================
 // Helper Methods
 //===========================================================================
@@ -234,13 +284,13 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 		}
 	}
 
-	// Check the content type to ensure data deserialization is possible
-	if ct := rep.Header.Get("Content-Type"); ct != contentType {
-		return rep, fmt.Errorf("unexpected content type: %q", ct)
-	}
-
 	// Deserialize the JSON data from the body
 	if data != nil && rep.StatusCode >= 200 && rep.StatusCode < 300 {
+		// Check the content type to ensure data deserialization is possible
+		if ct := rep.Header.Get("Content-Type"); ct != contentType {
+			return rep, fmt.Errorf("unexpected content type: %q", ct)
+		}
+
 		if err = json.NewDecoder(rep.Body).Decode(data); err != nil {
 			return nil, fmt.Errorf("could not deserialize response data: %s", err)
 		}

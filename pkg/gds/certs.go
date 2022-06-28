@@ -419,6 +419,26 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 		return
 	}
 
+	// Create the certificate record
+	var cert *models.Certificate
+	if cert, err = models.NewCertificate(vasp, r, vasp.IdentityCertificate); err != nil {
+		log.Error().Err(err).Msg("could not create certificate record")
+		return
+	}
+
+	// Update the certificate record
+	if err = s.db.UpdateCert(cert); err != nil {
+		log.Error().Err(err).Msg("could not update certificate record")
+		return
+	}
+
+	// Add the certificate ID to the request and VASP records
+	r.Certificate = cert.Id
+	if err = models.AppendCertID(vasp, cert.Id); err != nil {
+		log.Error().Err(err).Msg("could not append certificate ID to VASP")
+		return
+	}
+
 	// Update the VASP status as verified/certificate issued
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_VERIFIED, "certificate issued", "automated"); err != nil {
 		log.Error().Err(err).Msg("could not update VASP verification status")

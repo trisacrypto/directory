@@ -2,11 +2,11 @@ import React from 'react';
 import { Stack, Box, Text, Heading, HStack, Flex, chakra } from '@chakra-ui/react';
 import { IoEllipse } from 'react-icons/io5';
 interface StatusCardProps {
-  isOnline: any;
+  isOnline: string;
 }
 
 const StatusCard = ({ isOnline }: StatusCardProps) => {
-  const status = !!(typeof isOnline === 'string' && isOnline === 'HEALTH');
+  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTH');
   return (
     <Box
       bg={'white'}

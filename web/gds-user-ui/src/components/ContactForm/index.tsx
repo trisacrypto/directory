@@ -5,7 +5,7 @@ import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import get from 'lodash/get';
 import { t } from '@lingui/macro';
-
+import { Trans } from '@lingui/react';
 type ContactFormProps = {
   title: string;
   description: string;
@@ -20,15 +20,21 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
     if (name === 'contacts.legal') {
       return (
         <div data-testid="legal-contact-phone-number-hint">
-          A business phone number is required to complete physical verification for MainNet
-          registration. Please provide a phone number where the Legal/ Compliance contact can be
-          contacted.
+          <Trans id="A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted">
+            A business phone number is required to complete physical verification for MainNet
+            registration. Please provide a phone number where the Legal/ Compliance contact can be
+            contacted
+          </Trans>
+          .
         </div>
       );
     }
     return (
       <div data-testid="legal-contact-phone-number-hint">
-        If supplied, use full phone number with country code.
+        <Trans id="If supplied, use full phone number with country code">
+          If supplied, use full phone number with country code
+        </Trans>
+        .
       </div>
     );
   };
@@ -75,7 +81,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
               value={value}
               name={inputName}
               isInvalid={get(errors, `${name}.phone`)}
-              label="Phone Number "
+              label={t`Phone Number `}
               formHelperText={
                 get(errors, `${name}.phone`)
                   ? get(errors, `${name}.phone`).message

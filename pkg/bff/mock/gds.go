@@ -10,6 +10,7 @@ import (
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -72,6 +73,13 @@ func (g *GDS) Client() (client gds.TRISADirectoryClient, err error) {
 		g.client = gds.NewTRISADirectoryClient(g.sock.Conn)
 	}
 	return g.client, nil
+}
+
+func (g *GDS) DialOpts() (opts []grpc.DialOption) {
+	return []grpc.DialOption{
+		grpc.WithContextDialer(g.sock.Dialer),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 }
 
 func (g *GDS) Shutdown() {

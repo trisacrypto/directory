@@ -6,6 +6,10 @@ import useAnalytics from 'hooks/useAnalytics';
 import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
+// const Home = React.lazy(() =>
+//   lazyLoaderPromise(() => import('modules/home'))
+// );
+
 import HandleAuthCallback from 'modules/auth/callback';
 import Overview from 'modules/dashboard/overview';
 import CertificateRegistration from 'modules/dashboard/certificate/registration';

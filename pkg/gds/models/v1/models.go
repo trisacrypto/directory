@@ -225,6 +225,34 @@ func AppendCertID(vasp *pb.VASP, certID string) (err error) {
 	return nil
 }
 
+// NewCertificate creates and returns a certificate associated with a VASP.
+func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Certificate) (cert *Certificate, err error) {
+	// VASP must be not nil.
+	if vasp == nil {
+		return nil, errors.New("must supply a VASP object for certificate creation")
+	}
+
+	// Certificate request must be not nil.
+	if certRequest == nil {
+		return nil, errors.New("must supply a certificate request for certificate creation")
+	}
+
+	// Certificate data must be not nil.
+	if data == nil {
+		return nil, errors.New("must supply certificate data for certificate creation")
+	}
+
+	cert = &Certificate{
+		Id:      fmt.Sprintf("%X", data.SerialNumber), // capital hex encoded serial number to match sectigo
+		Request: certRequest.Id,
+		Vasp:    vasp.Id,
+		Status:  CertificateState_ISSUED,
+		Details: data,
+	}
+
+	return cert, nil
+}
+
 // Defaults to use for the certificate request parameters if they can't be inferred.
 const (
 	crDefaultOrganization        = "TRISA Member VASP"
