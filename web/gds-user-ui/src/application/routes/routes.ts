@@ -31,8 +31,8 @@ const CertificateRegistration = React.lazy(
 // const LoginPage = React.lazy(() => import('modules/auth/login'));
 // const RegisterPage = React.lazy(() => import('modules/auth/register'));
 
-// import MembershipGuide from 'components/Section/MembershipGuide';
-// import IntegrateAndComply from 'components/Section/IntegrateAndComply';
+import MembershipGuide from 'components/Section/MembershipGuide';
+import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -72,6 +72,19 @@ const appRoutes = [
     component: HandleAuthCallback,
     layout: 'landing'
   },
+  {
+    path: '/comply',
+    name: 'Comply and Integrate',
+    component: IntegrateAndComply,
+    layout: 'landing'
+  },
+  {
+    path: '/guide',
+    name: 'Membership Guide',
+    component: MembershipGuide,
+    layout: 'landing'
+  },
+
   // -------AUTH ROUTES-------
   {
     path: '/auth/login',
