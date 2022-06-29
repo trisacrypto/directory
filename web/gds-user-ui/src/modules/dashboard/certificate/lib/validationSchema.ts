@@ -100,7 +100,6 @@ export const validationSchema = [
       }),
       geographic_addresses: yup.array().of(
         yup.object().shape({
-          address_type: yup.string().required(),
           address_line: yup.array(),
           'address_line[0]': yup
             .string()
@@ -112,7 +111,10 @@ export const validationSchema = [
             .test('test-0', 'addresse line 0', (value: any, ctx: any): any => {
               return ctx && ctx.parent && ctx.parent.address_line[2];
             }),
-          country: yup.string().required()
+          country: yup.string().required(),
+          postal_code: yup.string().required(),
+          state: yup.string().required(),
+          address_type: yup.string().required(),
         })
       ),
       national_identification: yup.object().shape({

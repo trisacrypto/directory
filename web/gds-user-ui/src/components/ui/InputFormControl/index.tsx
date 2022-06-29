@@ -13,10 +13,10 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 
-interface _FormControlProps extends FormControlProps {
+interface _FormControlProps extends Omit<FormControlProps, 'label'> {
   formHelperText?: string | React.ReactNode;
   controlId: string;
-  label?: string;
+  label?: React.ReactNode;
   inputProps?: InputProps;
   name?: string;
   error?: string;
