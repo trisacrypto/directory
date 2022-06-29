@@ -141,6 +141,10 @@ func (c *GDSClient) DeleteVASP(ctx context.Context, id string) (out *admin.Reply
 	return c.admin.DeleteVASP(ctx, id)
 }
 
+func (c *GDSClient) ListCertificates(ctx context.Context, vaspID string) (out *admin.ListCertificatesReply, err error) {
+	return c.admin.ListCertificates(ctx, vaspID)
+}
+
 func (c *GDSClient) ReplaceContact(ctx context.Context, in *admin.ReplaceContactRequest) (out *admin.Reply, err error) {
 	return c.admin.ReplaceContact(ctx, in)
 }
