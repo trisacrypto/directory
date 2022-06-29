@@ -1697,8 +1697,8 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspErrored,
 	}
 	actual := &admin.ResendReply{}
-	sent := time.Now()
 	c, w = s.makeRequest(request)
+	firstSend := time.Now()
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
@@ -1714,8 +1714,8 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspErrored,
 	}
 	actual = &admin.ResendReply{}
-	sent = time.Now()
 	c, w = s.makeRequest(request)
+	secondSend := time.Now()
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(1, actual.Sent)
@@ -1731,8 +1731,8 @@ func (s *gdsTestSuite) TestResend() {
 		"vaspID": vaspRejected,
 	}
 	actual = &admin.ResendReply{}
-	sent = time.Now()
 	c, w = s.makeRequest(request)
+	thirdSend := time.Now()
 	rep = s.doRequest(a.Resend, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Equal(2, actual.Sent)
@@ -1751,13 +1751,13 @@ func (s *gdsTestSuite) TestResend() {
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.VerifyContactRE,
 			reason:    "verify_contact",
-			timestamp: sent,
+			timestamp: firstSend,
 		},
 		{
 			to:        s.svc.GetConf().Email.AdminEmail,
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.ReviewRequestRE,
-			timestamp: sent,
+			timestamp: secondSend,
 		},
 		{
 			contact:   rejected.Contacts.Administrative,
@@ -1765,7 +1765,7 @@ func (s *gdsTestSuite) TestResend() {
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.RejectRegistrationRE,
 			reason:    "rejection",
-			timestamp: sent,
+			timestamp: thirdSend,
 		},
 		{
 			contact:   rejected.Contacts.Legal,
@@ -1773,7 +1773,7 @@ func (s *gdsTestSuite) TestResend() {
 			from:      s.svc.GetConf().Email.ServiceEmail,
 			subject:   emails.RejectRegistrationRE,
 			reason:    "rejection",
-			timestamp: sent,
+			timestamp: thirdSend,
 		},
 	}
 	s.CheckEmails(messages)
