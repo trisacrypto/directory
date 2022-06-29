@@ -24,6 +24,8 @@ var testEnv = map[string]string{
 	"GDS_BFF_AUTH0_CLIENT_ID":                "exampleid",
 	"GDS_BFF_AUTH0_CLIENT_SECRET":            "supersecretsquirrel",
 	"GDS_BFF_AUTH0_TESTING":                  "true",
+	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":         "localhost:8444",
+	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
 	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":     "localhost:8443",
 	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":      "5s",
@@ -32,6 +34,8 @@ var testEnv = map[string]string{
 	"GDS_BFF_TESTNET_MEMBERS_TIMEOUT":        "5s",
 	"GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH": "fixtures/members/creds/testnet/certs.pem",
 	"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/testnet/pool.zip",
+	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":         "localhost:9444",
+	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
 	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":     "localhost:8444",
 	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":      "3s",
@@ -119,18 +123,21 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_BFF_AUTH0_AUDIENCE",
 		"GDS_BFF_AUTH0_CLIENT_ID",
 		"GDS_BFF_AUTH0_CLIENT_SECRET",
+		"GDS_BFF_TESTNET_ADMIN_ENDPOINT",
+		"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS",
 		"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_TESTNET_MEMBERS_ENDPOINT",
-		"GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH",
-		"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH",
+		"GDS_BFF_MAINNET_ADMIN_ENDPOINT",
+		"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS",
 		"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_MAINNET_MEMBERS_ENDPOINT",
-		"GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_PATH",
-		"GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH",
 		"GDS_BFF_DATABASE_URL",
-		"GDS_BFF_DATABASE_MTLS_CERT_PATH",
-		"GDS_BFF_DATABASE_MTLS_POOL_PATH",
 	}
+
+	// Insecure must be true if no mTLS certs are provided
+	os.Setenv("GDS_BFF_TESTNET_MEMBERS_INSECURE", "true")
+	os.Setenv("GDS_BFF_MAINNET_MEMBERS_INSECURE", "true")
+	os.Setenv("GDS_BFF_DATABASE_INSECURE", "true")
 
 	// Collect required environment variables and cleanup after
 	prevEnv := curEnv(required...)

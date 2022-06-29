@@ -969,7 +969,7 @@ func adminStatus(c *cli.Context) (err error) {
 	defer cancel()
 
 	var rep *admin.StatusReply
-	if rep, err = adminClient.Status(ctx); err != nil {
+	if rep, err = adminClient.AdminStatus(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -981,7 +981,7 @@ func adminSummary(c *cli.Context) (err error) {
 	defer cancel()
 
 	var rep *admin.SummaryReply
-	if rep, err = adminClient.Summary(ctx); err != nil {
+	if rep, err = adminClient.AdminSummary(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 

@@ -49,6 +49,7 @@ type AuthConfig struct {
 // NetworkConfig contains sub configurations for connecting to specific GDS and members
 // services.
 type NetworkConfig struct {
+	Admin     AdminConfig
 	Directory DirectoryConfig
 	Members   MembersConfig
 }
@@ -58,6 +59,15 @@ type DirectoryConfig struct {
 	Insecure bool          `split_words:"true" default:"true"`
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
+}
+
+// AdminConfig is a configuration for connecting to an Admin service.
+type AdminConfig struct {
+	Endpoint string `split_words:"true" required:"true"`
+	// Audience and TokenKeys should match the Admin server configuration, since the
+	// BFF uses these parameters to sign its own JWT tokens.
+	Audience  string            `split_words:"true"`
+	TokenKeys map[string]string `split_words:"true" required:"true"`
 }
 
 // MembersConfig is a configuration for connecting to a members service.
@@ -76,8 +86,8 @@ type DatabaseConfig struct {
 }
 
 type MTLSConfig struct {
-	CertPath string `split_words:"true" required:"true"`
-	PoolPath string `split_words:"true" required:"true"`
+	CertPath string `split_words:"true"`
+	PoolPath string `split_words:"true"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.

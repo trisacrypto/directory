@@ -114,12 +114,16 @@ func New(conf config.Config) (s *Server, err error) {
 func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) {
 	client := &GDSClient{}
 
-	if client.ConnectGDS(conf.Directory) != nil {
+	if err = client.ConnectAdmin(conf.Admin); err != nil {
+		return nil, fmt.Errorf("could not connect to admin service: %s", err)
+	}
+
+	if err = client.ConnectGDS(conf.Directory); err != nil {
 		return nil, fmt.Errorf("could not connect to directory service: %s", err)
 	}
 
 	if conf.Members.Insecure {
-		if client.ConnectMembers(conf.Members) != nil {
+		if err = client.ConnectMembers(conf.Members); err != nil {
 			return nil, fmt.Errorf("could not connect to insecure members service: %s", err)
 		}
 	} else {
@@ -128,7 +132,7 @@ func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err err
 			return nil, fmt.Errorf("could not create dial option for mTLS: %s", err)
 		}
 
-		if client.ConnectMembers(conf.Members, mtls) != nil {
+		if err = client.ConnectMembers(conf.Members, mtls); err != nil {
 			return nil, fmt.Errorf("could not connect to members service with mTLS: %s", err)
 		}
 	}
