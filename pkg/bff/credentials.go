@@ -30,7 +30,7 @@ func NewCredentials(conf config.AdminConfig) (creds *Credentials, err error) {
 		aud = conf.Endpoint
 	}
 
-	if creds.tm, err = tokens.New(conf.TokenKeys, conf.Audience); err != nil {
+	if creds.tm, err = tokens.New(conf.TokenKeys, aud); err != nil {
 		return creds, err
 	}
 
