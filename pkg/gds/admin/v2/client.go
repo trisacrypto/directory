@@ -378,6 +378,35 @@ func (s *APIv2) DeleteVASP(ctx context.Context, id string) (out *Reply, err erro
 	return out, nil
 }
 
+func (s *APIv2) ListCertificates(ctx context.Context, id string) (out *ListCertificatesReply, err error) {
+	// vaspID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/certificates", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ListCertificatesReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (s *APIv2) ReplaceContact(ctx context.Context, in *ReplaceContactRequest) (out *Reply, err error) {
 	// vaspID is required for the endpoint
 	if in.VASP == "" {

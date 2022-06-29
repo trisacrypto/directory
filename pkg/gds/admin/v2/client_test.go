@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 )
 
 func TestClient(t *testing.T) {
@@ -586,6 +587,57 @@ func TestDeleteVASP(t *testing.T) {
 
 	// Correctly formatted request
 	out, err := client.DeleteVASP(context.TODO(), id)
+	require.NoError(t, err)
+	require.NotNil(t, out)
+	require.Equal(t, fixture, out)
+}
+
+func TestListCertificates(t *testing.T) {
+	id := "83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5"
+	fixture := &admin.ListCertificatesReply{
+		Certificates: []admin.Certificate{
+			{
+				SerialNumber: "ABC83132333435363738",
+				IssuedAt:     time.Now().AddDate(-1, -1, 0).Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(0, -1, 0).Format(time.RFC3339),
+				Status:       models.CertificateState_REVOKED.String(),
+				Details: map[string]interface{}{
+					"common_name": "trisa.alice.us",
+				},
+			},
+			{
+				SerialNumber: "DEF83132333435363738",
+				IssuedAt:     time.Now().Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(1, 0, 0).Format(time.RFC3339),
+				Status:       models.CertificateState_ISSUED.String(),
+				Details: map[string]interface{}{
+					"common_name": "trisa.alice.us",
+				},
+			},
+		},
+	}
+
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/vasps/83dc8b6a-c3a8-4cb2-bc9d-b0d3fbd090c5/certificates", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	// Ensure a VASP ID is required to delete a VASP
+	_, err = client.ListCertificates(context.TODO(), "")
+	require.EqualError(t, err, "request requires a valid ID to determine endpoint")
+
+	// Correctly formatted request
+	out, err := client.ListCertificates(context.TODO(), id)
 	require.NoError(t, err)
 	require.NotNil(t, out)
 	require.Equal(t, fixture, out)

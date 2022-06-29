@@ -222,6 +222,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
 			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
+			vasps.GET("/:vaspID/certificates", csrf, s.ListCertificates)
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
@@ -1325,6 +1326,62 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// ListCertificates returns a list of certificates for the VASP.
+func (s *Admin) ListCertificates(c *gin.Context) {
+	var err error
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+
+	// Retrieve the VASP from the database
+	var vasp *pb.VASP
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("vasp_id", vaspID).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Retrieve the Certificate IDs from the VASP
+	var ids []string
+	if ids, err = models.GetCertIDs(vasp); err != nil {
+		log.Error().Err(err).Str("vasp_id", vaspID).Msg("could not retrieve certificate IDs for VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate IDs for VASP"))
+		return
+	}
+
+	// Construct the reply
+	out := &admin.ListCertificatesReply{
+		Certificates: make([]admin.Certificate, 0),
+	}
+
+	for _, id := range ids {
+		// Retrieve the Certificate from the database
+		var cert *models.Certificate
+		if cert, err = s.db.RetrieveCert(id); err != nil {
+			log.Error().Err(err).Str("cert_id", id).Msg("could not retrieve certificate from database")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate by ID"))
+			return
+		}
+
+		// Construct an entry for the reply
+		entry := admin.Certificate{
+			SerialNumber: id,
+			IssuedAt:     cert.Details.NotBefore,
+			ExpiresAt:    cert.Details.NotAfter,
+			Status:       cert.Status.String(),
+		}
+		if entry.Details, err = wire.Rewire(cert.Details); err != nil {
+			log.Error().Err(err).Str("cert_id", id).Msg("could not serialize certificate details")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not serialize certificate details"))
+			return
+		}
+
+		out.Certificates = append(out.Certificates, entry)
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 // ReplaceContact completely replaces a contact on a VASP with a new contact.
