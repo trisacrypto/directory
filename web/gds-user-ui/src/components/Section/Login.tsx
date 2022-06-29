@@ -134,7 +134,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-                  <RouterLink to={'/account/reset'}>
+                  <RouterLink to={'/auth/reset'}>
                     <Link color="#1F4CED" fontFamily="Open sans, sans-serif" fontSize="1rem">
                       <Trans id="Forgot password?">Forgot password?</Trans>
                     </Link>

@@ -42,14 +42,13 @@ const Overview: React.FC = () => {
     (async () => {
       try {
         const response = await getMetrics();
-        console.log('response', response);
         setResult(response.data);
       } catch (e: any) {
         if (e.response.status === 401) {
-          navigate('/auth/login?redirect=/dashboard/overview&q=unauthorized');
+          navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
         }
         if (e.response.status === 403) {
-          navigate('/auth/login?redirect=/dashboard/overview&q=token_expired');
+          navigate('/auth/login?from=/dashboard/overview&q=token_expired');
         }
 
         Sentry.captureException(e);
