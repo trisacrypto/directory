@@ -136,12 +136,13 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"reviews", http.MethodGet, "/v2/reviews", true, false},
 		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
-		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
-		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
-		{"replaceContact", http.MethodPut, "/v2/vasps/42/contacts/kind", true, true},
-		{"deleteContact", http.MethodDelete, "/v2/vasps/42/contacts/kind", true, true},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
 		// Authenticated and CSRF protected endpoints
+		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
+		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
+		{"listCertificates", http.MethodGet, "/v2/vasps/42/certificates", true, true},
+		{"replaceContact", http.MethodPut, "/v2/vasps/42/contacts/kind", true, true},
+		{"deleteContact", http.MethodDelete, "/v2/vasps/42/contacts/kind", true, true},
 		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},
 		{"resend", http.MethodPost, "/v2/vasps/42/resend", true, true},
 		{"createReviewNote", http.MethodPost, "/v2/vasps/42/notes", true, true},
@@ -159,6 +160,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 			require.NoError(t, err)
 			res, err := http.DefaultClient.Do(r)
 			require.NoError(t, err)
+			defer res.Body.Close()
 			require.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
 		})
 	}
@@ -189,6 +191,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 				r.Header.Add("Authorization", "Bearer "+access)
 				res, err = http.DefaultClient.Do(r)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				require.Equal(t, http.StatusForbidden, res.StatusCode)
 			})
 		case endpoint.authorize || endpoint.csrf:
@@ -203,6 +206,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 				require.NoError(t, err)
 				res, err := http.DefaultClient.Do(r)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				require.Equal(t, status, res.StatusCode)
 			})
 		default:
@@ -771,6 +775,87 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	require.Error(err)
 }
 
+// Test the ListCertificates endpoint
+func (s *gdsTestSuite) TestListCertificates() {
+	s.LoadFullFixtures()
+	defer s.ResetFixtures()
+
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// CharlieBank has no certificates
+	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+
+	// HotelCorp has a few certificates
+	hotelID := s.fixtures[vasps]["hotel"].(*pb.VASP).Id
+	uniform := s.fixtures[certs]["uniform"].(*models.Certificate)
+	uniformDetails, err := wire.Rewire(uniform.Details)
+	require.NoError(err)
+	victor := s.fixtures[certs]["victor"].(*models.Certificate)
+	victorDetails, err := wire.Rewire(victor.Details)
+	require.NoError(err)
+	zulu := s.fixtures[certs]["zulu"].(*models.Certificate)
+	zuluDetails, err := wire.Rewire(zulu.Details)
+	require.NoError(err)
+	certificates := []admin.Certificate{
+		{
+			SerialNumber: uniform.Id,
+			IssuedAt:     uniform.Details.NotBefore,
+			ExpiresAt:    uniform.Details.NotAfter,
+			Status:       "ISSUED",
+			Details:      uniformDetails,
+		},
+		{
+			SerialNumber: victor.Id,
+			IssuedAt:     victor.Details.NotBefore,
+			ExpiresAt:    victor.Details.NotAfter,
+			Status:       "EXPIRED",
+			Details:      victorDetails,
+		},
+		{
+			SerialNumber: zulu.Id,
+			IssuedAt:     zulu.Details.NotBefore,
+			ExpiresAt:    zulu.Details.NotAfter,
+			Status:       "REVOKED",
+			Details:      zuluDetails,
+		},
+	}
+
+	// Attempt to retrieve certificates for a VASP that doesn't exist
+	request := &httpRequest{
+		method: http.MethodGet,
+		path:   "/v2/vasps/invalid/certificates",
+		params: map[string]string{
+			"vaspID": "invalid",
+		},
+		claims: &tokens.Claims{
+			Email: "admin@example.com",
+		},
+	}
+	actual := &admin.ListCertificatesReply{}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ListCertificates, c, w, nil)
+	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
+
+	// No certificates exist for the VASP
+	request.path = "/v2/vasps/" + charlieID + "/certificates"
+	request.params["vaspID"] = charlieID
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ListCertificates, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	require.Empty(actual.Certificates)
+
+	// The VASP contains a few certificates
+	request.path = "/v2/vasps/" + hotelID + "/certificates"
+	request.params["vaspID"] = hotelID
+	actual = &admin.ListCertificatesReply{}
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ListCertificates, c, w, actual)
+	require.Equal(http.StatusOK, rep.StatusCode)
+	require.Len(actual.Certificates, len(certificates))
+	require.ElementsMatch(certificates, actual.Certificates)
+}
+
 // Test the ReplaceContact endpoint
 func (s *gdsTestSuite) TestReplaceContact() {
 	s.LoadSmallFixtures()
@@ -989,7 +1074,6 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	require.NoError(err, "could not retrieve VASP record")
 	require.Nil(vasp.Contacts.Administrative)
 	require.NotNil(vasp.Contacts.Billing)
-	require.NotNil(vasp.Contacts.Legal)
 
 	// Test deleting another contact
 	request.path = "/v2/vasps/charliebank/contacts/billing"

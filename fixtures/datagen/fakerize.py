@@ -155,6 +155,12 @@ FAKE_CERTS = {
     "Zulu": "COMPLETED",
 }
 
+CERT_STATES = {
+    "Uniform": "ISSUED",
+    "Victor": "EXPIRED",
+    "Zulu": "REVOKED",
+}
+
 CERT_STATE_CHANGES = {
     "INITIALIZED": {
         "previous_state": "INITIALIZED",
@@ -206,10 +212,11 @@ CERT_STATE_CHANGES = {
     },
 }
 
-VASP_CERT_RELATIONSHIPS = {
+VASP_CERTREQ_RELATIONSHIPS = {
     "Echo Funds": ["Quebec"],
     "Foxtrot LLC": ["Sierra"],
     "Juliet Capulet LLC": ["XRay"],
+    "Hotel Corp": ["Uniform", "Victor", "Zulu"],
 }
 
 ##########################################################################
@@ -262,6 +269,12 @@ def make_uuid(rng):
     """
     return str(uuid.UUID(bytes=bytes(rng.getrandbits(8) for _ in range(16)), version=4))
 
+def make_serial(rng):
+    """
+    Generate a capital hex encoded string using the given random generator.
+    """
+    return "".join(bytes(rng.getrandbits(8) for _ in range(16)).hex()).upper()
+
 def make_person(vasp, verified=True, token="", rng=random.Random()):
     """
     Given a string representing a VASP's name, return a valid
@@ -271,7 +284,7 @@ def make_person(vasp, verified=True, token="", rng=random.Random()):
     fake = Faker()
     name = fake.name()
     domain = rng.choice(DOMAINS)
-    email = name.lower().split()[0] + "@" + vasp.replace(" ", "").lower() + domain
+    email = name.lower().split()[0].split(".")[0] + "@" + vasp.replace(" ", "").lower() + domain
     return {
         "name": name,
         "email": email,
@@ -422,7 +435,8 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     record["entity"]["national_identification"][
         "national_identifier"
     ] = secrets.token_urlsafe(24)
-    record["entity"]["national_identification"]["country_of_issue"] = country
+    # Due to IVMS101 validation constraint C9, the country of issue should not be
+    # filled in for a legal person.
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
     record["contacts"]["legal"] = make_person(vasp, token="legal_token", rng=rng_person)
@@ -474,7 +488,8 @@ def make_unverified(
     record["entity"]["national_identification"][
         "national_identifier"
     ] = secrets.token_urlsafe(24)
-    record["entity"]["national_identification"]["country_of_issue"] = country
+    # Due to IVMS101 validation constraint C9, the country of issue should not be
+    # filled in for a legal person.
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
     record["contacts"]["legal"] = make_person(vasp, verified=email_verified, token="legal_token", rng=rng_person)
@@ -633,6 +648,23 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
     record["audit_log"] = make_cert_log("COMPLETED", start, end)
     return record
 
+def make_certificate(cert, status="ISSUED", template="fixtures/datagen/templates/cert.json", rng=random.Random()):
+    """
+    Make a certificate record in the given state.
+    """
+    with open(template, "r") as f:
+        record = json.load(f)
+
+    serial = make_serial(rng)
+    record["id"] = serial
+    record["status"] = status
+    record["details"]["serial_number"] = serial
+    record["details"]["subject"]["common_name"] = cert
+    start, end = make_dates(count=2)
+    record["details"]["not_before"] = start
+    record["details"]["not_after"] = end
+    record["details"]["revoked"] = status == "REVOKED"
+    return record
 
 def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -777,45 +809,64 @@ def make_cert_log(state, start, end):
 
 def augment_certs(fake_names=FAKE_CERTS):
     """
-    Generate new records from keys of FAKE_CERTS, using values to set cert state
-    The remaining data is random. Add audit logs to each record
-    Returns synthetic records as a single dictionary
+    Generate new records from keys of FAKE_CERTS, using values to set cert state. If
+    the certificate state is "COMPLETED", then a certificate record is also generated
+    in a separate dictionary. The remaining data is random.
+    Add audit logs to each record
+    Returns two dictionaries:
+    - synthetic_certreqs: the certificate request records keyed by FAKE_CERTS
+    - synthetic_certs: the certificate records also keyed by FAKE_CERTS
     """
     rng = random.Random("certs")
+    synthetic_certreqs = dict()
+
+    cert_record_rng = random.Random("cert_records")
     synthetic_certs = dict()
 
     for cert, state in fake_names.items():
         idx = make_uuid(rng)
-        cert = cert.lower()
+        name = cert.lower()
         if state == "INITIALIZED":
-            synthetic_certs[cert] = make_initialized(cert, idx)
+            synthetic_certreqs[name] = make_initialized(name, idx)
         elif state == "READY_TO_SUBMIT":
-            synthetic_certs[cert] = make_ready_to_submit(cert, idx)
+            synthetic_certreqs[name] = make_ready_to_submit(name, idx)
         elif state == "PROCESSING":
-            synthetic_certs[cert] = make_processing(cert, idx)
+            synthetic_certreqs[name] = make_processing(name, idx)
         elif state == "COMPLETED":
-            synthetic_certs[cert] = make_completed(cert, idx)
+            synthetic_certreqs[name] = make_completed(name, idx)
+            synthetic_certs[name] = make_certificate(name, status=CERT_STATES[cert], rng=cert_record_rng)
         elif state == "CR_ERRORED":
-            synthetic_certs[cert] = make_cr_errored(cert, idx)
+            synthetic_certreqs[cert] = make_cr_errored(cert, idx)
         elif state == "CR_REJECTED":
-            synthetic_certs[cert] = make_cr_rejected(cert, idx)
+            synthetic_certreqs[cert] = make_cr_rejected(cert, idx)
         else:
             print("Skipping unrecognized state: %s", state)
 
-    return synthetic_certs
+    return synthetic_certreqs, synthetic_certs
 
-def add_vasp_cert_relationships(vasps, certs):
+def add_vasp_cert_relationships(vasps, certreqs, certs):
     """
     Add predefined relationships between VASPs and certificate requests.
     """
-    for vasp_name, cert_names in VASP_CERT_RELATIONSHIPS.items():
+    for vasp_name, cert_names in VASP_CERTREQ_RELATIONSHIPS.items():
+        certreq_ids = []
         cert_ids = []
         for c in cert_names:
             name = c.lower()
-            cert_ids.append(certs[name]["id"])
-            certs[name]["vasp"] = vasps[vasp_name]["id"]
-            certs[name]["common_name"] = vasps[vasp_name]["common_name"]
-        vasps[vasp_name]["extra"]["certificate_requests"] = cert_ids
+            certreq_ids.append(certreqs[name]["id"])
+            certreqs[name]["vasp"] = vasps[vasp_name]["id"]
+            certreqs[name]["common_name"] = vasps[vasp_name]["common_name"]
+
+            # Add the certificate relationships if it exists
+            if name in certs:
+                cert_ids.append(certs[name]["id"])
+                certreqs[name]["certificate"] = certs[name]["id"]
+                certs[name]["request"] = certreqs[name]["id"]
+                certs[name]["vasp"] = vasps[vasp_name]["id"]
+
+        # Augment the VASP with the relations
+        vasps[vasp_name]["extra"]["certificate_requests"] = certreq_ids
+        vasps[vasp_name]["extra"]["certificates"] = cert_ids
 
 if __name__ == "__main__":
     replace = False
@@ -835,11 +886,12 @@ if __name__ == "__main__":
         shutil.rmtree(OUTPUT_DIRECTORY)
 
     fake_vasps = augment_vasps()
-    fake_certs = augment_certs()
-    add_vasp_cert_relationships(fake_vasps, fake_certs)
+    fake_certreqs, fake_certs = augment_certs()
+    add_vasp_cert_relationships(fake_vasps, fake_certreqs, fake_certs)
 
     store(fake_vasps, kind="vasps")
-    store(fake_certs, kind="certreqs")
+    store(fake_certreqs, kind="certreqs")
+    store(fake_certs, kind="certs")
 
     if replace:
         replace_fixtures()

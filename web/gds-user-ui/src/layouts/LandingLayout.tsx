@@ -2,6 +2,8 @@ import React from 'react';
 import { Box, Stack } from '@chakra-ui/react';
 import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
+import { Routes, Route, Link, Outlet } from 'react-router-dom';
+import appRoutes from 'application/routes/routes';
 type LandingLayoutProp = {
   children?: React.ReactNode;
 };

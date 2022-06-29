@@ -385,6 +385,20 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:certificates",
+				Usage:    "list certificates by VASP id",
+				Category: "admin",
+				Action:   adminListCertificates,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to list certificates for",
+					},
+				},
+			},
+			{
 				Name:     "admin:detail",
 				Usage:    "retrieve a VASP detail record by id",
 				Category: "admin",
@@ -1012,6 +1026,18 @@ func adminListVASPs(c *cli.Context) (err error) {
 
 	var rep *admin.ListVASPsReply
 	if rep, err = adminClient.ListVASPs(ctx, params); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminListCertificates(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *admin.ListCertificatesReply
+	if rep, err = adminClient.ListCertificates(ctx, c.String("id")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
