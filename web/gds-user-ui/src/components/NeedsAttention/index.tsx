@@ -1,31 +1,36 @@
 import { Box, Text, Stack, Button, HStack } from '@chakra-ui/react';
 import FormButton from 'components/ui/FormButton';
 import { NavLink } from 'react-router-dom';
-const NeedsAttention = () => {
+
+export type NeedsAttentionProps = {
+  text: string;
+  buttonText: string;
+  onClick?: (ev?: any) => void
+};
+
+const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
   return (
     <Stack
       minHeight={67}
       bg={'#D8EAF6'}
       p={5}
-      border="1px solid #DFE0EB"
+      border="1px solid #555151D4"
       fontSize={18}
-      display={'flex'}>
+      display={'flex'} borderRadius={'10px'}>
       <HStack justifyContent={'space-between'}>
         <Text fontWeight={'bold'}> Needs Attention </Text>
-        <Text> Complete Testnet Registration </Text>
-
+        <Text> {text} </Text>
         <Box>
-          <NavLink to="/dashboard/certificate/registration">
             <Button
+                onClick={onClick}
               width={142}
               as={'a'}
               borderRadius={0}
               background="#55ACD8"
               color="#fff"
               _hover={{ background: 'blue.200' }}>
-              Start
+              {buttonText}
             </Button>
-          </NavLink>
         </Box>
       </HStack>
     </Stack>
