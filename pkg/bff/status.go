@@ -49,7 +49,7 @@ func (s *Server) Status(c *gin.Context) {
 
 		go func() {
 			defer wg.Done()
-			if status, err := s.testnet.Status(ctx, &gds.HealthCheck{}); err != nil {
+			if status, err := s.testnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
 				log.Warn().Err(err).Str("network", testnet).Msg("could not connect to GDS")
 				out.TestNet = "unavailable"
 			} else {
@@ -64,7 +64,7 @@ func (s *Server) Status(c *gin.Context) {
 
 		go func() {
 			defer wg.Done()
-			if status, err := s.mainnet.Status(ctx, &gds.HealthCheck{}); err != nil {
+			if status, err := s.mainnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
 				log.Warn().Err(err).Str("network", mainnet).Msg("could not connect to GDS")
 				out.MainNet = "unavailable"
 			} else {

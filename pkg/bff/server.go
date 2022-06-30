@@ -17,10 +17,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/bff/admin"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
+	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
@@ -70,18 +72,26 @@ func New(conf config.Config) (s *Server, err error) {
 	// Connect to the TestNet and MainNet directory services and database if we're not
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
-		if s.testnet, err = ConnectNetwork(s.conf.TestNet); err != nil {
+		if s.testnetAdmin, err = admin.New(conf.TestNet.Admin); err != nil {
+			return nil, err
+		}
+
+		if s.mainnetAdmin, err = admin.New(conf.MainNet.Admin); err != nil {
+			return nil, err
+		}
+
+		if s.testnetGDS, err = ConnectGDS(s.conf.TestNet); err != nil {
 			return nil, fmt.Errorf("could not connect to testnet: %s", err)
 		}
 
-		if s.mainnet, err = ConnectNetwork(s.conf.MainNet); err != nil {
+		if s.mainnetGDS, err = ConnectGDS(s.conf.MainNet); err != nil {
 			return nil, fmt.Errorf("could not connect to mainnet: %s", err)
 		}
 
 		if s.db, err = db.Connect(s.conf.Database); err != nil {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
-		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.MTLS.Insecure).Msg("connected to trtl database")
 
 		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
@@ -108,18 +118,18 @@ func New(conf config.Config) (s *Server, err error) {
 	return s, nil
 }
 
-// ConnectNetwork creates a unified client to the TRISA Directory Service and TRISA
+// ConnectGDS creates a unified client to the TRISA Directory Service and TRISA
 // members service specified in the configuration. This method is used to connect to
 // both the TestNet and the MainNet so we can maintain separate clients for each.
-func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) {
+func ConnectGDS(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) {
 	client := &GDSClient{}
 
-	if client.ConnectGDS(conf.Directory) != nil {
+	if err = client.ConnectGDS(conf.Directory); err != nil {
 		return nil, fmt.Errorf("could not connect to directory service: %s", err)
 	}
 
-	if conf.Members.Insecure {
-		if client.ConnectMembers(conf.Members) != nil {
+	if conf.Members.MTLS.Insecure {
+		if err = client.ConnectMembers(conf.Members); err != nil {
 			return nil, fmt.Errorf("could not connect to insecure members service: %s", err)
 		}
 	} else {
@@ -128,7 +138,7 @@ func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err err
 			return nil, fmt.Errorf("could not create dial option for mTLS: %s", err)
 		}
 
-		if client.ConnectMembers(conf.Members, mtls) != nil {
+		if err = client.ConnectMembers(conf.Members, mtls); err != nil {
 			return nil, fmt.Errorf("could not connect to members service with mTLS: %s", err)
 		}
 	}
@@ -138,17 +148,19 @@ func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err err
 
 type Server struct {
 	sync.RWMutex
-	conf    config.Config
-	srv     *http.Server
-	router  *gin.Engine
-	testnet GlobalDirectoryClient
-	mainnet GlobalDirectoryClient
-	db      *db.DB
-	auth0   *management.Management
-	started time.Time
-	healthy bool
-	url     string
-	echan   chan error
+	conf         config.Config
+	srv          *http.Server
+	router       *gin.Engine
+	testnetAdmin apiv2.DirectoryAdministrationClient
+	mainnetAdmin apiv2.DirectoryAdministrationClient
+	testnetGDS   GlobalDirectoryClient
+	mainnetGDS   GlobalDirectoryClient
+	db           *db.DB
+	auth0        *management.Management
+	started      time.Time
+	healthy      bool
+	url          string
+	echan        chan error
 }
 
 // Serve API requests on the specified address.
@@ -345,8 +357,8 @@ func (s *Server) setupRoutes() (err error) {
 
 // SetGDSClients allows tests to set a bufconn client to a mock GDS server.
 func (s *Server) SetGDSClients(testnet, mainnet *GDSClient) {
-	s.testnet = testnet
-	s.mainnet = mainnet
+	s.testnetGDS = testnet
+	s.mainnetGDS = mainnet
 }
 
 // SetDB allows tests to set a bufconn client to a mock trtl server.

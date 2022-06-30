@@ -22,7 +22,7 @@ func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 	}
 
 	var opts []grpc.DialOption
-	if conf.Insecure {
+	if conf.MTLS.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var mtls grpc.DialOption
