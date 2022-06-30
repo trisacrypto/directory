@@ -13,7 +13,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
       color={'#252733'}
       fontSize={18}
       p={4}
-      mb={7}
+      mb={10}
       px={7}>
       <Stack width={'100%'}>
         <Heading as={'h1'} fontSize={19} pb={7} pt={4}>
