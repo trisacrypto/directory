@@ -29,7 +29,7 @@ import { Trans } from '@lingui/react';
 import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
-
+import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -128,6 +128,7 @@ const Overview: React.FC = () => {
       {/* </Sentry.ErrorBoundary> */}
       <OrganizationalDetail data={stepperData} />
       <TrisaDetail data={trisaData} />
+      <TrisaImplementation data={trisaData} />
     </DashboardLayout>
   );
 };
