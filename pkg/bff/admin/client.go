@@ -25,7 +25,7 @@ func New(conf config.AdminConfig) (client admin.DirectoryAdministrationClient, e
 	}
 
 	var creds admin.Credentials
-	if creds, err = NewCredentials(conf.TokenKeys, conf.Audience); err != nil {
+	if creds, err = NewCredentials(conf.TokenKeys, aud); err != nil {
 		return nil, err
 	}
 
