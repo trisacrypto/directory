@@ -33,6 +33,7 @@ const CertificateRegistration = React.lazy(
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
+import CertificateManagement from "../../components/CertificateManagement";
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -125,6 +126,13 @@ const appRoutes = [
     component: CertificateRegistrationPage,
     layout: 'dashboard',
     route: '/certificate/registration'
+  },
+  {
+    path: '/dashboard/certificate-management',
+    name: 'Certificate Management',
+    component: CertificateManagement,
+    layout: 'dashboard',
+    route: '/dashboard/certificate-management'
   },
 
   //  -------ERROR ROUTES-------

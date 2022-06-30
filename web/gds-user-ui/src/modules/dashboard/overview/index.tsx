@@ -76,7 +76,7 @@ const Overview: React.FC = () => {
   return (
     <DashboardLayout>
       <Heading marginBottom="30px">Overview</Heading>
-      <NeedsAttention />
+      <NeedsAttention text={t`Start Certificate Registration`} buttonText={'Start'} onClick={() => navigate("/dashboard/certificate/registration")} />
       <NetworkAnnouncements />
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
