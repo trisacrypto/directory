@@ -79,31 +79,44 @@ func (s *Server) Lookup(c *gin.Context) {
 		return rep, nil
 	}
 
-	// Execute the parallel GDS lookup request, ensuring that flatten is true
-	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, true)
+	// Execute the parallel GDS lookup request, ensuring that flatten is false with the
+	// expectation that TestNet will be in the 0 index and MainNet in the 1 index.
+	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, false)
 
 	// If there were multiple errors, return a 500
-	if len(errs) == 2 {
+	// Because the results cannot be flattened we have to check each err individually.
+	if errs[0] != nil && errs[1] != nil {
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to execute Lookup request"))
 		return
 	}
 
 	// Check if there are results to return
-	if len(results) == 0 {
+	// Because the results cannot be flattened we have to check each result individually.
+	if results[0] == nil && results[1] == nil {
 		c.JSON(http.StatusNotFound, api.ErrorResponse("no results returned for query"))
 		return
 	}
 
 	// Rewire the results into a JSON response
-	out := &api.LookupReply{
-		Results: make([]map[string]interface{}, len(results)),
-	}
+	out := &api.LookupReply{}
 	for idx, result := range results {
-		var err error
-		if out.Results[idx], err = wire.Rewire(result); err != nil {
+		// Skip over nil results
+		if result == nil {
+			continue
+		}
+
+		data, err := wire.Rewire(result)
+		if err != nil {
 			log.Error().Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))
 			return
+		}
+
+		switch idx {
+		case 0:
+			out.TestNet = data
+		case 1:
+			out.MainNet = data
 		}
 	}
 

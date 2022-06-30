@@ -118,7 +118,8 @@ type LookupParams struct {
 // also contain an "error" field - the BFF will handle this field by logging the error
 // but will exclude it from any results returned.
 type LookupReply struct {
-	Results []map[string]interface{} `json:"results"`
+	TestNet map[string]interface{} `json:"testnet"`
+	MainNet map[string]interface{} `json:"mainnet"`
 }
 
 // RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
