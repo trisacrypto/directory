@@ -81,7 +81,7 @@ func New(conf config.Config) (s *Server, err error) {
 		if s.db, err = db.Connect(s.conf.Database); err != nil {
 			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 		}
-		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.MTLS.Insecure).Msg("connected to trtl database")
 
 		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
@@ -122,7 +122,7 @@ func ConnectNetwork(conf config.NetworkConfig) (_ GlobalDirectoryClient, err err
 		return nil, fmt.Errorf("could not connect to directory service: %s", err)
 	}
 
-	if conf.Members.Insecure {
+	if conf.Members.MTLS.Insecure {
 		if err = client.ConnectMembers(conf.Members); err != nil {
 			return nil, fmt.Errorf("could not connect to insecure members service: %s", err)
 		}
