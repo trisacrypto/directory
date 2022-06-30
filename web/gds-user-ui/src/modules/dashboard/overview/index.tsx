@@ -84,10 +84,16 @@ const Overview: React.FC = () => {
   }, [result]);
 
   return (
-    <DashboardLayout>
+    <>
       <Heading marginBottom="30px">Overview</Heading>
-      <NeedsAttention />
-      {announcements.length === 0 && <NetworkAnnouncements datas={announcements} />}
+
+      <NeedsAttention
+        text={t`Start Certificate Registration`}
+        buttonText={'Start'}
+        onClick={() => navigate('/dashboard/certificate/registration')}
+      />
+      {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
+
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (
@@ -139,7 +145,7 @@ const Overview: React.FC = () => {
       <OrganizationalDetail data={stepperData} />
       <TrisaDetail data={trisaData} />
       <TrisaImplementation data={trisaData} />
-    </DashboardLayout>
+    </>
   );
 };
 
