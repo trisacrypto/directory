@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
+import { getAppVersionNumber } from ".";
 
 const defaultTracingOrigins = ['localhost', /^\//];
 
@@ -23,7 +24,8 @@ const initSentry = () => {
       // Set tracesSampleRate to 1.0 to capture 100%
       // of transactions for performance monitoring.
       // We recommend adjusting this value in production
-      tracesSampleRate: 1.0
+      tracesSampleRate: 1.0,
+      release: getAppVersionNumber()
     });
 
     // eslint-disable-next-line no-console
