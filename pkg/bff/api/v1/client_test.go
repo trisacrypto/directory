@@ -118,10 +118,8 @@ func TestStatus(t *testing.T) {
 
 func TestLookup(t *testing.T) {
 	fixture := &api.LookupReply{
-		Results: []map[string]interface{}{
-			{"foo": "1", "color": "red"},
-			{"foo": "2", "color": "blue"},
-		},
+		TestNet: map[string]interface{}{"foo": "2", "color": "blue"},
+		MainNet: map[string]interface{}{"foo": "1", "color": "red"},
 	}
 
 	// Create a Test Server
@@ -141,7 +139,8 @@ func TestLookup(t *testing.T) {
 
 	out, err := client.Lookup(context.TODO(), &api.LookupParams{CommonName: "example.com"})
 	require.NoError(t, err)
-	require.Equal(t, fixture.Results, out.Results)
+	require.Equal(t, fixture.TestNet, out.TestNet)
+	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
 func TestRegister(t *testing.T) {
