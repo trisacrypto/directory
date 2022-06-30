@@ -1,8 +1,9 @@
 import React, { FC } from 'react';
-import { Stack, Box, Text, Heading, Flex } from '@chakra-ui/react';
+import { Stack, Box, Text, Heading, Flex, HStack } from '@chakra-ui/react';
 
 interface NetworkAnnouncementProps {
   message: string;
+  datas?: any;
 }
 const NetworkAnnouncements = (props: NetworkAnnouncementProps) => {
   return (
@@ -15,7 +16,13 @@ const NetworkAnnouncements = (props: NetworkAnnouncementProps) => {
       p={5}
       mt={10}>
       <Stack>
-        <Heading fontSize={'1.2rem'}> Network announcements</Heading>
+        <HStack justifyContent="space-between">
+          <Heading fontSize={'1.2rem'}> Network announcements</Heading>
+          <Box className="arrow">
+            <Box className="arrow-top"></Box>
+            <Box className="arrow-bottom"></Box>
+          </Box>
+        </HStack>
 
         <Text>{props.message}</Text>
       </Stack>
