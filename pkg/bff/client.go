@@ -3,9 +3,7 @@ package bff
 import (
 	"context"
 
-	"github.com/trisacrypto/directory/pkg/bff/admin"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc"
@@ -15,30 +13,18 @@ import (
 // GlobalDirectoryClient is a unified interface which can be implemented to create a
 // unified client to multiple GDS services.
 type GlobalDirectoryClient interface {
-	apiv2.DirectoryAdministrationClient
 	gds.TRISADirectoryClient
 	members.TRISAMembersClient
 }
 
 // GDSClient is a unified client which contains sub-clients for interacting with the
 // various GDS services. This helps reduce common client code when making parallel
-// request to both testnet and mainnet.
+// requests to both testnet and mainnet.
 type GDSClient struct {
-	apiv2.APIv2
-	admin       apiv2.DirectoryAdministrationClient
 	gds         gds.TRISADirectoryClient
 	members     members.TRISAMembersClient
 	gdsConn     *grpc.ClientConn
 	membersConn *grpc.ClientConn
-}
-
-// ConnectAdmin creates a DirectoryAdministrationClient to the GDS Admin service.
-func (c *GDSClient) ConnectAdmin(conf config.AdminConfig) (err error) {
-	if c.admin, err = admin.New(conf); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // ConnectGDS creates a gRPC client to the TRISA Directory Service specified in the

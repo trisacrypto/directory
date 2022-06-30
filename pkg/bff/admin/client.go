@@ -18,13 +18,13 @@ const (
 
 // New creates a new DirectoryAdministrationClient which uses its own self signed
 // credentials to make authenticated requests to a GDS Admin service.
-func New(conf config.AdminConfig) (_ admin.DirectoryAdministrationClient, err error) {
+func New(conf config.AdminConfig) (client admin.DirectoryAdministrationClient, err error) {
 	aud := conf.Audience
 	if aud == "" {
 		aud = conf.Endpoint
 	}
 
-	var creds *Credentials
+	var creds admin.Credentials
 	if creds, err = NewCredentials(conf.TokenKeys, conf.Audience); err != nil {
 		return nil, err
 	}
@@ -34,8 +34,8 @@ func New(conf config.AdminConfig) (_ admin.DirectoryAdministrationClient, err er
 
 // NewCredentials creates a new Credentials object with the given token keys and
 // audience which can generate self signed access tokens for authenticated requests.
-func NewCredentials(tokenKeys map[string]string, audience string) (creds *Credentials, err error) {
-	creds = &Credentials{}
+func NewCredentials(tokenKeys map[string]string, audience string) (_ admin.Credentials, err error) {
+	creds := &Credentials{}
 
 	if creds.tm, err = tokens.New(tokenKeys, audience); err != nil {
 		return nil, err
@@ -51,9 +51,12 @@ type Credentials struct {
 	access string
 }
 
+// Ensure that the Credentials implements the admin.Credentials interface.
+var _ admin.Credentials = &Credentials{}
+
 // Generate signs a new access token using the token manager if a valid one does not
 // already exist.
-func (c *Credentials) Generate() (err error) {
+func (c *Credentials) Generate(api admin.DirectoryAdministrationClient) (err error) {
 	if c.Valid() {
 		return nil
 	}
@@ -76,17 +79,6 @@ func (c *Credentials) Generate() (err error) {
 		return err
 	}
 
-	// Call ProtectAuthenticate to get the csrf tokens
-	/*
-		apiv2, ok := api.(*admin.APIv2)
-		if ok {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			if err = apiv2.ProtectAuthenticate(ctx); err != nil {
-				return fmt.Errorf("could not get double cookie csrf tokens: %s", err)
-			}
-		}*/
-
 	return nil
 }
 
@@ -106,7 +98,7 @@ func (c *Credentials) Valid() bool {
 
 // Login creates new access and refresh tokens if they don't already exist.
 func (c *Credentials) Login(api admin.DirectoryAdministrationClient) (accessToken, _ string, err error) {
-	if err = c.Generate(); err != nil {
+	if err = c.Generate(api); err != nil {
 		return "", "", err
 	}
 
@@ -115,7 +107,7 @@ func (c *Credentials) Login(api admin.DirectoryAdministrationClient) (accessToke
 
 // Refresh
 func (c *Credentials) Refresh(api admin.DirectoryAdministrationClient) (accessToken, _ string, err error) {
-	if err = c.Generate(); err != nil {
+	if err = c.Generate(api); err != nil {
 		return "", "", err
 	}
 

@@ -172,7 +172,7 @@ func (s *APIv2) Reauthenticate(ctx context.Context, in *AuthRequest) (out *AuthR
 	return out, nil
 }
 
-func (s *APIv2) AdminStatus(ctx context.Context) (out *StatusReply, err error) {
+func (s *APIv2) Status(ctx context.Context) (out *StatusReply, err error) {
 	//  Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/status", nil, nil); err != nil {
@@ -200,7 +200,7 @@ func (s *APIv2) AdminStatus(ctx context.Context) (out *StatusReply, err error) {
 	return out, nil
 }
 
-func (s *APIv2) AdminSummary(ctx context.Context) (out *SummaryReply, err error) {
+func (s *APIv2) Summary(ctx context.Context) (out *SummaryReply, err error) {
 	// Must be authenticated
 	if err = s.checkAuthentication(ctx); err != nil {
 		return nil, err

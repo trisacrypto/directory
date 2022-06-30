@@ -225,7 +225,7 @@ func TestStatus(t *testing.T) {
 	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
-	out, err := client.AdminStatus(context.TODO())
+	out, err := client.Status(context.TODO())
 	require.NoError(t, err)
 	require.Equal(t, fixture.Status, out.Status)
 	require.True(t, fixture.Timestamp.Equal(out.Timestamp))
@@ -267,7 +267,7 @@ func TestSummary(t *testing.T) {
 	client, err := admin.New(ts.URL, nil)
 	require.NoError(t, err)
 
-	out, err := client.AdminSummary(context.TODO())
+	out, err := client.Summary(context.TODO())
 	require.NoError(t, err)
 	require.Equal(t, fixture.VASPsCount, out.VASPsCount)
 	require.Equal(t, fixture.PendingRegistrations, out.PendingRegistrations)
