@@ -38,7 +38,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
   const getOrgDivEl: any = document.getElementById('org') as HTMLDivElement;
   const getCntDivEl: any = document.getElementById('cnt') as HTMLDivElement;
   const [divOrgHeight, setDivOrgHeight] = useState(getOrgDivEl);
-  const [divCntHeight, setDivCntHeight] = useState(getOrgDivEl);
+  const [divCntHeight, setDivCntHeight] = useState(getCntDivEl);
   const orgRef = useRef<HTMLDivElement>(null);
   const cntRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -69,6 +69,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           bg={'white'}
           minHeight={divHeight}
           id={'org'}
+          // boxSize={'border-box'}
           ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
@@ -146,6 +147,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           w={'30%'}
           bg={'white'}
           minHeight={divHeight}
+          boxSize={'content-box'}
           id={'cnt'}>
           <Box>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
