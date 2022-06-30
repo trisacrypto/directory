@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 
-const PrivateOutlet = () => {
+const LandingOutlet = () => {
   const { isUserAuthenticated } = useAuth();
   const { pathname } = useLocation();
   return isUserAuthenticated ? (
@@ -11,4 +11,4 @@ const PrivateOutlet = () => {
     <Outlet />
   );
 };
-export default PrivateOutlet;
+export default LandingOutlet;

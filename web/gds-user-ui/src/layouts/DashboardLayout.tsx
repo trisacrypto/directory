@@ -7,10 +7,11 @@ type DashboardLayoutProp = {
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
-  const { getUser } = useAuth();
-  useEffect(() => {
-    getUser();
-  }, []);
+  console.log('[DashboardLayout rendering]');
+  // const { getUser } = useAuth();
+  // useEffect(() => {
+  //   getUser();
+  // }, [getUser]);
   return (
     <>
       <Sidebar {...props} />;

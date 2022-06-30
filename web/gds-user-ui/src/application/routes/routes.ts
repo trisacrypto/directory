@@ -5,7 +5,7 @@ import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
 import CertificateRegistrationPage from 'modules/dashboard/certificate/registration';
-import { Routes, Route, Link, Outlet } from 'react-router-dom';
+
 import Home from 'modules/home';
 import Start from 'modules/start';
 import VerifyPage from 'modules/verify';
@@ -16,7 +16,7 @@ const CertificateRegistration = React.lazy(
   () => import('modules/dashboard/certificate/registration')
 );
 
-// const Home = React.lazy(() => import('modules/home'));
+// const Home = React.lazy(() => import('modules/home'git));
 // const StartPage = React.lazy(() => import('modules/start'));
 // const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
 // const VerifyPage = React.lazy(() => import('modules/verify'));
@@ -43,7 +43,7 @@ const appRoutes = [
     layout: 'landing'
   },
   {
-    path: '/start',
+    path: '/getting-started',
     name: 'Start',
     component: Start,
     layout: 'landing'

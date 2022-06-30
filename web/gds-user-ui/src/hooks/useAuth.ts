@@ -18,9 +18,10 @@ const useAuth = () => {
     dispatch(logout());
   };
   const getUser = async () => {
-    if (accessToken) {
+    const getToken = getCookie('access_token');
+    if (getToken) {
       try {
-        const userInfo: any = await auth0GetUser(accessToken);
+        const userInfo: any = await auth0GetUser(getToken);
         const u: TUser = {
           isLoggedIn: true,
           user: {
