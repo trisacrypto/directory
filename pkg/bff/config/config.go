@@ -49,6 +49,7 @@ type AuthConfig struct {
 // NetworkConfig contains sub configurations for connecting to specific GDS and members
 // services.
 type NetworkConfig struct {
+	Admin     AdminConfig
 	Directory DirectoryConfig
 	Members   MembersConfig
 }
@@ -60,9 +61,17 @@ type DirectoryConfig struct {
 	Timeout  time.Duration `split_words:"true" default:"10s"`
 }
 
+// AdminConfig is a configuration for connecting to an Admin service.
+type AdminConfig struct {
+	Endpoint string `split_words:"true" required:"true"`
+	// Audience and TokenKeys should match the Admin server configuration, since the
+	// BFF uses these parameters to sign its own JWT tokens.
+	Audience  string            `split_words:"true"`
+	TokenKeys map[string]string `split_words:"true" required:"true"`
+}
+
 // MembersConfig is a configuration for connecting to a members service.
 type MembersConfig struct {
-	Insecure bool          `split_words:"true" default:"false"`
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
 	MTLS     MTLSConfig
@@ -71,13 +80,13 @@ type MembersConfig struct {
 type DatabaseConfig struct {
 	URL           string `split_words:"true" required:"true"`
 	ReindexOnBoot bool   `split_words:"true" default:"false"`
-	Insecure      bool   `split_words:"true" default:"false"`
 	MTLS          MTLSConfig
 }
 
 type MTLSConfig struct {
-	CertPath string `split_words:"true" required:"true"`
-	PoolPath string `split_words:"true" required:"true"`
+	Insecure bool   `split_words:"true"`
+	CertPath string `split_words:"true"`
+	PoolPath string `split_words:"true"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -145,21 +154,15 @@ func (c NetworkConfig) Validate() error {
 }
 
 func (c MembersConfig) Validate() error {
-	// If insecure is false then we must have certs to connect to the members service.
-	if !c.Insecure {
-		if err := c.MTLS.Validate(); err != nil {
-			return fmt.Errorf("invalid members configuration: %w", err)
-		}
+	if err := c.MTLS.Validate(); err != nil {
+		return fmt.Errorf("invalid members configuration: %w", err)
 	}
 	return nil
 }
 
 func (c DatabaseConfig) Validate() error {
-	// If the insecure flag isn't set then we must have certs when connecting to trtl.
-	if !c.Insecure {
-		if err := c.MTLS.Validate(); err != nil {
-			return fmt.Errorf("invalid database configuration: %w", err)
-		}
+	if err := c.MTLS.Validate(); err != nil {
+		return fmt.Errorf("invalid database configuration: %w", err)
 	}
 	return nil
 }
@@ -209,8 +212,10 @@ func (c AuthConfig) ClientCredentials() management.Option {
 }
 
 func (c MTLSConfig) Validate() error {
-	if c.CertPath == "" || c.PoolPath == "" {
-		return errors.New("connecting over mTLS requires certs and cert pool")
+	if !c.Insecure {
+		if c.CertPath == "" || c.PoolPath == "" {
+			return errors.New("connecting over mTLS requires certs and cert pool")
+		}
 	}
 	return nil
 }

@@ -130,6 +130,8 @@ services:
       - gds-mainnet
     ports:
       - 4437:4437
+    volumes:
+      - ../fixtures:/data
     environment:
       - GDS_BFF_MAINTENANCE=false
       - GDS_BFF_BIND_ADDR=:4437
@@ -138,20 +140,31 @@ services:
       - GDS_BFF_CONSOLE_LOG=true
       - GDS_ADMIN_ALLOW_ORIGINS=http://localhost:3000
       - GDS_ADMIN_COOKIE_DOMAIN=localhost
-      - GDS_BFF_TESTNET_INSECURE=true
-      - GDS_BFF_TESTNET_ENDPOINT=gds:4433
-      - GDS_BFF_TESTNET_TIMEOUT=5s
-      - GDS_BFF_MAINNET_INSECURE=true
-      - GDS_BFF_MAINNET_ENDPOINT=gds-mainnet:8433
-      - GDS_BFF_MAINNET_TIMEOUT=5s
+      - GDS_BFF_TESTNET_DIRECTORY_INSECURE=true
+      - GDS_BFF_TESTNET_DIRECTORY_ENDPOINT=gds:4433
+      - GDS_BFF_TESTNET_DIRECTORY_TIMEOUT=5s
+      - GDS_BFF_TESTNET_ADMIN_ENDPOINT=http://gds:4434
+      - GDS_BFF_TESTNET_ADMIN_AUDIENCE=http://localhost:4433
+      - GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
+      - GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE=true
+      - GDS_BFF_TESTNET_MEMBERS_ENDPOINT=gds:4435
+      - GDS_BFF_MAINNET_DIRECTORY_INSECURE=true
+      - GDS_BFF_MAINNET_DIRECTORY_ENDPOINT=gds-mainnet:8433
+      - GDS_BFF_MAINNET_DIRECTORY_TIMEOUT=5s
+      - GDS_BFF_MAINNET_ADMIN_ENDPOINT=http://gds:8434
+      - GDS_BFF_MAINNET_ADMIN_AUDIENCE=http://localhost:8433
+      - GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
+      - GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE=true
+      - GDS_BFF_MAINNET_MEMBERS_ENDPOINT=gds-mainnet:8435
       - GDS_BFF_DATABASE_URL=trtl://trtl:4436/
       - GDS_BFF_DATABASE_REINDEX_ON_BOOT=false
-      - GDS_BFF_DATABASE_INSECURE=true
+      - GDS_BFF_DATABASE_MTLS_INSECURE=true
       - GDS_BFF_DATABASE_CERT_PATH
       - GDS_BFF_DATABASE_POOL_PATH
       - GDS_BFF_SENTRY_DSN
       - GDS_BFF_SENTRY_ENVIRONMENT
       - GDS_BFF_SENTRY_TRACK_PERFORMANCE
+      - GDS_BFF_AUTH0_TESTING
       - GDS_BFF_AUTH0_DOMAIN=dev-bu-hbv3o.us.auth0.com
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
       - GDS_BFF_AUTH0_CLIENT_ID

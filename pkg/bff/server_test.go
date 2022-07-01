@@ -89,9 +89,11 @@ func (s *bffTestSuite) SetupSuite() {
 				Timeout:  1 * time.Second,
 			},
 			Members: config.MembersConfig{
-				Insecure: true,
 				Endpoint: "bufnet",
 				Timeout:  1 * time.Second,
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
 			},
 		},
 		MainNet: config.NetworkConfig{
@@ -101,14 +103,18 @@ func (s *bffTestSuite) SetupSuite() {
 				Timeout:  1 * time.Second,
 			},
 			Members: config.MembersConfig{
-				Insecure: true,
 				Endpoint: "bufnet",
 				Timeout:  1 * time.Second,
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
 			},
 		},
 		Database: config.DatabaseConfig{
-			URL:      "trtl://bufnet/",
-			Insecure: true,
+			URL: "trtl://bufnet/",
+			MTLS: config.MTLSConfig{
+				Insecure: true,
+			},
 		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")

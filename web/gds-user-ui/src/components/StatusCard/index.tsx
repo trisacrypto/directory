@@ -16,6 +16,7 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
       // minWidth={250}
       // height={170}
       fontSize={18}
+      p={5}
       mt={10}
       px={5}>
       <Stack textAlign={'center'}>
