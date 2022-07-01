@@ -55,8 +55,12 @@ type DB struct {
 	trtl trtl.TrtlClient
 
 	// Announcements collection and singleton helper
-	announcements *Announcements
-	muMakeAC      sync.Once
+	announcements     *Announcements
+	makeAnnouncements sync.Once
+
+	// Organizations collection and singleton helper
+	organizations     *Organizations
+	makeOrganizations sync.Once
 }
 
 // Collection is an interface that identifies utilities that manage specific namespaces.
