@@ -28,7 +28,7 @@ var _ Collection = &Organizations{}
 
 // Organizations constructs the collection type for db interactions with the namespace.
 // This method is intended to be used with chaining, e.g. db.Organizations().Get(id). To
-// reduce the number of allocations a singleton us used. Method calls to the collection
+// reduce the number of allocations a singleton is used. Method calls to the collection
 // are thread-safe.
 func (db *DB) Organizations() *Organizations {
 	db.makeOrganizations.Do(func() {
