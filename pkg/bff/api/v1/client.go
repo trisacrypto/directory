@@ -17,22 +17,32 @@ import (
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.
-func New(endpoint string) (_ BFFClient, err error) {
-	c := &APIv1{
-		client: &http.Client{
+func New(endpoint string, opts ...ClientOption) (_ BFFClient, err error) {
+	// Create a client with the parsed endpoint.
+	c := &APIv1{}
+	if c.endpoint, err = url.Parse(endpoint); err != nil {
+		return nil, fmt.Errorf("could not parse endpoint: %s", err)
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		if err = opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// If a client hasn't been specified, create the default client.
+	if c.client == nil {
+		c.client = &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
 			Timeout:       30 * time.Second,
-		},
-	}
+		}
 
-	// Create cookie jar
-	if c.client.Jar, err = cookiejar.New(nil); err != nil {
-		return nil, fmt.Errorf("could not create cookiejar: %s", err)
-	}
-
-	if c.endpoint, err = url.Parse(endpoint); err != nil {
-		return nil, fmt.Errorf("could not parse endpoint: %s", err)
+		// Create cookie jar for CSRF
+		if c.client.Jar, err = cookiejar.New(nil); err != nil {
+			return nil, fmt.Errorf("could not create cookiejar: %s", err)
+		}
 	}
 	return c, nil
 }
@@ -41,6 +51,7 @@ func New(endpoint string) (_ BFFClient, err error) {
 type APIv1 struct {
 	endpoint *url.URL
 	client   *http.Client
+	creds    Credentials
 }
 
 // Ensure the API implments the BFFClient interface.
@@ -105,6 +116,27 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 	return out, nil
 }
 
+func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/verify", nil, &params); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &VerifyContactReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error) {
 	// network is required for the endpoint
 	if in.Network == "" {
@@ -123,27 +155,6 @@ func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *Registe
 
 	// Execute the request and get a response
 	out = &RegisterReply{}
-	if _, err = s.Do(req, out, true); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error) {
-	// Create the query params from the input
-	var params url.Values
-	if params, err = query.Values(in); err != nil {
-		return nil, fmt.Errorf("could not encode query params: %s", err)
-	}
-
-	// Make the HTTP request
-	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/verify", nil, &params); err != nil {
-		return nil, err
-	}
-
-	// Execute the request and get a response
-	out = &VerifyContactReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

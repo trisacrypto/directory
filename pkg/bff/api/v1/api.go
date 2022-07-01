@@ -9,14 +9,19 @@ import (
 //===========================================================================
 
 type BFFClient interface {
+	// Unauthenticated Endpoints
 	Status(context.Context, *StatusParams) (*StatusReply, error)
+	Lookup(context.Context, *LookupParams) (*LookupReply, error)
+	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
+
+	// User Management Endpoints
+
+	// Authenticated Endpoints
+	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
-	Lookup(context.Context, *LookupParams) (*LookupReply, error)
-	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
-	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 }
 
 //===========================================================================
@@ -46,6 +51,72 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// LookupParams is converted into a GDS LookupRequest.
+type LookupParams struct {
+	ID         string `url:"uuid,omitempty" form:"uuid"`
+	CommonName string `url:"common_name,omitempty" form:"common_name"`
+}
+
+// LookupReply can return 1-2 results either one result found from one directory
+// service or results found from both TestNet and MainNet. If no results are found, the
+// Lookup endpoint returns a 404 error (not found). The result is the simplest case,
+// just a JSON serialization of the protocol buffers returned from GDS to help long term
+// maintainability. The protocol buffers contain a "registered_directory" field that
+// will have either vaspdirectory.net or trisatest.net inside of it - which can be used
+// to identify which network the record is associated with. The protocol buffers may
+// also contain an "error" field - the BFF will handle this field by logging the error
+// but will exclude it from any results returned.
+type LookupReply struct {
+	TestNet map[string]interface{} `json:"testnet"`
+	MainNet map[string]interface{} `json:"mainnet"`
+}
+
+// VerifyContactParams is converted into a GDS VerifyContactRequest.
+type VerifyContactParams struct {
+	ID        string `url:"vaspID,omitempty" form:"vaspID"`
+	Token     string `url:"token,omitempty" form:"token"`
+	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
+}
+
+// VerifyContactReply
+type VerifyContactReply struct {
+	Error   map[string]interface{} `json:"error,omitempty"`
+	Status  string                 `json:"status"`
+	Message string                 `json:"message"`
+}
+
+// RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
+// specified GDS in v1.4. In v1.5 this will be expanded to include fields for both
+// TestNet and MainNet registration (e.g. multiple fields for endpoint and domain).
+// All generic fields (e.g. map[string]interface{}) should match their protobuf spec.
+type RegisterRequest struct {
+	// The network of the directory to register with, e.g. testnet or mainnet
+	// NOTE: not required for front-end, used to determine endpoint in the client.
+	Network string `json:"network,omitempty"`
+
+	// RegisterRequest ProtocolBuffer fields
+	Entity           map[string]interface{} `json:"entity"`
+	Contacts         map[string]interface{} `json:"contacts"`
+	TRISAEndpoint    string                 `json:"trisa_endpoint"`
+	CommonName       string                 `json:"common_name"`
+	Website          string                 `json:"website"`
+	BusinessCategory string                 `json:"business_category"`
+	VASPCategories   []string               `json:"vasp_categories"`
+	EstablishedOn    string                 `json:"established_on"`
+	TRIXO            map[string]interface{} `json:"trixo"`
+}
+
+// RegisterReply is converted from a protocol buffer RegisterReply.
+type RegisterReply struct {
+	Error               map[string]interface{} `json:"error,omitempty"`
+	Id                  string                 `json:"id"`
+	RegisteredDirectory string                 `json:"registered_directory"`
+	CommonName          string                 `json:"common_name"`
+	Status              string                 `json:"status"`
+	Message             string                 `json:"message"`
+	PKCS12Password      string                 `json:"pkcs12password"`
+}
 
 // OverviewReply is returned on overview requests.
 type OverviewReply struct {
@@ -100,70 +171,4 @@ type Certificate struct {
 	ExpiresAt    string                 `json:"expires_at"`
 	Revoked      bool                   `json:"revoked"`
 	Details      map[string]interface{} `json:"details"`
-}
-
-// LookupParams is converted into a GDS LookupRequest.
-type LookupParams struct {
-	ID         string `url:"uuid,omitempty" form:"uuid"`
-	CommonName string `url:"common_name,omitempty" form:"common_name"`
-}
-
-// LookupReply can return 1-2 results either one result found from one directory
-// service or results found from both TestNet and MainNet. If no results are found, the
-// Lookup endpoint returns a 404 error (not found). The result is the simplest case,
-// just a JSON serialization of the protocol buffers returned from GDS to help long term
-// maintainability. The protocol buffers contain a "registered_directory" field that
-// will have either vaspdirectory.net or trisatest.net inside of it - which can be used
-// to identify which network the record is associated with. The protocol buffers may
-// also contain an "error" field - the BFF will handle this field by logging the error
-// but will exclude it from any results returned.
-type LookupReply struct {
-	TestNet map[string]interface{} `json:"testnet"`
-	MainNet map[string]interface{} `json:"mainnet"`
-}
-
-// RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
-// specified GDS in v1.4. In v1.5 this will be expanded to include fields for both
-// TestNet and MainNet registration (e.g. multiple fields for endpoint and domain).
-// All generic fields (e.g. map[string]interface{}) should match their protobuf spec.
-type RegisterRequest struct {
-	// The network of the directory to register with, e.g. testnet or mainnet
-	// NOTE: not required for front-end, used to determine endpoint in the client.
-	Network string `json:"network,omitempty"`
-
-	// RegisterRequest ProtocolBuffer fields
-	Entity           map[string]interface{} `json:"entity"`
-	Contacts         map[string]interface{} `json:"contacts"`
-	TRISAEndpoint    string                 `json:"trisa_endpoint"`
-	CommonName       string                 `json:"common_name"`
-	Website          string                 `json:"website"`
-	BusinessCategory string                 `json:"business_category"`
-	VASPCategories   []string               `json:"vasp_categories"`
-	EstablishedOn    string                 `json:"established_on"`
-	TRIXO            map[string]interface{} `json:"trixo"`
-}
-
-// RegisterReply is converted from a protocol buffer RegisterReply.
-type RegisterReply struct {
-	Error               map[string]interface{} `json:"error,omitempty"`
-	Id                  string                 `json:"id"`
-	RegisteredDirectory string                 `json:"registered_directory"`
-	CommonName          string                 `json:"common_name"`
-	Status              string                 `json:"status"`
-	Message             string                 `json:"message"`
-	PKCS12Password      string                 `json:"pkcs12password"`
-}
-
-// VerifyContactParams is converted into a GDS VerifyContactRequest.
-type VerifyContactParams struct {
-	ID        string `url:"vaspID,omitempty" form:"vaspID"`
-	Token     string `url:"token,omitempty" form:"token"`
-	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
-}
-
-// VerifyContactReply
-type VerifyContactReply struct {
-	Error   map[string]interface{} `json:"error,omitempty"`
-	Status  string                 `json:"status"`
-	Message string                 `json:"message"`
 }
