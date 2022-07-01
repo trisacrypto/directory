@@ -13,6 +13,7 @@ message Organization {
     string logo_url = 3;
 
     // Directory Registrations for Lookups
+    // TODO: populate these details in the Registration Endpoint
     DirectoryRecord testnet = 10;
     DirectoryRecord mainnet = 11;
 

@@ -250,6 +250,7 @@ func (s *Server) Register(c *gin.Context) {
 		}
 	}
 
+	// TODO: save the response with the organization details in the Organization document.
 	c.JSON(http.StatusOK, out)
 }
 
