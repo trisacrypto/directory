@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
@@ -46,6 +47,7 @@ type bffTestSuite struct {
 	dbPath   string
 	trtl     *trtl.Server
 	trtlsock *bufconn.GRPCListener
+	auth     *authtest.Server
 }
 
 type mockNetwork struct {
@@ -149,6 +151,10 @@ func (s *bffTestSuite) SetupSuite() {
 	// Add the mock clients to the mock
 	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
+	// Start the authtest server for authentication verification
+	s.auth, err = authtest.Serve()
+	require.NoError(err, "could not start the authtest server")
+
 	// Direct connect the BFF server to the database
 	db, err := db.DirectConnect(s.trtlsock.Conn)
 	require.NoError(err, "could not direct connect db to the BFF server")
@@ -182,6 +188,9 @@ func (s *bffTestSuite) TearDownSuite() {
 	s.mainnet.gds.Shutdown()
 	s.testnet.members.Shutdown()
 	s.mainnet.members.Shutdown()
+
+	// Shutdown the authtest server
+	authtest.Close()
 
 	// Shutdown and cleanup trtl
 	s.trtl.Shutdown()

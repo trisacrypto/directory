@@ -4,6 +4,14 @@ The most common request is related to authentication and token verification, to
 authenticate requests to the BFF server, use this package's token generation methods to
 create a token that will be validated by the authentication middleware. Note that you
 will have to configure the Authenticate middleware to use the correct TLS client.
+
+This module also provides a singleton authtest.Server that can be used on demand from
+both tests and live server code by calling the package level functions authtest.Serve()
+and authtest.Close respectively. This ensures that tests do not require injection of
+the authentication mechanism. The first time that authtest.Serve is called a new server
+will be created; and the first time authtest.Close is called, the server will be closed.
+Note however that a new server will not be created on subsequent calls, so it's
+important to ensure that Close is not called before the tests are complete.
 */
 package authtest
 
@@ -11,9 +19,11 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -33,6 +43,38 @@ const (
 	TestNetVASP  = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"
 	Scope        = "openid profile email"
 )
+
+var (
+	srv       *Server
+	srvErr    error
+	srvCreate sync.Once
+	srvClose  sync.Once
+)
+
+// Serve creates the singleton authtest server if it does not already exist and returns
+// it for use in tests and test dependency injection. If creating the server resulted in
+// an error then the error is returned. Once Close is called, this method will return
+// nil since the server is a singleton and can only be created once. Ensure that Close
+// is not called until the tests are complete.
+func Serve() (*Server, error) {
+	srvCreate.Do(func() {
+		srv, srvErr = New()
+	})
+	return srv, srvErr
+}
+
+// Close shuts down the single authtest server and cleans it up. This method should only
+// be called once when tests are completed. When the singleton server is shutdown it can
+// no longer be created a second time because of the use of sync.Once.
+func Close() {
+	srvClose.Do(func() {
+		if srv != nil {
+			srv.Close()
+		}
+		srv = nil
+		srvErr = errors.New("the authtest server has been closed")
+	})
+}
 
 // Server wraps an httptest.Server to provide a default handler for auth0 requests.
 type Server struct {

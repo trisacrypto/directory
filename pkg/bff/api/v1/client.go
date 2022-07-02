@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -16,24 +15,6 @@ import (
 
 	"github.com/google/go-querystring/query"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
-)
-
-// ProtocolBuffer JSON marshaling and unmarshaling
-var (
-	pbencoder = protojson.MarshalOptions{
-		Multiline:       false,
-		Indent:          "",
-		AllowPartial:    true,
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: false,
-	}
-	pbdecoder = protojson.UnmarshalOptions{
-		AllowPartial:   true,
-		DiscardUnknown: true,
-	}
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.
@@ -320,15 +301,9 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	}
 
 	var body io.ReadWriter
-	switch t := data.(type) {
-	case nil:
+	switch {
+	case data == nil:
 		body = nil
-	case proto.Message:
-		var bindata []byte
-		if bindata, err = pbencoder.Marshal(t); err != nil {
-			return nil, fmt.Errorf("could not serialize request data with protojson: %s", err)
-		}
-		body = bytes.NewBuffer(bindata)
 	default:
 		body = &bytes.Buffer{}
 		if err = json.NewEncoder(body).Encode(data); err != nil {
@@ -390,20 +365,8 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 			return rep, fmt.Errorf("unexpected content type: %q", ct)
 		}
 
-		switch t := data.(type) {
-		case proto.Message:
-			var b []byte
-			if b, err = ioutil.ReadAll(rep.Body); err != nil {
-				return nil, fmt.Errorf("could not deserialize response data: %s", err)
-			}
-
-			if err = pbdecoder.Unmarshal(b, t); err != nil {
-				return nil, fmt.Errorf("could not deserialize response data: %s", err)
-			}
-		default:
-			if err = json.NewDecoder(rep.Body).Decode(data); err != nil {
-				return nil, fmt.Errorf("could not deserialize response data: %s", err)
-			}
+		if err = json.NewDecoder(rep.Body).Decode(data); err != nil {
+			return nil, fmt.Errorf("could not deserialize response data: %s", err)
 		}
 	}
 
