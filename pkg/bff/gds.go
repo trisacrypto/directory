@@ -211,7 +211,10 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// Return the registration form
+	// Return the registration form, ensuring nil is not serialized.
+	if org.Registration == nil {
+		org.Registration = &records.RegistrationForm{}
+	}
 	c.JSON(http.StatusOK, org.Registration)
 }
 

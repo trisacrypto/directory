@@ -27,6 +27,11 @@ type BFFClient interface {
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
+
+	// Client management helpers
+	// HACK: this really doesn't belong on this interface, but the tests need it here
+	// and it may be helpful to client users in the future.
+	SetCredentials(Credentials)
 }
 
 //===========================================================================

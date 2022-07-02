@@ -3,7 +3,6 @@ package api_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -549,17 +547,15 @@ func TestCertificates(t *testing.T) {
 }
 
 func loadFixture(path string, v interface{}) (err error) {
-	switch {
-	case strings.HasSuffix(path, ".pb.json"):
-		return loadPBFixture(path, v)
-	case strings.HasSuffix(path, ".json"):
-		return loadJSONFixture(path, v)
+	switch t := v.(type) {
+	case proto.Message:
+		return loadPBFixture(path, t)
 	default:
-		return errors.New("unknown extension use .proto.json for pb or .json for json")
+		return loadJSONFixture(path, t)
 	}
 }
 
-func loadPBFixture(path string, v interface{}) (err error) {
+func loadPBFixture(path string, v proto.Message) (err error) {
 	var data []byte
 	if data, err = ioutil.ReadFile(path); err != nil {
 		return err
@@ -570,7 +566,7 @@ func loadPBFixture(path string, v interface{}) (err error) {
 		DiscardUnknown: true,
 	}
 
-	if err = pbjson.Unmarshal(data, v.(proto.Message)); err != nil {
+	if err = pbjson.Unmarshal(data, v); err != nil {
 		return err
 	}
 	return nil

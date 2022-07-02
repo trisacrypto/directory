@@ -372,3 +372,9 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 
 	return rep, nil
 }
+
+// SetCredentials is a helper function for external users to override credentials at
+// runtime and is used extensively in testing the BFF server.
+func (c *APIv1) SetCredentials(creds Credentials) {
+	c.creds = creds
+}

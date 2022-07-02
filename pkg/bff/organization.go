@@ -22,14 +22,14 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	if claims, err = auth.GetClaims(c); err != nil {
 		log.Error().Err(err).Msg("could not retrieve claims to fetch orgID")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
-		return
+		return nil, err
 	}
 
 	// If there is no organization ID, something went wrong
 	if claims.OrgID == "" {
 		log.Warn().Msg("claims do not contain an orgID")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("missing claims info, try logging out and logging back in"))
-		return
+		return nil, errors.New("missing organization ID in claims")
 	}
 
 	// Fetch the record from the database
@@ -37,12 +37,13 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 		if errors.Is(err, db.ErrNotFound) {
 			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
 			c.JSON(http.StatusNotFound, api.ErrorResponse("no organization found, try logging out and logging back in"))
-			return
+			return nil, err
 		}
 
 		log.Error().Err(err).Msg("could not retrieve organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
-		return
+		return nil, err
 	}
+
 	return org, nil
 }

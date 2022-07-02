@@ -339,11 +339,11 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)
-		v1.POST("/register", auth.Authorize("update:vasp"), s.SaveRegisterForm)
-		v1.POST("/register/:network", auth.Authorize("update:vasp"), s.SubmitRegistration)
+		v1.POST("/register", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SaveRegisterForm)
+		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SubmitRegistration)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
 		v1.GET("/announcements", auth.Authorize("read:vasp"), s.Announcements)
-		v1.POST("/announcements", auth.Authorize("create:announcements"), s.MakeAnnouncement)
+		v1.POST("/announcements", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
 		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
 	}
 

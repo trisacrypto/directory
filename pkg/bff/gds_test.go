@@ -6,10 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
+	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestLookup() {
@@ -60,6 +63,78 @@ func (s *bffTestSuite) TestLookup() {
 	require.NoError(err, "could not fetch expected result from mainnet and testnet")
 	require.NotEmpty(rep.MainNet, "expected mainnet result from server")
 	require.NotEmpty(rep.TestNet, "expected testnet result from server")
+}
+
+func (s *bffTestSuite) TestLoadRegisterForm() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	_, err := s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint must have the read:vasp permission
+	token, err := s.auth.NewTokenWithClaims(claims)
+	require.NoError(err, "could not create token with incorrect permissions from claims")
+	s.client.SetCredentials(api.Token(token))
+
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID and the server must not panic if it does not
+	claims.Permissions = []string{"read:vasp"}
+	token, err = s.auth.NewTokenWithClaims(claims)
+	require.NoError(err, "could not create token without organizationID from claims")
+	s.client.SetCredentials(api.Token(token))
+
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic and should return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	token, err = s.auth.NewTokenWithClaims(claims)
+	require.NoError(err, "could not create token with valid claims")
+	s.client.SetCredentials(api.Token(token))
+
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+	// Create organization in the database, but without registration form.
+	// An empty registration form should be returned without panic.
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	claims.OrgID = org.Id
+	token, err = s.auth.NewTokenWithClaims(claims)
+	require.NoError(err, "could not create token with valid claims")
+	s.client.SetCredentials(api.Token(token))
+
+	form, err := s.client.LoadRegistrationForm(context.TODO())
+	require.NoError(err, "expected no error when no form data is stored")
+	require.NotNil(form, "expected empty registration form when no form data is stored")
+
+	// Load a registration form from fixtures and store it in the database
+	org.Registration = &records.RegistrationForm{}
+	err = loadFixture("testdata/registration_form.pb.json", org.Registration)
+	require.NoError(err, "could not load registration form fixture")
+	require.False(proto.Equal(form, org.Registration), "expected fixture to not be empty")
+
+	err = s.db.Organizations().Update(context.TODO(), org)
+	require.NoError(err, "could not update organization in database")
+
+	form, err = s.client.LoadRegistrationForm(context.TODO())
+	require.NoError(err, "expected no error when form data is available")
+	require.NotNil(form, "expected completed registration form when form data is available")
+	require.True(proto.Equal(form, org.Registration), "expected completed registration form when form data is available")
 }
 
 func (s *bffTestSuite) TestSubmitRegistration() {

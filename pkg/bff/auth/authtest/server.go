@@ -35,7 +35,7 @@ const (
 	KeyID        = "StyqeY8Kl4Eam28KsUs"
 	ClientID     = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
 	ClientSecret = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
-	Audience     = "http://localhost:4437/"
+	Audience     = "http://localhost"
 	Email        = "leopold.wentzel@gmail.com"
 	UserID       = "test|abcdefg1234567890"
 	OrgID        = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
@@ -155,6 +155,30 @@ func (s *Server) NewToken(permissions ...string) (tks string, err error) {
 
 // NewTokenWithClaims allows test user to specifically configure their claims.
 func (s *Server) NewTokenWithClaims(claims *Claims) (tks string, err error) {
+	// Set required claims strings if they are not on the struct
+	if claims.Issuer == "" {
+		claims.Issuer = s.URL.ResolveReference(&url.URL{Path: "/"}).String()
+	}
+
+	if len(claims.Audience) == 0 {
+		claims.Audience = jwt.ClaimStrings{
+			claims.Issuer, Audience,
+		}
+	}
+
+	if claims.Subject == "" {
+		claims.Subject = UserID
+	}
+
+	if claims.IssuedAt == nil && claims.ExpiresAt == nil {
+		claims.IssuedAt = jwt.NewNumericDate(time.Now())
+		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
+	}
+
+	if claims.Scope == "" {
+		claims.Scope = Scope
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = KeyID
 	return token.SignedString(s.keys)
