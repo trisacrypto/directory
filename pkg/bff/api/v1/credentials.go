@@ -28,8 +28,11 @@ var (
 // implements the Credentials interface so it can be passed directly to the client.
 type Token string
 
-// Token implements the Credentials interface but performs no validation on the string.
+// Token implements the Credentials interface but performs limited validation on the string.
 func (t Token) AccessToken() (string, error) {
+	if string(t) == "" {
+		return "", ErrInvalidCredentials
+	}
 	return string(t), nil
 }
 

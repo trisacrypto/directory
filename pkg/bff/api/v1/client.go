@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,6 +15,25 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+)
+
+// ProtocolBuffer JSON marshaling and unmarshaling
+var (
+	pbencoder = protojson.MarshalOptions{
+		Multiline:       false,
+		Indent:          "",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+	}
+	pbdecoder = protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.
@@ -61,6 +81,7 @@ var _ BFFClient = &APIv1{}
 // Client Methods
 //===========================================================================
 
+// Status performs a health check request to the BFF.
 func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -95,6 +116,7 @@ func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply,
 	return out, nil
 }
 
+// Lookup a VASP record in both the TestNet and the MainNet.
 func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -116,6 +138,7 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 	return out, nil
 }
 
+// Verify a contact with the token sent to their email address.
 func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -137,19 +160,63 @@ func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out
 	return out, nil
 }
 
-func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error) {
+// Login post-processes an Auth0 login or registration and sets CSRF cookies.
+func (s *APIv1) Login(ctx context.Context) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/users/login", nil, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Load registration form data from the server to populate the front-end form.
+func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.RegistrationForm, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/register", nil, nil); err != nil {
+		return nil, err
+	}
+
+	form = &models.RegistrationForm{}
+	if _, err = s.Do(req, form, true); err != nil {
+		return nil, err
+	}
+	return form, nil
+}
+
+// Save registration form data to the server in preparation for submitting it.
+func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/register", form, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+//  Submit the registration form to the specified network (testnet or mainnet).
+func (s *APIv1) SubmitRegistration(ctx context.Context, network string) (out *RegisterReply, err error) {
 	// network is required for the endpoint
-	if in.Network == "" {
+	if network == "" {
 		return nil, ErrNetworkRequired
 	}
 
 	// Determine the path for the request
-	in.Network = strings.ToLower(strings.TrimSpace(in.Network))
-	path := fmt.Sprintf("/v1/register/%s", in.Network)
+	network = strings.ToLower(strings.TrimSpace(network))
+	path := fmt.Sprintf("/v1/register/%s", network)
 
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, nil, nil); err != nil {
 		return nil, err
 	}
 
@@ -161,6 +228,7 @@ func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *Registe
 	return out, nil
 }
 
+// Overview returns a high-level summary of the organization account and networks.
 func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -176,6 +244,7 @@ func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	return out, nil
 }
 
+// Announcements returns a list of network announcments made by the admins.
 func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -191,6 +260,7 @@ func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err
 	return out, nil
 }
 
+// MakeAnnouncement allows administrators to post new network announcements.
 func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -211,6 +281,7 @@ func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err err
 	return nil
 }
 
+// Certificates returns the list of certificates associated with the organization.
 func (s *APIv1) Certificates(ctx context.Context) (out *CertificatesReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -249,13 +320,20 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	}
 
 	var body io.ReadWriter
-	if data != nil {
+	switch t := data.(type) {
+	case nil:
+		body = nil
+	case proto.Message:
+		var bindata []byte
+		if bindata, err = pbencoder.Marshal(t); err != nil {
+			return nil, fmt.Errorf("could not serialize request data with protojson: %s", err)
+		}
+		body = bytes.NewBuffer(bindata)
+	default:
 		body = &bytes.Buffer{}
 		if err = json.NewEncoder(body).Encode(data); err != nil {
 			return nil, fmt.Errorf("could not serialize request data: %s", err)
 		}
-	} else {
-		body = nil
 	}
 
 	// Create the http request
@@ -269,6 +347,15 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	req.Header.Add("Accept-Language", acceptLang)
 	req.Header.Add("Accept-Encoding", acceptEncode)
 	req.Header.Add("Content-Type", contentType)
+
+	// Add authentication if it is available
+	if s.creds != nil {
+		var token string
+		if token, err = s.creds.AccessToken(); err != nil {
+			return nil, err
+		}
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
 	return req, nil
 }
 
@@ -296,14 +383,27 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 	}
 
 	// Deserialize the JSON data from the body
+	// TODO: what if this is protocol buffer JSON?
 	if data != nil && rep.StatusCode >= 200 && rep.StatusCode < 300 {
 		// Check the content type to ensure data deserialization is possible
 		if ct := rep.Header.Get("Content-Type"); ct != contentType {
 			return rep, fmt.Errorf("unexpected content type: %q", ct)
 		}
 
-		if err = json.NewDecoder(rep.Body).Decode(data); err != nil {
-			return nil, fmt.Errorf("could not deserialize response data: %s", err)
+		switch t := data.(type) {
+		case proto.Message:
+			var b []byte
+			if b, err = ioutil.ReadAll(rep.Body); err != nil {
+				return nil, fmt.Errorf("could not deserialize response data: %s", err)
+			}
+
+			if err = pbdecoder.Unmarshal(b, t); err != nil {
+				return nil, fmt.Errorf("could not deserialize response data: %s", err)
+			}
+		default:
+			if err = json.NewDecoder(rep.Body).Decode(data); err != nil {
+				return nil, fmt.Errorf("could not deserialize response data: %s", err)
+			}
 		}
 	}
 

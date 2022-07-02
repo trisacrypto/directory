@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 //===========================================================================
@@ -15,9 +17,12 @@ type BFFClient interface {
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 
 	// User Management Endpoints
+	Login(context.Context) error
 
 	// Authenticated Endpoints
-	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
+	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
+	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
+	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *Announcement) error
@@ -84,27 +89,6 @@ type VerifyContactReply struct {
 	Error   map[string]interface{} `json:"error,omitempty"`
 	Status  string                 `json:"status"`
 	Message string                 `json:"message"`
-}
-
-// RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
-// specified GDS in v1.4. In v1.5 this will be expanded to include fields for both
-// TestNet and MainNet registration (e.g. multiple fields for endpoint and domain).
-// All generic fields (e.g. map[string]interface{}) should match their protobuf spec.
-type RegisterRequest struct {
-	// The network of the directory to register with, e.g. testnet or mainnet
-	// NOTE: not required for front-end, used to determine endpoint in the client.
-	Network string `json:"network,omitempty"`
-
-	// RegisterRequest ProtocolBuffer fields
-	Entity           map[string]interface{} `json:"entity"`
-	Contacts         map[string]interface{} `json:"contacts"`
-	TRISAEndpoint    string                 `json:"trisa_endpoint"`
-	CommonName       string                 `json:"common_name"`
-	Website          string                 `json:"website"`
-	BusinessCategory string                 `json:"business_category"`
-	VASPCategories   []string               `json:"vasp_categories"`
-	EstablishedOn    string                 `json:"established_on"`
-	TRIXO            map[string]interface{} `json:"trixo"`
 }
 
 // RegisterReply is converted from a protocol buffer RegisterReply.

@@ -62,55 +62,51 @@ func (s *bffTestSuite) TestLookup() {
 	require.NotEmpty(rep.TestNet, "expected testnet result from server")
 }
 
-func (s *bffTestSuite) TestRegister() {
+func (s *bffTestSuite) TestSubmitRegistration() {
 	require := s.Require()
 
 	// Test both the testnet and the mainnet registration
 	for _, network := range []string{"testnet", "mainnet"} {
-		req := &api.RegisterRequest{
-			Network: network,
-		}
-
 		// Test Errors first - should make no calls to the mock GDS because the input is invalid.
 		// Test Business Category is required
-		_, err := s.client.Register(context.TODO(), req)
+		_, err := s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] business category is required")
 
 		// Test Entity is required
 		req.BusinessCategory = "FOO"
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] entity is required")
 
 		// Test Contacts are required
 		req.Entity = map[string]interface{}{"name": 1}
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] contacts are required")
 
 		// Test TRIXO is required
 		req.Contacts = map[string]interface{}{"technical": "red"}
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] trixo is required")
 
 		// Test entity must be valid
 		req.TRIXO = map[string]interface{}{"primary_regulator": 1}
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] could not parse legal person entity")
 
 		// Test contacts must be valid
 		req.Entity, err = loadFixture("testdata/entity.json")
 		require.NoError(err, "could not load testdata/entity.json")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] could not parse contacts")
 
 		// Test business category must be valid
 		req.Contacts, err = loadFixture("testdata/contacts.json")
 		require.NoError(err, "could not load testdata/contacts.json")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] could not parse \"FOO\" into a business category")
 
 		// Test TRIXO must be valid
 		req.BusinessCategory = models.BusinessCategoryPrivate.String()
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		require.EqualError(err, "[400] could not parse TRIXO form")
 
 		// We now have a valid request from BFF's perspective because BFF only handles
@@ -142,7 +138,7 @@ func (s *bffTestSuite) TestRegister() {
 
 		// Test Invalid Argument Error
 		mgds.UseError(mock.RegisterRPC, codes.InvalidArgument, "the TRISA endpoint is not valid")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] the TRISA endpoint is not valid")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -150,7 +146,7 @@ func (s *bffTestSuite) TestRegister() {
 
 		// Test Already Exists error
 		mgds.UseError(mock.RegisterRPC, codes.AlreadyExists, "this VASP is already registered")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] this VASP is already registered")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -158,7 +154,7 @@ func (s *bffTestSuite) TestRegister() {
 
 		// Test Aborted error
 		mgds.UseError(mock.RegisterRPC, codes.Aborted, "a conflict occurred")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[409] a conflict occurred")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -166,7 +162,7 @@ func (s *bffTestSuite) TestRegister() {
 
 		// Test Timeout error
 		mgds.UseError(mock.RegisterRPC, codes.DeadlineExceeded, "deadline exceeded")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -174,7 +170,7 @@ func (s *bffTestSuite) TestRegister() {
 
 		// Test FailedPrecondition error
 		mgds.UseError(mock.RegisterRPC, codes.FailedPrecondition, "couldn't access database")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -184,7 +180,7 @@ func (s *bffTestSuite) TestRegister() {
 		err = mgds.UseFixture(mock.RegisterRPC, fmt.Sprintf("testdata/%s/register_reply.json", network))
 		require.NoError(err, "could not load register reply fixture")
 
-		rep, err := s.client.Register(context.TODO(), req)
+		rep, err := s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.NoError(err, "could not make register call with valid payload")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -200,8 +196,7 @@ func (s *bffTestSuite) TestRegister() {
 		require.Equal(rep.PKCS12Password, "supersecret", "a pkcs12 password was not returned from the server")
 
 		// Test that a post to an incorrect network returns an error.
-		req.Network = "foo"
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), "notanetwork")
 		require.EqualError(err, "[404] network should be either testnet or mainnet")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)

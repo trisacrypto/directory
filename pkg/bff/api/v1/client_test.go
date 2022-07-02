@@ -3,15 +3,23 @@ package api_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestClient(t *testing.T) {
@@ -143,55 +151,6 @@ func TestLookup(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
-func TestRegister(t *testing.T) {
-	fixture := &api.RegisterReply{
-		Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
-		RegisteredDirectory: "vaspdirectory.net",
-		CommonName:          "trisa.example.com",
-		Status:              "PENDING_REVIEW",
-		Message:             "Thank you for registering",
-		PKCS12Password:      "supersecret squirrel",
-	}
-
-	// Create a Test Server
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, http.MethodPost, r.Method)
-		require.Equal(t, "/v1/register/mainnet", r.URL.Path)
-
-		in := &api.RegisterRequest{}
-		err := json.NewDecoder(r.Body).Decode(in)
-		require.NoError(t, err, "could not decode register request")
-
-		w.Header().Add("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(fixture)
-	}))
-	defer ts.Close()
-
-	// Create a Client that makes requests to the test server
-	client, err := api.New(ts.URL)
-	require.NoError(t, err)
-
-	req := &api.RegisterRequest{
-		Network:          "MainNet",
-		TRISAEndpoint:    "trisa.example.com:443",
-		CommonName:       "trisa.example.com",
-		Website:          "https://example.com",
-		BusinessCategory: "PRIVATE_ORGANIZATION",
-		VASPCategories:   []string{"ATM", "Other"},
-		EstablishedOn:    "2019-01-14",
-	}
-
-	out, err := client.Register(context.TODO(), req)
-	require.NoError(t, err)
-	require.Equal(t, fixture.Id, out.Id)
-	require.Equal(t, fixture.RegisteredDirectory, out.RegisteredDirectory)
-	require.Equal(t, fixture.CommonName, out.CommonName)
-	require.Equal(t, fixture.Status, out.Status)
-	require.Equal(t, fixture.Message, out.Message)
-	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
-}
-
 func TestVerifyContact(t *testing.T) {
 	fixture := &api.VerifyContactReply{
 		Status:  "PENDING_REVIEW",
@@ -217,6 +176,158 @@ func TestVerifyContact(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, fixture.Status, out.Status)
 	require.Equal(t, fixture.Message, out.Message)
+}
+
+func TestLogin(t *testing.T) {
+	// Test login with credentials and a TLS connection sets csrf protection
+	var err error
+	token := api.Token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+
+	// Create a Test TLS Server
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.URL.Path != "/v1/users/login" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if r.Header.Get("Authorization") != "Bearer "+string(token) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		// Set double cookies
+		cookie := http.Cookie{
+			Name:     "csrf_token",
+			Value:    "thisisanexamplecookietoken",
+			MaxAge:   600,
+			Secure:   true,
+			HttpOnly: false,
+			Path:     "/",
+		}
+		http.SetCookie(w, &cookie)
+
+		cookie.Name = "csrf_reference_token"
+		cookie.HttpOnly = true
+		http.SetCookie(w, &cookie)
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	// Fetch the https client and add a cookie jar
+	client := ts.Client()
+	client.Jar, err = cookiejar.New(nil)
+	require.NoError(t, err, "couldn't add a cookie jar to the https client")
+
+	// Create the BFF api client
+	bff, err := api.New(ts.URL, api.WithClient(client), api.WithCredentials(token))
+	require.NoError(t, err, "couldn't create BFF client with https and credentials")
+
+	// Execute the Login request
+	err = bff.Login(context.TODO())
+	require.NoError(t, err, "could not login using the bff client")
+
+	// Check to ensure double cookies are set. This doesn't test our code, but ensures
+	// that tests that depend on double cookies will work in the future.
+	u, err := url.Parse(ts.URL)
+	require.NoError(t, err, "could not parse test server url")
+	require.Len(t, client.Jar.Cookies(u), 2, "expected two cookies set in the cookie jar")
+}
+
+func TestLoadRegistrationForm(t *testing.T) {
+	// Load a fixture from testdata
+	fixture := &models.RegistrationForm{}
+	err := loadFixture("testdata/registration.pb.json", fixture)
+	require.NoError(t, err, "could not load registration fixture")
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/register", r.URL.Path)
+
+		pbjson := protojson.MarshalOptions{
+			AllowPartial:    true,
+			EmitUnpopulated: true,
+			UseProtoNames:   true,
+		}
+		data, err := pbjson.Marshal(fixture)
+		require.NoError(t, err, "could not marshal fixture")
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.LoadRegistrationForm(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
+func TestSaveRegistrationForm(t *testing.T) {
+	// Load a fixture from testdata
+	fixture := &models.RegistrationForm{}
+	err := loadFixture("testdata/registration.pb.json", fixture)
+	require.NoError(t, err, "could not load registration fixture")
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/register", r.URL.Path)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	err = client.SaveRegistrationForm(context.TODO(), fixture)
+	require.NoError(t, err)
+}
+
+func TestSubmitRegistration(t *testing.T) {
+	fixture := &api.RegisterReply{
+		Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
+		RegisteredDirectory: "vaspdirectory.net",
+		CommonName:          "trisa.example.com",
+		Status:              "PENDING_REVIEW",
+		Message:             "Thank you for registering",
+		PKCS12Password:      "supersecret squirrel",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/register/mainnet", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.SubmitRegistration(context.TODO(), "MainNet")
+	require.NoError(t, err)
+	require.Equal(t, fixture.Id, out.Id)
+	require.Equal(t, fixture.RegisteredDirectory, out.RegisteredDirectory)
+	require.Equal(t, fixture.CommonName, out.CommonName)
+	require.Equal(t, fixture.Status, out.Status)
+	require.Equal(t, fixture.Message, out.Message)
+	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
 }
 
 func TestOverview(t *testing.T) {
@@ -275,54 +386,6 @@ func TestOverview(t *testing.T) {
 	require.Equal(t, fixture.TestNet.MemberDetails, out.TestNet.MemberDetails)
 	require.Equal(t, fixture.MainNet.CertificatesIssued, out.MainNet.CertificatesIssued)
 	require.Equal(t, fixture.MainNet.MemberDetails, out.MainNet.MemberDetails)
-}
-
-func TestCertificates(t *testing.T) {
-	fixture := &api.CertificatesReply{
-		TestNet: []api.Certificate{
-			{
-				SerialNumber: "ABC83132333435363738",
-				IssuedAt:     time.Now().AddDate(-1, -1, 0).Format(time.RFC3339),
-				ExpiresAt:    time.Now().AddDate(0, -1, 0).Format(time.RFC3339),
-				Revoked:      true,
-				Details: map[string]interface{}{
-					"common_name": "trisa.example.com",
-				},
-			},
-		},
-		MainNet: []api.Certificate{
-			{
-				SerialNumber: "DEF83132333435363738",
-				IssuedAt:     time.Now().Format(time.RFC3339),
-				ExpiresAt:    time.Now().AddDate(1, 0, 0).Format(time.RFC3339),
-				Revoked:      false,
-				Details: map[string]interface{}{
-					"common_name": "trisa.example.com",
-				},
-			},
-		},
-	}
-
-	// Create a Test Server
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v1/certificates", r.URL.Path)
-
-		w.Header().Add("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(fixture)
-	}))
-	defer ts.Close()
-
-	// Create a Client that makes requests to the test server
-	client, err := api.New(ts.URL)
-	require.NoError(t, err)
-
-	out, err := client.Certificates(context.TODO())
-	require.NoError(t, err)
-	require.Equal(t, fixture, out)
-	require.Equal(t, fixture.TestNet, out.TestNet)
-	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
 func TestAnnoucements(t *testing.T) {
@@ -435,4 +498,89 @@ func TestMakeAnnoucementErrors(t *testing.T) {
 	req = &api.Announcement{Title: "400"}
 	err = client.MakeAnnouncement(context.TODO(), req)
 	require.EqualError(t, err, "400 Bad Request")
+}
+
+func TestCertificates(t *testing.T) {
+	fixture := &api.CertificatesReply{
+		TestNet: []api.Certificate{
+			{
+				SerialNumber: "ABC83132333435363738",
+				IssuedAt:     time.Now().AddDate(-1, -1, 0).Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(0, -1, 0).Format(time.RFC3339),
+				Revoked:      true,
+				Details: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
+		},
+		MainNet: []api.Certificate{
+			{
+				SerialNumber: "DEF83132333435363738",
+				IssuedAt:     time.Now().Format(time.RFC3339),
+				ExpiresAt:    time.Now().AddDate(1, 0, 0).Format(time.RFC3339),
+				Revoked:      false,
+				Details: map[string]interface{}{
+					"common_name": "trisa.example.com",
+				},
+			},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/certificates", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Certificates(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	require.Equal(t, fixture.TestNet, out.TestNet)
+	require.Equal(t, fixture.MainNet, out.MainNet)
+}
+
+func loadFixture(path string, v interface{}) (err error) {
+	switch {
+	case strings.HasSuffix(path, ".pb.json"):
+		return loadPBFixture(path, v)
+	case strings.HasSuffix(path, ".json"):
+		return loadJSONFixture(path, v)
+	default:
+		return errors.New("unknown extension use .proto.json for pb or .json for json")
+	}
+}
+
+func loadPBFixture(path string, v interface{}) (err error) {
+	var data []byte
+	if data, err = ioutil.ReadFile(path); err != nil {
+		return err
+	}
+
+	pbjson := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+
+	if err = pbjson.Unmarshal(data, v.(proto.Message)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadJSONFixture(path string, v interface{}) (err error) {
+	var f *os.File
+	if f, err = os.Open(path); err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(v)
 }

@@ -3,6 +3,9 @@ syntax="proto3";
 package bff.models.v1;
 option go_package = "github.com/trisacrypto/directory/pkg/bff/db/models/v1;models";
 
+import "ivms101/ivms101.proto";
+import "trisa/gds/models/v1beta1/models.proto";
+
 // The Organization document contains VASP-specific information for a single VASP record
 // in the directory service. This document differs in that it stores information
 // relevant to the BFF and should not be used to duplicate storage in the directory.
@@ -32,16 +35,41 @@ message DirectoryRecord {
     string id = 1;
     string registered_directory = 2;
     string common_name = 3;
+
+    // RFC 3339 timestamp -- if set, the form has been submitted without error
+    string submitted = 15;
 }
 
 // RegistrationForm is an extension of the TRISA GDS RegistrationRequest with BFF fields.
 message RegistrationForm {
+    // Business information
+    string website = 1;
+    trisa.gds.models.v1beta1.BusinessCategory business_category = 2;
+    repeated string vasp_categories = 3;
+    string established_on = 4;
 
-    RegistrationInfo testnet = 14;
-    RegistrationInfo mainnet = 15;
+    // IVMS 101 Legal Person record
+    ivms101.LegalPerson entity = 11;
+
+    // Directory Record contacts
+    trisa.gds.models.v1beta1.Contacts contacts = 12;
+
+    // TRIXO Form
+    trisa.gds.models.v1beta1.TRIXOQuestionnaire trixo = 13;
+
+    // Network-specific information and submission details
+    NetworkDetails testnet = 14;
+    NetworkDetails mainnet = 15;
 }
 
-// RegistrationInfo contains metadata about when the registration form was submitted.
-message RegistrationInfo {
-    string submitted = 1; // Timestamp when the form was submitted
+// BuisnessInfo
+
+// NetworkDetails contains directory-service specific submission information such as the
+// certificate request and information about when the registration form was submitted.
+message NetworkDetails {
+    // Certificate request information
+    string common_name = 1;
+    string endpoint = 2;
+    repeated string dns_names = 3;
 }
+
