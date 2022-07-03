@@ -32,13 +32,11 @@ const HomePage: React.FC = () => {
       }
     } catch (e: any) {
       setIsLoading(false);
-      console.error('error', e);
       if (!e?.response?.data.success) {
         setResult(false);
         setError(e.response.data.error);
         setResult(false);
       } else {
-        console.error('error 2', e);
         Sentry.captureMessage('Something wrong happen when we trying to call lookup api');
         Sentry.captureException(e);
       }
