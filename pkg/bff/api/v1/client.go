@@ -333,10 +333,12 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	}
 
 	// Add CSRF protection if it is available
-	cookies := s.client.Jar.Cookies(endpoint)
-	for _, cookie := range cookies {
-		if cookie.Name == "csrf_token" {
-			req.Header.Add("X-CSRF-TOKEN", cookie.Value)
+	if s.client.Jar != nil {
+		cookies := s.client.Jar.Cookies(endpoint)
+		for _, cookie := range cookies {
+			if cookie.Name == "csrf_token" {
+				req.Header.Add("X-CSRF-TOKEN", cookie.Value)
+			}
 		}
 	}
 
@@ -394,6 +396,10 @@ func (c *APIv1) SetCredentials(creds Credentials) {
 // clients - the server should set these cookies. If protect is false, then the cookies
 // are removed from the client by setting the cookies to an empty slice.
 func (c *APIv1) SetCSRFProtect(protect bool) error {
+	if c.client.Jar == nil {
+		return errors.New("client does not have a cookie jar, cannot set cookies")
+	}
+
 	if c.endpoint.Hostname() != "127.0.0.1" && c.endpoint.Hostname() != "localhost" {
 		return fmt.Errorf("csrf protect is for local testing only, cannot set cookies for %s", c.endpoint.Hostname())
 	}
