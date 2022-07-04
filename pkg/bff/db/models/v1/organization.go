@@ -31,3 +31,31 @@ func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 		return uuid.Nil, ErrInvalidOrgID
 	}
 }
+
+// ReadyToSubmit performs very lightweight validation, ensuring that there are non-nil
+// values on the nested data structures so that the request to the GDS does not fail.
+// For data validation (required fields, types, etc.), we should rely on the GDS
+// response to ensure that we're able to submit valid forms and that validation only
+// occurs in one place in the code.
+func (r *RegistrationForm) ReadyToSubmit(network string) bool {
+	if r.VaspCategories == nil || r.Entity == nil || r.Contacts == nil || r.Trixo == nil {
+		return false
+	}
+
+	switch network {
+	case "testnet":
+		if r.Testnet == nil {
+			return false
+		}
+	case "mainnet":
+		if r.Mainnet == nil {
+			return false
+		}
+	default:
+		if r.Testnet == nil || r.Mainnet == nil {
+			return false
+		}
+	}
+
+	return true
+}

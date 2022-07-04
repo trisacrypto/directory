@@ -262,11 +262,40 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Get the network from the URL
 	var err error
 	network := strings.ToLower(c.Param("network"))
+	if network != testnet && network != mainnet {
+		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
+		return
+	}
 
 	// Load the organization from the claims
 	// NOTE: this method will handle the error logging and response.
 	var org *records.Organization
 	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Do not allow a registration form to be submitted twice
+	switch network {
+	case testnet:
+		if org.Testnet != nil && org.Testnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	case mainnet:
+		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	}
+
+	// Validate that a registration form exists on the organization
+	if org.Registration == nil || !org.Registration.ReadyToSubmit(network) {
+		log.Debug().Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("registration form is not ready to submit"))
 		return
 	}
 

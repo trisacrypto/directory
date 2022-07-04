@@ -331,6 +331,15 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 		}
 		req.Header.Add("Authorization", "Bearer "+token)
 	}
+
+	// Add CSRF protection if it is available
+	cookies := s.client.Jar.Cookies(endpoint)
+	for _, cookie := range cookies {
+		if cookie.Name == "csrf_token" {
+			req.Header.Add("X-CSRF-TOKEN", cookie.Value)
+		}
+	}
+
 	return req, nil
 }
 
@@ -377,4 +386,44 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 // runtime and is used extensively in testing the BFF server.
 func (c *APIv1) SetCredentials(creds Credentials) {
 	c.creds = creds
+}
+
+// SetCSRFProtect is a helper function to set CSRF cookies on the client. This is not
+// possible in a browser because of the HttpOnly flag. This method should only be used
+// for testing purposes and an error is returned if the URL is not localhost. For live
+// clients - the server should set these cookies. If protect is false, then the cookies
+// are removed from the client by setting the cookies to an empty slice.
+func (c *APIv1) SetCSRFProtect(protect bool) error {
+	if c.endpoint.Hostname() != "127.0.0.1" && c.endpoint.Hostname() != "localhost" {
+		return fmt.Errorf("csrf protect is for local testing only, cannot set cookies for %s", c.endpoint.Hostname())
+	}
+
+	// The URL for the cookies
+	u := c.endpoint.ResolveReference(&url.URL{Path: "/"})
+
+	var cookies []*http.Cookie
+	if protect {
+		cookies = []*http.Cookie{
+			{
+				Name:     "csrf_token",
+				Value:    "testingcsrftoken",
+				Expires:  time.Now().Add(10 * time.Minute),
+				HttpOnly: false,
+			},
+			{
+				Name:     "csrf_reference_token",
+				Value:    "testingcsrftoken",
+				Expires:  time.Now().Add(10 * time.Minute),
+				HttpOnly: true,
+			},
+		}
+	} else {
+		cookies = c.client.Jar.Cookies(u)
+		for _, cookie := range cookies {
+			cookie.MaxAge = -1
+		}
+	}
+
+	c.client.Jar.SetCookies(u, cookies)
+	return nil
 }

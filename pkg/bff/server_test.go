@@ -164,7 +164,8 @@ func (s *bffTestSuite) AfterTest(suiteName, testName string) {
 	s.mainnet.members.Reset()
 
 	// Ensure any credentials set on the client are reset
-	s.client.SetCredentials(nil)
+	s.client.(*api.APIv1).SetCredentials(nil)
+	s.client.(*api.APIv1).SetCSRFProtect(false)
 }
 
 func (s *bffTestSuite) TearDownSuite() {
@@ -217,6 +218,26 @@ func (s *bffTestSuite) SetupTrtl() {
 	require.NoError(s.trtlsock.Connect(), "could not connect to trtl socket")
 }
 
+// Helper function to set the credentials on the test client from claims, reducing 3 or
+// 4 lines of code into a single helper function call to make tests more readable.
+func (s *bffTestSuite) SetClientCredentials(claims *authtest.Claims) error {
+	token, err := s.auth.NewTokenWithClaims(claims)
+	if err != nil {
+		return err
+	}
+
+	s.client.(*api.APIv1).SetCredentials(api.Token(token))
+	return nil
+}
+
+// Helper function to set cookies for CSRF protection on the BFF client
+func (s *bffTestSuite) SetClientCSRFProtection() error {
+	s.client.(*api.APIv1).SetCSRFProtect(true)
+	return nil
+}
+
+// Helper function to load test fixtures from disk. If v is a proto.Message it is loaded
+// using protojson, otherwise it is loaded using encoding/json.
 func loadFixture(path string, v interface{}) (err error) {
 	switch t := v.(type) {
 	case proto.Message:
