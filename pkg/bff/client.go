@@ -104,3 +104,7 @@ func (c *GDSClient) List(ctx context.Context, in *members.ListRequest, opts ...g
 func (c *GDSClient) Summary(ctx context.Context, in *members.SummaryRequest, opts ...grpc.CallOption) (*members.SummaryReply, error) {
 	return c.members.Summary(ctx, in, opts...)
 }
+
+func (c *GDSClient) Details(ctx context.Context, in *members.DetailsRequest, opts ...grpc.CallOption) (*members.MemberDetails, error) {
+	return c.members.Details(ctx, in, opts...)
+}
