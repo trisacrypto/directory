@@ -4,6 +4,7 @@ package gds.members.v1alpha1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1;members";
 
 import "trisa/gds/models/v1beta1/models.proto";
+import "ivms101/ivms101.proto";
 
 // The TRISAMembers service is an experimental service that provides extra access to the
 // directory service for verified TRISA members. Access to this service requires mTLS
@@ -17,6 +18,9 @@ service TRISAMembers {
 
     // Get a short summary of the verified VASP members in the Directory Service.
     rpc Summary(SummaryRequest) returns (SummaryReply) {};
+
+    // Get details for a VASP member in the Directory Service.
+    rpc Details(DetailsRequest) returns (MemberDetails) {};
 }
 
 
@@ -78,4 +82,21 @@ message SummaryReply {
 
     // Details for the requested VASP
     VASPMember member_info = 4;
+}
+
+// DetailsRequest allows the caller to specify the VASP member to retrieve details for.
+message DetailsRequest {
+    string member_id = 1;
+}
+
+// MemberDetails returns details about the requested VASP member.
+message MemberDetails {
+    // Summary information about the VASP member
+    VASPMember member_summary = 1;
+
+    // The IVMS101 legal person identifying the VASP member
+    ivms101.LegalPerson legal_person = 2;
+
+    // The TRIXO questionnaire used to register the VASP
+    trisa.gds.models.v1beta1.TRIXOQuestionnaire trixo = 3;
 }
