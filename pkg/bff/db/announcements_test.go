@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	. "github.com/trisacrypto/directory/pkg/bff/db"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *dbTestSuite) TestAnnouncements() {
@@ -114,7 +115,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 
 func TestAnnouncementsSerialization(t *testing.T) {
 	// Should be able to encode and decode an announcement to and from bytes.
-	announcement := &api.Announcement{
+	announcement := &models.Announcement{
 		Title:    "It is the Solstice!",
 		Body:     "Today is the longest day of the year, make sure it's a grilling day!",
 		PostDate: "2022-06-21",
@@ -127,22 +128,21 @@ func TestAnnouncementsSerialization(t *testing.T) {
 	data, err := collection.Encode(announcement)
 	require.NoError(t, err, "could not encode announcement into bytes")
 	require.NotEmpty(t, data, "expected some data returned from encoding")
-	require.Len(t, data, 158, "encoding compression has changed")
 
 	// Decode the announcement
 	decoded, err := collection.Decode(data)
 	require.NoError(t, err, "could not decode announcement from bytes")
-	require.Equal(t, announcement, decoded, "the decoded announcement did not match the original")
+	require.True(t, proto.Equal(announcement, decoded), "the decoded announcement did not match the original")
 }
 
-func loadAnnouncements() (fixture []*api.Announcement, err error) {
+func loadAnnouncements() (fixture []*models.Announcement, err error) {
 	var f *os.File
 	if f, err = os.Open("testdata/announcements.json"); err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	fixture = make([]*api.Announcement, 0, 10)
+	fixture = make([]*models.Announcement, 0, 10)
 	if err = json.NewDecoder(f).Decode(&fixture); err != nil {
 		return nil, err
 	}

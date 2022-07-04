@@ -2,7 +2,6 @@ package db
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,7 +12,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	trtl "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -59,7 +60,7 @@ func (db *DB) Announcements() *Announcements {
 // any announcement was added or changed.
 func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore time.Time) (out *api.AnnouncementsReply, err error) {
 	out = &api.AnnouncementsReply{
-		Announcements: make([]*api.Announcement, 0, maxResults),
+		Announcements: make([]*models.Announcement, 0, maxResults),
 	}
 
 	// Get the last updated value from the index key in the collection.
@@ -87,7 +88,7 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore ti
 	// get slower and slower. Worse, we're loading everything in memory so we might
 	// overload the pod. We need to either figure out a different key-value storage
 	// and ordering mechanism or implement reverse seek in trtl.
-	results := make([]*api.Announcement, 0)
+	results := make([]*models.Announcement, 0)
 	for {
 		var pair *trtl.KVPair
 		if pair, err = cursor.Recv(); err != nil {
@@ -101,7 +102,7 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore ti
 			continue
 		}
 
-		var post *api.Announcement
+		var post *models.Announcement
 		if post, err = a.Decode(pair.Value); err != nil {
 			// If we can't decode the announcement log the error and continue
 			log.Error().Err(err).Str("key", ParseKSUID(pair.Key)).Msg("could not decode announcement from database")
@@ -135,7 +136,7 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore ti
 // Post an announcement, putting it to the trtl database. This method does no
 // verification of duplicate announcements or any content verification except for a
 // check that an empty announcement is not being put to the database.
-func (a *Announcements) Post(ctx context.Context, in *api.Announcement) (_ string, err error) {
+func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ string, err error) {
 	// Make sure we don't post empty announcements
 	if in.Title == "" && in.Body == "" && in.PostDate == "" && in.Author == "" {
 		return "", ErrEmptyAnnouncement
@@ -175,31 +176,16 @@ func (a *Announcements) Namespace() string {
 // Encode an announcement for storage in the database.
 // HACK: the api definition is probably not the right place to store a database model,
 // should we just create protocol buffer model definitions instead of using this?
-func (a *Announcements) Encode(in *api.Announcement) (_ []byte, err error) {
-	buf := &bytes.Buffer{}
-	w := gzip.NewWriter(buf)
-
-	if err = json.NewEncoder(w).Encode(in); err != nil {
-		return nil, err
-	}
-	w.Close()
-
-	return buf.Bytes(), nil
+func (a *Announcements) Encode(in *models.Announcement) (_ []byte, err error) {
+	return proto.Marshal(in)
 }
 
 // Decode an annoucement from storage in the database.
 // HACK: the api definition is probably not the right place to store a database model,
 // should we just create protocol buffer model definitions instead of using this?
-func (a *Announcements) Decode(data []byte) (out *api.Announcement, err error) {
-	buf := bytes.NewBuffer(data)
-
-	var r *gzip.Reader
-	if r, err = gzip.NewReader(buf); err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	if err = json.NewDecoder(r).Decode(&out); err != nil {
+func (a *Announcements) Decode(data []byte) (out *models.Announcement, err error) {
+	out = &models.Announcement{}
+	if err = proto.Unmarshal(data, out); err != nil {
 		return nil, err
 	}
 	return out, nil

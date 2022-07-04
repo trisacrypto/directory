@@ -388,7 +388,7 @@ func TestOverview(t *testing.T) {
 
 func TestAnnoucements(t *testing.T) {
 	fixture := &api.AnnouncementsReply{
-		Announcements: []*api.Announcement{
+		Announcements: []*models.Announcement{
 			{
 				Title:    "Upcoming TRISA Working Group Call",
 				Body:     "Join us on Thursday Apr 28 for the TRISA Working Group.",
@@ -439,7 +439,7 @@ func TestMakeAnnoucement(t *testing.T) {
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v1/announcements", r.URL.Path)
 
-		in := &api.Announcement{}
+		in := &models.Announcement{}
 		err := json.NewDecoder(r.Body).Decode(in)
 		require.NoError(t, err, "could not decode register request")
 
@@ -451,7 +451,7 @@ func TestMakeAnnoucement(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	req := &api.Announcement{
+	req := &models.Announcement{
 		Title: "The Happenings",
 		Body:  "Things are going on, we're all very busy, and you should join us!",
 	}
@@ -466,7 +466,7 @@ func TestMakeAnnoucementErrors(t *testing.T) {
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/v1/announcements", r.URL.Path)
 
-		in := &api.Announcement{}
+		in := &models.Announcement{}
 		err := json.NewDecoder(r.Body).Decode(in)
 		require.NoError(t, err, "could not decode register request")
 
@@ -489,11 +489,11 @@ func TestMakeAnnoucementErrors(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	req := &api.Announcement{Title: "200"}
+	req := &models.Announcement{Title: "200"}
 	err = client.MakeAnnouncement(context.TODO(), req)
 	require.EqualError(t, err, "expected no content, received 200 OK")
 
-	req = &api.Announcement{Title: "400"}
+	req = &models.Announcement{Title: "400"}
 	err = client.MakeAnnouncement(context.TODO(), req)
 	require.EqualError(t, err, "400 Bad Request")
 }

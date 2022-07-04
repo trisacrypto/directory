@@ -389,6 +389,183 @@ func (x *NetworkDetails) GetDnsNames() []string {
 	return nil
 }
 
+// Announcements are made by network administrators to inform all TRISA members of
+// important events, maintenance, or milestones. These are broadcast from the BFF so
+// that all members receive the same announcement.
+type Announcement struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id       string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title    string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Body     string `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	PostDate string `protobuf:"bytes,4,opt,name=post_date,json=postDate,proto3" json:"post_date,omitempty"`
+	Author   string `protobuf:"bytes,5,opt,name=author,proto3" json:"author,omitempty"`
+	// Metadata as RFC3339 Timestamps
+	Created  string `protobuf:"bytes,14,opt,name=created,proto3" json:"created,omitempty"`
+	Modified string `protobuf:"bytes,15,opt,name=modified,proto3" json:"modified,omitempty"`
+}
+
+func (x *Announcement) Reset() {
+	*x = Announcement{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bff_models_v1_models_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Announcement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Announcement) ProtoMessage() {}
+
+func (x *Announcement) ProtoReflect() protoreflect.Message {
+	mi := &file_bff_models_v1_models_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Announcement.ProtoReflect.Descriptor instead.
+func (*Announcement) Descriptor() ([]byte, []int) {
+	return file_bff_models_v1_models_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Announcement) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Announcement) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Announcement) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+func (x *Announcement) GetPostDate() string {
+	if x != nil {
+		return x.PostDate
+	}
+	return ""
+}
+
+func (x *Announcement) GetAuthor() string {
+	if x != nil {
+		return x.Author
+	}
+	return ""
+}
+
+func (x *Announcement) GetCreated() string {
+	if x != nil {
+		return x.Created
+	}
+	return ""
+}
+
+func (x *Announcement) GetModified() string {
+	if x != nil {
+		return x.Modified
+	}
+	return ""
+}
+
+// Announcements are stored in months to enable fast retrieval of the latest
+// announcements in a specific time range without a reversal traversal of time-ordered
+// anncouncement objects. Note that the annoucements are stored in a slice instead of
+// a map to reduce data storage overhead. Accessing a specific announcement requires
+// iterating over the annoucements, but the number of annoucements in a month should not
+// be unbounded, so this cost is acceptable for data storage performance.
+type AnnouncementMonth struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Date          string          `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Announcements []*Announcement `protobuf:"bytes,2,rep,name=announcements,proto3" json:"announcements,omitempty"`
+	// Metadata as RFC3339 Timestamps
+	Created  string `protobuf:"bytes,14,opt,name=created,proto3" json:"created,omitempty"`
+	Modified string `protobuf:"bytes,15,opt,name=modified,proto3" json:"modified,omitempty"`
+}
+
+func (x *AnnouncementMonth) Reset() {
+	*x = AnnouncementMonth{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bff_models_v1_models_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AnnouncementMonth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnnouncementMonth) ProtoMessage() {}
+
+func (x *AnnouncementMonth) ProtoReflect() protoreflect.Message {
+	mi := &file_bff_models_v1_models_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnnouncementMonth.ProtoReflect.Descriptor instead.
+func (*AnnouncementMonth) Descriptor() ([]byte, []int) {
+	return file_bff_models_v1_models_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AnnouncementMonth) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *AnnouncementMonth) GetAnnouncements() []*Announcement {
+	if x != nil {
+		return x.Announcements
+	}
+	return nil
+}
+
+func (x *AnnouncementMonth) GetCreated() string {
+	if x != nil {
+		return x.Created
+	}
+	return ""
+}
+
+func (x *AnnouncementMonth) GetModified() string {
+	if x != nil {
+		return x.Modified
+	}
+	return ""
+}
+
 var File_bff_models_v1_models_proto protoreflect.FileDescriptor
 
 var file_bff_models_v1_models_proto_rawDesc = []byte{
@@ -466,12 +643,33 @@ var file_bff_models_v1_models_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18,
 	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12,
 	0x1b, 0x0a, 0x09, 0x64, 0x6e, 0x73, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03,
-	0x28, 0x09, 0x52, 0x08, 0x64, 0x6e, 0x73, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x42, 0x3e, 0x5a, 0x3c,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x72, 0x69, 0x73, 0x61,
-	0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79,
-	0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x62, 0x66, 0x66, 0x2f, 0x64, 0x62, 0x2f, 0x6d, 0x6f, 0x64, 0x65,
-	0x6c, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x28, 0x09, 0x52, 0x08, 0x64, 0x6e, 0x73, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x22, 0xb3, 0x01, 0x0a,
+	0x0c, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a,
+	0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69,
+	0x74, 0x6c, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6f, 0x73, 0x74, 0x5f,
+	0x64, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6f, 0x73, 0x74,
+	0x44, 0x61, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x12, 0x18, 0x0a, 0x07,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x6f, 0x64, 0x69, 0x66, 0x69,
+	0x65, 0x64, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x6f, 0x64, 0x69, 0x66, 0x69,
+	0x65, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x11, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x6d,
+	0x65, 0x6e, 0x74, 0x4d, 0x6f, 0x6e, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x65, 0x12, 0x41, 0x0a, 0x0d,
+	0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x62, 0x66, 0x66, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x6d, 0x65, 0x6e, 0x74,
+	0x52, 0x0d, 0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x12,
+	0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x6f, 0x64,
+	0x69, 0x66, 0x69, 0x65, 0x64, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x6f, 0x64,
+	0x69, 0x66, 0x69, 0x65, 0x64, 0x42, 0x3e, 0x5a, 0x3c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x72, 0x69, 0x73, 0x61, 0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f,
+	0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x62, 0x66,
+	0x66, 0x2f, 0x64, 0x62, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x6d,
+	0x6f, 0x64, 0x65, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -486,32 +684,35 @@ func file_bff_models_v1_models_proto_rawDescGZIP() []byte {
 	return file_bff_models_v1_models_proto_rawDescData
 }
 
-var file_bff_models_v1_models_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_bff_models_v1_models_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_bff_models_v1_models_proto_goTypes = []interface{}{
 	(*Organization)(nil),               // 0: bff.models.v1.Organization
 	(*DirectoryRecord)(nil),            // 1: bff.models.v1.DirectoryRecord
 	(*RegistrationForm)(nil),           // 2: bff.models.v1.RegistrationForm
 	(*NetworkDetails)(nil),             // 3: bff.models.v1.NetworkDetails
-	(v1beta1.BusinessCategory)(0),      // 4: trisa.gds.models.v1beta1.BusinessCategory
-	(*ivms101.LegalPerson)(nil),        // 5: ivms101.LegalPerson
-	(*v1beta1.Contacts)(nil),           // 6: trisa.gds.models.v1beta1.Contacts
-	(*v1beta1.TRIXOQuestionnaire)(nil), // 7: trisa.gds.models.v1beta1.TRIXOQuestionnaire
+	(*Announcement)(nil),               // 4: bff.models.v1.Announcement
+	(*AnnouncementMonth)(nil),          // 5: bff.models.v1.AnnouncementMonth
+	(v1beta1.BusinessCategory)(0),      // 6: trisa.gds.models.v1beta1.BusinessCategory
+	(*ivms101.LegalPerson)(nil),        // 7: ivms101.LegalPerson
+	(*v1beta1.Contacts)(nil),           // 8: trisa.gds.models.v1beta1.Contacts
+	(*v1beta1.TRIXOQuestionnaire)(nil), // 9: trisa.gds.models.v1beta1.TRIXOQuestionnaire
 }
 var file_bff_models_v1_models_proto_depIdxs = []int32{
-	1, // 0: bff.models.v1.Organization.testnet:type_name -> bff.models.v1.DirectoryRecord
-	1, // 1: bff.models.v1.Organization.mainnet:type_name -> bff.models.v1.DirectoryRecord
-	2, // 2: bff.models.v1.Organization.registration:type_name -> bff.models.v1.RegistrationForm
-	4, // 3: bff.models.v1.RegistrationForm.business_category:type_name -> trisa.gds.models.v1beta1.BusinessCategory
-	5, // 4: bff.models.v1.RegistrationForm.entity:type_name -> ivms101.LegalPerson
-	6, // 5: bff.models.v1.RegistrationForm.contacts:type_name -> trisa.gds.models.v1beta1.Contacts
-	7, // 6: bff.models.v1.RegistrationForm.trixo:type_name -> trisa.gds.models.v1beta1.TRIXOQuestionnaire
-	3, // 7: bff.models.v1.RegistrationForm.testnet:type_name -> bff.models.v1.NetworkDetails
-	3, // 8: bff.models.v1.RegistrationForm.mainnet:type_name -> bff.models.v1.NetworkDetails
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	1,  // 0: bff.models.v1.Organization.testnet:type_name -> bff.models.v1.DirectoryRecord
+	1,  // 1: bff.models.v1.Organization.mainnet:type_name -> bff.models.v1.DirectoryRecord
+	2,  // 2: bff.models.v1.Organization.registration:type_name -> bff.models.v1.RegistrationForm
+	6,  // 3: bff.models.v1.RegistrationForm.business_category:type_name -> trisa.gds.models.v1beta1.BusinessCategory
+	7,  // 4: bff.models.v1.RegistrationForm.entity:type_name -> ivms101.LegalPerson
+	8,  // 5: bff.models.v1.RegistrationForm.contacts:type_name -> trisa.gds.models.v1beta1.Contacts
+	9,  // 6: bff.models.v1.RegistrationForm.trixo:type_name -> trisa.gds.models.v1beta1.TRIXOQuestionnaire
+	3,  // 7: bff.models.v1.RegistrationForm.testnet:type_name -> bff.models.v1.NetworkDetails
+	3,  // 8: bff.models.v1.RegistrationForm.mainnet:type_name -> bff.models.v1.NetworkDetails
+	4,  // 9: bff.models.v1.AnnouncementMonth.announcements:type_name -> bff.models.v1.Announcement
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_bff_models_v1_models_proto_init() }
@@ -568,6 +769,30 @@ func file_bff_models_v1_models_proto_init() {
 				return nil
 			}
 		}
+		file_bff_models_v1_models_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Announcement); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bff_models_v1_models_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AnnouncementMonth); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -575,7 +800,7 @@ func file_bff_models_v1_models_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bff_models_v1_models_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

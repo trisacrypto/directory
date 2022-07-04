@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 const (
@@ -39,7 +40,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 		id     string
 		err    error
 		claims *auth.Claims
-		post   *api.Announcement
+		post   *models.Announcement
 	)
 
 	if err = c.BindJSON(&post); err != nil {

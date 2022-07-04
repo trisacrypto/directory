@@ -62,8 +62,6 @@ message RegistrationForm {
     NetworkDetails mainnet = 15;
 }
 
-// BuisnessInfo
-
 // NetworkDetails contains directory-service specific submission information such as the
 // certificate request and information about when the registration form was submitted.
 message NetworkDetails {
@@ -73,3 +71,32 @@ message NetworkDetails {
     repeated string dns_names = 3;
 }
 
+// Announcements are made by network administrators to inform all TRISA members of
+// important events, maintenance, or milestones. These are broadcast from the BFF so
+// that all members receive the same announcement.
+message Announcement {
+    string id = 1;
+    string title = 2;
+    string body = 3;
+    string post_date = 4;
+    string author = 5;
+
+    // Metadata as RFC3339 Timestamps
+    string created = 14;
+    string modified = 15;
+}
+
+// Announcements are stored in months to enable fast retrieval of the latest
+// announcements in a specific time range without a reversal traversal of time-ordered
+// anncouncement objects. Note that the annoucements are stored in a slice instead of
+// a map to reduce data storage overhead. Accessing a specific announcement requires
+// iterating over the annoucements, but the number of annoucements in a month should not
+// be unbounded, so this cost is acceptable for data storage performance.
+message AnnouncementMonth {
+    string date = 1;
+    repeated Announcement announcements = 2;
+
+    // Metadata as RFC3339 Timestamps
+    string created = 14;
+    string modified = 15;
+}
