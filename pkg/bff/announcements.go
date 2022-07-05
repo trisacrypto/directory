@@ -13,13 +13,15 @@ import (
 
 const (
 	maxAnnouncements = 10
-	subMonths        = -1
+	subMonths        = -2
 )
 
 func (s *Server) Announcements(c *gin.Context) {
-	// Only fetch the previous 10 announcements from the last month
+	// Only fetch the previous 10 announcements from the last two months
 	nbf := time.Now().AddDate(0, subMonths, 0)
-	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf)
+	nbf = time.Date(nbf.Year(), nbf.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf, time.Now())
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch recent announcements")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to fetch recent announcements"))

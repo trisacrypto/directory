@@ -25,7 +25,7 @@ message Organization {
     // Registration Form
     RegistrationForm registration = 13;
 
-    // Metadata as RFC3339 Timestamps
+    // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
 }
@@ -81,7 +81,7 @@ message Announcement {
     string post_date = 4;
     string author = 5;
 
-    // Metadata as RFC3339 Timestamps
+    // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
 }
@@ -96,7 +96,7 @@ message AnnouncementMonth {
     string date = 1;
     repeated Announcement announcements = 2;
 
-    // Metadata as RFC3339 Timestamps
+    // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
 }
