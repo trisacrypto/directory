@@ -20,14 +20,17 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 const ConfirmationResetForm = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
+
   const handleOnClose = () => {
     props.onClose();
     onAlertClose();
+    props.onChange(false);
   };
   const handleResetBtn = () => {
     resetForm();
     props.onClose();
     onAlertClose();
+    props.onChange(false);
   };
   return (
     <>

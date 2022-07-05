@@ -125,6 +125,9 @@ const Certificate: React.FC = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
   };
+  const onChangeModalValue = (value: boolean) => {
+    setIsResetModalOpen(value);
+  };
 
   useEffect(() => {
     if (isResetModalOpen) {
@@ -226,7 +229,13 @@ const Certificate: React.FC = () => {
             </VStack>
           </form>
         </FormProvider>
-        {isResetModalOpen && <ConfirmationResetFormModal isOpen={isOpen} onClose={onClose} />}
+        {isResetModalOpen && (
+          <ConfirmationResetFormModal
+            isOpen={isOpen}
+            onClose={onClose}
+            onChange={onChangeModalValue}
+          />
+        )}
       </>
     </SimpleDashboardLayout>
   );
