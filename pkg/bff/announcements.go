@@ -64,7 +64,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 
 	if claims.Email == "" {
 		log.Warn().Msg("missing email on claims, cannot set author of network announcement")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("user claims are not correctly configured"))
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("user claims are not correctly configured"))
 		return
 	}
 
