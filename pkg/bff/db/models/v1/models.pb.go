@@ -40,7 +40,7 @@ type Organization struct {
 	Mainnet *DirectoryRecord `protobuf:"bytes,11,opt,name=mainnet,proto3" json:"mainnet,omitempty"`
 	// Registration Form
 	Registration *RegistrationForm `protobuf:"bytes,13,opt,name=registration,proto3" json:"registration,omitempty"`
-	// Metadata as RFC3339 Timestamps
+	// Metadata as RFC3339Nano Timestamps
 	Created  string `protobuf:"bytes,14,opt,name=created,proto3" json:"created,omitempty"`
 	Modified string `protobuf:"bytes,15,opt,name=modified,proto3" json:"modified,omitempty"`
 }
@@ -402,7 +402,7 @@ type Announcement struct {
 	Body     string `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
 	PostDate string `protobuf:"bytes,4,opt,name=post_date,json=postDate,proto3" json:"post_date,omitempty"`
 	Author   string `protobuf:"bytes,5,opt,name=author,proto3" json:"author,omitempty"`
-	// Metadata as RFC3339 Timestamps
+	// Metadata as RFC3339Nano Timestamps
 	Created  string `protobuf:"bytes,14,opt,name=created,proto3" json:"created,omitempty"`
 	Modified string `protobuf:"bytes,15,opt,name=modified,proto3" json:"modified,omitempty"`
 }
@@ -501,7 +501,7 @@ type AnnouncementMonth struct {
 
 	Date          string          `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
 	Announcements []*Announcement `protobuf:"bytes,2,rep,name=announcements,proto3" json:"announcements,omitempty"`
-	// Metadata as RFC3339 Timestamps
+	// Metadata as RFC3339Nano Timestamps
 	Created  string `protobuf:"bytes,14,opt,name=created,proto3" json:"created,omitempty"`
 	Modified string `protobuf:"bytes,15,opt,name=modified,proto3" json:"modified,omitempty"`
 }
@@ -564,20 +564,6 @@ func (x *AnnouncementMonth) GetModified() string {
 		return x.Modified
 	}
 	return ""
-}
-
-func (x *NetworkDetails) GetEndpoint() string {
-	if x != nil {
-		return x.Endpoint
-	}
-	return ""
-}
-
-func (x *NetworkDetails) GetDnsNames() []string {
-	if x != nil {
-		return x.DnsNames
-	}
-	return nil
 }
 
 var File_bff_models_v1_models_proto protoreflect.FileDescriptor
