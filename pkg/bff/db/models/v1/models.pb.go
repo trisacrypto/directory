@@ -566,6 +566,20 @@ func (x *AnnouncementMonth) GetModified() string {
 	return ""
 }
 
+func (x *NetworkDetails) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+func (x *NetworkDetails) GetDnsNames() []string {
+	if x != nil {
+		return x.DnsNames
+	}
+	return nil
+}
+
 var File_bff_models_v1_models_proto protoreflect.FileDescriptor
 
 var file_bff_models_v1_models_proto_rawDesc = []byte{
