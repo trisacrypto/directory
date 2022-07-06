@@ -25,7 +25,7 @@ const CallbackPage: React.FC = () => {
         const getUserInfo: any = accessToken && (await auth0Hash());
         console.log('[getUserInfo]', getUserInfo);
         setIsLoading(false);
-        if (getUserInfo && getUserInfo?.email_verified) {
+        if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
           setCookie('access_token', accessToken);
           setCookie('user_locale', getUserInfo?.locale);
           const getUser = await logUserInBff();

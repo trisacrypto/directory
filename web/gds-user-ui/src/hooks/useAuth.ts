@@ -41,7 +41,7 @@ const useAuth = () => {
         // if (refreshToken) {
         //   return getUser();
         // }
-        // return error;
+        return error;
       }
     } else {
       logoutUser();

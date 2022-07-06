@@ -37,6 +37,7 @@
     "ga-4-react": "^0.1.281",
     "jose": "^4.8.3",
     "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "pofile": "^1.1.3",
     "prop-types": "^15.8.1",

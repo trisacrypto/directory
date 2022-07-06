@@ -1,6 +1,6 @@
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
-import jwt from 'jsonwebtoken';
+import jwt_decode from 'jwt-decode';
 const useCustomAuth0 = () => {
   // initialize auth0
   const auth0Config = getAuth0Config();
@@ -62,7 +62,8 @@ const useCustomAuth0 = () => {
         if (err) {
           reject(err);
         } else {
-          console.log('[authResult]', authResult);
+          const decodeToken: any = jwt_decode(authResult.accessToken);
+          authResult.idTokenPayload.permissions = decodeToken.permissions;
 
           resolve(authResult);
         }
