@@ -24,7 +24,7 @@ import _ from 'lodash';
 import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
-import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
+import { fieldNamesPerSteps, validationSchema } from './lib';
 
 import {
   loadDefaultValueFromLocalStorage,
@@ -35,6 +35,10 @@ import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 const Certificate: React.FC = () => {
+  const [, updateState] = React.useState<any>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
+  const [isResetForm, setIsResetForm] = useState<boolean>(false);
+
   const { nextStep, previousStep } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
@@ -58,7 +62,7 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
-  const { formState } = methods;
+  const { formState, reset } = methods;
 
   const dirtyFields = formState.dirtyFields;
 
@@ -125,8 +129,11 @@ const Certificate: React.FC = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
   };
-  const onChangeModalValue = (value: boolean) => {
+  const onChangeModalState = (value: boolean) => {
     setIsResetModalOpen(value);
+  };
+  const onChangeResetForm = (value: boolean) => {
+    setIsResetForm(value);
   };
 
   useEffect(() => {
@@ -135,6 +142,12 @@ const Certificate: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
+
+  useEffect(() => {
+    reset({ ...loadDefaultValueFromLocalStorage() });
+    setIsResetForm(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm]);
 
   return (
     // <DashboardLayout>
@@ -233,7 +246,9 @@ const Certificate: React.FC = () => {
           <ConfirmationResetFormModal
             isOpen={isOpen}
             onClose={onClose}
-            onChange={onChangeModalValue}
+            onChangeState={onChangeModalState}
+            onRefeshState={forceUpdate}
+            onChangeResetState={onChangeResetForm}
           />
         )}
       </>

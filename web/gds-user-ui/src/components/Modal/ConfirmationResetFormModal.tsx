@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   chakra,
@@ -17,20 +17,26 @@ import {
   Button
 } from '@chakra-ui/react';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 const ConfirmationResetForm = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const handleOnClose = () => {
     props.onClose();
     onAlertClose();
-    props.onChange(false);
+    props.onChangeState(false);
   };
   const handleResetBtn = () => {
+    setIsLoading(true);
+    // props.onReset(loadDefaultValueFromLocalStorage);
     resetForm();
+    props.onChangeResetState(true);
+    props.onChangeState(false);
+    setIsLoading(false);
     props.onClose();
     onAlertClose();
-    props.onChange(false);
+    // props.onRefeshState();
   };
   return (
     <>
@@ -55,6 +61,7 @@ const ConfirmationResetForm = (props: any) => {
                 <Button
                   mr={10}
                   onClick={handleResetBtn}
+                  isLoading={isLoading}
                   bgColor="#23a7e0e8"
                   color="#fff"
                   _hover={{

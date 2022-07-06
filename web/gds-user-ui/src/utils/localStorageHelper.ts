@@ -105,4 +105,5 @@ export const clearStepperFromLocalStorage = () => {
   localStorage.removeItem('certificateForm');
   localStorage.removeItem('isTestNetSent');
   localStorage.removeItem('isMainNetSent');
+  loadDefaultValueFromLocalStorage();
 };
