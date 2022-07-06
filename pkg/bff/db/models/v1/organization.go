@@ -52,6 +52,8 @@ func (r *RegistrationForm) ReadyToSubmit(network string) bool {
 			return false
 		}
 	default:
+		// If the network is not specified or a string like "all" or "both" is passed
+		// in then the default behavior is to validate that both networks are ready.
 		if r.Testnet == nil || r.Mainnet == nil {
 			return false
 		}

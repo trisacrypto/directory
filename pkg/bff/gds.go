@@ -144,6 +144,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	params.Directory = strings.ToLower(params.Directory)
 	if params.Directory != trisatest && params.Directory != vaspdirectory {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
 	}
 
 	// Make the GDS request
