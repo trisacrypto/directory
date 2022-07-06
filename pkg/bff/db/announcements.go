@@ -45,7 +45,7 @@ var _ Collection = &Announcements{}
 // db.Announcements().Recent(), so to reduce the number of allocations a singleton
 // intermediate struct is used. Method calls to the collection are thread-safe.
 func (db *DB) Announcements() *Announcements {
-	db.muMakeAC.Do(func() {
+	db.makeAnnouncements.Do(func() {
 		db.announcements = &Announcements{
 			db:        db,
 			namespace: NamespaceAnnouncements,

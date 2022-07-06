@@ -192,8 +192,10 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 				Endpoint: "bufcon",
 			},
 			Members: config.MembersConfig{
-				Insecure: true,
 				Endpoint: "bufcon",
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
 			},
 		},
 		MainNet: config.NetworkConfig{
@@ -201,13 +203,17 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 				Endpoint: "bufcon",
 			},
 			Members: config.MembersConfig{
-				Insecure: true,
 				Endpoint: "bufcon",
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
 			},
 		},
 		Database: config.DatabaseConfig{
-			URL:      "trtl:///",
-			Insecure: true,
+			URL: "trtl:///",
+			MTLS: config.MTLSConfig{
+				Insecure: true,
+			},
 		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")

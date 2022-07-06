@@ -22,7 +22,7 @@ func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 	}
 
 	var opts []grpc.DialOption
-	if conf.Insecure {
+	if conf.MTLS.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var mtls grpc.DialOption
@@ -55,8 +55,12 @@ type DB struct {
 	trtl trtl.TrtlClient
 
 	// Announcements collection and singleton helper
-	announcements *Announcements
-	muMakeAC      sync.Once
+	announcements     *Announcements
+	makeAnnouncements sync.Once
+
+	// Organizations collection and singleton helper
+	organizations     *Organizations
+	makeOrganizations sync.Once
 }
 
 // Collection is an interface that identifies utilities that manage specific namespaces.
