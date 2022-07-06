@@ -17,7 +17,7 @@ import {
   Button
 } from '@chakra-ui/react';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
+import { Trans } from '@lingui/react';
 const ConfirmationResetForm = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
@@ -46,14 +46,16 @@ const ConfirmationResetForm = (props: any) => {
             <ModalOverlay />
             <ModalContent width={'100%'}>
               <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                Clear & Reset Registration Form
+                <Trans id="Clear & Reset Registration Form">Clear & Reset Registration Form</Trans>
               </ModalHeader>
 
               <ModalBody pb={5}>
                 <Text pb={2} fontSize={'sm'}>
-                  Click “Reset” to clear and reset the registration form. All data will be deleted
-                  and you will be re-directed to the beginning of the form and you will be required
-                  to restart the registration process
+                  <Trans id="Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process">
+                    Click “Reset” to clear and reset the registration form. All data will be deleted
+                    and you will be re-directed to the beginning of the form and you will be
+                    required to restart the registration process
+                  </Trans>
                 </Text>
               </ModalBody>
 
@@ -67,10 +69,10 @@ const ConfirmationResetForm = (props: any) => {
                   _hover={{
                     bgColor: '#189fda'
                   }}>
-                  Reset
+                  <Trans id="Reset">Reset</Trans>
                 </Button>
                 <Button onClick={handleOnClose} bgColor="#555151" color={'#fff'}>
-                  Cancel
+                  <Trans id="Cancel">Cancel</Trans>
                 </Button>
               </ModalFooter>
             </ModalContent>
