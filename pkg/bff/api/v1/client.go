@@ -14,25 +14,36 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.
-func New(endpoint string) (_ BFFClient, err error) {
-	c := &APIv1{
-		client: &http.Client{
+func New(endpoint string, opts ...ClientOption) (_ BFFClient, err error) {
+	// Create a client with the parsed endpoint.
+	c := &APIv1{}
+	if c.endpoint, err = url.Parse(endpoint); err != nil {
+		return nil, fmt.Errorf("could not parse endpoint: %s", err)
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		if err = opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// If a client hasn't been specified, create the default client.
+	if c.client == nil {
+		c.client = &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
 			Timeout:       30 * time.Second,
-		},
-	}
+		}
 
-	// Create cookie jar
-	if c.client.Jar, err = cookiejar.New(nil); err != nil {
-		return nil, fmt.Errorf("could not create cookiejar: %s", err)
-	}
-
-	if c.endpoint, err = url.Parse(endpoint); err != nil {
-		return nil, fmt.Errorf("could not parse endpoint: %s", err)
+		// Create cookie jar for CSRF
+		if c.client.Jar, err = cookiejar.New(nil); err != nil {
+			return nil, fmt.Errorf("could not create cookiejar: %s", err)
+		}
 	}
 	return c, nil
 }
@@ -41,6 +52,7 @@ func New(endpoint string) (_ BFFClient, err error) {
 type APIv1 struct {
 	endpoint *url.URL
 	client   *http.Client
+	creds    Credentials
 }
 
 // Ensure the API implments the BFFClient interface.
@@ -50,6 +62,7 @@ var _ BFFClient = &APIv1{}
 // Client Methods
 //===========================================================================
 
+// Status performs a health check request to the BFF.
 func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -84,6 +97,7 @@ func (s *APIv1) Status(ctx context.Context, in *StatusParams) (out *StatusReply,
 	return out, nil
 }
 
+// Lookup a VASP record in both the TestNet and the MainNet.
 func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -105,30 +119,7 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 	return out, nil
 }
 
-func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error) {
-	// network is required for the endpoint
-	if in.Network == "" {
-		return nil, ErrNetworkRequired
-	}
-
-	// Determine the path for the request
-	in.Network = strings.ToLower(strings.TrimSpace(in.Network))
-	path := fmt.Sprintf("/v1/register/%s", in.Network)
-
-	// Make the HTTP request
-	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, path, in, nil); err != nil {
-		return nil, err
-	}
-
-	// Execute the request and get a response
-	out = &RegisterReply{}
-	if _, err = s.Do(req, out, true); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
+// Verify a contact with the token sent to their email address.
 func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error) {
 	// Create the query params from the input
 	var params url.Values
@@ -150,6 +141,75 @@ func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out
 	return out, nil
 }
 
+// Login post-processes an Auth0 login or registration and sets CSRF cookies.
+func (s *APIv1) Login(ctx context.Context) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/users/login", nil, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Load registration form data from the server to populate the front-end form.
+func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.RegistrationForm, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/register", nil, nil); err != nil {
+		return nil, err
+	}
+
+	form = &models.RegistrationForm{}
+	if _, err = s.Do(req, form, true); err != nil {
+		return nil, err
+	}
+	return form, nil
+}
+
+// Save registration form data to the server in preparation for submitting it.
+func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/register", form, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+//  Submit the registration form to the specified network (testnet or mainnet).
+func (s *APIv1) SubmitRegistration(ctx context.Context, network string) (out *RegisterReply, err error) {
+	// network is required for the endpoint
+	if network == "" {
+		return nil, ErrNetworkRequired
+	}
+
+	// Determine the path for the request
+	network = strings.ToLower(strings.TrimSpace(network))
+	path := fmt.Sprintf("/v1/register/%s", network)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &RegisterReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Overview returns a high-level summary of the organization account and networks.
 func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -165,6 +225,7 @@ func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	return out, nil
 }
 
+// Announcements returns a list of network announcments made by the admins.
 func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -180,6 +241,7 @@ func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err
 	return out, nil
 }
 
+// MakeAnnouncement allows administrators to post new network announcements.
 func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -200,6 +262,7 @@ func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err err
 	return nil
 }
 
+// Certificates returns the list of certificates associated with the organization.
 func (s *APIv1) Certificates(ctx context.Context) (out *CertificatesReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
@@ -238,13 +301,14 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	}
 
 	var body io.ReadWriter
-	if data != nil {
+	switch {
+	case data == nil:
+		body = nil
+	default:
 		body = &bytes.Buffer{}
 		if err = json.NewEncoder(body).Encode(data); err != nil {
 			return nil, fmt.Errorf("could not serialize request data: %s", err)
 		}
-	} else {
-		body = nil
 	}
 
 	// Create the http request
@@ -258,6 +322,26 @@ func (s *APIv1) NewRequest(ctx context.Context, method, path string, data interf
 	req.Header.Add("Accept-Language", acceptLang)
 	req.Header.Add("Accept-Encoding", acceptEncode)
 	req.Header.Add("Content-Type", contentType)
+
+	// Add authentication if it is available
+	if s.creds != nil {
+		var token string
+		if token, err = s.creds.AccessToken(); err != nil {
+			return nil, err
+		}
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
+
+	// Add CSRF protection if it is available
+	if s.client.Jar != nil {
+		cookies := s.client.Jar.Cookies(endpoint)
+		for _, cookie := range cookies {
+			if cookie.Name == "csrf_token" {
+				req.Header.Add("X-CSRF-TOKEN", cookie.Value)
+			}
+		}
+	}
+
 	return req, nil
 }
 
@@ -285,6 +369,7 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 	}
 
 	// Deserialize the JSON data from the body
+	// TODO: what if this is protocol buffer JSON?
 	if data != nil && rep.StatusCode >= 200 && rep.StatusCode < 300 {
 		// Check the content type to ensure data deserialization is possible
 		if ct := rep.Header.Get("Content-Type"); ct != contentType {
@@ -297,4 +382,54 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 	}
 
 	return rep, nil
+}
+
+// SetCredentials is a helper function for external users to override credentials at
+// runtime and is used extensively in testing the BFF server.
+func (c *APIv1) SetCredentials(creds Credentials) {
+	c.creds = creds
+}
+
+// SetCSRFProtect is a helper function to set CSRF cookies on the client. This is not
+// possible in a browser because of the HttpOnly flag. This method should only be used
+// for testing purposes and an error is returned if the URL is not localhost. For live
+// clients - the server should set these cookies. If protect is false, then the cookies
+// are removed from the client by setting the cookies to an empty slice.
+func (c *APIv1) SetCSRFProtect(protect bool) error {
+	if c.client.Jar == nil {
+		return errors.New("client does not have a cookie jar, cannot set cookies")
+	}
+
+	if c.endpoint.Hostname() != "127.0.0.1" && c.endpoint.Hostname() != "localhost" {
+		return fmt.Errorf("csrf protect is for local testing only, cannot set cookies for %s", c.endpoint.Hostname())
+	}
+
+	// The URL for the cookies
+	u := c.endpoint.ResolveReference(&url.URL{Path: "/"})
+
+	var cookies []*http.Cookie
+	if protect {
+		cookies = []*http.Cookie{
+			{
+				Name:     "csrf_token",
+				Value:    "testingcsrftoken",
+				Expires:  time.Now().Add(10 * time.Minute),
+				HttpOnly: false,
+			},
+			{
+				Name:     "csrf_reference_token",
+				Value:    "testingcsrftoken",
+				Expires:  time.Now().Add(10 * time.Minute),
+				HttpOnly: true,
+			},
+		}
+	} else {
+		cookies = c.client.Jar.Cookies(u)
+		for _, cookie := range cookies {
+			cookie.MaxAge = -1
+		}
+	}
+
+	c.client.Jar.SetCookies(u, cookies)
+	return nil
 }
