@@ -1,5 +1,6 @@
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
+import jwt from 'jsonwebtoken';
 const useCustomAuth0 = () => {
   // initialize auth0
   const auth0Config = getAuth0Config();
@@ -55,13 +56,15 @@ const useCustomAuth0 = () => {
     });
   };
 
-  const auth0Hash = () => {
+  const auth0Hash = (hash?: any) => {
     return new Promise((resolve, reject) => {
-      authWeb.parseHash((err: any, data: any) => {
+      authWeb.parseHash({ hash: hash || window.location.hash }, (err: any, authResult: any) => {
         if (err) {
           reject(err);
         } else {
-          resolve(data);
+          console.log('[authResult]', authResult);
+
+          resolve(authResult);
         }
       });
     });
@@ -102,6 +105,8 @@ const useCustomAuth0 = () => {
       connection
     });
   };
+
+  // decode auth access token
 
   return {
     auth0Authorize,

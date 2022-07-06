@@ -1,6 +1,8 @@
 import { Box, Text, Stack, Button, HStack } from '@chakra-ui/react';
 import FormButton from 'components/ui/FormButton';
 import { NavLink } from 'react-router-dom';
+
+import { Trans } from '@lingui/react';
 const NeedsAttention = () => {
   return (
     <Stack
@@ -11,8 +13,12 @@ const NeedsAttention = () => {
       fontSize={18}
       display={'flex'}>
       <HStack justifyContent={'space-between'}>
-        <Text fontWeight={'bold'}> Needs Attention </Text>
-        <Text> Complete Testnet Registration </Text>
+        <Text fontWeight={'bold'}>
+          <Trans id="Needs Attention">Needs Attention</Trans>
+        </Text>
+        <Text>
+          <Trans id="Complete Testnet Registration">Complete Testnet Registration</Trans>
+        </Text>
 
         <Box>
           <NavLink to="/dashboard/certificate/registration">

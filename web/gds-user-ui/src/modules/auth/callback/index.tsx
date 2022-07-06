@@ -12,7 +12,7 @@ import { t } from '@lingui/macro';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
-  const { auth0GetUser } = useCustomAuth0();
+  const { auth0GetUser, auth0Hash } = useCustomAuth0();
   const { loginUser } = useAuth();
   const accessToken = query.access_token;
   const navigate = useNavigate();
@@ -22,8 +22,8 @@ const CallbackPage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const getUserInfo: any = accessToken && (await auth0GetUser(accessToken));
-
+        const getUserInfo: any = accessToken && (await auth0Hash());
+        console.log('[getUserInfo]', getUserInfo);
         setIsLoading(false);
         if (getUserInfo && getUserInfo?.email_verified) {
           setCookie('access_token', accessToken);
