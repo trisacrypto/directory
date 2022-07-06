@@ -20,7 +20,7 @@ const BasicDetailsForm: React.FC = () => {
 
   return (
     <>
-      <VStack spacing={4} w="100%">
+      <VStack spacing={4}>
         <InputFormControl
           controlId="organization_name"
           data-testid="organization_name"
