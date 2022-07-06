@@ -53,8 +53,8 @@ const Overview: React.FC = () => {
           setAnnouncements(getAnnouncements.data.announcements);
         }
 
-        console.log('[Overview] metrics', metrics);
-        console.log('[announcements]', getAnnouncements);
+        // console.log('[Overview] metrics', metrics);
+        // console.log('[announcements]', getAnnouncements);
       } catch (e: any) {
         if (e.response.status === 401) {
           navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
@@ -88,8 +88,14 @@ const Overview: React.FC = () => {
   return (
     <DashboardLayout>
       <Heading marginBottom="30px">Overview</Heading>
-      <NeedsAttention />
+      <NeedsAttention
+        text={t`Start Certificate Registration`}
+        buttonText={'Start'}
+        onClick={() => navigate('/dashboard/certificate/registration')}
+      />
       {announcements.length === 0 && <NetworkAnnouncements datas={announcements} />}
+
+      <NetworkAnnouncements />
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (

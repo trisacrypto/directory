@@ -209,9 +209,9 @@ func (s *Server) Register(c *gin.Context) {
 
 	switch network {
 	case testnet:
-		rep, err = s.testnet.Register(ctx, req)
+		rep, err = s.testnetGDS.Register(ctx, req)
 	case mainnet:
-		rep, err = s.mainnet.Register(ctx, req)
+		rep, err = s.mainnetGDS.Register(ctx, req)
 	default:
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
 		return
@@ -250,6 +250,7 @@ func (s *Server) Register(c *gin.Context) {
 		}
 	}
 
+	// TODO: save the response with the organization details in the Organization document.
 	c.JSON(http.StatusOK, out)
 }
 
@@ -289,9 +290,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	switch params.Directory {
 	case trisatest:
-		rep, err = s.testnet.VerifyContact(ctx, req)
+		rep, err = s.testnetGDS.VerifyContact(ctx, req)
 	case vaspdirectory:
-		rep, err = s.mainnet.VerifyContact(ctx, req)
+		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not verify contact"))

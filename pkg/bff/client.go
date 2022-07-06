@@ -18,8 +18,8 @@ type GlobalDirectoryClient interface {
 }
 
 // GDSClient is a unified client which contains sub-clients for interacting with the
-// directory service and members service. This helps reduce common client code when
-// making parallel requests to both the TestNet and MainNet.
+// various GDS services. This helps reduce common client code when making parallel
+// requests to both testnet and mainnet.
 type GDSClient struct {
 	gds         gds.TRISADirectoryClient
 	members     members.TRISAMembersClient
@@ -71,6 +71,7 @@ func (c *GDSClient) ConnectMembers(conf config.MembersConfig, opts ...grpc.DialO
 // Compile time check that GDSClient implements the GlobalDirectoryClient interface.
 var _ GlobalDirectoryClient = &GDSClient{}
 
+// GDS methods
 func (c *GDSClient) Lookup(ctx context.Context, in *gds.LookupRequest, opts ...grpc.CallOption) (*gds.LookupReply, error) {
 	return c.gds.Lookup(ctx, in, opts...)
 }
@@ -95,10 +96,15 @@ func (c *GDSClient) Status(ctx context.Context, in *gds.HealthCheck, opts ...grp
 	return c.gds.Status(ctx, in, opts...)
 }
 
+// Members methods
 func (c *GDSClient) List(ctx context.Context, in *members.ListRequest, opts ...grpc.CallOption) (*members.ListReply, error) {
 	return c.members.List(ctx, in, opts...)
 }
 
 func (c *GDSClient) Summary(ctx context.Context, in *members.SummaryRequest, opts ...grpc.CallOption) (*members.SummaryReply, error) {
 	return c.members.Summary(ctx, in, opts...)
+}
+
+func (c *GDSClient) Details(ctx context.Context, in *members.DetailsRequest, opts ...grpc.CallOption) (*members.MemberDetails, error) {
+	return c.members.Details(ctx, in, opts...)
 }

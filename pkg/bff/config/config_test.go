@@ -24,25 +24,29 @@ var testEnv = map[string]string{
 	"GDS_BFF_AUTH0_CLIENT_ID":                "exampleid",
 	"GDS_BFF_AUTH0_CLIENT_SECRET":            "supersecretsquirrel",
 	"GDS_BFF_AUTH0_TESTING":                  "true",
+	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":         "localhost:8444",
+	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
 	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":     "localhost:8443",
 	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":      "5s",
-	"GDS_BFF_TESTNET_MEMBERS_INSECURE":       "true",
+	"GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE":  "true",
 	"GDS_BFF_TESTNET_MEMBERS_ENDPOINT":       "localhost:9443",
 	"GDS_BFF_TESTNET_MEMBERS_TIMEOUT":        "5s",
 	"GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH": "fixtures/members/creds/testnet/certs.pem",
 	"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/testnet/pool.zip",
+	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":         "localhost:9444",
+	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
 	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":     "localhost:8444",
 	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":      "3s",
-	"GDS_BFF_MAINNET_MEMBERS_INSECURE":       "true",
+	"GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE":  "true",
 	"GDS_BFF_MAINNET_MEMBERS_ENDPOINT":       "localhost:9444",
 	"GDS_BFF_MAINNET_MEMBERS_TIMEOUT":        "3s",
 	"GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_PATH": "fixtures/members/creds/mainnet/certs.pem",
 	"GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/mainnet/pool.zip",
 	"GDS_BFF_DATABASE_URL":                   "trtl://trtl.test:4436",
 	"GDS_BFF_DATABASE_REINDEX_ON_BOOT":       "false",
-	"GDS_BFF_DATABASE_INSECURE":              "true",
+	"GDS_BFF_DATABASE_MTLS_INSECURE":         "true",
 	"GDS_BFF_DATABASE_MTLS_CERT_PATH":        "fixtures/creds/certs.pem",
 	"GDS_BFF_DATABASE_MTLS_POOL_PATH":        "fixtures/creds/pool.zip",
 	"GDS_BFF_SENTRY_DSN":                     "https://something.ingest.sentry.io",
@@ -85,7 +89,7 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.Auth0.Testing)
 	require.Equal(t, 10*time.Minute, conf.Auth0.ProviderCache)
 	require.True(t, conf.TestNet.Directory.Insecure)
-	require.True(t, conf.TestNet.Members.Insecure)
+	require.True(t, conf.TestNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_DIRECTORY_ENDPOINT"], conf.TestNet.Directory.Endpoint)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_ENDPOINT"], conf.TestNet.Members.Endpoint)
 	require.Equal(t, 5*time.Second, conf.TestNet.Directory.Timeout)
@@ -93,7 +97,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH"], conf.TestNet.Members.MTLS.CertPath)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH"], conf.TestNet.Members.MTLS.PoolPath)
 	require.True(t, conf.MainNet.Directory.Insecure)
-	require.True(t, conf.MainNet.Members.Insecure)
+	require.True(t, conf.MainNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_DIRECTORY_ENDPOINT"], conf.MainNet.Directory.Endpoint)
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_MEMBERS_ENDPOINT"], conf.MainNet.Members.Endpoint)
 	require.Equal(t, 3*time.Second, conf.MainNet.Directory.Timeout)
@@ -102,7 +106,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH"], conf.MainNet.Members.MTLS.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
-	require.Equal(t, true, conf.Database.Insecure)
+	require.Equal(t, true, conf.Database.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_MTLS_CERT_PATH"], conf.Database.MTLS.CertPath)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_MTLS_POOL_PATH"], conf.Database.MTLS.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
@@ -119,18 +123,21 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_BFF_AUTH0_AUDIENCE",
 		"GDS_BFF_AUTH0_CLIENT_ID",
 		"GDS_BFF_AUTH0_CLIENT_SECRET",
+		"GDS_BFF_TESTNET_ADMIN_ENDPOINT",
+		"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS",
 		"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_TESTNET_MEMBERS_ENDPOINT",
-		"GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH",
-		"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH",
+		"GDS_BFF_MAINNET_ADMIN_ENDPOINT",
+		"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS",
 		"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_MAINNET_MEMBERS_ENDPOINT",
-		"GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_PATH",
-		"GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH",
 		"GDS_BFF_DATABASE_URL",
-		"GDS_BFF_DATABASE_MTLS_CERT_PATH",
-		"GDS_BFF_DATABASE_MTLS_POOL_PATH",
 	}
+
+	// Insecure must be true if no mTLS certs are provided
+	os.Setenv("GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE", "true")
+	os.Setenv("GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE", "true")
+	os.Setenv("GDS_BFF_DATABASE_MTLS_INSECURE", "true")
 
 	// Collect required environment variables and cleanup after
 	prevEnv := curEnv(required...)
@@ -222,19 +229,19 @@ func TestAuthConfig(t *testing.T) {
 func TestMembersConfigValidation(t *testing.T) {
 	conf := config.MembersConfig{
 		Endpoint: "https://example.com",
-		Insecure: false,
 		MTLS: config.MTLSConfig{
+			Insecure: false,
 			CertPath: "",
 			PoolPath: "",
 		},
 	}
 
-	conf.Insecure = true
+	conf.MTLS.Insecure = true
 	err := conf.Validate()
 	require.NoError(t, err)
 
 	// If Insecure is false, then the certs and cert pool are required.
-	conf.Insecure = false
+	conf.MTLS.Insecure = false
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid members configuration: connecting over mTLS requires certs and cert pool")
 
@@ -251,19 +258,19 @@ func TestDatabaseConfigValidation(t *testing.T) {
 	conf := config.DatabaseConfig{
 		URL:           "trtl://trtl.test.net:443",
 		ReindexOnBoot: false,
-		Insecure:      false,
 		MTLS: config.MTLSConfig{
+			Insecure: false,
 			CertPath: "",
 			PoolPath: "",
 		},
 	}
 
-	conf.Insecure = true
+	conf.MTLS.Insecure = true
 	err := conf.Validate()
 	require.NoError(t, err)
 
 	// If Insecure is false, then the certs and cert pool are required.
-	conf.Insecure = false
+	conf.MTLS.Insecure = false
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid database configuration: connecting over mTLS requires certs and cert pool")
 

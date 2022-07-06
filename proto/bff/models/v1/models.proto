@@ -1,0 +1,47 @@
+syntax="proto3";
+
+package bff.models.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/bff/db/models/v1;models";
+
+// The Organization document contains VASP-specific information for a single VASP record
+// in the directory service. This document differs in that it stores information
+// relevant to the BFF and should not be used to duplicate storage in the directory.
+message Organization {
+    // BFF Unique Identifier and Record Information
+    string id = 1;
+    string name = 2;
+    string logo_url = 3;
+
+    // Directory Registrations for Lookups
+    // TODO: populate these details in the Registration Endpoint
+    DirectoryRecord testnet = 10;
+    DirectoryRecord mainnet = 11;
+
+    reserved 12; // Reserved for collaborators
+
+    // Registration Form
+    RegistrationForm registration = 13;
+
+    // Metadata as RFC3339 Timestamps
+    string created = 14;
+    string modified = 15;
+}
+
+// DirectoryRecord contains the information needed to lookup a VASP in a directory service.
+message DirectoryRecord {
+    string id = 1;
+    string registered_directory = 2;
+    string common_name = 3;
+}
+
+// RegistrationForm is an extension of the TRISA GDS RegistrationRequest with BFF fields.
+message RegistrationForm {
+
+    RegistrationInfo testnet = 14;
+    RegistrationInfo mainnet = 15;
+}
+
+// RegistrationInfo contains metadata about when the registration form was submitted.
+message RegistrationInfo {
+    string submitted = 1; // Timestamp when the form was submitted
+}

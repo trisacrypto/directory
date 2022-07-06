@@ -37,8 +37,8 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPC, flatten bool)
 	}
 
 	// execute both requests
-	go closure(s.testnet, 0, testnet)
-	go closure(s.mainnet, 1, mainnet)
+	go closure(s.testnetGDS, 0, testnet)
+	go closure(s.mainnetGDS, 1, mainnet)
 	wg.Wait()
 
 	// flatten rpc and error if requested
