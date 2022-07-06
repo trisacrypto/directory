@@ -72,6 +72,4 @@ func TestAnnouncementsMonth(t *testing.T) {
 
 		day = pd
 	}
-
-	// Ensure later
 }

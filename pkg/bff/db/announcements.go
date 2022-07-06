@@ -149,10 +149,10 @@ func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ st
 }
 
 // GetOrCreateMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) GetOrCreateMonth(ctx context.Context, months string) (month *models.AnnouncementMonth, err error) {
-	if month, err = a.GetMonth(ctx, months); err != nil {
+func (a *Announcements) GetOrCreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
+	if month, err = a.GetMonth(ctx, date); err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return a.CreateMonth(ctx, months)
+			return a.CreateMonth(ctx, date)
 		}
 		return nil, err
 	}
@@ -160,11 +160,11 @@ func (a *Announcements) GetOrCreateMonth(ctx context.Context, months string) (mo
 }
 
 // GetMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) GetMonth(ctx context.Context, months string) (month *models.AnnouncementMonth, err error) {
+func (a *Announcements) GetMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
 	// Get the key by creating an intermediate announcement month to ensure that
 	// validation and key creation always happens the same way.
 	var key, value []byte
-	month = &models.AnnouncementMonth{Date: months}
+	month = &models.AnnouncementMonth{Date: date}
 	if key, err = month.Key(); err != nil {
 		return nil, err
 	}
@@ -180,9 +180,9 @@ func (a *Announcements) GetMonth(ctx context.Context, months string) (month *mod
 }
 
 // CreateMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) CreateMonth(ctx context.Context, months string) (month *models.AnnouncementMonth, err error) {
+func (a *Announcements) CreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
 	month = &models.AnnouncementMonth{
-		Date:          months,
+		Date:          date,
 		Announcements: make([]*models.Announcement, 0, 1),
 	}
 
