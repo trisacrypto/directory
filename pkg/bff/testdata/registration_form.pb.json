@@ -1,0 +1,78 @@
+{
+  "website": "https://example.ua",
+  "business_category": "PRIVATE_ORGANIZATION",
+  "vasp_categories": ["Miner", "Mixer", "P2P"],
+  "established_on": "2022-04-07",
+	"entity": {
+		"name": {
+			"name_identifiers": [{
+				"legal_person_name": "криптовалютний кіоск, TOV",
+				"legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
+			}],
+			"local_name_identifiers": [],
+			"phonetic_name_identifiers": []
+		},
+		"geographic_addresses": [{
+			"address_type": "ADDRESS_TYPE_CODE_BIZZ",
+			"address_line": [
+				"Krylova, bld. 50/А, appt. 87",
+				"Nikolaev",
+				"12345"
+			],
+			"country": "UA"
+		}],
+		"customer_number": "",
+		"national_identification": {
+			"national_identifier": "629900T8BM49AUKSDO56",
+			"national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX"
+
+		},
+		"country_of_registration": "UA"
+	},
+	"contacts": {
+		"technical": {
+			"name": "Panas Slobodyan",
+			"email": "panas@example.com",
+			"phone": "+380 44 884 5700"
+		},
+		"administrative": {
+			"name": "Olesya Prykhodko",
+			"email": "olesya@example.com",
+			"phone": "+380 44 905 9189"
+		},
+		"legal": {
+			"name": "Illya Shvets",
+			"email": "illya@example.com",
+			"phone": "+380 44 316 8744"
+		},
+		"billing": {
+			"name": "Marta Morozova",
+			"email": "marta@example.com",
+			"phone": "+380 44 717 8840"
+		}
+	},
+	"trixo": {
+		"primary_national_jurisdiction": "UA",
+		"primary_regulator": "European Securities and Markets Authority",
+		"financial_transfers_permitted": "yes",
+		"other_jurisdictions": [],
+		"has_required_regulatory_program": "yes",
+		"conducts_customer_kyc": true,
+		"kyc_threshold": 3000.0,
+		"kyc_threshold_currency": "UAH",
+		"must_comply_travel_rule": false,
+		"applicable_regulations": [],
+		"compliance_threshold": 10000.00,
+		"compliance_threshold_currency": "UAH",
+		"must_safegaurd_pii": false,
+		"safeguards_pii": true
+	},
+  "testnet": {
+    "common_name": "test.trisa.example.ua",
+    "endpoint": "test.trisa.example.ua:443"
+  },
+  "mainnet": {
+    "common_name": "trisa.example.ua",
+    "endpoint": "trisa.example.ua:443"
+  }
+}

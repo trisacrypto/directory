@@ -6,6 +6,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// Claims must be defined here both to ensure we can use jwt and to ensure there are no
+// recursive imports. That means this claims struct MUST be kept up to date with the
+// auth.Claims struct that uses this package for testing.
 type Claims struct {
 	jwt.RegisteredClaims
 	Email       string            `json:"https://vaspdirectory.net/email"`
