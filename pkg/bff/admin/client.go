@@ -12,8 +12,8 @@ import (
 
 const (
 	HD    = "hd"
-	EMAIL = "bff@rotational.io"
-	NAME  = "GDS BFF"
+	Email = "bff@rotational.io"
+	Name  = "GDS BFF"
 )
 
 // New creates a new DirectoryAdministrationClient which uses its own self signed
@@ -63,8 +63,8 @@ func (c *Credentials) Generate(api admin.DirectoryAdministrationClient) (err err
 
 	claims := map[string]interface{}{
 		"hd":      HD,
-		"email":   EMAIL,
-		"name":    NAME,
+		"email":   Email,
+		"name":    Name,
 		"picture": "",
 	}
 

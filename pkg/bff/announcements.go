@@ -8,17 +8,20 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 const (
 	maxAnnouncements = 10
-	subMonths        = -1
+	subMonths        = -2
 )
 
 func (s *Server) Announcements(c *gin.Context) {
-	// Only fetch the previous 10 announcements from the last month
+	// Only fetch the previous 10 announcements from the last two months
 	nbf := time.Now().AddDate(0, subMonths, 0)
-	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf)
+	nbf = time.Date(nbf.Year(), nbf.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf, time.Now())
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch recent announcements")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to fetch recent announcements"))
@@ -39,7 +42,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 		id     string
 		err    error
 		claims *auth.Claims
-		post   *api.Announcement
+		post   *models.Announcement
 	)
 
 	if err = c.BindJSON(&post); err != nil {
@@ -61,7 +64,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 
 	if claims.Email == "" {
 		log.Warn().Msg("missing email on claims, cannot set author of network announcement")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("user claims are not correctly configured"))
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("user claims are not correctly configured"))
 		return
 	}
 
