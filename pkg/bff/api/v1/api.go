@@ -25,7 +25,7 @@ type BFFClient interface {
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
-	MakeAnnouncement(context.Context, *Announcement) error
+	MakeAnnouncement(context.Context, *models.Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
 }
 
@@ -129,17 +129,8 @@ type MemberDetails struct {
 // AnnouncementsReply contains up to the last 10 network announcements that were made in
 // the past month. It does not require pagination since only relevant results are returned.
 type AnnouncementsReply struct {
-	Announcements []*Announcement `json:"announcements"`
-	LastUpdated   string          `json:"last_updated,omitempty"`
-}
-
-// Announcement represents a single network announcementthat can be posted to the
-// endpoint or returned in the announcements reply.
-type Announcement struct {
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	PostDate string `json:"post_date,omitempty"` // Ignored on POST only available on GET
-	Author   string `json:"author,omitempty"`    // Ignored on POST only available on GET
+	Announcements []*models.Announcement `json:"announcements"`
+	LastUpdated   string                 `json:"last_updated,omitempty"`
 }
 
 // CertificatesReply is returned on certificates requests.

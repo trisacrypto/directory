@@ -242,7 +242,7 @@ func (s *APIv1) Announcements(ctx context.Context) (out *AnnouncementsReply, err
 }
 
 // MakeAnnouncement allows administrators to post new network announcements.
-func (s *APIv1) MakeAnnouncement(ctx context.Context, in *Announcement) (err error) {
+func (s *APIv1) MakeAnnouncement(ctx context.Context, in *models.Announcement) (err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/announcements", in, nil); err != nil {
