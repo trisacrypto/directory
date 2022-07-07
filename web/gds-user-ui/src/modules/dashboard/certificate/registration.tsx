@@ -121,7 +121,6 @@ const Certificate: React.FC = () => {
   }
   const handlePreviousStep = () => {
     setCertificateFormValueToLocalStorage(methods.getValues());
-
     previousStep();
   };
 
