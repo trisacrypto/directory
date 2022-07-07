@@ -20,7 +20,7 @@ import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import Metrics from 'components/Metrics';
 import useAuth from 'hooks/useAuth';
-import { getMetrics } from './overview.service';
+import { getMetrics, getAnnouncementsData } from './service';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { colors } from 'utils/theme';
 import OverviewLoader from 'components/ContentLoader/Overview';
@@ -32,6 +32,7 @@ import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
+  const [announcements, setAnnouncements] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   // const { user, getUser } = useAuth();
   const [stepperData, setStepperData] = React.useState<any>({});
@@ -41,8 +42,19 @@ const Overview: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const response = await getMetrics();
-        setResult(response.data);
+        const [metrics, getAnnouncements] = await Promise.all([
+          getMetrics(),
+          getAnnouncementsData()
+        ]);
+        if (metrics.status === 200) {
+          setResult(metrics);
+        }
+        if (getAnnouncements.status === 200) {
+          setAnnouncements(getAnnouncements.data.announcements);
+        }
+
+        // console.log('[Overview] metrics', metrics);
+        // console.log('[announcements]', getAnnouncements);
       } catch (e: any) {
         if (e.response.status === 401) {
           navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
@@ -76,7 +88,13 @@ const Overview: React.FC = () => {
   return (
     <DashboardLayout>
       <Heading marginBottom="30px">Overview</Heading>
-      <NeedsAttention text={t`Start Certificate Registration`} buttonText={'Start'} onClick={() => navigate("/dashboard/certificate/registration")} />
+      <NeedsAttention
+        text={t`Start Certificate Registration`}
+        buttonText={'Start'}
+        onClick={() => navigate('/dashboard/certificate/registration')}
+      />
+      {announcements.length === 0 && <NetworkAnnouncements datas={announcements} />}
+
       <NetworkAnnouncements />
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>

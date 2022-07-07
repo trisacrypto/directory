@@ -3,6 +3,7 @@ import { RegistrationAuthority, StepStatus } from 'types/type';
 import registrationAuthority from './registration-authority.json';
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
+import * as Sentry from '@sentry/react';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 
 export const findStepKey = (steps: any, key: number) =>
@@ -140,4 +141,11 @@ export const getRefreshToken = () => {
       }
     );
   });
+};
+
+export const captureExceptionError = (message: string) => {
+  Sentry.captureException(message);
+};
+export const captureMessageError = (message: string) => {
+  Sentry.captureMessage(message);
 };
