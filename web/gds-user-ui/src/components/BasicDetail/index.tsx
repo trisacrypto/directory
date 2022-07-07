@@ -8,6 +8,7 @@ import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 
 const BasicDetails: React.FC = (props) => {
+  console.log('[BasicDetails rendered]');
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
