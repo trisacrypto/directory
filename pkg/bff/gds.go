@@ -105,7 +105,16 @@ func (s *Server) Lookup(c *gin.Context) {
 			continue
 		}
 
-		data, err := wire.Rewire(result)
+		var lookup *gds.LookupReply
+		var ok bool
+		if lookup, ok = result.(*gds.LookupReply); !ok {
+			err := fmt.Errorf("unexpected result type: %T", result)
+			log.Error().Err(err).Msg("unexpected result type")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+			return
+		}
+
+		data, err := wire.Rewire(lookup)
 		if err != nil {
 			log.Error().Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))

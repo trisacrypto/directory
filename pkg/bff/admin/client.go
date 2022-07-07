@@ -29,7 +29,7 @@ func New(conf config.AdminConfig) (client admin.DirectoryAdministrationClient, e
 		return nil, err
 	}
 
-	return admin.New(conf.Endpoint, creds)
+	return admin.New(conf.Endpoint, creds, nil)
 }
 
 // NewCredentials creates a new Credentials object with the given token keys and
