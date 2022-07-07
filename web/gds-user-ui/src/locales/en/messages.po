@@ -976,7 +976,7 @@ msgstr "Registration Authority cannot be left empty"
 msgid "Registration Submission"
 msgstr "Registration Submission"
 
-#: src/components/OtherJurisdictions/index.tsx:48
+#: src/components/OtherJuridictions/index.tsx:48
 msgid "Regulator Name"
 msgstr "Regulator Name"
 
