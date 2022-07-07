@@ -1,27 +1,19 @@
 package db
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	trtl "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
 	NamespaceAnnouncements = "announcements"
-)
-
-var (
-	lastUpdatedKey = []byte("last_updated")
 )
 
 // The Announcements type exposes methods for interacting with Network Announcements
@@ -45,7 +37,7 @@ var _ Collection = &Announcements{}
 // db.Announcements().Recent(), so to reduce the number of allocations a singleton
 // intermediate struct is used. Method calls to the collection are thread-safe.
 func (db *DB) Announcements() *Announcements {
-	db.muMakeAC.Do(func() {
+	db.makeAnnouncements.Do(func() {
 		db.announcements = &Announcements{
 			db:        db,
 			namespace: NamespaceAnnouncements,
@@ -57,114 +49,172 @@ func (db *DB) Announcements() *Announcements {
 // Recent returns the set of results whose post date is after the not before timestamp,
 // limited to the maximum number of results. Last updated returns the timestamp that
 // any announcement was added or changed.
-func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore time.Time) (out *api.AnnouncementsReply, err error) {
+func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore, start time.Time) (out *api.AnnouncementsReply, err error) {
+	// Do not allow unbounded requests in recent
+	if notBefore.IsZero() {
+		return nil, ErrUnboundedRecent
+	}
+
 	out = &api.AnnouncementsReply{
-		Announcements: make([]*api.Announcement, 0, maxResults),
+		Announcements: make([]*models.Announcement, 0, maxResults),
 	}
 
-	// Get the last updated value from the index key in the collection.
-	var value []byte
-	if value, err = a.db.Get(ctx, lastUpdatedKey, a.namespace); err != nil && !errors.Is(err, ErrNotFound) {
-		return nil, fmt.Errorf("could not fetch last updated: %s", err)
+	// Get the last day of this month or the start-after to begin querying announcements
+	if start.IsZero() {
+		start = time.Now()
 	}
+	month := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
 
-	if len(value) > 0 {
-		if err = json.Unmarshal(value, &out.LastUpdated); err != nil {
-			return nil, fmt.Errorf("could not unmarshal last updated: %s", err)
+	for !month.Before(notBefore) {
+		var crate *models.AnnouncementMonth
+		if crate, err = a.GetMonth(ctx, month.Format(models.MonthLayout)); err != nil {
+			if errors.Is(err, ErrNotFound) {
+				// Decrement month and continue; see notes below about month decrement
+				month = month.AddDate(0, -1, -5)
+				month = time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
+				continue
+			}
+			return nil, err
 		}
-	}
 
-	var cursor trtl.Trtl_CursorClient
-	if cursor, err = a.db.trtl.Cursor(ctx, &trtl.CursorRequest{Namespace: a.namespace}); err != nil {
-		return nil, fmt.Errorf("could not connect to trtl cursor: %s", err)
-	}
-	defer cursor.CloseSend()
-
-	// Consume the cursor
-	// TODO: this filtering method is NOT ideal since it scans in ascending time order
-	// rather than reverse time order (trtl doesn't support reverse ordering). This
-	// means as the number of announcements in the collection grows, this method will
-	// get slower and slower. Worse, we're loading everything in memory so we might
-	// overload the pod. We need to either figure out a different key-value storage
-	// and ordering mechanism or implement reverse seek in trtl.
-	results := make([]*api.Announcement, 0)
-	for {
-		var pair *trtl.KVPair
-		if pair, err = cursor.Recv(); err != nil {
-			if err == io.EOF {
+		// Loop through the announcements adding them to the reply
+		// NOTE: this expects announcements are in PostDate order
+		for _, post := range crate.Announcements {
+			// Stop if we've reached the maximum number of announcements
+			if len(out.Announcements) >= maxResults {
 				break
 			}
-			return nil, fmt.Errorf("could not read message from cursor: %s", err)
+
+			// Stop if the post is before the notBefore limit
+			var pd time.Time
+			if pd, err = post.ParsePostDate(); err != nil {
+				return nil, fmt.Errorf("could not parse post date for announcement %s: %s", post.Id, err)
+			}
+
+			if pd.Before(notBefore) {
+				break
+			}
+
+			out.Announcements = append(out.Announcements, post)
+			out.LastUpdated = Latest(out.LastUpdated, post.Modified)
 		}
 
-		if bytes.Equal(pair.Key, lastUpdatedKey) {
-			continue
-		}
-
-		var post *api.Announcement
-		if post, err = a.Decode(pair.Value); err != nil {
-			// If we can't decode the announcement log the error and continue
-			log.Error().Err(err).Str("key", ParseKSUID(pair.Key)).Msg("could not decode announcement from database")
-			continue
-		}
-
-		var date time.Time
-		if date, err = time.Parse("2006-01-02", post.PostDate); err != nil {
-			// If we can't decode the post date log the error and continue
-			log.Error().Err(err).Str("key", ParseKSUID(pair.Key)).Msg("could not parse the post date")
-		}
-
-		if date.Before(notBefore) {
-			// Filter on the not before date
-			continue
-		}
-
-		results = append(results, post)
+		// Decrement the month to check for more announcements
+		// We need to find the last day of the previous month, to do this, we subtract
+		// 1 month and 5 days (to ensure we go past the 28th of February), then compute
+		// the last day of that month using the AddDate function.
+		month = month.AddDate(0, -1, -5)
+		month = time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
 	}
 
-	// Reverse the results and apply the max results limit
-	for i := len(results) - 1; i >= 0; i-- {
-		if len(out.Announcements) >= maxResults {
-			break
-		}
-		out.Announcements = append(out.Announcements, results[i])
-	}
 	return out, nil
 }
 
 // Post an announcement, putting it to the trtl database. This method does no
 // verification of duplicate announcements or any content verification except for a
-// check that an empty announcement is not being put to the database.
-func (a *Announcements) Post(ctx context.Context, in *api.Announcement) (_ string, err error) {
+// check that an empty announcement is not being put to the database. Announcements are
+// stored in announcement months, so the month for the announcement is extracted and the
+// announcement is inserted into the correct month, creating it if necessary.
+func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ string, err error) {
 	// Make sure we don't post empty announcements
 	if in.Title == "" && in.Body == "" && in.PostDate == "" && in.Author == "" {
 		return "", ErrEmptyAnnouncement
 	}
 
-	// Encode the Post to bytes for storage
+	// Set the ID and timestamp metadata on the Post
+	in.Id = ksuid.New().String()
+	in.Created = time.Now().Format(time.RFC3339Nano)
+	in.Modified = in.Created
+
+	// Get the month to store the announcement in
+	var month string
+	if month, err = in.Month(); err != nil {
+		return "", fmt.Errorf("could not identify month from post date: %s", err)
+	}
+
+	// Get or Create the announcement month "crate"
+	var crate *models.AnnouncementMonth
+	if crate, err = a.GetOrCreateMonth(ctx, month); err != nil {
+		return "", err
+	}
+
+	// Add the announcement in sorted order and update its modified timestamp
+	crate.Add(in)
+	crate.Modified = time.Now().Format(time.RFC3339Nano)
+
+	if err = a.SaveMonth(ctx, crate); err != nil {
+		return "", err
+	}
+	return in.Id, nil
+}
+
+// GetOrCreateMonth from a month timestamp in the form YYYY-MM.
+func (a *Announcements) GetOrCreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
+	if month, err = a.GetMonth(ctx, date); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return a.CreateMonth(ctx, date)
+		}
+		return nil, err
+	}
+	return month, nil
+}
+
+// GetMonth from a month timestamp in the form YYYY-MM.
+func (a *Announcements) GetMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	var key, value []byte
+	month = &models.AnnouncementMonth{Date: date}
+	if key, err = month.Key(); err != nil {
+		return nil, err
+	}
+
+	if value, err = a.db.Get(ctx, key, a.namespace); err != nil {
+		return nil, err
+	}
+
+	if err = proto.Unmarshal(value, month); err != nil {
+		return nil, err
+	}
+	return month, nil
+}
+
+// CreateMonth from a month timestamp in the form YYYY-MM.
+func (a *Announcements) CreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
+	month = &models.AnnouncementMonth{
+		Date:          date,
+		Announcements: make([]*models.Announcement, 0, 1),
+	}
+
+	if err = a.SaveMonth(ctx, month); err != nil {
+		return nil, err
+	}
+	return month, nil
+}
+
+// Save a month, storing it in the database
+func (a *Announcements) SaveMonth(ctx context.Context, month *models.AnnouncementMonth) (err error) {
+	// Compute the key for the month
+	var key []byte
+	if key, err = month.Key(); err != nil {
+		return err
+	}
+
+	// Update the modified timestamp and serialize
+	month.Modified = time.Now().Format(time.RFC3339Nano)
+	if month.Created == "" {
+		month.Created = month.Modified
+	}
+
 	var value []byte
-	if value, err = a.Encode(in); err != nil {
-		return "", fmt.Errorf("could not encode announcement: %s", err)
+	if value, err = proto.Marshal(month); err != nil {
+		return err
 	}
 
-	// Create a ksuid for the post
-	key := ksuid.New()
-
-	if err = a.db.Put(ctx, key.Bytes(), value, a.namespace); err != nil {
-		return "", fmt.Errorf("could not put announcement to db: %s", err)
+	if err = a.db.Put(ctx, key, value, a.namespace); err != nil {
+		return err
 	}
-
-	// Set the last updated timestamp on the database
-	var updated []byte
-	if updated, err = json.Marshal(time.Now()); err != nil {
-		return "", fmt.Errorf("could not create last updated timestamp value: %s", err)
-	}
-
-	if err = a.db.Put(ctx, lastUpdatedKey, updated, a.namespace); err != nil {
-		return "", fmt.Errorf("could not put last updated index: %s", err)
-	}
-
-	return key.String(), nil
+	return nil
 }
 
 // Namespace implements the collection interface
@@ -172,44 +222,21 @@ func (a *Announcements) Namespace() string {
 	return a.namespace
 }
 
-// Encode an announcement for storage in the database.
-// HACK: the api definition is probably not the right place to store a database model,
-// should we just create protocol buffer model definitions instead of using this?
-func (a *Announcements) Encode(in *api.Announcement) (_ []byte, err error) {
-	buf := &bytes.Buffer{}
-	w := gzip.NewWriter(buf)
+// Helper method to return the latest string timestamp from the two RFC3339 timestamps
+func Latest(a, b string) string {
+	// Parse without checking errors - will use zero-valued ts for checks
+	ats, _ := time.Parse(time.RFC3339Nano, a)
+	bts, _ := time.Parse(time.RFC3339Nano, b)
 
-	if err = json.NewEncoder(w).Encode(in); err != nil {
-		return nil, err
+	switch {
+	case ats.IsZero() && bts.IsZero():
+		return ""
+	case !ats.IsZero() && ats.After(bts):
+		return a
+	case !bts.IsZero() && bts.After(ats):
+		return b
+	case !ats.IsZero() && !bts.IsZero() && ats.Equal(bts):
+		return a
 	}
-	w.Close()
-
-	return buf.Bytes(), nil
-}
-
-// Decode an annoucement from storage in the database.
-// HACK: the api definition is probably not the right place to store a database model,
-// should we just create protocol buffer model definitions instead of using this?
-func (a *Announcements) Decode(data []byte) (out *api.Announcement, err error) {
-	buf := bytes.NewBuffer(data)
-
-	var r *gzip.Reader
-	if r, err = gzip.NewReader(buf); err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	if err = json.NewDecoder(r).Decode(&out); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ParseKSUID from bytes into a string, returning the nil ksuid if an error occurs.
-func ParseKSUID(key []byte) string {
-	kid, err := ksuid.FromBytes(key)
-	if err != nil {
-		return ksuid.Nil.String()
-	}
-	return kid.String()
+	return ""
 }

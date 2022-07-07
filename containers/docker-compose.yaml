@@ -66,6 +66,7 @@ services:
       - GDS_SENTRY_DSN
       - GDS_SENTRY_ENVIRONMENT
       - GDS_SENTRY_TRACK_PERFORMANCE
+    
     profiles:
       - gds
       - api
@@ -169,6 +170,21 @@ services:
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
       - GDS_BFF_AUTH0_CLIENT_ID
       - GDS_BFF_AUTH0_CLIENT_SECRET
+      - GDS_BFF_TESTNET_DIRECTORY_ENDPOINT=gds:4433
+      - GDS_BFF_TESTNET_MEMBERS_INSECURE=true
+      - GDS_BFF_TESTNET_MEMBERS_ENDPOINT=gds:4435
+      - GDS_BFF_MAINNET_MEMBERS_INSECURE=true
+      - GDS_BFF_MAINNET_MEMBERS_ENDPOINT=gds-mainnet:8435
+      - GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH=placeholder
+      - GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_POOL=placeholder
+      - GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_PATH=placeholder
+      - GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_POOL=placeholder
+      - GDS_BFF_DATABASE_MTLS_CERT_PATH=placeholder
+      - GDS_BFF_DATABASE_MTLS_CERT_POOL=placeholder
+      - GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH=placeholder
+      - GDS_BFF_MAINNET_DIRECTORY_ENDPOINT=gds:4433
+      - GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH=placeholder
+      - GDS_BFF_DATABASE_MTLS_POOL_PATH=placeholder
     profiles:
       - api
       - testnet

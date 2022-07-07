@@ -311,6 +311,37 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	return out, nil
 }
 
+// Details returns the details of the VASP member using the provided ID.
+func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api.MemberDetails, err error) {
+	// Fetch the requested VASP if provided
+	var vasp *pb.VASP
+	if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
+		return nil, status.Error(codes.NotFound, "requested VASP not found")
+	}
+
+	// Construct the member response
+	out = &api.MemberDetails{
+		MemberSummary: GetVASPMember(vasp),
+	}
+
+	// Add the IVMS101 legal person to the response
+	if vasp.Entity == nil {
+		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
+		return nil, status.Error(codes.Internal, "VASP is missing legal person")
+	}
+	out.LegalPerson = vasp.Entity
+
+	// Add the TRIXO form data to the response
+	if vasp.Trixo == nil {
+		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
+		return nil, status.Error(codes.Internal, "VASP is missing TRIXO form data")
+	}
+	out.Trixo = vasp.Trixo
+
+	return out, nil
+}
+
 // GetVASPMember is a helper function to construct a VASPMember from a VASP record.
 func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
 	var err error

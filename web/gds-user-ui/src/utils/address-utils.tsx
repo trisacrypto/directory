@@ -4,7 +4,7 @@ export const isValidIvmsAddress = (address: any) => {
 
 export const hasAddressLine = (address: any) => {
   if (isValidIvmsAddress(address)) {
-    return Array.isArray(address.address_line) && address.address_line.length > 0;
+    return Array.isArray(address.address_line) && address.address_line.some(Boolean) > 0;
   }
   return false;
 };
@@ -65,7 +65,7 @@ export const renderField = (address: any) => (
     {address.town_name || address.town_location_name || address.country_sub_division ? (
       <>
         {address?.town_name} {address?.town_location_name} {address?.country_sub_division}{' '}
-        {address?.post_code} <br />
+        {address?.postal_code} <br />
       </>
     ) : null}
     {address?.country}
@@ -73,6 +73,7 @@ export const renderField = (address: any) => (
 );
 
 export const renderAddress = (address: any) => {
+  console.log('[address]', address);
   if (hasAddressFieldAndLine(address)) {
     console.error('[ERROR]', 'invalid address with both fields and lines');
     return <div>Invalid Address</div>;

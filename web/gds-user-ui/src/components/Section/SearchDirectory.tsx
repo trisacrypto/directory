@@ -164,40 +164,40 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result[0]?.name}</Td>
+                            <Td colSpan={2}>{result?.testnet?.name}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result[0]?.common_name}</Td>
+                            <Td>{result?.testnet?.common_name}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result[0]?.endpoint}</Td>
+                            <Td>{result?.testnet?.endpoint}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory">Registered Directory</Trans>
                             </Td>
-                            <Td>{result[0]?.registered_directory}</Td>
+                            <Td>{result?.testnet?.registered_directory}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID">TRISA Member ID</Trans>
                             </Td>
-                            <Td>{result[0]?.id}</Td>
+                            <Td>{result?.testnet?.id}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Country">Country</Trans>
                             </Td>
                             <Td>
-                              {getCountryName(result[0]?.country as IsoCountryCode)}
+                              {getCountryName(result?.testnet?.country as IsoCountryCode)}
                               {'  '}
-                              {countryCodeEmoji(result[0]?.country) || 'N/A'}
+                              {countryCodeEmoji(result?.testnet?.country) || 'N/A'}
                             </Td>
                           </Tr>
 
@@ -205,10 +205,11 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="TRISA Verification">TRISA Verification</Trans>
                             </Td>
-                            {result[0]?.verified_on ? (
+                            {result?.testnet?.verified_on ? (
                               <Td>
                                 {' '}
-                                <Trans id="VERIFIED ON">VERIFIED ON</Trans> {result[0]?.verified_on}{' '}
+                                <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
+                                {result?.testnet?.verified_on}{' '}
                               </Td>
                             ) : (
                               <Td>N/A</Td>
@@ -231,31 +232,31 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result[1]?.name || 'N/A'} </Td>
+                            <Td colSpan={2}>{result?.mainet?.name || 'N/A'} </Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result[1]?.common_name || 'N/A'}</Td>
+                            <Td>{result?.mainet?.common_name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result[1]?.endpoint || 'N/A'}</Td>
+                            <Td>{result?.mainet?.endpoint || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory"></Trans>
                             </Td>
-                            <Td>{result[1]?.registered_directory || 'N/A'}</Td>
+                            <Td>{result?.mainet?.registered_directory || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID"></Trans>
                             </Td>
-                            <Td>{result[1]?.id || 'N/A'}</Td>
+                            <Td>{result?.mainet?.id || 'N/A'}</Td>
                           </Tr>
 
                           <Tr>
@@ -263,9 +264,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                               <Trans id="Country">Country</Trans>
                             </Td>
                             <Td>
-                              {getCountryName(result[1]?.country as IsoCountryCode)}
+                              {getCountryName(result?.mainet?.country as IsoCountryCode)}
                               {'  '}
-                              {countryCodeEmoji(result[1]?.country) || 'N/A'}
+                              {countryCodeEmoji(result?.mainet?.country) || 'N/A'}
                             </Td>
                           </Tr>
 
@@ -273,10 +274,11 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="TRISA Verification">TRISA Verification</Trans>
                             </Td>
-                            {result[1]?.verified_on ? (
+                            {result?.mainet?.verified_on ? (
                               <Td>
                                 {' '}
-                                <Trans id="VERIFIED ON">VERIFIED ON</Trans> {result[1]?.verified_on}{' '}
+                                <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
+                                {result?.mainet?.verified_on}{' '}
                               </Td>
                             ) : (
                               <Td>N/A</Td>

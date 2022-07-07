@@ -115,3 +115,47 @@ func (s *gdsTestSuite) TestMembersSummary() {
 	})
 	s.StatusError(err, codes.InvalidArgument, "since timestamp must be in the past")
 }
+
+func (s *gdsTestSuite) TestMembersDetails() {
+	s.LoadFullFixtures()
+	s.SetupMembers()
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client.
+	require.NoError(s.grpc.Connect())
+	defer s.grpc.Close()
+	client := members.NewTRISAMembersClient(s.grpc.Conn)
+	require.NotNil(client)
+
+	// Test with a non-existent VASP
+	_, err := client.Details(ctx, &members.DetailsRequest{
+		MemberId: "invalid",
+	})
+	s.StatusError(err, codes.NotFound, "requested VASP not found")
+
+	// Test with a valid VASP
+	charlie := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	name, err := charlie.Name()
+	require.NoError(err)
+	details := &members.VASPMember{
+		Id:                  charlie.Id,
+		RegisteredDirectory: charlie.RegisteredDirectory,
+		CommonName:          charlie.CommonName,
+		Endpoint:            charlie.TrisaEndpoint,
+		Name:                name,
+		Website:             charlie.Website,
+		Country:             charlie.Entity.CountryOfRegistration,
+		BusinessCategory:    charlie.BusinessCategory,
+		VaspCategories:      charlie.VaspCategories,
+		VerifiedOn:          charlie.VerifiedOn,
+		Status:              charlie.VerificationStatus,
+	}
+	out, err := client.Details(ctx, &members.DetailsRequest{
+		MemberId: charlie.Id,
+	})
+	require.NoError(err, "details request with VASP failed")
+	require.True(proto.Equal(details, out.MemberSummary), "VASP details mismatch")
+	require.True(proto.Equal(charlie.Entity, out.LegalPerson), "VASP legal person mismatch")
+	require.True(proto.Equal(charlie.Trixo, out.Trixo), "VASP trixo form mismatch")
+}
