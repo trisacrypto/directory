@@ -99,3 +99,11 @@ export const loadUserDataFromLocalStorage = () => {
     return undefined;
   }
 };
+
+export const clearStepperFromLocalStorage = () => {
+  localStorage.removeItem('trs_stepper');
+  localStorage.removeItem('certificateForm');
+  localStorage.removeItem('isTestNetSent');
+  localStorage.removeItem('isMainNetSent');
+  loadDefaultValueFromLocalStorage();
+};

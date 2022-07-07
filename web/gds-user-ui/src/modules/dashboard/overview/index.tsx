@@ -53,6 +53,12 @@ const Overview: React.FC = () => {
         if (getAnnouncements.status === 200) {
           setAnnouncements(getAnnouncements.data.announcements);
         }
+<<<<<<< HEAD
+=======
+
+        // console.log('[Overview] metrics', metrics);
+        // console.log('[announcements]', getAnnouncements);
+>>>>>>> 34f726c6 (Sc-4660: implement Reset form feature (#624))
       } catch (e: any) {
         if (e.response.status === 401) {
           navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
@@ -86,7 +92,6 @@ const Overview: React.FC = () => {
   return (
     <>
       <Heading marginBottom="30px">Overview</Heading>
-
       <NeedsAttention
         text={t`Start Certificate Registration`}
         buttonText={'Start'}
@@ -94,7 +99,7 @@ const Overview: React.FC = () => {
       />
       {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
 
-      {/* <Sentry.ErrorBoundary
+      <NetworkAnnouncements />      {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (
         <OverviewLoader />
