@@ -115,7 +115,7 @@ msgstr "Action"
 msgid "Add Address"
 msgstr "Add Address"
 
-#: src/components/OtherJurisdictions/index.tsx:61
+#: src/components/OtherJuridictions/index.tsx:61
 msgid "Add Jurisdiction"
 msgstr "Add Jurisdiction"
 
@@ -810,7 +810,7 @@ msgstr "Name, Address, Country, National Identifier"
 msgid "National Identification"
 msgstr "National Identification"
 
-#: src/components/OtherJurisdictions/index.tsx:40
+#: src/components/OtherJuridictions/index.tsx:40
 msgid "National Jurisdiction"
 msgstr "National Jurisdiction"
 
