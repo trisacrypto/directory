@@ -3,8 +3,10 @@ package bff_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
@@ -22,30 +24,33 @@ func (s *bffTestSuite) TestParallelAdminRequests() {
 
 	require := s.Require()
 
-	// RPC that returns error responses for both networks
+	// RPC that returns a status reply for both networks
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
-		if rep, err = client.ListCertificates(ctx, "invalid"); err != nil {
-			return nil, err
-		}
-		return rep, nil
-	}
-
-	// Test the case where the RPC returns two errors and flatten is true
-	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
-	require.Len(results, 0, "results was not flattened")
-	require.Len(errs, 2, "errors were not returned")
-	require.NotNil(errs[0], "expected testnet error to be not nil")
-	require.NotNil(errs[1], "expected mainnet error to be not nil")
-
-	// RPC that returns valid response for both networks
-	rpc = func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		if rep, err = client.Status(ctx); err != nil {
 			return nil, err
 		}
 		return rep, nil
 	}
 
+	// Handler that returns a healthy status reply
+	healthy := func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.StatusReply{
+			Status: "healthy",
+		})
+	}
+
+	// Test the case where the RPC returns two errors and flatten is true
+	require.NoError(s.testnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error"))
+	require.NoError(s.mainnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error"))
+	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
+	require.Len(results, 0, "results was not flattened")
+	require.Len(errs, 2, "errors were not returned")
+	require.NotNil(errs[0], "expected testnet error to be not nil")
+	require.NotNil(errs[1], "expected mainnet error to be not nil")
+
 	// Test the case where the RPC returns 2 results and flatten is true
+	require.NoError(s.testnet.admin.UseHandler(mock.StatusEP, healthy))
+	require.NoError(s.mainnet.admin.UseHandler(mock.StatusEP, healthy))
 	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
 	require.Len(results, 2, "results was not flattened")
 	require.Len(errs, 0, "errors were not flattened")

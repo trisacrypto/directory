@@ -13,7 +13,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 	Email       string            `json:"https://vaspdirectory.net/email"`
 	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
-	VASPs       map[string]string `json:"https://vaspdirectory.net/vasps"`
+	VASP        map[string]string `json:"https://vaspdirectory.net/vasp"`
 	Scope       string            `json:"scope"`
 	Permissions []string          `json:"permissions"`
 }

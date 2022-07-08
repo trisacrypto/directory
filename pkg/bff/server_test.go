@@ -110,10 +110,10 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(err, "could not mark configuration")
 
 	// Create the Admin mocks for testnet and mainnet
-	s.testnet.admin, err = mock.NewAdmin(s.trtlsock.Conn)
+	s.testnet.admin, err = mock.NewAdmin()
 	require.NoError(err, "could not create testnet admin mock")
 
-	s.mainnet.admin, err = mock.NewAdmin(s.trtlsock.Conn)
+	s.mainnet.admin, err = mock.NewAdmin()
 	require.NoError(err, "could not create mainnet admin mock")
 
 	// Create the GDS mocks for testnet and mainnet
