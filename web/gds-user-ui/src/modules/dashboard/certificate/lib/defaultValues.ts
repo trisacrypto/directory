@@ -16,7 +16,7 @@ export const getRegistrationDefaultValue = () => {
       geographic_addresses: [
         {
           address_type: '',
-          address_line: ['', '', ''],
+          address_line: [],
           country: ''
         }
       ],

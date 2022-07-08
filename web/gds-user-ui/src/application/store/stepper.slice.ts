@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { clear } from 'console';
 import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
 export type TStep = {
   status: string;
@@ -51,6 +52,18 @@ const stepperSlice: any = createSlice({
     },
     setSubmitStep: (state: any, { payload }: any) => {
       state.hasReachSubmitStep = payload.submitStep;
+    },
+    clearStepper: (state: any) => {
+      state.steps = [
+        {
+          key: 1,
+          status: 'progress',
+          data: {}
+        }
+      ];
+      state.currentStep = 1;
+      state.lastStep = null;
+      state.hasReachSubmitStep = false;
     }
   }
 });
@@ -63,5 +76,6 @@ export const {
   setLastStep,
   setStepFormValue,
   getCurrentFormValues,
-  setSubmitStep
+  setSubmitStep,
+  clearStepper
 } = stepperSlice.actions;

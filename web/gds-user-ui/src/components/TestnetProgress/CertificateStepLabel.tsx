@@ -143,7 +143,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(2)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
+                      fill: getLabel(2)?.color
                     }
                   }}
                 />
@@ -165,7 +165,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(3)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
+                      fill: getLabel(3)?.color
                     }
                   }}
                 />
@@ -187,7 +187,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(4)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
+                      fill: getLabel(4)?.color
                     }
                   }}
                 />
@@ -209,7 +209,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(5)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
+                      fill: getLabel(5)?.color
                     }
                   }}
                 />
@@ -231,7 +231,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(6)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
+                      fill: getLabel(6)?.color
                     }
                   }}
                 />

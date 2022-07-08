@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 )
 
@@ -89,12 +90,21 @@ func NewClaims() validator.CustomClaims {
 // downstream processing. If no JWT token is present in the header, this middleware will
 // mark the request as unauthenticated but it does not perform any authorization. If the
 // JWT token is invalid this middleware will return a 403 Forbidden response.
-//
 func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin.HandlerFunc, err error) {
 	// Parse the issuer url to ensure it is correctly configured.
 	var issuerURL *url.URL
 	if issuerURL, err = conf.IssuerURL(); err != nil {
 		return nil, err
+	}
+
+	// If we're in testing mode and no other options have been provided, connect to the
+	// default authtest server to validate local, test credentials
+	if conf.Testing && len(options) == 0 {
+		var ts *authtest.Server
+		if ts, err = authtest.Serve(); err != nil {
+			return nil, err
+		}
+		options = append(options, WithHTTPClient(ts.Client()))
 	}
 
 	// The caching provider fetches the JWKS (JSON Web Key Set) public keys used to

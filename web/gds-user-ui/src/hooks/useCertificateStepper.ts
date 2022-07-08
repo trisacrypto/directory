@@ -1,4 +1,4 @@
-import { getSteps, getLastStep } from './../application/store/selectors/stepper';
+import { getSteps, getLastStep, resetStepper } from './../application/store/selectors/stepper';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
@@ -8,9 +8,14 @@ import {
   setStepStatus,
   TStep,
   setStepFormValue,
-  setSubmitStep
+  setSubmitStep,
+  clearStepper
 } from 'application/store/stepper.slice';
-import { setStepperFromLocalStorage, addStepToLocalStorage } from 'utils/localStorageHelper';
+import {
+  setStepperFromLocalStorage,
+  addStepToLocalStorage,
+  clearStepperFromLocalStorage
+} from 'utils/localStorageHelper';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
@@ -115,10 +120,16 @@ const useCertificateStepper = () => {
     dispatch(setCurrentStep({ currentStep: step }));
   };
 
+  const resetForm = () => {
+    clearStepperFromLocalStorage();
+    dispatch(clearStepper());
+  };
+
   return {
     nextStep,
     previousStep,
-    jumpToStep
+    jumpToStep,
+    resetForm
   };
 };
 
