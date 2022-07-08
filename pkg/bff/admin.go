@@ -11,7 +11,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
-	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 )
 
@@ -19,9 +18,9 @@ import (
 // information for both testnet and mainnet. If testnetID or mainnetID are empty
 // strings, this will simply return a nil response for the corresponding network so
 // the caller can distinguish between a non registration and an error.
-func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testcerts *apiv2.ListCertificatesReply, maincerts *apiv2.ListCertificatesReply, err error) {
+func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testcerts *admin.ListCertificatesReply, maincerts *admin.ListCertificatesReply, err error) {
 	// Create the RPC which can do both testnet and mainnet calls
-	rpc := func(ctx context.Context, client apiv2.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
+	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
 		switch network {
 		case testnet:
@@ -53,7 +52,7 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 	}
 
 	if results[0] != nil {
-		if testcerts, ok = results[0].(*apiv2.ListCertificatesReply); !ok {
+		if testcerts, ok = results[0].(*admin.ListCertificatesReply); !ok {
 			return nil, nil, fmt.Errorf("unexpected testnet result type returned from parallel certificate requests: %T", results[0])
 		}
 	}
@@ -63,7 +62,7 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 	}
 
 	if results[1] != nil {
-		if maincerts, ok = results[1].(*apiv2.ListCertificatesReply); !ok {
+		if maincerts, ok = results[1].(*admin.ListCertificatesReply); !ok {
 			return nil, nil, fmt.Errorf("unexpected mainnet result type returned from parallel certificate requests: %T", results[1])
 		}
 	}
