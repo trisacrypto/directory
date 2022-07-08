@@ -16,7 +16,8 @@ const NotSavedSectionStatus: React.FC = () => {
           }
         }}
       />
-      <Trans id="(not saved)">(not saved)</Trans>
+      {'  '}
+      <Trans id="(not saved)"> (not saved)</Trans>
     </Box>
   );
 };

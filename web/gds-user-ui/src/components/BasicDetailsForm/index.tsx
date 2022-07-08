@@ -6,7 +6,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { useEffect } from 'react';
-
+import FormLayout from 'layouts/FormLayout';
 const BasicDetailsForm: React.FC = () => {
   const options = getBusinessCategoryOptions();
   const {
@@ -19,8 +19,8 @@ const BasicDetailsForm: React.FC = () => {
   useEffect(() => {}, [language]);
 
   return (
-    <>
-      <VStack spacing={4} w="100%">
+    <FormLayout>
+      <VStack spacing={4}>
         <InputFormControl
           controlId="organization_name"
           data-testid="organization_name"
@@ -91,7 +91,7 @@ const BasicDetailsForm: React.FC = () => {
           )}
         />
       </VStack>
-    </>
+    </FormLayout>
   );
 };
 

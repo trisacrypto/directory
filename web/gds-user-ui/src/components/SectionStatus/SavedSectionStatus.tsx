@@ -16,7 +16,7 @@ const SavedSectionStatus: React.FC = () => {
           }
         }}
       />{' '}
-      <Trans id="(Saved)">(Saved)</Trans>
+      <Trans id="(Saved)"> (Saved)</Trans>
     </Box>
   );
 };

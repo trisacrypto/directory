@@ -8,21 +8,12 @@ import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 
 const BasicDetails: React.FC = (props) => {
-  console.log('[BasicDetails rendered]');
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
 
   return (
-    <Stack
-      spacing={5}
-      w="100%"
-      paddingX="39px"
-      paddingY="27px"
-      border="3px solid #E5EDF1"
-      mt="2rem"
-      bg={'white'}
-      borderRadius="md">
+    <Stack spacing={7} mt="2rem">
       <HStack>
         <Heading size="md">
           <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>

@@ -31,7 +31,6 @@ import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelpe
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
 const Overview: React.FC = () => {
-  console.log('[OverviewLayout]');
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -53,12 +52,9 @@ const Overview: React.FC = () => {
         if (getAnnouncements.status === 200) {
           setAnnouncements(getAnnouncements.data.announcements);
         }
-<<<<<<< HEAD
-=======
 
         // console.log('[Overview] metrics', metrics);
         // console.log('[announcements]', getAnnouncements);
->>>>>>> 34f726c6 (Sc-4660: implement Reset form feature (#624))
       } catch (e: any) {
         if (e.response.status === 401) {
           navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
@@ -98,8 +94,8 @@ const Overview: React.FC = () => {
         onClick={() => navigate('/dashboard/certificate/registration')}
       />
       {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
-
-      <NetworkAnnouncements />      {/* <Sentry.ErrorBoundary
+      <NetworkAnnouncements />{' '}
+      {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (
         <OverviewLoader />
