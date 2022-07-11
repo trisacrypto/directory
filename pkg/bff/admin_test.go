@@ -44,7 +44,7 @@ func (s *bffTestSuite) TestCertificates() {
 	claims.VASPs["mainnet"] = authtest.MainNetVASP
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 
-	// Test an error is returned when only testnet returns an error
+	// Test error message is populated when only testnet returns an error
 	s.testnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve testnet certificates")
 	s.mainnet.admin.UseHandler(mock.ListCertificatesEP, func(c *gin.Context) {
 		c.JSON(http.StatusOK, &admin.ListCertificatesReply{
@@ -52,12 +52,13 @@ func (s *bffTestSuite) TestCertificates() {
 		})
 	})
 	reply, err := s.client.Certificates(context.TODO())
+	require.NoError(err, "expected no error when only testnet returns an error")
 	require.Empty(reply.TestNet)
 	require.Empty(reply.MainNet)
-	require.Equal("500 Internal Server Error", reply.Error.TestNet, "expected error when testnet returns an error")
+	require.Equal("500 Internal Server Error", reply.Error.TestNet, "expected testnet error message")
 	require.Empty(reply.Error.MainNet, "expected no error when mainnet returns a valid response")
 
-	// Test an error is returned when only mainnet returns an error
+	// Test error message is populated when only mainnet returns an error
 	s.testnet.admin.UseHandler(mock.ListCertificatesEP, func(c *gin.Context) {
 		c.JSON(http.StatusOK, &admin.ListCertificatesReply{
 			Certificates: []admin.Certificate{},
@@ -65,9 +66,10 @@ func (s *bffTestSuite) TestCertificates() {
 	})
 	s.mainnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve mainnet certificates")
 	reply, err = s.client.Certificates(context.TODO())
+	require.NoError(err, "expected no error when only mainnet returns an error")
 	require.Empty(reply.TestNet)
 	require.Empty(reply.MainNet)
-	require.Equal("500 Internal Server Error", reply.Error.MainNet, "expected error when mainnet returns an error")
+	require.Equal("500 Internal Server Error", reply.Error.MainNet, "expected mainnet error message")
 	require.Empty(reply.Error.TestNet, "expected no error when testnet returns a valid response")
 
 	// Test empty results are returned even if there is no mainnet registration
