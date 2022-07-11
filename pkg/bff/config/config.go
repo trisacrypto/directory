@@ -68,7 +68,6 @@ type AdminConfig struct {
 	// BFF uses these parameters to sign its own JWT tokens.
 	Audience  string            `split_words:"true"`
 	TokenKeys map[string]string `split_words:"true" required:"true"`
-	Testing   bool              `split_words:"true" default:"false"`
 }
 
 // MembersConfig is a configuration for connecting to a members service.

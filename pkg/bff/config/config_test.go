@@ -26,7 +26,6 @@ var testEnv = map[string]string{
 	"GDS_BFF_AUTH0_TESTING":                  "true",
 	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":         "localhost:8444",
 	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
-	"GDS_BFF_TESTNET_ADMIN_TESTING":          "true",
 	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":     "localhost:8443",
 	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":      "5s",
@@ -37,7 +36,6 @@ var testEnv = map[string]string{
 	"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/testnet/pool.zip",
 	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":         "localhost:9444",
 	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
-	"GDS_BFF_MAINNET_ADMIN_TESTING":          "true",
 	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":     "true",
 	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":     "localhost:8444",
 	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":      "3s",
@@ -97,7 +95,6 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 10*time.Minute, conf.Auth0.ProviderCache)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_ADMIN_ENDPOINT"], conf.TestNet.Admin.Endpoint)
 	require.Equal(t, tokenKeys, conf.TestNet.Admin.TokenKeys)
-	require.True(t, conf.TestNet.Admin.Testing)
 	require.True(t, conf.TestNet.Directory.Insecure)
 	require.True(t, conf.TestNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_DIRECTORY_ENDPOINT"], conf.TestNet.Directory.Endpoint)
@@ -108,7 +105,6 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH"], conf.TestNet.Members.MTLS.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_ADMIN_ENDPOINT"], conf.MainNet.Admin.Endpoint)
 	require.Equal(t, tokenKeys, conf.MainNet.Admin.TokenKeys)
-	require.True(t, conf.MainNet.Admin.Testing)
 	require.True(t, conf.MainNet.Directory.Insecure)
 	require.True(t, conf.MainNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_DIRECTORY_ENDPOINT"], conf.MainNet.Directory.Endpoint)
