@@ -135,6 +135,7 @@ type AnnouncementsReply struct {
 
 // CertificatesReply is returned on certificates requests.
 type CertificatesReply struct {
+	Error   NetworkError  `json:"network_error,omitempty"`
 	TestNet []Certificate `json:"testnet"`
 	MainNet []Certificate `json:"mainnet"`
 }
@@ -146,4 +147,13 @@ type Certificate struct {
 	ExpiresAt    string                 `json:"expires_at"`
 	Revoked      bool                   `json:"revoked"`
 	Details      map[string]interface{} `json:"details"`
+}
+
+// NetworkError is populated when the BFF receives an error from a network endpoint,
+// containing an error string for each network that errored. This allows the client to
+// distinguish between network errors and BFF errors and determine which network the
+// errors originated from.
+type NetworkError struct {
+	TestNet string `json:"testnet,omitempty"`
+	MainNet string `json:"mainnet,omitempty"`
 }

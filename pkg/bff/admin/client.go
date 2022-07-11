@@ -44,6 +44,16 @@ func NewCredentials(tokenKeys map[string]string, audience string) (_ admin.Crede
 	return creds, nil
 }
 
+// NewCredentialsFromTokens creates a new Credentials object from a token manager for
+// testing purposes.
+func NewCredentialsFromTokens(tm *tokens.TokenManager) (_ admin.Credentials, err error) {
+	creds := &Credentials{
+		tm: tm,
+	}
+
+	return creds, nil
+}
+
 // Credentials implements the admin.Credentials interface to provide access tokens to
 // authenticated requests.
 type Credentials struct {

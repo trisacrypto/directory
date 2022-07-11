@@ -12,7 +12,7 @@ func TestAppDataHelpers(t *testing.T) {
 	// Create a valid appdata data structure
 	appdata := map[string]interface{}{
 		"orgid": "a2de6ede-1706-4746-8e85-d85a5fbc203e",
-		"vasp": map[string]string{
+		"vasps": map[string]string{
 			"testnet": "c87df2af-93aa-4281-996e-1c13bcd731d0",
 			"mainnet": "9c84beb3-dcad-4e85-be55-2378fd226123",
 		},

@@ -39,6 +39,7 @@ type bffTestSuite struct {
 }
 
 type mockNetwork struct {
+	admin   *mock.Admin
 	gds     *mock.GDS
 	members *mock.Members
 }
@@ -108,6 +109,13 @@ func (s *bffTestSuite) SetupSuite() {
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
 
+	// Create the Admin mocks for testnet and mainnet
+	s.testnet.admin, err = mock.NewAdmin()
+	require.NoError(err, "could not create testnet admin mock")
+
+	s.mainnet.admin, err = mock.NewAdmin()
+	require.NoError(err, "could not create mainnet admin mock")
+
 	// Create the GDS mocks for testnet and mainnet
 	s.testnet.gds, err = mock.NewGDS(conf.TestNet.Directory)
 	require.NoError(err, "could not create testnet mock")
@@ -125,7 +133,7 @@ func (s *bffTestSuite) SetupSuite() {
 	s.bff, err = bff.New(conf)
 	require.NoError(err, "could not create the bff")
 
-	// Create the mock testnet client
+	// Create the mock testnet clients
 	testnetClient := &bff.GDSClient{}
 	require.NoError(testnetClient.ConnectGDS(conf.TestNet.Directory, s.testnet.gds.DialOpts()...), "could not connect to testnet GDS")
 	require.NoError(testnetClient.ConnectMembers(conf.TestNet.Members, s.testnet.members.DialOpts()...), "could not connect to testnet members")
@@ -136,6 +144,7 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(mainnetClient.ConnectMembers(conf.MainNet.Members, s.mainnet.members.DialOpts()...), "could not connect to mainnet members")
 
 	// Add the mock clients to the mock
+	s.bff.SetAdminClients(s.testnet.admin.Client(), s.mainnet.admin.Client())
 	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
 	// Direct connect the BFF server to the database

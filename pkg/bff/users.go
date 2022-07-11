@@ -16,7 +16,7 @@ const (
 	DefaultRole        = "Organization Collaborator"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
-	VASPKey            = "vasp"
+	VASPsKey           = "vasps"
 )
 
 // Login performs post-authentication checks and ensures that the user has the proper
@@ -104,7 +104,7 @@ func (s *Server) Login(c *gin.Context) {
 
 		// Ensure the VASP record is correct for the user
 		if vasps, ok := GetVASPs(user.AppMetadata); !ok || !MapEqual(vasps, directory) {
-			user.AppMetadata[VASPKey] = directory
+			user.AppMetadata[VASPsKey] = directory
 			if err = s.auth0.User.Update(*user.ID, user); err != nil {
 				log.Error().Err(err).Msg("could not update user app_metadata")
 				c.JSON(http.StatusInternalServerError, "could not complete user login")
@@ -155,7 +155,7 @@ func GetOrgID(appdata map[string]interface{}) (orgID string, ok bool) {
 
 func GetVASPs(appdata map[string]interface{}) (vasps map[string]string, ok bool) {
 	var val interface{}
-	if val, ok = appdata[VASPKey]; !ok {
+	if val, ok = appdata[VASPsKey]; !ok {
 		return nil, false
 	}
 
