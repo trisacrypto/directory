@@ -34,7 +34,7 @@ type Claims struct {
 	Scope       string            `json:"scope"`
 	Permissions []string          `json:"permissions"`
 	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
-	VASP        map[string]string `json:"https://vaspdirectory.net/vasp"`
+	VASPs       map[string]string `json:"https://vaspdirectory.net/vasps"`
 	Email       string            `json:"https://vaspdirectory.net/email"`
 }
 

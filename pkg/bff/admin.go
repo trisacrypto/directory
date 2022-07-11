@@ -18,7 +18,7 @@ import (
 // information for both testnet and mainnet. If testnetID or mainnetID are empty
 // strings, this will simply return a nil response for the corresponding network so
 // the caller can distinguish between a non registration and an error.
-func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testcerts *admin.ListCertificatesReply, maincerts *admin.ListCertificatesReply, err error) {
+func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testnetCerts *admin.ListCertificatesReply, mainnetCerts *admin.ListCertificatesReply, testnetErr, mainnetErr error) {
 	// Create the RPC which can do both testnet and mainnet calls
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
@@ -42,32 +42,29 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 	// Perform the parallel requests
 	results, errs := s.ParallelAdminRequests(ctx, rpc, false)
 	if len(errs) != 2 || len(results) != 2 {
-		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
+		err := fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
+		return nil, nil, err, err
 	}
 
 	// Parse the results
 	var ok bool
 	if errs[0] != nil {
-		return nil, nil, errs[0]
-	}
-
-	if results[0] != nil {
-		if testcerts, ok = results[0].(*admin.ListCertificatesReply); !ok {
-			return nil, nil, fmt.Errorf("unexpected testnet result type returned from parallel certificate requests: %T", results[0])
+		testnetErr = errs[0]
+	} else if results[0] != nil {
+		if testnetCerts, ok = results[0].(*admin.ListCertificatesReply); !ok {
+			testnetErr = fmt.Errorf("unexpected testnet result type returned from parallel certificate requests: %T", results[0])
 		}
 	}
 
 	if errs[1] != nil {
-		return nil, nil, errs[1]
-	}
-
-	if results[1] != nil {
-		if maincerts, ok = results[1].(*admin.ListCertificatesReply); !ok {
-			return nil, nil, fmt.Errorf("unexpected mainnet result type returned from parallel certificate requests: %T", results[1])
+		mainnetErr = errs[1]
+	} else if results[1] != nil {
+		if mainnetCerts, ok = results[1].(*admin.ListCertificatesReply); !ok {
+			mainnetErr = fmt.Errorf("unexpected mainnet result type returned from parallel certificate requests: %T", results[1])
 		}
 	}
 
-	return testcerts, maincerts, nil
+	return testnetCerts, mainnetCerts, testnetErr, mainnetErr
 }
 
 // Certificates returns the list of certificates for the authenticated user.
@@ -83,25 +80,26 @@ func (s *Server) Certificates(c *gin.Context) {
 	}
 
 	// Extract the VASP IDs from the claims
-	testnetID := claims.VASP[testnet]
-	mainnetID := claims.VASP[mainnet]
+	// Note that if testnet or mainnet are absent from the VASPs map, the ID will
+	// default to an empty string, and GetCertificates will return nil for that network
+	// instead of an error.
+	testnetID := claims.VASPs[testnet]
+	mainnetID := claims.VASPs[mainnet]
 
 	// Get the certificate replies from the admin APIs
-	var testnet, mainnet *admin.ListCertificatesReply
-	if testnet, mainnet, err = s.GetCertificates(c.Request.Context(), testnetID, mainnetID); err != nil {
-		log.Error().Err(err).Msg("unable to get certificates from the admin APIs")
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
+	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(c.Request.Context(), testnetID, mainnetID)
 
 	// Construct the response
 	out := &api.CertificatesReply{
+		Error:   api.NetworkError{},
 		TestNet: make([]api.Certificate, 0),
 		MainNet: make([]api.Certificate, 0),
 	}
 
 	// Populate the testnet response
-	if testnet != nil {
+	if testnetErr != nil {
+		out.Error.TestNet = testnetErr.Error()
+	} else if testnet != nil {
 		for _, cert := range testnet.Certificates {
 			out.TestNet = append(out.TestNet, api.Certificate{
 				SerialNumber: cert.SerialNumber,
@@ -114,7 +112,9 @@ func (s *Server) Certificates(c *gin.Context) {
 	}
 
 	// Populate the mainnet response
-	if mainnet != nil {
+	if mainnetErr != nil {
+		out.Error.MainNet = mainnetErr.Error()
+	} else if mainnet != nil {
 		for _, cert := range mainnet.Certificates {
 			out.MainNet = append(out.MainNet, api.Certificate{
 				SerialNumber: cert.SerialNumber,

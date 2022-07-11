@@ -143,7 +143,7 @@ func (s *Server) NewToken(permissions ...string) (tks string, err error) {
 		},
 		Email: Email,
 		OrgID: OrgID,
-		VASP: map[string]string{
+		VASPs: map[string]string{
 			"testnet": TestNetVASP,
 			"mainnet": MainNetVASP,
 		},

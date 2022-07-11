@@ -19,15 +19,20 @@ import (
 
 // New creates a new admin.v2 API client from the provided http.Client. If no http
 // Client is provided, a defaul one is created.
-func New(endpoint string, creds Credentials, client *http.Client) (_ DirectoryAdministrationClient, err error) {
+func New(endpoint string, creds Credentials, opts ...ClientOption) (_ DirectoryAdministrationClient, err error) {
 	c := &APIv2{
 		creds: creds,
 	}
 
-	if client != nil {
-		// This enables testing with an httptest.server
-		c.client = client
-	} else {
+	// Apply options
+	for _, opt := range opts {
+		if err = opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// If a client hasn't been specified, create a default one
+	if c.client == nil {
 		c.client = &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
-	"github.com/trisacrypto/directory/pkg/bff/admin"
+	"github.com/trisacrypto/directory/pkg/bff/admin/mock"
 	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 )
@@ -34,7 +34,7 @@ func NewAdmin() (a *Admin, err error) {
 	a.setupHandlers()
 
 	a.srv = httptest.NewTLSServer(a.router)
-	if a.client, err = admin.NewMock(a.tokens, a.srv); err != nil {
+	if a.client, err = mock.New(a.tokens, a.srv); err != nil {
 		return nil, err
 	}
 
@@ -72,21 +72,17 @@ func (a *Admin) UseFixture(endpoint, path string) (err error) {
 		if err = json.Unmarshal(data, out); err != nil {
 			return fmt.Errorf("could not unmarshal fixture data: %s", err)
 		}
-		if err = a.handle(endpoint, func(c *gin.Context) {
+		a.handle(endpoint, func(c *gin.Context) {
 			c.JSON(http.StatusOK, out)
-		}); err != nil {
-			return fmt.Errorf("could not handle fixture data: %s", err)
-		}
+		})
 	case ListCertificatesEP:
 		out := &apiv2.ListCertificatesReply{}
 		if err = json.Unmarshal(data, out); err != nil {
 			return fmt.Errorf("could not unmarshal fixture data: %s", err)
 		}
-		if err = a.handle(endpoint, func(c *gin.Context) {
+		a.handle(endpoint, func(c *gin.Context) {
 			c.JSON(http.StatusOK, out)
-		}); err != nil {
-			return fmt.Errorf("could not set handler: %s", err)
-		}
+		})
 	default:
 		return fmt.Errorf("unsupported endpoint: %s", endpoint)
 	}
@@ -95,25 +91,24 @@ func (a *Admin) UseFixture(endpoint, path string) (err error) {
 }
 
 // UseError allows tests to specify an HTTP error for the response.
-func (a *Admin) UseError(endpoint string, code int, msg string) (err error) {
-	return a.handle(endpoint, func(c *gin.Context) {
+func (a *Admin) UseError(endpoint string, code int, msg string) {
+	a.handle(endpoint, func(c *gin.Context) {
 		c.JSON(code, msg)
 	})
 }
 
 // UseHandler allows tests to specify a custom handler for the endpoint.
-func (a *Admin) UseHandler(endpoint string, handler gin.HandlerFunc) (err error) {
-	return a.handle(endpoint, handler)
+func (a *Admin) UseHandler(endpoint string, handler gin.HandlerFunc) {
+	a.handle(endpoint, handler)
 }
 
 // handle is a helper function that adds a handler to the handlers map and
 // returns that handler function when the endpoint is called.
-func (a *Admin) handle(endpoint string, handler gin.HandlerFunc) error {
+func (a *Admin) handle(endpoint string, handler gin.HandlerFunc) {
 	if _, ok := a.handlers[endpoint]; !ok {
-		return fmt.Errorf("unhandled endpoint %s", endpoint)
+		panic(fmt.Sprintf("endpoint %s not initialized", endpoint))
 	}
 	a.handlers[endpoint] = handler
-	return nil
 }
 
 // initHandler initializes a handler for the given endpoint on the gin router with the
@@ -122,14 +117,12 @@ func (a *Admin) handle(endpoint string, handler gin.HandlerFunc) error {
 // be called once for each endpoint to avoid a gin panic. UseFixture, UseError, or
 // UseHandler should be used to configure different endpoint responses from the tests.
 func (a *Admin) initHandler(endpoint, method, path string, middleware ...gin.HandlerFunc) {
-	var handlers []gin.HandlerFunc
+	// Copy any provided middleware into the handlers slice
+	handlers := make([]gin.HandlerFunc, len(middleware), len(middleware)+1)
+	copy(handlers, middleware)
 
 	a.handlers[endpoint] = func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{})
-	}
-
-	if len(middleware) > 0 {
-		handlers = append(handlers, middleware...)
 	}
 
 	handlerFunc := func(c *gin.Context) {

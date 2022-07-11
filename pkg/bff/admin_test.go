@@ -26,7 +26,7 @@ func (s *bffTestSuite) TestCertificates() {
 	claims := &authtest.Claims{
 		Email:       "leopold.wentzel@gmail.com",
 		Permissions: []string{"read:nothing"},
-		VASP:        map[string]string{},
+		VASPs:       map[string]string{},
 	}
 
 	// Endpoint must be authenticated
@@ -40,35 +40,47 @@ func (s *bffTestSuite) TestCertificates() {
 
 	// Set valid credentials for the remainder of the tests
 	claims.Permissions = []string{"read:vasp"}
-	claims.VASP["testnet"] = authtest.TestNetVASP
-	claims.VASP["mainnet"] = authtest.MainNetVASP
+	claims.VASPs["testnet"] = authtest.TestNetVASP
+	claims.VASPs["mainnet"] = authtest.MainNetVASP
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 
-	// Test an error is returned when testnet returns an error
-	require.NoError(s.testnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve testnet certificates"))
-	_, err = s.client.Certificates(context.TODO())
-	require.EqualError(err, "500 Internal Server Error", "expected error when testnet returns an error")
-
-	// Test an error is returned when mainnet returns an error
-	require.NoError(s.testnet.admin.UseHandler(mock.ListCertificatesEP, func(c *gin.Context) {
+	// Test an error is returned when only testnet returns an error
+	s.testnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve testnet certificates")
+	s.mainnet.admin.UseHandler(mock.ListCertificatesEP, func(c *gin.Context) {
 		c.JSON(http.StatusOK, &admin.ListCertificatesReply{
 			Certificates: []admin.Certificate{},
 		})
-	}))
-	require.NoError(s.mainnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve mainnet certificates"))
-	_, err = s.client.Certificates(context.TODO())
-	require.EqualError(err, "500 Internal Server Error", "expected error when mainnet returns an error")
+	})
+	reply, err := s.client.Certificates(context.TODO())
+	require.Empty(reply.TestNet)
+	require.Empty(reply.MainNet)
+	require.Equal("500 Internal Server Error", reply.Error.TestNet, "expected error when testnet returns an error")
+	require.Empty(reply.Error.MainNet, "expected no error when mainnet returns a valid response")
+
+	// Test an error is returned when only mainnet returns an error
+	s.testnet.admin.UseHandler(mock.ListCertificatesEP, func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.ListCertificatesReply{
+			Certificates: []admin.Certificate{},
+		})
+	})
+	s.mainnet.admin.UseError(mock.ListCertificatesEP, http.StatusInternalServerError, "could not retrieve mainnet certificates")
+	reply, err = s.client.Certificates(context.TODO())
+	require.Empty(reply.TestNet)
+	require.Empty(reply.MainNet)
+	require.Equal("500 Internal Server Error", reply.Error.MainNet, "expected error when mainnet returns an error")
+	require.Empty(reply.Error.TestNet, "expected no error when testnet returns a valid response")
 
 	// Test empty results are returned even if there is no mainnet registration
-	delete(claims.VASP, "mainnet")
+	delete(claims.VASPs, "mainnet")
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
-	reply, err := s.client.Certificates(context.TODO())
+	reply, err = s.client.Certificates(context.TODO())
 	require.NoError(err, "could not retrieve certificates")
 	require.Empty(reply.TestNet, "expected no testnet certificates")
 	require.Empty(reply.MainNet, "expected no mainnet certificates")
+	require.Empty(reply.Error, "expected no errors")
 
 	// Test certificates are returned from both testnet and mainnet
-	claims.VASP["mainnet"] = authtest.MainNetVASP
+	claims.VASPs["mainnet"] = authtest.MainNetVASP
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 	s.testnet.admin.UseFixture(mock.ListCertificatesEP, filepath.Join("testdata", "testnet", "certificates_reply.json"))
 	s.mainnet.admin.UseFixture(mock.ListCertificatesEP, filepath.Join("testdata", "mainnet", "certificates_reply.json"))
@@ -76,6 +88,7 @@ func (s *bffTestSuite) TestCertificates() {
 	require.NoError(err, "could not retrieve certificates")
 	require.Len(reply.TestNet, len(testnetCerts.Certificates), "wrong number of testnet certificates")
 	require.Len(reply.MainNet, len(mainnetCerts.Certificates), "wrong number of mainnet certificates")
+	require.Empty(reply.Error, "expected no errors")
 
 	// Verify the testnet certificate fields
 	expected := testnetCerts.Certificates[0]

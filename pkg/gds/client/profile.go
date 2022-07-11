@@ -160,7 +160,7 @@ func (p *DirectoryProfile) Connect() (_ api.TRISADirectoryClient, err error) {
 // Connect to the GDS Admin API and return an admin client
 func (p *AdminProfile) Connect() (client admin.DirectoryAdministrationClient, err error) {
 	// Connect the admin client
-	if client, err = admin.New(p.Endpoint, p, nil); err != nil {
+	if client, err = admin.New(p.Endpoint, p); err != nil {
 		return nil, err
 	}
 	return client, nil

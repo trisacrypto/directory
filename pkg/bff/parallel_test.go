@@ -40,8 +40,8 @@ func (s *bffTestSuite) TestParallelAdminRequests() {
 	}
 
 	// Test the case where the RPC returns two errors and flatten is true
-	require.NoError(s.testnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error"))
-	require.NoError(s.mainnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error"))
+	s.testnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error")
+	s.mainnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error")
 	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
 	require.Len(results, 0, "results was not flattened")
 	require.Len(errs, 2, "errors were not returned")
@@ -49,8 +49,8 @@ func (s *bffTestSuite) TestParallelAdminRequests() {
 	require.NotNil(errs[1], "expected mainnet error to be not nil")
 
 	// Test the case where the RPC returns 2 results and flatten is true
-	require.NoError(s.testnet.admin.UseHandler(mock.StatusEP, healthy))
-	require.NoError(s.mainnet.admin.UseHandler(mock.StatusEP, healthy))
+	s.testnet.admin.UseHandler(mock.StatusEP, healthy)
+	s.mainnet.admin.UseHandler(mock.StatusEP, healthy)
 	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
 	require.Len(results, 2, "results was not flattened")
 	require.Len(errs, 0, "errors were not flattened")
