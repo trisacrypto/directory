@@ -80,7 +80,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	}
 
 	// Extract the VASP IDs from the claims
-	// Note that if testnet or mainnet are absent from the VASPs map, the ID will
+	// Note that if testnet or mainnet are absent from the VASPs struct, the ID will
 	// default to an empty string, and GetCertificates will return nil for that network
 	// instead of an error.
 	testnetID := claims.VASPs.TestNet
