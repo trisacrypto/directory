@@ -83,8 +83,8 @@ func (s *Server) Certificates(c *gin.Context) {
 	// Note that if testnet or mainnet are absent from the VASPs map, the ID will
 	// default to an empty string, and GetCertificates will return nil for that network
 	// instead of an error.
-	testnetID := claims.VASPs[testnet]
-	mainnetID := claims.VASPs[mainnet]
+	testnetID := claims.VASPs.TestNet
+	mainnetID := claims.VASPs.MainNet
 
 	// Get the certificate replies from the admin APIs
 	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(c.Request.Context(), testnetID, mainnetID)
