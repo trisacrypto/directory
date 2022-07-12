@@ -73,8 +73,8 @@ func (s *Server) Overview(c *gin.Context) {
 	}
 
 	// Extract the VASP IDs from the claims
-	testnetID := claims.VASPs[testnet]
-	mainnetID := claims.VASPs[mainnet]
+	testnetID := claims.VASPs.TestNet
+	mainnetID := claims.VASPs.MainNet
 
 	out := api.OverviewReply{
 		OrgID:   claims.OrgID,

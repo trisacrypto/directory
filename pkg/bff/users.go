@@ -68,7 +68,14 @@ func (s *Server) Login(c *gin.Context) {
 
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
-	if orgID, ok := GetOrgID(user.AppMetadata); !ok || orgID == "" {
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, "could not parse user app metadata")
+		return
+	}
+
+	if appdata.OrgID == "" {
 		// Create the organization
 		org, err := s.db.Organizations().Create(c.Request.Context())
 		if err != nil {
@@ -78,39 +85,29 @@ func (s *Server) Login(c *gin.Context) {
 		}
 
 		// Set the organization ID in the user app metadata
-		user.AppMetadata[OrgIDKey] = org.Id
-		if err = s.auth0.User.Update(*user.ID, user); err != nil {
-			log.Error().Err(err).Msg("could not update user app_metadata")
-			c.JSON(http.StatusInternalServerError, "could not complete user login")
-			return
-		}
+		appdata.OrgID = org.Id
 	} else {
 		// Get the organization for the specified user
-		org, err := s.db.Organizations().Retrieve(c.Request.Context(), orgID)
+		org, err := s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
 		if err != nil {
-			log.Error().Err(err).Msg("could not retrieve organization for user VASP verification")
+			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
 			return
-		}
-
-		// Create the actual VASP table
-		directory := make(map[string]string)
-		if org.Testnet != nil && org.Testnet.Id != "" {
-			directory[testnet] = org.Testnet.Id
-		}
-		if org.Mainnet != nil && org.Mainnet.Id != "" {
-			directory[mainnet] = org.Mainnet.Id
 		}
 
 		// Ensure the VASP record is correct for the user
-		if vasps, ok := GetVASPs(user.AppMetadata); !ok || !MapEqual(vasps, directory) {
-			user.AppMetadata[VASPsKey] = directory
-			if err = s.auth0.User.Update(*user.ID, user); err != nil {
-				log.Error().Err(err).Msg("could not update user app_metadata")
-				c.JSON(http.StatusInternalServerError, "could not complete user login")
-				return
-			}
+		if org.Testnet != nil && org.Testnet.Id != "" {
+			appdata.VASPs.TestNet = org.Testnet.Id
 		}
+		if org.Mainnet != nil && org.Mainnet.Id != "" {
+			appdata.VASPs.MainNet = org.Mainnet.Id
+		}
+	}
+
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
+		c.JSON(http.StatusInternalServerError, "could not complete user login")
+		return
 	}
 
 	// Protect the front-end by setting double cookie tokens for CSRF protection.
@@ -140,48 +137,19 @@ func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 	return nil, fmt.Errorf("could not find role %q in %d available roles", name, len(roles.Roles))
 }
 
-func GetOrgID(appdata map[string]interface{}) (orgID string, ok bool) {
-	var val interface{}
-	if val, ok = appdata[OrgIDKey]; !ok {
-		return "", false
+func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+	// Create a blank user with no data but the appdata
+	user := &management.User{}
+
+	// Send the updated user app_metadata back to auth0
+	if user.AppMetadata, err = appdata.Dump(); err != nil {
+		return err
 	}
 
-	if orgID, ok = val.(string); !ok {
-		return "", false
+	// Patch the user with the specified user ID
+	if err = s.auth0.User.Update(uid, user); err != nil {
+		return err
 	}
 
-	return orgID, true
-}
-
-func GetVASPs(appdata map[string]interface{}) (vasps map[string]string, ok bool) {
-	var val interface{}
-	if val, ok = appdata[VASPsKey]; !ok {
-		return nil, false
-	}
-
-	if vasps, ok = val.(map[string]string); !ok {
-		return nil, false
-	}
-
-	return vasps, true
-}
-
-func MapEqual(a, b map[string]string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for key, val := range a {
-		if alt, ok := b[key]; !ok || val != alt {
-			return false
-		}
-	}
-
-	for key, val := range b {
-		if alt, ok := a[key]; !ok || val != alt {
-			return false
-		}
-	}
-
-	return true
+	return nil
 }
