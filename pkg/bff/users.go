@@ -104,15 +104,8 @@ func (s *Server) Login(c *gin.Context) {
 		}
 	}
 
-	// Send the updated user app_metadata back to auth0
-	if user.AppMetadata, err = appdata.Dump(); err != nil {
-		log.Error().Err(err).Msg("could not serialize user app_metadata")
-		c.JSON(http.StatusInternalServerError, "could not complete user login")
-		return
-	}
-
-	if err = s.auth0.User.Update(*user.ID, user); err != nil {
-		log.Error().Err(err).Msg("could not update user app_metadata")
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
 		c.JSON(http.StatusInternalServerError, "could not complete user login")
 		return
 	}
@@ -142,4 +135,21 @@ func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 		}
 	}
 	return nil, fmt.Errorf("could not find role %q in %d available roles", name, len(roles.Roles))
+}
+
+func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+	// Create a blank user with no data but the appdata
+	user := &management.User{}
+
+	// Send the updated user app_metadata back to auth0
+	if user.AppMetadata, err = appdata.Dump(); err != nil {
+		return err
+	}
+
+	// Patch the user with the specified user ID
+	if err = s.auth0.User.Update(uid, user); err != nil {
+		return err
+	}
+
+	return nil
 }
