@@ -9,7 +9,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
@@ -67,6 +66,7 @@ func (s *bffTestSuite) TestGetSummaries() {
 	s.mainnet.members.OnSummary = errorSummary
 	testnet, mainnet, testnetErr, mainnetErr = s.bff.GetSummaries(context.TODO(), expectTestnet.MemberInfo.Id, expectMainnet.MemberInfo.Id)
 	require.NoError(testnetErr, "could not get testnet summary")
+	require.Error(mainnetErr, "expected mainnet error")
 	require.True(proto.Equal(expectTestnet, testnet), "testnet summaries did not match")
 	require.Nil(mainnet, "mainnet summary should be nil")
 
@@ -74,6 +74,7 @@ func (s *bffTestSuite) TestGetSummaries() {
 	s.testnet.members.OnSummary = errorSummary
 	s.mainnet.members.OnSummary = mainnetSummary
 	testnet, mainnet, testnetErr, mainnetErr = s.bff.GetSummaries(context.TODO(), expectTestnet.MemberInfo.Id, expectMainnet.MemberInfo.Id)
+	require.Error(testnetErr, "expected testnet error")
 	require.NoError(mainnetErr, "could not get mainnet summary")
 	require.True(proto.Equal(expectMainnet, mainnet), "mainnet summaries did not match")
 	require.Nil(testnet, "testnet summary should be nil")
@@ -181,7 +182,7 @@ func (s *bffTestSuite) TestOverview() {
 			NewMembers:         5,
 			MemberInfo: &members.VASPMember{
 				Id:      claims.VASPs["mainnet"],
-				Status:  models.VerificationState_SUBMITTED,
+				Status:  pb.VerificationState_SUBMITTED,
 				Country: "US",
 			},
 		}, nil
@@ -192,7 +193,7 @@ func (s *bffTestSuite) TestOverview() {
 	expected.MainNet.NewMembers = 5
 	expected.MainNet.MemberDetails = api.MemberDetails{
 		ID:          claims.VASPs["mainnet"],
-		Status:      models.VerificationState_SUBMITTED.String(),
+		Status:      pb.VerificationState_SUBMITTED.String(),
 		CountryCode: "US",
 	}
 	expected.Error.MainNet = ""
@@ -210,14 +211,14 @@ func (s *bffTestSuite) TestOverview() {
 			NewMembers:         3,
 			MemberInfo: &members.VASPMember{
 				Id:      claims.VASPs["testnet"],
-				Status:  models.VerificationState_VERIFIED,
+				Status:  pb.VerificationState_VERIFIED,
 				Country: "FR",
 			},
 		}, nil
 	}
 	expected.TestNet.MemberDetails = api.MemberDetails{
 		ID:          claims.VASPs["testnet"],
-		Status:      models.VerificationState_VERIFIED.String(),
+		Status:      pb.VerificationState_VERIFIED.String(),
 		CountryCode: "FR",
 	}
 	reply, err = s.client.Overview(context.TODO())
