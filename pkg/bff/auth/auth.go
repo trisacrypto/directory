@@ -31,11 +31,11 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 
 // Claims extracts custom data from the JWT token provided by Auth0
 type Claims struct {
-	Scope       string            `json:"scope"`
-	Permissions []string          `json:"permissions"`
-	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
-	VASP        map[string]string `json:"https://vaspdirectory.net/vasp"`
-	Email       string            `json:"https://vaspdirectory.net/email"`
+	Scope       string   `json:"scope"`
+	Permissions []string `json:"permissions"`
+	OrgID       string   `json:"https://vaspdirectory.net/orgid"`
+	VASPs       VASPs    `json:"https://vaspdirectory.net/vasps"`
+	Email       string   `json:"https://vaspdirectory.net/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.
