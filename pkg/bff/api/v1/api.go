@@ -104,6 +104,7 @@ type RegisterReply struct {
 
 // OverviewReply is returned on overview requests.
 type OverviewReply struct {
+	Error   NetworkError    `json:"error,omitempty"`
 	OrgID   string          `json:"org_id"`
 	TestNet NetworkOverview `json:"testnet"`
 	MainNet NetworkOverview `json:"mainnet"`

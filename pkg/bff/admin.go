@@ -18,7 +18,7 @@ import (
 // information for both testnet and mainnet. If testnetID or mainnetID are empty
 // strings, this will simply return a nil response for the corresponding network so
 // the caller can distinguish between a non registration and an error.
-func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testnetCerts *admin.ListCertificatesReply, mainnetCerts *admin.ListCertificatesReply, testnetErr, mainnetErr error) {
+func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID string) (testnetCerts, mainnetCerts *admin.ListCertificatesReply, testnetErr, mainnetErr error) {
 	// Create the RPC which can do both testnet and mainnet calls
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
