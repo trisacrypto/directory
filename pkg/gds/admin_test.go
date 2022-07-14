@@ -596,7 +596,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 
 // Test the RetrieveVASP endpoint.
 func (s *gdsTestSuite) TestRetrieveVASP() {
-	s.LoadSmallFixtures()
+	s.LoadFullFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -609,19 +609,19 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	rep := s.doRequest(a.RetrieveVASP, c, w, nil)
 	require.Equal(http.StatusNotFound, rep.StatusCode)
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	hotel := s.fixtures[vasps]["hotel"].(*pb.VASP)
 
 	// Retrieve a VASP that exists
-	request.path = "/v2/vasps/" + charlieID
+	request.path = "/v2/vasps/" + hotel.Id
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": hotel.Id,
 	}
 	actual := &admin.RetrieveVASPReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.RetrieveVASP, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	expected := &admin.RetrieveVASPReply{
-		Name:     "CharlieBank",
+		Name:     "Hotel Corp",
 		Traveler: false,
 		AuditLog: []map[string]interface{}{
 			{
@@ -629,19 +629,72 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 				"description":    "register request received",
 				"previous_state": pb.VerificationState_NO_VERIFICATION.String(),
 				"source":         "automated",
-				"timestamp":      "2021-08-31T12:36:27Z",
+				"timestamp":      "2021-06-17T11:12:23Z",
+			},
+			{
+				"current_state":  pb.VerificationState_EMAIL_VERIFIED.String(),
+				"description":    "completed email verification",
+				"previous_state": pb.VerificationState_SUBMITTED.String(),
+				"source":         "automated",
+				"timestamp":      "2021-06-21T14:34:49Z",
+			},
+			{
+				"current_state":  pb.VerificationState_PENDING_REVIEW.String(),
+				"description":    "review email sent",
+				"previous_state": pb.VerificationState_EMAIL_VERIFIED.String(),
+				"source":         "automated",
+				"timestamp":      "2021-07-01T20:59:04Z",
+			},
+			{
+				"current_state":  pb.VerificationState_REVIEWED.String(),
+				"description":    "registration request received",
+				"previous_state": pb.VerificationState_PENDING_REVIEW.String(),
+				"source":         "admin@rotational.io",
+				"timestamp":      "2021-08-10T21:37:14Z",
+			},
+			{
+				"current_state":  pb.VerificationState_ISSUING_CERTIFICATE.String(),
+				"description":    "issuing certificate",
+				"previous_state": pb.VerificationState_REVIEWED.String(),
+				"source":         "automated",
+				"timestamp":      "2021-08-25T18:03:15Z",
+			},
+			{
+				"current_state":  pb.VerificationState_VERIFIED.String(),
+				"description":    "certificate issued",
+				"previous_state": pb.VerificationState_ISSUING_CERTIFICATE.String(),
+				"source":         "automated",
+				"timestamp":      "2021-10-21T15:52:08Z",
 			},
 		},
 	}
 
 	actualVASP, err := remarshalProto(vasps, actual.VASP)
-	require.NoError(err, "could not remarshall actual VASP")
+	require.NoError(err, "could not remarshal actual VASP")
 
-	// RetrieveVASP removes the extra data from the VASP before returning it
-	s.CompareFixture(vasps, charlieID, actualVASP, true)
+	// RetrieveVASP removes the extra data and modifies the serial numbers before
+	// returning the VASP
+	s.CompareFixture(vasps, hotel.Id, actualVASP, true, true)
 
 	// Check the verified contacts
-	require.Len(actual.VerifiedContacts, 0)
+	require.Len(actual.VerifiedContacts, 2)
+
+	// Verify that the identity certificate serial number was converted to a capital hex encoded string
+	expectedSerial := fmt.Sprintf("%X", hotel.IdentityCertificate.SerialNumber)
+	actualSerial, ok := actual.VASP["identity_certificate"].(map[string]interface{})["serial_number"]
+	require.True(ok, "identity_certificate.serial_number not found in VASP json")
+	require.Equal(expectedSerial, actualSerial)
+
+	// Verify that the signing cerificate serial numbers were converted to capital hex encoded strings
+	actualCerts, ok := actual.VASP["signing_certificates"].([]interface{})
+	require.True(ok, "signing_certificates not found in VASP json")
+	require.Len(actualCerts, len(hotel.SigningCertificates))
+	for i, cert := range actualCerts {
+		actualSerial, ok := cert.(map[string]interface{})["serial_number"]
+		require.True(ok, "signing certificate serial number not found in VASP json")
+		expectedSerial := fmt.Sprintf("%X", hotel.SigningCertificates[i].SerialNumber)
+		require.Equal(expectedSerial, actualSerial)
+	}
 
 	// Compare the rest of the non-vasp results
 	actual.VASP = nil
