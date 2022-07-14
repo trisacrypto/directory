@@ -13,12 +13,12 @@ import {
   MenuItem,
   IconButton,
   MenuList,
-  VStack
+  VStack,
+  Button
 } from '@chakra-ui/react';
 import { BsThreeDots } from 'react-icons/bs';
 import FormLayout from 'layouts/FormLayout';
 import React from 'react';
-import FormButton from 'components/ui/FormButton';
 
 type Row = {
   id: string;
@@ -156,7 +156,7 @@ const CollaboratorsSection: React.FC = () => {
         </Tbody>
       </Table>
       <VStack align="center" w="100%">
-        <FormButton borderRadius={5}>Add Contact</FormButton>
+        <Button>Add Contact</Button>
       </VStack>
     </FormLayout>
   );
