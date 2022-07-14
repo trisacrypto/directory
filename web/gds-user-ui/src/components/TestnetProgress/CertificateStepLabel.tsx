@@ -9,7 +9,8 @@ import {
   Grid,
   Button,
   Tooltip,
-  Flex
+  Flex,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
@@ -43,6 +44,7 @@ type TStepLabel = {
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const textColor = useColorModeValue('#3C4257', '#F7F8FC');
 
   // this function need some clean up
   const getLabel = (step: number): TStepLabel | undefined => {
@@ -103,7 +105,6 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   return (
     <>
       <Stack
-        bg={'white'}
         boxShadow="0 24px 50px rgba(55,65, 81, 0.25) "
         borderColor={'#C1C9D2'}
         borderRadius={8}
@@ -116,7 +117,6 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
             <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
           </Heading>
         </Box>
-        {/* <Grid templateColumns="repeat(6, 1fr)" gap={2}> */}
         <Flex gap={2}>
           <Tooltip
             label={getLabel(1)?.hasError && t`Missing required element`}
@@ -139,7 +139,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   />
                 </Box>
                 <Text
-                  color={'#3C4257'}
+                  color={textColor}
                   fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                   fontSize={'sm'}
                   textAlign="center">
@@ -167,7 +167,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                color={'#3C4257'}
+                color={textColor}
                 fontSize={'sm'}
                 fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
                 textAlign="center">
@@ -193,7 +193,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                color={'#3C4257'}
+                color={textColor}
                 fontSize={'sm'}
                 fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
                 textAlign="center">
@@ -219,7 +219,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                color={'#3C4257'}
+                color={textColor}
                 fontSize={'sm'}
                 fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
                 textAlign="center">
@@ -245,7 +245,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                color={'#3C4257'}
+                color={textColor}
                 fontSize={'sm'}
                 fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
                 textAlign="center">
@@ -271,7 +271,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                color={'#3C4257'}
+                color={textColor}
                 fontSize={'sm'}
                 fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
                 textAlign="center">

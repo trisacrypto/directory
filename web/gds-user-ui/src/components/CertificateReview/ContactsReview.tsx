@@ -1,5 +1,16 @@
 import React, { useEffect } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
+import {
+  Stack,
+  Box,
+  Text,
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Button,
+  useColorModeValue
+} from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import { hasValue } from 'utils/utils';
@@ -15,6 +26,8 @@ const ContactsReview = (props: ContactsProps) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [contacts, setContacts] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
+
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const stepData = {
@@ -25,10 +38,9 @@ const ContactsReview = (props: ContactsProps) => {
 
   return (
     <Box
-      border="1px solid #DFE0EB"
+      border="2px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      color={'#252733'}
-      bg={'white'}
+      color={textColor}
       fontSize={18}
       p={5}
       px={5}>

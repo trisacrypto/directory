@@ -10,7 +10,8 @@ import {
   Th,
   Stack,
   Heading,
-  useColorModeValue
+  useColorModeValue,
+  useColorMode
 } from '@chakra-ui/react';
 import CertificateRegistrationRow from 'components/Tables/CertificateRegistrationRow';
 import Card from 'components/ui/Card';
@@ -56,6 +57,7 @@ const defaultRowData = [
 ];
 const CertificateRegistration = ({ data }: any) => {
   const textColor = useColorModeValue('#858585', 'white');
+
   return (
     <Card>
       <Stack p={4} mb={5}>
