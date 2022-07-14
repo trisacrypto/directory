@@ -1,4 +1,4 @@
-import { Box, Stack, Flex } from '@chakra-ui/react';
+import { Box, Flex, useColorModeValue } from '@chakra-ui/react';
 import useAuth from 'hooks/useAuth';
 type SimpleDashboardLayout = {
   children: React.ReactNode;
@@ -6,6 +6,8 @@ type SimpleDashboardLayout = {
 import DashboardLayout from './DashboardLayout';
 export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ children }) => {
   const { isUserAuthenticated } = useAuth();
+  const bg = useColorModeValue('#F7F8FC', 'gray.800');
+
   return (
     <>
       {!isUserAuthenticated ? (
@@ -13,7 +15,7 @@ export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ childre
           direction="column"
           align="center"
           maxW={'100%'}
-          bg={'#F7F8FC'}
+          bg={bg}
           px={58}
           py={10}
           fontFamily={'Open Sans'}

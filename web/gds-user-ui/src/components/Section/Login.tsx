@@ -61,9 +61,9 @@ const Login: React.FC<LoginProps> = (props) => {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>
-          <Heading fontSize={'xl'}>
+          <Text fontWeight="bold">
             <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
-          </Heading>
+          </Text>
         </Stack>
         <Stack align={'center'} justify={'center'} fontFamily={colors.font}>
           <Button

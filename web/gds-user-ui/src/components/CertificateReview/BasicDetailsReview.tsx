@@ -1,5 +1,17 @@
 import React, { useEffect } from 'react';
-import { Stack, Box, Heading, Table, Tbody, Tr, Td, Button, Tag, Link } from '@chakra-ui/react';
+import {
+  Stack,
+  Box,
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Button,
+  Tag,
+  Link,
+  useColorModeValue
+} from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
@@ -12,6 +24,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [basicDetail, setBasicDetail] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
@@ -21,15 +34,14 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       vasp_categories: getStepperData.vasp_categories,
       business_category: getStepperData.business_category
     };
-
+    // '#252733'
     setBasicDetail(stepData);
   }, [steps]);
   return (
     <Box
-      border="1px solid #DFE0EB"
+      border="2px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      bg={'white'}
-      color={'#252733'}
+      color={textColor}
       maxHeight={367}
       fontSize={18}
       p={5}
