@@ -30,7 +30,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
   }, [getCountryFromLegalAddress]);
 
   return (
-    <FormLayout spacing={4}>
+    <FormLayout spacing={5}>
       <Controller
         control={control}
         name="trixo.primary_national_jurisdiction"

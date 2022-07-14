@@ -1,7 +1,6 @@
 import { Box, Button, Heading, HStack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
-import FormButton from 'components/ui/FormButton';
 import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
@@ -58,9 +57,9 @@ const Addresses: React.FC = () => {
           );
         })}
         <Box>
-          <FormButton onClick={handleAddressClick} borderRadius="5px">
+          <Button onClick={handleAddressClick}>
             <Trans id="Add Address">Add Address</Trans>
-          </FormButton>
+          </Button>
         </Box>
       </VStack>
     </FormLayout>

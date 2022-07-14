@@ -9,13 +9,13 @@ const HomeButton: React.FC<HomeButtonProps & ButtonProps> = ({ link, ...props })
   return (
     <Button
       as={'a'}
+      role="group"
       href={link}
       {...props}
       backgroundColor={'transparent'}
       _hover={{ background: 'black', color: 'white' }}
-      _focus={{ background: 'red.100', color: 'red.500' }}
-      borderRadius={0}>
-      <Icon as={AiOutlineHome} fontSize={'24'} />
+      _focus={{ background: 'red.100', color: 'red.500' }}>
+      <Icon as={AiOutlineHome} fontSize={'24'} color="black" _groupHover={{ color: 'white' }} />
     </Button>
   );
 };
