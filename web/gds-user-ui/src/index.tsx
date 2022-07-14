@@ -6,15 +6,15 @@ import reportWebVitals from './reportWebVitals';
 import { ChakraProvider } from '@chakra-ui/react';
 import store from 'application/store';
 import { Provider } from 'react-redux';
-import customTheme from 'utils/theme';
 import initSentry from 'application/config/sentry';
+import theme from 'theme';
 
 initSentry();
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ChakraProvider theme={customTheme}>
+      <ChakraProvider theme={theme}>
         <App />
       </ChakraProvider>
     </Provider>

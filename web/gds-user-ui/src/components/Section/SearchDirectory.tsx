@@ -91,15 +91,13 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     <Input
                       size="md"
                       pr="4.5rem"
-                      type={'gray.100'}
+                      type="search"
                       isRequired
                       placeholder="Common name or VASP ID"
                       name="search"
                       onChange={(event) => setSearch(event.currentTarget.value)}
                     />
                     <Button
-                      h="2.5rem"
-                      size="sm"
                       isLoading={isLoading}
                       variant="outline"
                       type="submit"

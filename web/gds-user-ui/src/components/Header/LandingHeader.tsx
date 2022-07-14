@@ -75,18 +75,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               </MenuItem>
               <Stack>
                 <NavLink to={'/auth/login'}>
-                  <Button
-                    bg="#FF7A59"
-                    color="white"
-                    borderColor="white"
-                    pl={'1.5rem'}
-                    pr={'1.5rem'}
-                    py={'0.375rem'}
-                    maxWidth={'190px'}
-                    width="100%"
-                    borderRadius="2px"
-                    border="1px solid #fff"
-                    _hover={{ bg: '#FF7A77' }}>
+                  <Button variant="secondary">
                     <Trans id="Login">Login</Trans>
                   </Button>
                 </NavLink>

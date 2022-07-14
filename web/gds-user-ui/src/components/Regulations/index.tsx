@@ -1,10 +1,9 @@
-import { Grid, GridItem, VStack } from '@chakra-ui/react';
+import { Button, Grid, GridItem, VStack } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
-import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
-import { Control, useFieldArray, UseFormRegister, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 
 type RegulationsProps = {
   name: string;
@@ -31,9 +30,9 @@ const Regulations: React.FC<RegulationsProps> = ({ name }) => {
           </GridItem>
         </Grid>
       ))}
-      <FormButton onClick={() => append({ name: '' })} borderRadius={5}>
+      <Button onClick={() => append({ name: '' })} borderRadius={5}>
         <Trans id="Add Regulation">Add Regulation</Trans>
-      </FormButton>
+      </Button>
     </VStack>
   );
 };
