@@ -1,11 +1,11 @@
-import { Box, Text, Button } from '@chakra-ui/react';
+import { Box, Text, Button as CkButton } from '@chakra-ui/react';
 
-export default function Logo(props: any) {
+export default function Button(props: any) {
   return (
     <Box w="80%" pt={7}>
-      <Button w="full" colorScheme="red" variant="outline">
+      <CkButton w="full" colorScheme="red" variant="outline">
         Start trial
-      </Button>
+      </CkButton>
     </Box>
   );
 }

@@ -275,7 +275,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 fontSize={'sm'}
                 fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
                 textAlign="center">
-                6 <Trans id="Review & Submit">Review & Submit</Trans>
+                6 <Trans id="Review">Review</Trans>
               </Text>
             </Stack>
           </Stack>

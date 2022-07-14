@@ -1,6 +1,5 @@
-import { Box, Grid, GridItem, HStack } from '@chakra-ui/react';
+import { Box, Button, Grid, GridItem, HStack } from '@chakra-ui/react';
 import DeleteButton from 'components/ui/DeleteButton';
-import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
@@ -57,9 +56,9 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
         </HStack>
       ))}
 
-      <FormButton onClick={handleAddJuridictionClick} borderRadius={5}>
+      <Button onClick={handleAddJuridictionClick} borderRadius={5}>
         <Trans id="Add Jurisdiction">Add Jurisdiction</Trans>
-      </FormButton>
+      </Button>
     </>
   );
 };
