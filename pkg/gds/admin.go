@@ -222,7 +222,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
 			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
-			vasps.GET("/:vaspID/certificates", csrf, s.ListCertificates)
+			vasps.GET("/:vaspID/certificates", s.ListCertificates)
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)

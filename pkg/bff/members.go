@@ -4,14 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -161,6 +166,101 @@ func (s *Server) Overview(c *gin.Context) {
 				Status: pb.VerificationState_NO_VERIFICATION.String(),
 			}
 		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
+// permission and returns details about a VASP member.
+func (s *Server) MemberDetails(c *gin.Context) {
+	// Bind the parameters associated with the MemberDetails request
+	params := &api.MemberDetailsParams{}
+	if err := c.ShouldBindQuery(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Check that the required parameters are present
+	if params.ID == "" || params.Directory == "" {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("must provide vaspID and registered_directory in query parameters"))
+		return
+	}
+
+	// Validate the registered directory
+	params.Directory = strings.ToLower(params.Directory)
+	if params.Directory != trisatest && params.Directory != vaspdirectory {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
+	}
+
+	// Do the members request
+	log.Debug().Str("registered_directory", params.Directory).Msg("issuing members detail request")
+	req := &members.DetailsRequest{
+		MemberId: params.ID,
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	defer cancel()
+
+	var (
+		err error
+		rep *members.MemberDetails
+	)
+
+	switch params.Directory {
+	case trisatest:
+		rep, err = s.testnetGDS.Details(ctx, req)
+	case vaspdirectory:
+		rep, err = s.mainnetGDS.Details(ctx, req)
+	default:
+		log.Error().Str("registered_directory", params.Directory).Msg("unhandled directory")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	// Handle errors from the members endpoint
+	if err != nil {
+		serr, _ := status.FromError(err)
+		switch serr.Code() {
+		case codes.NotFound:
+			c.JSON(http.StatusNotFound, api.ErrorResponse(serr.Message()))
+		default:
+			log.Error().Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not retrieve member details")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(serr.Message()))
+		}
+		return
+	}
+
+	// Create the member details response
+	out := api.MemberDetailsReply{
+		Summary: rep.MemberSummary,
+	}
+
+	// Marshal the legal person details
+	if rep.LegalPerson == nil {
+		log.Error().Msg("did not receive legal person details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.LegalPerson, err = wire.Rewire(rep.LegalPerson); err != nil {
+		log.Error().Err(err).Msg("could not serialize legal person details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Marshal the Trixo form details
+	if rep.Trixo == nil {
+		log.Error().Msg("did not receive trixo form details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.Trixo, err = wire.Rewire(rep.Trixo); err != nil {
+		log.Error().Err(err).Msg("could not serialize trixo form details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
 	}
 
 	c.JSON(http.StatusOK, out)

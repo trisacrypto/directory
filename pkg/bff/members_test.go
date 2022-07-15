@@ -3,12 +3,16 @@ package bff_test
 import (
 	"context"
 	"errors"
+	"path/filepath"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
@@ -105,7 +109,7 @@ func (s *bffTestSuite) TestOverview() {
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
-	_, err = s.client.Certificates(context.TODO())
+	_, err = s.client.Overview(context.TODO())
 	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
@@ -224,4 +228,91 @@ func (s *bffTestSuite) TestOverview() {
 	reply, err = s.client.Overview(context.TODO())
 	require.NoError(err, "could not get overview")
 	require.Equal(expected, reply, "overview reply did not match")
+}
+
+func (s *bffTestSuite) TestMemberDetails() {
+	require := s.Require()
+
+	testnetDetails := &members.MemberDetails{}
+	mainnetDetails := &members.MemberDetails{}
+	testnetFixture := filepath.Join("testdata", "testnet", "details_reply.json")
+	mainnetFixture := filepath.Join("testdata", "mainnet", "details_reply.json")
+	require.NoError(loadFixture(testnetFixture, testnetDetails))
+	require.NoError(loadFixture(mainnetFixture, mainnetDetails))
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+		OrgID:       "a2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f",
+		VASPs:       map[string]string{},
+	}
+
+	// Set initial handlers to return an error
+	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.Unavailable, "endpoint is unavailable"))
+	require.NoError(s.mainnet.members.UseError(mock.DetailsRPC, codes.Unavailable, "endpoint is unavailable"))
+
+	// Endpoint must be authenticated
+	req := &api.MemberDetailsParams{}
+	_, err := s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the read:vasp permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Set valid permissions for the rest of the tests
+	claims.Permissions = []string{"read:vasp"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+
+	// Test that both ID and directory must be set
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
+
+	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
+
+	req.ID = ""
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
+
+	// Test with unrecognized directory
+	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
+	req.Directory = "unrecognized.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[400] unknown registered directory", "expected error when directory is unrecognized")
+
+	// Test error is returned when VASP does not exist in the requested directory
+	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.NotFound, "member not found"))
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	require.EqualError(err, "[404] member not found", "expected error when VASP does not exist")
+
+	// Test successful response from testnet
+	actualPerson := &ivms101.LegalPerson{}
+	actualTrixo := &models.TRIXOQuestionnaire{}
+	require.NoError(s.testnet.members.UseFixture(mock.DetailsRPC, testnetFixture))
+	reply, err := s.client.MemberDetails(context.TODO(), req)
+	require.NoError(err, "could not get member details")
+	require.Equal(testnetDetails.MemberSummary, reply.Summary, "response summary did not match")
+	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
+	require.Equal(testnetDetails.LegalPerson, actualPerson, "response legal person did not match")
+	require.NoError(wire.Unwire(reply.Trixo, actualTrixo), "could not unmarshal trixo in response")
+	require.Equal(testnetDetails.Trixo, actualTrixo, "response trixo did not match")
+
+	// Test successful response from mainnet and mixed case directory
+	req.Directory = "VASPdirectory.net"
+	actualPerson = &ivms101.LegalPerson{}
+	actualTrixo = &models.TRIXOQuestionnaire{}
+	require.NoError(s.mainnet.members.UseFixture(mock.DetailsRPC, mainnetFixture))
+	reply, err = s.client.MemberDetails(context.TODO(), req)
+	require.NoError(err, "could not get member details")
+	require.Equal(mainnetDetails.MemberSummary, reply.Summary, "response summary did not match")
+	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
+	require.Equal(mainnetDetails.LegalPerson, actualPerson, "response legal person did not match")
+	require.NoError(wire.Unwire(reply.Trixo, actualTrixo), "could not unmarshal trixo in response")
+	require.Equal(mainnetDetails.Trixo, actualTrixo, "response trixo did not match")
 }
