@@ -12,7 +12,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
@@ -293,7 +292,7 @@ func (s *bffTestSuite) TestMemberDetails() {
 
 	// Test successful response from testnet
 	actualPerson := &ivms101.LegalPerson{}
-	actualTrixo := &models.TRIXOQuestionnaire{}
+	actualTrixo := &pb.TRIXOQuestionnaire{}
 	require.NoError(s.testnet.members.UseFixture(mock.DetailsRPC, testnetFixture))
 	reply, err := s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
@@ -306,7 +305,7 @@ func (s *bffTestSuite) TestMemberDetails() {
 	// Test successful response from mainnet and mixed case directory
 	req.Directory = "VASPdirectory.net"
 	actualPerson = &ivms101.LegalPerson{}
-	actualTrixo = &models.TRIXOQuestionnaire{}
+	actualTrixo = &pb.TRIXOQuestionnaire{}
 	require.NoError(s.mainnet.members.UseFixture(mock.DetailsRPC, mainnetFixture))
 	reply, err = s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
