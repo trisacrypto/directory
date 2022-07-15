@@ -87,7 +87,7 @@ func (s *Server) Status(c *gin.Context) {
 
 // GetStatuses makes parallel calls to the directory service to get the status
 // information for both testnet and mainnet.
-func (s *Server) GetStatuses(ctx context.Context) (testnet *gds.ServiceState, mainnet *gds.ServiceState, err error) {
+func (s *Server) GetStatuses(ctx context.Context) (testnet, mainnet *gds.ServiceState, err error) {
 	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
 		return client.Status(ctx, &gds.HealthCheck{})
 	}
@@ -101,6 +101,7 @@ func (s *Server) GetStatuses(ctx context.Context) (testnet *gds.ServiceState, ma
 	// Parse the results
 	var ok bool
 	if errs[0] != nil {
+		log.Warn().Err(errs[0]).Msg("could not call testnet Status RPC")
 		testnet = nil
 	} else if results[0] == nil {
 		return nil, nil, fmt.Errorf("nil testnet result returned from parallel requests")
@@ -109,6 +110,7 @@ func (s *Server) GetStatuses(ctx context.Context) (testnet *gds.ServiceState, ma
 	}
 
 	if errs[1] != nil {
+		log.Warn().Err(errs[1]).Msg("could not call mainnet Status RPC")
 		mainnet = nil
 	} else if results[1] == nil {
 		return nil, nil, fmt.Errorf("nil mainnet status result returned from parallel requests")

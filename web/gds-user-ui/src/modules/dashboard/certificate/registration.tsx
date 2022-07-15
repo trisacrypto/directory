@@ -9,13 +9,14 @@ import {
   Text,
   Link,
   Flex,
-  useDisclosure
+  useDisclosure,
+  Button,
+  Stack
 } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
-import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { FormProvider, useForm, useFormState } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import useAuth from 'hooks/useAuth';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
@@ -176,7 +177,7 @@ const Certificate: React.FC = () => {
                       available to verified TRISA members to facilitate compliance decisions. If you
                       need guidance, see the
                     </Trans>{' '}
-                    <Link isExternal href="/getting-started" color={'blue'} fontWeight={'bold'}>
+                    <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
                       <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
                     </Link>
                   </Text>
@@ -200,44 +201,23 @@ const Certificate: React.FC = () => {
                 <TestNetCertificateProgressBar />
                 {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
-              <HStack width="100%" spacing={8} justifyContent={'center'} py={6}>
+              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    <FormButton
-                      onClick={handlePreviousStep}
-                      isDisabled={currentStep === 1}
-                      borderRadius={5}
-                      type="button"
-                      w="100%"
-                      _active={{ outline: 'none' }}
-                      _focus={{ outline: 'none' }}
-                      maxW="13rem">
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
                       <Trans id="Save & Previous">Save & Previous</Trans>
-                    </FormButton>
-                    <FormButton
-                      borderRadius={5}
-                      w="100%"
-                      _active={{ outline: 'none' }}
-                      _focus={{ outline: 'none' }}
-                      maxW="13rem"
-                      backgroundColor="#FF7A59"
-                      type="submit"
-                      _hover={{ backgroundColor: '#f07253' }}>
+                    </Button>
+                    <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                    </FormButton>
+                    </Button>
                     {/* add review button when reach to final step */}
 
-                    <FormButton
-                      borderRadius={5}
-                      w="100%"
-                      maxW="13rem"
-                      onClick={handleResetForm}
-                      type="button">
+                    <Button onClick={handleResetForm}>
                       <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </FormButton>
+                    </Button>
                   </>
                 )}
-              </HStack>
+              </Stack>
             </VStack>
           </form>
         </FormProvider>

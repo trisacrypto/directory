@@ -16,7 +16,11 @@ const (
 	DefaultRole        = "Organization Collaborator"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
+<<<<<<< HEAD
 	VASPKey            = "vasp"
+=======
+	VASPsKey           = "vasps"
+>>>>>>> origin/main
 )
 
 // Login performs post-authentication checks and ensures that the user has the proper
@@ -68,7 +72,18 @@ func (s *Server) Login(c *gin.Context) {
 
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
+<<<<<<< HEAD
 	if orgID, ok := GetOrgID(user.AppMetadata); !ok || orgID == "" {
+=======
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, "could not parse user app metadata")
+		return
+	}
+
+	if appdata.OrgID == "" {
+>>>>>>> origin/main
 		// Create the organization
 		org, err := s.db.Organizations().Create(c.Request.Context())
 		if err != nil {
@@ -78,6 +93,7 @@ func (s *Server) Login(c *gin.Context) {
 		}
 
 		// Set the organization ID in the user app metadata
+<<<<<<< HEAD
 		user.AppMetadata[OrgIDKey] = org.Id
 		if err = s.auth0.User.Update(*user.ID, user); err != nil {
 			log.Error().Err(err).Msg("could not update user app_metadata")
@@ -89,10 +105,19 @@ func (s *Server) Login(c *gin.Context) {
 		org, err := s.db.Organizations().Retrieve(c.Request.Context(), orgID)
 		if err != nil {
 			log.Error().Err(err).Msg("could not retrieve organization for user VASP verification")
+=======
+		appdata.OrgID = org.Id
+	} else {
+		// Get the organization for the specified user
+		org, err := s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
+		if err != nil {
+			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
+>>>>>>> origin/main
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
 			return
 		}
 
+<<<<<<< HEAD
 		// Create the actual VASP table
 		directory := make(map[string]string)
 		if org.Testnet != nil && org.Testnet.Id != "" {
@@ -111,6 +136,21 @@ func (s *Server) Login(c *gin.Context) {
 				return
 			}
 		}
+=======
+		// Ensure the VASP record is correct for the user
+		if org.Testnet != nil && org.Testnet.Id != "" {
+			appdata.VASPs.TestNet = org.Testnet.Id
+		}
+		if org.Mainnet != nil && org.Mainnet.Id != "" {
+			appdata.VASPs.MainNet = org.Mainnet.Id
+		}
+	}
+
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
+		c.JSON(http.StatusInternalServerError, "could not complete user login")
+		return
+>>>>>>> origin/main
 	}
 
 	// Protect the front-end by setting double cookie tokens for CSRF protection.
@@ -140,6 +180,7 @@ func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 	return nil, fmt.Errorf("could not find role %q in %d available roles", name, len(roles.Roles))
 }
 
+<<<<<<< HEAD
 func GetOrgID(appdata map[string]interface{}) (orgID string, ok bool) {
 	var val interface{}
 	if val, ok = appdata[OrgIDKey]; !ok {
@@ -184,4 +225,21 @@ func MapEqual(a, b map[string]string) bool {
 	}
 
 	return true
+=======
+func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+	// Create a blank user with no data but the appdata
+	user := &management.User{}
+
+	// Send the updated user app_metadata back to auth0
+	if user.AppMetadata, err = appdata.Dump(); err != nil {
+		return err
+	}
+
+	// Patch the user with the specified user ID
+	if err = s.auth0.User.Update(uid, user); err != nil {
+		return err
+	}
+
+	return nil
+>>>>>>> origin/main
 }

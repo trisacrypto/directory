@@ -1,5 +1,16 @@
 import React, { FC, useEffect } from 'react';
-import { HStack, Box, Icon, Text, Heading, Stack, Grid, Button, Tooltip } from '@chakra-ui/react';
+import {
+  HStack,
+  Box,
+  Icon,
+  Text,
+  Heading,
+  Stack,
+  Grid,
+  Button,
+  Tooltip,
+  Flex
+} from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
@@ -91,32 +102,33 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
 
   return (
     <>
-      <Box
-        position={'relative'}
+      <Stack
         bg={'white'}
-        height={'100px'}
-        pt={4}
         boxShadow="0 24px 50px rgba(55,65, 81, 0.25) "
         borderColor={'#C1C9D2'}
         borderRadius={8}
         borderWidth={1}
-        // mt={10}
-        // mx={5}
-        px={5}
-        fontFamily={'Open Sans'}>
-        <Box pb={2} display={'flex'} justifyContent={'space-between'}>
-          <Heading fontSize={20}>
+        p={5}
+        fontFamily={'Open Sans'}
+        width="100%">
+        <Box display={'flex'} justifyContent={'space-between'}>
+          <Heading fontSize={['md', '2xl']}>
             <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
           </Heading>
         </Box>
-        <Grid templateColumns="repeat(6, 1fr)" gap={2}>
+        {/* <Grid templateColumns="repeat(6, 1fr)" gap={2}> */}
+        <Flex gap={2}>
           <Tooltip
             label={getLabel(1)?.hasError && t`Missing required element`}
             placement="top"
             bg={'red'}>
-            <Box w="70px" h="1" borderRadius={50} bg={getLabel(1)?.color} width={'100%'} key={1}>
-              <HStack>
-                <Box pt={3}>
+            <Stack spacing={1} width="100%">
+              <Box h="1" borderRadius={'50px'} bg={getLabel(1)?.color} width={'100%'} key={1} />
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                alignItems={['center']}
+                spacing={{ base: 0, md: 1 }}>
+                <Box>
                   <Icon
                     as={getLabel(1)?.icon}
                     sx={{
@@ -127,40 +139,50 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   />
                 </Box>
                 <Text
-                  pt={2}
                   color={'#3C4257'}
                   fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
-                  fontSize={'0.8em'}>
+                  fontSize={'sm'}
+                  textAlign="center">
                   1 <Trans id="Basic Details">Basic Details</Trans>
                 </Text>
-              </HStack>
-            </Box>
+              </Stack>
+            </Stack>
           </Tooltip>
-          <Box w="70px" h="1" bg={getLabel(2)?.color} width={'100%'}>
-            <HStack>
-              <Box pt={3}>
+
+          <Stack spacing={1} width="100%">
+            <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              alignItems={'center'}
+              spacing={{ base: 0, md: 1 }}>
+              <Box>
                 <Icon
                   as={getLabel(2)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(2)?.color
+                      fill: getLabel(2)?.color,
+                      verticalAlign: 'middle'
                     }
                   }}
                 />
               </Box>
               <Text
-                pt={2}
                 color={'#3C4257'}
-                fontSize={'0.8em'}
-                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}>
+                fontSize={'sm'}
+                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
+                textAlign="center">
                 2 <Trans id="Legal Person">Legal Person</Trans>
               </Text>
-            </HStack>
-          </Box>
+            </Stack>
+          </Stack>
 
-          <Box w="70px" h="1" bg={getLabel(3)?.color} width={'100%'}>
-            <HStack>
-              <Box pt={3}>
+          <Stack spacing={1} width="100%">
+            <Box h="1" bg={getLabel(3)?.color} width={'100%'} borderRadius={'50px'} />
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              alignItems={['center']}
+              spacing={{ base: 0, md: 1 }}>
+              <Box>
                 <Icon
                   as={getLabel(3)?.icon}
                   sx={{
@@ -171,18 +193,22 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                pt={2}
                 color={'#3C4257'}
-                fontSize={'0.8em'}
-                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}>
+                fontSize={'sm'}
+                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
+                textAlign="center">
                 3 <Trans id="Contacts">Contacts</Trans>
               </Text>
-            </HStack>
-          </Box>
+            </Stack>
+          </Stack>
 
-          <Box w="70px" h="1" bg={getLabel(4)?.color} width={'100%'}>
-            <HStack>
-              <Box pt={3}>
+          <Stack spacing={1} width="100%">
+            <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              alignItems={['center']}
+              spacing={{ base: 0, md: 1 }}>
+              <Box>
                 <Icon
                   as={getLabel(4)?.icon}
                   sx={{
@@ -193,18 +219,22 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                pt={2}
                 color={'#3C4257'}
-                fontSize={'0.8em'}
-                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}>
+                fontSize={'sm'}
+                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
+                textAlign="center">
                 4 <Trans id="TRISA implementation">TRISA implementation</Trans>
               </Text>
-            </HStack>
-          </Box>
+            </Stack>
+          </Stack>
 
-          <Box w="70px" h="1" bg={getLabel(5)?.color} width={'100%'}>
-            <HStack>
-              <Box pt={3}>
+          <Stack spacing={1} width="100%">
+            <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              alignItems={['center']}
+              spacing={{ base: 0, md: 1 }}>
+              <Box>
                 <Icon
                   as={getLabel(5)?.icon}
                   sx={{
@@ -215,18 +245,22 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                pt={2}
                 color={'#3C4257'}
-                fontSize={'0.8em'}
-                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}>
+                fontSize={'sm'}
+                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
+                textAlign="center">
                 5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
               </Text>
-            </HStack>
-          </Box>
+            </Stack>
+          </Stack>
 
-          <Box w="70px" h="1" bg={getLabel(6)?.color} width={'100%'}>
-            <HStack>
-              <Box pt={3}>
+          <Stack spacing={1} width="100%">
+            <Box h="1" bg={getLabel(6)?.color} width={'100%'} borderRadius={'50px'} />
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              alignItems={['center']}
+              spacing={{ base: 0, md: 1 }}>
+              <Box>
                 <Icon
                   as={getLabel(6)?.icon}
                   sx={{
@@ -237,16 +271,17 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                 />
               </Box>
               <Text
-                pt={2}
                 color={'#3C4257'}
-                fontSize={'0.8em'}
-                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}>
-                6 <Trans id="Review & Submit">Review & Submit</Trans>
+                fontSize={'sm'}
+                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
+                textAlign="center">
+                6 <Trans id="Review">Review</Trans>
               </Text>
-            </HStack>
-          </Box>
-        </Grid>
-      </Box>
+            </Stack>
+          </Stack>
+        </Flex>
+        {/* </Grid> */}
+      </Stack>
     </>
   );
 };

@@ -357,6 +357,12 @@ func (s *Server) setupRoutes() (err error) {
 // Accessors - used primarily for testing
 //===========================================================================
 
+// SetAdminClients allows tests to set the admin clients to the mocked clients.
+func (s *Server) SetAdminClients(testnet, mainnet apiv2.DirectoryAdministrationClient) {
+	s.testnetAdmin = testnet
+	s.mainnetAdmin = mainnet
+}
+
 // SetGDSClients allows tests to set a bufconn client to a mock GDS server.
 func (s *Server) SetGDSClients(testnet, mainnet *GDSClient) {
 	s.testnetGDS = testnet

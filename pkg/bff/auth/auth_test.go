@@ -70,7 +70,7 @@ func TestClaimsContext(t *testing.T) {
 	bclaims, err := auth.GetClaims(c)
 	require.NoError(t, err, "could not fetch bff claims")
 	require.Equal(t, "6f0d943d-6cd7-4745-bc9d-6d65e32c70e9", bclaims.OrgID)
-	require.Equal(t, "eee784b5-49b3-452e-97d5-1b01e79f5e62", bclaims.VASP["testnet"])
+	require.Equal(t, "eee784b5-49b3-452e-97d5-1b01e79f5e62", bclaims.VASPs.TestNet)
 	require.True(t, bclaims.HasAllPermissions("add:collaborators", "read:certificates"))
 
 	rclaims, err := auth.GetRegisteredClaims(c)

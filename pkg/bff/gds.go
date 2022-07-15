@@ -104,7 +104,14 @@ func (s *Server) Lookup(c *gin.Context) {
 			continue
 		}
 
-		data, err := wire.Rewire(result)
+		if _, ok := result.(*gds.LookupReply); !ok {
+			err := fmt.Errorf("unexpected result type: %T", result)
+			log.Error().Err(err).Msg("unexpected result type")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+			return
+		}
+
+		data, err := wire.Rewire(result.(proto.Message))
 		if err != nil {
 			log.Error().Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))
@@ -218,6 +225,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, org.Registration)
 }
+<<<<<<< HEAD
 
 // Saves the registration form on the BFF to allow multiple users to edit the
 // registration form before it is submitted to the directory service.
@@ -229,6 +237,19 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		org  *records.Organization
 	)
 
+=======
+
+// Saves the registration form on the BFF to allow multiple users to edit the
+// registration form before it is submitted to the directory service.
+func (s *Server) SaveRegisterForm(c *gin.Context) {
+	// Parse the incoming JSON data from the client request
+	var (
+		err  error
+		form *records.RegistrationForm
+		org  *records.Organization
+	)
+
+>>>>>>> origin/main
 	// Unmarshal the registration form from the POST request
 	form = &records.RegistrationForm{}
 	if err = c.ShouldBind(form); err != nil {
@@ -248,6 +269,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
+<<<<<<< HEAD
 		return
 	}
 
@@ -300,6 +322,60 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		return
 	}
 
+=======
+		return
+	}
+
+	// If successful respond with 204: No Content so that the front-end can continue.
+	c.Status(http.StatusNoContent)
+}
+
+// SubmitRegistration makes a request on behalf of the user to either the TestNet or the
+// MainNet GDS server based on the URL endpoint. The endpoint will first load the saved
+// registration form from the front-end and will parse it for some basic validity
+// constraints - it will then submit the form and return any response from the directory.
+func (s *Server) SubmitRegistration(c *gin.Context) {
+	// Get the network from the URL
+	var err error
+	network := strings.ToLower(c.Param("network"))
+	if network != testnet && network != mainnet {
+		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
+		return
+	}
+
+	// Load the organization from the claims
+	// NOTE: this method will handle the error logging and response.
+	var org *records.Organization
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Do not allow a registration form to be submitted twice
+	switch network {
+	case testnet:
+		if org.Testnet != nil && org.Testnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	case mainnet:
+		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	}
+
+	// Validate that a registration form exists on the organization
+	if org.Registration == nil || !org.Registration.ReadyToSubmit(network) {
+		log.Debug().Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("registration form is not ready to submit"))
+		return
+	}
+
+>>>>>>> origin/main
 	// Create the RegisterRequest to send to GDS
 	req := &gds.RegisterRequest{
 		Entity:         org.Registration.Entity,

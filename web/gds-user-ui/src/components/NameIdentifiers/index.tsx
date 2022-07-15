@@ -1,6 +1,5 @@
 import React, { useState, FC, useEffect } from 'react';
-import { HStack } from '@chakra-ui/react';
-import Button from 'components/ui/FormButton';
+import { Button, HStack } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifier from '../NameIdentifier';
 import { t } from '@lingui/macro';
@@ -48,13 +47,13 @@ const NameIdentifiers: React.FC = () => {
       />
 
       <HStack width="100%" wrap="wrap" align="start" gap={4}>
-        <Button borderRadius="5px" onClick={handleAddLegalNamesRow}>
+        <Button onClick={handleAddLegalNamesRow}>
           <Trans id="Add Legal Name">Add Legal Name</Trans>
         </Button>
-        <Button borderRadius="5px" marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
+        <Button marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
           <Trans id="Add Local Name">Add Local Name</Trans>
         </Button>
-        <Button borderRadius="5px" marginLeft="0 !important" onClick={handleAddNewPhoneticNamesRow}>
+        <Button marginLeft="0 !important" onClick={handleAddNewPhoneticNamesRow}>
           <Trans id="Add Phonetic Names">Add Phonetic Names</Trans>
         </Button>
       </HStack>

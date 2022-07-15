@@ -1,5 +1,5 @@
 import { Box, Text, Stack, Button, HStack } from '@chakra-ui/react';
-import FormButton from 'components/ui/FormButton';
+
 import { NavLink } from 'react-router-dom';
 
 import { Trans } from '@lingui/react';
