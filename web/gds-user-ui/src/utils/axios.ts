@@ -16,24 +16,13 @@ axiosInstance.interceptors.response.use(
     console.log('[AxiosError detected]', error.response.status);
     const originalRequest = error.config;
 
-    if (error && !error.response) {
-      return Promise.reject<any>(new Error('Network connection error'));
-    }
-
-    // retry 3 time if request failed
-
-    // // Reject promise for now if usual error
-    // if (error.response.status !== 401) {
-    //   return Promise.reject(error);
-    // }
-
-    // if (error.response.status === 403) {
-    //   return Promise.reject(error);
-    // }
     if (error && error.response && error.response.status === 401) {
       console.log('[401]');
-      if (originalRequest.retry < 3) {
-        originalRequest.retry = originalRequest.retry || 0;
+
+      originalRequest.retry = originalRequest.retry || 0;
+
+      if (originalRequest.retry <= 1) {
+        console.log('[401]-retry]', originalRequest.retry);
         originalRequest.retry += 1;
         const token = await getRefreshToken();
         // if (token) {
@@ -55,6 +44,9 @@ axiosInstance.interceptors.response.use(
           return axiosInstance.request(originalRequest);
         }
       }
+    }
+    if (error && !error.response) {
+      return Promise.reject<any>(new Error('Network connection error'));
     }
   }
 );

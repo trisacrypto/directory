@@ -16,7 +16,7 @@ const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
       minHeight={67}
       bg={'#D8EAF6'}
       p={5}
-      border="1px solid #555151D4"
+      border="1px solid #eee"
       fontSize={18}
       display={'flex'}
       borderRadius={'10px'}>

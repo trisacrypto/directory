@@ -19,6 +19,7 @@ const useAuth = () => {
   };
   const getUser: any = async () => {
     if (getToken) {
+      console.log('[getToken]', getToken);
       try {
         const userInfo: any = await auth0GetUser(getToken);
         if (userInfo) {
@@ -34,13 +35,7 @@ const useAuth = () => {
         } else {
         }
       } catch (error) {
-        // log error in sentry
-        // const refreshToken: any = await auth0CheckSession(getToken);
-        // console.log('[refreshToken]', refreshToken);
-        // setCookie('access_token', refreshToken.accessToken);
-        // if (refreshToken) {
-        //   return getUser();
-        // }
+        console.log('[getUser error]', error);
         return error;
       }
     } else {
@@ -50,7 +45,7 @@ const useAuth = () => {
   const isUserAuthenticated = !!isLoggedIn;
 
   const isAuthenticated = () => {
-    if (getToken) {
+    if (!isLoggedIn && getToken) {
       getUser();
       return true;
     }

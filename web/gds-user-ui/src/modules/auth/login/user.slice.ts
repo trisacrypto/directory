@@ -4,8 +4,15 @@ import { setCookie, getCookie, removeCookie } from 'utils/cookies';
 
 const hasSession = getCookie('session');
 export const initialValue: TUser = hasSession
-  ? { isLoggedIn: true, user: hasSession }
-  : { isLoggedIn: false, user: null };
+  ? {
+      isLoggedIn: true,
+      isFetching: false,
+      isSuccess: false,
+      isError: false,
+      errorMessage: '',
+      user: hasSession
+    }
+  : { isLoggedIn: false, isFetching: false, isSuccess: false, isError: false, user: null };
 
 const userSlice: any = createSlice({
   name: 'user',
@@ -19,6 +26,7 @@ const userSlice: any = createSlice({
       state.user = null;
       state.isLoggedIn = false;
     }
+    // isloading: (state: any, { payload }: any) => {
   }
 });
 

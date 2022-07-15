@@ -76,7 +76,7 @@ const useCustomAuth0 = () => {
       authWeb.checkSession(
         {
           ...options,
-          scope: 'read:current_user'
+          scope: 'openid profile email'
         },
         (err: any, authResult: any) => {
           if (err) {

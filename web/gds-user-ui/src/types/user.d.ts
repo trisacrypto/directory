@@ -6,6 +6,10 @@ interface IUserState {
   permission?: TUserPermission;
 }
 type TUser = {
+  isFetching?: boolean;
+  isSuccess?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
   isLoggedIn: boolean;
   user: IUserState | null;
 };

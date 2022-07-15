@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import useAuth from 'hooks/useAuth';
+
 import Sidebar from 'components/Sidebar';
 
 type DashboardLayoutProp = {
@@ -7,8 +7,6 @@ type DashboardLayoutProp = {
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
-  console.log('[DashboardLayout]');
-
   return (
     <>
       <Sidebar {...props} />;
