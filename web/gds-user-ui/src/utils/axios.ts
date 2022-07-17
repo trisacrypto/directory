@@ -15,6 +15,12 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     console.log('[AxiosError detected]', error.response.status);
     const originalRequest = error.config;
+    if (error && !error.response) {
+      return Promise.reject<any>(
+        new Error('Sorry we cannot reach the server, please contact the admin')
+      );
+    }
+    // handle 403 error
 
     if (error && error.response && error.response.status === 401) {
       console.log('[401]');
@@ -25,28 +31,16 @@ axiosInstance.interceptors.response.use(
         console.log('[401]-retry]', originalRequest.retry);
         originalRequest.retry += 1;
         const token = await getRefreshToken();
-        // if (token) {
-        //   const headers = {
-        //     'Content-Type': 'application/json',
-        //     Authorization: `Bearer ${token}`
-        //   };
-        //   const newRequest = {
-        //     ...originalRequest,
-        //     headers,
-        //     url: `${originalRequest.url}?${originalRequest.data}`
-        //   };
-        //   setCookie('access_token', token);
-        //   return axiosInstance.request(newRequest);
-        // }
+
         if (token) {
           setCookie('access_token', token);
           axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-          return axiosInstance.request(originalRequest);
+          return axiosInstance(originalRequest);
         }
       }
     }
-    if (error && !error.response) {
-      return Promise.reject<any>(new Error('Network connection error'));
+    if (error && error?.response?.status === 403) {
+      return Promise.reject<any>(new Error('Unauthorize user'));
     }
   }
 );

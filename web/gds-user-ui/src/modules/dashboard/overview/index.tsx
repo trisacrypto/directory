@@ -94,7 +94,7 @@ const Overview: React.FC = () => {
         onClick={() => navigate('/dashboard/certificate/registration')}
       />
       {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
-      <NetworkAnnouncements />{' '}
+
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (

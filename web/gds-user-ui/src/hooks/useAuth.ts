@@ -19,7 +19,6 @@ const useAuth = () => {
   };
   const getUser: any = async () => {
     if (getToken) {
-      console.log('[getToken]', getToken);
       try {
         const userInfo: any = await auth0GetUser(getToken);
         if (userInfo) {
@@ -36,7 +35,7 @@ const useAuth = () => {
         }
       } catch (error) {
         console.log('[getUser error]', error);
-        return error;
+        throw new Error('401');
       }
     } else {
       logoutUser();
@@ -45,6 +44,7 @@ const useAuth = () => {
   const isUserAuthenticated = !!isLoggedIn;
 
   const isAuthenticated = () => {
+    console.log('[isLoggedIn]', isLoggedIn);
     if (!isLoggedIn && getToken) {
       getUser();
       return true;
