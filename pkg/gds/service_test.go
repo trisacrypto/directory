@@ -309,7 +309,7 @@ func (s *gdsTestSuite) countLevelDBFixtures(db *leveldb.DB) (counts map[string]i
 		counts[key[0]]++
 
 		// Test that the database fixture matches our reference
-		s.CompareFixture(key[0], key[1], obj, false)
+		s.CompareFixture(key[0], key[1], obj, false, false)
 	}
 
 	require.NoError(iter.Error())
@@ -327,7 +327,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		vasp := &pb.VASP{}
 		require.NoError(proto.Unmarshal(iter.Value(), vasp))
 		counts[vasps]++
-		s.CompareFixture(vasps, string(iter.Key()), vasp, false)
+		s.CompareFixture(vasps, string(iter.Key()), vasp, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -338,7 +338,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		cert := &models.Certificate{}
 		require.NoError(proto.Unmarshal(iter.Value(), cert))
 		counts[certs]++
-		s.CompareFixture(certs, string(iter.Key()), cert, false)
+		s.CompareFixture(certs, string(iter.Key()), cert, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -349,7 +349,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		certreq := &models.CertificateRequest{}
 		require.NoError(proto.Unmarshal(iter.Value(), certreq))
 		counts[certreqs]++
-		s.CompareFixture(certreqs, string(iter.Key()), certreq, false)
+		s.CompareFixture(certreqs, string(iter.Key()), certreq, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -361,7 +361,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 // Custom Assertions
 //===========================================================================
 
-func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra bool) {
+func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra, removeSerials bool) {
 	var (
 		ok bool
 	)
@@ -405,6 +405,26 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 			for iter.Next() {
 				contact, _ := iter.Value()
 				contact.Extra = nil
+			}
+		}
+
+		if removeSerials {
+			// Data copy to avoid modifying the identity certificate in the fixtures map
+			data := *a.IdentityCertificate
+			a.IdentityCertificate = &data
+			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
+
+			// Allocate a new slice to avoid modifying the signing certificates in the fixtures map
+			certs := make([]*pb.Certificate, 0)
+			for _, cert := range a.SigningCertificates {
+				data := *cert
+				data.SerialNumber = nil
+				certs = append(certs, &data)
+			}
+			a.SigningCertificates = certs
+
+			for _, cert := range b.SigningCertificates {
+				cert.SerialNumber = nil
 			}
 		}
 
