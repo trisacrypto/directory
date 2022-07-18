@@ -9,8 +9,8 @@ type DashboardLayoutProp = {
 const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
   return (
     <>
-      <Loader />
-      {/* <Sidebar {...props} />; */}
+      {/* <Loader /> */}
+      <Sidebar {...props} />;
     </>
   );
 };

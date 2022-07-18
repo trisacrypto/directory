@@ -58,10 +58,11 @@ const StartPage: React.FC = () => {
       });
       if (response) {
         setIsloading(false);
+        console.log('[response', response);
         if (response.emailVerified) {
           // to implement later
           // get user info
-
+          console.log('[login dispatch] first');
           loginUser(response);
         } else {
         }

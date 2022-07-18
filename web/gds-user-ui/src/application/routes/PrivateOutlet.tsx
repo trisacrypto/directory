@@ -1,12 +1,12 @@
 import React from 'react';
 import { Route, Navigate, useLocation, Outlet } from 'react-router-dom';
-import useAuth from 'hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { userSelector } from 'modules/auth/login/user.slice';
 import DashboardLayout from 'layouts/DashboardLayout';
 const PrivateOutlet = () => {
-  const { isAuthenticated } = useAuth();
-
+  const { isLoggedIn } = useSelector(userSelector);
   const { pathname } = useLocation();
-  return isAuthenticated() ? (
+  return isLoggedIn ? (
     <DashboardLayout>
       <Outlet />
     </DashboardLayout>
