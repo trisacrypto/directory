@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"strings"
+	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-multierror"
@@ -281,6 +283,7 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
+	// Note: new contact iterator provides the contact email prioritization order.
 	iter := models.NewContactIterator(vasp.Contacts, true, true)
 	for iter.Next() {
 		var contact *pb.Contact
@@ -321,6 +324,163 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 
 	if sent == 0 {
 		errs = multierror.Append(errs, fmt.Errorf("no deliver certificates emails were successfully sent"))
+	}
+
+	return sent, errs.ErrorOrNil()
+}
+
+// SendExpiresAdminNotification sends the admins a notice that an identity certificate
+// will be expiring soon. This allows the admins to determine if a new review of the
+// TRISA member is necessary before the reissuance process begins.
+func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
+	// Create the template context
+	ctx := ExpiresAdminNotificationData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		Reissuance:          reissueDate,
+		BaseURL:             m.conf.AdminReviewBaseURL,
+	}
+
+	if vasp.IdentityCertificate != nil {
+		// TODO: ensure the timestamp format is correct
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		ctx.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+	}
+
+	msg, err := ExpiresAdminNotificationEmail(
+		m.serviceEmail.Name, m.serviceEmail.Address,
+		m.adminsEmail.Name, m.adminsEmail.Address,
+		ctx,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	if err = m.Send(msg); err != nil {
+		return 0, err
+	}
+
+	return 1, nil
+}
+
+// SendReissuanceReminder sends a reminder to all verified contacts that their identity
+// certificates will be expiring soon and that the system will automatically reissue the
+// certs on a particular date.
+func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
+	var errs *multierror.Error
+	ctx := ReissuanceReminderData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		Reissuance:          reissueDate,
+	}
+
+	if vasp.IdentityCertificate != nil {
+		// TODO: ensure the timestamp format is correct
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		ctx.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+	}
+
+	// Attempt at least one delivery, don't give up just because one email failed.
+	// Track how many emails and errors occurred during delivery.
+	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	for iter.Next() {
+		contact, kind := iter.Value()
+		ctx.Name = contact.Name
+
+		msg, err := ReissuanceReminderEmail(
+			m.serviceEmail.Name, m.serviceEmail.Address,
+			contact.Name, contact.Email,
+			ctx,
+		)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance reminder email for %s contact: %s", kind, err))
+			continue
+		}
+
+		if err = m.Send(msg); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance reminder email for %s contact: %s", kind, err))
+			continue
+		}
+
+		sent++
+
+		if err = models.AppendEmailLog(contact, string(admin.ReissuanceReminder), msg.Subject); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not log reissuance reminder email for %s contact: %s", kind, err))
+			continue
+		}
+	}
+
+	if iterErrs := iter.Error(); iterErrs != nil {
+		errs = multierror.Append(errs, iterErrs)
+	}
+
+	if sent == 0 {
+		errs = multierror.Append(errs, fmt.Errorf("no reissuance reminder emails were successfully sent"))
+	}
+
+	return sent, errs.ErrorOrNil()
+}
+
+// SendReissuanceStarted sends the PKCS12 password via a secure one time link. This
+// method only sends the PKCS12 password to one email (to limit the delivery of secure
+// emails), ranking the contact emails by priority.
+func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) (sent int, err error) {
+	var errs *multierror.Error
+	ctx := ReissuanceStartedData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		WhisperURL:          whisperLink,
+	}
+
+	// Attempt at least one delivery, don't give up just because one email failed.
+	// Track how many emails and errors are occurring during delivery.
+	// Note: new contact iterator provides the contact email prioritization order.
+	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	for iter.Next() {
+		contact, kind := iter.Value()
+		ctx.Name = contact.Name
+
+		msg, err := ReissuanceStartedEmail(
+			m.serviceEmail.Name, m.serviceEmail.Address,
+			contact.Name, contact.Email,
+			ctx,
+		)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance started email for %s contact: %s", kind, err))
+			continue
+		}
+
+		if err = m.Send(msg); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance started email for %s contact: %s", kind, err))
+			continue
+		}
+
+		sent++
+
+		if err = models.AppendEmailLog(contact, string(admin.ReissuanceStarted), msg.Subject); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("could not log reissuance started email for %s contact: %s", kind, err))
+			continue
+		}
+
+		// If we've successfully send one reissuance started message, ten stop sending
+		// messages to minimize how many contacts receive the secure one-time link.
+		break
+	}
+
+	if iterErrs := iter.Error(); iterErrs != nil {
+		errs = multierror.Append(errs, iterErrs)
+	}
+
+	if sent == 0 {
+		errs = multierror.Append(errs, fmt.Errorf("no reissuance started emails were successfully sent"))
 	}
 
 	return sent, errs.ErrorOrNil()
