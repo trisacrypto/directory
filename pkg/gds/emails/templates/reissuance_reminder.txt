@@ -1,0 +1,22 @@
+Hello {{ .Name }},
+
+We wish to remind you that your TRISA Identity Certificates for {{ .CommonName }} will soon be expiring. The expiration date on your current certificates is {{ .ExpirationDate }}.
+
+The Global Directory Service will automatically reissue your certificates on {{ .ReissueDate }}. When the certificates are reissued, you will receive two additional emails; one of which will contain your password-protected certificates and the other of which will contain your PKCS12 password, which you will use to decrypt the new certificates.
+
+Please note: the PKCS12 password will be sent via a time-sensitive secure link, so please be sure to look out for both reissuance notification emails and open them immediately.
+
+Once your new certificates have been issued, your expiring certificates will remain valid until the expiration date. However, the certificate details listed for your organization in the Global Directory Service will be updated to the new certificates. Any counterparty that queries your certificate details after the reissuance will receive the new certificate details, which may have the potential of causing conflicts with any transfers that occur before you have updated your node to use the new certificates. We encourage you to install the new certificates as expeditiously as possible.
+
+Please review the primary details of your directory entry and current certificate:
+
+ID: {{ .VID }}
+Registered Directory: {{ .RegisteredDirectory }}
+Common Name: {{ .CommonName }}
+Serial Number: {{ .SerialNumber }}
+Endpoint: {{ .Endpoint }}
+
+Please refer any questions to support@rotational.io. Please do not reply directly to this email.
+
+Best Regards,
+TRISA Global Directory Service Team

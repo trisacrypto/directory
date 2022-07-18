@@ -1,0 +1,23 @@
+<p>Hello {{ .Name }},</p>
+
+<p>We are writing to let you know that your TRISA Identity Certificates for the directory registration described below have been reissued, as your old certificates were nearing their expiration date. You will soon be receiving a separate email containing your new PKCS12 encrypted certificates.</p>
+
+<p>The primary details of your directory entry are as follows:</p>
+
+<ul>
+	<li><strong>ID:</strong> {{ .VID }}</li>
+  <li><strong>Registered Directory:</strong> {{ .RegisteredDirectory }}</li>
+	<li><strong>Common Name:</strong> {{ .CommonName }}</li>
+	<li><strong>Endpoint:</strong> {{ .Endpoint }}</li>
+</ul>
+
+<p>This email contains a secure link to the PKCS12 password which you must use to decrypt the new certificates.</p>
+
+<p><strong>NOTE:</strong> Please use this link with care! It will automatically expire after 7 days or 3 access attempts, whichever comes first. <em>After the link has expired, there will be no way to decrypt your new certificates.</em></p>
+
+<p><strong><a href="{{ .WhisperURL }}">{{ .WhisperURL }}</a></strong></p>
+
+<p>Please refer any questions to <a href="mailto:support@rotational.io">support@rotational.io</a>. Please do not reply directly to this email.<p>
+
+<p>Best Regards,<br />
+TRISA Global Directory Service Team</p>
