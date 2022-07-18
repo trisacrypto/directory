@@ -1,4 +1,4 @@
-import { Box, Heading, Stack, Icon, HStack } from '@chakra-ui/react';
+import { Box, Heading, Stack, Icon, HStack, useColorModeValue } from '@chakra-ui/react';
 import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
@@ -7,13 +7,14 @@ import { getStepStatus } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 
-const BasicDetails: React.FC = (props) => {
+const BasicDetails: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
+  const bg = useColorModeValue('#F7F8FC', 'gray.800');
 
   return (
-    <Stack spacing={7} mt="2rem">
+    <Stack spacing={7} mt="2rem" bg={bg}>
       <HStack>
         <Heading size="md">
           <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
