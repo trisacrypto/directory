@@ -8,6 +8,7 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
 
+// TO-DO: IMPROVE THIS COMPONENT BY USING USER SLICE FUNCTION TO AUTH
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
