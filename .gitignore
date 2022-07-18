@@ -7,6 +7,7 @@
 *.DS_Store
 *.idea
 
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -20,3 +21,5 @@
 fixtures/
 .env
 .secrets
+.idea
+.vscode
