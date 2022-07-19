@@ -1,29 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
-import {
-  Box,
-  Heading,
-  VStack,
-  Flex,
-  Input,
-  Stack,
-  Text,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel
-} from '@chakra-ui/react';
-import Card from 'components/ui/Card';
+import { Box, Heading, Text, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import DashboardLayout from 'layouts/DashboardLayout';
 import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import Metrics from 'components/Metrics';
-import useAuth from 'hooks/useAuth';
 import { getMetrics, getAnnouncementsData } from './service';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { colors } from 'utils/theme';
-import OverviewLoader from 'components/ContentLoader/Overview';
+import { useNavigate } from 'react-router-dom';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
@@ -33,8 +16,7 @@ import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementat
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  // const { user, getUser } = useAuth();
+  const [, setIsLoading] = useState<boolean>(true);
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
 
@@ -92,18 +74,6 @@ const Overview: React.FC = () => {
         onClick={() => navigate('/dashboard/certificate/registration')}
       />
       <NetworkAnnouncements />
-      {/* <Sentry.ErrorBoundary
-      <Heading marginBottom="69px">Overview</Heading>
-      {isLoading ? (
-        <OverviewLoader />
-      ) : (
-        <>
-          <NeedsAttention />
-          <NetworkAnnouncements />
-          {/* <Sentry.ErrorBoundary
-        fallback={<Text color={'red'}>An error has occurred to load testnet metric</Text>}> */}
-      {/* <Metrics data={result?.testnet} type="Testnet" />
-      <Metrics data={result?.mainnet} type="Mainnet" /> */}
       <Box fontSize={'md'} mx={'auto'} w={'100%'}>
         <Box>
           <Tabs my={'10'}>
