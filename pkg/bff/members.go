@@ -214,7 +214,7 @@ func (s *Server) MemberDetails(c *gin.Context) {
 	case vaspdirectory:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
-		log.Error().Str("registered_directory", params.Directory).Msg("unhandled directory")
+		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
 		return
 	}
