@@ -12,6 +12,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth/clive"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/urfave/cli/v2"
 )
@@ -61,6 +62,13 @@ func main() {
 						Value:   false,
 					},
 				},
+			},
+			{
+				Name:     "login",
+				Usage:    "allow a user to login to the BFF via Auth0 Oauth",
+				Category: "client",
+				Action:   login,
+				Flags:    []cli.Flag{},
 			},
 		},
 	}
@@ -120,6 +128,25 @@ func status(c *cli.Context) (err error) {
 	}
 
 	return printJSON(rep)
+}
+
+func login(c *cli.Context) (err error) {
+	// Create a new clive server to handle the auth0 callback
+	var conf clive.Config
+	if conf, err = clive.NewConfig(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var srv *clive.Server
+	if srv, err = clive.New(conf); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = srv.Serve(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return nil
 }
 
 //===========================================================================
