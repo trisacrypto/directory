@@ -23,7 +23,7 @@ const (
 func NewMembers(conf config.MembersConfig) (m *Members, err error) {
 	m = &Members{
 		srv:   grpc.NewServer(),
-		sock:  bufconn.New(bufSize),
+		sock:  bufconn.New(bufSize, ""),
 		Calls: make(map[string]int),
 	}
 
@@ -58,7 +58,7 @@ type Members struct {
 
 func (g *Members) Client() (client members.TRISAMembersClient, err error) {
 	if g.client == nil {
-		if err = g.sock.Connect(); err != nil {
+		if err = g.sock.Connect(context.Background()); err != nil {
 			return nil, err
 		}
 		g.client = members.NewTRISAMembersClient(g.sock.Conn)

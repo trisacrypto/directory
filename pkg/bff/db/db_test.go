@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/trtl"
+	"github.com/trisacrypto/directory/pkg/trtl/mock"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 )
 
@@ -36,15 +37,14 @@ func (s *dbTestSuite) SetupSuite() {
 	require := s.Require()
 
 	// Create a trtl config that points trtl to a temporary directory for storage
-	conf := trtl.MockConfig()
+	conf := mock.Config()
 	conf.Database.URL = "leveldb:///" + s.T().TempDir()
 	conf, err = conf.Mark()
 	require.NoError(err, "could not mark config as processed")
 
 	// Create a bufconn to connect to the trtl server on
-	s.conn = bufconn.New(bufsize)
-	err = s.conn.Connect()
-	require.NoError(err, "could not dial the bufconn")
+	s.conn = bufconn.New(bufsize, "")
+	require.NoError(s.conn.Connect(context.Background()), "could not dial the bufconn")
 
 	// Start the Trtl server
 	s.trtl, err = trtl.New(conf)

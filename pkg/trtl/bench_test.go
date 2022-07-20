@@ -81,7 +81,7 @@ func setupTrtl(t testing.TB) (bench *trtlBench, err error) {
 	}
 
 	// Create a bufconn listener(s) so that there are no actual network requests
-	bench.grpc = bufconn.New(benchbuf)
+	bench.grpc = bufconn.New(benchbuf, "")
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	go bench.trtl.Run(bench.grpc.Listener)
@@ -121,7 +121,7 @@ func BenchmarkTrtlGet(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
@@ -152,7 +152,7 @@ func BenchmarkTrtlPut(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
@@ -181,7 +181,7 @@ func BenchmarkTrtlDelete(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
@@ -214,7 +214,7 @@ func BenchmarkTrtlIter(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
@@ -248,7 +248,7 @@ func BenchmarkTrtlCursor(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()
@@ -289,7 +289,7 @@ func BenchmarkTrtlBatch(b *testing.B) {
 	require.NoError(b, e)
 
 	// Start the gRPC client.
-	require.NoError(b, bench.grpc.Connect())
+	require.NoError(b, bench.grpc.Connect(context.Background()))
 	defer bench.grpc.Close()
 	cc := pb.NewTrtlClient(bench.grpc.Conn)
 	ctx := context.Background()

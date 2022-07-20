@@ -1,4 +1,4 @@
-package trtl
+package mock
 
 import (
 	"github.com/rs/zerolog"
@@ -12,10 +12,10 @@ const (
 	metaPID    = 8
 )
 
-// MockConfig returns a configuration that ensures the server will operate in a fully
+// Config returns a configuration that ensures the server will operate in a fully
 // mocked way with all testing parameters set correctly. The config is returned directly
 // for required modifications, such as pointing the database path to a fixtures path.
-func MockConfig() config.Config {
+func Config() config.Config {
 	return config.Config{
 		Maintenance: false,
 		BindAddr:    ":4436",
