@@ -137,10 +137,10 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
+		{"listCertificates", http.MethodGet, "/v2/vasps/42/certificates", true, false},
 		// Authenticated and CSRF protected endpoints
 		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
 		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
-		{"listCertificates", http.MethodGet, "/v2/vasps/42/certificates", true, true},
 		{"replaceContact", http.MethodPut, "/v2/vasps/42/contacts/kind", true, true},
 		{"deleteContact", http.MethodDelete, "/v2/vasps/42/contacts/kind", true, true},
 		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},

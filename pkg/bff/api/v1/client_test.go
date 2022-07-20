@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -544,6 +545,55 @@ func TestCertificates(t *testing.T) {
 	require.Equal(t, fixture, out)
 	require.Equal(t, fixture.TestNet, out.TestNet)
 	require.Equal(t, fixture.MainNet, out.MainNet)
+}
+
+func TestMemberDetails(t *testing.T) {
+	fixture := &api.MemberDetailsReply{
+		Summary: &members.VASPMember{
+			Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
+			RegisteredDirectory: "trisatest.net",
+			CommonName:          "trisa.example.com",
+			Endpoint:            "trisa.example.com:443",
+			Name:                "Trisa TestNet",
+			Website:             "https://trisa.example.com",
+			Country:             "US",
+			VaspCategories:      []string{"P2P"},
+			VerifiedOn:          "2022-04-21T12:05:23Z",
+		},
+		LegalPerson: map[string]interface{}{
+			"country_of_registration": "US",
+			"customer_number":         "123456789",
+		},
+		Trixo: map[string]interface{}{
+			"compliance_threshold":          0.0,
+			"compliance_threshold_currency": "USD",
+			"conducts_customer_kyc":         false,
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/details", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.MemberDetailsParams{
+		ID:        "8b2e9e78-baca-4c34-a382-8b285503c901",
+		Directory: "trisatest.net",
+	}
+
+	out, err := client.MemberDetails(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
 }
 
 func loadFixture(path string, v interface{}) (err error) {
