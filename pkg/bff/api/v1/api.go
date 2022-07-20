@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 )
 
 //===========================================================================
@@ -27,6 +28,7 @@ type BFFClient interface {
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *models.Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
+	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 }
 
 //===========================================================================
@@ -148,6 +150,20 @@ type Certificate struct {
 	ExpiresAt    string                 `json:"expires_at"`
 	Revoked      bool                   `json:"revoked"`
 	Details      map[string]interface{} `json:"details"`
+}
+
+// MemberDetailsParams contains details required to identify a VASP member for the
+// MembersDetails request.
+type MemberDetailsParams struct {
+	ID        string `url:"vaspID,omitempty" form:"vaspID"`
+	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
+}
+
+// MemberDetailsReply contains sensitive details about a VASP member.
+type MemberDetailsReply struct {
+	Summary     *members.VASPMember    `json:"summary"`
+	LegalPerson map[string]interface{} `json:"legal_person"`
+	Trixo       map[string]interface{} `json:"trixo"`
 }
 
 // NetworkError is populated when the BFF receives an error from a network endpoint,
