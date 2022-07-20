@@ -152,7 +152,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                   href="/auth/login"
                 >
                   <button
-                    class="chakra-button css-1ncsb74"
+                    class="chakra-button css-1t0rcyz"
                     type="button"
                   >
                     Login
