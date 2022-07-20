@@ -222,7 +222,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
 			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
-			vasps.GET("/:vaspID/certificates", csrf, s.ListCertificates)
+			vasps.GET("/:vaspID/certificates", s.ListCertificates)
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
@@ -947,6 +947,25 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 		log.Warn().Err(err).Msg("could rewire vasp json")
 		return nil, err
 	}
+
+	// Convert the identity certificate serial number a capital hex encoded string
+	if vasp.IdentityCertificate != nil {
+		if _, ok := out.VASP["identity_certificate"].(map[string]interface{})["serial_number"]; !ok {
+			log.Warn().Msg("could not parse identity certificate serial number from vasp json")
+			return nil, errors.New("could not parse identity certificate serial number from vasp json")
+		}
+		out.VASP["identity_certificate"].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+	}
+
+	// Convert the signing certificate serial numbers to capital hex encoded strings
+	for i, cert := range vasp.SigningCertificates {
+		if _, ok := out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"]; !ok {
+			log.Warn().Msg("could not parse signing certificate serial number from vasp json")
+			return nil, errors.New("could not parse signing certificate serial number from vasp json")
+		}
+		out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", cert.SerialNumber)
+	}
+
 	return out, nil
 }
 

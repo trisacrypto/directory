@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/require"
@@ -74,6 +75,27 @@ func TestEmailBuilders(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, emails.DeliverCertsRE, mail.Subject)
 	generateMIME(t, mail, "deliver-certs.mim")
+
+	expires := time.Date(2022, time.July, 18, 12, 11, 35, 0, time.UTC)
+	reissuance := time.Date(2022, time.July, 25, 14, 0, 0, 0, time.UTC)
+
+	eandata := emails.ExpiresAdminNotificationData{VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	mail, err = emails.ExpiresAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, eandata)
+	require.NoError(t, err)
+	require.Equal(t, emails.ExpiresAdminNotificationRE, mail.Subject, "incorrect subject")
+	generateMIME(t, mail, "expires-admin-notification.mim")
+
+	rmdata := emails.ReissuanceReminderData{Name: recipient, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance}
+	mail, err = emails.ReissuanceReminderEmail(sender, senderEmail, recipient, recipientEmail, rmdata)
+	require.NoError(t, err)
+	require.Equal(t, emails.ReissuanceReminderRE, mail.Subject, "incorrect subject")
+	generateMIME(t, mail, "reissuance-reminder.mim")
+
+	rsdata := emails.ReissuanceStartedData{Name: recipient, VID: "42", CommonName: "example.com", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", WhisperURL: "http://localhost/secret"}
+	mail, err = emails.ReissuanceStartedEmail(sender, senderEmail, recipient, recipientEmail, rsdata)
+	require.NoError(t, err)
+	require.Equal(t, emails.ReissuanceStartedRE, mail.Subject, "incorrect subject")
+	generateMIME(t, mail, "reissuance-started.mim")
 }
 
 func TestVerifyContactURL(t *testing.T) {
@@ -102,22 +124,86 @@ func TestVerifyContactURL(t *testing.T) {
 }
 
 func TestAdminReviewURL(t *testing.T) {
-	data := emails.ReviewRequestData{
-		VID:   "42",
-		Token: "1234defg4321",
+	emptyCases := []emails.AdminReview{
+		emails.ReviewRequestData{
+			VID:   "42",
+			Token: "1234defg4321",
+		},
+		emails.ExpiresAdminNotificationData{
+			VID:        "42",
+			CommonName: "test.example.com",
+		},
 	}
-	require.Empty(t, data.AdminReviewURL(), "if no base url provided, AdminReviewURL() should return empty string")
 
-	data = emails.ReviewRequestData{
-		VID:     "42",
-		Token:   "1234defg4321",
-		BaseURL: "http://localhost:8088/vasps/",
+	for _, tc := range emptyCases {
+		require.Empty(t, tc.AdminReviewURL(), "if no base url provided, AdminReviewURL() should return empty string")
 	}
-	link, err := url.Parse(data.AdminReviewURL())
-	require.NoError(t, err)
-	require.Equal(t, "http", link.Scheme)
-	require.Equal(t, "localhost:8088", link.Host)
-	require.Equal(t, "/vasps/42", link.Path)
+
+	testCases := []emails.AdminReview{
+		emails.ReviewRequestData{
+			VID:     "42",
+			Token:   "1234defg4321",
+			BaseURL: "http://localhost:8088/vasps/",
+		},
+		emails.ExpiresAdminNotificationData{
+			VID:        "42",
+			CommonName: "test.example.com",
+			BaseURL:    "http://localhost:8088/vasps/",
+		},
+	}
+
+	for _, tc := range testCases {
+		link, err := url.Parse(tc.AdminReviewURL())
+		require.NoError(t, err)
+		require.Equal(t, "http", link.Scheme)
+		require.Equal(t, "localhost:8088", link.Host)
+		require.Equal(t, "/vasps/42", link.Path)
+	}
+}
+
+func TestDateStrings(t *testing.T) {
+	emptyCases := []emails.FutureReissuer{
+		emails.ExpiresAdminNotificationData{
+			VID:        "42",
+			CommonName: "test.example.com",
+		},
+		emails.ReissuanceReminderData{
+			VID:        "42",
+			CommonName: "test.example.com",
+		},
+	}
+
+	for _, tc := range emptyCases {
+		require.Equal(t, emails.UnknownDate, tc.ExpirationDate(), "expected expiration date to be unknown when no expiration timestamp")
+		require.Equal(t, emails.UnknownDate, tc.ReissueDate(), "expected reissue date to be unknown when no reissuance timestamp")
+	}
+
+	// Create some timestamps
+	expires, err := time.Parse(time.RFC3339, "2022-07-18T16:28:51-05:00")
+	require.NoError(t, err, "could not parse timestamp fixture")
+
+	reissue, err := time.Parse(time.RFC3339, "2022-07-25T12:30:00-05:00")
+	require.NoError(t, err, "could not parse timestamp fixture")
+
+	testCases := []emails.FutureReissuer{
+		emails.ExpiresAdminNotificationData{
+			VID:        "42",
+			CommonName: "test.example.com",
+			Expiration: expires,
+			Reissuance: reissue,
+		},
+		emails.ReissuanceReminderData{
+			VID:        "42",
+			CommonName: "test.example.com",
+			Expiration: expires,
+			Reissuance: reissue,
+		},
+	}
+
+	for _, tc := range testCases {
+		require.Equal(t, "Monday, July 18, 2022", tc.ExpirationDate(), "expected expiration date to be formated correctly with timestamp")
+		require.Equal(t, "Monday, July 25, 2022", tc.ReissueDate(), "expected reissuance date to be formated correctly with timestamp")
+	}
 }
 
 // This suite mocks the SendGrid email client to verify that email metadata is
@@ -250,4 +336,107 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	generateMIME(suite.T(), msg, "deliver-certs.mim")
+}
+
+func (suite *EmailTestSuite) TestSendExpiresAdminNotificationEmail() {
+	// Load the test suite config
+	require := suite.Require()
+	sender, err := mail.ParseAddress(suite.conf.ServiceEmail)
+	require.NoError(err)
+	recipient, err := mail.ParseAddress(suite.conf.AdminEmail)
+	require.NoError(err)
+
+	// Init the mocked SendGrid client
+	email, err := emails.New(suite.conf)
+	require.NoError(err)
+
+	// Create the expires admin notification email.
+	data := emails.ExpiresAdminNotificationData{
+		VID:                 "42",
+		CommonName:          "test.example.com",
+		SerialNumber:        "1234abcdef56789",
+		Endpoint:            "test.example.com:443",
+		RegisteredDirectory: "trisatest.net",
+		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
+		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
+		BaseURL:             "http://localhost:8080/vasps",
+	}
+	msg, err := emails.ExpiresAdminNotificationEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
+
+	require.NoError(err)
+	require.NoError(email.Send(msg))
+	require.Len(emails.MockEmails, 1)
+	expected, err := json.Marshal(msg)
+	require.NoError(err)
+	require.Equal(expected, emails.MockEmails[0])
+
+	generateMIME(suite.T(), msg, "expires-admin-notification.mim")
+}
+
+func (suite *EmailTestSuite) TestSendReissuanceReminderEmail() {
+	// Load the test suite config
+	require := suite.Require()
+	sender, err := mail.ParseAddress(suite.conf.ServiceEmail)
+	require.NoError(err)
+	recipient, err := mail.ParseAddress(suite.conf.AdminEmail)
+	require.NoError(err)
+
+	// Init the mocked SendGrid client
+	email, err := emails.New(suite.conf)
+	require.NoError(err)
+
+	// Create the reissuance reminder email.
+	data := emails.ReissuanceReminderData{
+		Name:                recipient.Name,
+		VID:                 "42",
+		CommonName:          "test.example.com",
+		SerialNumber:        "1234abcdef56789",
+		Endpoint:            "test.example.com:443",
+		RegisteredDirectory: "trisatest.net",
+		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
+		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
+	}
+	msg, err := emails.ReissuanceReminderEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
+
+	require.NoError(err)
+	require.NoError(email.Send(msg))
+	require.Len(emails.MockEmails, 1)
+	expected, err := json.Marshal(msg)
+	require.NoError(err)
+	require.Equal(expected, emails.MockEmails[0])
+
+	generateMIME(suite.T(), msg, "reissuance-reminder.mim")
+}
+
+func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
+	// Load the test suite config
+	require := suite.Require()
+	sender, err := mail.ParseAddress(suite.conf.ServiceEmail)
+	require.NoError(err)
+	recipient, err := mail.ParseAddress(suite.conf.AdminEmail)
+	require.NoError(err)
+
+	// Init the mocked SendGrid client
+	email, err := emails.New(suite.conf)
+	require.NoError(err)
+
+	// Create the reissuance started email.
+	data := emails.ReissuanceStartedData{
+		Name:                recipient.Name,
+		VID:                 "42",
+		CommonName:          "test.example.com",
+		Endpoint:            "test.example.com:443",
+		RegisteredDirectory: "trisatest.net",
+		WhisperURL:          "http://whisper.rotational.dev/secret/foo",
+	}
+	msg, err := emails.ReissuanceStartedEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
+
+	require.NoError(err)
+	require.NoError(email.Send(msg))
+	require.Len(emails.MockEmails, 1)
+	expected, err := json.Marshal(msg)
+	require.NoError(err)
+	require.Equal(expected, emails.MockEmails[0])
+
+	generateMIME(suite.T(), msg, "reissuance-started.mim")
 }

@@ -20,7 +20,7 @@ const BasicDetails: React.FC = (props) => {
         </Heading>{' '}
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
-      <Box w={{ base: '100%', lg: '715px' }}>
+      <Box w={{ base: '100%' }}>
         <BasicDetailsForm />
       </Box>
     </Stack>
