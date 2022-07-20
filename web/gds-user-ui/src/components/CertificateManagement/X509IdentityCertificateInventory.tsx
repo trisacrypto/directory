@@ -17,9 +17,9 @@ import {
 } from '@chakra-ui/react';
 import FormLayout from '../../layouts/FormLayout';
 import StatisticCard from './StatisticCard';
+import X509IdentityCertificateInventoryDataTable from './X509IdentityCertificateInventoryDataTable';
+import X509IdentityCertificateInventoryStatistics from './X509IdentityCertificateInventoryStatistics';
 import X509TableRows from './X509TableRows';
-
-const STATISTICS = { current: 0, expired: 0, revoked: 0, total: 0 };
 
 function X509IdentityCertificateInventory() {
   return (
@@ -36,40 +36,9 @@ function X509IdentityCertificateInventory() {
           <TabPanels>
             <TabPanel>
               <Stack spacing={5}>
-                <Stack direction={'row'} flexWrap={'wrap'} spacing={4}>
-                  {Object.entries(STATISTICS).map((statistic) => (
-                    <StatisticCard key={statistic[0]} title={statistic[0]} total={statistic[1]} />
-                  ))}
-                </Stack>
+                <X509IdentityCertificateInventoryStatistics />
                 <Box>
-                  <FormLayout overflowX={'scroll'}>
-                    <Table
-                      variant="unstyled"
-                      css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
-                      <TableCaption placement="top" textAlign="start" p={0} m={0}>
-                        <Stack
-                          direction={'row'}
-                          alignItems={'center'}
-                          justifyContent={'space-between'}>
-                          <Heading fontSize={'1.2rem'}>X.509 Identity Certificates</Heading>
-                          <Button borderRadius={5}>Request New Identity Certificate</Button>
-                        </Stack>
-                      </TableCaption>
-                      <Thead>
-                        <Tr>
-                          <Th>No</Th>
-                          <Th>Signature ID</Th>
-                          <Th>Issue Date</Th>
-                          <Th>Expiration Date</Th>
-                          <Th>Status</Th>
-                          <Th textAlign="center">Action</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        <X509TableRows />
-                      </Tbody>
-                    </Table>
-                  </FormLayout>
+                  <X509IdentityCertificateInventoryDataTable />
                 </Box>
               </Stack>
             </TabPanel>
