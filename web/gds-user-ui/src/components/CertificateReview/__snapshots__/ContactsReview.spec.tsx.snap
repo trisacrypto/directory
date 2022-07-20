@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<ContactsReview /> should match snapshot 1`] = `
+<div>
+  <div
+    class="css-18e1pym"
+  >
+    <div
+      class="chakra-stack css-n21gh5"
+    >
+      <div
+        class="css-18uk989"
+      >
+        <h2
+          class="chakra-heading css-13m0iy4"
+        >
+          Section 3: Contacts
+        </h2>
+        <button
+          class="chakra-button css-qhu6kf"
+          type="button"
+        >
+          Edit
+        </button>
+      </div>
+      <div
+        class="chakra-stack css-13yvh52"
+      >
+        <table
+          class="chakra-table css-gjk8qb"
+          role="table"
+        >
+          <tbody
+            class="css-0"
+          >
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-woxhqh"
+                role="gridcell"
+              >
+                technical Contact
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                <p
+                  class="chakra-text css-0"
+                >
+                  Test
+                </p>
+                <p
+                  class="chakra-text css-0"
+                >
+                  test@test.com
+                </p>
+                <p
+                  class="chakra-text css-0"
+                >
+                  +4535557757
+                </p>
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-woxhqh"
+                role="gridcell"
+              >
+                Compliance / legal Contact
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                <p
+                  class="chakra-text css-0"
+                >
+                  Info 
+                </p>
+                <p
+                  class="chakra-text css-0"
+                >
+                  info@gmail.com
+                </p>
+                <p
+                  class="chakra-text css-0"
+                >
+                  +93400583484
+                </p>
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-woxhqh"
+                role="gridcell"
+              >
+                administrative Contact
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                N/A
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-woxhqh"
+                role="gridcell"
+              >
+                billing Contact
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                N/A
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+`;

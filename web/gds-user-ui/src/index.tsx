@@ -6,24 +6,15 @@ import reportWebVitals from './reportWebVitals';
 import { ChakraProvider } from '@chakra-ui/react';
 import store from 'application/store';
 import { Provider } from 'react-redux';
-import customTheme from 'utils/theme';
-import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
+import initSentry from 'application/config/sentry';
+import theme from 'theme';
 
-Sentry.init({
-  dsn: process.env.REACT_APP_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  integrations: [new BrowserTracing()],
+initSentry();
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0
-});
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ChakraProvider theme={customTheme}>
+      <ChakraProvider theme={theme}>
         <App />
       </ChakraProvider>
     </Provider>

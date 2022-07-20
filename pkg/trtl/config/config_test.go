@@ -32,6 +32,12 @@ var testEnv = map[string]string{
 	"TRTL_BACKUP_INTERVAL":          "1h",
 	"TRTL_BACKUP_STORAGE":           "fixtures/backups",
 	"TRTL_BACKUP_KEEP":              "7",
+	"TRTL_SENTRY_DSN":               "https://something.ingest.sentry.io",
+	"TRTL_SENTRY_ENVIRONMENT":       "test",
+	"TRTL_SENTRY_RELEASE":           "1.4",
+	"TRTL_SENTRY_DEBUG":             "true",
+	"TRTL_SENTRY_TRACK_PERFORMANCE": "true",
+	"TRTL_SENTRY_SAMPLE_RATE":       "0.2",
 }
 
 var strategyEnv = map[string]string{
@@ -81,6 +87,12 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 1*time.Hour, conf.Backup.Interval)
 	require.Equal(t, testEnv["TRTL_BACKUP_STORAGE"], conf.Backup.Storage)
 	require.Equal(t, 7, conf.Backup.Keep)
+	require.Equal(t, testEnv["TRTL_SENTRY_DSN"], conf.Sentry.DSN)
+	require.Equal(t, testEnv["TRTL_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
+	require.Equal(t, testEnv["TRTL_SENTRY_RELEASE"], conf.Sentry.Release)
+	require.Equal(t, true, conf.Sentry.Debug)
+	require.Equal(t, true, conf.Sentry.TrackPerformance)
+	require.Equal(t, 0.2, conf.Sentry.SampleRate)
 }
 
 func TestRequiredConfig(t *testing.T) {

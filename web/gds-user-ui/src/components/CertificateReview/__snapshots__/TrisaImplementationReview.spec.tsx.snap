@@ -1,0 +1,144 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
+<div>
+  <div
+    class="css-1pknxmq"
+  >
+    <div
+      class="chakra-stack css-n21gh5"
+    >
+      <div
+        class="css-18uk989"
+      >
+        <h2
+          class="chakra-heading css-13m0iy4"
+        >
+          Section 4: TRISA Implementation
+        </h2>
+        <button
+          class="chakra-button css-qhu6kf"
+          type="button"
+        >
+          Edit
+        </button>
+      </div>
+      <div
+        class="chakra-stack css-13yvh52"
+      >
+        <table
+          class="chakra-table css-1hvi0g4"
+          role="table"
+        >
+          <tbody
+            class="css-1m1qgoi"
+          >
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-1eku6qd"
+                colspan="2"
+                role="gridcell"
+              >
+                TestNet
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-13wigwd"
+                role="gridcell"
+              >
+                TestNet TRISA Endpoint
+              </td>
+              <td
+                class="css-i257lr"
+                role="gridcell"
+              >
+                testnet.kyc.com:443
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                TestNet Certificate Common Name
+              </td>
+              <td
+                class="css-i257lr"
+                role="gridcell"
+              >
+                testnet.kyc.com
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-xumdn4"
+                colspan="2"
+                role="gridcell"
+              />
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-1eku6qd"
+                colspan="2"
+                role="gridcell"
+              >
+                MainNet
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-13wigwd"
+                role="gridcell"
+              >
+                MainNet TRISA Endpoint
+              </td>
+              <td
+                class="css-i257lr"
+                role="gridcell"
+              >
+                trisa.kyc.com:443
+              </td>
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                MainNet Certificate Common Name
+              </td>
+              <td
+                class="css-i257lr"
+                role="gridcell"
+              >
+                trisa.kyc.com
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+`;

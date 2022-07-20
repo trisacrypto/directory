@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
 import { getStepStatus } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
+import { Trans } from '@lingui/react';
 
 const BasicDetails: React.FC = (props) => {
   const steps = useSelector(getSteps);
@@ -12,20 +13,14 @@ const BasicDetails: React.FC = (props) => {
   const stepStatus = getStepStatus(steps, currentStep);
 
   return (
-    <Stack
-      spacing={5}
-      w="100%"
-      paddingX="39px"
-      paddingY="27px"
-      border="3px solid #E5EDF1"
-      mt="2rem"
-      bg={'white'}
-      borderRadius="md">
+    <Stack spacing={7} mt="2rem">
       <HStack>
-        <Heading size="md">Section 1: Basic Details</Heading>{' '}
+        <Heading size="md">
+          <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
+        </Heading>{' '}
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
-      <Box w={{ base: '100%', lg: '715px' }}>
+      <Box w={{ base: '100%' }}>
         <BasicDetailsForm />
       </Box>
     </Stack>

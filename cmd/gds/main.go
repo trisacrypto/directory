@@ -385,6 +385,20 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:certificates",
+				Usage:    "list certificates by VASP id",
+				Category: "admin",
+				Action:   adminListCertificates,
+				Before:   initAdminClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to list certificates for",
+					},
+				},
+			},
+			{
 				Name:     "admin:detail",
 				Usage:    "retrieve a VASP detail record by id",
 				Category: "admin",
@@ -583,9 +597,37 @@ func main() {
 						Usage:   "next page token for follow-on requests",
 					},
 					&cli.BoolFlag{
-						Name:    "fetc-all",
+						Name:    "fetch-all",
 						Aliases: []string{"a", "all"},
 						Usage:   "keep fetching results as long as a next page token is returned",
+					},
+				},
+			},
+			{
+				Name:     "members:summary",
+				Usage:    "list summary information about a VASP",
+				Category: "members",
+				Action:   membersSummary,
+				Before:   initMembersClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to get summary information for",
+					},
+				},
+			},
+			{
+				Name:     "members:details",
+				Usage:    "list detailed information about a VASP",
+				Category: "members",
+				Action:   membersDetails,
+				Before:   initMembersClient,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "id",
+						Aliases: []string{"i"},
+						Usage:   "the uuid of the VASP to get detailed information for",
 					},
 				},
 			},
@@ -1018,6 +1060,18 @@ func adminListVASPs(c *cli.Context) (err error) {
 	return printJSON(rep)
 }
 
+func adminListCertificates(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep *admin.ListCertificatesReply
+	if rep, err = adminClient.ListCertificates(ctx, c.String("id")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
 func adminRetrieveVASP(c *cli.Context) (err error) {
 	ctx, cancel := profile.Context()
 	defer cancel()
@@ -1308,6 +1362,45 @@ func membersList(c *cli.Context) (err error) {
 		}
 		req.PageToken = rep.NextPageToken
 	}
+}
+
+func membersSummary(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	req := &members.SummaryRequest{}
+
+	vaspID := c.String("id")
+	if vaspID != "" {
+		req.MemberId = vaspID
+	}
+
+	var rep *members.SummaryReply
+	if rep, err = membersClient.Summary(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func membersDetails(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	req := &members.DetailsRequest{}
+
+	vaspID := c.String("id")
+	if vaspID == "" {
+		return cli.Exit("must specify VASP ID (--id)", 1)
+	}
+	req.MemberId = vaspID
+
+	var rep *members.MemberDetails
+	if rep, err = membersClient.Details(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
 }
 
 func manageProfiles(c *cli.Context) (err error) {

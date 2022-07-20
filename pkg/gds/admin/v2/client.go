@@ -17,15 +17,27 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 )
 
-// New creates a new admin.v2 API client that implements the Service interface.
-func New(endpoint string, creds Credentials) (_ DirectoryAdministrationClient, err error) {
+// New creates a new admin.v2 API client from the provided http.Client. If no http
+// Client is provided, a defaul one is created.
+func New(endpoint string, creds Credentials, opts ...ClientOption) (_ DirectoryAdministrationClient, err error) {
 	c := &APIv2{
 		creds: creds,
-		client: &http.Client{
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		if err = opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// If a client hasn't been specified, create a default one
+	if c.client == nil {
+		c.client = &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
 			Timeout:       30 * time.Second,
-		},
+		}
 	}
 
 	// Create cookie jar
@@ -371,6 +383,35 @@ func (s *APIv2) DeleteVASP(ctx context.Context, id string) (out *Reply, err erro
 
 	// Execute the request and get a response
 	out = &Reply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv2) ListCertificates(ctx context.Context, id string) (out *ListCertificatesReply, err error) {
+	// vaspID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequred
+	}
+
+	// Determine the path from the request
+	path := fmt.Sprintf("/v2/vasps/%s/certificates", id)
+
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, path, nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &ListCertificatesReply{}
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}

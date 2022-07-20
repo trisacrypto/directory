@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
@@ -208,28 +209,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 			continue
 		}
 
-		// Build the directory information to return to the user
-		info := &api.VASPMember{
-			Id:                  vasp.Id,
-			RegisteredDirectory: vasp.RegisteredDirectory,
-			CommonName:          vasp.CommonName,
-			Endpoint:            vasp.TrisaEndpoint,
-			Website:             vasp.Website,
-			BusinessCategory:    vasp.BusinessCategory,
-			VaspCategories:      vasp.VaspCategories,
-			VerifiedOn:          vasp.VerifiedOn,
-		}
-
-		// Add other information to the VASP
-		if info.Name, err = vasp.Name(); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
-		}
-
-		if vasp.Entity != nil {
-			info.Country = vasp.Entity.CountryOfRegistration
-		}
-
-		out.Vasps = append(out.Vasps, info)
+		out.Vasps = append(out.Vasps, GetVASPMember(vasp))
 	}
 
 	if err = iter.Error(); err != nil {
@@ -248,4 +228,145 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	// Request Complete
 	log.Info().Int("count", len(out.Vasps)).Bool("has_next_page", out.NextPageToken != "").Msg("vasp member list complete")
 	return out, nil
+}
+
+// Summary returns a summary of the VASP members in the Directory Service.
+// Note: Any VASP can call this endpoint with any VASP ID, therefore we need to avoid
+// returning sensitive VASP details here such as IVMS info.
+func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api.SummaryReply, err error) {
+	// Get the since timestamp from the request
+	var since time.Time
+	if in.Since != "" {
+		if since, err = time.Parse(time.RFC3339, in.Since); err != nil {
+			log.Warn().Str("since", in.Since).Err(err).Msg("invalid since timestamp on summary request")
+			return nil, status.Error(codes.InvalidArgument, "since must be a valid RFC3339 timestamp")
+		}
+
+		if since.After(time.Now()) {
+			log.Warn().Str("since", in.Since).Err(err).Msg("since timestamp must be in the past")
+			return nil, status.Error(codes.InvalidArgument, "since timestamp must be in the past")
+		}
+	} else {
+		// Default to one month ago for new members
+		since = time.Now().Add(-time.Hour * 24 * 30)
+	}
+
+	// Create response
+	out = &api.SummaryReply{}
+
+	if in.MemberId != "" {
+		// Fetch the requested VASP if provided
+		var vasp *pb.VASP
+		if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+			log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
+			return nil, status.Error(codes.NotFound, "requested VASP not found")
+		}
+
+		// Add the VASP member details to the response
+		out.MemberInfo = GetVASPMember(vasp)
+	}
+
+	// Create the VASPs iterator
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+
+	// Iterate over VASPs
+	for iter.Next() {
+		// Collect the VASP from the iterator
+		var vasp *pb.VASP
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse VASP from database")
+			continue
+		}
+
+		// Only count verified VASPs
+		if vasp.VerificationStatus == pb.VerificationState_VERIFIED {
+			// Parse verified timestamp
+			var verified time.Time
+			if verified, err = time.Parse(time.RFC3339, vasp.VerifiedOn); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse verified timestamp")
+				continue
+			}
+
+			// Count if the VASP is a new member
+			if verified.After(since) {
+				out.NewMembers++
+			}
+
+			// Increment the total VASPs count
+			out.Vasps++
+		}
+
+		// Count issued certificates
+		if vasp.IdentityCertificate != nil && !vasp.IdentityCertificate.Revoked {
+			out.CertificatesIssued++
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		log.Error().Err(err).Msg("could not iterate over VASPs")
+		return nil, status.Error(codes.Internal, "could not iterate over directory service")
+	}
+
+	return out, nil
+}
+
+// Details returns the details of the VASP member using the provided ID.
+func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api.MemberDetails, err error) {
+	// Fetch the requested VASP if provided
+	var vasp *pb.VASP
+	if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
+		return nil, status.Error(codes.NotFound, "requested VASP not found")
+	}
+
+	// Construct the member response
+	out = &api.MemberDetails{
+		MemberSummary: GetVASPMember(vasp),
+	}
+
+	// Add the IVMS101 legal person to the response
+	if vasp.Entity == nil {
+		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
+		return nil, status.Error(codes.Internal, "VASP is missing legal person")
+	}
+	out.LegalPerson = vasp.Entity
+
+	// Add the TRIXO form data to the response
+	if vasp.Trixo == nil {
+		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
+		return nil, status.Error(codes.Internal, "VASP is missing TRIXO form data")
+	}
+	out.Trixo = vasp.Trixo
+
+	return out, nil
+}
+
+// GetVASPMember is a helper function to construct a VASPMember from a VASP record.
+func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
+	var err error
+
+	info := &api.VASPMember{
+		Id:                  vasp.Id,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		Website:             vasp.Website,
+		BusinessCategory:    vasp.BusinessCategory,
+		VaspCategories:      vasp.VaspCategories,
+		VerifiedOn:          vasp.VerifiedOn,
+		Status:              vasp.VerificationStatus,
+	}
+
+	// Try to add the name information
+	if info.Name, err = vasp.Name(); err != nil {
+		log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
+	}
+
+	// Add the country information if available
+	if vasp.Entity != nil {
+		info.Country = vasp.Entity.CountryOfRegistration
+	}
+
+	return info
 }

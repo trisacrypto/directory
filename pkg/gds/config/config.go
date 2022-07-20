@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Config uses envconfig to load required settings from the environment and validate
@@ -30,6 +31,7 @@ type Config struct {
 	CertMan     CertManConfig
 	Backup      BackupConfig
 	Secrets     SecretsConfig
+	Sentry      sentry.Config
 	processed   bool
 }
 
@@ -143,6 +145,10 @@ func (c Config) Mark() (Config, error) {
 }
 
 func (c Config) Validate() (err error) {
+	if err = c.GDS.Validate(); err != nil {
+		return err
+	}
+
 	if err = c.Admin.Validate(); err != nil {
 		return err
 	}
@@ -161,6 +167,16 @@ func (c Config) Validate() (err error) {
 
 	if err = c.Email.Validate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c GDSConfig) Validate() error {
+	if c.Enabled {
+		if c.BindAddr == "" {
+			return errors.New("invalid configuration: bind addr is required for enabled GDS")
+		}
 	}
 
 	return nil
@@ -204,6 +220,7 @@ func (c MembersConfig) Validate() error {
 			return errors.New("invalid configuration: serving mTLS requires the path to certs and the cert pool")
 		}
 	}
+
 	return nil
 }
 

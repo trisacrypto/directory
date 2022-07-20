@@ -20,8 +20,10 @@ export const getBffAndGdsVersion = async () => {
       return res.data;
     } catch (e) {
       // log error in sentry or console
-      console.warn('Error while fetching BFF and GDS version', e);
+      console.error('Error while fetching BFF and GDS version', e);
       return false;
     }
   }
 };
+
+export const isDashLocale = () => process.env.REACT_APP_USE_DASH_LOCALE?.toLowerCase() === 'true';

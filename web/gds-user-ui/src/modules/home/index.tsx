@@ -8,6 +8,8 @@ import AboutTrisaSection from 'components/Section/AboutUs';
 import * as Sentry from '@sentry/react';
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
+import LandingHeader from 'components/Header/LandingHeader';
+import Footer from 'components/Footer/LandingFooter';
 const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(false);
@@ -21,7 +23,7 @@ const HomePage: React.FC = () => {
 
     try {
       const request = await lookup(query);
-      const response = request.results[0];
+      const response = request.results;
       setIsLoading(false);
       if (!response.error) {
         setError('');
@@ -30,8 +32,7 @@ const HomePage: React.FC = () => {
       }
     } catch (e: any) {
       setIsLoading(false);
-
-      if (!e.response.data.success) {
+      if (!e?.response?.data.success) {
         setResult(false);
         setError(e.response.data.error);
         setResult(false);
@@ -42,7 +43,8 @@ const HomePage: React.FC = () => {
     }
   };
   return (
-    <LandingLayout>
+    <>
+      <LandingHeader />
       <Head hasBtn isHomePage />
       <AboutTrisaSection />
       <JoinUsSection />
@@ -58,7 +60,8 @@ const HomePage: React.FC = () => {
         }}
         query={search}
       />
-    </LandingLayout>
+      <Footer />
+    </>
   );
 };
 

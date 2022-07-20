@@ -17,6 +17,13 @@ ARG REACT_APP_TRISA_BASE_URL="https://bff.vaspdirectory.net/v1/"
 ARG REACT_APP_ANALYTICS_ID=""
 ARG REACT_APP_VERSION_NUMBER=""
 ARG REACT_APP_GIT_REVISION=""
+ARG REACT_APP_SENTRY_DSN=""
+ARG REACT_APP_AUTH0_DOMAIN=""
+ARG REACT_APP_AUTH0_CLIENT_ID=""
+ARG REACT_APP_AUTH0_REDIRECT_URI="https://vaspdirectory.net/auth/callback"
+ARG REACT_APP_AUTH0_SCOPE="openid profile email"
+ARG REACT_APP_AUTH0_AUDIENCE="https://bff.vaspdirectory.net"
+
 
 # Build app with react-scripts
 COPY web/gds-user-ui/ ./

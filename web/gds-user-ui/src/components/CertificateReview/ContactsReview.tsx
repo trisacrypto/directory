@@ -1,10 +1,12 @@
-import React, { FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { getStepData, hasValue } from 'utils/utils';
+import { useSelector, RootStateOrAny } from 'react-redux';
+import { hasValue } from 'utils/utils';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 interface ContactsProps {
   data: any;
 }
@@ -33,7 +35,7 @@ const ContactsReview = (props: ContactsProps) => {
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
           <Heading fontSize={20} mb="2rem">
-            Section 3: Contacts
+            <Trans id="Section 3: Contacts">Section 3: Contacts</Trans>
           </Heading>
           <Button
             bg={colors.system.blue}
@@ -43,7 +45,7 @@ const ContactsReview = (props: ContactsProps) => {
             _hover={{
               bg: '#10aaed'
             }}>
-            Edit{' '}
+            <Trans id="Edit">Edit</Trans>
           </Button>
         </Box>
         <Stack fontSize={'1rem'}>
@@ -52,7 +54,8 @@ const ContactsReview = (props: ContactsProps) => {
               'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
-                width: '50%'
+                width: '50%',
+                paddingLeft: '1rem'
               },
               td: {
                 borderBottom: 'none',
@@ -64,7 +67,7 @@ const ContactsReview = (props: ContactsProps) => {
               {['technical', 'legal', 'administrative', 'billing'].map((contact, index) => (
                 <Tr key={index}>
                   <Td textTransform="capitalize">
-                    {contact === 'legal' ? `Compliance / ${contact}` : contact} Contact
+                    {t`${contact === 'legal' ? `Compliance / ${contact}` : contact} Contact`}
                   </Td>
                   <Td>
                     {hasValue(contacts?.[contact]) ? (

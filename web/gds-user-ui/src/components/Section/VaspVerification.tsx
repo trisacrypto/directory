@@ -18,6 +18,8 @@ import {
 } from '@chakra-ui/react';
 
 import { colors } from '../../utils/theme';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 
 type Props = StyleProps &
   FlexProps & {
@@ -65,78 +67,92 @@ export default function VaspVerification() {
         <Stack flex={1} justify={{ lg: 'center' }}>
           <Box my={{ base: 4 }} color="black">
             <Text fontSize={'1rem'} mt={3}>
-              TRISA members must complete a comprehensive multi-part verification form and due
-              diligence process. Once verified, TRISA will issue TestNet and MainNet certificates
-              for secure Travel Rule compliance.
+              <Trans id="TRISA members must complete a comprehensive multi-part verification form and due diligence process. Once verified, TRISA will issue TestNet and MainNet certificates for secure Travel Rule compliance.">
+                TRISA members must complete a comprehensive multi-part verification form and due
+                diligence process. Once verified, TRISA will issue TestNet and MainNet certificates
+                for secure Travel Rule compliance.
+              </Trans>
             </Text>
           </Box>
           <Box bg={'#E5EDF1'} p={6}>
             <Text fontSize={'1rem'} color={'black'}>
-              TRISA’s verification form includes five sections and may require information from
-              several parties in your organization.
+              <Trans id="TRISA’s verification form includes five sections and may require information from several parties in your organization.">
+                TRISA’s verification form includes five sections and may require information from
+                several parties in your organization.
+              </Trans>
             </Text>
           </Box>
-          <Box mx={20} pt={10}>
+          <Box mx={20} pt={'10px'}>
             <Box
               display={{ md: 'grid' }}
               gridTemplateColumns={{ md: 'repeat(5,1fr)' }}
               color={'black'}
-              gap={10}
+              gap={'10px'}
               alignItems="center">
               <>
-                <Line title="Sections & Details" fontWeight={'bold'} colSpan={3}>
+                <Line title={t`Sections & Details`} fontWeight={'bold'} colSpan={3}>
                   {''}
                 </Line>
-                <Line title="Who to Ask" fontWeight={'bold'} colSpan={2}>
+                <Line title={t`Who to Ask`} fontWeight={'bold'} colSpan={2}>
                   {''}
                 </Line>
               </>
 
-              <Line title="1 Basic Details" fontWeight={'bold'} colSpan={3}>
-                Information about the VASP such as website, incorporation date, business and VASP
-                category.
+              <Line title={t`1 Basic Details`} fontWeight={'bold'} colSpan={3}>
+                <Trans id="Information about the VASP such as website, incorporation date, business and VASP category.">
+                  Information about the VASP such as website, incorporation date, business and VASP
+                  category.
+                </Trans>
               </Line>
 
-              <Line colSpan={2} dataContent="Who to ask">
-                Business or Compliance Office
+              <Line colSpan={2} dataContent={t`Who to ask`}>
+                <Trans id="Business or Compliance Office">Business or Compliance Office</Trans>
               </Line>
 
-              <Line title="2 Legal Person" fontWeight={'bold'} colSpan={3}>
-                Information that identifies your organization as a Legal Person. This section
-                represents the{' '}
-                <Link color="#1F4CED" href="https://intervasp.org/" isExternal>
-                  IVMS 101
-                </Link>{' '}
-                data structure for legal persons and is strongly suggested for use as KYC
-                information exchanged in TRISA transfers.
+              <Line title={t`2 Legal Person`} fontWeight={'bold'} colSpan={3}>
+                <Trans id="Information that identifies your organization as a Legal Person. This section represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.">
+                  Information that identifies your organization as a Legal Person. This section
+                  represents the{' '}
+                  <Link color="#1F4CED" href="https://intervasp.org/" isExternal>
+                    IVMS 101
+                  </Link>{' '}
+                  data structure for legal persons and is strongly suggested for use as KYC
+                  information exchanged in TRISA transfers.
+                </Trans>
               </Line>
-              <Line colSpan={2} dataContent="Who to ask">
-                Business or Compliance Office
-              </Line>
-
-              <Line title="3 Contacts" fontWeight={'bold'} colSpan={3}>
-                Contact information for representatives of your organization. Contacts include
-                Technical, Legal/Compliance, Administrative, and Billing persons.
-              </Line>
-              <Line colSpan={2} dataContent="Who to ask">
-                Business or Compliance Office
+              <Line colSpan={2} dataContent={t`Who to ask`}>
+                <Trans id="Business or Compliance Office">Business or Compliance Office</Trans>
               </Line>
 
-              <Line title="4 TRISA Implementation" fontWeight={'bold'} colSpan={3}>
-                Technical information about your endpoint for certificate issuance. Each VASP is
-                required to establish a TRISA endpoint for inter-VASP communication.
+              <Line title={t`3 Contacts`} fontWeight={'bold'} colSpan={3}>
+                <Trans id="Contact information for representatives of your organization. Contacts include Technical, Legal/Compliance, Administrative, and Billing persons.">
+                  Contact information for representatives of your organization. Contacts include
+                  Technical, Legal/Compliance, Administrative, and Billing persons.
+                </Trans>
               </Line>
-              <Line colSpan={2} dataContent="Who to ask">
-                Technical Officer
+              <Line colSpan={2} dataContent={t`Who to ask`}>
+                <Trans id="Business or Compliance Office">Business or Compliance Office</Trans>
               </Line>
-              <Line title="5 TRIXO Questionnaire" fontWeight={'bold'} colSpan={3}>
-                Information to ensure that required compliance information exchanges are conducted
-                correctly and safely. This includes information about jurisdiction and national
-                regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection
-                policies.
+
+              <Line title={t`4 TRISA Implementation`} fontWeight={'bold'} colSpan={3}>
+                <Trans id="Technical information about your endpoint for certificate issuance. Each VASP is required to establish a TRISA endpoint for inter-VASP communication.">
+                  Technical information about your endpoint for certificate issuance. Each VASP is
+                  required to establish a TRISA endpoint for inter-VASP communication.
+                </Trans>
               </Line>
-              <Line colSpan={2} dataContent="Who to ask">
-                Compliance Officer
+              <Line colSpan={2} dataContent={t`Who to ask`}>
+                <Trans id="Technical Officer">Technical Officer</Trans>
+              </Line>
+              <Line title={t`5 TRIXO Questionnaire`} fontWeight={'bold'} colSpan={3}>
+                <Trans id="Information to ensure that required compliance information exchanges are conducted correctly and safely. This includes information about jurisdiction and national regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection policies.">
+                  Information to ensure that required compliance information exchanges are conducted
+                  correctly and safely. This includes information about jurisdiction and national
+                  regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data
+                  protection policies.
+                </Trans>
+              </Line>
+              <Line colSpan={2} dataContent={t`Who to ask`}>
+                <Trans id="Compliance Officer">Compliance Officer</Trans>
               </Line>
             </Box>
             <Box
@@ -147,30 +163,32 @@ export default function VaspVerification() {
               gridRowGap={10}>
               <GridItem colSpan={3} bg={'#E5EDF1'} mt={5} p={6}>
                 <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
-                  Final Confirmation
+                  <Trans id="Final Confirmation">Final Confirmation</Trans>
                 </chakra.dt>
                 <chakra.dd mt={2} fontSize="1rem">
-                  For MainNet certificate requests, a member of TRISA’s verification team will
-                  review your submission and conduct a final due diligence phone call for physical
-                  verification. When physical verification is complete, TRISA will issue MainNet
-                  certificates. Requests for TestNet certificates do not require physical
-                  verification.
+                  <Trans id="For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification.">
+                    For MainNet certificate requests, a member of TRISA’s verification team will
+                    review your submission and conduct a final due diligence phone call for physical
+                    verification. When physical verification is complete, TRISA will issue MainNet
+                    certificates. Requests for TestNet certificates do not require physical
+                    verification.
+                  </Trans>
                 </chakra.dd>
               </GridItem>
               <GridItem colSpan={2} bg={'#E5EDF1'} mt={5} p={6}>
                 <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
-                  Need to Learn More?
+                  <Trans id="Need to Learn More?">Need to Learn More?</Trans>
                 </chakra.dt>
                 <chakra.dd mt={2}>
                   <UnorderedList color={'#1F4CED'}>
                     <ListItem fontSize="1rem">
                       <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
-                        Learn How TRISA Works
+                        <Trans id="Learn How TRISA Works">Learn How TRISA Works</Trans>
                       </Link>
                     </ListItem>
                     <ListItem fontSize="1rem">
                       <Link isExternal href="https://intervasp.org/">
-                        What is IVMS101?
+                        <Trans id="What is IVMS101?">What is IVMS101?</Trans>
                       </Link>
                     </ListItem>
                   </UnorderedList>
@@ -180,8 +198,7 @@ export default function VaspVerification() {
           </Box>
           <Stack
             direction={['column', 'row']}
-            pt={20}
-            mx={10}
+            py={20}
             justifyContent={'center'}
             textAlign={'center'}>
             {/* <Box>
@@ -210,7 +227,7 @@ export default function VaspVerification() {
                 _focus={{
                   borderColor: 'transparent'
                 }}>
-                Start Registration Process
+                <Trans id="Start Registration Process">Start Registration Process</Trans>
               </Button>
             </Box>
           </Stack>

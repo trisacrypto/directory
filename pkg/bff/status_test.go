@@ -2,6 +2,7 @@ package bff_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -26,8 +27,8 @@ func (s *bffTestSuite) TestStatus() {
 			NotAfter:  time.Now().Format(time.RFC3339Nano),
 		}, nil
 	}
-	s.testnet.OnStatus = healthy
-	s.mainnet.OnStatus = healthy
+	s.testnet.gds.OnStatus = healthy
+	s.mainnet.gds.OnStatus = healthy
 
 	// Test Status with nil params (should default to getting GDS status)
 	rep, err := s.client.Status(context.TODO(), nil)
@@ -37,8 +38,8 @@ func (s *bffTestSuite) TestStatus() {
 	require.NotEmpty(rep.Version, "server did not return a version")
 	require.Equal("healthy", rep.TestNet)
 	require.Equal("healthy", rep.MainNet)
-	require.Equal(s.testnet.Calls["Status"], 1)
-	require.Equal(s.mainnet.Calls["Status"], 1)
+	require.Equal(s.testnet.gds.Calls["Status"], 1)
+	require.Equal(s.mainnet.gds.Calls["Status"], 1)
 
 	// Test Status with default params
 	rep, err = s.client.Status(context.TODO(), &api.StatusParams{NoGDS: false})
@@ -48,8 +49,8 @@ func (s *bffTestSuite) TestStatus() {
 	require.NotEmpty(rep.Version, "server did not return a version")
 	require.Equal("healthy", rep.TestNet)
 	require.Equal("healthy", rep.MainNet)
-	require.Equal(s.testnet.Calls["Status"], 2)
-	require.Equal(s.mainnet.Calls["Status"], 2)
+	require.Equal(s.testnet.gds.Calls["Status"], 2)
+	require.Equal(s.mainnet.gds.Calls["Status"], 2)
 
 	// Test Status with NoGDS
 	rep, err = s.client.Status(context.TODO(), &api.StatusParams{NoGDS: true})
@@ -59,11 +60,11 @@ func (s *bffTestSuite) TestStatus() {
 	require.NotEmpty(rep.Version, "server did not return a version")
 	require.Empty(rep.TestNet)
 	require.Empty(rep.MainNet)
-	require.Equal(s.testnet.Calls["Status"], 2)
-	require.Equal(s.mainnet.Calls["Status"], 2)
+	require.Equal(s.testnet.gds.Calls["Status"], 2)
+	require.Equal(s.mainnet.gds.Calls["Status"], 2)
 
 	// Test Status with TestNet Error
-	s.testnet.UseError(mock.StatusRPC, codes.Unavailable, "unreachable host")
+	s.testnet.gds.UseError(mock.StatusRPC, codes.Unavailable, "unreachable host")
 	rep, err = s.client.Status(context.TODO(), nil)
 	require.NoError(err, "could not make status request")
 	require.Equal("ok", rep.Status, "server did not return an ok status")
@@ -71,11 +72,11 @@ func (s *bffTestSuite) TestStatus() {
 	require.NotEmpty(rep.Version, "server did not return a version")
 	require.Equal("unavailable", rep.TestNet)
 	require.Equal("healthy", rep.MainNet)
-	require.Equal(s.testnet.Calls["Status"], 3)
-	require.Equal(s.mainnet.Calls["Status"], 3)
+	require.Equal(s.testnet.gds.Calls["Status"], 3)
+	require.Equal(s.mainnet.gds.Calls["Status"], 3)
 
 	// Test Status with MainNet bad state
-	s.mainnet.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
+	s.mainnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
 		return &gds.ServiceState{
 			Status:    gds.ServiceState_DANGER,
 			NotBefore: time.Now().Add(1 * time.Hour).Format(time.RFC3339Nano),
@@ -89,9 +90,69 @@ func (s *bffTestSuite) TestStatus() {
 	require.NotEmpty(rep.Version, "server did not return a version")
 	require.Equal("unavailable", rep.TestNet)
 	require.Equal("danger", rep.MainNet)
-	require.Equal(s.testnet.Calls["Status"], 4)
-	require.Equal(s.mainnet.Calls["Status"], 4)
+	require.Equal(s.testnet.gds.Calls["Status"], 4)
+	require.Equal(s.mainnet.gds.Calls["Status"], 4)
+}
 
+func (s *bffTestSuite) TestGetStatuses() {
+	var err error
+	require := s.Require()
+
+	// Set the Status RPC for the mocks
+	healthy := func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
+		return &gds.ServiceState{
+			Status:    gds.ServiceState_HEALTHY,
+			NotBefore: time.Now().Add(1 * time.Hour).Format(time.RFC3339Nano),
+			NotAfter:  time.Now().Format(time.RFC3339Nano),
+		}, nil
+	}
+
+	unhealthy := func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
+		return &gds.ServiceState{
+			Status:    gds.ServiceState_UNHEALTHY,
+			NotBefore: time.Now().Add(1 * time.Hour).Format(time.RFC3339Nano),
+			NotAfter:  time.Now().Format(time.RFC3339Nano),
+		}, nil
+	}
+
+	errored := func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
+		return nil, errors.New("unreachable host")
+	}
+
+	s.testnet.gds.OnStatus = healthy
+	s.mainnet.gds.OnStatus = unhealthy
+
+	// Test both statuses were returned
+	testnet, mainnet, err := s.bff.GetStatuses(context.TODO())
+	require.NoError(err, "could not get statuses")
+	require.NotNil(testnet)
+	require.NotNil(mainnet)
+	require.Equal(gds.ServiceState_HEALTHY, testnet.Status, "testnet statuses did not match")
+	require.Equal(gds.ServiceState_UNHEALTHY, mainnet.Status, "mainnet statuses did not match")
+
+	// Test only testnet status was returned
+	s.mainnet.gds.OnStatus = errored
+	testnet, mainnet, err = s.bff.GetStatuses(context.TODO())
+	require.NoError(err, "could not get statuses")
+	require.NotNil(testnet)
+	require.Equal(gds.ServiceState_HEALTHY, testnet.Status, "testnet status did not match")
+	require.Nil(mainnet, "mainnet status should be nil")
+
+	// Test only mainnet summary was returned
+	s.testnet.gds.OnStatus = errored
+	s.mainnet.gds.OnStatus = unhealthy
+	testnet, mainnet, err = s.bff.GetStatuses(context.TODO())
+	require.NoError(err, "could not get statuses")
+	require.Nil(testnet, "testnet status should be nil")
+	require.NotNil(mainnet)
+	require.Equal(gds.ServiceState_UNHEALTHY, mainnet.Status, "mainnet summaries did not match")
+
+	// Test both statuses were not returned
+	s.mainnet.gds.OnStatus = errored
+	testnet, mainnet, err = s.bff.GetStatuses(context.TODO())
+	require.NoError(err, "could not get statuses")
+	require.Nil(testnet, "testnet summary should be nil")
+	require.Nil(mainnet, "mainnet summary should be nil")
 }
 
 func (s *bffTestSuite) TestAvailableMiddleware() {
@@ -120,11 +181,39 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
-		TestNet:      config.DirectoryConfig{Endpoint: "bufcon"},
-		MainNet:      config.DirectoryConfig{Endpoint: "bufcon"},
+		Auth0: config.AuthConfig{
+			Domain:        "auth.localhost",
+			Audience:      "http://localhost",
+			ProviderCache: 5 * time.Minute,
+			Testing:       true,
+		},
+		TestNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Endpoint: "bufcon",
+			},
+			Members: config.MembersConfig{
+				Endpoint: "bufcon",
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
+			},
+		},
+		MainNet: config.NetworkConfig{
+			Directory: config.DirectoryConfig{
+				Endpoint: "bufcon",
+			},
+			Members: config.MembersConfig{
+				Endpoint: "bufcon",
+				MTLS: config.MTLSConfig{
+					Insecure: true,
+				},
+			},
+		},
 		Database: config.DatabaseConfig{
-			URL:      "trtl:///",
-			Insecure: true,
+			URL: "trtl:///",
+			MTLS: config.MTLSConfig{
+				Insecure: true,
+			},
 		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")

@@ -22,9 +22,16 @@ type DirectoryIterator interface {
 	SeekId(vaspID string) bool
 }
 
-// CertificateIterator allows access to CertificateStore models
-type CertificateIterator interface {
+// CertificateRequestIterator allows access to CertificateRequestStore models
+type CertificateRequestIterator interface {
 	Iterator
 	CertReq() (*models.CertificateRequest, error)
 	All() ([]*models.CertificateRequest, error)
+}
+
+// CertificateIterator allows access to CertificateStore models
+type CertificateIterator interface {
+	Iterator
+	Cert() (*models.Certificate, error)
+	All() ([]*models.Certificate, error)
 }

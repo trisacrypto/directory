@@ -7,7 +7,6 @@ import BasicDetails from 'components/BasicDetail';
 import LegalPerson from 'components/LegalPerson';
 import Contacts from 'components/Contacts';
 import TrixoQuestionnaire from 'components/TrixoQuestionnaire';
-import ReviewSubmit from 'components/ReviewSubmit';
 import TrisaImplementation from 'components/TrisaImplementation';
 import CertificateReview from 'components/CertificateReview';
 

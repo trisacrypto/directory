@@ -13,10 +13,10 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 
-interface _FormControlProps extends FormControlProps {
+interface _FormControlProps extends Omit<FormControlProps, 'label'> {
   formHelperText?: string | React.ReactNode;
   controlId: string;
-  label?: string;
+  label?: React.ReactNode;
   inputProps?: InputProps;
   name?: string;
   error?: string;
@@ -55,6 +55,13 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
   ) => {
     const inputColorMode = useColorModeValue('#E3EBEF', undefined);
 
+    const handleMouseScroll = (e: React.WheelEvent<HTMLInputElement>) => {
+      // Disable Mouse scrolling
+      if (e.currentTarget.type === 'number') {
+        e.currentTarget.blur();
+      }
+    };
+
     return (
       <CkFormControl isInvalid={isInvalid}>
         <FormLabel htmlFor={controlId}>{label}</FormLabel>
@@ -67,6 +74,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
             type={type}
             ref={inputRef || ref}
             onChange={onChange}
+            onWheel={handleMouseScroll}
             isDisabled={isDisabled}
             isRequired={isRequired}
             placeholder={placeholder}
@@ -74,8 +82,8 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
             {...rest}
           />
           {hasBtn && (
-            <InputRightElement width="4.5rem">
-              <Button h="1.75rem" bg={'transparent'} color={'blue'} size="sm" onClick={handleFn}>
+            <InputRightElement width="4.5rem" height={'100%'}>
+              <Button color={'#000'} size="sm" onClick={handleFn}>
                 {setBtnName || 'Change'}
               </Button>
             </InputRightElement>

@@ -1,9 +1,10 @@
+import { t } from '@lingui/macro';
 import currencies from 'utils/currencies.json';
 
 const FINANCIAL_TRANSFERTS_PERMITTED_OPTIONS = {
-  yes: 'Yes',
-  partial: 'Partially',
-  no: 'No'
+  yes: t`Yes`,
+  partial: t`Partially`,
+  no: t`No`
 };
 
 export const getFinancialTransfertsPermittedOptions = () =>

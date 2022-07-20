@@ -16,7 +16,7 @@ export const getRegistrationDefaultValue = () => {
       geographic_addresses: [
         {
           address_type: '',
-          address_line: ['', '', ''],
+          address_line: [],
           country: ''
         }
       ],
@@ -24,7 +24,7 @@ export const getRegistrationDefaultValue = () => {
         national_identifier: undefined,
         national_identifier_type: 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX',
         country_of_issue: '',
-        registration_authority: ''
+        registration_authority: 'RA777777'
       }
     },
     contacts: {

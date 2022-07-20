@@ -4,18 +4,16 @@ import UserEmailVerification from 'components/Section/UserEmailVerification';
 import UserEmailConfirmation from 'components/Section/UserEmailConfirmation';
 import LandingLayout from 'layouts/LandingLayout';
 import AlertMessage from 'components/ui/AlertMessage';
+import { t } from '@lingui/macro';
 const VerifyPage: React.FC = () => {
-  //   const [isLoading, setIsLoading] = useState(true);
-  //   const [error, setError] = useState<any>();
-  //   const [result, setResult] = useState<any>(null);
-  const successRegistrationMessage = `Your account has been created successfully. Please check your email to verify your account.`;
+  const successRegistrationMessage = t`Your account has been created successfully. Please check your email to verify your account.`;
 
   return (
     <LandingLayout>
       <AlertMessage
         message={successRegistrationMessage}
         status="success"
-        title="Success Registration"
+        title={t`Account Registration Complete`}
       />
     </LandingLayout>
   );

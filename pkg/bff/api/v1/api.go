@@ -2,6 +2,9 @@ package api
 
 import (
 	"context"
+
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 )
 
 //===========================================================================
@@ -9,10 +12,23 @@ import (
 //===========================================================================
 
 type BFFClient interface {
-	Status(ctx context.Context, in *StatusParams) (out *StatusReply, err error)
-	Lookup(ctx context.Context, in *LookupParams) (out *LookupReply, err error)
-	Register(ctx context.Context, in *RegisterRequest) (out *RegisterReply, err error)
-	VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error)
+	// Unauthenticated Endpoints
+	Status(context.Context, *StatusParams) (*StatusReply, error)
+	Lookup(context.Context, *LookupParams) (*LookupReply, error)
+	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
+
+	// User Management Endpoints
+	Login(context.Context) error
+
+	// Authenticated Endpoints
+	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
+	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
+	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
+	Overview(context.Context) (*OverviewReply, error)
+	Announcements(context.Context) (*AnnouncementsReply, error)
+	MakeAnnouncement(context.Context, *models.Announcement) error
+	Certificates(context.Context) (*CertificatesReply, error)
+	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 }
 
 //===========================================================================
@@ -59,39 +75,8 @@ type LookupParams struct {
 // also contain an "error" field - the BFF will handle this field by logging the error
 // but will exclude it from any results returned.
 type LookupReply struct {
-	Results []map[string]interface{} `json:"results"`
-}
-
-// RegisterRequest is converted into a protocol buffer RegisterRequest to send to the
-// specified GDS in v1.4. In v1.5 this will be expanded to include fields for both
-// TestNet and MainNet registration (e.g. multiple fields for endpoint and domain).
-// All generic fields (e.g. map[string]interface{}) should match their protobuf spec.
-type RegisterRequest struct {
-	// The network of the directory to register with, e.g. testnet or mainnet
-	// NOTE: not required for front-end, used to determine endpoint in the client.
-	Network string `json:"network,omitempty"`
-
-	// RegisterRequest ProtocolBuffer fields
-	Entity           map[string]interface{} `json:"entity"`
-	Contacts         map[string]interface{} `json:"contacts"`
-	TRISAEndpoint    string                 `json:"trisa_endpoint"`
-	CommonName       string                 `json:"common_name"`
-	Website          string                 `json:"website"`
-	BusinessCategory string                 `json:"business_category"`
-	VASPCategories   []string               `json:"vasp_categories"`
-	EstablishedOn    string                 `json:"established_on"`
-	TRIXO            map[string]interface{} `json:"trixo"`
-}
-
-// RegisterReply is converted from a protocol buffer RegisterReply.
-type RegisterReply struct {
-	Error               map[string]interface{} `json:"error,omitempty"`
-	Id                  string                 `json:"id"`
-	RegisteredDirectory string                 `json:"registered_directory"`
-	CommonName          string                 `json:"common_name"`
-	Status              string                 `json:"status"`
-	Message             string                 `json:"message"`
-	PKCS12Password      string                 `json:"pkcs12password"`
+	TestNet map[string]interface{} `json:"testnet"`
+	MainNet map[string]interface{} `json:"mainnet"`
 }
 
 // VerifyContactParams is converted into a GDS VerifyContactRequest.
@@ -106,4 +91,86 @@ type VerifyContactReply struct {
 	Error   map[string]interface{} `json:"error,omitempty"`
 	Status  string                 `json:"status"`
 	Message string                 `json:"message"`
+}
+
+// RegisterReply is converted from a protocol buffer RegisterReply.
+type RegisterReply struct {
+	Error               map[string]interface{} `json:"error,omitempty"`
+	Id                  string                 `json:"id"`
+	RegisteredDirectory string                 `json:"registered_directory"`
+	CommonName          string                 `json:"common_name"`
+	Status              string                 `json:"status"`
+	Message             string                 `json:"message"`
+	PKCS12Password      string                 `json:"pkcs12password"`
+}
+
+// OverviewReply is returned on overview requests.
+type OverviewReply struct {
+	Error   NetworkError    `json:"error,omitempty"`
+	OrgID   string          `json:"org_id"`
+	TestNet NetworkOverview `json:"testnet"`
+	MainNet NetworkOverview `json:"mainnet"`
+}
+
+// NetworkOverview contains network-specific information.
+type NetworkOverview struct {
+	Status             string        `json:"status"`
+	Vasps              int           `json:"vasps"`
+	CertificatesIssued int           `json:"certificates_issued"`
+	NewMembers         int           `json:"new_members"`
+	MemberDetails      MemberDetails `json:"member_details"`
+}
+
+// MemberDetails contains VASP-specific information.
+type MemberDetails struct {
+	ID          string                 `json:"id"`
+	Status      string                 `json:"status"`
+	CountryCode string                 `json:"country_code"`
+	Certificate map[string]interface{} `json:"certificate"`
+}
+
+// AnnouncementsReply contains up to the last 10 network announcements that were made in
+// the past month. It does not require pagination since only relevant results are returned.
+type AnnouncementsReply struct {
+	Announcements []*models.Announcement `json:"announcements"`
+	LastUpdated   string                 `json:"last_updated,omitempty"`
+}
+
+// CertificatesReply is returned on certificates requests.
+type CertificatesReply struct {
+	Error   NetworkError  `json:"network_error,omitempty"`
+	TestNet []Certificate `json:"testnet"`
+	MainNet []Certificate `json:"mainnet"`
+}
+
+// Certificate contains details about a certificate issued to a VASP.
+type Certificate struct {
+	SerialNumber string                 `json:"serial_number"`
+	IssuedAt     string                 `json:"issued_at"`
+	ExpiresAt    string                 `json:"expires_at"`
+	Revoked      bool                   `json:"revoked"`
+	Details      map[string]interface{} `json:"details"`
+}
+
+// MemberDetailsParams contains details required to identify a VASP member for the
+// MembersDetails request.
+type MemberDetailsParams struct {
+	ID        string `url:"vaspID,omitempty" form:"vaspID"`
+	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
+}
+
+// MemberDetailsReply contains sensitive details about a VASP member.
+type MemberDetailsReply struct {
+	Summary     *members.VASPMember    `json:"summary"`
+	LegalPerson map[string]interface{} `json:"legal_person"`
+	Trixo       map[string]interface{} `json:"trixo"`
+}
+
+// NetworkError is populated when the BFF receives an error from a network endpoint,
+// containing an error string for each network that errored. This allows the client to
+// distinguish between network errors and BFF errors and determine which network the
+// errors originated from.
+type NetworkError struct {
+	TestNet string `json:"testnet,omitempty"`
+	MainNet string `json:"mainnet,omitempty"`
 }

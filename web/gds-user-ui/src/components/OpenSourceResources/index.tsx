@@ -1,5 +1,5 @@
 import { Link, ListItem, UnorderedList } from '@chakra-ui/react';
-import Card from 'components/Card';
+import Card from 'components/Card/Card';
 
 const OpenSourceResources: React.FC = () => {
   return (

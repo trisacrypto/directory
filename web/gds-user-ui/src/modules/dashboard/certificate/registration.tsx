@@ -1,42 +1,60 @@
+import React, { useState, useEffect } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
-import { Box, Heading, HStack, VStack, useToast, Text, Link, Flex } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  HStack,
+  VStack,
+  useToast,
+  Text,
+  Link,
+  Flex,
+  useDisclosure,
+  Button,
+  Stack
+} from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
-import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { FormProvider, useForm, useFormState } from 'react-hook-form';
-
+import { FormProvider, useForm } from 'react-hook-form';
+import useAuth from 'hooks/useAuth';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError, getStepDatas } from 'utils/utils';
+import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
-import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
+import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
+import { fieldNamesPerSteps, validationSchema } from './lib';
 
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
 } from 'utils/localStorageHelper';
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
-import { colors } from 'utils/theme';
+import { isProdEnv } from 'application/config';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 const Certificate: React.FC = () => {
+  const [, updateState] = React.useState<any>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
+  const [isResetForm, setIsResetForm] = useState<boolean>(false);
+
   const { nextStep, previousStep } = useCertificateStepper();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
+  const { isUserAuthenticated } = useAuth();
   const toast = useToast();
-
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
-  console.log('[registration] tsr stepper', localStorage.getItem('trs_stepper'));
-  console.log('[registration] current step', currentStep);
-
   const resolver = yupResolver(getCurrentStepValidationSchema());
 
   const methods = useForm({
@@ -45,7 +63,7 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
-  const { formState } = methods;
+  const { formState, reset } = methods;
 
   const dirtyFields = formState.dirtyFields;
 
@@ -104,9 +122,32 @@ const Certificate: React.FC = () => {
   }
   const handlePreviousStep = () => {
     setCertificateFormValueToLocalStorage(methods.getValues());
-
     previousStep();
   };
+
+  const handleResetForm = () => {
+    // open confirmation modal
+    setIsResetModalOpen(true);
+  };
+  const onChangeModalState = (value: boolean) => {
+    setIsResetModalOpen(value);
+  };
+  const onChangeResetForm = (value: boolean) => {
+    setIsResetForm(value);
+  };
+
+  useEffect(() => {
+    if (isResetModalOpen) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetModalOpen]);
+
+  useEffect(() => {
+    reset({ ...loadDefaultValueFromLocalStorage() });
+    setIsResetForm(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm]);
 
   return (
     // <DashboardLayout>
@@ -120,30 +161,37 @@ const Certificate: React.FC = () => {
           <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <Flex justifyContent={'space-between'}>
               <Heading size="lg" mb="24px" className="heading">
-                Certificate Registration
+                <Trans id="Certificate Registration">Certificate Registration</Trans>
               </Heading>
-              <Box>
-                <HomeButton link={'/'} />
-              </Box>
+              <Box>{!isUserAuthenticated && <HomeButton link={'/'} />}</Box>
             </Flex>
 
             <VStack spacing={3}>
               <Card maxW="100%" bg={'white'}>
                 <Card.Body>
                   <Text>
-                    This multi-section form is an important step in the registration and certificate
-                    issuance process. The information you provide will be used to verify the legal
-                    entity that you represent and, where appropriate, will be available to verified
-                    TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
-                    <Link isExternal href="/getting-started" color={'blue'} fontWeight={'bold'}>
-                      Getting Started Help Guide.{' '}
+                    <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
+                      This multi-section form is an important step in the registration and
+                      certificate issuance process. The information you provide will be used to
+                      verify the legal entity that you represent and, where appropriate, will be
+                      available to verified TRISA members to facilitate compliance decisions. If you
+                      need guidance, see the
+                    </Trans>{' '}
+                    <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
+                      <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
                     </Link>
                   </Text>
                   <Text pt={4}>
-                    To assist in completing the registration form, the form is divided into multiple
-                    sections.{' '}
+                    <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
+                      To assist in completing the registration form, the form is divided into
+                      multiple sections
+                    </Trans>
+                    .{' '}
                     <Text as={'span'} fontWeight={'bold'}>
-                      No information is sent until you complete Section 6 - Review & Submit.{' '}
+                      <Trans id="No information is sent until you complete Section 6 - Review & Submit">
+                        No information is sent until you complete Section 6 - Review & Submit
+                      </Trans>
+                      .{' '}
                     </Text>
                   </Text>
                 </Card.Body>
@@ -151,47 +199,37 @@ const Certificate: React.FC = () => {
 
               <Box width={'100%'}>
                 <TestNetCertificateProgressBar />
-                <DevTool control={methods.control} /> {/* setting up the hook form dev tool */}
+                {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
-              <HStack width="100%" spacing={8} justifyContent={'center'} py={6}>
+              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    <FormButton
-                      onClick={handlePreviousStep}
-                      isDisabled={currentStep === 1}
-                      borderRadius={5}
-                      type="button"
-                      w="100%"
-                      maxW="13rem">
-                      Save & Previous
-                    </FormButton>
-                    <FormButton
-                      borderRadius={5}
-                      w="100%"
-                      maxW="13rem"
-                      backgroundColor="#FF7A59"
-                      type="submit"
-                      _hover={{ backgroundColor: '#f07253' }}>
-                      {currentStep === lastStep ? 'Next' : 'Save & Next'}
-                    </FormButton>
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <Trans id="Save & Previous">Save & Previous</Trans>
+                    </Button>
+                    <Button type="submit" variant="secondary">
+                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                    </Button>
                     {/* add review button when reach to final step */}
-                    {/* {currentStep !== lastStep && (
-                      <FormButton
-                        borderRadius={5}
-                        w="100%"
-                        maxW="13rem"
-                        backgroundColor="#FF7A59"
-                        type="submit"
-                        _hover={{ backgroundColor: '#f07253' }}>
-                        Review Summary
-                      </FormButton>
-                    )} */}
+
+                    <Button onClick={handleResetForm}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
                   </>
                 )}
-              </HStack>
+              </Stack>
             </VStack>
           </form>
         </FormProvider>
+        {isResetModalOpen && (
+          <ConfirmationResetFormModal
+            isOpen={isOpen}
+            onClose={onClose}
+            onChangeState={onChangeModalState}
+            onRefeshState={forceUpdate}
+            onChangeResetState={onChangeResetForm}
+          />
+        )}
       </>
     </SimpleDashboardLayout>
   );

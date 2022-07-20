@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	ginzerolog "github.com/dn365/gin-zerolog"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -29,6 +29,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -137,19 +139,61 @@ func (s *Admin) Shutdown() (err error) {
 }
 
 func (s *Admin) setupRoutes() (err error) {
-	// Application Middleware
-	s.router.Use(ginzerolog.Logger("gin"))
-	s.router.Use(gin.Recovery())
-	s.router.Use(s.Available())
+	var (
+		tags      gin.HandlerFunc
+		tracing   gin.HandlerFunc
+		adminTags map[string]string
+	)
 
-	// Add CORS configuration
-	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     s.conf.AllowOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	if s.svc.conf.Sentry.UseSentry() {
+		adminTags = map[string]string{"service": "admin"}
+		tags = sentry.UseTags(adminTags)
+	}
+
+	if s.svc.conf.Sentry.UsePerformanceTracking() {
+		tracing = sentry.TrackPerformance(adminTags)
+	}
+
+	// Application Middleware
+	// NOTE: ordering is very important to how middleware is handled.
+	middlewares := []gin.HandlerFunc{
+		// Logging should be outside so we can record the complete latency of requests.
+		// Note: logging panics will not recover.
+		logger.GinLogger("gds_admin_v2"),
+
+		// Panic recovery middleware; note: gin middleware needs to be added before sentry
+		gin.Recovery(),
+		sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		}),
+
+		// Add searchable tags to the sentry context.
+		tags,
+
+		// Tracing helps us with our peformance metrics and should be as early in the
+		// chain as possible. It is after recovery to ensure trace panics recover.
+		tracing,
+
+		// CORS configuration allows the front-end to make cross-origin requests.
+		cors.New(cors.Config{
+			AllowOrigins:     s.conf.AllowOrigins,
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}),
+
+		// Maintenance mode handling - does not require authentication
+		s.Available(),
+	}
+
+	// Add the middleware to the router
+	for _, middleware := range middlewares {
+		if middleware != nil {
+			s.router.Use(middleware)
+		}
+	}
 
 	// Route-specific middleware
 	authorize := admin.Authorization(s.tokens)
@@ -178,6 +222,7 @@ func (s *Admin) setupRoutes() (err error) {
 			vasps.GET("/:vaspID", s.RetrieveVASP)
 			vasps.PATCH("/:vaspID", csrf, s.UpdateVASP)
 			vasps.DELETE("/:vaspID", csrf, s.DeleteVASP)
+			vasps.GET("/:vaspID/certificates", s.ListCertificates)
 			vasps.GET("/:vaspID/review", s.ReviewToken)
 			vasps.POST("/:vaspID/review", csrf, s.Review)
 			vasps.POST("/:vaspID/resend", csrf, s.Resend)
@@ -902,6 +947,25 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 		log.Warn().Err(err).Msg("could rewire vasp json")
 		return nil, err
 	}
+
+	// Convert the identity certificate serial number a capital hex encoded string
+	if vasp.IdentityCertificate != nil {
+		if _, ok := out.VASP["identity_certificate"].(map[string]interface{})["serial_number"]; !ok {
+			log.Warn().Msg("could not parse identity certificate serial number from vasp json")
+			return nil, errors.New("could not parse identity certificate serial number from vasp json")
+		}
+		out.VASP["identity_certificate"].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+	}
+
+	// Convert the signing certificate serial numbers to capital hex encoded strings
+	for i, cert := range vasp.SigningCertificates {
+		if _, ok := out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"]; !ok {
+			log.Warn().Msg("could not parse signing certificate serial number from vasp json")
+			return nil, errors.New("could not parse signing certificate serial number from vasp json")
+		}
+		out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", cert.SerialNumber)
+	}
+
 	return out, nil
 }
 
@@ -1281,6 +1345,62 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, admin.Reply{Success: true})
+}
+
+// ListCertificates returns a list of certificates for the VASP.
+func (s *Admin) ListCertificates(c *gin.Context) {
+	var err error
+
+	// Get vaspID from the URL
+	vaspID := c.Param("vaspID")
+
+	// Retrieve the VASP from the database
+	var vasp *pb.VASP
+	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+		log.Warn().Err(err).Str("vasp_id", vaspID).Msg("could not retrieve VASP from database")
+		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
+		return
+	}
+
+	// Retrieve the Certificate IDs from the VASP
+	var ids []string
+	if ids, err = models.GetCertIDs(vasp); err != nil {
+		log.Error().Err(err).Str("vasp_id", vaspID).Msg("could not retrieve certificate IDs for VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate IDs for VASP"))
+		return
+	}
+
+	// Construct the reply
+	out := &admin.ListCertificatesReply{
+		Certificates: make([]admin.Certificate, 0),
+	}
+
+	for _, id := range ids {
+		// Retrieve the Certificate from the database
+		var cert *models.Certificate
+		if cert, err = s.db.RetrieveCert(id); err != nil {
+			log.Error().Err(err).Str("cert_id", id).Msg("could not retrieve certificate from database")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate by ID"))
+			return
+		}
+
+		// Construct an entry for the reply
+		entry := admin.Certificate{
+			SerialNumber: id,
+			IssuedAt:     cert.Details.NotBefore,
+			ExpiresAt:    cert.Details.NotAfter,
+			Status:       cert.Status.String(),
+		}
+		if entry.Details, err = wire.Rewire(cert.Details); err != nil {
+			log.Error().Err(err).Str("cert_id", id).Msg("could not serialize certificate details")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not serialize certificate details"))
+			return
+		}
+
+		out.Certificates = append(out.Certificates, entry)
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 // ReplaceContact completely replaces a contact on a VASP with a new contact.

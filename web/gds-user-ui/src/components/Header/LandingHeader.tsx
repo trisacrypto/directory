@@ -14,17 +14,25 @@ import {
   DrawerContent,
   DrawerHeader,
   useDisclosure,
-  DrawerCloseButton
+  DrawerCloseButton,
+  Text,
+  Button
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
 import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
+import { Trans } from '@lingui/react';
+import LanguagesDropdown from 'components/LanguagesDropdown';
+import { NavLink, Outlet } from 'react-router-dom';
+import { useLanguageProvider } from 'contexts/LanguageContext';
+import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [locale] = useLanguageProvider();
 
   return (
     <Flex
@@ -38,20 +46,40 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
             <Box>
-              <Link href="/" _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
-              </Link>
+              <NavLink to={'/'}>
+                <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
+                  <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
+                </Link>
+              </NavLink>
             </Box>
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>
 
-            <Stack ml="auto" display={{ base: 'none', sm: 'flex' }} direction={['column', 'row']}>
-              <MenuItem to="/#about">About TRISA</MenuItem>
-              <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-              {/* <MenuItem isLast to="/auth/login">
-                Login{' '}
-              </MenuItem> */}
+            <Stack
+              isInline
+              align="center"
+              justify="flex-end"
+              ml={{ base: 'auto', md: 0 }}
+              alignItems={'center'}
+              display={{ base: 'none', sm: 'flex' }}
+              direction={['column', 'row']}>
+              <Stack pr={2}>
+                <LanguagesDropdown />
+              </Stack>
+              <MenuItem to="/#about">
+                <Trans id="About TRISA">About TRISA</Trans>
+              </MenuItem>
+              <MenuItem data-testid="documentation" to={`${TRISA_BASE_URL}/${locale}`}>
+                <Trans id="Documentation">Documentation</Trans>
+              </MenuItem>
+              <Stack>
+                <NavLink to={'/auth/login'}>
+                  <Button variant="secondary">
+                    <Trans id="Login">Login</Trans>
+                  </Button>
+                </NavLink>
+              </Stack>
             </Stack>
 
             {/* mobile drawer */}
@@ -79,9 +107,15 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                         pl: '25px'
                       }
                     }}>
-                    <MenuItem to="/#about">About TRISA </MenuItem>
-                    <MenuItem to="https://trisa.dev">Documentation </MenuItem>
-                    <MenuItem to="/auth/login">Login </MenuItem>
+                    <MenuItem to="/#about">
+                      <Trans id="About TRISA">About TRISA</Trans>{' '}
+                    </MenuItem>
+                    <MenuItem to={`${TRISA_BASE_URL}/${locale}`}>
+                      <Trans id="Documentation">Documentation</Trans>
+                    </MenuItem>
+                    <MenuItem to="/auth/login">
+                      <Trans id="Login">Login</Trans>
+                    </MenuItem>
                   </VStack>
                 </DrawerBody>
               </DrawerContent>

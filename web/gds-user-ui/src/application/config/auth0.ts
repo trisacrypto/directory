@@ -5,7 +5,7 @@ const defaultConfig: auth0.AuthOptions = {
   redirectUri: process.env.REACT_APP_AUTH0_REDIRECT_URI,
   audience: process.env.REACT_APP_AUTH0_AUDIENCE,
   scope: process.env.REACT_APP_AUTH0_SCOPE || 'openid profile email',
-  responseType: 'token id_token code'
+  responseType: 'token id_token'
 
   // responseType: 'code',
   // responseMode: 'query',

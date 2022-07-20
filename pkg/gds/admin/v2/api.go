@@ -24,6 +24,7 @@ type DirectoryAdministrationClient interface {
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error)
 	DeleteVASP(ctx context.Context, id string) (out *Reply, err error)
+	ListCertificates(ctx context.Context, vaspID string) (out *ListCertificatesReply, err error)
 	ReplaceContact(ctx context.Context, in *ReplaceContactRequest) (out *Reply, err error)
 	DeleteContact(ctx context.Context, vaspID string, kind string) (out *Reply, err error)
 	CreateReviewNote(ctx context.Context, in *ModifyReviewNoteRequest) (out *ReviewNote, err error)
@@ -190,6 +191,27 @@ type UpdateVASPRequest struct {
 type UpdateVASPReply RetrieveVASPReply
 
 //===========================================================================
+// Certificate Management RPCs
+//===========================================================================
+
+// Certififcate contains some high level information about a certificate issued to a
+// VASP as well as the actual trisa.gds.models.v1beta1.Certificate marshaled by
+// protojson.
+type Certificate struct {
+	SerialNumber string                 `json:"serial_number"`
+	IssuedAt     string                 `json:"issued_at"`
+	ExpiresAt    string                 `json:"expires_at"`
+	Status       string                 `json:"status"`
+	Details      map[string]interface{} `json:"details"`
+}
+
+// ListCertificatesReply contains a list of certificates that have been issued to a
+// VASP.
+type ListCertificatesReply struct {
+	Certificates []Certificate `json:"certificates"`
+}
+
+//===========================================================================
 // Contact management RPCs
 //===========================================================================
 
@@ -298,6 +320,8 @@ const (
 	ResendReview        ResendAction = "review"
 	ResendDeliverCerts  ResendAction = "deliver_certs"
 	ResendRejection     ResendAction = "rejection"
+	ReissuanceReminder  ResendAction = "reissuance_reminder"
+	ReissuanceStarted   ResendAction = "reissuance_started"
 )
 
 // ResendRequest allows extra attempts to resend emails to be made if they were not

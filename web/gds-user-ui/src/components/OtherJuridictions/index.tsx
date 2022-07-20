@@ -1,11 +1,11 @@
-import { Box, Grid, GridItem, HStack } from '@chakra-ui/react';
+import { Box, Button, Grid, GridItem, HStack } from '@chakra-ui/react';
 import DeleteButton from 'components/ui/DeleteButton';
-import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
-
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -36,7 +36,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
                     value={getCountriesOptions().find((option) => option.value === f.value)}
                     onChange={(newValue: any) => f.onChange(newValue.value)}
                     options={getCountriesOptions()}
-                    label="National Jurisdiction"
+                    label={t`National Jurisdiction`}
                     controlId="country"
                   />
                 )}
@@ -44,7 +44,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
             </GridItem>
             <GridItem>
               <InputFormControl
-                label="Regulator Name"
+                label={t`Regulator Name`}
                 controlId="regulator_name"
                 {...register(`${name}[${index}].regulator_name`)}
               />
@@ -56,9 +56,9 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
         </HStack>
       ))}
 
-      <FormButton onClick={handleAddJuridictionClick} borderRadius={5}>
-        Add Jurisdiction
-      </FormButton>
+      <Button onClick={handleAddJuridictionClick} borderRadius={5}>
+        <Trans id="Add Jurisdiction">Add Jurisdiction</Trans>
+      </Button>
     </>
   );
 };

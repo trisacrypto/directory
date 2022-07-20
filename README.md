@@ -19,8 +19,8 @@ On other systems you can use `go install`:
 
 ```
 $ go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
-$ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
-$ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+$ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+$ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 ```
 
 On the server-side, the Go code requires code generation for the API protocol buffers and email template data. Ensure that you have a [go workspace](https://go.dev/doc/gopath_code) correctly setup and the `$GOPATH` environment variable configured. Then from the project root run:

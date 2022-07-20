@@ -1,4 +1,6 @@
 import { Heading } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import FormLayout from 'layouts/FormLayout';
@@ -13,7 +15,9 @@ const CountryOfRegistration: React.FC = () => {
 
   return (
     <FormLayout>
-      <Heading size="md">Country of Registration</Heading>
+      <Heading size="md">
+        <Trans id="Country of Registration">Country of Registration</Trans>
+      </Heading>
       <Controller
         control={control}
         name="entity.country_of_registration"
@@ -21,7 +25,7 @@ const CountryOfRegistration: React.FC = () => {
           <SelectFormControl
             ref={field.ref}
             label=""
-            placeholder="Select a country"
+            placeholder={t`Select a country`}
             isInvalid={!!errors?.entity?.country_of_registration}
             formHelperText={errors?.entity?.country_of_registration?.message}
             controlId="entity.country_of_registration"

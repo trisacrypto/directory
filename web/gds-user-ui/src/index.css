@@ -10,6 +10,15 @@
 * {
   /* color: #221f1f; */
 }
+html,
+body {
+  height: '100%';
+  font-family: 'Open sans', sans-serif;
+  scroll-behavior: smooth;
+}
+body {
+  background-color: '#F7F8FC' !important;
+}
 
 .heading {
   font-family: 'Roboto Slab', serif !important;

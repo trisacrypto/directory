@@ -18,6 +18,8 @@ import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelpe
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { COUNTRIES } from 'constants/countries';
 import { currencyFormatter } from 'utils/utils';
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 interface TrixoReviewProps {}
 
 const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
@@ -51,7 +53,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
       <Stack>
         <Box display={'flex'} justifyContent="space-between" pt={4} ml={0}>
           <Heading fontSize={20} mb="2rem">
-            Section 5: TRIXO Questionnaire
+            <Trans id="Section 5: TRIXO Questionnaire">Section 5: TRIXO Questionnaire</Trans>
           </Heading>
           <Button
             bg={colors.system.blue}
@@ -62,7 +64,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               bg: '#10aaed'
             }}>
             {' '}
-            Edit{' '}
+            {t`Edit`}{' '}
           </Button>
         </Box>
         <Stack fontSize={'1rem'}>
@@ -72,7 +74,8 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               'td:nth-child(2)': { maxWidth: '75%' },
               Tr: { borderStyle: 'hidden' },
               'td:first-child': {
-                width: '50%'
+                width: '50%',
+                paddingLeft: '1rem'
               },
               td: {
                 borderBottom: 'none',
@@ -82,26 +85,29 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
             }}>
             <Tbody>
               <Tr>
-                <Td>Primary National Jurisdiction</Td>
+                <Td>
+                  <Trans id="Primary National Jurisdiction">Primary National Jurisdiction</Trans>
+                </Td>
                 <Td>{(COUNTRIES as any)[trixo?.primary_national_jurisdiction] || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>Name of Primary Regulator</Td>
+                <Td>
+                  <Trans id="Name of Primary Regulator">Name of Primary Regulator</Trans>
+                </Td>
                 <Td>{trixo?.primary_regulator || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td>Other Jurisdictions</Td>
+                <Td>
+                  <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
+                </Td>
                 <Td>
                   {trixo?.other_jurisdictions?.length > 0
                     ? trixo?.other_jurisdictions?.map((o: any, i: any) => {
                         if (o?.regulator_name?.length > 0) {
                           return (
-                            <>
-                              <Tr>
-                                <Td>{o.country}</Td>
-                                <Td>{o.regulator_name}</Td>
-                              </Tr>
-                            </>
+                            <Text key={i}>
+                              {o.country} : {o.regulator_name}{' '}
+                            </Text>
                           );
                         }
                       })
@@ -110,8 +116,10 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>
-                  Is your organization permitted to send and/or receive transfers of virtual assets
-                  in the jurisdictions in which it operates?
+                  <Trans id="Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?">
+                    Is your organization permitted to send and/or receive transfers of virtual
+                    assets in the jurisdictions in which it operates?
+                  </Trans>
                 </Td>
                 <Td>
                   <Tag
@@ -120,7 +128,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                     variant="subtle"
                     colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
                     <TagLabel fontWeight={'bold'}>
-                      {trixo?.financial_transfers_permitted?.toUpperCase()}
+                      {trixo?.financial_transfers_permitted?.toString().toUpperCase()}
                     </TagLabel>
                   </Tag>
                 </Td>
@@ -130,7 +138,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
-                  CDD & Travel Rule Policies
+                  <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
                 </Td>
               </Tr>
               <Tr>
@@ -138,9 +146,11 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>
-                  Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and
-                  Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes
-                  where it is licensed/approved/registered?
+                  <Trans id="Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?">
+                    Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and
+                    Sanctions standards per the requirements of the jurisdiction(s) regulatory
+                    regimes where it is licensed/approved/registered?
+                  </Trans>
                 </Td>
                 <Td>
                   <Tag
@@ -157,8 +167,10 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>
-                  Does your organization conduct KYC/CDD before permitting its customers to
-                  send/receive virtual asset transfers?
+                  <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+                    Does your organization conduct KYC/CDD before permitting its customers to
+                    send/receive virtual asset transfers?
+                  </Trans>
                 </Td>
                 <Td>
                   <Tag
@@ -174,23 +186,27 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>At what threshold and currency does your organization conduct KYC?</Td>
+                <Td>
+                  <Trans id="At what threshold and currency does your organization conduct KYC?">
+                    At what threshold and currency does your organization conduct KYC?
+                  </Trans>
+                </Td>
                 <Td pl={0}>
-                  <Tr>
-                    <Td>
-                      {currencyFormatter(trixo.kyc_threshold, {
-                        currency: trixo.kyc_threshold_currency
-                      }) || 'N/A'}
-                    </Td>
-                    <Td pl={0}>{trixo.kyc_threshold_currency || 'N/A'}</Td>
-                  </Tr>
+                  <Text>
+                    {currencyFormatter(trixo.kyc_threshold, {
+                      currency: trixo.kyc_threshold_currency
+                    }) || 'N/A'}{' '}
+                    {trixo.kyc_threshold_currency || 'N/A'}
+                  </Text>
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
                 <Td>
-                  Is your organization required to comply with the application of the Travel Rule
-                  standards in the jurisdiction(s) where it is licensed/approved/registered?
+                  <Trans id="Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?">
+                    Is your organization required to comply with the application of the Travel Rule
+                    standards in the jurisdiction(s) where it is licensed/approved/registered?
+                  </Trans>
                 </Td>
                 <Td>
                   <Tag
@@ -206,34 +222,29 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>Applicable Regulations</Td>
                 <Td>
-                  <Tr>
-                    <Td pl={0}>
-                      {trixo?.applicable_regulations?.map((reg: any) => {
-                        if (reg?.name.length > 0) {
-                          return (
-                            <React.Fragment key={reg.name}>{reg.name || 'N/A'}</React.Fragment>
-                          );
-                        }
-                      })}
-                    </Td>
-                    <Td></Td>
-                  </Tr>
+                  <Trans id="Applicable Regulations">Applicable Regulations</Trans>
+                </Td>
+                <Td>
+                  {trixo?.applicable_regulations?.map((reg: any) => {
+                    if (reg?.name.length > 0) {
+                      return <Text key={reg.name}>{reg.name || 'N/A'}</Text>;
+                    }
+                  })}
                 </Td>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>What is the minimum threshold for Travel Rule compliance?</Td>
+                <Td>
+                  <Trans id="What is the minimum threshold for Travel Rule compliance?">
+                    What is the minimum threshold for Travel Rule compliance?
+                  </Trans>
+                </Td>
                 <Td pl={0}>
-                  <Tr>
-                    <Td>
-                      {currencyFormatter(trixo.compliance_threshold, {
-                        currency: trixo.compliance_threshold_currency
-                      }) || 'N/A'}
-                    </Td>
-                    <Td pl={0}>{trixo.compliance_threshold_currency || 'N/A'}</Td>
-                  </Tr>
+                  {currencyFormatter(trixo.compliance_threshold, {
+                    currency: trixo.compliance_threshold_currency
+                  }) || 'N/A'}{' '}
+                  {trixo.compliance_threshold_currency || 'N/A'}
                 </Td>
                 <Td></Td>
               </Tr>
@@ -242,14 +253,18 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
-                  Data Protection Policies
+                  <Trans id="Data Protection Policies">Data Protection Policies</Trans>
                 </Td>
               </Tr>
               <Tr>
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td>Is your organization required by law to safeguard PII?</Td>
+                <Td>
+                  <Trans id="Is your organization required by law to safeguard PII?">
+                    Is your organization required by law to safeguard PII?
+                  </Trans>
+                </Td>
                 <Td>
                   <Tag
                     size={'sm'}
@@ -265,8 +280,10 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
               </Tr>
               <Tr>
                 <Td>
-                  Does your organization secure and protect PII, including PII received from other
-                  VASPs under the Travel Rule?
+                  <Trans id="Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?">
+                    Does your organization secure and protect PII, including PII received from other
+                    VASPs under the Travel Rule?
+                  </Trans>
                 </Td>
                 <Td>
                   <Tag

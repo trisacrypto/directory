@@ -81,6 +81,10 @@ if [ -z "$REACT_APP_TRISATEST_ANALYTICS_ID" ]; then
     exit 1
 fi
 
+if [ -z "$GIT_REVISION" ]; then
+    export GIT_REVISION=$(git rev-parse --short HEAD)
+fi
+
 if [ -z "$REACT_APP_GIT_REVISION" ]; then
     export REACT_APP_GIT_REVISION=$(git rev-parse --short HEAD)
 fi
@@ -90,12 +94,11 @@ if [ -z "$REACT_APP_VERSION_NUMBER" ]; then
 fi
 
 # Build the primary backend images
-docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile $REPO
-docker build -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile $REPO
-docker build -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile $REPO
+docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
+docker build -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
+docker build -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
 docker build -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
 docker build -t trisa/trtlsim:$TAG -f $DIR/trtlsim/Dockerfile .
-docker build -t trisa/grpc-proxy:$TAG -f $DIR/grpc-proxy/Dockerfile $REPO
 
 # Build the UI image for vaspdirectory.net
 docker build \
@@ -104,6 +107,12 @@ docker build \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
+    --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
+    --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_AUTH0_CLIENT_ID} \
+    --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.net/auth/callback \
+    --build-arg REACT_APP_AUTH0_SCOPE="openid profile email" \
+    --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net \
     $REPO
 
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
@@ -127,7 +136,6 @@ docker tag trisa/gds-bff:$TAG gcr.io/trisa-gds/gds-bff:$TAG
 docker tag trisa/trtl:$TAG gcr.io/trisa-gds/trtl:$TAG
 docker tag trisa/trtl-init:$TAG gcr.io/trisa-gds/trtl-init:$TAG
 docker tag trisa/trtlsim:$TAG gcr.io/trisa-gds/trtlsim:$TAG
-docker tag trisa/grpc-proxy:$TAG gcr.io/trisa-gds/grpc-proxy:$TAG
 docker tag trisa/gds-user-ui:$TAG gcr.io/trisa-gds/gds-user-ui:$TAG
 docker tag trisa/gds-admin-ui:$TAG gcr.io/trisa-gds/gds-admin-ui:$TAG
 docker tag trisa/gds-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-testnet-admin-ui:$TAG
@@ -138,7 +146,6 @@ docker push trisa/gds-bff:$TAG
 docker push trisa/trtl:$TAG
 docker push trisa/trtl-init:$TAG
 docker push trisa/trtlsim:$TAG
-docker push trisa/grpc-proxy:$TAG
 docker push trisa/gds-user-ui:$TAG
 docker push trisa/gds-admin-ui:$TAG
 docker push trisa/gds-testnet-admin-ui:$TAG
@@ -149,7 +156,6 @@ docker push gcr.io/trisa-gds/gds-bff:$TAG
 docker push gcr.io/trisa-gds/trtl:$TAG
 docker push gcr.io/trisa-gds/trtl-init:$TAG
 docker push gcr.io/trisa-gds/trtlsim:$TAG
-docker push gcr.io/trisa-gds/grpc-proxy:$TAG
 docker push gcr.io/trisa-gds/gds-user-ui:$TAG
 docker push gcr.io/trisa-gds/gds-admin-ui:$TAG
 docker push gcr.io/trisa-gds/gds-testnet-admin-ui:$TAG

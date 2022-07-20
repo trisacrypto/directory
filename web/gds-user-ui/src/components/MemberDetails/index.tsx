@@ -19,6 +19,7 @@ import {
   Tr,
   VStack
 } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 import { getPreferredColorScheme } from '@storybook/theming/dist/ts3.9/utils';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { COUNTRIES } from 'constants/countries';
@@ -87,7 +88,7 @@ export default function MemberDetails() {
 
         <SimpleLayout>
           <Heading size="md" mb={2}>
-            Basic Details
+            <Trans id="Basic Details">Basic Details</Trans>
           </Heading>
           <TableContainer width="100%">
             <Table
@@ -107,19 +108,29 @@ export default function MemberDetails() {
               }}>
               <Tbody>
                 <Tr>
-                  <Td>Website</Td>
+                  <Td>
+                    <Trans id="Website">Website</Trans>
+                  </Td>
                   <Td>{certificate?.website || 'N/A'}</Td>
                 </Tr>
                 <Tr>
-                  <Td>Date of Incorporation/ Establishment</Td>
+                  <Td>
+                    <Trans id="Date of Incorporation / Establishment">
+                      Date of Incorporation / Establishment
+                    </Trans>
+                  </Td>
                   <Td>{certificate?.established_on || 'N/A'}</Td>
                 </Tr>
                 <Tr>
-                  <Td>Business Category</Td>
+                  <Td>
+                    <Trans id="Business Category">Business Category</Trans>
+                  </Td>
                   <Td>{(BUSINESS_CATEGORY as any)[certificate.business_category] || 'N/A'}</Td>
                 </Tr>
                 <Tr>
-                  <Td>VASP Category</Td>
+                  <Td>
+                    <Trans id="VASP Category">VASP Category</Trans>
+                  </Td>
                   <Td>
                     {certificate?.vasp_categories && certificate?.vasp_categories.length
                       ? certificate?.vasp_categories?.map((categ: any) => {
@@ -139,7 +150,7 @@ export default function MemberDetails() {
 
         <SimpleLayout>
           <Heading size="md" mb={2}>
-            Legal Person
+            <Trans id="Legal Person">Legal Person</Trans>
           </Heading>
           <TableContainer width="100%">
             <Table
@@ -159,12 +170,14 @@ export default function MemberDetails() {
                 }
               }}>
               <TableCaption placement="top" color="#000" textAlign="start" paddingInlineStart={0}>
-                Name Identifiers
+                <Trans id="Name Identifiers">Name Identifiers</Trans>
               </TableCaption>
               <Tbody>
                 <Tr>
                   <Td fontStyle="italic">
-                    The name and type of name by which the legal person is known.
+                    <Trans id="The name and type of name by which the legal person is known.">
+                      The name and type of name by which the legal person is known.
+                    </Trans>
                   </Td>
                   <Td>
                     {certificate.entity.name?.name_identifiers?.map(
@@ -228,7 +241,9 @@ export default function MemberDetails() {
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>Addressess</Td>
+                  <Td>
+                    <Trans id="Addresses">Addresses</Trans>
+                  </Td>
                   <Td>
                     <Stack direction="row">
                       <Stack width="50%">
@@ -253,7 +268,9 @@ export default function MemberDetails() {
                   <Td>N/A</Td>
                 </Tr> */}
                 <Tr>
-                  <Td>Country of Registration</Td>
+                  <Td>
+                    <Trans id="Country of Registration">Country of Registration</Trans>
+                  </Td>
                   <Td>
                     {(COUNTRIES as any)[certificate.entity?.country_of_registration] || 'N/A'}
                   </Td>
@@ -279,17 +296,21 @@ export default function MemberDetails() {
                 }
               }}>
               <TableCaption placement="top" color="#000" textAlign="start" paddingInlineStart={0}>
-                National Identification
+                <Trans id="National Identification">National Identification</Trans>
               </TableCaption>
               <Tbody>
                 <Tr>
-                  <Td>Identification Number</Td>
+                  <Td>
+                    <Trans id="Identification Number">Identification Number</Trans>
+                  </Td>
                   <Td>
                     {certificate.entity?.national_identification?.national_identifier || 'N/A'}
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>Identification Type</Td>
+                  <Td>
+                    <Trans id="Identification Type">Identification Type</Trans>
+                  </Td>
                   <Td>
                     {getNationalIdentificationLabel(
                       certificate.entity?.national_identification?.national_identifier_type
@@ -297,7 +318,9 @@ export default function MemberDetails() {
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>Country of Issue</Td>
+                  <Td>
+                    <Trans id="Country of Issue">Country of Issue</Trans>
+                  </Td>
                   <Td>
                     {(COUNTRIES as any)[
                       certificate.entity?.national_identification?.country_of_issue
@@ -305,11 +328,15 @@ export default function MemberDetails() {
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>Country of Registration</Td>
+                  <Td>
+                    <Trans id="Country of Registration">Country of Registration</Trans>
+                  </Td>
                   <Td>USA</Td>
                 </Tr>
                 <Tr>
-                  <Td>Reg Authority</Td>
+                  <Td>
+                    <Trans id="Reg Authority">Reg Authority</Trans>
+                  </Td>
                   <Td>
                     {certificate.entity?.national_identification?.registration_authority || 'N/A'}
                   </Td>
@@ -550,7 +577,11 @@ export default function MemberDetails() {
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>At what threshold and currency does your organization conduct KYC?</Td>
+                  <Td>
+                    <Trans id="At what threshold and currency does your organization conduct KYC?">
+                      At what threshold and currency does your organization conduct KYC?
+                    </Trans>
+                  </Td>
                   <Td>
                     {currencyFormatter(certificate?.trixo?.kyc_threshold || 0, {
                       currency: certificate.trixo.kyc_threshold_currency

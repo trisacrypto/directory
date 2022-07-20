@@ -14,7 +14,7 @@ To decrypt your certificates, you will need the PKCS12 password that you receive
 
 openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
 
-For more information on integrating with the TRISA network, please visit our documentation at https://trisa.dev/. If you have any questions, you may contact us at admin@trisa.io or join us on our Slack channel trisa-workspace.slack.com. Please do not reply directly to this email.
+For more information on integrating with the TRISA network, please visit our documentation at https://trisa.dev/. If you have any questions, you may contact us at support@rotational.io or join us on our Slack channel trisa-workspace.slack.com. Please do not reply directly to this email.
 
 Best Regards,
 TRISA Global Directory Service Team

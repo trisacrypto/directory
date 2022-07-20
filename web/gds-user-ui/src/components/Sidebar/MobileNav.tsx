@@ -20,11 +20,29 @@ import UsaIcon from 'assets/usa-flag-large.jpg';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 // import FranceIcon from 'assets/france.svg';
-
+import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import useAuth from 'hooks/useAuth';
+import useCustomAuth0 from 'hooks/useCustomAuth0';
+import { removeCookie } from 'utils/cookies';
+import { useNavigate } from 'react-router-dom';
+import DefaultAvatar from 'assets/default_avatar.svg';
+import AvatarContentLoader from 'components/ContentLoader/Avatar';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
+  isLoading?: boolean;
 }
+
+const DEFAULT_AVARTAR = 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200';
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
+  const { user, logoutUser } = useAuth();
+  const navigate = useNavigate();
+  const { auth0Logout } = useCustomAuth0();
+  const handleLogout = (e: any) => {
+    e.preventDefault();
+    removeCookie('access_token');
+    logoutUser();
+    navigate('/');
+  };
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -55,7 +73,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
 
       <HStack spacing={{ base: '0', md: '6' }}>
         <HStack>
-          <IconButton
+          {/* <IconButton
             size="lg"
             variant="ghost"
             aria-label="open menu"
@@ -81,7 +99,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
             color="gray.700"
             _focus={{ boxShadow: 'none' }}
             icon={<FiBell />}
-          />
+          /> */}
           <LanguagesDropdown />
         </HStack>
         <Divider orientation="vertical" height={8} />
@@ -89,16 +107,14 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuButton transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
             <HStack>
               <Text fontSize="sm" color="blackAlpha.700">
-                Jones Ferdinand
+                {user?.name || 'Guest'}
               </Text>
               <Box borderRadius="50%" borderWidth={2} padding={0.5}>
                 <Avatar
                   size={'md'}
                   height="43.3"
                   w="43.3"
-                  src={
-                    'https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
-                  }
+                  src={user?.pictureUrl || DefaultAvatar}
                 />
               </Box>
             </HStack>
@@ -106,9 +122,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
-            <MenuItem>Profile</MenuItem>
+            {/* <MenuItem>Profile</MenuItem> */}
             <MenuDivider />
-            <MenuItem>Sign out</MenuItem>
+            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
           </MenuList>
         </Menu>
       </HStack>

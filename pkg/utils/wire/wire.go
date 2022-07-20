@@ -30,6 +30,7 @@ var (
 // Namespace constants for all managed objects in GDS
 const (
 	NamespaceVASPs    = "vasps"
+	NamespaceCerts    = "certs"
 	NamespaceCertReqs = "certreqs"
 	NamespaceReplicas = "peers"
 	NamespaceIndices  = "index"
@@ -50,6 +51,12 @@ func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) 
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, vasp, err)
 		}
 		return vasp, nil
+	case NamespaceCerts:
+		cert := &models.Certificate{}
+		if err = proto.Unmarshal(data, cert); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, cert, err)
+		}
+		return cert, nil
 	case NamespaceCertReqs:
 		certreq := &models.CertificateRequest{}
 		if err = proto.Unmarshal(data, certreq); err != nil {
@@ -111,6 +118,12 @@ func RemarshalJSON(namespace string, in []byte) (out []byte, err error) {
 			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, vasp, err)
 		}
 		return proto.Marshal(vasp)
+	case NamespaceCerts:
+		cert := &models.Certificate{}
+		if err = jsonpb.Unmarshal(in, cert); err != nil {
+			return nil, fmt.Errorf("could not unmarshal json %s into %T: %s", namespace, cert, err)
+		}
+		return proto.Marshal(cert)
 	case NamespaceCertReqs:
 		certreq := &models.CertificateRequest{}
 		if err = jsonpb.Unmarshal(in, certreq); err != nil {

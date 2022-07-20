@@ -1,0 +1,22 @@
+Hello TRISA Admins,
+
+A TRISA Identity Certificate automated reissuance for {{ .CommonName }} will soon begin as the identity certificates for this record will expire on {{ .ExpirationDate }}.
+
+The Global Directory Service will automatically reissue the certificates on {{ .ReissueDate }}. Please review the directory entry and VASP record for the current certificate to ensure the TRISA member should remain verified.
+
+Current certificate and directory entry details:
+
+ID: {{ .VID }}
+Registered Directory: {{ .RegisteredDirectory }}
+Common Name: {{ .CommonName }}
+Endpoint: {{ .Endpoint }}
+Serial Number: {{ .SerialNumber }}
+Expiration: {{ .ExpirationDate }}
+Reissuance: {{ .ReissueDate }}
+
+You can view the full record on the TRISA Admin UI:
+
+{{ .AdminReviewURL }}
+
+Best Regards,
+TRISA Global Directory Service Team

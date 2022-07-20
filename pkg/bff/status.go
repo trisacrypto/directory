@@ -2,6 +2,7 @@ package bff
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -47,7 +49,7 @@ func (s *Server) Status(c *gin.Context) {
 
 		go func() {
 			defer wg.Done()
-			if status, err := s.testnet.Status(ctx, &gds.HealthCheck{}); err != nil {
+			if status, err := s.testnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
 				log.Warn().Err(err).Str("network", testnet).Msg("could not connect to GDS")
 				out.TestNet = "unavailable"
 			} else {
@@ -62,7 +64,7 @@ func (s *Server) Status(c *gin.Context) {
 
 		go func() {
 			defer wg.Done()
-			if status, err := s.mainnet.Status(ctx, &gds.HealthCheck{}); err != nil {
+			if status, err := s.mainnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
 				log.Warn().Err(err).Str("network", mainnet).Msg("could not connect to GDS")
 				out.MainNet = "unavailable"
 			} else {
@@ -81,6 +83,42 @@ func (s *Server) Status(c *gin.Context) {
 
 	// Render the response
 	c.JSON(http.StatusOK, out)
+}
+
+// GetStatuses makes parallel calls to the directory service to get the status
+// information for both testnet and mainnet.
+func (s *Server) GetStatuses(ctx context.Context) (testnet, mainnet *gds.ServiceState, err error) {
+	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
+		return client.Status(ctx, &gds.HealthCheck{})
+	}
+
+	// Perform the parallel requests
+	results, errs := s.ParallelGDSRequests(ctx, rpc, false)
+	if len(errs) != 2 || len(results) != 2 {
+		return nil, nil, fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
+	}
+
+	// Parse the results
+	var ok bool
+	if errs[0] != nil {
+		log.Warn().Err(errs[0]).Msg("could not call testnet Status RPC")
+		testnet = nil
+	} else if results[0] == nil {
+		return nil, nil, fmt.Errorf("nil testnet result returned from parallel requests")
+	} else if testnet, ok = results[0].(*gds.ServiceState); !ok {
+		return nil, nil, fmt.Errorf("unexpected testnet status result type returned from parallel requests: %T", results[0])
+	}
+
+	if errs[1] != nil {
+		log.Warn().Err(errs[1]).Msg("could not call mainnet Status RPC")
+		mainnet = nil
+	} else if results[1] == nil {
+		return nil, nil, fmt.Errorf("nil mainnet status result returned from parallel requests")
+	} else if mainnet, ok = results[1].(*gds.ServiceState); !ok {
+		return nil, nil, fmt.Errorf("unexpected mainnet status result type returned from parallel requests: %T", results[1])
+	}
+
+	return testnet, mainnet, nil
 }
 
 // Available is middleware that uses the healthy boolean to return a service unavailable

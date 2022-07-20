@@ -6,9 +6,11 @@ import {
   Image,
   CloseButton,
   Divider,
-  VStack
+  VStack,
+  Stack,
+  Heading
 } from '@chakra-ui/react';
-import trisaLogo from '../../assets/images/logo-removebg-preview.png';
+import trisaLogo from '../../assets/trisa.svg';
 import NavItem from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
@@ -27,25 +29,32 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 275 }}
       pos="fixed"
+      px={2}
       h="full"
       {...rest}>
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Box width="100%">
+      <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
+        <Stack width="100%" direction={['row']}>
           <Image src={trisaLogo} alt="GDS UI" />
-        </Box>
+          <Heading size="sm" color="#FFFFFF" lineHeight={1.35}>
+            Global Directory Service
+          </Heading>
+        </Stack>
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
-        {MenuItems.map((menu) => (
-          <NavItem key={menu.title} icon={menu.icon}>
+        {MenuItems.filter((m) => m.activated).map((menu) => (
+          <NavItem key={menu.title} icon={menu.icon} href={menu.path || '/#'} path={menu.path}>
             {menu.title}
           </NavItem>
         ))}
+
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
-        <NavItem href="mailto:support@trisa.io" icon={MdContactSupport}>
+        <NavItem href="mailto:support@trisa.io" icon={MdContactSupport} w={'100%'}>
           Support
         </NavItem>
-        <NavItem icon={IoLogoSlack}>Slack</NavItem>
+        <NavItem icon={IoLogoSlack} href="/#" w={'100%'}>
+          Slack
+        </NavItem>
       </VStack>
     </Box>
   );

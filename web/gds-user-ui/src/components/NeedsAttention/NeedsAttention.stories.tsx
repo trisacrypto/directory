@@ -1,12 +1,12 @@
 import { Meta, Story } from "@storybook/react";
-import NeedsAttention from ".";
+import NeedsAttention, { NeedsAttentionProps } from ".";
 
 export default {
   title: "components/NeedsAttention",
   component: NeedsAttention,
 } as Meta;
 
-const Template: Story = (args) => <NeedsAttention {...args} />;
+const Template: Story<NeedsAttentionProps> = (args) => <NeedsAttention {...args} />;
 
 export const Default = Template.bind({});
 Default.args = {};

@@ -1,16 +1,16 @@
-import { Grid, GridItem, VStack } from '@chakra-ui/react';
+import { Button, Grid, GridItem, VStack } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
-import FormButton from 'components/ui/FormButton';
 import InputFormControl from 'components/ui/InputFormControl';
-import { Control, useFieldArray, UseFormRegister } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 
 type RegulationsProps = {
-  register: UseFormRegister<any>;
-  control: Control;
   name: string;
 };
 
-const Regulations: React.FC<RegulationsProps> = ({ register, name, control }) => {
+const Regulations: React.FC<RegulationsProps> = ({ name }) => {
+  const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     name,
     control
@@ -26,13 +26,13 @@ const Regulations: React.FC<RegulationsProps> = ({ register, name, control }) =>
             />
           </GridItem>
           <GridItem display="flex" alignItems="center">
-            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
           </GridItem>
         </Grid>
       ))}
-      <FormButton onClick={() => append({ name: '' })} borderRadius={5}>
-        Add Regulation
-      </FormButton>
+      <Button onClick={() => append({ name: '' })} borderRadius={5}>
+        <Trans id="Add Regulation">Add Regulation</Trans>
+      </Button>
     </VStack>
   );
 };

@@ -146,8 +146,8 @@ message ReplicaStatus {
 // Get vs Put options. The semantics of each option depends on the type of request.
 message Options {
     bool return_meta = 1;     // generally, return the version information for the object in the response
-    bool iter_no_keys = 2;    // do not include keys in an Iter or Batch response, to reduce data transfer load
-    bool iter_no_values = 3;  // do not include values in an Iter or Batch response, to reduce data transfer load
+    bool iter_no_keys = 2;    // do not include keys in an Iter or Cursor response, to reduce data transfer load
+    bool iter_no_values = 3;  // do not include values in an Iter or Cursor response, to reduce data transfer load
     string page_token = 4;    // specify the page token to fetch the next page of results
     int32 page_size = 5;      // specify the number of results per page, cannot change between page requests
 }

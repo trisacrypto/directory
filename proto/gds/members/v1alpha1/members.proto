@@ -4,6 +4,7 @@ package gds.members.v1alpha1;
 option go_package = "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1;members";
 
 import "trisa/gds/models/v1beta1/models.proto";
+import "ivms101/ivms101.proto";
 
 // The TRISAMembers service is an experimental service that provides extra access to the
 // directory service for verified TRISA members. Access to this service requires mTLS
@@ -14,6 +15,12 @@ import "trisa/gds/models/v1beta1/models.proto";
 service TRISAMembers {
     // List all verified VASP members in the Directory Service.
     rpc List(ListRequest) returns (ListReply) {};
+
+    // Get a short summary of the verified VASP members in the Directory Service.
+    rpc Summary(SummaryRequest) returns (SummaryReply) {};
+
+    // Get details for a VASP member in the Directory Service.
+    rpc Details(DetailsRequest) returns (MemberDetails) {};
 }
 
 
@@ -36,6 +43,8 @@ message ListReply {
 
 // VASPMember is a lightweight data structure containing enough information to
 // facilitate p2p exchanges or more detailed lookups against the Directory Service.
+// Note: This should not contain any sensitive VASP information since it is returned on
+// the publicly accessible List and Summary APIs.
 message VASPMember {
     // The uniquely identifying components of the VASP in the directory service
     string id = 1;
@@ -52,4 +61,42 @@ message VASPMember {
     trisa.gds.models.v1beta1.BusinessCategory business_category = 8;
     repeated string vasp_categories = 9;
     string verified_on = 10;
+    trisa.gds.models.v1beta1.VerificationState status = 11;
+}
+
+// SummaryRequest allows the caller to specify parameters for the returned summary.
+message SummaryRequest {
+    // The start date for determining how many members are new - optional
+    string since = 1;
+
+    // Include your VASP ID to return details about your VASP record in the summary - optional
+    string member_id = 2;
+}
+
+// SummaryReply returns summary info about the members in the Directory Service.
+message SummaryReply {
+    // Counts of VASPs and certificates
+    int32 vasps = 1;
+    int32 certificates_issued = 2;
+    int32 new_members = 3;
+
+    // Details for the requested VASP
+    VASPMember member_info = 4;
+}
+
+// DetailsRequest allows the caller to specify the VASP member to retrieve details for.
+message DetailsRequest {
+    string member_id = 1;
+}
+
+// MemberDetails returns details about the requested VASP member.
+message MemberDetails {
+    // Summary information about the VASP member
+    VASPMember member_summary = 1;
+
+    // The IVMS101 legal person identifying the VASP member
+    ivms101.LegalPerson legal_person = 2;
+
+    // The TRIXO questionnaire used to register the VASP
+    trisa.gds.models.v1beta1.TRIXOQuestionnaire trixo = 3;
 }

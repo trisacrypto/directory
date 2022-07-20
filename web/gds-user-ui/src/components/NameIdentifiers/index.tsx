@@ -1,8 +1,9 @@
 import React, { useState, FC, useEffect } from 'react';
-import { HStack } from '@chakra-ui/react';
-import Button from 'components/ui/FormButton';
+import { Button, HStack } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifier from '../NameIdentifier';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 
 const NameIdentifiers: React.FC = () => {
   const nameIdentifiersFieldArrayRef = React.useRef<any>(null);
@@ -25,35 +26,35 @@ const NameIdentifiers: React.FC = () => {
     <FormLayout>
       <NameIdentifier
         name="entity.name.name_identifiers"
-        heading="Name identifiers"
-        type={'legal'}
-        description="Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetics names where appropriate."
+        heading={t`Name identifiers`}
+        type={t`legal`}
+        description={t`Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetics names where appropriate.`}
         ref={nameIdentifiersFieldArrayRef}
       />
 
       <NameIdentifier
         name="entity.name.local_name_identifiers"
-        heading="Local Name Identifiers"
-        description="The name and type of name by which the legal person is known."
+        heading={t`Local Name Identifiers`}
+        description={t`The name and type of name by which the legal person is known.`}
         ref={localNameIdentifiersFieldArrayRef}
       />
 
       <NameIdentifier
         name="entity.name.phonetic_name_identifiers"
-        heading="Phonetic Name Identifiers"
-        description="The name and type of name by which the legal person is known."
+        heading={t`Phonetic Name Identifiers`}
+        description={t`The name and type of name by which the legal person is known.`}
         ref={phoneticNameIdentifiersFieldArrayRef}
       />
 
       <HStack width="100%" wrap="wrap" align="start" gap={4}>
-        <Button borderRadius="5px" onClick={handleAddLegalNamesRow}>
-          Add Legal Name
+        <Button onClick={handleAddLegalNamesRow}>
+          <Trans id="Add Legal Name">Add Legal Name</Trans>
         </Button>
-        <Button borderRadius="5px" marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
-          Add Local Name
+        <Button marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
+          <Trans id="Add Local Name">Add Local Name</Trans>
         </Button>
-        <Button borderRadius="5px" marginLeft="0 !important" onClick={handleAddNewPhoneticNamesRow}>
-          Add Phonetic Names
+        <Button marginLeft="0 !important" onClick={handleAddNewPhoneticNamesRow}>
+          <Trans id="Add Phonetic Names">Add Phonetic Names</Trans>
         </Button>
       </HStack>
     </FormLayout>

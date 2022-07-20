@@ -17,39 +17,17 @@ const OFFSET = 127397;
  * @param {string} cc - country code string
  * @returns {string} flag emoji
  */
-export function countryCodeEmoji(cc: string) {
-  // Ignore empty strings, null, and undefined
-  if (!cc) {
-    return '';
-  }
-
-  if (!CC_REGEX.test(cc)) {
-    const type = typeof cc;
-    throw new TypeError(
-      `cc argument must be an ISO 3166-1 alpha-2 string, but got '${
-        type === 'string' ? cc : type
-      }' instead.`
-    );
-  }
+export function countryCodeEmoji(cc: IsoCountryCode) {
+  // if (!CC_REGEX.test(cc)) {
+  //   const type = typeof cc;
+  //   throw new TypeError(
+  //     `cc argument must be an ISO 3166-1 alpha-2 string, but got '${
+  //       type === 'string' ? cc : type
+  //     }' instead.`
+  //   );
+  // }
 
   const codePoints = [...cc.toUpperCase()].map((c) => (c as any).codePointAt() + OFFSET);
-  return String.fromCodePoint(...codePoints);
-}
-
-/**
- * convert flag emoji to corresponding country code
- * @param {string} flag - flag emoji
- * @returns {string} country code string
- */
-export function emojiCountryCode(flag: string) {
-  if (flag.length !== FLAG_LENGTH) {
-    const type = typeof flag;
-    throw new TypeError(
-      `flag argument must be a flag emoji, but got '${type === 'string' ? flag : type}' instead.`
-    );
-  }
-
-  const codePoints = [...flag].map((c) => (c as any).codePointAt() - OFFSET);
   return String.fromCodePoint(...codePoints);
 }
 
@@ -307,11 +285,7 @@ export const isoCountries = {
  * @returns {string} country name
  */
 export function getCountryName(countryCode: IsoCountryCode) {
-  if (countryCode in isoCountries) {
-    return isoCountries[countryCode];
-  } else {
-    return countryCode;
-  }
+  return isoCountries[countryCode] as string;
 }
 
 export default countryCodeEmoji;

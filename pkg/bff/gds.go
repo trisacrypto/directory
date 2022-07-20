@@ -2,7 +2,6 @@ package bff
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,15 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	"github.com/trisacrypto/directory/pkg/bff/config"
+	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
-	"github.com/trisacrypto/trisa/pkg/ivms101"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -30,29 +24,6 @@ const (
 	trisatest     = "trisatest.net"
 	vaspdirectory = "vaspdirectory.net"
 )
-
-// ConnectGDS creates a gRPC client to the TRISA Directory Service specified in the
-// configuration. This method is used to connect to both the TestNet and the MainNet and
-// to connect to mock GDS services in testing using buffconn.
-func ConnectGDS(conf config.DirectoryConfig) (_ gds.TRISADirectoryClient, err error) {
-	// Create the Dial options with required credentials
-	var opts []grpc.DialOption
-	if conf.Insecure {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
-	defer cancel()
-
-	// Connect the directory client (non-blocking)
-	var cc *grpc.ClientConn
-	if cc, err = grpc.DialContext(ctx, conf.Endpoint, opts...); err != nil {
-		return nil, err
-	}
-	return gds.NewTRISADirectoryClient(cc), nil
-}
 
 // Lookup makes a request on behalf of the user to both the TestNet and MainNet GDS
 // servers, returning 1-2 results (e.g. either or both GDS responses). If no results
@@ -81,7 +52,7 @@ func (s *Server) Lookup(c *gin.Context) {
 	req := &gds.LookupRequest{Id: params.ID, CommonName: params.CommonName}
 
 	// Create an RPC func for making a parallel GDS request
-	lookup := func(ctx context.Context, client gds.TRISADirectoryClient, network string) (_ proto.Message, err error) {
+	lookup := func(ctx context.Context, client GlobalDirectoryClient, network string) (_ proto.Message, err error) {
 		var rep *gds.LookupReply
 		if rep, err = client.Lookup(ctx, req); err != nil {
 			// If the code is not found then do not return an error, just no result.
@@ -107,164 +78,55 @@ func (s *Server) Lookup(c *gin.Context) {
 		return rep, nil
 	}
 
-	// Execute the parallel GDS lookup request, ensuring that flatten is true
-	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, true)
+	// Execute the parallel GDS lookup request, ensuring that flatten is false with the
+	// expectation that TestNet will be in the 0 index and MainNet in the 1 index.
+	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, false)
 
 	// If there were multiple errors, return a 500
-	if len(errs) == 2 {
+	// Because the results cannot be flattened we have to check each err individually.
+	if errs[0] != nil && errs[1] != nil {
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to execute Lookup request"))
 		return
 	}
 
 	// Check if there are results to return
-	if len(results) == 0 {
+	// Because the results cannot be flattened we have to check each result individually.
+	if results[0] == nil && results[1] == nil {
 		c.JSON(http.StatusNotFound, api.ErrorResponse("no results returned for query"))
 		return
 	}
 
 	// Rewire the results into a JSON response
-	out := &api.LookupReply{
-		Results: make([]map[string]interface{}, len(results)),
-	}
+	out := &api.LookupReply{}
 	for idx, result := range results {
-		var err error
-		if out.Results[idx], err = wire.Rewire(result); err != nil {
+		// Skip over nil results
+		if result == nil {
+			continue
+		}
+
+		if _, ok := result.(*gds.LookupReply); !ok {
+			err := fmt.Errorf("unexpected result type: %T", result)
+			log.Error().Err(err).Msg("unexpected result type")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+			return
+		}
+
+		data, err := wire.Rewire(result.(proto.Message))
+		if err != nil {
 			log.Error().Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))
 			return
 		}
+
+		switch idx {
+		case 0:
+			out.TestNet = data
+		case 1:
+			out.MainNet = data
+		}
 	}
 
 	// Serialize the results and return a successful response
-	c.JSON(http.StatusOK, out)
-}
-
-// Register makes a request on behalf of the user to either the TestNet or the MainNet
-// GDS server based on the URL endpoint. This method is essentially a passthrough
-// conversion of a JSON request to a gRPC request to GDS.
-func (s *Server) Register(c *gin.Context) {
-	// Get the network from the URL
-	network := strings.ToLower(c.Param("network"))
-
-	// Parse the incoming JSON data from the client request
-	var err error
-	in := &api.RegisterRequest{}
-	if err = c.ShouldBind(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
-		return
-	}
-
-	// Sanity check: validate the network with the request if supplied
-	if in.Network != "" && in.Network != network {
-		log.Warn().Str("data", in.Network).Str("param", network).Msg("mismatched request network and URL")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("the request network does not match the URL endpoint"))
-		return
-	}
-
-	// Prevent panics by requiring data that will be unwired
-	switch {
-	case in.BusinessCategory == "":
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("business category is required"))
-		return
-	case len(in.Entity) == 0:
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("entity is required"))
-		return
-	case len(in.Contacts) == 0:
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("contacts are required"))
-		return
-	case len(in.TRIXO) == 0:
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("trixo is required"))
-		return
-	}
-
-	// Create the RegisterRequest to send to GDS
-	req := &gds.RegisterRequest{
-		Entity:           &ivms101.LegalPerson{},
-		Contacts:         &models.Contacts{},
-		TrisaEndpoint:    in.TRISAEndpoint,
-		CommonName:       in.CommonName,
-		Website:          in.Website,
-		BusinessCategory: models.BusinessCategoryUnknown,
-		VaspCategories:   in.VASPCategories,
-		EstablishedOn:    in.EstablishedOn,
-		Trixo:            &models.TRIXOQuestionnaire{},
-	}
-
-	// Unwire the protocol buffers into the request
-	if err = wire.Unwire(in.Entity, req.Entity); err != nil {
-		log.Warn().Err(err).Msg("could not unwire legal person entity")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse legal person entity"))
-		return
-	}
-
-	if err = wire.Unwire(in.Contacts, req.Contacts); err != nil {
-		log.Warn().Err(err).Msg("could not unwire contacts")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse contacts"))
-		return
-	}
-
-	if req.BusinessCategory, err = models.ParseBusinessCategory(in.BusinessCategory); err != nil {
-		log.Warn().Err(err).Str("input", in.BusinessCategory).Msg("could not parse business category")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
-		return
-	}
-
-	if err = wire.Unwire(in.TRIXO, req.Trixo); err != nil {
-		log.Warn().Err(err).Msg("could not unwire TRIXO form")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse TRIXO form"))
-		return
-	}
-
-	// Make the GDS request
-	log.Debug().Str("network", network).Msg("issuing GDS register request")
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
-	var rep *gds.RegisterReply
-	defer cancel()
-
-	switch network {
-	case testnet:
-		rep, err = s.testnet.Register(ctx, req)
-	case mainnet:
-		rep, err = s.mainnet.Register(ctx, req)
-	default:
-		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
-		return
-	}
-
-	// Handle GDS errors
-	if err != nil {
-		serr, _ := status.FromError(err)
-		switch serr.Code() {
-		case codes.InvalidArgument, codes.AlreadyExists:
-			c.JSON(http.StatusBadRequest, api.ErrorResponse(serr.Message()))
-		case codes.Aborted:
-			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
-		default:
-			log.Error().Err(err).Str("code", serr.Code().String()).Str("network", network).Msg("could not register with directory service")
-			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not register with %s", network)))
-		}
-		return
-	}
-
-	// Create the response from the reply
-	out := &api.RegisterReply{
-		Id:                  rep.Id,
-		RegisteredDirectory: rep.RegisteredDirectory,
-		CommonName:          rep.CommonName,
-		Status:              rep.Status.String(),
-		Message:             rep.Message,
-		PKCS12Password:      rep.Pkcs12Password,
-	}
-
-	if rep.Error != nil && rep.Error.Code != 0 {
-		if out.Error, err = wire.Rewire(rep.Error); err != nil {
-			log.Error().Err(err).Msg("could not rewire response error struct")
-			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle register response from %s", network)))
-			return
-		}
-	}
-
 	c.JSON(http.StatusOK, out)
 }
 
@@ -289,6 +151,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	params.Directory = strings.ToLower(params.Directory)
 	if params.Directory != trisatest && params.Directory != vaspdirectory {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
 	}
 
 	// Make the GDS request
@@ -304,9 +167,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	switch params.Directory {
 	case trisatest:
-		rep, err = s.testnet.VerifyContact(ctx, req)
+		rep, err = s.testnetGDS.VerifyContact(ctx, req)
 	case vaspdirectory:
-		rep, err = s.mainnet.VerifyContact(ctx, req)
+		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not verify contact"))
@@ -342,6 +205,197 @@ func (s *Server) VerifyContact(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle verify contact response from %s", params.Directory)))
 			return
 		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// Returns the user's current registration form if it's available
+func (s *Server) LoadRegisterForm(c *gin.Context) {
+	// Load the organization from the claims
+	// NOTE: this method will handle the error logging and response.
+	org, err := s.OrganizationFromClaims(c)
+	if err != nil {
+		return
+	}
+
+	// Return the registration form, ensuring nil is not serialized.
+	if org.Registration == nil {
+		org.Registration = &records.RegistrationForm{}
+	}
+	c.JSON(http.StatusOK, org.Registration)
+}
+
+// Saves the registration form on the BFF to allow multiple users to edit the
+// registration form before it is submitted to the directory service.
+func (s *Server) SaveRegisterForm(c *gin.Context) {
+	// Parse the incoming JSON data from the client request
+	var (
+		err  error
+		form *records.RegistrationForm
+		org  *records.Organization
+	)
+
+	// Unmarshal the registration form from the POST request
+	form = &records.RegistrationForm{}
+	if err = c.ShouldBind(form); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Load the organization from the claims
+	// NOTE: this method will handle the error logging and response.
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Update the organizations form
+	org.Registration = form
+	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+		log.Error().Err(err).Msg("could not update organization")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
+		return
+	}
+
+	// If successful respond with 204: No Content so that the front-end can continue.
+	c.Status(http.StatusNoContent)
+}
+
+// SubmitRegistration makes a request on behalf of the user to either the TestNet or the
+// MainNet GDS server based on the URL endpoint. The endpoint will first load the saved
+// registration form from the front-end and will parse it for some basic validity
+// constraints - it will then submit the form and return any response from the directory.
+func (s *Server) SubmitRegistration(c *gin.Context) {
+	// Get the network from the URL
+	var err error
+	network := strings.ToLower(c.Param("network"))
+	if network != testnet && network != mainnet {
+		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
+		return
+	}
+
+	// Load the organization from the claims
+	// NOTE: this method will handle the error logging and response.
+	var org *records.Organization
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Do not allow a registration form to be submitted twice
+	switch network {
+	case testnet:
+		if org.Testnet != nil && org.Testnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	case mainnet:
+		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
+			err = fmt.Errorf("registration form has already been submitted to the %s", network)
+			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+			return
+		}
+	}
+
+	// Validate that a registration form exists on the organization
+	if org.Registration == nil || !org.Registration.ReadyToSubmit(network) {
+		log.Debug().Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("registration form is not ready to submit"))
+		return
+	}
+
+	// Create the RegisterRequest to send to GDS
+	req := &gds.RegisterRequest{
+		Entity:         org.Registration.Entity,
+		Contacts:       org.Registration.Contacts,
+		Website:        org.Registration.Website,
+		VaspCategories: org.Registration.VaspCategories,
+		EstablishedOn:  org.Registration.EstablishedOn,
+		Trixo:          org.Registration.Trixo,
+	}
+
+	// Make the GDS request
+	var rep *gds.RegisterReply
+	log.Debug().Str("network", network).Msg("issuing GDS register request")
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	defer cancel()
+
+	switch network {
+	case testnet:
+		req.TrisaEndpoint = org.Registration.Testnet.Endpoint
+		req.CommonName = org.Registration.Testnet.CommonName
+		rep, err = s.testnetGDS.Register(ctx, req)
+	case mainnet:
+		req.TrisaEndpoint = org.Registration.Mainnet.Endpoint
+		req.CommonName = org.Registration.Mainnet.CommonName
+		rep, err = s.mainnetGDS.Register(ctx, req)
+	default:
+		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
+		return
+	}
+
+	// Handle GDS errors
+	if err != nil {
+		serr, _ := status.FromError(err)
+		switch serr.Code() {
+		case codes.InvalidArgument, codes.AlreadyExists:
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(serr.Message()))
+		case codes.Aborted:
+			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
+		default:
+			log.Error().Err(err).Str("code", serr.Code().String()).Str("network", network).Msg("could not register with directory service")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not register with %s", network)))
+		}
+		return
+	}
+
+	// Create the response from the reply
+	out := &api.RegisterReply{
+		Id:                  rep.Id,
+		RegisteredDirectory: rep.RegisteredDirectory,
+		CommonName:          rep.CommonName,
+		Status:              rep.Status.String(),
+		Message:             rep.Message,
+		PKCS12Password:      rep.Pkcs12Password,
+	}
+
+	if rep.Error != nil && rep.Error.Code != 0 {
+		if out.Error, err = wire.Rewire(rep.Error); err != nil {
+			log.Error().Err(err).Str("network", network).Msg("could not rewire response error struct")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle register response from %s", network)))
+			return
+		}
+	}
+
+	// If there is only an error and no vaspID, return a 409 and the response
+	if out.Error != nil && out.Id == "" {
+		log.Error().Err(rep.Error).Str("network", network).Msg("received unexpected GDS OK with an error in the response")
+		c.JSON(http.StatusConflict, out)
+		return
+	}
+
+	// Save the response with the organization details in the Organization document.
+	directoryRecord := &records.DirectoryRecord{
+		Id:                  rep.Id,
+		RegisteredDirectory: rep.RegisteredDirectory,
+		CommonName:          rep.CommonName,
+		Submitted:           time.Now().Format(time.RFC3339),
+	}
+
+	switch network {
+	case testnet:
+		org.Testnet = directoryRecord
+	case mainnet:
+		org.Mainnet = directoryRecord
+	}
+
+	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
+		return
 	}
 
 	c.JSON(http.StatusOK, out)

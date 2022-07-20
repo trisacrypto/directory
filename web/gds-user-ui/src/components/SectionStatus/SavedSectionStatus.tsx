@@ -1,6 +1,7 @@
 import Icon from '@chakra-ui/icon';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { Box } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 
 const SavedSectionStatus: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ const SavedSectionStatus: React.FC = () => {
           }
         }}
       />{' '}
-      (saved)
+      <Trans id="(Saved)"> (Saved)</Trans>
     </Box>
   );
 };

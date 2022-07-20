@@ -19,7 +19,9 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import InputFormControl from 'components/ui/InputFormControl';
 import { getValueByPathname } from 'utils/utils';
-
+import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
+import { Link as RouterLink } from 'react-router-dom';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
@@ -55,11 +57,13 @@ const Login: React.FC<LoginProps> = (props) => {
       justify={'center'}
       fontFamily={colors.font}
       fontSize={'xl'}
-      marginTop={'10vh'}
+      mb={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         <Stack align={'left'}>
-          <Heading fontSize={'xl'}>Log into your TRISA account.</Heading>
+          <Heading fontSize={'xl'}>
+            <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
+          </Heading>
         </Stack>
         <Stack align={'center'} justify={'center'} fontFamily={colors.font}>
           <Button
@@ -78,7 +82,7 @@ const Login: React.FC<LoginProps> = (props) => {
             }}>
             <GoogleIcon h={24} />
             <Text as={'span'} ml={3}>
-              Continue with google
+              Continue with Google
             </Text>
           </Button>
           <Text py={3}>or</Text>
@@ -95,7 +99,7 @@ const Login: React.FC<LoginProps> = (props) => {
                 data-testid="email"
                 controlId=""
                 height={'64px'}
-                placeholder="Email Address"
+                placeholder={t`Email Address`}
                 type="email"
                 isInvalid={getValueByPathname(errors, 'username')}
                 formHelperText={getValueByPathname(errors, 'username')?.message}
@@ -105,7 +109,7 @@ const Login: React.FC<LoginProps> = (props) => {
                 data-testid="password"
                 controlId=""
                 height={'64px'}
-                placeholder="Password"
+                placeholder={t`Password`}
                 type="password"
                 isInvalid={getValueByPathname(errors, 'password')}
                 formHelperText={getValueByPathname(errors, 'password')?.message}
@@ -116,6 +120,7 @@ const Login: React.FC<LoginProps> = (props) => {
                   data-testid="login-btn"
                   bg={colors.system.blue}
                   color={'white'}
+                  isLoading={props.isLoading}
                   px={2}
                   py={4}
                   w={['full', '50%']}
@@ -126,25 +131,25 @@ const Login: React.FC<LoginProps> = (props) => {
                   _focus={{
                     borderColor: 'transparent'
                   }}>
-                  Log In
+                  <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-                  <Link
-                    href="/auth/forget"
-                    color="#1F4CED"
-                    fontFamily="Open sans, sans-serif"
-                    fontSize="1rem">
-                    Forgot password?
-                  </Link>
+                  <RouterLink to={'/auth/reset'}>
+                    <Link color="#1F4CED" fontFamily="Open sans, sans-serif" fontSize="1rem">
+                      <Trans id="Forgot password?">Forgot password?</Trans>
+                    </Link>
+                  </RouterLink>
                 </Text>
               </Stack>
             </Stack>
           </form>
           <Text textAlign="center" fontSize="1rem">
-            Not a TRISA Member?{' '}
-            <Link href="/auth/register" color={'#1F4CED'}>
-              Join the TRISA network today.
-            </Link>
+            <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
+            <RouterLink to="/auth/register">
+              <Link color={'#1F4CED'}>
+                <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
+              </Link>
+            </RouterLink>
           </Text>
         </Box>
       </Stack>
