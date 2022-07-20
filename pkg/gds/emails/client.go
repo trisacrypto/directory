@@ -338,7 +338,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate t
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
 		Endpoint:            vasp.TrisaEndpoint,
-		RegisteredDirectory: vasp.RegisteredDirectory,
+		RegisteredDirectory: m.conf.DirectoryID,
 		Reissuance:          reissueDate,
 		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
@@ -374,7 +374,7 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
 		Endpoint:            vasp.TrisaEndpoint,
-		RegisteredDirectory: vasp.RegisteredDirectory,
+		RegisteredDirectory: m.conf.DirectoryID,
 		Reissuance:          reissueDate,
 	}
 
@@ -435,7 +435,7 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
 		Endpoint:            vasp.TrisaEndpoint,
-		RegisteredDirectory: vasp.RegisteredDirectory,
+		RegisteredDirectory: m.conf.DirectoryID,
 		WhisperURL:          whisperLink,
 	}
 
