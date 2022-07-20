@@ -301,6 +301,7 @@ func main() {
 			Usage:    "create a new certificate request for the VASP",
 			Category: "admin",
 			Action:   registerReissue,
+			Before:   openLevelDB,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:    "db",
