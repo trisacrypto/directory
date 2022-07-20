@@ -2,17 +2,46 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>CLIve -- Auth0 Login for CLI Prompts</title>
+  <title>CLIve: Auth0 Login for CLI Prompts</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/fontawesome.min.css" integrity="sha384-zIaWifL2YFF1qaDiAo0JFgsmasocJ/rqu7LKYH8CoBEXqGbb9eO+Xi3s6fQhgFWM" crossorigin="anonymous">
   <link rel="icon" type="image/png" href="/favicon.png">
 </head>
-<body class="text-center">
-  <main class="container">
-    <div class="row">
-      <h1>CLIve Login</h1>
-    </div>
-  </main>
+<body>
+  <div class="container py-4">
+    <header class="pb-3 mb-4 border-bottom">
+      <a href="https://rotational.io" class="d-flex align-items-center text-dark text-decoration-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="me-2" role="img" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="32" height="32"><svg width="32" height="32" viewBox="0 0 135.46666 135.46667" version="1.1" id="SvgjsSvg1010" inkscape:export-filename="/Volumes/GoogleDrive/Shared drives/Communications/Branding/99Designs Logo Contest/Lighthouse Logo - Winning Design/Rotational Square.png" inkscape:export-xdpi="96" inkscape:export-ydpi="96" inkscape:version="1.1 (c4e8f9e, 2021-05-24)" sodipodi:docname="Rotational Square Lighthouse.svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+          <sodipodi:namedview id="SvgjsSodipodi:namedview1009" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:document-units="mm" showgrid="false" units="px" inkscape:zoom="0.75455247" inkscape:cx="395.59873" inkscape:cy="216.68473" inkscape:window-width="1312" inkscape:window-height="1027" inkscape:window-x="430" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="layer1"></sodipodi:namedview>
+          <defs id="SvgjsDefs1008"></defs>
+          <title>Rotational Labs</title>
+          <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="SvgjsG1007">
+            <g id="SvgjsG1006" style="display:inline" transform="matrix(1.8980981,0,0,-1.8980981,-141.83302,523.27678)">
+              <path d="m 99.8388,228.4574 0.0249,-0.003 0.6058,3.028 3.7315,17.9651 h -0.0204 v 0.9408 l -3.0756,2.9061 h 3.0756 v 4.2123 h -2.2802 l 7.0441,6.8882 v 2.2263 c -0.4331,-0.1151 -0.8527,-0.2843 -1.2487,-0.5145 L 88.8849,255.2431 c -1.5733,-0.9068 -2.5444,-2.5849 -2.5444,-4.4019 v -17.1867 c 2.838,-0.493 6.4547,-1.6858 10.7668,-4.2342 0.8396,-0.496 1.7634,-0.8418 2.7315,-0.9629" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1005"></path>
+              <path d="m 131.5953,255.2428 -18.8147,10.8641 c -0.5377,0.3076 -1.116,0.5142 -1.7081,0.6089 v -2.1419 l 7.2266,-7.0676 h -2.3955 v -4.212 h 3.1229 l -3.1229,-3.2919 -0.1656,-0.555 3.1127,-15.9656 c 2.49,0.8898 4.9799,1.34 7.4226,1.34 3.1297,0 5.7756,-0.7308 7.863,-1.6444 v 17.6638 c 0,1.817 -0.9678,3.4951 -2.541,4.4016" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1004"></path>
+              <path d="m 119.2158,231.594 c -0.4365,-0.1591 -0.8829,-0.3382 -1.3328,-0.5347 -1.0828,-0.4733 -2.1181,-1.0488 -3.1261,-1.6645 -0.5008,-0.3044 -1.2892,-0.7409 -2.3448,-1.1908 h -0.007 c -2.3547,-0.9981 -6.0324,-2.0435 -10.7858,-1.8065 0.866,-0.6565 1.7796,-1.4043 2.7947,-2.2873 1.4921,-1.2991 5.9848,-4.3169 15.4718,-4.3169 1.0995,0 2.2362,0.0406 3.4032,0.1247 l 0.7073,0.4097 0.007,0.003 1.8913,1.0927 4.3744,2.524 h 0.004 l 1.3226,0.7645 c 1.5724,0.9091 2.541,2.5872 2.541,4.4036 v 1.9638 c -3.282,1.624 -8.4246,2.9197 -14.9205,0.5143" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1003"></path>
+              <path d="m 111.81,218.7241 c -4.8177,1.0791 -7.4874,2.9534 -8.6445,3.9549 -0.1959,0.1723 -0.3991,0.345 -0.5987,0.5142 -0.003,0.003 -0.003,0.003 -0.007,0.003 -0.007,0.003 -0.007,0.003 -0.0105,0.007 -1.0315,0.8833 -2.1004,1.7323 -3.2139,2.5104 -0.5953,0.4195 -1.1772,0.8087 -1.7456,1.1741 0,0.003 -0.0034,0.003 -0.0034,0.003 -0.8934,0.5717 -1.7526,1.0825 -2.5815,1.5361 -3.4441,1.9012 -6.3501,2.8553 -8.6646,3.2952 v -2.605 c 0,-1.8167 0.9711,-3.4948 2.5444,-4.4053 l 18.8109,-10.8601 c 1.5733,-0.9102 3.5119,-0.9102 5.0851,0 l 2.8928,1.6713 2.2359,1.2892 1.878,1.0823 c -3.1363,0.007 -5.7685,0.335 -7.9608,0.8254 -0.007,0 -0.0102,0.004 -0.0168,0.004" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1002"></path>
+              <path d="m 108.0714,252.8915 h 3.7489 v 3.7488 h -3.7489 z" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1001"></path>
+              <path d="m 137.3837,227.2572 c 0,-1.8195 -0.9788,-3.5163 -2.5535,-4.4274 l -22.0374,-12.7205 c -1.5758,-0.9122 -3.5334,-0.9116 -5.1094,3e-4 l -22.0323,12.7202 c -1.5775,0.9128 -2.558,2.6093 -2.558,4.4274 v 25.4452 c 0,1.8193 0.9797,3.5139 2.5574,4.4226 l 22.032,12.7245 c 0.7883,0.4544 1.6725,0.6811 2.556,0.6811 0.8833,0 1.7669,-0.2267 2.5552,-0.6808 l 22.0374,-12.725 c 1.5746,-0.9071 2.5526,-2.6017 2.5526,-4.4224 z m 1.6917,15.7816 v 9.6636 c 0,2.4236 -1.3028,4.68 -3.3993,5.8879 l -22.0374,12.725 c -0.1075,0.0618 -0.2174,0.1185 -0.3277,0.1743 l -2.9526,4.0558 -3.2972,-4.1116 c -0.0746,-0.0392 -0.15,-0.0766 -0.2237,-0.1191 L 84.8052,258.5906 c -2.0996,-1.2099 -3.4038,-3.4663 -3.4038,-5.8882 v -9.911 l -3.6414,-2.6513 3.6414,-2.9208 v -9.9621 c 0,-2.4199 1.3036,-4.6777 3.4033,-5.8921 l 22.032,-12.7202 c 0.0924,-0.0532 0.1868,-0.1012 0.2812,-0.1499 l 3.2405,-4.0405 2.9041,3.9886 c 0.127,0.0629 0.2532,0.1298 0.377,0.2016 l 22.0374,12.7207 c 2.0962,1.2127 3.3985,3.4705 3.3985,5.8918 v 9.6897 l 3.9818,3.1932 z" style="fill:#027dcb;fill-opacity:1;fill-rule:nonzero;stroke:none" id="SvgjsPath1000"></path>
+            </g>
+          </g>
+        </svg></svg>
+        <span class="fs-4">CLIve Authentication</span>
+      </a>
+    </header>
+
+    <main class="p-5 mb-4 bg-light rounded-3">
+      <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Auth0 Authentication Complete</h1>
+        <p class="col-md-8 fs-4">You have successfully logged in with Auth0! Your access token has been stored for use in subsequent CLI calls and will be available for the next 24 hours. You may now close this window and return to the terminal.</p>
+        <button class="btn btn-primary btn-lg" type="button">Close Window</button>
+      </div>
+    </main>
+
+    <footer class="pt-3 mt-4 text-muted border-top">
+      Made with &spades; by Rotational Labs
+    </footer>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
 </body>
 </html>
