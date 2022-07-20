@@ -298,7 +298,7 @@ func main() {
 		},
 		{
 			Name:     "register:reissue",
-			Usage:    "interactively reissue certificates for a VASP",
+			Usage:    "create a new certificate request for the VASP",
 			Category: "admin",
 			Action:   registerReissue,
 			Flags: []cli.Flag{
