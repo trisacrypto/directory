@@ -199,7 +199,7 @@ func notify(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	fmt.Printf("successfully sent %d email remdiners about certificate reissuance on %s\n", nsent, reissueDate.Format(emails.DateFormat))
+	fmt.Printf("successfully sent %d email reminders about certificate reissuance on %s\n", nsent, reissueDate.Format(emails.DateFormat))
 	return nil
 }
 
