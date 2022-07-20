@@ -331,12 +331,6 @@ func main() {
 			},
 		},
 		{
-			Name:     "admin:reissue",
-			Usage:    "interactively reissue certificates for a VASP record",
-			Category: "admin",
-			Action:   interactiveReissue,
-		},
-		{
 			Name:     "admin:tokenkey",
 			Usage:    "generate an RSA token key pair and ksuid for JWT token signing",
 			Category: "admin",
