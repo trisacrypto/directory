@@ -18,17 +18,17 @@ import (
 
 const (
 	bufSize     = 1024 * 1024
-	GetRPC      = "trtl.v1.Get"
-	PutRPC      = "trtl.v1.Put"
-	DeleteRPC   = "trtl.v1.Delete"
-	IterRPC     = "trtl.v1.Iter"
-	BatchRPC    = "trtl.v1.Batch"
-	CursorRPC   = "trtl.v1.Cursor"
-	SyncRPC     = "trtl.v1.Sync"
-	StatusRPC   = "trtl.v1.Status"
-	GetPeersRPC = "trtl.peers.v1.PeerManagement.GetPeers"
-	AddPeersRPC = "trtl.peers.v1.PeerManagement.AddPeers"
-	RmPeersRPC  = "trtl.peers.v1.PeerManagement.RmPeers"
+	GetRPC      = "trtl.v1.Trtl/Get"
+	PutRPC      = "trtl.v1.Trtl/Put"
+	DeleteRPC   = "trtl.v1.Trtl/Delete"
+	IterRPC     = "trtl.v1.Trtl/Iter"
+	BatchRPC    = "trtl.v1.Trtl/Batch"
+	CursorRPC   = "trtl.v1.Trtl/Cursor"
+	SyncRPC     = "trtl.v1.Trtl/Sync"
+	StatusRPC   = "trtl.v1.Trtl/Status"
+	GetPeersRPC = "trtl.peers.v1.PeerManagement/GetPeers"
+	AddPeersRPC = "trtl.peers.v1.PeerManagement/AddPeers"
+	RmPeersRPC  = "trtl.peers.v1.PeerManagement/RmPeers"
 	GossipRPC   = "honu.replica.v1.Replication/Gossip"
 )
 

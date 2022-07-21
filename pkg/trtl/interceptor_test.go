@@ -74,8 +74,6 @@ func (s *trtlTestSuite) TestPeerFromTLS() {
 	_, err = peersClient.AddPeers(context.Background(), &peers.Peer{})
 	require.NoError(err, "could not make peers request to remote peer")
 	s.checkPeerInfo(expected, info)
-
-	// TODO: Do we need to test the replica service?
 }
 
 // checkPeerInfo checks that the peer info matches the expected one
