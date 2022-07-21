@@ -15,11 +15,13 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
+	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -97,6 +99,20 @@ func main() {
 			ArgsUsage: "src dst",
 			Category:  "server",
 			Action:    migrate,
+		},
+		{
+			Name:     "migrate-certs",
+			Usage:    "create certificate records in the trtl database from the existing certreqs",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   migrateCerts,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "report",
+					Aliases: []string{"r"},
+					Usage:   "dump a migration report to a file",
+				},
+			},
 		},
 		{
 			Name:     "status",
@@ -530,6 +546,195 @@ func initPeersClient(c *cli.Context) (err error) {
 // Trtl (DB) Client Functions
 //===========================================================================
 
+// migrateCerts creates certificate records in the trtl database based on the existing certreqs.
+func migrateCerts(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Open the report file if requested
+	var report *os.File
+	if c.String("report") != "" {
+		if report, err = os.Create(c.String("report")); err != nil {
+			return cli.Exit(fmt.Errorf("could not open report file %s: %s", c.String("report"), err), 1)
+		}
+		defer report.Close()
+	}
+
+	// Get the list of certreqs
+	req := &pb.CursorRequest{
+		Namespace: wire.NamespaceVASPs,
+	}
+	var stream pb.Trtl_CursorClient
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var migrated, skipped int
+	var migrateErr error
+
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err != io.EOF {
+				migrateErr = err
+			}
+			break
+		}
+
+		vasp := &gds.VASP{}
+		if err = proto.Unmarshal(rep.Value, vasp); err != nil {
+			migrateErr = err
+			break
+		}
+
+		// Get all the certificate requests for this vasp
+		var ids []string
+		if ids, err = models.GetCertReqIDs(vasp); err != nil {
+			migrateErr = err
+			break
+		}
+
+		// Get the latest completed certificate request
+		var certreq *models.CertificateRequest
+		for _, id := range ids {
+			var rep *pb.GetReply
+			if rep, err = dbClient.Get(ctx, &pb.GetRequest{
+				Namespace: wire.NamespaceCertReqs,
+				Key:       []byte(id),
+			}); err != nil {
+				fmt.Printf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err)
+				if report != nil {
+					report.WriteString(fmt.Sprintf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err))
+				}
+				continue
+			}
+
+			current := &models.CertificateRequest{}
+			if err = proto.Unmarshal(rep.Value, current); err != nil {
+				migrateErr = err
+				break
+			}
+
+			if current.Status == models.CertificateRequestState_COMPLETED {
+				certreq = current
+			}
+		}
+
+		if migrateErr != nil {
+			break
+		}
+
+		if certreq == nil {
+			fmt.Printf("skipping vasp %s (%s) with no certificates\n", vasp.Id, vasp.CommonName)
+			if report != nil {
+				report.WriteString(fmt.Sprintf("skipping vasp %s (%s) with no certificates\n", vasp.Id, vasp.CommonName))
+			}
+			skipped++
+			continue
+		}
+
+		// Create the certificate record
+		var cert *models.Certificate
+		if cert, err = models.NewCertificate(vasp, certreq, vasp.IdentityCertificate); err != nil {
+			migrateErr = err
+			break
+		}
+
+		// Validate that the serial number is correct
+		expected := fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+		if cert.Id != expected {
+			migrateErr = fmt.Errorf("expected certificate serial to be %s, was actually %s", expected, cert.Id)
+			break
+		}
+
+		// Update the certreq record with the certificate ID
+		certreq.Certificate = cert.Id
+
+		// Append the certificate serial to the vasp
+		if err = models.AppendCertID(vasp, cert.Id); err != nil {
+			migrateErr = err
+			break
+		}
+
+		// Put the certificate record
+		var putReply *pb.PutReply
+		var certData []byte
+		if certData, err = proto.Marshal(cert); err != nil {
+			migrateErr = err
+			break
+		}
+		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+			Namespace: wire.NamespaceCerts,
+			Key:       []byte(cert.Id),
+			Value:     certData,
+		}); err != nil {
+			migrateErr = fmt.Errorf("could not put certificate %s: %s", cert.Id, err)
+			break
+		}
+		if !putReply.Success {
+			migrateErr = fmt.Errorf("could not put certificate %s", cert.Id)
+			break
+		}
+
+		// Put the vasp record
+		var vaspData []byte
+		if vaspData, err = proto.Marshal(vasp); err != nil {
+			migrateErr = err
+			break
+		}
+		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+			Namespace: wire.NamespaceVASPs,
+			Key:       []byte(vasp.Id),
+			Value:     vaspData,
+		}); err != nil {
+			migrateErr = fmt.Errorf("could not put vasp %s: %s", vasp.Id, err)
+			break
+		}
+		if !putReply.Success {
+			migrateErr = fmt.Errorf("could not put vasp %s", vasp.Id)
+			break
+		}
+
+		// Put the certreq record
+		var certreqData []byte
+		if certreqData, err = proto.Marshal(certreq); err != nil {
+			migrateErr = err
+			break
+		}
+		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+			Namespace: wire.NamespaceCertReqs,
+			Key:       []byte(certreq.Id),
+			Value:     certreqData,
+		}); err != nil {
+			migrateErr = fmt.Errorf("could not put certreq %s: %s", certreq.Id, err)
+			break
+		}
+		if !putReply.Success {
+			migrateErr = fmt.Errorf("could not put certreq %s", certreq.Id)
+			break
+		}
+
+		migrated++
+		fmt.Printf("migrated certreq %s (%s) to certificate %s\n", certreq.Id, certreq.CommonName, cert.Id)
+		if report != nil {
+			report.WriteString(fmt.Sprintf("migrated certreq %s (%s) to certificate %s\n", certreq.Id, certreq.CommonName, cert.Id))
+			if err = writeJSON(cert, report); err != nil {
+				migrateErr = err
+				break
+			}
+			report.WriteString("\n")
+		}
+	}
+
+	fmt.Println("Migrated", migrated, "certificates")
+	fmt.Println("Skipped", skipped, "vasps")
+
+	if migrateErr != nil {
+		return cli.Exit(migrateErr, 1)
+	}
+	return nil
+}
+
 // dbGet prints values from the trtl database given a set of keys.
 func dbGet(c *cli.Context) (err error) {
 	b64decode := c.Bool("b64decode")
@@ -914,5 +1119,34 @@ func printJSON(m interface{}) (err error) {
 	}
 
 	fmt.Println(string(data))
+	return nil
+}
+
+// helper function to write JSON response to file and exit
+func writeJSON(m interface{}, file *os.File) (err error) {
+	var data []byte
+
+	switch msg := m.(type) {
+	case proto.Message:
+		opts := protojson.MarshalOptions{
+			Multiline:       true,
+			Indent:          "  ",
+			AllowPartial:    true,
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: true,
+		}
+		if data, err = opts.Marshal(msg); err != nil {
+			return cli.Exit(err, 1)
+		}
+	default:
+		if data, err = json.MarshalIndent(m, "", "  "); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	if _, err = file.Write(data); err != nil {
+		return cli.Exit(err, 1)
+	}
 	return nil
 }
