@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"os/exec"
+	"runtime"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -142,6 +145,16 @@ func login(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	// Get URL to redirect the user to
+	var link *url.URL
+	if link, err = srv.GetAuthenticationURL(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Open the browser window to the link
+	openBrowser(link)
+	fmt.Printf("To complete authentication you'll need to login with Auth0.\nIf a browser window is not automatically opened, please copy and paste the following\nlink into your browser:\n\n%s\n\n", link)
+
 	if err = srv.Serve(); err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -161,4 +174,18 @@ func printJSON(msg interface{}) (err error) {
 
 	fmt.Println(string(data))
 	return nil
+}
+
+func openBrowser(link *url.URL) (err error) {
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", link.String()).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", link.String()).Start()
+	case "darwin":
+		err = exec.Command("open", link.String()).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	return err
 }
