@@ -4,6 +4,7 @@ import (
 	"net/mail"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -59,6 +60,7 @@ func TestClientSendEmails(t *testing.T) {
 		},
 		IdentityCertificate: &pb.Certificate{
 			SerialNumber: []byte("notarealcertificate"),
+			NotAfter:     "2022-07-18T17:18:55Z",
 		},
 	}
 
@@ -112,21 +114,41 @@ func TestClientSendEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 
+	reissueDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
+	sent, err = email.SendExpiresAdminNotification(vasp, reissueDate)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
+	sent, err = email.SendReissuanceReminder(vasp, reissueDate)
+	require.NoError(t, err)
+	require.Equal(t, 2, sent)
+
+	sent, err = email.SendReissuanceStarted(vasp, "https://whisper.dev/supersecret")
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
 	// Technical is verified and first so should get Rejection and DeliverCerts emails
+	// It should also receive the reissuance started email after the reminder.
 	emailLog, err := models.GetEmailLog(vasp.Contacts.Technical)
 	require.NoError(t, err)
-	require.Len(t, emailLog, 2)
+	require.Len(t, emailLog, 4)
 	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
 	require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
 	require.Equal(t, string(admin.ResendDeliverCerts), emailLog[1].Reason)
 	require.Equal(t, emails.DeliverCertsRE, emailLog[1].Subject)
+	require.Equal(t, string(admin.ReissuanceReminder), emailLog[2].Reason)
+	require.Equal(t, emails.ReissuanceReminderRE, emailLog[2].Subject)
+	require.Equal(t, string(admin.ReissuanceStarted), emailLog[3].Reason)
+	require.Equal(t, emails.ReissuanceStartedRE, emailLog[3].Subject)
 
-	// Administrative is verified so should get Rejection email
+	// Administrative is verified so should get Rejection and Reissue Reminder emails
 	emailLog, err = models.GetEmailLog(vasp.Contacts.Administrative)
 	require.NoError(t, err)
-	require.Len(t, emailLog, 1)
+	require.Len(t, emailLog, 2)
 	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
 	require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
+	require.Equal(t, string(admin.ReissuanceReminder), emailLog[1].Reason)
+	require.Equal(t, emails.ReissuanceReminderRE, emailLog[1].Subject)
 
 	// Legal is not verified so should get VerifyContact email
 	emailLog, err = models.GetEmailLog(vasp.Contacts.Legal)
