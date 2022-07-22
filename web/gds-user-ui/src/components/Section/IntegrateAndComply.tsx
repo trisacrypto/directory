@@ -5,7 +5,7 @@ import {
   Flex,
   Text,
   Link,
-  chakra,
+  VStack,
   FlexProps,
   StyleProps,
   useColorModeValue,
@@ -13,12 +13,11 @@ import {
   ListItem,
   Button,
   Heading,
-  VStack,
   Container,
   Divider,
   useBreakpointValue
 } from '@chakra-ui/react';
-
+import { Link as RouterLink } from 'react-router-dom';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import { Line } from './Line';
@@ -174,7 +173,7 @@ export default function IntegrateAndComply() {
                 </Stack>
               </Box>
               <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent="center">
-                <Box>
+                <VStack>
                   <Button
                     bg={colors.system.blue}
                     color={'white'}
@@ -184,9 +183,18 @@ export default function IntegrateAndComply() {
                     _focus={{
                       borderColor: 'transparent'
                     }}>
-                    Getting Started
+                    Create account
                   </Button>
-                </Box>
+                  <Text textAlign="center">
+                    <Trans id="Already have an account?">Already have an account?</Trans>{' '}
+                    <RouterLink to={'/auth/login'}>
+                      <Link color={colors.system.cyan}>
+                        {' '}
+                        <Trans id="Log in.">Log in.</Trans>
+                      </Link>
+                    </RouterLink>
+                  </Text>
+                </VStack>
               </Stack>
             </Stack>
           </Stack>

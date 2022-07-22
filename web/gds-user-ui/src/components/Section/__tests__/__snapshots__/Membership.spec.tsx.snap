@@ -230,12 +230,17 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               <div
                 class="css-14d2w9n"
               >
-                <button
-                  class="chakra-button css-vx0ruo"
-                  type="button"
+                <a
+                  class=""
+                  href="/auth/register"
                 >
-                  Create Account
-                </button>
+                  <button
+                    class="chakra-button css-vx0ruo"
+                    type="button"
+                  >
+                    Create Account
+                  </button>
+                </a>
               </div>
             </div>
           </div>
@@ -271,12 +276,17 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               <div
                 class="css-14d2w9n"
               >
-                <button
-                  class="chakra-button css-vx0ruo"
-                  type="button"
+                <a
+                  class=""
+                  href="/getting-started"
                 >
-                  Learn More
-                </button>
+                  <button
+                    class="chakra-button css-vx0ruo"
+                    type="button"
+                  >
+                    Learn More
+                  </button>
+                </a>
               </div>
             </div>
           </div>
@@ -312,12 +322,17 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               <div
                 class="css-14d2w9n"
               >
-                <button
-                  class="chakra-button css-vx0ruo"
-                  type="button"
+                <a
+                  class=""
+                  href="/comply"
                 >
-                  Learn More
-                </button>
+                  <button
+                    class="chakra-button css-vx0ruo"
+                    type="button"
+                  >
+                    Learn More
+                  </button>
+                </a>
               </div>
             </div>
           </div>

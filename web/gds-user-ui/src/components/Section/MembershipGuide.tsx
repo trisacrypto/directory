@@ -6,7 +6,7 @@ import LandingHeader from 'components/Header/LandingHeader';
 import MembershipGuideCard from 'components/MembershipGuideCard';
 import { NavBar } from 'components/Navbar/Landing/Nav';
 import React from 'react';
-
+import LandingLayout from 'layouts/LandingLayout';
 const MembershipGuideText = [
   {
     stepNumber: 1,
@@ -33,64 +33,60 @@ const MembershipGuideText = [
 
 const MembershipGuide = () => {
   return (
-    <Box minHeight="100vh">
-      <LandingHeader />
-      <section>
-        <Stack>
-          <Flex
-            bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
-            color="white"
-            width="100%"
-            minHeight={286}
-            justifyContent="center"
-            direction="column"
-            paddingY={{ base: 12, md: 16 }}
-            px="1rem"
-            fontSize={'xl'}>
-            <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
-              <VStack spacing={1}>
-                <Heading
-                  fontWeight={700}
-                  fontFamily="Open Sans, sans-serif !important"
-                  fontSize={{ md: '4xl', sm: '2xl' }}
-                  color="#fff">
-                  <Trans id="Welcome to TRISA’s network of Certified VASPs.">
-                    Welcome to TRISA’s network of Certified VASPs.
-                  </Trans>
-                </Heading>
-                <Text as="p" mt={2}>
-                  <Trans id="Learn about the three-step process to become a member and verified VASP.">
-                    Learn about the three-step process to become a member and verified VASP.
-                  </Trans>
-                </Text>
-                <Text as="p" mt={2}>
-                  <Trans id="Create your account today.">Create your account today.</Trans>
-                </Text>
-              </VStack>
-            </Stack>
-          </Flex>
-          <Stack
-            justifyContent={'center'}
-            alignItems={['center', 'stretch']}
-            spacing={10}
-            direction={['column', 'row']}
-            py={'2rem'}>
-            {MembershipGuideText.map(({ stepNumber, header, description, buttonText, link }) => (
-              <React.Fragment key={stepNumber}>
-                <MembershipGuideCard
-                  stepNumber={stepNumber}
-                  header={header}
-                  description={description}
-                  buttonText={buttonText}
-                  link={link}
-                />
-              </React.Fragment>
-            ))}
+    <LandingLayout>
+      <Stack>
+        <Flex
+          bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
+          color="white"
+          width="100%"
+          minHeight={286}
+          justifyContent="center"
+          direction="column"
+          paddingY={{ base: 12, md: 16 }}
+          px="1rem"
+          fontSize={'xl'}>
+          <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
+            <VStack spacing={1}>
+              <Heading
+                fontWeight={700}
+                fontFamily="Open Sans, sans-serif !important"
+                fontSize={{ md: '4xl', sm: '2xl' }}
+                color="#fff">
+                <Trans id="Welcome to TRISA’s network of Certified VASPs.">
+                  Welcome to TRISA’s network of Certified VASPs.
+                </Trans>
+              </Heading>
+              <Text as="p" mt={2}>
+                <Trans id="Learn about the three-step process to become a member and verified VASP.">
+                  Learn about the three-step process to become a member and verified VASP.
+                </Trans>
+              </Text>
+              <Text as="p" mt={2}>
+                <Trans id="Create your account today.">Create your account today.</Trans>
+              </Text>
+            </VStack>
           </Stack>
+        </Flex>
+        <Stack
+          justifyContent={'center'}
+          alignItems={['center', 'stretch']}
+          spacing={10}
+          direction={['column', 'row']}
+          py={'2rem'}>
+          {MembershipGuideText.map(({ stepNumber, header, description, buttonText, link }) => (
+            <React.Fragment key={stepNumber}>
+              <MembershipGuideCard
+                stepNumber={stepNumber}
+                header={header}
+                description={description}
+                buttonText={buttonText}
+                link={link}
+              />
+            </React.Fragment>
+          ))}
         </Stack>
-      </section>
-      <Footer />
-    </Box>
+      </Stack>
+    </LandingLayout>
   );
 };
 

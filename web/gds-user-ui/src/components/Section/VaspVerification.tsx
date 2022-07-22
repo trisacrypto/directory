@@ -9,7 +9,7 @@ import {
   chakra,
   FlexProps,
   StyleProps,
-  useColorModeValue,
+  VStack,
   UnorderedList,
   ListItem,
   Button,
@@ -20,6 +20,7 @@ import {
 import { colors } from '../../utils/theme';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { Link as RouterLink } from 'react-router-dom';
 
 type Props = StyleProps &
   FlexProps & {
@@ -214,8 +215,8 @@ export default function VaspVerification() {
                 Download PDF
               </Button>
             </Box> */}
-            <Box pb={16}>
-              <Button
+
+            {/* <Button
                 bg={colors.system.blue}
                 px={4}
                 color={'white'}
@@ -228,8 +229,31 @@ export default function VaspVerification() {
                   borderColor: 'transparent'
                 }}>
                 <Trans id="Start Registration Process">Start Registration Process</Trans>
+              </Button> */}
+
+            <VStack>
+              <Button
+                bg={colors.system.blue}
+                color={'white'}
+                width={'300px'}
+                _hover={{
+                  bg: '#10aaed'
+                }}
+                _focus={{
+                  borderColor: 'transparent'
+                }}>
+                Create account
               </Button>
-            </Box>
+              <Text textAlign="center">
+                <Trans id="Already have an account?">Already have an account?</Trans>{' '}
+                <RouterLink to={'/auth/login'}>
+                  <Link color={colors.system.cyan}>
+                    {' '}
+                    <Trans id="Log in.">Log in.</Trans>
+                  </Link>
+                </RouterLink>
+              </Text>
+            </VStack>
           </Stack>
         </Stack>
       </Container>
