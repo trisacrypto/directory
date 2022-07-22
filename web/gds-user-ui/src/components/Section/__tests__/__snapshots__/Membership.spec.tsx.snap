@@ -3,7 +3,7 @@
 exports[`<MembershipGuide /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-vooagt"
+    class="chakra-stack css-1jtm99b"
   >
     <div
       class="css-1pwxvtk"
@@ -164,7 +164,9 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
         </div>
       </div>
     </div>
-    <section>
+    <div
+      class="css-i9gxme"
+    >
       <div
         class="chakra-stack css-n21gh5"
       >
@@ -338,7 +340,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
           </div>
         </div>
       </div>
-    </section>
+    </div>
     <footer
       style="width: 100%;"
     >
