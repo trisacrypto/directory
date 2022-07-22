@@ -1,36 +1,18 @@
-import React, { useState } from 'react';
-import {
-  Flex,
-  Box,
-  FormControl,
-  FormLabel,
-  Input,
-  Checkbox,
-  Stack,
-  Link,
-  Button,
-  Heading,
-  Text,
-  useColorModeValue,
-  FormHelperText,
-  FormErrorMessage,
-  InputGroup,
-  InputRightElement
-} from '@chakra-ui/react';
+import React from 'react';
+import { Flex, Box, Stack, Button, Text, useColorModeValue } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
 import { colors } from 'utils/theme';
 import { useForm } from 'react-hook-form';
 
 import { yupResolver } from '@hookform/resolvers/yup';
-// import { validationSchema } from 'modules/auth/register/register.validation';
 import { getValueByPathname } from 'utils/utils';
 import InputFormControl from 'components/ui/InputFormControl';
 import PasswordStrength from 'components/PasswordStrength';
 import * as yup from 'yup';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import { Link as RouterLink } from 'react-router-dom';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
@@ -69,12 +51,11 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
       align={'center'}
       justify={'center'}
       fontFamily={'open sans'}
-      fontSize={'xl'}
+      fontSize={'lg'}
       mb={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
-      <Stack spacing={8} mx={'auto'} maxW={'xl'} py={12} px={6}>
+      <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
         <Stack align={'center'}>
-          <Heading fontSize={'4xl'}></Heading>
           <Text color={useColorModeValue('gray.600', 'white')}>
             <Text as={'span'} fontWeight={'bold'}>
               <Trans id="Create your TRISA account.">Create your TRISA account.</Trans>
@@ -89,8 +70,9 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
           <Button
             bg={'gray.100'}
             w="100%"
-            onClick={(event) => props.handleSocialAuth(event, 'google')}
-            height={'64px'}
+            onClick={(event: any) => props.handleSocialAuth(event, 'google')}
+            size="lg"
+            borderRadius="none"
             color={'gray.600'}
             _hover={{
               background: useColorModeValue('gray.200', 'black'),
@@ -113,9 +95,9 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
           <form onSubmit={handleSubmit(props.handleSignUpWithEmail)} noValidate>
             <Stack spacing={4}>
               <InputFormControl
-                controlId=""
+                controlId="username"
                 {...register('username')}
-                paddingY={6}
+                size="lg"
                 data-testid="username-field"
                 placeholder={t`Email Address`}
                 isInvalid={!!getValueByPathname(errors, 'username')}
@@ -123,41 +105,39 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
               />
 
               <InputFormControl
-                controlId=""
+                controlId="password"
                 {...register('password')}
-                paddingY={6}
                 data-testid="password-field"
                 placeholder={t`Password`}
                 hasBtn
+                size="lg"
                 handleFn={handleClick}
                 setBtnName={show ? 'Hide' : 'Show'}
                 isInvalid={!!getValueByPathname(errors, 'password')}
                 type={show ? 'text' : 'password'}
                 formHelperText={watchPassword ? <PasswordStrength data={watchPassword} /> : null}
               />
-              <Stack spacing={10}>
-                <Button
-                  bg={colors.system.blue}
-                  color={'white'}
-                  py={6}
-                  type="submit"
-                  borderRadius={'none'}
-                  isLoading={props.isLoading}
-                  _hover={{
-                    bg: '#10aaed'
-                  }}>
-                  <Trans id="Create an Account">Create an Account</Trans>
-                </Button>
-                <Text textAlign="center">
-                  <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-                  <RouterLink to={'/auth/login'}>
-                    <Link color={colors.system.cyan}>
-                      {' '}
-                      <Trans id="Log in.">Log in.</Trans>
-                    </Link>
-                  </RouterLink>
-                </Text>
-              </Stack>
+              <Button
+                display="block"
+                alignSelf="center"
+                bg={'blue'}
+                color={'white'}
+                type="submit"
+                isLoading={props.isLoading}
+                _hover={{
+                  bg: '#10aaed'
+                }}>
+                <Trans id="Create an Account">Create an Account</Trans>
+              </Button>
+              <Text textAlign="center">
+                <Trans id="Already have an account?">Already have an account?</Trans>{' '}
+                <ChakraRouterLink
+                  to={'/auth/login'}
+                  color="link"
+                  _hover={{ textDecor: 'underline' }}>
+                  <Trans id="Log in.">Log in.</Trans>
+                </ChakraRouterLink>
+              </Text>
             </Stack>
           </form>
         </Box>
