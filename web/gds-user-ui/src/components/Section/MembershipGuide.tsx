@@ -12,19 +12,22 @@ const MembershipGuideText = [
     stepNumber: 1,
     header: t`create your account`,
     description: t`Create your TRISA account with your VASP email address. Add collaborators in your organization.`,
-    buttonText: t`Create Account`
+    buttonText: t`Create Account`,
+    link: '/auth/register'
   },
   {
     stepNumber: 2,
     header: t`complete VASP verification`,
     description: t`Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.`,
-    buttonText: t`Learn More`
+    buttonText: t`Learn More`,
+    link: '/getting-started'
   },
   {
     stepNumber: 3,
     header: t`Integrate and Comply`,
     description: t`Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production.`,
-    buttonText: t`Learn More`
+    buttonText: t`Learn More`,
+    link: '/comply'
   }
 ];
 
@@ -72,13 +75,14 @@ const MembershipGuide = () => {
             spacing={10}
             direction={['column', 'row']}
             py={'2rem'}>
-            {MembershipGuideText.map(({ stepNumber, header, description, buttonText }) => (
+            {MembershipGuideText.map(({ stepNumber, header, description, buttonText, link }) => (
               <React.Fragment key={stepNumber}>
                 <MembershipGuideCard
                   stepNumber={stepNumber}
                   header={header}
                   description={description}
                   buttonText={buttonText}
+                  link={link}
                 />
               </React.Fragment>
             ))}
