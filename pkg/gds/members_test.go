@@ -17,7 +17,7 @@ func (s *gdsTestSuite) TestMembersList() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := members.NewTRISAMembersClient(s.grpc.Conn)
 	require.NotNil(client)
@@ -52,7 +52,7 @@ func (s *gdsTestSuite) TestMembersSummary() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := members.NewTRISAMembersClient(s.grpc.Conn)
 	require.NotNil(client)
@@ -123,7 +123,7 @@ func (s *gdsTestSuite) TestMembersDetails() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := members.NewTRISAMembersClient(s.grpc.Conn)
 	require.NotNil(client)
