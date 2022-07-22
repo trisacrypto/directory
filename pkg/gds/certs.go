@@ -85,7 +85,25 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 			wg.Add(1)
 			go func(logctx zerolog.Logger) {
 				defer wg.Done()
-				if err := s.submitCertificateRequest(req); err != nil {
+				// Get the VASP from the certificate request
+				var vasp *pb.VASP
+				if vasp, err = s.db.RetrieveVASP(req.Vasp); err != nil {
+					logctx.Error().Str("vasp_id", req.Vasp).Msg("could not retrieve vasp for certificate request submission")
+					return
+				}
+
+				// Verify that the VASP has not errored or been rejected
+				if vasp.VerificationStatus != pb.VerificationState_REVIEWED {
+					logctx.Info().Msg("vasp is not in the REVIEWED state, rejecting certificate request")
+					if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_CR_REJECTED, "certificate request rejected", "automated"); err != nil {
+						logctx.Error().Err(err).Msg("could not update certificate request status")
+						return
+					}
+					if err = s.db.UpdateCertReq(req); err != nil {
+						logctx.Error().Err(err).Msg("could not save updated certificate request")
+						return
+					}
+				} else if err := s.submitCertificateRequest(req, vasp); err != nil {
 					// If certificate submission requests fail we want immediate notification
 					// so this is a CRITICAL severity that should alert us immediately.
 					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
@@ -124,12 +142,8 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 	return nil
 }
 
-func (s *Service) submitCertificateRequest(r *models.CertificateRequest) (err error) {
+func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
 	// Step 0: mark the VASP status as issuing certificates
-	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(r.Vasp); err != nil {
-		return fmt.Errorf("could not fetch VASP to mark as issuing certificate: %s", err)
-	}
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_ISSUING_CERTIFICATE, "issuing certificate", "automated"); err != nil {
 		return err
 	}
@@ -320,8 +334,26 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		return fmt.Errorf("could not save updated cert request: %s", err)
 	}
 
+	// Fetch the VASP from the certificate request
+	var vasp *pb.VASP
+	if vasp, err = s.db.RetrieveVASP(r.Vasp); err != nil {
+		return fmt.Errorf("could not retrieve vasp: %s", err)
+	}
+
+	// Make sure the VASP has not errored or been rejected before downloading certificates
+	if vasp.VerificationStatus != pb.VerificationState_ISSUING_CERTIFICATE {
+		log.Error().Err(err).Msg("VASP is not in the ISSUING_CERTIFICATE state, cannot download certificates")
+		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "rejecting certificate request", "automated"); err != nil {
+			return fmt.Errorf("could not update certificate request status: %s", err)
+		}
+		if err = s.db.UpdateCertReq(r); err != nil {
+			return fmt.Errorf("could not save updated cert request: %s", err)
+		}
+		return nil
+	}
+
 	// Send off downloader go routine to fetch the certs and notify the user
-	s.downloadCertificateRequest(r)
+	s.downloadCertificateRequest(r, vasp)
 	return nil
 }
 
@@ -347,7 +379,7 @@ func (s *Service) findCertAuthority() (id int, err error) {
 
 // a go routine that downloads the certificate in the background, then sends the certs
 // as an attachment to the technical contact if available.
-func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
+func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) {
 	var (
 		err        error
 		path       string
@@ -398,13 +430,6 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest) {
 	defer os.Remove(path)
 
 	log.Info().Str(path, path).Msg("certificates written to secret manager")
-
-	// Fetch the VASP to get contact info and store certificate data
-	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(r.Vasp); err != nil {
-		log.Error().Err(err).Msg("could not get VASP to store certificates")
-		return
-	}
 
 	// Retrieve the latest secret version for the password
 	secretType = "password"
