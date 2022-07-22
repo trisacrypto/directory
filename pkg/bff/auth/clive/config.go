@@ -43,5 +43,5 @@ func (c Config) Validate() error {
 }
 
 func (c Config) IsZero() bool {
-	return c.Domain == "" && c.ClientID == "" && c.TokenCache == ""
+	return c.Domain == "" && c.Audience == "" && c.ClientID == "" && c.TokenCache == ""
 }
