@@ -9,11 +9,10 @@ import (
 // Config stores the client ID and secrets for accessing auth0 in order to conduct
 // "live" authentication on a CLI from the localhost.
 type Config struct {
-	Domain       string `envconfig:"AUTH0_DOMAIN"`
-	Audience     string `envconfig:"AUTH0_AUDIENCE"`
-	ClientID     string `envconfig:"AUTH0_CLIENT_ID"`
-	ClientSecret string `envconfig:"AUTH0_CLIENT_SECRET"`
-	TokenCache   string `envconfig:"AUTH0_TOKEN_CACHE"`
+	Domain     string `envconfig:"AUTH0_DOMAIN"`
+	Audience   string `envconfig:"AUTH0_AUDIENCE"`
+	ClientID   string `envconfig:"AUTH0_CLIENT_ID"`
+	TokenCache string `envconfig:"AUTH0_TOKEN_CACHE"`
 }
 
 func NewConfig() (conf Config, err error) {
@@ -36,8 +35,6 @@ func (c Config) Validate() error {
 		return errors.New("invalid configuration: missing $AUTH0_AUDIENCE")
 	case c.ClientID == "":
 		return errors.New("invalid configuration: missing $AUTH0_CLIENT_ID")
-	case c.ClientSecret == "":
-		return errors.New("invalid configuration: missing $AUTH0_CLIENT_SECRET")
 	case c.TokenCache == "":
 		return errors.New("invalid configuration: missing path in $AUTH0_TOKEN_CACHE")
 	default:

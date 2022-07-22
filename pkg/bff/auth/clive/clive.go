@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -175,6 +176,14 @@ func (s *Server) authorize(ctx RenderContext) (err error) {
 		return fmt.Errorf("could not complete request server responded %s", rep.Status)
 	}
 
+	// Parse the JSON response into an Access Token
+	token := &AccessToken{}
+	if err = json.NewDecoder(rep.Body).Decode(token); err != nil {
+		return fmt.Errorf("could not parse access token response from auth0: %s", err)
+	}
+	token.CreatedAt = time.Now()
+	token.ExpiresAt = token.CreatedAt.Add(time.Duration(token.ExpiresIn-60) * time.Second)
+
 	// Write the JSON response to the token cache
 	var f *os.File
 	if f, err = os.OpenFile(s.conf.TokenCache, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600); err != nil {
@@ -182,7 +191,9 @@ func (s *Server) authorize(ctx RenderContext) (err error) {
 	}
 	defer f.Close()
 
-	if _, err = io.Copy(f, rep.Body); err != nil {
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	if err = encoder.Encode(token); err != nil {
 		return fmt.Errorf("could not write JSON response into token cache file: %s", err)
 	}
 	return nil
@@ -240,4 +251,14 @@ type RenderContext struct {
 	State       string `json:"state"`
 	Error       string `json:"error"`
 	Description string `json:"error_description"`
+}
+
+type AccessToken struct {
+	AccessToken string    `json:"access_token"`
+	IDToken     string    `json:"id_token"`
+	Scope       string    `json:"scope"`
+	ExpiresIn   int       `json:"expires_in"`
+	TokenType   string    `json:"token_type"`
+	CreatedAt   time.Time `json:"created_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
