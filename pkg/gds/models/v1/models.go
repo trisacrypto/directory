@@ -175,6 +175,38 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 	return nil
 }
 
+func DeleteCertReqID(vasp *pb.VASP, certreqID string) (err error) {
+	// Entry must be non-nil
+	if certreqID == "" {
+		return errors.New("cannot delete empty certificate request ID from extra")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.CertificateRequests = make([]string, 0, 1)
+	}
+
+	// Search the array for the certificate request ID
+	for i, containsID := range extra.CertificateRequests {
+		if certreqID == containsID {
+			// Remove the certificate request ID from the array
+			extra.CertificateRequests = append(extra.CertificateRequests[:i], extra.CertificateRequests[i+1:]...)
+			break
+		}
+	}
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetCertIDs returns the list of associated Certificate IDs for the VASP record.
 func GetCertIDs(vasp *pb.VASP) (_ []string, err error) {
 	// If the extra data is nil, return nil (no certificates).

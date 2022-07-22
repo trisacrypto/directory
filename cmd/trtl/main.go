@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"os"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/joho/godotenv"
 	"github.com/rotationalio/honu"
 	opts "github.com/rotationalio/honu/options"
@@ -23,6 +25,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
@@ -111,6 +114,11 @@ func main() {
 					Name:    "report",
 					Aliases: []string{"r"},
 					Usage:   "dump a migration report to a file",
+				},
+				&cli.BoolFlag{
+					Name:    "cleanup",
+					Aliases: []string{"c"},
+					Usage:   "cleanup dangling references to non-existent certificate requests",
 				},
 			},
 		},
@@ -570,58 +578,79 @@ func migrateCerts(c *cli.Context) (err error) {
 	}
 
 	var migrated, skipped int
-	var migrateErr error
+	var result *multierror.Error
 
+vaspLoop:
 	for {
 		var rep *pb.KVPair
 		if rep, err = stream.Recv(); err != nil {
 			if err != io.EOF {
-				migrateErr = err
+				result = multierror.Append(result, err)
 			}
-			break
+			break vaspLoop
 		}
 
 		vasp := &gds.VASP{}
 		if err = proto.Unmarshal(rep.Value, vasp); err != nil {
-			migrateErr = err
-			break
+			result = multierror.Append(result, err)
+			break vaspLoop
 		}
 
 		// Get all the certificate requests for this vasp
 		var ids []string
 		if ids, err = models.GetCertReqIDs(vasp); err != nil {
-			migrateErr = err
-			break
+			result = multierror.Append(result, err)
+			break vaspLoop
 		}
 
 		// Get the latest completed certificate request
 		var certreq *models.CertificateRequest
+	certreqLoop:
 		for _, id := range ids {
 			var rep *pb.GetReply
-			if rep, err = dbClient.Get(ctx, &pb.GetRequest{
+			rep, err = dbClient.Get(ctx, &pb.GetRequest{
 				Namespace: wire.NamespaceCertReqs,
 				Key:       []byte(id),
-			}); err != nil {
-				fmt.Printf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err)
-				if report != nil {
-					report.WriteString(fmt.Sprintf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err))
+			})
+			if err != nil {
+				if e, ok := status.FromError(err); ok {
+					switch e.Code() {
+					case codes.NotFound:
+						result = multierror.Append(result, err)
+						// Remove dangling certreq IDs if requested
+						if c.Bool("cleanup") {
+							if err = models.DeleteCertReqID(vasp, id); err != nil {
+								result = multierror.Append(result, err)
+								break vaspLoop
+							}
+						}
+					default:
+						result = multierror.Append(result, err)
+						break vaspLoop
+					}
+				} else {
+					result = multierror.Append(result, err)
+					break vaspLoop
 				}
-				continue
 			}
-
+			// Successfully retrieved the certificate request
 			current := &models.CertificateRequest{}
 			if err = proto.Unmarshal(rep.Value, current); err != nil {
-				migrateErr = err
-				break
+				result = multierror.Append(result, err)
+				break vaspLoop
 			}
 
 			if current.Status == models.CertificateRequestState_COMPLETED {
 				certreq = current
 			}
 		}
+			fmt.Printf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err)
+			if report != nil {
+				report.WriteString(fmt.Sprintf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err))
+			}
+			continue
+		}
 
-		if migrateErr != nil {
-			break
 		}
 
 		if certreq == nil {
