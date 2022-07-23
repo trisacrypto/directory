@@ -7,6 +7,7 @@ import MembershipGuideCard from 'components/MembershipGuideCard';
 import { NavBar } from 'components/Navbar/Landing/Nav';
 import React from 'react';
 import LandingLayout from 'layouts/LandingLayout';
+
 const MembershipGuideText = [
   {
     stepNumber: 1,
@@ -33,8 +34,8 @@ const MembershipGuideText = [
 
 const MembershipGuide = () => {
   return (
-    <LandingLayout>
-      <Stack>
+    <>
+      <LandingLayout>
         <Flex
           bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
           color="white"
@@ -43,7 +44,6 @@ const MembershipGuide = () => {
           justifyContent="center"
           direction="column"
           paddingY={{ base: 12, md: 16 }}
-          px="1rem"
           fontSize={'xl'}>
           <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
             <VStack spacing={1}>
@@ -69,6 +69,7 @@ const MembershipGuide = () => {
         </Flex>
         <Stack
           justifyContent={'center'}
+          alignContent={'center'}
           alignItems={['center', 'stretch']}
           spacing={10}
           direction={['column', 'row']}
@@ -85,8 +86,8 @@ const MembershipGuide = () => {
             </React.Fragment>
           ))}
         </Stack>
-      </Stack>
-    </LandingLayout>
+      </LandingLayout>
+    </>
   );
 };
 

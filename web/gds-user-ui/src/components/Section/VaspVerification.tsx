@@ -231,12 +231,12 @@ export default function VaspVerification() {
                 <Trans id="Start Registration Process">Start Registration Process</Trans>
               </Button> */}
 
-            <VStack>
+            <VStack fontSize={'md'}>
               <RouterLink to={'/auth/register'}>
                 <Button
                   bg={colors.system.blue}
                   color={'white'}
-                  width={'300px'}
+                  minWidth={'300px'}
                   _hover={{
                     bg: '#10aaed'
                   }}
