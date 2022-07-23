@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -27,6 +28,11 @@ func init() {
 //===========================================================================
 // Template Contexts
 //===========================================================================
+
+const (
+	UnknownDate = "unknown date"
+	DateFormat  = "Monday, January 2, 2006"
+)
 
 // VerifyContactData to complete the verify contact email templates.
 type VerifyContactData struct {
@@ -108,6 +114,92 @@ type DeliverCertsData struct {
 	SerialNumber        string // The serial number of the certificate
 	Endpoint            string // The expected endpoint for the TRISA service
 	RegisteredDirectory string // The directory name for the certificates being issued
+}
+
+// ExpiresAdminNotificationData to complete expires admin notification email templates.
+type ExpiresAdminNotificationData struct {
+	VID                 string    // The ID of the VASP/Registration
+	CommonName          string    // The common name assigned to the cert
+	SerialNumber        string    // The serial number of the certificate
+	Endpoint            string    // The expected endpoint for the TRISA service
+	RegisteredDirectory string    // The directory name for the certificates being issued
+	Expiration          time.Time // The timestamp that the certificates expire
+	Reissuance          time.Time // The timestamp the certificates will be reissued
+	BaseURL             string    // The URL of the admin review endpoint to build the AdminReviewURL
+}
+
+// AdminReviewURL composes a link to the VASP detail in the admin UI. If the base url is
+// missing or can't be parsed, it logs an warning and returns empty string.
+// The AdminReviewURL is useful, but it is not a critical error.
+func (d ExpiresAdminNotificationData) AdminReviewURL() string {
+	var (
+		link *url.URL
+		err  error
+	)
+	if d.BaseURL != "" {
+		if link, err = url.Parse(d.BaseURL); err != nil {
+			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			return ""
+		}
+	} else {
+		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		return ""
+	}
+	return link.ResolveReference(&url.URL{Path: d.VID}).String()
+}
+
+// ExpirationDate formats the expiration date for rendering in the email.
+func (d ExpiresAdminNotificationData) ExpirationDate() string {
+	if d.Expiration.IsZero() {
+		return UnknownDate
+	}
+	return d.Expiration.Format(DateFormat)
+}
+
+// ReissueDate formats the reissuance date for rendering in the email.
+func (d ExpiresAdminNotificationData) ReissueDate() string {
+	if d.Reissuance.IsZero() {
+		return UnknownDate
+	}
+	return d.Reissuance.Format(DateFormat)
+}
+
+// ReissuanceReminderData to complete reissue reminder email templates.
+type ReissuanceReminderData struct {
+	Name                string    // Used to address the email
+	VID                 string    // The ID of the VASP/Registration
+	CommonName          string    // The common name assigned to the cert
+	SerialNumber        string    // The serial number of the certificate
+	Endpoint            string    // The expected endpoint for the TRISA service
+	RegisteredDirectory string    // The directory name for the certificates being issued
+	Expiration          time.Time // The timestamp that the certificates expire
+	Reissuance          time.Time // The timestamp the certificates will be reissued
+}
+
+// ExpirationDate formats the expiration date for rendering in the email.
+func (d ReissuanceReminderData) ExpirationDate() string {
+	if d.Expiration.IsZero() {
+		return UnknownDate
+	}
+	return d.Expiration.Format(DateFormat)
+}
+
+// ReissueDate formats the reissuance date for rendering in the email.
+func (d ReissuanceReminderData) ReissueDate() string {
+	if d.Reissuance.IsZero() {
+		return UnknownDate
+	}
+	return d.Reissuance.Format(DateFormat)
+}
+
+// ReissuanceStartedData to complete reissue reminder email templates.
+type ReissuanceStartedData struct {
+	Name                string // Used to address the email
+	VID                 string // The ID of the VASP/Registration
+	CommonName          string // The common name assigned to the cert
+	Endpoint            string // The expected endpoint for the TRISA service
+	RegisteredDirectory string // The directory name for the certificates being issued
+	WhisperURL          string // Secure one-time whisper link for password retrieval
 }
 
 //===========================================================================
@@ -197,6 +289,63 @@ func DeliverCertsEmail(sender, senderEmail, recipient, recipientEmail, attachmen
 	return message, nil
 }
 
+// ExpiresAdminNotificationEmail creates a new certs expired admin notification email,
+// ready for sending by rendering the text and html templates with the supplied data.
+func ExpiresAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail string, data ExpiresAdminNotificationData) (message *mail.SGMailV3, err error) {
+	var text, html string
+	if text, html, err = Render("expires_admin_notification", data); err != nil {
+		return nil, err
+	}
+
+	message = mail.NewSingleEmail(
+		mail.NewEmail(sender, senderEmail),
+		ExpiresAdminNotificationRE,
+		mail.NewEmail(recipient, recipientEmail),
+		text,
+		html,
+	)
+
+	return message, nil
+}
+
+// ReissuanceReminderEmail creates a new reissuance reminder email, ready for sending by
+// rendering the text and html templates with the supplied data.
+func ReissuanceReminderEmail(sender, senderEmail, recipient, recipientEmail string, data ReissuanceReminderData) (message *mail.SGMailV3, err error) {
+	var text, html string
+	if text, html, err = Render("reissuance_reminder", data); err != nil {
+		return nil, err
+	}
+
+	message = mail.NewSingleEmail(
+		mail.NewEmail(sender, senderEmail),
+		ReissuanceReminderRE,
+		mail.NewEmail(recipient, recipientEmail),
+		text,
+		html,
+	)
+
+	return message, nil
+}
+
+// ReissuanceStartedEmail creates a new reissuance started email, ready for sending by
+// rendering the text and html templates with the supplied data.
+func ReissuanceStartedEmail(sender, senderEmail, recipient, recipientEmail string, data ReissuanceStartedData) (message *mail.SGMailV3, err error) {
+	var text, html string
+	if text, html, err = Render("reissuance_started", data); err != nil {
+		return nil, err
+	}
+
+	message = mail.NewSingleEmail(
+		mail.NewEmail(sender, senderEmail),
+		ReissuanceStartedRE,
+		mail.NewEmail(recipient, recipientEmail),
+		text,
+		html,
+	)
+
+	return message, nil
+}
+
 //===========================================================================
 // Template Builders
 //===========================================================================
@@ -267,4 +416,17 @@ func AttachJSON(message *mail.SGMailV3, data []byte, filename string) (err error
 	message.AddAttachment(attach)
 	return nil
 
+}
+
+//===========================================================================
+// Testing Interfaces
+//===========================================================================
+
+type AdminReview interface {
+	AdminReviewURL() string
+}
+
+type FutureReissuer interface {
+	ExpirationDate() string
+	ReissueDate() string
 }

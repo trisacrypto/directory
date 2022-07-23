@@ -41,7 +41,7 @@ func (s *gdsTestSuite) TestRegister() {
 	refVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
 
 	// Start the gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -215,7 +215,7 @@ func (s *gdsTestSuite) TestLookup() {
 	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
 
 	// Start the gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -260,7 +260,7 @@ func (s *gdsTestSuite) TestSearch() {
 	ctx := context.Background()
 
 	// Start the gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -388,7 +388,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	ctx := context.Background()
 
 	// Start the gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -495,7 +495,7 @@ func (s *gdsTestSuite) TestVerification() {
 	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
 
 	// Start the gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -547,7 +547,7 @@ func (s *gdsTestSuite) TestStatus() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
@@ -582,7 +582,7 @@ func (s *gdsTestSuite) TestStatusMaintenance() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
