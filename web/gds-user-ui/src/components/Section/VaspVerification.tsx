@@ -232,18 +232,20 @@ export default function VaspVerification() {
               </Button> */}
 
             <VStack>
-              <Button
-                bg={colors.system.blue}
-                color={'white'}
-                width={'300px'}
-                _hover={{
-                  bg: '#10aaed'
-                }}
-                _focus={{
-                  borderColor: 'transparent'
-                }}>
-                Create account
-              </Button>
+              <RouterLink to={'/auth/register'}>
+                <Button
+                  bg={colors.system.blue}
+                  color={'white'}
+                  width={'300px'}
+                  _hover={{
+                    bg: '#10aaed'
+                  }}
+                  _focus={{
+                    borderColor: 'transparent'
+                  }}>
+                  Create account
+                </Button>
+              </RouterLink>
               <Text textAlign="center">
                 <Trans id="Already have an account?">Already have an account?</Trans>{' '}
                 <RouterLink to={'/auth/login'}>

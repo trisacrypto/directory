@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
       const request = await lookup(query);
 
       setIsLoading(false);
-      if (request.mainnet || request.testnet) {
+      if (request?.mainnet || request?.testnet) {
         setError('');
         setResult(request);
         setSearch(searchQuery);
