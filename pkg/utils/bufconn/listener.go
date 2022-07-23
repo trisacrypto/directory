@@ -16,21 +16,31 @@ import (
 // Release() to close the listener.
 type GRPCListener struct {
 	Listener *bufconn.Listener
+	Target   string
 	Conn     *grpc.ClientConn
 }
 
-func New(bufSize int) *GRPCListener {
+func New(bufSize int, target string) *GRPCListener {
+	if target == "" {
+		target = "bufnet"
+	}
+
 	return &GRPCListener{
 		Listener: bufconn.Listen(bufSize),
+		Target:   target,
 	}
 }
 
-func (g *GRPCListener) Connect() (err error) {
-	ctx := context.Background()
-	if g.Conn, err = grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(g.Dialer), grpc.WithTransportCredentials(insecure.NewCredentials())); err != nil {
+func (g *GRPCListener) Connect(ctx context.Context, opts ...grpc.DialOption) (err error) {
+	if len(opts) == 0 {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	opts = append([]grpc.DialOption{grpc.WithContextDialer(g.Dialer)}, opts...)
+	if g.Conn, err = grpc.DialContext(ctx, g.Target, opts...); err != nil {
 		return err
 	}
-	return nil
+	return err
 }
 
 func (g *GRPCListener) Dialer(context.Context, string) (net.Conn, error) {

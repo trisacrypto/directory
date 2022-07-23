@@ -15,7 +15,7 @@ func (s *trtlStoreTestSuite) TestBatchIterator() {
 	require := s.Require()
 
 	// Connect to bufconn and get a trtl gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Iterate over an empty namespace
@@ -213,7 +213,7 @@ func (s *trtlStoreTestSuite) TestStreamingIterator() {
 	require := s.Require()
 
 	// Connect to bufconn and get a trtl gRPC client
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
 	// Iterate over an empty namespace

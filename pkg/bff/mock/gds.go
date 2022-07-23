@@ -28,7 +28,7 @@ const (
 func NewGDS(conf config.DirectoryConfig) (g *GDS, err error) {
 	g = &GDS{
 		srv:   grpc.NewServer(),
-		sock:  bufconn.New(bufSize),
+		sock:  bufconn.New(bufSize, ""),
 		Calls: make(map[string]int),
 	}
 
@@ -67,7 +67,7 @@ type GDS struct {
 
 func (g *GDS) Client() (client gds.TRISADirectoryClient, err error) {
 	if g.client == nil {
-		if err = g.sock.Connect(); err != nil {
+		if err = g.sock.Connect(context.Background()); err != nil {
 			return nil, err
 		}
 		g.client = gds.NewTRISADirectoryClient(g.sock.Conn)

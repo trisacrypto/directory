@@ -68,7 +68,7 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	// Fetch peer information from the TLS info if we're not in insecure mode.
 	if !t.conf.MTLS.Insecure {
 		var peer *PeerInfo
-		if peer, err = peerFromTLS(ctx); err != nil {
+		if peer, err = PeerFromTLS(ctx); err != nil {
 			return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
 		}
 
@@ -96,9 +96,9 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	return out, err
 }
 
-// peerFromTLS looks up the TLSInfo from the incoming gRPC connection to retrieve
+// PeerFromTLS looks up the TLSInfo from the incoming gRPC connection to retrieve
 // information about the remote peer from the certificate.
-func peerFromTLS(ctx context.Context) (info *PeerInfo, err error) {
+func PeerFromTLS(ctx context.Context) (info *PeerInfo, err error) {
 	var (
 		ok      bool
 		gp      *peer.Peer
@@ -131,8 +131,14 @@ func peerFromTLS(ctx context.Context) (info *PeerInfo, err error) {
 			info = &PeerInfo{
 				Name:        &c[0].Subject,
 				DNSNames:    c[0].DNSNames,
-				IPAddresses: []net.IP{net.ParseIP(gp.Addr.String())},
+				IPAddresses: []net.IP{},
 			}
+			var addr net.IP
+			if addr = net.ParseIP(gp.Addr.String()); addr != nil {
+				// Only add the net.Addr if it's parseable
+				info.IPAddresses = append(info.IPAddresses, addr)
+			}
+
 			info.IPAddresses = append(info.IPAddresses, c[0].IPAddresses...)
 			return info, nil
 		}

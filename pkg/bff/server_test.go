@@ -1,6 +1,7 @@
 package bff_test
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	"github.com/trisacrypto/directory/pkg/trtl"
+	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -211,7 +213,7 @@ func (s *bffTestSuite) SetupTrtl() {
 	s.dbPath, err = ioutil.TempDir("", "trtldb-*")
 	require.NoError(err, "could not create a temporary directory for trtl")
 
-	conf := trtl.MockConfig()
+	conf := trtlmock.Config()
 	conf.Database.URL = "leveldb:///" + s.dbPath
 	conf, err = conf.Mark()
 	require.NoError(err, "could not validate mock config")
@@ -220,11 +222,11 @@ func (s *bffTestSuite) SetupTrtl() {
 	s.trtl, err = trtl.New(conf)
 	require.NoError(err, "could not start trtl server")
 
-	s.trtlsock = bufconn.New(1024 * 1024)
+	s.trtlsock = bufconn.New(1024*1024, "")
 	go s.trtl.Run(s.trtlsock.Listener)
 
 	// Connect to the running trtl server
-	require.NoError(s.trtlsock.Connect(), "could not connect to trtl socket")
+	require.NoError(s.trtlsock.Connect(context.Background()), "could not connect to trtl socket")
 }
 
 // Helper function to set the credentials on the test client from claims, reducing 3 or

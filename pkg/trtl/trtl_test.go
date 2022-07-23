@@ -19,7 +19,7 @@ func (s *trtlTestSuite) TestGet() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -108,7 +108,7 @@ func (s *trtlTestSuite) TestPut() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -188,7 +188,7 @@ func (s *trtlTestSuite) TestDelete() {
 	tempNS := "temp"
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -259,7 +259,7 @@ func (s *trtlTestSuite) TestUnaryOperationsInNamespaces() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -319,7 +319,7 @@ func (s *trtlTestSuite) TestBatch() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -365,7 +365,7 @@ func (s *trtlTestSuite) TestIter() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -534,7 +534,7 @@ func (s *trtlTestSuite) TestCursor() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 
@@ -669,7 +669,7 @@ func (s *trtlTestSuite) TestStatus() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := pb.NewTrtlClient(s.grpc.Conn)
 

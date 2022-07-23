@@ -1,12 +1,14 @@
 package trtl_test
 
 import (
+	"context"
+
 	store "github.com/trisacrypto/directory/pkg/gds/store/trtl"
 )
 
 func (s *trtlStoreTestSuite) TestIndexSync() {
 	require := s.Require()
-	require.NoError(s.grpc.Connect(), "could not connect to grpc bufconn")
+	require.NoError(s.grpc.Connect(context.Background()), "could not connect to grpc bufconn")
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -46,7 +48,7 @@ func (s *trtlStoreTestSuite) TestIndexSync() {
 
 func (s *trtlStoreTestSuite) TestSearch() {
 	require := s.Require()
-	require.NoError(s.grpc.Connect(), "could not connect to grpc bufconn")
+	require.NoError(s.grpc.Connect(context.Background()), "could not connect to grpc bufconn")
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)

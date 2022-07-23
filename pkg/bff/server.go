@@ -185,7 +185,7 @@ func (s *Server) Serve() (err error) {
 	// creating the listener will allow us to determine which port).
 	var sock net.Listener
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
-		s.echan <- err
+		return fmt.Errorf("could not listen on bind addr %s: %s", s.conf.BindAddr, err)
 	}
 
 	// Set the URL from the listener
