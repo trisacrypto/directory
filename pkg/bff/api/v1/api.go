@@ -151,6 +151,8 @@ type Certificate struct {
 	Revoked      bool                   `json:"revoked"`
 	Details      map[string]interface{} `json:"details"`
 }
+<<<<<<< HEAD
+=======
 
 // MemberDetailsParams contains details required to identify a VASP member for the
 // MembersDetails request.
@@ -174,3 +176,4 @@ type NetworkError struct {
 	TestNet string `json:"testnet,omitempty"`
 	MainNet string `json:"mainnet,omitempty"`
 }
+>>>>>>> origin/main

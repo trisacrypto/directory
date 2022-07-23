@@ -136,7 +136,7 @@ export const getRefreshToken = () => {
         if (err) {
           reject(err);
         } else {
-          resolve(authResult);
+          resolve(authResult.accessToken);
         }
       }
     );

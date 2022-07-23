@@ -13,6 +13,17 @@ export const parameters = {
 
 export const decorators = [
   (Story) => {
+<<<<<<< HEAD
+  return (
+  <MemoryRouter initialEntries={['/']}>
+    <Provider store={store}>
+        <LanguageProvider>
+          <Story />
+        </LanguageProvider>
+    </Provider>
+  </MemoryRouter>
+  )
+=======
     return (
       <MemoryRouter initialEntries={['/']}>
         <Provider store={store}>
@@ -22,5 +33,6 @@ export const decorators = [
         </Provider>
       </MemoryRouter>
     )
+>>>>>>> origin/main
   },
 ];

@@ -1,14 +1,15 @@
 import { Box, Stack, Flex } from '@chakra-ui/react';
 import useAuth from 'hooks/useAuth';
+import { userSelector } from 'modules/auth/login/user.slice';
+import { useSelector } from 'react-redux';
 type SimpleDashboardLayout = {
   children: React.ReactNode;
 };
-import DashboardLayout from './DashboardLayout';
 export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ children }) => {
-  const { isUserAuthenticated } = useAuth();
+  const { isLoggedIn } = useSelector(userSelector);
   return (
     <>
-      {!isUserAuthenticated ? (
+      {!isLoggedIn ? (
         <Flex
           direction="column"
           align="center"
@@ -22,7 +23,7 @@ export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ childre
           <Box>{children}</Box>
         </Flex>
       ) : (
-        <DashboardLayout>{children}</DashboardLayout>
+        children
       )}
     </>
   );

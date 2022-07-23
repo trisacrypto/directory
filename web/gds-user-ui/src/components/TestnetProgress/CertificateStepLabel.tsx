@@ -160,9 +160,9 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
                   as={getLabel(2)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(1)?.color
-                    },
-                    verticalAlign: 'middle'
+                      fill: getLabel(2)?.color,
+                      verticalAlign: 'middle'
+                    }
                   }}
                 />
               </Box>

@@ -13,49 +13,34 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.log('[AxiosError]', error);
-
-    if (error && !error.response) {
-      return Promise.reject<any>(new Error('Network connection error'));
-    }
+    console.log('[AxiosError detected]', error.response.status);
     const originalRequest = error.config;
-    // retry 3 time if request failed
-
-    // Reject promise for now if usual error
-    if (error.response.status !== 401) {
-      return Promise.reject(error);
+    if (error && !error.response) {
+      return Promise.reject<any>(
+        new Error('Sorry we cannot reach the server, please contact the admin')
+      );
     }
+    // handle 403 error
 
-    if (error.response.status === 403) {
-      return Promise.reject(error);
-    }
+    if (error && error.response && error.response.status === 401) {
+      console.log('[401]');
 
-    if (error.response.status === 401 && error.response.data.error === 'Unauthorized') {
-      console.log('[TokenError]', error);
-      if (originalRequest.retry < 3) {
-        originalRequest.retry = originalRequest.retry || 0;
+      originalRequest.retry = originalRequest.retry || 0;
+
+      if (originalRequest.retry <= 1) {
+        console.log('[401]-retry]', originalRequest.retry);
         originalRequest.retry += 1;
         const token = await getRefreshToken();
+
         if (token) {
-          const headers = {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          };
-          const newRequest = {
-            ...originalRequest,
-            headers,
-            url: `${originalRequest.url}?${originalRequest.data}`
-          };
           setCookie('access_token', token);
-          return axiosInstance.request(newRequest);
+          axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+          return axiosInstance(originalRequest);
         }
-        // const token = await getRefreshToken();
-        // if (token) {
-        //   setCookie('access_token', token);
-        //   axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-        //   return axiosInstance.request(originalRequest);
-        // }
       }
+    }
+    if (error && error?.response?.status === 403) {
+      return Promise.reject<any>(new Error('Unauthorize user'));
     }
   }
 );

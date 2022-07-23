@@ -8,6 +8,7 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
 
+// TO-DO: IMPROVE THIS COMPONENT BY USING USER SLICE FUNCTION TO AUTH
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
@@ -58,10 +59,11 @@ const StartPage: React.FC = () => {
       });
       if (response) {
         setIsloading(false);
+        console.log('[response', response);
         if (response.emailVerified) {
           // to implement later
           // get user info
-
+          console.log('[login dispatch] first');
           loginUser(response);
         } else {
         }

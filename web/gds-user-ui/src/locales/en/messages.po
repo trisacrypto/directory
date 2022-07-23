@@ -84,6 +84,13 @@ msgid "About TRISA"
 msgstr "About TRISA"
 
 #: src/modules/auth/register/success.tsx:16
+<<<<<<< HEAD
+#~ msgid "Account Registratin Complete"
+#~ msgstr "Account Registratin Complete"
+
+#: src/modules/auth/register/success.tsx:16
+=======
+>>>>>>> origin/main
 msgid "Account Registration Complete"
 msgstr "Account Registration Complete"
 
@@ -119,18 +126,43 @@ msgstr "Add Regulation"
 msgid "Address"
 msgstr "Address"
 
+<<<<<<< HEAD
+#: src/components/AddressForm/index.tsx:97
+#~ msgid "Address Type"
+#~ msgstr "Address Type"
+
+=======
+>>>>>>> origin/main
 #: src/components/AddressForm/index.tsx:117
 msgid "Address Type (required)"
 msgstr "Address Type (required)"
+
+<<<<<<< HEAD
+#: src/components/AddressForm/index.tsx:41
+#~ msgid "Address line 1 e.g. building name/number, street name"
+#~ msgstr "Address line 1 e.g. building name/number, street name"
 
 #: src/components/AddressForm/index.tsx:40
 msgid "Address line 1 e.g. building name/number, street name (required)"
 msgstr "Address line 1 e.g. building name/number, street name (required)"
 
+=======
+#: src/components/AddressForm/index.tsx:40
+msgid "Address line 1 e.g. building name/number, street name (required)"
+msgstr "Address line 1 e.g. building name/number, street name (required)"
+
+>>>>>>> origin/main
 #: src/components/AddressForm/index.tsx:48
 msgid "Address line 2 e.g. apartment or suite number"
 msgstr "Address line 2 e.g. apartment or suite number"
 
+<<<<<<< HEAD
+#: src/components/AddressForm/index.tsx:57
+#~ msgid "Address line 3 e.g. city, province, postal code"
+#~ msgstr "Address line 3 e.g. city, province, postal code"
+
+=======
+>>>>>>> origin/main
 #: src/components/Addresses/index.tsx:28
 #: src/components/CertificateReview/LegalPersonReview.tsx:167
 #: src/components/MemberDetails/index.tsx:245
@@ -272,8 +304,13 @@ msgid "Click below to submit your"
 msgstr "Click below to submit your"
 
 #: src/components/Modal/ConfirmationResetFormModal.tsx:54
+<<<<<<< HEAD
+msgid "Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process"
+msgstr "Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process"
+=======
 msgid "Click “Reset” to clear and reset the registration form. All data will be deleted. You will be re-directed to the beginning of the form and be required to restart the registration process"
 msgstr "Click “Reset” to clear and reset the registration form. All data will be deleted. You will be re-directed to the beginning of the form and be required to restart the registration process"
+>>>>>>> origin/main
 
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:61
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:82
@@ -328,6 +365,14 @@ msgstr "Contacts"
 msgid "Continue with Google"
 msgstr "Continue with Google"
 
+<<<<<<< HEAD
+#: src/components/Section/CreateAccount.tsx:91
+#: src/components/Section/Login.tsx:85
+#~ msgid "Continue with google"
+#~ msgstr "Continue with google"
+
+=======
+>>>>>>> origin/main
 #: src/components/Section/SearchDirectory.tsx:195
 #: src/components/Section/SearchDirectory.tsx:264
 msgid "Country"
@@ -503,6 +548,13 @@ msgstr "Final Confirmation"
 msgid "Final review and form submission"
 msgstr "Final review and form submission"
 
+<<<<<<< HEAD
+#: src/components/OrganizationProfile/TrisaDetail.tsx:52
+#~ msgid "First Listed"
+#~ msgstr "First Listed"
+
+=======
+>>>>>>> origin/main
 #: src/components/Section/VaspVerification.tsx:169
 msgid "For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification."
 msgstr "For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification."
@@ -620,6 +672,13 @@ msgstr "Join Today"
 msgid "Join the TRISA network today."
 msgstr "Join the TRISA network today."
 
+<<<<<<< HEAD
+#: src/components/OrganizationProfile/TrisaDetail.tsx:64
+#~ msgid "Last Updated"
+#~ msgstr "Last Updated"
+
+=======
+>>>>>>> origin/main
 #: src/components/Section/VaspVerification.tsx:186
 msgid "Learn How TRISA Works"
 msgstr "Learn How TRISA Works"
@@ -1296,6 +1355,17 @@ msgstr "VASP Category"
 msgid "VERIFIED ON"
 msgstr "VERIFIED ON"
 
+<<<<<<< HEAD
+#: src/components/OrganizationProfile/TrisaDetail.tsx:58
+#~ msgid "Verified On"
+#~ msgstr "Verified On"
+
+#: src/components/Section/CreateAccount.tsx:81
+#~ msgid "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
+#~ msgstr "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
+
+=======
+>>>>>>> origin/main
 #: src/components/Section/CreateAccount.tsx:82
 msgid "We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later."
 msgstr "We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later."

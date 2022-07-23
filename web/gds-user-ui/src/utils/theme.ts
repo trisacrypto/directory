@@ -37,6 +37,10 @@ const customTheme = extendTheme({
       // This could also be "div, p"
       '*, *::before, ::after': {
         wordWrap: 'normal'
+      },
+      ' html,body': {
+        height: '100%',
+        margin: 0
       }
     }
   }

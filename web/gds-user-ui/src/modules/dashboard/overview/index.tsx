@@ -52,6 +52,9 @@ const Overview: React.FC = () => {
         if (getAnnouncements.status === 200) {
           setAnnouncements(getAnnouncements.data.announcements);
         }
+
+        // console.log('[Overview] metrics', metrics);
+        // console.log('[announcements]', getAnnouncements);
       } catch (e: any) {
         if (e.response.status === 401) {
           navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
@@ -83,15 +86,15 @@ const Overview: React.FC = () => {
   }, [result]);
 
   return (
-    <DashboardLayout>
+    <>
       <Heading marginBottom="30px">Overview</Heading>
-      {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
       <NeedsAttention
         text={t`Start Certificate Registration`}
         buttonText={'Start'}
         onClick={() => navigate('/dashboard/certificate/registration')}
       />
-      <NetworkAnnouncements />
+      {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
+
       {/* <Sentry.ErrorBoundary
       <Heading marginBottom="69px">Overview</Heading>
       {isLoading ? (
@@ -143,7 +146,7 @@ const Overview: React.FC = () => {
       <OrganizationalDetail data={stepperData} />
       <TrisaDetail data={trisaData} />
       <TrisaImplementation data={trisaData} />
-    </DashboardLayout>
+    </>
   );
 };
 
