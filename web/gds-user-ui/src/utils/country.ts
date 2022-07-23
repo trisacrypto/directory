@@ -26,9 +26,10 @@ export function countryCodeEmoji(cc: IsoCountryCode) {
   //     }' instead.`
   //   );
   // }
-
-  const codePoints = [...cc.toUpperCase()].map((c) => (c as any).codePointAt() + OFFSET);
-  return String.fromCodePoint(...codePoints);
+  if (cc) {
+    const codePoints = [...cc.toUpperCase()].map((c) => (c as any).codePointAt() + OFFSET);
+    return String.fromCodePoint(...codePoints);
+  }
 }
 
 export const isoCountries = {

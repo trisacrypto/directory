@@ -34,12 +34,17 @@ exports[`<MembershipGuideCard /> should match snapshot 1`] = `
       <div
         class="css-14d2w9n"
       >
-        <button
-          class="chakra-button css-vx0ruo"
-          type="button"
+        <a
+          class=""
+          href="/auth/signup"
         >
-          Learn More
-        </button>
+          <button
+            class="chakra-button css-vx0ruo"
+            type="button"
+          >
+            Learn More
+          </button>
+        </a>
       </div>
     </div>
   </div>

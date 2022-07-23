@@ -33,7 +33,7 @@ const CertificateRegistration = React.lazy(
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-import CertificateManagement from "../../components/CertificateManagement";
+import CertificateManagement from '../../components/CertificateManagement';
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -44,11 +44,23 @@ const appRoutes = [
     layout: 'landing'
   },
   {
-    path: '/start',
-    name: 'Start',
+    path: '/',
+    name: 'Success Auth',
+    component: Home,
+    layout: 'landing'
+  },
+  {
+    path: '/getting-started',
+    name: 'getting-started',
     component: Start,
     layout: 'landing'
   },
+  // {
+  //   path: '/start',
+  //   name: 'Start',
+  //   component: Start,
+  //   layout: 'landing'
+  // },
   {
     path: '/certificate/registration',
     name: 'Certificate Registration',
@@ -59,18 +71,6 @@ const appRoutes = [
     path: '/verify',
     name: 'Verify',
     component: VerifyPage,
-    layout: 'landing'
-  },
-  {
-    path: '/success',
-    name: 'Success',
-    component: SuccessPage,
-    layout: 'landing'
-  },
-  {
-    path: '/auth/callback',
-    name: 'Callback',
-    component: HandleAuthCallback,
     layout: 'landing'
   },
   {
@@ -109,6 +109,19 @@ const appRoutes = [
     path: '/auth/reset',
     name: 'Reset',
     component: ResetPassword,
+    layout: 'landing'
+  },
+
+  {
+    path: '/auth/success',
+    name: 'Success',
+    component: SuccessPage,
+    layout: 'landing'
+  },
+  {
+    path: '/auth/callback',
+    name: 'Callback',
+    component: HandleAuthCallback,
     layout: 'landing'
   },
 

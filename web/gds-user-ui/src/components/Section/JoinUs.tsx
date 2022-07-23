@@ -95,7 +95,7 @@ export default function JoinUsSection() {
               ))}
             </SimpleGrid>
             <Box alignItems="center" textAlign="center">
-              <RouterLink to={'/getting-started'}>
+              <RouterLink to={'/guide'}>
                 <Button
                   bg="#FF7A59"
                   color="white"

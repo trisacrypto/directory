@@ -16,6 +16,7 @@ describe('<MembershipGuideCard />', () => {
         header="Create Your Account"
         description="Create your TRISA account with your VASP email address"
         buttonText="Learn More"
+        link="/auth/signup"
       />
     );
 
@@ -34,6 +35,7 @@ describe('<MembershipGuideCard />', () => {
         header="Create Your Account"
         description="Create your TRISA account with your VASP email address"
         buttonText="Learn More"
+        link="/auth/signup"
       />
     );
     expect(container).toMatchSnapshot();
