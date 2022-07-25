@@ -93,8 +93,8 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 				}
 
 				// Verify that the VASP has not errored or been rejected
-				if vasp.VerificationStatus != pb.VerificationState_REVIEWED {
-					logctx.Info().Msg("vasp is not in the REVIEWED state, rejecting certificate request")
+				if vasp.VerificationStatus < pb.VerificationState_REVIEWED || vasp.VerificationStatus > pb.VerificationState_VERIFIED {
+					logctx.Info().Str("verification_status", vasp.VerificationStatus.String()).Msg("vasp is not ready for certificate request submission")
 					if err = models.UpdateCertificateRequestStatus(req, models.CertificateRequestState_CR_REJECTED, "certificate request rejected", "automated"); err != nil {
 						logctx.Error().Err(err).Msg("could not update certificate request status")
 						return
@@ -342,7 +342,7 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 
 	// Make sure the VASP has not errored or been rejected before downloading certificates
 	if vasp.VerificationStatus != pb.VerificationState_ISSUING_CERTIFICATE {
-		log.Error().Err(err).Msg("VASP is not in the ISSUING_CERTIFICATE state, cannot download certificates")
+		log.Error().Str("verification_status", vasp.VerificationStatus.String()).Msg("VASP is not in the ISSUING_CERTIFICATE state, cannot download certificates")
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "rejecting certificate request", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
