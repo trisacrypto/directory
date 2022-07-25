@@ -260,13 +260,13 @@ exports[`<Line /> should match snapshot 1`] = `
           class="chakra-stack css-15av81"
         >
           <div
-            class="chakra-stack css-owjkmg"
+            class="chakra-stack css-vnfttn"
           >
             <a
               href="/auth/register"
             >
               <button
-                class="chakra-button css-1g4bfcn"
+                class="chakra-button css-1xatu72"
                 type="button"
               >
                 Create account
