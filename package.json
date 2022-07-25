@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "redux-persist": "^6.0.0",
-    "reduxjs-toolkit-persist": "^7.2.1"
-  }
-}
