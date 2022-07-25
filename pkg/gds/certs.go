@@ -83,7 +83,7 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 		switch req.Status {
 		case models.CertificateRequestState_READY_TO_SUBMIT:
 			wg.Add(1)
-			go func(logctx zerolog.Logger) {
+			go func(req *models.CertificateRequest, logctx zerolog.Logger) {
 				defer wg.Done()
 				// Get the VASP from the certificate request
 				var (
@@ -115,17 +115,17 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 				} else {
 					logctx.Info().Msg("certificate request submitted")
 				}
-			}(logctx)
+			}(req, logctx)
 		case models.CertificateRequestState_PROCESSING:
 			wg.Add(1)
-			go func(logctx zerolog.Logger) {
+			go func(req *models.CertificateRequest, logctx zerolog.Logger) {
 				defer wg.Done()
 				if err := s.checkCertificateRequest(req); err != nil {
 					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
 				} else {
 					logctx.Info().Msg("processing certificate request check complete")
 				}
-			}(logctx)
+			}(req, logctx)
 		}
 
 		nrequests++
