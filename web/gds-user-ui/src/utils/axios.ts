@@ -60,4 +60,9 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+export const setAuthorization = () => {
+  const token = getCookie('access_token');
+  axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+};
+
 export default axiosInstance;

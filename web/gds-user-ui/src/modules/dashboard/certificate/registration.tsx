@@ -27,7 +27,7 @@ import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
-
+import { getRegistrationData } from 'modules/dashboard/registration/service';
 import {
   loadDefaultValueFromLocalStorage,
   setCertificateFormValueToLocalStorage
@@ -40,13 +40,14 @@ const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   const [isResetForm, setIsResetForm] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState(true);
   const { nextStep, previousStep } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
+  const [registrationData, setRegistrationData] = useState<any>([]);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -150,6 +151,16 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetForm]);
 
+  // load default value from trtl
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const data = await getRegistrationData();
+  //     console.log('[getRegistrationData]', data);
+  //     setRegistrationData(data.data);
+  //     setIsLoading(false);
+  //   };
+  //   fetchData();
+  // }, []);
   return (
     // <DashboardLayout>
     //   <CertificateLayout>

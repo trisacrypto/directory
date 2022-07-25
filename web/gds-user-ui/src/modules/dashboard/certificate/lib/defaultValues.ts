@@ -41,12 +41,12 @@ export const getRegistrationDefaultValue = () => {
       billing: {},
       legal: {}
     },
-    trisa_endpoint_testnet: {
-      trisa_endpoint: '',
+    testnet: {
+      endpoint: '',
       common_name: ''
     },
-    trisa_endpoint_mainnet: {
-      trisa_endpoint: '',
+    mainnet: {
+      endpoint: '',
       common_name: ''
     },
     website: '',
