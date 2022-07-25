@@ -102,17 +102,20 @@ const useCertificateStepper = () => {
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
     }
-    // do not allow to go back to the first step
+
+    // do not allow to go back for the first step
+
     const step = currentStep;
     if (currentStep === 1) {
       return;
     }
-
     dispatch(setCurrentStep({ currentStep: step - 1 }));
+
     // if the current status is already completed, do not change the status
+
     const found = findStepKey(steps, currentStep);
     if (found.length > 0 && found[0].status !== LSTATUS.COMPLETE) {
-      dispatch(setStepStatus({ step, status: LSTATUS.INCOMPLETE }));
+      dispatch(setStepStatus({ step, status: LSTATUS.PROGRESS }));
     }
   };
 

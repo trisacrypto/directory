@@ -2,68 +2,85 @@ import React, { useEffect, useState } from 'react';
 
 import { Heading, Stack, Spinner, Flex, Box, useToast } from '@chakra-ui/react';
 import useHashQuery from 'hooks/useHashQuery';
-import useCustomAuth0 from 'hooks/useCustomAuth0';
+import { getAuth0User, userSelector, logout } from 'modules/auth/login/user.slice';
 import { getCookie, setCookie } from 'utils/cookies';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import { t } from '@lingui/macro';
-import LandingLayout from 'layouts/LandingLayout';
+import { useSelector, useDispatch } from 'react-redux';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
-  const { auth0GetUser } = useCustomAuth0();
-  const { loginUser } = useAuth();
   const accessToken = query.access_token;
+  const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>('');
+  const dispatch = useDispatch();
   const toast = useToast();
   useEffect(() => {
-    (async () => {
-      try {
-        const getUserInfo: any = accessToken && (await auth0GetUser(accessToken));
+    dispatch(getAuth0User(accessToken));
 
-        setIsLoading(false);
-        if (getUserInfo && getUserInfo?.email_verified) {
-          setCookie('access_token', accessToken);
-          setCookie('user_locale', getUserInfo?.locale);
-          const getUser = await logUserInBff();
+    // (async () => {
+    //   try {
+    //     const getUserInfo: any = accessToken && (await auth0Hash());
+    //     console.log('[getUserInfo]', getUserInfo);
+    //     setIsLoading(false);
+    //     if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
+    //       setCookie('access_token', accessToken);
+    //       setCookie('user_locale', getUserInfo?.locale);
+    //       const getUser = await logUserInBff();
 
-          // if (getUser.status === 204) {
-          const userInfo: TUser = {
-            isLoggedIn: true,
-            user: {
-              name: getUserInfo?.name,
-              pictureUrl: getUserInfo?.picture,
-              email: getUserInfo?.email
-            }
-          };
-          loginUser(userInfo);
-          navigate('/dashboard/overview');
-          // }
-          // log this error to sentry
-        } else {
-          setError(
-            t`Your account has not been verified. Please check your email to verify your account.`
-          );
-        }
-      } catch (e: any) {
-        toast({
-          description: e.response?.data?.message || e.message,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    //       // if (getUser.status === 204) {
+    //       const userInfo: TUser = {
+    //         isLoggedIn: true,
+    //         user: {
+    //           name: getUserInfo?.name,
+    //           pictureUrl: getUserInfo?.picture,
+    //           email: getUserInfo?.email
+    //         }
+    //       };
+    //       console.log('[login dispatch] second');
+    //       loginUser(userInfo);
+    //       navigate('/dashboard/overview');
+    //       // }
+    //       // log this error to sentry
+    //     } else {
+    //       setError(
+    //         t`Your account has not been verified. Please check your email to verify your account.`
+    //       );
+    //     }
+    //   } catch (e: any) {
+    //     toast({
+    //       description: e.response?.data?.message || e.message,
+    //       status: 'error',
+    //       duration: 5000,
+    //       isClosable: true,
+    //       position: 'top-right'
+    //     });
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // })();
   }, [accessToken]);
+
+  useEffect(() => {
+    if (isError) {
+      toast({
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right'
+      });
+    }
+    if (isLoggedIn) {
+      navigate('/dashboard/overview');
+    }
+  }, [isError, isLoggedIn]);
+
   return (
-    <Stack height={'100%'}>
-      {isLoading && (
+    <Box height={'100%'}>
+      {isFetching && (
         <Box
           textAlign={'center'}
           justifyItems="center"
@@ -72,16 +89,8 @@ const CallbackPage: React.FC = () => {
           <Spinner size={'xl'} />
         </Box>
       )}
-      {error && (
-        <LandingLayout>
-          <Box>
-            <Stack justifyContent={'center'} alignContent="center" my={20}>
-              <AlertMessage title={t`Token not valid`} message={error} status="error" />
-            </Stack>
-          </Box>
-        </LandingLayout>
-      )}
-    </Stack>
+      {isError && <AlertMessage title={t`Token not valid`} message={errorMessage} status="error" />}
+    </Box>
   );
 };
 
