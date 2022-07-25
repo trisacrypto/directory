@@ -35,7 +35,7 @@ const AlertMessage: React.FC<AlertMessageProps> = ({ status, title, message, has
       width={'100%'}
       mt={'10%'}
       bg={useColorModeValue('white', 'gray.800')}>
-      <Stack width={'50%'}>
+      <Stack width={'100%'}>
         <Alert
           status={status}
           variant="subtle"

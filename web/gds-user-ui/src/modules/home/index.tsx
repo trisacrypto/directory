@@ -23,21 +23,23 @@ const HomePage: React.FC = () => {
 
     try {
       const request = await lookup(query);
-      const response = request.results;
+
       setIsLoading(false);
-      if (!response.error) {
+      if (request?.mainnet || request?.testnet) {
         setError('');
-        setResult(response);
+        setResult(request);
         setSearch(searchQuery);
+      } else {
+        setResult(false);
+        setError('No results found');
       }
     } catch (e: any) {
       setIsLoading(false);
-      if (!e?.response?.data.success) {
-        setResult(false);
-        setError(e.response.data.error);
-        setResult(false);
+      setResult(false);
+      if (!e.response?.data?.success) {
+        setError(e.response?.data?.error);
       } else {
-        Sentry.captureMessage('Something wrong happen when we trying to call lookup api');
+        setError('Something went wrong');
         Sentry.captureException(e);
       }
     }

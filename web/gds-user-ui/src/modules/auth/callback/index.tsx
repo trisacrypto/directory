@@ -8,7 +8,7 @@ import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import { t } from '@lingui/macro';
-
+import LandingLayout from 'layouts/LandingLayout';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
@@ -60,10 +60,9 @@ const CallbackPage: React.FC = () => {
         setIsLoading(false);
       }
     })();
-  });
-
+  }, [accessToken]);
   return (
-    <Box height={'100%'}>
+    <Stack height={'100%'}>
       {isLoading && (
         <Box
           textAlign={'center'}
@@ -73,8 +72,16 @@ const CallbackPage: React.FC = () => {
           <Spinner size={'xl'} />
         </Box>
       )}
-      {error && <AlertMessage title={t`Token not valid`} message={error} status="error" />}
-    </Box>
+      {error && (
+        <LandingLayout>
+          <Box>
+            <Stack justifyContent={'center'} alignContent="center" my={20}>
+              <AlertMessage title={t`Token not valid`} message={error} status="error" />
+            </Stack>
+          </Box>
+        </LandingLayout>
+      )}
+    </Stack>
   );
 };
 
