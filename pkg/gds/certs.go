@@ -86,7 +86,10 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 			go func(logctx zerolog.Logger) {
 				defer wg.Done()
 				// Get the VASP from the certificate request
-				var vasp *pb.VASP
+				var (
+					vasp *pb.VASP
+					err  error
+				)
 				if vasp, err = s.db.RetrieveVASP(req.Vasp); err != nil {
 					logctx.Error().Str("vasp_id", req.Vasp).Msg("could not retrieve vasp for certificate request submission")
 					return
@@ -103,7 +106,7 @@ func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
 						logctx.Error().Err(err).Msg("could not save updated certificate request")
 						return
 					}
-				} else if err := s.submitCertificateRequest(req, vasp); err != nil {
+				} else if err = s.submitCertificateRequest(req, vasp); err != nil {
 					// If certificate submission requests fail we want immediate notification
 					// so this is a CRITICAL severity that should alert us immediately.
 					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
