@@ -35,17 +35,16 @@ const PasswordReset: React.FC<PasswordResetProps> = (props) => {
 
   return (
     <Flex
-      minWidth={'100vw'}
       align={'center'}
       justify={'center'}
       fontFamily={colors.font}
+      color={useColorModeValue('gray.600', 'white')}
       fontSize={'xl'}
-      marginTop={'10vh'}
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         {props.message && <SuccessMessage message={props.message} handleClose={() => {}} />}
         <Stack align={'left'}>
-          <Text fontSize="lg" mb={3}>
+          <Text fontSize="lg" mb={3} fontWeight="bold">
             Follow the instructions below to reset your TRISA password
           </Text>
           <Text fontSize={'sm'}>
@@ -63,28 +62,27 @@ const PasswordReset: React.FC<PasswordResetProps> = (props) => {
               <FormControl id="email">
                 <Input
                   type="email"
-                  height={'64px'}
+                  size="lg"
                   {...register('username')}
                   placeholder={t`Email Address`}
                 />
               </FormControl>
-              <Stack spacing={8}>
-                <Button
-                  bg={colors.system.blue}
-                  color={'white'}
-                  height={'57px'}
-                  isLoading={props.isLoading}
-                  type="submit"
-                  w={['full', '50%']}
-                  _hover={{
-                    bg: '#10aaed'
-                  }}
-                  _focus={{
-                    borderColor: 'transparent'
-                  }}>
-                  <Trans id="Submit">Submit</Trans>
-                </Button>
-              </Stack>
+              <Button
+                display="block"
+                alignSelf="start"
+                px={16}
+                bg="blue"
+                color={'white'}
+                isLoading={props.isLoading}
+                type="submit"
+                _hover={{
+                  bg: '#10aaed'
+                }}
+                _focus={{
+                  borderColor: 'transparent'
+                }}>
+                <Trans id="Submit">Submit</Trans>
+              </Button>
             </Stack>
           </form>
         </Box>

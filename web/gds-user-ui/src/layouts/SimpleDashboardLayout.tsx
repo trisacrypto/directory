@@ -1,4 +1,4 @@
-import { Box, Flex, useColorModeValue } from '@chakra-ui/react';
+import { Box, Container, Flex, useColorModeValue } from '@chakra-ui/react';
 import useAuth from 'hooks/useAuth';
 type SimpleDashboardLayout = {
   children: React.ReactNode;
@@ -14,14 +14,15 @@ export const SimpleDashboardLayout: React.FC<SimpleDashboardLayout> = ({ childre
         <Flex
           direction="column"
           align="center"
-          maxW={'100%'}
-          bg={bg}
+          m="auto"
+          bg={'#F7F8FC'}
+          w="100%"
           px={58}
           py={10}
           fontFamily={'Open Sans'}
           position={'relative'}
           minHeight={'100vh'}>
-          <Box>{children}</Box>
+          <Container maxW="7xl">{children}</Container>
         </Flex>
       ) : (
         <DashboardLayout>{children}</DashboardLayout>
