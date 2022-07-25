@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { Box, Heading, Text, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+import OverviewLoader from 'components/ContentLoader/Overview';
 import DashboardLayout from 'layouts/DashboardLayout';
 import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
@@ -16,10 +17,9 @@ import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementat
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
-  const [, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
-
   const navigate = useNavigate();
   useEffect(() => {
     (async () => {
@@ -65,55 +65,61 @@ const Overview: React.FC = () => {
   }, [result]);
 
   return (
-    <DashboardLayout>
-      <Heading marginBottom="30px">Overview</Heading>
-      {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
-      <NeedsAttention
-        text={t`Start Certificate Registration`}
-        buttonText={'Start'}
-        onClick={() => navigate('/dashboard/certificate/registration')}
-      />
-      <NetworkAnnouncements />
-      <Box fontSize={'md'} mx={'auto'} w={'100%'}>
-        <Box>
-          <Tabs my={'10'}>
-            <TabList>
-              <Tab
-                bg={'#E5EDF1'}
-                sx={{ width: '100%' }}
-                _focus={{ outline: 'none' }}
-                _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                <Text fontSize={['x-small', 'medium']}>
-                  <Trans id="MainNet Network Metrics">MainNet Network Metrics</Trans>
-                </Text>
-              </Tab>
-              <Tab
-                bg={'#E5EDF1'}
-                fontWeight={'bold'}
-                sx={{ width: '100%' }}
-                _focus={{ outline: 'none' }}
-                _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                <Text fontSize={['x-small', 'medium']}>
-                  <Trans id="TestNet Network Metrics">TestNet Network Metrics</Trans>
-                </Text>
-              </Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel p={0}>
-                <Metrics data={result?.testnet} type="Testnet" />
-              </TabPanel>
-              <TabPanel p={0}>
-                <Metrics data={result?.mainnet} type="Mainnet" />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </Box>
-      </Box>
-      {/* </Sentry.ErrorBoundary> */}
-      <OrganizationalDetail data={stepperData} />
-      <TrisaDetail data={trisaData} />
-      <TrisaImplementation data={trisaData} />
-    </DashboardLayout>
+    <>
+      {isLoading ? (
+        <OverviewLoader />
+      ) : (
+        <>
+          <Heading marginBottom="30px">Overview</Heading>
+          <NeedsAttention
+            text={t`Start Certificate Registration`}
+            buttonText={'Start'}
+            onClick={() => navigate('/dashboard/certificate/registration')}
+          />
+          {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
+
+          <Box fontSize={'md'} mx={'auto'} w={'100%'}>
+            <Box>
+              <Tabs my={'10'}>
+                <TabList>
+                  <Tab
+                    bg={'#E5EDF1'}
+                    sx={{ width: '100%' }}
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
+                    <Text fontSize={['x-small', 'medium']}>
+                      <Trans id="MainNet Network Metrics">MainNet Network Metrics</Trans>
+                    </Text>
+                  </Tab>
+                  <Tab
+                    bg={'#E5EDF1'}
+                    fontWeight={'bold'}
+                    sx={{ width: '100%' }}
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
+                    <Text fontSize={['x-small', 'medium']}>
+                      <Trans id="TestNet Network Metrics">TestNet Network Metrics</Trans>
+                    </Text>
+                  </Tab>
+                </TabList>
+                <TabPanels>
+                  <TabPanel p={0}>
+                    <Metrics data={result?.testnet} type="Testnet" />
+                  </TabPanel>
+                  <TabPanel p={0}>
+                    <Metrics data={result?.mainnet} type="Mainnet" />
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+            </Box>
+          </Box>
+          {/* </Sentry.ErrorBoundary> */}
+          <OrganizationalDetail data={stepperData} />
+          <TrisaDetail data={trisaData} />
+          <TrisaImplementation data={trisaData} />
+        </>
+      )}
+    </>
   );
 };
 

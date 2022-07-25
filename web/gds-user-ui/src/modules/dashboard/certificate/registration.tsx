@@ -18,7 +18,8 @@ import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm } from 'react-hook-form';
-import useAuth from 'hooks/useAuth';
+
+import { userSelector } from 'modules/auth/login/user.slice';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
@@ -52,7 +53,7 @@ const Certificate: React.FC = () => {
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
-  const { isUserAuthenticated } = useAuth();
+  const { isLoggedIn } = useSelector(userSelector);
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
@@ -158,7 +159,7 @@ const Certificate: React.FC = () => {
               <Heading size="lg" mb="24px" className="heading">
                 <Trans id="Certificate Registration">Certificate Registration</Trans>
               </Heading>
-              <Box>{!isUserAuthenticated && <HomeButton link={'/'} />}</Box>
+              <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
             </Flex>
 
             <VStack spacing={3}>
