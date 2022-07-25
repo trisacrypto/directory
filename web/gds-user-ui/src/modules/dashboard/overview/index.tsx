@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { Box, Heading, Text, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
-import Card from 'components/ui/Card';
+import OverviewLoader from 'components/ContentLoader/Overview';
 import DashboardLayout from 'layouts/DashboardLayout';
 import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import Metrics from 'components/Metrics';
-import useAuth from 'hooks/useAuth';
 import { getMetrics, getAnnouncementsData } from './service';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { colors } from 'utils/theme';
-import OverviewLoader from 'components/ContentLoader/Overview';
+import { useNavigate } from 'react-router-dom';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
@@ -21,10 +18,8 @@ const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // const { user, getUser } = useAuth();
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
-
   const navigate = useNavigate();
   useEffect(() => {
     (async () => {

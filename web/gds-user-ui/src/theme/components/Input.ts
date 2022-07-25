@@ -5,9 +5,18 @@ import type { ComponentStyleConfig } from '@chakra-ui/theme';
 const Input: ComponentStyleConfig = {
   // The styles all button have in common
   baseStyle: {
-    fontFamily: 'Open Sans, Roboto, sans-serif'
+    field: {
+      fontFamily: 'Open Sans, Roboto, sans-serif'
+    }
   },
-  sizes: {},
+  sizes: {
+    lg: {
+      field: {
+        borderRadius: 0,
+        backgroundColor: '#E5EDF1 !important'
+      }
+    }
+  },
   variants: {},
   defaultProps: {
     size: 'md',
