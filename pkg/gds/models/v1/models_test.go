@@ -96,6 +96,9 @@ func TestVASPExtra(t *testing.T) {
 	require.Equal(t, "", notes["boats"].Editor)
 	require.Equal(t, "boats are cool", notes["boats"].Text)
 
+	// Deleting certificate request IDs from an empty slice should not error
+	require.NoError(t, DeleteCertReqID(vasp, "b5841869-105f-411c-8722-4045aad72717"))
+
 	// Attempt to append certificate request IDs
 	certReqs := []string{
 		"b5841869-105f-411c-8722-4045aad72717",
@@ -112,6 +115,25 @@ func TestVASPExtra(t *testing.T) {
 	require.Len(t, ids, 2)
 	require.Equal(t, certReqs[0], ids[0])
 	require.Equal(t, certReqs[1], ids[1])
+
+	// Should be able to delete a certificate request ID
+	require.NoError(t, DeleteCertReqID(vasp, certReqs[0]))
+	ids, err = GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 1)
+	require.Equal(t, certReqs[1], ids[0])
+
+	// Deleting the certificate request ID again should not error
+	require.NoError(t, DeleteCertReqID(vasp, certReqs[0]))
+
+	// Deleting a non-existent certificate request ID should not error
+	require.NoError(t, DeleteCertReqID(vasp, "does-not-exist"))
+
+	// Certificate request IDs should be unchanged
+	ids, err = GetCertReqIDs(vasp)
+	require.NoError(t, err)
+	require.Len(t, ids, 1)
+	require.Equal(t, certReqs[1], ids[0])
 
 	// Attempt to append certificate IDs
 	certs := []string{

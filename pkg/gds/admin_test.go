@@ -1682,6 +1682,11 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Equal(pb.VerificationState_REJECTED, log[3].CurrentState)
 	require.Equal(request.claims.Email, log[3].Source)
 
+	// Certificate request should be deleted from the VASP extra
+	ids, err := models.GetCertReqIDs(v)
+	require.NoError(err)
+	require.Len(ids, 0)
+
 	// Certificate request should be deleted
 	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
 	require.Error(err)

@@ -2092,8 +2092,17 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 			continue
 		}
 
+		// Delete the certificate request
 		if err = s.db.DeleteCertReq(careq.Id); err != nil {
 			log.Error().Err(err).Str("id", careq.Id).Msg("could not delete certificate request")
+			continue
+		}
+
+		// Delete the VASP reference to the certificate request
+		if err = models.DeleteCertReqID(vasp, careq.Id); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careq.Id).Msg("could not delete certificate request ID from VASP")
+		} else if err = s.db.UpdateVASP(vasp); err != nil {
+			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update VASP with deleted certificate request ID")
 		}
 		ncertreqs++
 	}
