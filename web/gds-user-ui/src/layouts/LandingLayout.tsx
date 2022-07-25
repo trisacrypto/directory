@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Stack } from '@chakra-ui/react';
+import { Box, Stack, Flex } from '@chakra-ui/react';
 import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
 type LandingLayoutProp = {
@@ -9,7 +9,7 @@ type LandingLayoutProp = {
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
   return (
     <Stack
-      align="center"
+      // align="center"
       justifyContent="space-between"
       minW={'100%'}
       m="0 auto"
@@ -18,7 +18,7 @@ export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
       position={'relative'}
       minHeight={'100vh'}>
       <LandingHeader />
-      <Box maxW="7xl">{props.children}</Box>
+      <Stack flexGrow={1}>{props.children}</Stack>
       <Footer />
     </Stack>
   );

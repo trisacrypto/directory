@@ -3,7 +3,7 @@
 exports[`<MembershipGuide /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-vooagt"
+    class="chakra-stack css-1erbuhs"
   >
     <div
       class="css-a4hqho"
@@ -189,71 +189,74 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
         </div>
       </div>
     </div>
-    <section>
+    <div
+      class="chakra-stack css-8vjl7u"
+    >
       <div
-        class="chakra-stack css-n21gh5"
+        class="css-zf3z9z"
       >
         <div
-          class="css-1u814me"
+          class="chakra-stack css-1vqyy53"
         >
           <div
-            class="chakra-stack css-1vqyy53"
+            class="chakra-stack css-126kq63"
           >
-            <div
-              class="chakra-stack css-126kq63"
+            <h2
+              class="chakra-heading css-1y1itts"
             >
-              <h2
-                class="chakra-heading css-1y1itts"
-              >
-                Welcome to TRISA’s network of Certified VASPs.
-              </h2>
-              <p
-                class="chakra-text css-rltemf"
-              >
-                Learn about the three-step process to become a member and verified VASP.
-              </p>
-              <p
-                class="chakra-text css-rltemf"
-              >
-                Create your account today.
-              </p>
-            </div>
+              Welcome to TRISA’s network of Certified VASPs.
+            </h2>
+            <p
+              class="chakra-text css-rltemf"
+            >
+              Learn about the three-step process to become a member and verified VASP.
+            </p>
+            <p
+              class="chakra-text css-rltemf"
+            >
+              Create your account today.
+            </p>
           </div>
         </div>
+      </div>
+      <div
+        class="chakra-stack css-1kkrd7x"
+      >
         <div
-          class="chakra-stack css-1kojfy"
+          class="css-wsis5l"
         >
           <div
-            class="css-wsis5l"
+            class="chakra-stack css-ly7s1u"
           >
             <div
-              class="chakra-stack css-ly7s1u"
+              class="chakra-stack css-owjkmg"
             >
-              <div
-                class="chakra-stack css-owjkmg"
+              <p
+                class="chakra-text css-wz7pgp"
+                data-testid="step"
               >
-                <p
-                  class="chakra-text css-wz7pgp"
-                  data-testid="step"
-                >
-                  Step 
-                  1
-                </p>
-                <p
-                  class="chakra-text css-8cgwqi"
-                  data-testid="header"
-                >
-                  create your account
-                </p>
-                <p
-                  class="chakra-text css-0"
-                  data-testid="description"
-                >
-                  Create your TRISA account with your VASP email address. Add collaborators in your organization.
-                </p>
-              </div>
-              <div
-                class="css-14d2w9n"
+                Step 
+                1
+              </p>
+              <p
+                class="chakra-text css-8cgwqi"
+                data-testid="header"
+              >
+                create your account
+              </p>
+              <p
+                class="chakra-text css-0"
+                data-testid="description"
+              >
+                Create your TRISA account with your VASP email address. Add collaborators in your organization.
+              </p>
+            </div>
+            <div
+              class="css-14d2w9n"
+            >
+              <a
+                class=""
+                href="/auth/register"
               >
                 <button
                   class="chakra-button css-vx0ruo"
@@ -261,40 +264,45 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 >
                   Create Account
                 </button>
-              </div>
+              </a>
             </div>
           </div>
+        </div>
+        <div
+          class="css-wsis5l"
+        >
           <div
-            class="css-wsis5l"
+            class="chakra-stack css-ly7s1u"
           >
             <div
-              class="chakra-stack css-ly7s1u"
+              class="chakra-stack css-owjkmg"
             >
-              <div
-                class="chakra-stack css-owjkmg"
+              <p
+                class="chakra-text css-wz7pgp"
+                data-testid="step"
               >
-                <p
-                  class="chakra-text css-wz7pgp"
-                  data-testid="step"
-                >
-                  Step 
-                  2
-                </p>
-                <p
-                  class="chakra-text css-8cgwqi"
-                  data-testid="header"
-                >
-                  complete VASP verification
-                </p>
-                <p
-                  class="chakra-text css-0"
-                  data-testid="description"
-                >
-                  Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.
-                </p>
-              </div>
-              <div
-                class="css-14d2w9n"
+                Step 
+                2
+              </p>
+              <p
+                class="chakra-text css-8cgwqi"
+                data-testid="header"
+              >
+                complete VASP verification
+              </p>
+              <p
+                class="chakra-text css-0"
+                data-testid="description"
+              >
+                Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.
+              </p>
+            </div>
+            <div
+              class="css-14d2w9n"
+            >
+              <a
+                class=""
+                href="/getting-started"
               >
                 <button
                   class="chakra-button css-vx0ruo"
@@ -302,40 +310,45 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 >
                   Learn More
                 </button>
-              </div>
+              </a>
             </div>
           </div>
+        </div>
+        <div
+          class="css-wsis5l"
+        >
           <div
-            class="css-wsis5l"
+            class="chakra-stack css-ly7s1u"
           >
             <div
-              class="chakra-stack css-ly7s1u"
+              class="chakra-stack css-owjkmg"
             >
-              <div
-                class="chakra-stack css-owjkmg"
+              <p
+                class="chakra-text css-wz7pgp"
+                data-testid="step"
               >
-                <p
-                  class="chakra-text css-wz7pgp"
-                  data-testid="step"
-                >
-                  Step 
-                  3
-                </p>
-                <p
-                  class="chakra-text css-8cgwqi"
-                  data-testid="header"
-                >
-                  Integrate and Comply
-                </p>
-                <p
-                  class="chakra-text css-0"
-                  data-testid="description"
-                >
-                  Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production.
-                </p>
-              </div>
-              <div
-                class="css-14d2w9n"
+                Step 
+                3
+              </p>
+              <p
+                class="chakra-text css-8cgwqi"
+                data-testid="header"
+              >
+                Integrate and Comply
+              </p>
+              <p
+                class="chakra-text css-0"
+                data-testid="description"
+              >
+                Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production.
+              </p>
+            </div>
+            <div
+              class="css-14d2w9n"
+            >
+              <a
+                class=""
+                href="/comply"
               >
                 <button
                   class="chakra-button css-vx0ruo"
@@ -343,12 +356,12 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 >
                   Learn More
                 </button>
-              </div>
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
     <footer
       style="width: 100%;"
     >

@@ -260,14 +260,34 @@ exports[`<Line /> should match snapshot 1`] = `
           class="chakra-stack css-15av81"
         >
           <div
-            class="css-1tms7qa"
+            class="chakra-stack css-vnfttn"
           >
             <a
-              class="chakra-button css-1n03jlk"
-              href="/certificate/registration"
+              href="/auth/register"
             >
-              Start Registration Process
+              <button
+                class="chakra-button css-1xatu72"
+                type="button"
+              >
+                Create account
+              </button>
             </a>
+            <p
+              class="chakra-text css-xi606m"
+            >
+              Already have an account?
+               
+              <a
+                href="/auth/login"
+              >
+                <a
+                  class="chakra-link css-1av0s05"
+                >
+                   
+                  Log in.
+                </a>
+              </a>
+            </p>
           </div>
         </div>
       </div>

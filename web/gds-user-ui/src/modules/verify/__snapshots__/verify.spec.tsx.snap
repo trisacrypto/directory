@@ -190,13 +190,17 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
       </div>
     </div>
     <div
+<<<<<<< HEAD
       class="css-hfexg0"
+=======
+      class="chakra-stack css-8vjl7u"
+>>>>>>> origin/main
     >
       <div
         class="css-at8wy6"
       >
         <div
-          class="chakra-stack css-156zt38"
+          class="chakra-stack css-1485kjp"
         >
           <div
             class="chakra-alert css-x6jk6h"
