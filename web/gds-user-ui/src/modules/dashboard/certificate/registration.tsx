@@ -3,7 +3,6 @@ import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
   Heading,
-  HStack,
   VStack,
   useToast,
   Text,
@@ -69,8 +68,6 @@ const Certificate: React.FC = () => {
 
   const { formState, reset } = methods;
 
-  const dirtyFields = formState.dirtyFields;
-
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
   }
@@ -81,7 +78,6 @@ const Certificate: React.FC = () => {
   }
 
   function getCurrentFormValue() {
-    // console.log('current', current);
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
@@ -154,11 +150,6 @@ const Certificate: React.FC = () => {
   }, [isResetForm]);
 
   return (
-    // <DashboardLayout>
-    //   <CertificateLayout>
-    //     <BasicDetails />
-    //   </CertificateLayout>
-    // </DashboardLayout>
     <SimpleDashboardLayout>
       <>
         <FormProvider {...methods}>

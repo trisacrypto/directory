@@ -21,7 +21,7 @@ import InputFormControl from 'components/ui/InputFormControl';
 import { getValueByPathname } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import { Link as RouterLink } from 'react-router-dom';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
@@ -51,27 +51,19 @@ const Login: React.FC<LoginProps> = (props) => {
   } = useForm<IFormInputs>({ resolver: yupResolver(validationSchema), defaultValues });
 
   return (
-    <Flex
-      minWidth={'100vw'}
-      align={'center'}
-      justify={'center'}
-      fontFamily={colors.font}
-      fontSize={'xl'}
-      mb={'10vh'}
-      bg={useColorModeValue('white', 'gray.800')}>
-      <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
-        <Stack align={'left'}>
-          <Text fontWeight="bold">
-            <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
-          </Text>
-        </Stack>
+    <Flex fontSize={'xl'} bg={useColorModeValue('white', 'gray.800')}>
+      <Stack spacing={8} mx={'auto'} maxW={'xl'} py={12} width={'100%'}>
+        <Text fontSize={'xl'} fontWeight="bold" color={useColorModeValue('gray.600', 'white')}>
+          <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
+        </Text>
         <Stack align={'center'} justify={'center'} fontFamily={colors.font}>
           <Button
             data-testid="signin-with-google"
             bg={'gray.100'}
             w="100%"
-            height={'64px'}
-            onClick={(event) => props.handleSignWithSocial(event, 'google')}
+            size="lg"
+            borderRadius="none"
+            onClick={(event: any) => props.handleSignWithSocial(event, 'google')}
             color={'gray.600'}
             _hover={{
               background: useColorModeValue('gray.200', 'black'),
@@ -85,30 +77,28 @@ const Login: React.FC<LoginProps> = (props) => {
               Continue with Google
             </Text>
           </Button>
-          <Text py={3}>or</Text>
         </Stack>
+        <Text py={3} align="center">
+          or
+        </Text>
 
-        <Box
-          rounded={'lg'}
-          bg={useColorModeValue('white', 'transparent')}
-          position={'relative'}
-          bottom={5}>
+        <Box bg={useColorModeValue('white', 'transparent')}>
           <form onSubmit={handleSubmit(props.handleSignWithEmail)} noValidate>
             <Stack spacing={4}>
               <InputFormControl
                 data-testid="email"
-                controlId=""
-                height={'64px'}
+                controlId="email"
                 placeholder={t`Email Address`}
                 type="email"
+                size="lg"
                 isInvalid={getValueByPathname(errors, 'username')}
                 formHelperText={getValueByPathname(errors, 'username')?.message}
                 {...register('username')}
               />
               <InputFormControl
                 data-testid="password"
-                controlId=""
-                height={'64px'}
+                controlId="password"
+                size="lg"
                 placeholder={t`Password`}
                 type="password"
                 isInvalid={getValueByPathname(errors, 'password')}
@@ -134,22 +124,22 @@ const Login: React.FC<LoginProps> = (props) => {
                   <Trans id="Log In">Log In</Trans>
                 </Button>
                 <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-                  <RouterLink to={'/auth/reset'}>
-                    <Link color="#1F4CED" fontFamily="Open sans, sans-serif" fontSize="1rem">
-                      <Trans id="Forgot password?">Forgot password?</Trans>
-                    </Link>
-                  </RouterLink>
+                  <ChakraRouterLink
+                    to={'/auth/reset'}
+                    color="#1F4CED"
+                    fontFamily="Open sans, sans-serif"
+                    fontSize="1rem">
+                    <Trans id="Forgot password?">Forgot password?</Trans>
+                  </ChakraRouterLink>
                 </Text>
               </Stack>
             </Stack>
           </form>
           <Text textAlign="center" fontSize="1rem">
             <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
-            <RouterLink to="/auth/register">
-              <Link color={'#1F4CED'}>
-                <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
-              </Link>
-            </RouterLink>
+            <ChakraRouterLink to="/auth/register" color={'#1F4CED'}>
+              <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
+            </ChakraRouterLink>
           </Text>
         </Box>
       </Stack>
