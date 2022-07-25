@@ -1,6 +1,7 @@
 package trtl_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -78,7 +79,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	trtl, err := trtl.New(*s.conf)
 	require.NoError(err)
 
-	s.grpc = bufconn.New(bufSize)
+	s.grpc = bufconn.New(bufSize, "")
 	go trtl.Run(s.grpc.Listener)
 }
 
@@ -133,7 +134,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Empty(alice.Id)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -268,7 +269,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	s.NotEmpty(cert.Details.NotBefore)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -403,7 +404,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	s.Empty(certreq.Modified)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
