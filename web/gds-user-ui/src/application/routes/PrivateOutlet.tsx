@@ -5,6 +5,7 @@ import { userSelector } from 'modules/auth/login/user.slice';
 import DashboardLayout from 'layouts/DashboardLayout';
 const PrivateOutlet = () => {
   const { isLoggedIn } = useSelector(userSelector);
+
   const { pathname } = useLocation();
   return isLoggedIn ? (
     <DashboardLayout>

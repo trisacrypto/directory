@@ -107,6 +107,7 @@ const userSlice: any = createSlice({
       state.isError = false;
       state.isLoggedIn = false;
       state.isFetching = false;
+      state.user = null;
 
       return state;
     }
