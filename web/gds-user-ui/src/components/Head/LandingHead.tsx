@@ -80,7 +80,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                   background: '#24a9df',
                   transition: '0.15s all ease'
                 }}
-                href="/certificate/registration">
+                href="/guide">
                 <Trans id="Start Registration">Start Registration</Trans>
               </Button>
               <Button
