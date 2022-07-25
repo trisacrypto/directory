@@ -7,7 +7,8 @@ import {
   Button,
   Heading,
   useColorModeValue,
-  Image
+  Image,
+  Text
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import React, { useEffect } from 'react';
@@ -44,12 +45,12 @@ const PasswordReset: React.FC<PasswordResetProps> = (props) => {
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
         {props.message && <SuccessMessage message={props.message} handleClose={() => {}} />}
         <Stack align={'left'}>
-          <Heading fontSize="lg" mb={3}>
+          <Text fontSize="lg" mb={3}>
             Follow the instructions below to reset your TRISA password
-          </Heading>
-          <Heading fontSize={'sm'}>
+          </Text>
+          <Text fontSize={'sm'}>
             <Trans id="Enter your email address">Enter your email address</Trans>
-          </Heading>
+          </Text>
         </Stack>
 
         <Box

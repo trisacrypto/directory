@@ -10,7 +10,8 @@ import {
   Td,
   Button,
   Tag,
-  TagLabel
+  TagLabel,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useSelector, RootStateOrAny } from 'react-redux';
@@ -26,6 +27,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trixo, setTrixo] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
   const getColorScheme = (status: string | boolean) => {
     if (status === 'yes' || status === true) {
       return 'green';
@@ -45,8 +47,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
     <Box
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      color={'#252733'}
-      bg={'white'}
+      color={textColor}
       fontSize={18}
       p={5}
       px={5}>
@@ -137,7 +138,11 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
                 </Td>
               </Tr>
@@ -252,7 +257,11 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 <Td></Td>
               </Tr>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="Data Protection Policies">Data Protection Policies</Trans>
                 </Td>
               </Tr>
