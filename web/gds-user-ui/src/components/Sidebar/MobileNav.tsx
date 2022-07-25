@@ -27,6 +27,7 @@ import { removeCookie } from 'utils/cookies';
 import { useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import AvatarContentLoader from 'components/ContentLoader/Avatar';
+import { userSelector, logout } from 'modules/auth/login/user.slice';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
@@ -34,13 +35,14 @@ interface MobileProps extends FlexProps {
 
 const DEFAULT_AVARTAR = 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200';
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
-  const { user, logoutUser } = useAuth();
+  const dispatch = useDispatch();
+  const { user } = useSelector(userSelector);
   const navigate = useNavigate();
   const { auth0Logout } = useCustomAuth0();
   const handleLogout = (e: any) => {
     e.preventDefault();
     removeCookie('access_token');
-    logoutUser();
+    dispatch(logout());
     navigate('/');
   };
   return (
