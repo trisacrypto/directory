@@ -3,7 +3,7 @@
 exports[`<VerifyPage /> should match snapshot 1`] = `
 <div>
   <div
-    class="chakra-stack css-qnuwt2"
+    class="chakra-stack css-1erbuhs"
   >
     <div
       class="css-a4hqho"
@@ -190,11 +190,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
       </div>
     </div>
     <div
-<<<<<<< HEAD
-      class="css-hfexg0"
-=======
       class="chakra-stack css-8vjl7u"
->>>>>>> origin/main
     >
       <div
         class="css-at8wy6"
