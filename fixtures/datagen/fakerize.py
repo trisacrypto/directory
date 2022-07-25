@@ -14,6 +14,7 @@ import os
 import sys
 import json
 import uuid
+import base64
 import random
 import shutil
 import secrets
@@ -263,17 +264,23 @@ def fake_address(country):
         "country": country,
     }
 
+def make_bytes(rng):
+    """
+    Generate a random byte array using the given random generator.
+    """
+    return bytes(rng.getrandbits(8) for _ in range(16))
+
 def make_uuid(rng):
     """
     Generate a random UUID using the given random generator.
     """
-    return str(uuid.UUID(bytes=bytes(rng.getrandbits(8) for _ in range(16)), version=4))
+    return str(uuid.UUID(bytes=make_bytes(rng), version=4))
 
 def make_serial(rng):
     """
     Generate a capital hex encoded string using the given random generator.
     """
-    return "".join(bytes(rng.getrandbits(8) for _ in range(16)).hex()).upper()
+    return "".join(make_bytes(rng).hex()).upper()
 
 def make_person(vasp, verified=True, token="", rng=random.Random()):
     """
@@ -356,8 +363,13 @@ def make_notes(rng=random.Random()):
         }
     }
 
+def make_trisa_cert(record, rng=random.Random()):
+    """
+    Make a fake trisa.gds.models.v1beta1.Certificate that can be used in a VASP record
+    as an identity or signing certificate.
+    """
 
-def synthesize_secrets(record):
+def synthesize_secrets(record, rng=random.Random()):
     """
     For a single record, synthesize sensitive fields
     - signature
@@ -367,17 +379,18 @@ def synthesize_secrets(record):
 
     Returns updated version of the record (dict) with synthetic secrets
     """
-    secret = secrets.token_urlsafe(684)
-    record["identity_certificate"]["signature"] = secret
+    record["identity_certificate"]["signature"] = secrets.token_urlsafe(684)
+    record["identity_certificate"]["data"] = secrets.token_urlsafe(3328)
+    record["identity_certificate"]["chain"] = secrets.token_urlsafe(5920)
+    encoded = base64.b64encode(make_bytes(rng))
+    record["identity_certificate"]["serial_number"] = encoded.decode("ascii")
 
-    data = secrets.token_urlsafe(3328)
-    record["identity_certificate"]["data"] = data
-
-    chain = secrets.token_urlsafe(5920)
-    record["identity_certificate"]["chain"] = chain
-
-    serial = secrets.token_urlsafe(24)
-    record["identity_certificate"]["serial_number"] = serial
+    for cert in record["signing_certificates"]:
+        cert["signature"] = secrets.token_urlsafe(684)
+        cert["data"] = secrets.token_urlsafe(3328)
+        cert["chain"] = secrets.token_urlsafe(5920)
+        encoded = base64.b64encode(make_bytes(rng))
+        cert["serial_number"] = encoded.decode("ascii")
 
     return record
 
@@ -445,10 +458,13 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
         ["administrative", "technical"]
     )  # billing always unverified for demo purposes
     record["contacts"][other] = make_person(vasp, token=other+"_token", rng=rng_person)
-    record = synthesize_secrets(record)
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["identity_certificate"]["subject"]["common_name"] = common_name + ".io"
+    for cert in record["signing_certificates"]:
+        cert["subject"]["common_name"] = common_name + ".io"
+    rng_cert = random.Random(vasp+"cert")
+    record = synthesize_secrets(record, rng=rng_cert)
     record["trisa_endpoint"] = common_name + ".io" + ":123"
     record["website"] = "https://" + common_name + ".io"
     rng_cat = random.Random(vasp+"cat")

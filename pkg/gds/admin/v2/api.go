@@ -320,6 +320,8 @@ const (
 	ResendReview        ResendAction = "review"
 	ResendDeliverCerts  ResendAction = "deliver_certs"
 	ResendRejection     ResendAction = "rejection"
+	ReissuanceReminder  ResendAction = "reissuance_reminder"
+	ReissuanceStarted   ResendAction = "reissuance_started"
 )
 
 // ResendRequest allows extra attempts to resend emails to be made if they were not

@@ -1,6 +1,7 @@
 package gds_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/mail"
@@ -24,6 +25,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	trtlstore "github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
+	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -112,7 +114,7 @@ func (s *gdsTestSuite) SetupSuite() {
 func (s *gdsTestSuite) SetupGDS() {
 
 	// Using a bufconn listener allows us to avoid network requests
-	s.grpc = bufconn.New(bufSize)
+	s.grpc = bufconn.New(bufSize, "")
 	go s.svc.GetGDS().Run(s.grpc.Listener)
 }
 
@@ -121,7 +123,7 @@ func (s *gdsTestSuite) SetupGDS() {
 func (s *gdsTestSuite) SetupMembers() {
 
 	// Using a bufconn listener allows us to avoid network requests
-	s.grpc = bufconn.New(bufSize)
+	s.grpc = bufconn.New(bufSize, "")
 	go s.svc.GetMembers().Run(s.grpc.Listener)
 }
 
@@ -130,7 +132,7 @@ func (s *gdsTestSuite) SetupTrtl() {
 	var err error
 	require := s.Require()
 
-	conf := trtl.MockConfig()
+	conf := trtlmock.Config()
 	conf.Database.URL = "leveldb:///" + dbPath
 
 	// Mark as processed since the config wasn't loaded from the envrionment
@@ -142,11 +144,11 @@ func (s *gdsTestSuite) SetupTrtl() {
 	require.NoError(err, "could not start Trtl server")
 
 	// Using a bufconn listener allows us to avoid network requests
-	s.trtlListener = bufconn.New(bufSize)
+	s.trtlListener = bufconn.New(bufSize, "")
 	go s.trtl.Run(s.trtlListener.Listener)
 
 	// Connect to the running Trtl server
-	require.NoError(s.trtlListener.Connect())
+	require.NoError(s.trtlListener.Connect(context.Background()))
 }
 
 // Helper function to shutdown any previously running GDS or Members servers and release the gRPC connection
@@ -309,7 +311,7 @@ func (s *gdsTestSuite) countLevelDBFixtures(db *leveldb.DB) (counts map[string]i
 		counts[key[0]]++
 
 		// Test that the database fixture matches our reference
-		s.CompareFixture(key[0], key[1], obj, false)
+		s.CompareFixture(key[0], key[1], obj, false, false)
 	}
 
 	require.NoError(iter.Error())
@@ -327,7 +329,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		vasp := &pb.VASP{}
 		require.NoError(proto.Unmarshal(iter.Value(), vasp))
 		counts[vasps]++
-		s.CompareFixture(vasps, string(iter.Key()), vasp, false)
+		s.CompareFixture(vasps, string(iter.Key()), vasp, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -338,7 +340,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		cert := &models.Certificate{}
 		require.NoError(proto.Unmarshal(iter.Value(), cert))
 		counts[certs]++
-		s.CompareFixture(certs, string(iter.Key()), cert, false)
+		s.CompareFixture(certs, string(iter.Key()), cert, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -349,7 +351,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 		certreq := &models.CertificateRequest{}
 		require.NoError(proto.Unmarshal(iter.Value(), certreq))
 		counts[certreqs]++
-		s.CompareFixture(certreqs, string(iter.Key()), certreq, false)
+		s.CompareFixture(certreqs, string(iter.Key()), certreq, false, false)
 	}
 	require.NoError(iter.Error())
 	iter.Release()
@@ -361,7 +363,7 @@ func (s *gdsTestSuite) countHonuFixtures(db *honu.DB) (counts map[string]int) {
 // Custom Assertions
 //===========================================================================
 
-func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra bool) {
+func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, removeExtra, removeSerials bool) {
 	var (
 		ok bool
 	)
@@ -405,6 +407,26 @@ func (s *gdsTestSuite) CompareFixture(namespace, key string, obj interface{}, re
 			for iter.Next() {
 				contact, _ := iter.Value()
 				contact.Extra = nil
+			}
+		}
+
+		if removeSerials {
+			// Data copy to avoid modifying the identity certificate in the fixtures map
+			data := *a.IdentityCertificate
+			a.IdentityCertificate = &data
+			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
+
+			// Allocate a new slice to avoid modifying the signing certificates in the fixtures map
+			certs := make([]*pb.Certificate, 0)
+			for _, cert := range a.SigningCertificates {
+				data := *cert
+				data.SerialNumber = nil
+				certs = append(certs, &data)
+			}
+			a.SigningCertificates = certs
+
+			for _, cert := range b.SigningCertificates {
+				cert.SerialNumber = nil
 			}
 		}
 
@@ -647,7 +669,7 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtureType) {
 
 	// Create the new service
 	if s.trtlListener != nil {
-		require.NoError(s.trtlListener.Connect())
+		require.NoError(s.trtlListener.Connect(context.Background()))
 		s.svc, err = gds.NewMock(conf, s.trtlListener.Conn)
 	} else {
 		s.svc, err = gds.NewMock(conf, nil)
@@ -709,7 +731,7 @@ func (s *gdsTestSuite) generateDB(ftype fixtureType) {
 		require.NoError(err, "could not open leveldb store")
 		defer db.Close()
 	case storeTrtl:
-		require.NoError(s.trtlListener.Connect())
+		require.NoError(s.trtlListener.Connect(context.Background()))
 		db, err = trtlstore.NewMock(s.trtlListener.Conn)
 		require.NoError(err, "could not open trtl store")
 		defer db.Close()
