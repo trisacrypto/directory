@@ -35,6 +35,7 @@ func TestCreateWhisperLink(t *testing.T) {
 	lastSlash := strings.LastIndex(link, "/")
 	url := link[:lastSlash+1]
 	token := link[lastSlash+1:]
+	require.NoError(t, err)
 	require.Equal(t, url, "https://api.whisper.rotational.dev/secret/")
 	require.NotNil(t, token)
 
