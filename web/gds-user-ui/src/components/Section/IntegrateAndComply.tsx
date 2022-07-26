@@ -5,7 +5,7 @@ import {
   Flex,
   Text,
   Link,
-  chakra,
+  VStack,
   FlexProps,
   StyleProps,
   useColorModeValue,
@@ -13,12 +13,11 @@ import {
   ListItem,
   Button,
   Heading,
-  VStack,
   Container,
   Divider,
   useBreakpointValue
 } from '@chakra-ui/react';
-
+import { Link as RouterLink } from 'react-router-dom';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import { Line } from './Line';
@@ -174,19 +173,31 @@ export default function IntegrateAndComply() {
                 </Stack>
               </Box>
               <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent="center">
-                <Box>
-                  <Button
-                    bg={colors.system.blue}
-                    color={'white'}
-                    _hover={{
-                      bg: '#10aaed'
-                    }}
-                    _focus={{
-                      borderColor: 'transparent'
-                    }}>
-                    Getting Started
-                  </Button>
-                </Box>
+                <VStack>
+                  <RouterLink to={'/auth/register'}>
+                    <Button
+                      bg={colors.system.blue}
+                      color={'white'}
+                      minWidth={'300px'}
+                      _hover={{
+                        bg: '#10aaed'
+                      }}
+                      _focus={{
+                        borderColor: 'transparent'
+                      }}>
+                      Create account
+                    </Button>
+                  </RouterLink>
+                  <Text textAlign="center">
+                    <Trans id="Already have an account?">Already have an account?</Trans>{' '}
+                    <RouterLink to={'/auth/login'}>
+                      <Link color={colors.system.cyan}>
+                        {' '}
+                        <Trans id="Log in.">Log in.</Trans>
+                      </Link>
+                    </RouterLink>
+                  </Text>
+                </VStack>
               </Stack>
             </Stack>
           </Stack>

@@ -21,13 +21,13 @@ import {
   Button
 } from '@chakra-ui/react';
 import FormLayout from '../../layouts/FormLayout';
-import StatisticCard from './StatisticCard';
 import X509TableRows from './X509TableRows';
-import SealingCertificateTableRows from './SealingCertificateTableRows';
+import CertificateDataTable from './CertificateDataTable';
+import Statistics from './Statistics';
+import MainnetCertificates from './MainnetCertificates';
+import TestnetCertificates from './TestnetCertificates';
 
 type CertificateManagementProps = {};
-
-const STATISTICS = { current: 0, expired: 0, revoked: 0, total: 0 };
 
 function CertificateManagement({}: CertificateManagementProps) {
   return (
@@ -82,46 +82,10 @@ function CertificateManagement({}: CertificateManagementProps) {
           </TabList>
           <TabPanels>
             <TabPanel>
-              <Stack spacing={5}>
-                <Stack direction={'row'} flexWrap={'wrap'} spacing={4}>
-                  {Object.entries(STATISTICS).map((statistic) => (
-                    <StatisticCard key={statistic[0]} title={statistic[0]} total={statistic[1]} />
-                  ))}
-                </Stack>
-                <Box>
-                  <FormLayout overflowX={'scroll'}>
-                    <Table
-                      variant="unstyled"
-                      css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
-                      <TableCaption placement="top" textAlign="start" p={0} m={0}>
-                        <Stack
-                          direction={'row'}
-                          alignItems={'center'}
-                          justifyContent={'space-between'}>
-                          <Heading fontSize={'1.2rem'}>X.509 Identity Certificates</Heading>
-                          <Button>Request New Identity Certificate</Button>
-                        </Stack>
-                      </TableCaption>
-                      <Thead>
-                        <Tr>
-                          <Th>No</Th>
-                          <Th>Signature ID</Th>
-                          <Th>Issue Date</Th>
-                          <Th>Expiration Date</Th>
-                          <Th>Status</Th>
-                          <Th textAlign="center">Action</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        <X509TableRows />
-                      </Tbody>
-                    </Table>
-                  </FormLayout>
-                </Box>
-              </Stack>
+              <MainnetCertificates />
             </TabPanel>
             <TabPanel>
-              <p>two!</p>
+              <TestnetCertificates />
             </TabPanel>
           </TabPanels>
         </Tabs>
@@ -130,29 +94,7 @@ function CertificateManagement({}: CertificateManagementProps) {
         Sealing Certificate Inventory
       </Heading>
       <Box>
-        <FormLayout overflowX={'scroll'}>
-          <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
-            <TableCaption placement="top" textAlign="start" p={0} m={0}>
-              <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
-                <Heading fontSize={'1.2rem'}>Sealing Certificates</Heading>
-                <Button>Request New Sealing Certificate</Button>
-              </Stack>
-            </TableCaption>
-            <Thead>
-              <Tr>
-                <Th>No</Th>
-                <Th>Signature ID</Th>
-                <Th>Issue Date</Th>
-                <Th>Expiration Date</Th>
-                <Th>Status</Th>
-                <Th textAlign="center">Action</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              <SealingCertificateTableRows />
-            </Tbody>
-          </Table>
-        </FormLayout>
+        <CertificateDataTable />
       </Box>
     </DashboardLayout>
   );
