@@ -185,7 +185,7 @@ func (s *Server) Serve() (err error) {
 	// creating the listener will allow us to determine which port).
 	var sock net.Listener
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
-		s.echan <- err
+		return fmt.Errorf("could not listen on bind addr %s: %s", s.conf.BindAddr, err)
 	}
 
 	// Set the URL from the listener
@@ -338,6 +338,8 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
+
+		// Authenticated routes
 		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)
 		v1.POST("/register", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SaveRegisterForm)
 		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SubmitRegistration)
@@ -345,6 +347,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/announcements", auth.Authorize("read:vasp"), s.Announcements)
 		v1.POST("/announcements", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
 		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
+		v1.GET("/details", auth.Authorize("read:vasp"), s.MemberDetails)
 	}
 
 	// NotFound and NotAllowed routes

@@ -1,5 +1,17 @@
 import React, { FC, useEffect } from 'react';
-import { Stack, Box, Text, Heading, Table, Tbody, Tr, Td, Button, Divider } from '@chakra-ui/react';
+import {
+  Stack,
+  Box,
+  Text,
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Button,
+  Divider,
+  useColorModeValue
+} from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
@@ -11,6 +23,8 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [trisa, setTrisa] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
+
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
     const stepData = {
@@ -24,8 +38,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
     <Box
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      color={'#252733'}
-      bg={'white'}
+      color={textColor}
       fontSize={'1rem'}
       p={5}>
       <Stack>
@@ -66,7 +79,11 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                 }
               }}>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="TestNet">TestNet</Trans>
                 </Td>
               </Tr>
@@ -88,7 +105,11 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
                 <Td colSpan={2}></Td>
               </Tr>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="MainNet">MainNet</Trans>
                 </Td>
               </Tr>

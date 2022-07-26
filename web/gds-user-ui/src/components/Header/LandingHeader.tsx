@@ -16,7 +16,9 @@ import {
   useDisclosure,
   DrawerCloseButton,
   Text,
-  Button
+  Button,
+  IconButton,
+  useColorMode
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -24,15 +26,18 @@ import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 import LanguagesDropdown from 'components/LanguagesDropdown';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
+import { MdModeNight, MdOutlineWbSunny } from 'react-icons/md';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [locale] = useLanguageProvider();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const isLight = colorMode === 'light';
 
   return (
     <Flex
@@ -40,6 +45,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
       position={'relative'}
       p={{ base: 4, md: 8 }}
       bg={'transparent'}
+      boxShadow="md"
       color={colors.system.blue}
       {...props}>
       <Container maxW={'5xl'}>
@@ -64,6 +70,12 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
+              <IconButton
+                aria-label={`swith to ${isLight ? 'light' : 'dark'}`}
+                icon={isLight ? <MdOutlineWbSunny /> : <MdModeNight />}
+                variant="outline"
+                onClick={toggleColorMode}
+              />
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>

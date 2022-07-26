@@ -1,6 +1,7 @@
 package trtl_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -78,7 +79,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	trtl, err := trtl.New(*s.conf)
 	require.NoError(err)
 
-	s.grpc = bufconn.New(bufSize)
+	s.grpc = bufconn.New(bufSize, "")
 	go trtl.Run(s.grpc.Listener)
 }
 
@@ -133,7 +134,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Empty(alice.Id)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -142,6 +143,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	// Initially there should be no VASPs
 	iter := db.ListVASPs()
 	require.False(iter.Next())
+	iter.Release()
 
 	// Should get a not found error trying to retrieve a VASP that doesn't exist
 	_, err = db.RetrieveVASP("12345")
@@ -222,6 +224,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(key, second.Id, "should be the second VASP")
+	iter.Release()
 
 	// Test iterating over all the VASPs
 	var niters int
@@ -268,7 +271,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	s.NotEmpty(cert.Details.NotBefore)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -277,6 +280,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	// Initially there should be no Certs
 	iter := db.ListCerts()
 	require.False(iter.Next())
+	iter.Release()
 
 	// Should get a not found error trying to retrieve a Cert that doesn't exist
 	_, err = db.RetrieveCert("12345")
@@ -362,6 +366,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+	iter.Release()
 
 	// Create enough Certs to exceed the page size
 	for i := 0; i < 100; i++ {
@@ -403,7 +408,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	s.Empty(certreq.Modified)
 
 	// Inject bufconn connection into the store
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(context.Background()))
 	defer s.grpc.Close()
 
 	db, err := store.NewMock(s.grpc.Conn)
@@ -412,6 +417,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	// Initially there should be no CertReqs
 	iter := db.ListCertReqs()
 	require.False(iter.Next())
+	iter.Release()
 
 	// Should get a not found error trying to retrieve a CertReq that doesn't exist
 	_, err = db.RetrieveCertReq("12345")
@@ -494,6 +500,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+	iter.Release()
 
 	// Create enough CertReqs to exceed the page size
 	for i := 0; i < 100; i++ {

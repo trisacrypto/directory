@@ -3,7 +3,6 @@ import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
   Heading,
-  HStack,
   VStack,
   useToast,
   Text,
@@ -11,13 +10,16 @@ import {
   Flex,
   useDisclosure,
   Button,
-  Stack
+  Stack,
+  useColorModeValue,
+  chakra
 } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm } from 'react-hook-form';
-import useAuth from 'hooks/useAuth';
+
+import { userSelector } from 'modules/auth/login/user.slice';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
@@ -39,6 +41,8 @@ const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   const [isResetForm, setIsResetForm] = useState<boolean>(false);
+  const textColor = useColorModeValue('black', '#EDF2F7');
+  const backgroundColor = useColorModeValue('white', '#171923');
 
   const { nextStep, previousStep } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -49,7 +53,7 @@ const Certificate: React.FC = () => {
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
-  const { isUserAuthenticated } = useAuth();
+  const { isLoggedIn } = useSelector(userSelector);
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
@@ -65,8 +69,6 @@ const Certificate: React.FC = () => {
 
   const { formState, reset } = methods;
 
-  const dirtyFields = formState.dirtyFields;
-
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
   }
@@ -77,7 +79,6 @@ const Certificate: React.FC = () => {
   }
 
   function getCurrentFormValue() {
-    // console.log('current', current);
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
@@ -150,24 +151,19 @@ const Certificate: React.FC = () => {
   }, [isResetForm]);
 
   return (
-    // <DashboardLayout>
-    //   <CertificateLayout>
-    //     <BasicDetails />
-    //   </CertificateLayout>
-    // </DashboardLayout>
     <SimpleDashboardLayout>
       <>
         <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <Flex justifyContent={'space-between'}>
               <Heading size="lg" mb="24px" className="heading">
                 <Trans id="Certificate Registration">Certificate Registration</Trans>
               </Heading>
-              <Box>{!isUserAuthenticated && <HomeButton link={'/'} />}</Box>
+              <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
             </Flex>
 
             <VStack spacing={3}>
-              <Card maxW="100%" bg={'white'}>
+              <Card maxW="100%" bg={backgroundColor} color={textColor}>
                 <Card.Body>
                   <Text>
                     <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
@@ -219,7 +215,7 @@ const Certificate: React.FC = () => {
                 )}
               </Stack>
             </VStack>
-          </form>
+          </chakra.form>
         </FormProvider>
         {isResetModalOpen && (
           <ConfirmationResetFormModal

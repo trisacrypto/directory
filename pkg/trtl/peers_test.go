@@ -15,7 +15,7 @@ func (s *trtlTestSuite) TestPeers() {
 	ctx := context.Background()
 
 	// Start the gRPC client.
-	require.NoError(s.grpc.Connect())
+	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := peers.NewPeerManagementClient(s.grpc.Conn)
 

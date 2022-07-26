@@ -137,10 +137,10 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
+		{"listCertificates", http.MethodGet, "/v2/vasps/42/certificates", true, false},
 		// Authenticated and CSRF protected endpoints
 		{"updateVASP", http.MethodPatch, "/v2/vasps/42", true, true},
 		{"deleteVASP", http.MethodDelete, "/v2/vasps/42", true, true},
-		{"listCertificates", http.MethodGet, "/v2/vasps/42/certificates", true, true},
 		{"replaceContact", http.MethodPut, "/v2/vasps/42/contacts/kind", true, true},
 		{"deleteContact", http.MethodDelete, "/v2/vasps/42/contacts/kind", true, true},
 		{"review", http.MethodPost, "/v2/vasps/42/review", true, true},
@@ -1681,6 +1681,11 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[3].PreviousState)
 	require.Equal(pb.VerificationState_REJECTED, log[3].CurrentState)
 	require.Equal(request.claims.Email, log[3].Source)
+
+	// Certificate request should be deleted from the VASP extra
+	ids, err := models.GetCertReqIDs(v)
+	require.NoError(err)
+	require.Len(ids, 0)
 
 	// Certificate request should be deleted
 	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)

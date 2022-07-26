@@ -12,20 +12,16 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
   return (
     <Flex
       bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
-      color="white"
       width="100%"
       minHeight={286}
       justifyContent="center"
       direction="column"
       paddingY={{ base: 16, md: 20 }}
       fontSize={'xl'}>
-      <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
+      <Stack textAlign={'center'} spacing={{ base: 3 }}>
         {isHomePage && (
           <>
-            <Heading
-              fontWeight={700}
-              fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }}
-              color="#fefefe">
+            <Heading color="#fff" fontWeight={700} fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }}>
               <Trans id="TRISA Global Directory Service">TRISA Global Directory Service</Trans>
             </Heading>
             <Text
@@ -84,7 +80,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                   background: '#24a9df',
                   transition: '0.15s all ease'
                 }}
-                href="/certificate/registration">
+                href="/guide">
                 <Trans id="Start Registration">Start Registration</Trans>
               </Button>
               <Button

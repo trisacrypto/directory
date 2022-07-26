@@ -18,12 +18,13 @@ import (
 const (
 	ListRPC    = "List"
 	SummaryRPC = "Summary"
+	DetailsRPC = "Details"
 )
 
 func NewMembers(conf config.MembersConfig) (m *Members, err error) {
 	m = &Members{
 		srv:   grpc.NewServer(),
-		sock:  bufconn.New(bufSize),
+		sock:  bufconn.New(bufSize, ""),
 		Calls: make(map[string]int),
 	}
 
@@ -54,11 +55,12 @@ type Members struct {
 	Calls     map[string]int
 	OnList    func(context.Context, *members.ListRequest) (*members.ListReply, error)
 	OnSummary func(context.Context, *members.SummaryRequest) (*members.SummaryReply, error)
+	OnDetails func(context.Context, *members.DetailsRequest) (*members.MemberDetails, error)
 }
 
 func (g *Members) Client() (client members.TRISAMembersClient, err error) {
 	if g.client == nil {
-		if err = g.sock.Connect(); err != nil {
+		if err = g.sock.Connect(context.Background()); err != nil {
 			return nil, err
 		}
 		g.client = members.NewTRISAMembersClient(g.sock.Conn)
@@ -134,6 +136,14 @@ func (m *Members) UseFixture(rpc, path string) (err error) {
 		m.OnSummary = func(context.Context, *members.SummaryRequest) (*members.SummaryReply, error) {
 			return out, nil
 		}
+	case DetailsRPC:
+		out := &members.MemberDetails{}
+		if err = jsonpb.Unmarshal(data, out); err != nil {
+			return fmt.Errorf("could not unmarshal json into %T: %s", out, err)
+		}
+		m.OnDetails = func(context.Context, *members.DetailsRequest) (*members.MemberDetails, error) {
+			return out, nil
+		}
 	default:
 		return fmt.Errorf("unknown rpc %q", rpc)
 	}
@@ -151,6 +161,10 @@ func (m *Members) UseError(rpc string, code codes.Code, msg string) error {
 		m.OnSummary = func(context.Context, *members.SummaryRequest) (*members.SummaryReply, error) {
 			return nil, status.Error(code, msg)
 		}
+	case DetailsRPC:
+		m.OnDetails = func(context.Context, *members.DetailsRequest) (*members.MemberDetails, error) {
+			return nil, status.Error(code, msg)
+		}
 	default:
 		return fmt.Errorf("unknown rpc %q", rpc)
 	}
@@ -165,4 +179,9 @@ func (m *Members) List(ctx context.Context, in *members.ListRequest) (*members.L
 func (m *Members) Summary(ctx context.Context, in *members.SummaryRequest) (*members.SummaryReply, error) {
 	m.Calls[SummaryRPC]++
 	return m.OnSummary(ctx, in)
+}
+
+func (m *Members) Details(ctx context.Context, in *members.DetailsRequest) (*members.MemberDetails, error) {
+	m.Calls[DetailsRPC]++
+	return m.OnDetails(ctx, in)
 }

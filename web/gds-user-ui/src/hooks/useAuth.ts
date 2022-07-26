@@ -7,39 +7,50 @@ const useAuth = () => {
   const dispatch = useDispatch();
   const user = useSelector(userSelector);
   const isLoggedIn = useSelector(isLoggedInSelector);
-  const { auth0GetUser } = useCustomAuth0();
+  const { auth0GetUser, auth0CheckSession } = useCustomAuth0();
 
   const loginUser = (u: TUser) => {
     dispatch(login(u));
   };
-  const accessToken = getCookie('access_token') || '';
+  const getToken = getCookie('access_token') || '';
 
   const logoutUser = () => {
     dispatch(logout());
   };
-  const getUser = async () => {
-    if (accessToken) {
+  const getUser: any = async () => {
+    if (getToken) {
       try {
-        const userInfo: any = await auth0GetUser(accessToken);
-        const u: TUser = {
-          isLoggedIn: true,
-          user: {
-            name: userInfo?.name,
-            email: userInfo?.email,
-            pictureUrl: userInfo?.picture
-          }
-        };
-        loginUser(u);
+        const userInfo: any = await auth0GetUser(getToken);
+        if (userInfo) {
+          const u: TUser = {
+            isLoggedIn: true,
+            user: {
+              name: userInfo?.name,
+              email: userInfo?.email,
+              pictureUrl: userInfo?.picture
+            }
+          };
+          loginUser(u);
+        } else {
+        }
       } catch (error) {
-        // log error in sentry
-        console.log(error);
-        return null;
+        console.log('[getUser error]', error);
+        throw new Error('401');
       }
     } else {
-      return accessToken;
+      logoutUser();
     }
   };
   const isUserAuthenticated = !!isLoggedIn;
+
+  const isAuthenticated = () => {
+    console.log('[isLoggedIn]', isLoggedIn);
+    if (!isLoggedIn && getToken) {
+      getUser();
+      return true;
+    }
+    return isUserAuthenticated;
+  };
 
   return {
     user,
@@ -47,7 +58,8 @@ const useAuth = () => {
     isLoggedIn,
     loginUser,
     logoutUser,
-    isUserAuthenticated
+    isUserAuthenticated,
+    isAuthenticated
   };
 };
 

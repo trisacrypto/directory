@@ -4,19 +4,21 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ChakraProvider } from '@chakra-ui/react';
-import store from 'application/store';
+import store, { persistor } from 'application/store';
 import { Provider } from 'react-redux';
 import initSentry from 'application/config/sentry';
 import theme from 'theme';
-
+import { PersistGate } from 'redux-persist/integration/react';
 initSentry();
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ChakraProvider theme={theme}>
-        <App />
-      </ChakraProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <ChakraProvider theme={theme}>
+          <App />
+        </ChakraProvider>
+      </PersistGate>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')

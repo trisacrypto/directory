@@ -175,8 +175,9 @@ func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 	return nil
 }
 
+// DeleteCertReqID removes the certificate request ID from the VASP if it exists.
 func DeleteCertReqID(vasp *pb.VASP, certreqID string) (err error) {
-	// Entry must be non-nil
+	// ID is required
 	if certreqID == "" {
 		return errors.New("cannot delete empty certificate request ID from extra")
 	}
@@ -188,10 +189,10 @@ func DeleteCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 			return fmt.Errorf("could not deserialize previous extra: %s", err)
 		}
 	} else {
-		extra.CertificateRequests = make([]string, 0, 1)
+		extra.CertificateRequests = make([]string, 0)
 	}
 
-	// Search the array for the certificate request ID
+	// Search the slice for the certificate request ID
 	for i, containsID := range extra.CertificateRequests {
 		if certreqID == containsID {
 			// Remove the certificate request ID from the array

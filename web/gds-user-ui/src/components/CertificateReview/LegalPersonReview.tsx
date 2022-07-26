@@ -10,7 +10,7 @@ import {
   Td,
   Button,
   Tag,
-  Divider
+  useColorModeValue
 } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
@@ -29,6 +29,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [legalPerson, setLegalPerson] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
     const getStepperData = loadDefaultValueFromLocalStorage();
@@ -39,10 +40,9 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
   }, [steps]);
   return (
     <Box
-      border="1px solid #DFE0EB"
+      border="2px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      color={'#252733'}
-      bg={'white'}
+      color={textColor}
       fontSize={18}
       p={5}
       px={5}>
@@ -84,7 +84,11 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                 }
               }}>
               <Tr>
-                <Td fontSize={'1rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
+                <Td
+                  fontSize={'1rem'}
+                  fontWeight="bold"
+                  colSpan={3}
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}>
                   <Trans id="Name Identifiers">Name Identifiers</Trans>
                 </Td>
               </Tr>
@@ -213,7 +217,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                   pt={'2rem'}
                   fontWeight="bold"
                   colSpan={3}
-                  background="#E5EDF1">
+                  background={useColorModeValue('#E5EDF1', 'gray.900')}>
                   <Text mb={1}>
                     <Trans id="National Identification">National Identification</Trans>
                   </Text>
@@ -233,7 +237,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
                   <Trans id="Identification Type">Identification Type</Trans>
                 </Td>
                 <Td pt={0}>
-                  <Tag color={'white'} bg={'blue.400'} size={'lg'}>
+                  <Tag bg={'blue.400'} size={'lg'}>
                     {getNationalIdentificationLabel(
                       legalPerson?.national_identification?.national_identifier_type
                     )}

@@ -1,14 +1,14 @@
 import React from 'react';
 import { Route, Navigate, useLocation, Outlet } from 'react-router-dom';
-import useAuth from 'hooks/useAuth';
-
-const PrivateOutlet = () => {
-  const { isUserAuthenticated } = useAuth();
+import { useSelector } from 'react-redux';
+import { userSelector } from 'modules/auth/login/user.slice';
+const PublicOutlet = () => {
+  const { isLoggedIn } = useSelector(userSelector);
   const { pathname } = useLocation();
-  return isUserAuthenticated ? (
+  return isLoggedIn ? (
     <Navigate to="/dashboard/overview" state={{ from: pathname }} replace />
   ) : (
     <Outlet />
   );
 };
-export default PrivateOutlet;
+export default PublicOutlet;
