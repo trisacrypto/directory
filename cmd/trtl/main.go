@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"os"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/joho/godotenv"
@@ -25,7 +25,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
+	grpc "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
@@ -119,6 +120,11 @@ func main() {
 					Name:    "cleanup",
 					Aliases: []string{"c"},
 					Usage:   "cleanup dangling references to non-existent certificate requests",
+				},
+				&cli.BoolFlag{
+					Name:    "timestamps",
+					Aliases: []string{"t"},
+					Usage:   "fill in missing verified timestamps on the VASP records",
 				},
 			},
 		},
@@ -578,33 +584,61 @@ func migrateCerts(c *cli.Context) (err error) {
 	}
 
 	var migrated, skipped int
-	var result *multierror.Error
+	var results *multierror.Error
 
 vaspLoop:
 	for {
 		var rep *pb.KVPair
 		if rep, err = stream.Recv(); err != nil {
 			if err != io.EOF {
-				result = multierror.Append(result, err)
+				results = multierror.Append(results, err)
 			}
 			break vaspLoop
 		}
 
 		vasp := &gds.VASP{}
 		if err = proto.Unmarshal(rep.Value, vasp); err != nil {
-			result = multierror.Append(result, err)
-			break vaspLoop
+			results = multierror.Append(results, err)
+			continue vaspLoop
+		}
+
+		if c.Bool("timestamps") {
+			if vasp.VerificationStatus == gds.VerificationState_VERIFIED && vasp.VerifiedOn == "" {
+				var log []*models.AuditLogEntry
+				var err error
+				if log, err = models.GetAuditLog(vasp); err != nil {
+					results = multierror.Append(results, err)
+					continue vaspLoop
+				}
+
+			verifyLoop:
+				for _, entry := range log {
+					if entry.CurrentState == gds.VerificationState_VERIFIED {
+						vasp.VerifiedOn = entry.Timestamp
+						fmt.Printf("setting verified timestamp for %s (%s) to %s\n", vasp.Id, vasp.CommonName, vasp.VerifiedOn)
+						if report != nil {
+							report.WriteString(fmt.Sprintf("setting verified timestamp for %s (%s) to %s\n", vasp.Id, vasp.CommonName, vasp.VerifiedOn))
+						}
+						break verifyLoop
+					}
+				}
+
+				if vasp.VerifiedOn == "" {
+					results = multierror.Append(results, fmt.Errorf("could not find verified timestamp for %s (%s)", vasp.Id, vasp.CommonName))
+				}
+			}
 		}
 
 		// Get all the certificate requests for this vasp
 		var ids []string
 		if ids, err = models.GetCertReqIDs(vasp); err != nil {
-			result = multierror.Append(result, err)
-			break vaspLoop
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Get the latest completed certificate request
 		var certreq *models.CertificateRequest
+		var created time.Time
 	certreqLoop:
 		for _, id := range ids {
 			var rep *pb.GetReply
@@ -613,44 +647,51 @@ vaspLoop:
 				Key:       []byte(id),
 			})
 			if err != nil {
-				if e, ok := status.FromError(err); ok {
+				if e, ok := grpc.FromError(err); ok {
 					switch e.Code() {
 					case codes.NotFound:
-						result = multierror.Append(result, err)
+						results = multierror.Append(results, fmt.Errorf("could not find certreq ID %s for vasp %s (%s)", id, vasp.Id, vasp.CommonName))
 						// Remove dangling certreq IDs if requested
 						if c.Bool("cleanup") {
 							if err = models.DeleteCertReqID(vasp, id); err != nil {
-								result = multierror.Append(result, err)
-								break vaspLoop
+								results = multierror.Append(results, err)
+								fmt.Printf("cleaning up dangling certreq ID %s for vasp %s (%s)\n", id, vasp.Id, vasp.CommonName)
+								if report != nil {
+									report.WriteString(fmt.Sprintf("cleaning up dangling certreq ID %s for vasp %s (%s)\n", id, vasp.Id, vasp.CommonName))
+								}
 							}
 						}
+						continue certreqLoop
 					default:
-						result = multierror.Append(result, err)
-						break vaspLoop
+						results = multierror.Append(results, err)
 					}
 				} else {
-					result = multierror.Append(result, err)
-					break vaspLoop
+					results = multierror.Append(results, err)
 				}
+				continue vaspLoop
 			}
+
 			// Successfully retrieved the certificate request
 			current := &models.CertificateRequest{}
 			if err = proto.Unmarshal(rep.Value, current); err != nil {
-				result = multierror.Append(result, err)
-				break vaspLoop
+				results = multierror.Append(results, err)
+				continue vaspLoop
 			}
 
+			// Check if this is the latest completed certificate request
 			if current.Status == models.CertificateRequestState_COMPLETED {
-				certreq = current
-			}
-		}
-			fmt.Printf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err)
-			if report != nil {
-				report.WriteString(fmt.Sprintf("WARNING: could not get certreq %s for vasp %s (%s): %s\n", id, vasp.Id, vasp.CommonName, err))
-			}
-			continue
-		}
+				var currentCreated time.Time
+				var err error
+				if currentCreated, err = time.Parse(time.RFC3339, current.Created); err != nil {
+					results = multierror.Append(results, err)
+					continue vaspLoop
+				}
 
+				if certreq == nil || currentCreated.After(created) {
+					certreq = current
+					created = currentCreated
+				}
+			}
 		}
 
 		if certreq == nil {
@@ -659,21 +700,22 @@ vaspLoop:
 				report.WriteString(fmt.Sprintf("skipping vasp %s (%s) with no certificates\n", vasp.Id, vasp.CommonName))
 			}
 			skipped++
-			continue
+			continue vaspLoop
 		}
 
 		// Create the certificate record
 		var cert *models.Certificate
 		if cert, err = models.NewCertificate(vasp, certreq, vasp.IdentityCertificate); err != nil {
-			migrateErr = err
-			break
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Validate that the serial number is correct
 		expected := fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
 		if cert.Id != expected {
-			migrateErr = fmt.Errorf("expected certificate serial to be %s, was actually %s", expected, cert.Id)
-			break
+			err = fmt.Errorf("expected certificate serial to be %s, was actually %s", expected, cert.Id)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Update the certreq record with the certificate ID
@@ -681,66 +723,72 @@ vaspLoop:
 
 		// Append the certificate serial to the vasp
 		if err = models.AppendCertID(vasp, cert.Id); err != nil {
-			migrateErr = err
-			break
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Put the certificate record
 		var putReply *pb.PutReply
 		var certData []byte
 		if certData, err = proto.Marshal(cert); err != nil {
-			migrateErr = err
-			break
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
 			Namespace: wire.NamespaceCerts,
 			Key:       []byte(cert.Id),
 			Value:     certData,
 		}); err != nil {
-			migrateErr = fmt.Errorf("could not put certificate %s: %s", cert.Id, err)
-			break
+			err = fmt.Errorf("could not put certificate %s: %s", cert.Id, err)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if !putReply.Success {
-			migrateErr = fmt.Errorf("could not put certificate %s", cert.Id)
-			break
+			err = fmt.Errorf("could not put certificate %s", cert.Id)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Put the vasp record
 		var vaspData []byte
 		if vaspData, err = proto.Marshal(vasp); err != nil {
-			migrateErr = err
-			break
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
 			Namespace: wire.NamespaceVASPs,
 			Key:       []byte(vasp.Id),
 			Value:     vaspData,
 		}); err != nil {
-			migrateErr = fmt.Errorf("could not put vasp %s: %s", vasp.Id, err)
-			break
+			err = fmt.Errorf("could not put vasp %s: %s", vasp.Id, err)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if !putReply.Success {
-			migrateErr = fmt.Errorf("could not put vasp %s", vasp.Id)
-			break
+			err = fmt.Errorf("could not put vasp %s", vasp.Id)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		// Put the certreq record
 		var certreqData []byte
 		if certreqData, err = proto.Marshal(certreq); err != nil {
-			migrateErr = err
-			break
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
 			Namespace: wire.NamespaceCertReqs,
 			Key:       []byte(certreq.Id),
 			Value:     certreqData,
 		}); err != nil {
-			migrateErr = fmt.Errorf("could not put certreq %s: %s", certreq.Id, err)
-			break
+			err = fmt.Errorf("could not put certreq %s: %s", certreq.Id, err)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 		if !putReply.Success {
-			migrateErr = fmt.Errorf("could not put certreq %s", certreq.Id)
-			break
+			err = fmt.Errorf("could not put certreq %s", certreq.Id)
+			results = multierror.Append(results, err)
+			continue vaspLoop
 		}
 
 		migrated++
@@ -748,18 +796,20 @@ vaspLoop:
 		if report != nil {
 			report.WriteString(fmt.Sprintf("migrated certreq %s (%s) to certificate %s\n", certreq.Id, certreq.CommonName, cert.Id))
 			if err = writeJSON(cert, report); err != nil {
-				migrateErr = err
-				break
+				results = multierror.Append(results, err)
+				break vaspLoop
 			}
-			report.WriteString("\n")
+			report.WriteString("\n\n")
 		}
 	}
 
 	fmt.Println("Migrated", migrated, "certificates")
 	fmt.Println("Skipped", skipped, "vasps")
-
-	if migrateErr != nil {
-		return cli.Exit(migrateErr, 1)
+	if results != nil {
+		fmt.Println(results.Error())
+	}
+	if report != nil {
+		fmt.Println("Report written to", c.String("report"))
 	}
 	return nil
 }
