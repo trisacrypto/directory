@@ -11,7 +11,7 @@ interface NavItemProps extends FlexProps {
   path?: string;
 }
 
-const getLinkStyle: any = () => ({
+export const getLinkStyle: any = () => ({
   w: '100%',
   py: '0.9rem',
   cursor: 'pointer',

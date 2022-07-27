@@ -1,9 +1,10 @@
 import { InfoIcon, CheckCircleIcon } from '@chakra-ui/icons';
-import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import { Box, Heading, HStack, Icon, Link, Stack, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 
 import FormLayout from 'layouts/FormLayout';
+import { ReactNode } from 'react';
 
 type CertificateSectionProps = {
   step: number;
@@ -13,7 +14,9 @@ type CertificateSectionProps = {
   isSubmitted?: boolean;
 };
 
-const getSection = (step: number): { title: string; description?: string } | undefined => {
+const getSection = (
+  step: number
+): { title: string; description?: string | ReactNode } | undefined => {
   switch (step) {
     case 1:
       return {
@@ -22,7 +25,11 @@ const getSection = (step: number): { title: string; description?: string } | und
     case 2:
       return {
         title: t`Section 2: Legal Person`,
-        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
+        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the ${(
+          <Link href="https://intervasp.org/" isExternal color="link">
+            IVMS 101
+          </Link>
+        )} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
       };
     case 3:
       return {
@@ -42,7 +49,11 @@ const getSection = (step: number): { title: string; description?: string } | und
     case 6:
       return {
         title: t`Section 6: Review & Submit`,
-        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
+        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the ${(
+          <Link href="https://intervasp.org/" isExternal color="link">
+            IVMS 101
+          </Link>
+        )} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
       };
     case 7:
       return {
