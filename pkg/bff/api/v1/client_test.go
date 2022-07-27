@@ -280,7 +280,7 @@ func TestSaveRegistrationForm(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, http.MethodPut, r.Method)
 		require.Equal(t, "/v1/register", r.URL.Path)
 		w.WriteHeader(http.StatusNoContent)
 	}))
