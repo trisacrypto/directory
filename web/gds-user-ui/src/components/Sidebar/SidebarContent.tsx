@@ -8,10 +8,13 @@ import {
   Divider,
   VStack,
   Stack,
-  Heading
+  Heading,
+  Link,
+  Icon,
+  Text
 } from '@chakra-ui/react';
 import trisaLogo from '../../assets/trisa.svg';
-import NavItem from './NavItem';
+import NavItem, { getLinkStyle } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
@@ -49,12 +52,57 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         ))}
 
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
-        <NavItem href="mailto:support@trisa.io" icon={MdContactSupport} w={'100%'}>
-          Support
-        </NavItem>
-        <NavItem icon={IoLogoSlack} href="/#" w={'100%'}>
+        <Link
+          w={'100%'}
+          display="flex"
+          alignItems="center"
+          color="#8391a2"
+          role="group"
+          href="mailto:support@trisa.io"
+          isExternal
+          {...getLinkStyle()}>
+          <Icon
+            mr="4"
+            fontSize="16"
+            _groupHover={{
+              color: 'white'
+            }}
+            as={MdContactSupport}
+          />
+          <Text
+            _groupHover={{
+              color: 'white'
+            }}>
+            Support
+          </Text>
+        </Link>
+        <Link
+          href="https://trisa-workspace.slack.com/"
+          w={'100%'}
+          display="flex"
+          alignItems="center"
+          color="#8391a2"
+          role="group"
+          isExternal
+          {...getLinkStyle()}>
+          <Icon
+            mr="4"
+            fontSize="16"
+            _groupHover={{
+              color: 'white'
+            }}
+            as={IoLogoSlack}
+          />
+          <Text
+            _groupHover={{
+              color: 'white'
+            }}>
+            Slack
+          </Text>
+        </Link>
+        {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
           Slack
-        </NavItem>
+        </NavItem> */}
       </VStack>
     </Box>
   );
