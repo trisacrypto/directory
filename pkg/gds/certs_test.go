@@ -36,7 +36,7 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Let the certificate manager submit the certificate request
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be changed to ISSUING_CERTIFICATE
@@ -71,7 +71,7 @@ func (s *gdsTestSuite) TestCertManager() {
 
 	// Let the certificate manager process the Sectigo response
 	sent := time.Now()
-	err = s.svc.HandleCertifcateRequests(certDir)
+	err = s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// Secret manager should contain the certificate
@@ -156,6 +156,63 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.Equal("automated", certReq.AuditLog[5].Source)
 }
 
+// Test that the certificate manager rejects requests when the VASP state is invalid.
+func (s *gdsTestSuite) TestCertManagerBadState() {
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	defer s.loadReferenceFixtures()
+	require := s.Require()
+
+	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
+
+	// Set VASP to pending review
+	echoVASP.VerificationStatus = pb.VerificationState_PENDING_REVIEW
+	require.NoError(s.svc.GetStore().UpdateVASP(echoVASP))
+
+	// Run the cert manager for a loop
+	require.NoError(s.svc.HandleCertificateRequests(certDir), "certman loop unsuccessful")
+
+	// Certificate request should be rejected before submission
+	certReq, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
+
+	// Set VASP to rejected
+	echoVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.svc.GetStore().UpdateVASP(echoVASP))
+
+	// Run the cert manager for a loop
+	require.NoError(s.svc.HandleCertificateRequests(certDir), "certman loop unsuccessful")
+
+	// Certificate request should be rejected before submission
+	certReq, err = s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
+
+	// Set VASP to verified for correct submission
+	echoVASP.VerificationStatus = pb.VerificationState_VERIFIED
+	require.NoError(s.svc.GetStore().UpdateVASP(echoVASP))
+	quebecCertReq.Status = models.CertificateRequestState_READY_TO_SUBMIT
+	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
+
+	// Move the certificate to processing
+	require.NoError(s.svc.HandleCertificateRequests(certDir), "certman loop unsuccessful")
+
+	// Set VASP to rejected
+	echoVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.svc.GetStore().UpdateVASP(echoVASP))
+
+	// Run the cert manager for a loop
+	require.NoError(s.svc.HandleCertificateRequests(certDir), "certman loop unsuccessful")
+
+	// Certificate request should be rejected before download
+	certReq, err = s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
+	require.Empty(certReq.Certificate)
+}
+
 // Test that the certificate manager is able to process an end entity profile.
 func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
 	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
@@ -182,9 +239,9 @@ func (s *gdsTestSuite) TestCertManagerEndEntityProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
-	err = s.svc.HandleCertifcateRequests(certDir)
+	err = s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should contain the new certificate
@@ -219,9 +276,9 @@ func (s *gdsTestSuite) TestCertManagerCipherTraceEEProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
-	err = s.svc.HandleCertifcateRequests(certDir)
+	err = s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should contain the new certificate
@@ -250,7 +307,7 @@ func (s *gdsTestSuite) TestSubmitNoBalance() {
 	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
@@ -282,7 +339,7 @@ func (s *gdsTestSuite) TestSubmitNoPassword() {
 	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
 
 	// Run the CertManager for a tick
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
@@ -329,7 +386,7 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
 
 	// Run the CertManager for a tick
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
@@ -365,7 +422,7 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 	})
 
 	// Run cert manager for one loop
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	v, err := s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -384,7 +441,7 @@ func (s *gdsTestSuite) TestProcessBatchDetailError() {
 	})
 
 	// Run cert manager for one loop
-	err = s.svc.HandleCertifcateRequests(certDir)
+	err = s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	v, err = s.svc.GetStore().RetrieveVASP(foxtrotId)
@@ -411,7 +468,7 @@ func (s *gdsTestSuite) TestProcessActiveBatch() {
 	})
 
 	// Run cert manager for one loop
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
@@ -456,7 +513,7 @@ func (s *gdsTestSuite) TestProcessRejected() {
 	})
 
 	// Run cert manager for one loop
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
@@ -501,7 +558,7 @@ func (s *gdsTestSuite) TestProcessBatchError() {
 	})
 
 	// Run cert manager for one loop
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
@@ -540,7 +597,7 @@ func (s *gdsTestSuite) TestProcessBatchNoSuccess() {
 	})
 
 	// Run cert manager for one loop
-	err := s.svc.HandleCertifcateRequests(certDir)
+	err := s.svc.HandleCertificateRequests(certDir)
 	require.NoError(err, "certman loop unsuccessful")
 
 	// VASP state should be still be ISSUING_CERTIFICATE
