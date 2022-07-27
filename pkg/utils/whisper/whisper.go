@@ -72,6 +72,8 @@ func CreateSecretLink(secret string, password string, accesses int, expirationDa
 	return link, nil
 }
 
+// Connects the client to the Whisper service, throws an
+// error if the client is already connected.
 func ConnectClient(endpoint string) error {
 	// Create the whisper client, using sync.Once to ensure we only instantiate
 	// a client once
@@ -84,10 +86,12 @@ func ConnectClient(endpoint string) error {
 	return nil
 }
 
+// Accessor for the client used in testing
 func Client() whisper.Service {
 	return client
 }
 
+// Resets the client connection
 func ResetClient() {
 	initClient = *new(sync.Once)
 }

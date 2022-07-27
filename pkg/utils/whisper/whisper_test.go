@@ -28,6 +28,7 @@ func TestCreateWhisperLink(t *testing.T) {
 		Expires: oneWeek,
 	}
 
+	// Create a Test Server
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, r.Method, http.MethodPost)
 		require.Equal(t, "/v1/secrets", r.URL.Path)
@@ -45,15 +46,21 @@ func TestCreateWhisperLink(t *testing.T) {
 	}))
 	defer testServer.Close()
 
+	// Create a Client that makes requests to the test server
 	err = whisper.ConnectClient(testServer.URL)
 	defer whisper.ResetClient()
 	require.NoError(t, err)
 
+	// Call CreateSecretLink. The call should perform a Post to the test server.
 	link, err = whisper.CreateSecretLink("this is a secret", "password", accesses, oneWeek)
 	require.NoError(t, err)
 	require.Equal(t, link, "https://whisper.rotational.dev/secret/abcdefghijklmnop")
 }
 
+// Live test using the Whisper server to ensure that we can fetch the secret using the
+// created Whisper link and that the correct number of accesses has been set. You must
+// set the GDS_TEST_LIVE_WHISPER environment variable equal to '1' in order to run this
+// test.
 func TestCreateWhisperLinkLive(t *testing.T) {
 	if os.Getenv("GDS_TEST_LIVE_WHISPER") != "1" {
 		t.Skip()
