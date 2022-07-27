@@ -103,10 +103,32 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
                   <FormHelperText ml={1} color={'#1F4CED'} cursor={'help'}>
                     <Tooltip
-                      label={t`TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.`}>
-                      <Trans id="What’s a Common name or VASP ID?">
-                        What’s a Common name or VASP ID?
-                      </Trans>
+                      p={2}
+                      label={
+                        <>
+                          <Text
+                            id="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.">
+                            TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.
+                          </Text>
+                          <Text>
+                            <Trans
+                              id="The Common Name typically matches the Endpoint, without the port number
+                            at the end (e.g. trisa.myvasp.com) and is used to identify the subject
+                            in the X.509 certificate.">
+                              The Common Name typically matches the Endpoint, without the port
+                              number at the end (e.g. trisa.myvasp.com) and is used to identify the
+                              subject in the X.509 certificate.
+                            </Trans>
+                          </Text>
+                        </>
+                      }>
+                      <Text>
+                        <Trans id="What’s a Common name or VASP ID?">
+                          What’s a Common name or VASP ID?
+                        </Trans>
+                      </Text>
                     </Tooltip>
                   </FormHelperText>
 
