@@ -62,9 +62,11 @@ func TestCreateWhisperLink(t *testing.T) {
 // set the GDS_TEST_LIVE_WHISPER environment variable equal to '1' in order to run this
 // test.
 func TestCreateWhisperLinkLive(t *testing.T) {
-	if os.Getenv("GDS_TEST_LIVE_WHISPER") != "1" {
+	var set bool
+	if _, set = os.LookupEnv("GDS_TEST_LIVE_WHISPER"); !set {
 		t.Skip()
 	}
+
 	// Pass in valid arguments and check that the returned URL is valid
 	accesses := 3
 	oneWeek := time.Now().AddDate(0, 0, 7)
