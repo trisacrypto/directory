@@ -114,7 +114,7 @@ export default function VaspVerification() {
                 <Trans id="Information that identifies your organization as a Legal Person. This section represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.">
                   Information that identifies your organization as a Legal Person. This section
                   represents the{' '}
-                  <Link color="#1F4CED" href="https://intervasp.org/" isExternal>
+                  <Link color="link" href="https://intervasp.org/" isExternal>
                     IVMS 101
                   </Link>{' '}
                   data structure for legal persons and is strongly suggested for use as KYC

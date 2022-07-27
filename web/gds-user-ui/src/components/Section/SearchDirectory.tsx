@@ -5,20 +5,15 @@ import {
   Box,
   Flex,
   Text,
-  Thead,
-  Tbody,
   Link,
   Button,
   Tooltip,
-  InputRightElement,
-  Input,
   FormHelperText,
   FormControl,
   useColorModeValue,
   Table,
   Tr,
   Td,
-  Th,
   Heading,
   HStack,
   Tabs,
@@ -26,8 +21,9 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  chakra,
-  TableContainer
+  TableContainer,
+  Input,
+  Tbody
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
@@ -51,7 +47,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   isLoading,
   result,
   error,
-  query,
   handleClose
 }) => {
   const [search, setSearch] = useState<string>('');
@@ -95,7 +90,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       isRequired
                       placeholder="Common name or VASP ID"
                       name="search"
-                      onChange={(event) => setSearch(event.currentTarget.value)}
+                      onChange={(event: any) => setSearch(event.currentTarget.value)}
                     />
                     <Button
                       isLoading={isLoading}
