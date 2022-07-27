@@ -70,12 +70,12 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
-              <IconButton
+              {/* <IconButton
                 aria-label={`swith to ${isLight ? 'light' : 'dark'}`}
                 icon={isLight ? <MdOutlineWbSunny /> : <MdModeNight />}
                 variant="outline"
                 onClick={toggleColorMode}
-              />
+              /> */}
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>
