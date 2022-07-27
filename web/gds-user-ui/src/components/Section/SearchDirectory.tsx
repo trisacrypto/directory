@@ -162,31 +162,31 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result?.testnet?.name}</Td>
+                            <Td colSpan={2}>{result?.testnet?.name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result?.testnet?.common_name}</Td>
+                            <Td>{result?.testnet?.common_name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result?.testnet?.endpoint}</Td>
+                            <Td>{result?.testnet?.endpoint || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory">Registered Directory</Trans>
                             </Td>
-                            <Td>{result?.testnet?.registered_directory}</Td>
+                            <Td>{result?.testnet?.registered_directory || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID">TRISA Member ID</Trans>
                             </Td>
-                            <Td>{result?.testnet?.id}</Td>
+                            <Td>{result?.testnet?.id || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
