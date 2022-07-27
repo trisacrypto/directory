@@ -53,7 +53,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         <Stack mb={5}>
           <Heading fontSize={20}>
             TRISA Organization Profile:{' '}
-            <Text as={'span'} color={'blue.500'}>
+            <Text as={'span'} color={'blue'}>
               [pending registration]
             </Text>
           </Heading>
@@ -94,7 +94,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                   {data?.vasp_categories && data?.vasp_categories.length
                     ? data?.vasp_categories?.map((categ: any) => {
                         return (
-                          <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
+                          <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
                             {getBusinessCategiryLabel(categ)}
                           </Tag>
                         );
@@ -123,7 +123,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>Identification Type</ListItem>
                 <ListItem>
                   {' '}
-                  <Tag color={'white'} bg={'blue.400'} size={'lg'}>
+                  <Tag color={'white'} bg={'blue'} size={'lg'}>
                     {getNationalIdentificationLabel(
                       data?.entity?.national_identification?.national_identifier_type
                     )}
