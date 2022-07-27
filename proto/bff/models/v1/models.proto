@@ -15,6 +15,9 @@ message Organization {
     string name = 2;
     string logo_url = 3;
 
+    // Progress of the registration form
+    FormProgression progress = 9;
+
     // Directory Registrations for Lookups
     // TODO: populate these details in the Registration Endpoint
     DirectoryRecord testnet = 10;
@@ -28,6 +31,16 @@ message Organization {
     // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
+}
+
+// FormProgression contains the current state of an organization's registration form to
+// enable a consistent user experience across multiple contexts.
+message FormProgression {
+    // The current step of the form
+    string current = 1;
+
+    // The state of each step in the form
+    map<string, int32> steps = 2;
 }
 
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.
