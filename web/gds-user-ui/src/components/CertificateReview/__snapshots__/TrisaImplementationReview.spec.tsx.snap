@@ -3,7 +3,7 @@
 exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-1ahr7gc"
+    class="css-joycc7"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -59,7 +59,7 @@ exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                testnet.kyc.com:443
+                N/A
               </td>
             </tr>
             <tr
@@ -76,7 +76,7 @@ exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                testnet.kyc.com
+                N/A
               </td>
             </tr>
             <tr
@@ -115,7 +115,7 @@ exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                trisa.kyc.com:443
+                N/A
               </td>
             </tr>
             <tr
@@ -132,7 +132,7 @@ exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                trisa.kyc.com
+                N/A
               </td>
             </tr>
           </tbody>

@@ -142,10 +142,7 @@ export const getRefreshToken = () => {
     );
   });
 };
-
-export const captureExceptionError = (message: string) => {
-  Sentry.captureException(message);
-};
-export const captureMessageError = (message: string) => {
-  Sentry.captureMessage(message);
+export const handleError = (error: any, customMessage?: string) => {
+  Sentry.captureMessage(customMessage || error);
+  Sentry.captureException(error);
 };

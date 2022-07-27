@@ -18,7 +18,7 @@ import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm } from 'react-hook-form';
-
+import Loader from 'components/Loader';
 import { userSelector } from 'modules/auth/login/user.slice';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
@@ -28,11 +28,12 @@ import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
-import { getRegistrationData } from 'modules/dashboard/registration/service';
+import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 import {
-  loadDefaultValueFromLocalStorage,
-  setCertificateFormValueToLocalStorage
-} from 'utils/localStorageHelper';
+  getRegistrationDefaultValue,
+  postRegistrationValue,
+  setRegistrationDefaultValue
+} from 'modules/dashboard/registration/utils';
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
@@ -41,7 +42,7 @@ const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   const [isResetForm, setIsResetForm] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(true);
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
@@ -62,9 +63,9 @@ const Certificate: React.FC = () => {
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
-
+  console.log('[registrationData from state]', registrationData);
   const methods = useForm({
-    defaultValues: loadDefaultValueFromLocalStorage(),
+    defaultValues: registrationData,
     resolver,
     mode: 'onChange'
   });
@@ -116,7 +117,7 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      setCertificateFormValueToLocalStorage(methods.getValues());
+      postRegistrationValue(methods.getValues());
       nextStep({
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue()
@@ -124,7 +125,7 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
-    setCertificateFormValueToLocalStorage(methods.getValues());
+    // postRegistrationValue(methods.getValues());
     previousStep();
   };
 
@@ -147,21 +148,23 @@ const Certificate: React.FC = () => {
   }, [isResetModalOpen]);
 
   useEffect(() => {
-    reset({ ...loadDefaultValueFromLocalStorage() });
+    const defaultValue =
+      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
+    reset(defaultValue);
     setIsResetForm(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isResetForm]);
+  }, [registrationData, isResetForm]);
 
   // load default value from trtl
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const data = await getRegistrationData();
-  //     console.log('[getRegistrationData]', data);
-  //     setRegistrationData(data.data);
-  //     setIsLoading(false);
-  //   };
-  //   fetchData();
-  // }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getRegistrationDefaultValue();
+      console.log('[getRegistrationData]', data);
+      setRegistrationData(data);
+      setIsLoadingDefaultValue(false);
+    };
+    fetchData();
+  }, []);
   return (
     <SimpleDashboardLayout>
       <>

@@ -21,7 +21,10 @@ import { COUNTRIES } from 'constants/countries';
 import { currencyFormatter } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-interface TrixoReviewProps {}
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+interface TrixoReviewProps {
+  data?: any;
+}
 
 const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
   const { jumpToStep } = useCertificateStepper();
@@ -36,11 +39,14 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
     }
   };
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.trixo
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        ...getStepperData.trixo
+      };
+      setTrixo(stepData);
     };
-    setTrixo(stepData);
+    fetchData();
   }, [steps]);
 
   return (
@@ -49,6 +55,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
       fontFamily={'Open Sans'}
       color={textColor}
       fontSize={18}
+      bg={useColorModeValue('white', '#171923')}
       p={5}
       px={5}>
       <Stack>
@@ -232,7 +239,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
                 </Td>
                 <Td>
                   {trixo?.applicable_regulations?.map((reg: any) => {
-                    if (reg?.name.length > 0) {
+                    if (reg?.length > 0) {
                       return <Text key={reg.name}>{reg.name || 'N/A'}</Text>;
                     }
                   })}

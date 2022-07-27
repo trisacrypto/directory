@@ -18,7 +18,11 @@ import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelpe
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { Trans } from '@lingui/react';
-interface BasicDetailsReviewProps {}
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+
+interface BasicDetailsReviewProps {
+  data?: any;
+}
 
 const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
   const { jumpToStep } = useCertificateStepper();
@@ -27,15 +31,18 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
   const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      website: getStepperData.website,
-      established_on: getStepperData.established_on,
-      vasp_categories: getStepperData.vasp_categories,
-      business_category: getStepperData.business_category
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        website: getStepperData.website,
+        established_on: getStepperData.established_on,
+        vasp_categories: getStepperData.vasp_categories,
+        business_category: getStepperData.business_category
+      };
+      // '#252733'
+      setBasicDetail(stepData);
     };
-    // '#252733'
-    setBasicDetail(stepData);
+    fetchData();
   }, [steps]);
   return (
     <Box
@@ -44,6 +51,7 @@ const BasicDetailsReview = (props: BasicDetailsReviewProps) => {
       color={textColor}
       maxHeight={367}
       fontSize={18}
+      bg={useColorModeValue('white', '#171923')}
       p={5}
       px={5}>
       <Stack width={'100%'}>

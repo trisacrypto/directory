@@ -22,7 +22,11 @@ import { COUNTRIES } from 'constants/countries';
 import { renderAddress } from 'utils/address-utils';
 import { addressType } from 'constants/address';
 import { Trans } from '@lingui/react';
-interface LegalReviewProps {}
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+
+interface LegalReviewProps {
+  data?: any;
+}
 // NOTE: need some clean up.
 
 const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
@@ -32,11 +36,14 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
   const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.entity
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        ...getStepperData.entity
+      };
+      setLegalPerson(stepData);
     };
-    setLegalPerson(stepData);
+    fetchData();
   }, [steps]);
   return (
     <Box
@@ -44,6 +51,7 @@ const LegalPersonReview: React.FC<LegalReviewProps> = (props) => {
       fontFamily={'Open Sans'}
       color={textColor}
       fontSize={18}
+      bg={useColorModeValue('white', '#171923')}
       p={5}
       px={5}>
       <Stack>

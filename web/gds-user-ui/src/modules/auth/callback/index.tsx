@@ -7,6 +7,7 @@ import { getCookie, setCookie } from 'utils/cookies';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
+import Loader from 'components/Loader';
 import { t } from '@lingui/macro';
 import { useSelector, useDispatch } from 'react-redux';
 import { logUserInBff } from 'modules/auth/login/auth.service';
@@ -80,15 +81,7 @@ const CallbackPage: React.FC = () => {
 
   return (
     <Box height={'100%'}>
-      {isFetching && (
-        <Box
-          textAlign={'center'}
-          justifyItems="center"
-          alignItems={'center'}
-          justifyContent="center">
-          <Spinner size={'xl'} />
-        </Box>
-      )}
+      {isFetching && <Loader />}
       {isError && <AlertMessage title={t`Token not valid`} message={errorMessage} status="error" />}
     </Box>
   );

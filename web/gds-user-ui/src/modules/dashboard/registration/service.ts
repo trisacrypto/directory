@@ -8,5 +8,5 @@ export const getRegistrationData = async () => {
 export const postRegistrationData = async (data: any) => {
   setAuthorization();
   const response = await axiosInstance.post(`/register`, { ...data });
-  return response.data;
+  return response;
 };

@@ -17,8 +17,12 @@ import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
-interface TrisaImplementationReviewProps {}
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
+interface TrisaImplementationReviewProps {
+  mainnetData?: any;
+  testnetData?: any;
+}
 const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
   const { jumpToStep } = useCertificateStepper();
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
@@ -26,19 +30,23 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
   const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      mainnet: getStepperData.trisa_endpoint_mainnet,
-      testnet: getStepperData.trisa_endpoint_testnet
-    };
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        mainnet: getStepperData.mainnet,
+        testnet: getStepperData.testnet
+      };
 
-    setTrisa(stepData);
+      setTrisa(stepData);
+    };
+    fetchData();
   }, [steps]);
   return (
     <Box
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={textColor}
+      bg={useColorModeValue('white', '#171923')}
       fontSize={'1rem'}
       p={5}>
       <Stack>

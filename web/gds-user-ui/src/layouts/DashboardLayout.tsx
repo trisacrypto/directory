@@ -37,6 +37,8 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
   //   fetchData();
   // }, []);
 
+  // return <Loader />;
+
   return <>{isFetching ? <Loader /> : <Sidebar {...props} />}</>;
 };
 export default DashboardLayout;

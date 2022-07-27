@@ -21,48 +21,46 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     // retry 3 time if request failed
 
-    // Reject promise for now if usual error
-    if (error.response.status !== 401) {
-      return Promise.reject(error);
-    }
-
     if (error.response.status === 403) {
       return Promise.reject(error);
     }
 
     if (error.response.status === 401 && error.response.data.error === 'Unauthorized') {
       console.log('[TokenError]', error);
-      if (originalRequest.retry < 3) {
-        originalRequest.retry = originalRequest.retry || 0;
-        originalRequest.retry += 1;
-        const token = await getRefreshToken();
-        if (token) {
-          const headers = {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          };
-          const newRequest = {
-            ...originalRequest,
-            headers,
-            url: `${originalRequest.url}?${originalRequest.data}`
-          };
-          setCookie('access_token', token);
-          return axiosInstance.request(newRequest);
-        }
-        // const token = await getRefreshToken();
-        // if (token) {
-        //   setCookie('access_token', token);
-        //   axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-        //   return axiosInstance.request(originalRequest);
-        // }
+      // if (originalRequest.retry < 3) {
+      //   originalRequest.retry = originalRequest.retry || 0;
+      //   originalRequest.retry += 1;
+      const token = await getRefreshToken();
+      console.log(token);
+      // if (token) {
+      //   const headers = {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${token}`
+      //   };
+      //   const newRequest = {
+      //     ...originalRequest,
+      //     headers,
+      //     url: `${originalRequest.url}?${originalRequest.data}`
+      //   };
+      //   setCookie('access_token', token);
+      //   return axiosInstance.request(newRequest);
+      // }
+      // const token = await getRefreshToken();
+      if (token) {
+        setCookie('access_token', token);
+        axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+        return axiosInstance.request(originalRequest);
       }
+      // }
     }
   }
 );
 
 export const setAuthorization = () => {
   const token = getCookie('access_token');
+  const csrfToken = getCookie('csrf_token');
   axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+  axiosInstance.defaults.headers.common['X-CSRF-Token'] = csrfToken;
 };
 
 export default axiosInstance;

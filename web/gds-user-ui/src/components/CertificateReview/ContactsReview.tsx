@@ -18,8 +18,10 @@ import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelpe
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+
 interface ContactsProps {
-  data: any;
+  data?: any;
 }
 
 const ContactsReview = (props: ContactsProps) => {
@@ -29,11 +31,14 @@ const ContactsReview = (props: ContactsProps) => {
   const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.contacts
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        ...getStepperData.contacts
+      };
+      setContacts(stepData);
     };
-    setContacts(stepData);
+    fetchData();
   }, [steps]);
 
   return (
@@ -42,6 +47,7 @@ const ContactsReview = (props: ContactsProps) => {
       fontFamily={'Open Sans'}
       color={textColor}
       fontSize={18}
+      bg={useColorModeValue('white', '#171923')}
       p={5}
       px={5}>
       <Stack>

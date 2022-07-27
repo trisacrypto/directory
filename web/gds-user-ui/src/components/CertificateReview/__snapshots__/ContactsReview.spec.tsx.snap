@@ -3,7 +3,7 @@
 exports[`<ContactsReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-17bwaio"
+    class="css-zouncv"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -47,21 +47,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <p
-                  class="chakra-text css-0"
-                >
-                  Test
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  test@test.com
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  +4535557757
-                </p>
+                N/A
               </td>
             </tr>
             <tr
@@ -78,21 +64,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <p
-                  class="chakra-text css-0"
-                >
-                  Info 
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  info@gmail.com
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  +93400583484
-                </p>
+                N/A
               </td>
             </tr>
             <tr
