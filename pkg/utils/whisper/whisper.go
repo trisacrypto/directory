@@ -15,10 +15,9 @@ const (
 )
 
 var (
-	client            whisper.Service
-	initError         error
-	initClient        sync.Once
-	expirationDefault time.Time = time.Now().AddDate(0, 0, 7) // unfortunately, time.Time values cannot be constant in golang
+	client     whisper.Service
+	initError  error
+	initClient sync.Once
 )
 
 // Creates a Whisper secret and returns the link to the Whisper UI where a user can access the secret value. If the
@@ -38,16 +37,7 @@ func CreateSecretLink(secret string, password string, accesses int, expirationDa
 
 	// Ensure the expiration date is valid
 	if expirationDate.IsZero() {
-		expirationDate = expirationDefault
-	}
-
-	// Create the whisper client, using sync.Once to ensure we only instantiate
-	// a client once
-	initClient.Do(func() {
-		client, initError = whisper.New(endpoint)
-	})
-	if initError != nil {
-		return "", initError
+		expirationDate = time.Now().AddDate(0, 0, 7)
 	}
 
 	// Convert the expiration date into a whisper.Duration
@@ -67,6 +57,10 @@ func CreateSecretLink(secret string, password string, accesses int, expirationDa
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	if err = ConnectClient(endpoint); err != nil {
+		return "", err
+	}
+
 	// Call CreateSecretReply
 	var reply *whisper.CreateSecretReply
 	if reply, err = client.CreateSecret(ctx, request); err != nil {
@@ -74,6 +68,26 @@ func CreateSecretLink(secret string, password string, accesses int, expirationDa
 	}
 
 	// Create and return the Whisper link with the returned
-	link = "https://api.whisper.rotational.dev/secret/" + reply.Token
+	link = "https://whisper.rotational.dev/secret/" + reply.Token
 	return link, nil
+}
+
+func ConnectClient(endpoint string) error {
+	// Create the whisper client, using sync.Once to ensure we only instantiate
+	// a client once
+	initClient.Do(func() {
+		client, initError = whisper.New(endpoint)
+	})
+	if initError != nil {
+		return initError
+	}
+	return nil
+}
+
+func Client() whisper.Service {
+	return client
+}
+
+func ResetClient() {
+	initClient = *new(sync.Once)
 }
