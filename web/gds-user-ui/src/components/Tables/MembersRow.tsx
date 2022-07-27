@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react';
 
 import { IoEllipse } from 'react-icons/io5';
-import { BiGame } from 'react-icons/bi';
 
 type MembersProps = {
   key?: string;
