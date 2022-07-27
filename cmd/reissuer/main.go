@@ -40,7 +40,8 @@ var (
 )
 
 const (
-	dateFmt = "2006-01-02"
+	dateFmt                 = "2006-01-02"
+	whisperPasswordTemplate = "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
 )
 
 func main() {
@@ -265,7 +266,7 @@ func reissueCerts(c *cli.Context) (err error) {
 	}
 
 	// Create a Whisper link for the provided PKCS12 password.
-	if whisperLink, err = whisper.CreateSecretLink(pkcs12password, "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
+	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, weekFromNow()); err != nil {
 		return cli.Exit(err, 1)
 	}
 
