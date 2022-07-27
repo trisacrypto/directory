@@ -53,14 +53,14 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 		case <-ticker.C:
 		}
 
-		if err := s.HandleCertifcateRequests(certDir); err != nil {
+		if err := s.HandleCertificateRequests(certDir); err != nil {
 			log.WithLevel(zerolog.PanicLevel).Err(err).Msg("could not handle certificate requests, certificate manager shutting down")
 			return
 		}
 	}
 }
 
-func (s *Service) HandleCertifcateRequests(certDir string) (err error) {
+func (s *Service) HandleCertificateRequests(certDir string) (err error) {
 	// Retrieve all certificate requests from the database
 	var (
 		nrequests int

@@ -174,7 +174,7 @@ func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.Registra
 func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (err error) {
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/register", form, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPut, "/v1/register", form, nil); err != nil {
 		return err
 	}
 
