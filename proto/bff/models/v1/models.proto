@@ -15,9 +15,6 @@ message Organization {
     string name = 2;
     string logo_url = 3;
 
-    // Progress of the registration form
-    FormProgression progress = 9;
-
     // Directory Registrations for Lookups
     // TODO: populate these details in the Registration Endpoint
     DirectoryRecord testnet = 10;
@@ -33,14 +30,23 @@ message Organization {
     string modified = 15;
 }
 
-// FormProgression contains the current state of an organization's registration form to
+// FormState contains the current state of an organization's registration form to
 // enable a consistent user experience across multiple contexts.
-message FormProgression {
-    // The current step of the form
-    string current = 1;
+message FormState {
+    // The current 0-indexed step of the form
+    int32 current = 1;
+
+    // If set, the form is completely filled out and ready to be submitted
+    bool complete = 2;
 
     // The state of each step in the form
-    map<string, int32> steps = 2;
+    repeated FormStep steps = 3;
+}
+
+// FormStep contains the state of a single step in an organization's registration form.
+message FormStep {
+    int32 key = 1;
+    int32 status = 2;
 }
 
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.
@@ -73,6 +79,9 @@ message RegistrationForm {
     // Network-specific information and submission details
     NetworkDetails testnet = 14;
     NetworkDetails mainnet = 15;
+
+    // Current progress of the form for the frontend
+    FormState state = 20;
 }
 
 // NetworkDetails contains directory-service specific submission information such as the
