@@ -15,23 +15,12 @@ func TestCreateWhisperLink(t *testing.T) {
 	// CreateWhisperLink should throw an error when passed an empty secret
 	accesses := 3
 	oneWeek := time.Now().AddDate(0, 0, 7)
-	link, err := whisper.CreateWhisperLink("", "not empty", accesses, oneWeek)
+	link, err := whisper.CreateSecretLink("", "not empty", accesses, oneWeek)
 	require.Equal(t, link, "")
 	require.EqualError(t, err, "a secret is required to generate a Whisper link")
 
-	// CreateWhisperLink should throw an error when passed an empty password
-	link, err = whisper.CreateWhisperLink("not empty", "", accesses, oneWeek)
-	require.Equal(t, link, "")
-	require.EqualError(t, err, "a password is required to generate a Whisper link")
-
-	// CreateWhisperLink should throw an error when passed an expiration date in the past
-	yesterday := time.Now().Add(-time.Hour * 24)
-	link, err = whisper.CreateWhisperLink("not empty", "not empty", accesses, yesterday)
-	require.Equal(t, link, "")
-	require.EqualError(t, err, "the expiration date for the secret must be in the future")
-
 	// Pass in valid arguments and check that the returned URL is valid
-	link, err = whisper.CreateWhisperLink("this is a secret", "password", accesses, oneWeek)
+	link, err = whisper.CreateSecretLink("this is a secret", "password", accesses, oneWeek)
 	lastSlash := strings.LastIndex(link, "/")
 	url := link[:lastSlash+1]
 	token := link[lastSlash+1:]
