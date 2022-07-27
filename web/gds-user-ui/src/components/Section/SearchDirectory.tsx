@@ -230,31 +230,31 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result?.mainet?.name || 'N/A'} </Td>
+                            <Td colSpan={2}>{result?.mainnet?.name || 'N/A'} </Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result?.mainet?.common_name || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.common_name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result?.mainet?.endpoint || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.endpoint || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory"></Trans>
                             </Td>
-                            <Td>{result?.mainet?.registered_directory || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.registered_directory || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID"></Trans>
                             </Td>
-                            <Td>{result?.mainet?.id || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.id || 'N/A'}</Td>
                           </Tr>
 
                           <Tr>
@@ -262,9 +262,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                               <Trans id="Country">Country</Trans>
                             </Td>
                             <Td>
-                              {getCountryName(result?.mainet?.country as IsoCountryCode)}
+                              {getCountryName(result?.mainnet?.country as IsoCountryCode)}
                               {'  '}
-                              {countryCodeEmoji(result?.mainet?.country) || 'N/A'}
+                              {countryCodeEmoji(result?.mainnet?.country) || 'N/A'}
                             </Td>
                           </Tr>
 
@@ -272,11 +272,11 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="TRISA Verification">TRISA Verification</Trans>
                             </Td>
-                            {result?.mainet?.verified_on ? (
+                            {result?.mainnet?.verified_on ? (
                               <Td>
                                 {' '}
                                 <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
-                                {result?.mainet?.verified_on}{' '}
+                                {result?.mainnet?.verified_on}{' '}
                               </Td>
                             ) : (
                               <Td>N/A</Td>
