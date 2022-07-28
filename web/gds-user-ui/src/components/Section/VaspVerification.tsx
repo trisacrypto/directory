@@ -199,38 +199,10 @@ export default function VaspVerification() {
           </Box>
           <Stack
             direction={['column', 'row']}
-            py={20}
+            pb={20}
+            pt={5}
             justifyContent={'center'}
             textAlign={'center'}>
-            {/* <Box>
-              <Button
-                bg={colors.system.blue}
-                color={'white'}
-                _hover={{
-                  bg: '#10aaed'
-                }}
-                _focus={{
-                  borderColor: 'transparent'
-                }}>
-                Download PDF
-              </Button>
-            </Box> */}
-
-            {/* <Button
-                bg={colors.system.blue}
-                px={4}
-                color={'white'}
-                as="a"
-                href="/certificate/registration"
-                _hover={{
-                  bg: '#10aaed'
-                }}
-                _focus={{
-                  borderColor: 'transparent'
-                }}>
-                <Trans id="Start Registration Process">Start Registration Process</Trans>
-              </Button> */}
-
             <VStack fontSize={'md'}>
               <RouterLink to={'/auth/register'}>
                 <Button
