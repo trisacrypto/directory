@@ -10,11 +10,15 @@ const VerifyPage: React.FC = () => {
 
   return (
     <LandingLayout>
-      <AlertMessage
+      {/* <AlertMessage
         message={successRegistrationMessage}
         status="success"
         title={t`Account Registration Complete`}
-      />
+      /> */}
+      <Stack spacing={7}>
+       
+      </Stack>
+
     </LandingLayout>
   );
 };
