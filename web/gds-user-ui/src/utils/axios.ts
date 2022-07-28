@@ -32,31 +32,31 @@ axiosInstance.interceptors.response.use(
 
     if (error.response.status === 401 && error.response.data.error === 'Unauthorized') {
       console.log('[TokenError]', error);
-      if (originalRequest.retry < 3) {
-        originalRequest.retry = originalRequest.retry || 0;
-        originalRequest.retry += 1;
-        const token = await getRefreshToken();
-        if (token) {
-          const headers = {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          };
-          const newRequest = {
-            ...originalRequest,
-            headers,
-            url: `${originalRequest.url}?${originalRequest.data}`
-          };
-          setCookie('access_token', token);
-          return axiosInstance.request(newRequest);
-        }
-        // const token = await getRefreshToken();
-        // if (token) {
-        //   setCookie('access_token', token);
-        //   axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-        //   return axiosInstance.request(originalRequest);
-        // }
+      // if (originalRequest.retry < 3) {
+      //   originalRequest.retry = originalRequest.retry || 0;
+      //   originalRequest.retry += 1;
+      //   const token = await getRefreshToken();
+      //   if (token) {
+      //     const headers = {
+      //       'Content-Type': 'application/json',
+      //       Authorization: `Bearer ${token}`
+      //     };
+      //     const newRequest = {
+      //       ...originalRequest,
+      //       headers,
+      //       url: `${originalRequest.url}?${originalRequest.data}`
+      //     };
+      //     setCookie('access_token', token);
+      //     return axiosInstance.request(newRequest);
+      //   }
+      const token = await getRefreshToken();
+      if (token) {
+        setCookie('access_token', token);
+        axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+        return axiosInstance(originalRequest);
       }
     }
+    // }
   }
 );
 
