@@ -90,7 +90,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                   <HStack>
                     <Input
                       size="md"
-                      pr="4.5rem"
+                      width={'100%'}
                       type="search"
                       isRequired
                       placeholder="Common name or VASP ID"
