@@ -16,6 +16,7 @@ RUN yarn install --frozen-lockfile --check-files
 ARG REACT_APP_GOOGLE_CLIENT_ID
 ARG REACT_APP_GDS_API_ENDPOINT="https://api.admin.vaspdirectory.net"
 ARG REACT_APP_GDS_IS_TESTNET=false
+ARG REACT_APP_SENTRY_ENVIRONMENT
 
 # Build app with react-scripts
 COPY web/gds-admin-ui/ ./
