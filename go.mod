@@ -38,6 +38,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/rotationalio/whisper v1.1.1
+
 require (
 	cloud.google.com/go v0.102.1 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect

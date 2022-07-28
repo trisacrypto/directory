@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Stack,
   Box,
@@ -6,15 +5,11 @@ import {
   Text,
   Link,
   VStack,
-  FlexProps,
-  StyleProps,
-  useColorModeValue,
   UnorderedList,
   ListItem,
   Button,
   Heading,
   Container,
-  Divider,
   useBreakpointValue
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -79,8 +74,10 @@ export default function IntegrateAndComply() {
             <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 14 }}>
               <Box pl={5} my={{ base: 4 }} color="black">
                 <Text fontFamily={'heading'} fontSize={'xl'}>
-                  Upon verification, VASPs must integrate with TRISA to begin exchanging Travel Rule
-                  data with other verified TRISA members.
+                  <Trans id="Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data.">
+                    Upon verification, integrate with TRISA to begin exchanging Travel Rule
+                    compliance
+                  </Trans>
                 </Text>
               </Box>
               <Box bg={'gray.100'} p={5}>
@@ -103,9 +100,12 @@ export default function IntegrateAndComply() {
                   <Line title="Option 1. Set Up Your Own TRISA Node" fontWeight={'bold'}>
                     Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set
                     up and maintain their own TRISA server to exhange encrypted Travel Rule
-                    compliance data. TRISA maintains an GitHub repository with detailed
-                    documentation, a reference implemenation, and “robot” VASPs for testing
-                    purposes.
+                    compliance data. TRISA maintains an{' '}
+                    <Link href="https://github.com/trisacrypto/trisa" isExternal color="link">
+                      <Trans id="GitHub repository">GitHub repository</Trans>
+                    </Link>{' '}
+                    with detailed documentation, a reference implemenation, and “robot” VASPs for
+                    testing purposes.
                   </Line>
                   <Line title="Option 2. Use a 3rd-party Solution" fontWeight={'bold'}>
                     TRISA is designed to be interoperable. There are several Travel Rule solutions
@@ -121,17 +121,21 @@ export default function IntegrateAndComply() {
                   <Line title="3rd Party Travel Rule Providers" fontWeight={'bold'}>
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
-                        <Link>CipherTrace</Link>
+                        <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
+                          CipherTrace Providers
+                        </Link>
                       </ListItem>
                       <ListItem>
-                        <Link>Synga Bridge</Link>
+                        <Link href="https://sygna.io" isExternal>
+                          Synga Bridge
+                        </Link>
                       </ListItem>
-                      <ListItem>
+                      {/* <ListItem>
                         <Link>NotaBene</Link> (not interoperable)
                       </ListItem>
                       <ListItem>
                         <Link>VerifyVASP</Link> (not interoperable)
-                      </ListItem>
+                      </ListItem> */}
                     </UnorderedList>
                   </Line>
                 </Stack>
@@ -140,13 +144,21 @@ export default function IntegrateAndComply() {
                     <Line title="Open Source Resources" fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
-                          <Link>TRISA’s Github repo</Link>
+                          <Link href="https://github.com/trisacrypto/trisa" isExternal>
+                            TRISA’s Github repo
+                          </Link>
                         </ListItem>
                         <ListItem>
-                          <Link>Documentation</Link>
+                          <Link href="https://trisa.dev/" isExternal>
+                            Documentation
+                          </Link>
                         </ListItem>
                         <ListItem>
-                          <Link>Reference implementation</Link>
+                          <Link
+                            href="https://github.com/trisacrypto/trisa/commit/436fd73fc48973ce09ccbae4260df6213d0c2894"
+                            isExternal>
+                            Reference implementation
+                          </Link>
                         </ListItem>
                         <ListItem>
                           <Link>Meet Alice VASP, Bob VASP, and “Evil” VASP</Link>

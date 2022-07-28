@@ -5,20 +5,15 @@ import {
   Box,
   Flex,
   Text,
-  Thead,
-  Tbody,
   Link,
   Button,
   Tooltip,
-  InputRightElement,
-  Input,
   FormHelperText,
   FormControl,
   useColorModeValue,
   Table,
   Tr,
   Td,
-  Th,
   Heading,
   HStack,
   Tabs,
@@ -26,8 +21,9 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  chakra,
-  TableContainer
+  TableContainer,
+  Input,
+  Tbody
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
@@ -51,7 +47,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   isLoading,
   result,
   error,
-  query,
   handleClose
 }) => {
   const [search, setSearch] = useState<string>('');
@@ -95,7 +90,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       isRequired
                       placeholder="Common name or VASP ID"
                       name="search"
-                      onChange={(event) => setSearch(event.currentTarget.value)}
+                      onChange={(event: any) => setSearch(event.currentTarget.value)}
                     />
                     <Button
                       isLoading={isLoading}
@@ -108,10 +103,32 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
                   <FormHelperText ml={1} color={'#1F4CED'} cursor={'help'}>
                     <Tooltip
-                      label={t`TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.`}>
-                      <Trans id="What’s a Common name or VASP ID?">
-                        What’s a Common name or VASP ID?
-                      </Trans>
+                      p={2}
+                      label={
+                        <>
+                          <Text
+                            id="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.">
+                            TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.
+                          </Text>
+                          <Text>
+                            <Trans
+                              id="The Common Name typically matches the Endpoint, without the port number
+                            at the end (e.g. trisa.myvasp.com) and is used to identify the subject
+                            in the X.509 certificate.">
+                              The Common Name typically matches the Endpoint, without the port
+                              number at the end (e.g. trisa.myvasp.com) and is used to identify the
+                              subject in the X.509 certificate.
+                            </Trans>
+                          </Text>
+                        </>
+                      }>
+                      <Text>
+                        <Trans id="What’s a Common name or VASP ID?">
+                          What’s a Common name or VASP ID?
+                        </Trans>
+                      </Text>
                     </Tooltip>
                   </FormHelperText>
 
