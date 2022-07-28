@@ -69,7 +69,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <Trans id="Enter the VASP Common Name or VASP ID. Not a TRISA Member?">
                 Enter the VASP Common Name or VASP ID. Not a TRISA Member?
               </Trans>
-              <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
+              <Link href={'/guide'} color={'#1F4CED'} pl={2}>
                 <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
               </Link>
             </Text>
@@ -85,7 +85,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                   <HStack>
                     <Input
                       size="md"
-                      pr="4.5rem"
+                      width={'100%'}
                       type="search"
                       isRequired
                       placeholder="Common name or VASP ID"
