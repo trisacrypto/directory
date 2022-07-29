@@ -77,15 +77,11 @@
   },
   "state": {
 	"current": 1,
-	"complete": false,
+	"ready_to_submit": false,
 	"steps": [
 		{
-			"key": 0,
-			"status": 1
-		},
-		{
 			"key": 1,
-			"status": 0
+			"status": "progress"
 		}
 	]
   }

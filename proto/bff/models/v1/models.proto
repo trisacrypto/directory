@@ -33,11 +33,11 @@ message Organization {
 // FormState contains the current state of an organization's registration form to
 // enable a consistent user experience across multiple contexts.
 message FormState {
-    // The current 0-indexed step of the form
+    // The current 1-indexed step of the form
     int32 current = 1;
 
     // If set, the form is completely filled out and ready to be submitted
-    bool complete = 2;
+    bool ready_to_submit = 2;
 
     // The state of each step in the form
     repeated FormStep steps = 3;
@@ -46,7 +46,7 @@ message FormState {
 // FormStep contains the state of a single step in an organization's registration form.
 message FormStep {
     int32 key = 1;
-    int32 status = 2;
+    string status = 2;
 }
 
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.
