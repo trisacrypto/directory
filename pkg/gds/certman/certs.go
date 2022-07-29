@@ -1,4 +1,4 @@
-package gds
+package certman
 
 import (
 	"bytes"
@@ -16,11 +16,25 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
+
+func New(conf config.CertManConfig) *CertificateManager {
+	return &CertificateManager{
+		conf: conf,
+	}
+}
+
+// CertificateManager is a struct with a go routine that periodically checks on the
+// status of certificate requests and moves them through the request pipeline. This is
+// separated from the parent GDS to allow for isolated testing.
+type CertificateManager struct {
+	conf config.CertManConfig
+}
 
 // CertManager is a go routine that periodically checks on the status of certificate
 // requests and moves them through the request pipeline. Once CertManager detects a
