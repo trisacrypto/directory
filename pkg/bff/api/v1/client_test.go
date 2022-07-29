@@ -17,7 +17,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -603,13 +602,13 @@ func TestAttention(t *testing.T) {
 		Messages: []*api.AttentionMessage{
 			{
 				Message:  bff.SubmitMainnet,
-				Severity: records.AttentionSeverity_INFO,
-				Action:   records.AttentionAction_SUBMIT_MAINNET,
+				Severity: models.AttentionSeverity_INFO,
+				Action:   models.AttentionAction_SUBMIT_MAINNET,
 			},
 			{
 				Message:  fmt.Sprintf(bff.CertificateRevoked, "testnet"),
-				Severity: records.AttentionSeverity_ALERT,
-				Action:   records.AttentionAction_CONTACT_SUPPORT,
+				Severity: models.AttentionSeverity_ALERT,
+				Action:   models.AttentionAction_CONTACT_SUPPORT,
 			},
 		},
 	}

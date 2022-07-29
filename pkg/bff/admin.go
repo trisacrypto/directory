@@ -239,7 +239,7 @@ func certificateMessage(vasp *pb.VASP, network string) (msg *api.AttentionMessag
 		}
 
 		// Warn if less than 30 days before expiration
-		if expiresAt.Sub(time.Now()) < time.Hour*24*7*30 {
+		if time.Until(expiresAt) < 30*24*time.Hour {
 			return &api.AttentionMessage{
 				Message:  fmt.Sprintf(RenewCertificate, network, expiresAt.Format(expireLayout)),
 				Severity: records.AttentionSeverity_WARNING,
