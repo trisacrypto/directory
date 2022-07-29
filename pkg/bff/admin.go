@@ -221,15 +221,15 @@ func certificateMessage(vasp *pb.VASP, network string) (msg *api.AttentionMessag
 		// The VASP has been rejected, so no certificate was issued
 		return &api.AttentionMessage{
 			Message:  fmt.Sprintf(CertificateRejected, network),
-			Severity: records.AttentionSeverity_ALERT,
-			Action:   records.AttentionAction_CONTACT_SUPPORT,
+			Severity: records.AttentionSeverity_ALERT.String(),
+			Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 		}, nil
 	case vasp.IdentityCertificate != nil && vasp.IdentityCertificate.Revoked:
 		// The VASP's certificate has been revoked
 		return &api.AttentionMessage{
 			Message:  fmt.Sprintf(CertificateRevoked, network),
-			Severity: records.AttentionSeverity_ALERT,
-			Action:   records.AttentionAction_CONTACT_SUPPORT,
+			Severity: records.AttentionSeverity_ALERT.String(),
+			Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 		}, nil
 	case vasp.IdentityCertificate != nil:
 		// Certificate has been issued, check if it is about to expire
@@ -242,8 +242,8 @@ func certificateMessage(vasp *pb.VASP, network string) (msg *api.AttentionMessag
 		if time.Until(expiresAt) < 30*24*time.Hour {
 			return &api.AttentionMessage{
 				Message:  fmt.Sprintf(RenewCertificate, network, expiresAt.Format(expireLayout)),
-				Severity: records.AttentionSeverity_WARNING,
-				Action:   records.AttentionAction_RENEW_CERTIFICATE,
+				Severity: records.AttentionSeverity_WARNING.String(),
+				Action:   records.AttentionAction_RENEW_CERTIFICATE.String(),
 			}, nil
 		}
 	default:
@@ -282,29 +282,29 @@ func (s *Server) Attention(c *gin.Context) {
 		// TODO: Is there a more robust way to check this?
 		messages = append(messages, &api.AttentionMessage{
 			Message:  StartRegistration,
-			Severity: records.AttentionSeverity_INFO,
-			Action:   records.AttentionAction_START_REGISTRATION,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_START_REGISTRATION.String(),
 		})
 	case !testnetSubmitted && !mainnetSubmitted:
 		// Registration has started but has not been completed
 		messages = append(messages, &api.AttentionMessage{
 			Message:  CompleteRegistration,
-			Severity: records.AttentionSeverity_INFO,
-			Action:   records.AttentionAction_COMPLETE_REGISTRATION,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_COMPLETE_REGISTRATION.String(),
 		})
 	case testnetSubmitted && !mainnetSubmitted:
 		// Registration is submitted for testnet but not for mainnet
 		messages = append(messages, &api.AttentionMessage{
 			Message:  SubmitMainnet,
-			Severity: records.AttentionSeverity_INFO,
-			Action:   records.AttentionAction_SUBMIT_MAINNET,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_SUBMIT_MAINNET.String(),
 		})
 	case !testnetSubmitted && mainnetSubmitted:
 		// Registration is submitted for mainnet but not for testnet
 		messages = append(messages, &api.AttentionMessage{
 			Message:  SubmitTestnet,
-			Severity: records.AttentionSeverity_INFO,
-			Action:   records.AttentionAction_SUBMIT_TESTNET,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_SUBMIT_TESTNET.String(),
 		})
 	default:
 	}

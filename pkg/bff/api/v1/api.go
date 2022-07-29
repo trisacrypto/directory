@@ -175,9 +175,9 @@ type AttentionReply struct {
 
 // AttentionMessage contains details about a single attention message.
 type AttentionMessage struct {
-	Message  string                   `json:"message"`
-	Severity models.AttentionSeverity `json:"severity"`
-	Action   models.AttentionAction   `json:"action"`
+	Message  string `json:"message"`
+	Severity string `json:"severity"`
+	Action   string `json:"action"`
 }
 
 // NetworkError is populated when the BFF receives an error from a network endpoint,

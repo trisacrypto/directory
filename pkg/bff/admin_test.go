@@ -170,8 +170,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	expected := &api.AttentionMessage{
 		Message:  bff.StartRegistration,
-		Severity: records.AttentionSeverity_INFO,
-		Action:   records.AttentionAction_START_REGISTRATION,
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_START_REGISTRATION.String(),
 	}
 	reply, err := s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
@@ -183,8 +183,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.CompleteRegistration,
-		Severity: records.AttentionSeverity_INFO,
-		Action:   records.AttentionAction_COMPLETE_REGISTRATION,
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_COMPLETE_REGISTRATION.String(),
 	}
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
@@ -198,8 +198,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.SubmitMainnet,
-		Severity: records.AttentionSeverity_INFO,
-		Action:   records.AttentionAction_SUBMIT_MAINNET,
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_SUBMIT_MAINNET.String(),
 	}
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
@@ -214,8 +214,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
 	submitTestnet := &api.AttentionMessage{
 		Message:  bff.SubmitTestnet,
-		Severity: records.AttentionSeverity_INFO,
-		Action:   records.AttentionAction_SUBMIT_TESTNET,
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_SUBMIT_TESTNET.String(),
 	}
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
@@ -241,8 +241,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.mainnet.admin.UseFixture(mock.RetrieveVASPEP, mainnetFixture))
 	rejectMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.CertificateRejected, "mainnet"),
-		Severity: records.AttentionSeverity_ALERT,
-		Action:   records.AttentionAction_CONTACT_SUPPORT,
+		Severity: records.AttentionSeverity_ALERT.String(),
+		Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 	}
 	messages := []*api.AttentionMessage{
 		submitTestnet,
@@ -257,8 +257,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.mainnet.admin.UseFixture(mock.RetrieveVASPEP, testnetFixture))
 	revokedMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.CertificateRevoked, "mainnet"),
-		Severity: records.AttentionSeverity_ALERT,
-		Action:   records.AttentionAction_CONTACT_SUPPORT,
+		Severity: records.AttentionSeverity_ALERT.String(),
+		Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 	}
 	messages = []*api.AttentionMessage{
 		submitTestnet,
@@ -290,8 +290,8 @@ func (s *bffTestSuite) TestAttention() {
 	})
 	revokedTestnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RenewCertificate, "testnet", expires.Format("February 2, 2006")),
-		Severity: records.AttentionSeverity_WARNING,
-		Action:   records.AttentionAction_RENEW_CERTIFICATE,
+		Severity: records.AttentionSeverity_WARNING.String(),
+		Action:   records.AttentionAction_RENEW_CERTIFICATE.String(),
 	}
 	messages = []*api.AttentionMessage{
 		revokedTestnet,
