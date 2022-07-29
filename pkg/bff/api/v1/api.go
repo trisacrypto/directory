@@ -29,6 +29,7 @@ type BFFClient interface {
 	MakeAnnouncement(context.Context, *models.Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
 	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
+	Attention(context.Context) (*AttentionReply, error)
 }
 
 //===========================================================================
@@ -164,6 +165,19 @@ type MemberDetailsReply struct {
 	Summary     *members.VASPMember    `json:"summary"`
 	LegalPerson map[string]interface{} `json:"legal_person"`
 	Trixo       map[string]interface{} `json:"trixo"`
+}
+
+// AttentionReply contains all the current attention messages relevant to an
+// organization.
+type AttentionReply struct {
+	Messages []*AttentionMessage `json:"messages"`
+}
+
+// AttentionMessage contains details about a single attention message.
+type AttentionMessage struct {
+	Message  string                   `json:"message"`
+	Severity models.AttentionSeverity `json:"severity"`
+	Action   models.AttentionAction   `json:"action"`
 }
 
 // NetworkError is populated when the BFF receives an error from a network endpoint,
