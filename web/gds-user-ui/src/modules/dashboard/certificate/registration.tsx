@@ -117,6 +117,7 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
+      console.log('handleNextStepClick', methods.getValues());
       postRegistrationValue(methods.getValues());
       nextStep({
         isFormCompleted: isFormCompleted(),
@@ -125,7 +126,7 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
-    // postRegistrationValue(methods.getValues());
+    postRegistrationValue(methods.getValues());
     previousStep();
   };
 

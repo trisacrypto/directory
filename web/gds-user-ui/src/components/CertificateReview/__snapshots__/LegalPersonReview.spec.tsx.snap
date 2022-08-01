@@ -3,7 +3,7 @@
 exports[`<LegalPersonReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-zouncv"
+    class="css-18e1pym"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -17,7 +17,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
           Section 2: Legal Person
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
           Edit
@@ -189,7 +189,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-d6yzk9"
+                  class="css-vnm0v1"
                 />
               </td>
             </tr>

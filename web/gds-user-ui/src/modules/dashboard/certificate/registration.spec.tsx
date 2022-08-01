@@ -141,7 +141,7 @@ describe('<Certificate />', () => {
           render(<Certificate />);
         });
 
-        const establishedOnField = screen.getByLabelText(/date of incorporation \/ establishment/i);
+        const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
         userEvent.type(establishedOnField, '12/12/22222');
 
         const submitButton = screen.getByRole('button', { name: /save & next/i });

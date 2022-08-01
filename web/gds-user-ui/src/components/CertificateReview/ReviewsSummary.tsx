@@ -17,7 +17,7 @@ import { handleError } from 'utils/utils';
 const ReviewsSummary: React.FC = () => {
   const [isLoadingExport, setIsLoadingExport] = useState(false);
   const handleExport = () => {
-    const downladData = async () => {
+    const downloadData = async () => {
       try {
         setIsLoadingExport(true);
         await downloadRegistrationData();
@@ -27,7 +27,7 @@ const ReviewsSummary: React.FC = () => {
         setIsLoadingExport(false);
       }
     };
-    downladData();
+    downloadData();
   };
 
   return (

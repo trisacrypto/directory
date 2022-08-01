@@ -3,7 +3,7 @@
 exports[`<TrixoReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-1003ump"
+    class="css-18e1pym"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -17,12 +17,10 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
           Section 5: TRIXO Questionnaire
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
-           
           Edit
-           
         </button>
       </div>
       <div

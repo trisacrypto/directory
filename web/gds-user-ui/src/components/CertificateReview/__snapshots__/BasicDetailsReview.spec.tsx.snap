@@ -3,10 +3,10 @@
 exports[`<BasicDetailsReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-xcbfj5"
+    class="css-18e1pym"
   >
     <div
-      class="chakra-stack css-1485kjp"
+      class="chakra-stack css-n21gh5"
     >
       <div
         class="css-18uk989"
@@ -17,7 +17,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
           Section 1: Basic Details
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
           Edit
