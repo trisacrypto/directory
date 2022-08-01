@@ -30,6 +30,25 @@ message Organization {
     string modified = 15;
 }
 
+// FormState contains the current state of an organization's registration form to
+// enable a consistent user experience across multiple contexts.
+message FormState {
+    // The current 1-indexed step of the form
+    int32 current = 1;
+
+    // If set, the form is completely filled out and ready to be submitted
+    bool ready_to_submit = 2;
+
+    // The state of each step in the form
+    repeated FormStep steps = 3;
+}
+
+// FormStep contains the state of a single step in an organization's registration form.
+message FormStep {
+    int32 key = 1;
+    string status = 2;
+}
+
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.
 message DirectoryRecord {
     string id = 1;
@@ -60,6 +79,9 @@ message RegistrationForm {
     // Network-specific information and submission details
     NetworkDetails testnet = 14;
     NetworkDetails mainnet = 15;
+
+    // Current progress of the form for the frontend
+    FormState state = 20;
 }
 
 // NetworkDetails contains directory-service specific submission information such as the
@@ -99,4 +121,23 @@ message AnnouncementMonth {
     // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
+}
+
+// AttentionSeverity is used to indicate the importance of an attention message
+enum AttentionSeverity {
+    SUCCESS = 0;
+    INFO = 1;
+    WARNING = 2;
+    ALERT = 3;
+}
+
+// AttentionAction is used to indicate the action that should be taken by the user in
+// response to an attention message.
+enum AttentionAction {
+    START_REGISTRATION = 0;
+    COMPLETE_REGISTRATION = 1;
+    SUBMIT_TESTNET = 2;
+    SUBMIT_MAINNET = 3;
+    RENEW_CERTIFICATE = 4;
+    CONTACT_SUPPORT = 5;
 }

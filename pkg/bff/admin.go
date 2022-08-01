@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // GetCertificates makes parallel calls to the admin services to get the certificate
@@ -127,4 +131,227 @@ func (s *Server) Certificates(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+const (
+	StartRegistration    = "Start the registration and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
+	CompleteRegistration = "Complete the registration process and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
+	SubmitTestnet        = "Review and submit your testnet registration."
+	SubmitMainnet        = "Review and submit your mainnet registration."
+	RenewCertificate     = "Your organization's %s X.509 Identity Certificate will expire on %s. Start the renewal process to receive a new X.509 Identity Certificate and remain a trusted member of the TRISA network."
+	CertificateRejected  = "Your organization's %s X.509 Identity Certificate has been rejected by TRISA. This means your organization is not a verified member of the TRISA network and cannot communicate with other members. Please contact TRISA at support@trisa.io for additional details and next steps."
+	CertificateRevoked   = "Your organization's %s X.509 Identity Certificate has been revoked by TRISA. This means your organization is no longer a verified member of the TRISA network and can no longer communicate with other members. Please contact TRISA at support@trisa.io for additional details and next steps."
+)
+
+// GetVASPs makes parallel calls to the admin APIs to retrieve VASP records from
+// testnet and mainnet. If testnet or mainnet are empty strings, this will simply
+// return a nil response for the corresponding network so the caller can distinguish
+// between a non registration and an error.
+func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (testnetVASP, mainnetVASP *pb.VASP, testnetErr, mainnetErr error) {
+	// Create the RPC which can do both testnet and mainnet calls
+	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
+		var vaspID string
+		switch network {
+		case testnet:
+			vaspID = testnetID
+		case mainnet:
+			vaspID = mainnetID
+		default:
+			return nil, fmt.Errorf("unknown network: %s", network)
+		}
+
+		if vaspID == "" {
+			// The VASP is not registered for this network, so do not error and return
+			// nil
+			return nil, nil
+		}
+		return client.RetrieveVASP(ctx, vaspID)
+	}
+
+	// Perform the parallel requests
+	results, errs := s.ParallelAdminRequests(ctx, rpc, false)
+	if len(errs) != 2 || len(results) != 2 {
+		err := fmt.Errorf("unexpected number of results from parallel requests: %d", len(results))
+		return nil, nil, err, err
+	}
+
+	// Parse the results
+	if errs[0] != nil {
+		testnetErr = errs[0]
+	} else if results[0] != nil {
+		if testnetReply, ok := results[0].(*admin.RetrieveVASPReply); ok {
+			testnetVASP = &pb.VASP{}
+			if err := wire.Unwire(testnetReply.VASP, testnetVASP); err != nil {
+				testnetErr = fmt.Errorf("could not unwire testnet result to VASP: %s", err)
+				testnetVASP = nil
+			}
+		} else {
+			testnetErr = fmt.Errorf("unexpected testnet result type returned from parallel certificate requests: %T", results[0])
+		}
+	}
+
+	if errs[1] != nil {
+		mainnetErr = errs[1]
+	} else if results[1] != nil {
+		if mainnetReply, ok := results[1].(*admin.RetrieveVASPReply); ok {
+			mainnetVASP = &pb.VASP{}
+			if err := wire.Unwire(mainnetReply.VASP, mainnetVASP); err != nil {
+				mainnetErr = fmt.Errorf("could not unwire mainnet result to VASP: %s", err)
+				mainnetVASP = nil
+			}
+		} else {
+			mainnetErr = fmt.Errorf("unexpected mainnet result type returned from parallel certificate requests: %T", results[1])
+		}
+	}
+
+	return testnetVASP, mainnetVASP, testnetErr, mainnetErr
+}
+
+// certificateMessage returns a certificate attention message for the given VASP, if
+// applicable. The states are distinct, so at most one message is returned.
+func certificateMessage(vasp *pb.VASP, network string) (msg *api.AttentionMessage, err error) {
+	const expireLayout = "February 2, 2006"
+
+	if vasp == nil {
+		return nil, nil
+	}
+
+	switch {
+	case vasp.VerificationStatus == pb.VerificationState_REJECTED:
+		// The VASP has been rejected, so no certificate was issued
+		return &api.AttentionMessage{
+			Message:  fmt.Sprintf(CertificateRejected, network),
+			Severity: records.AttentionSeverity_ALERT.String(),
+			Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
+		}, nil
+	case vasp.IdentityCertificate != nil && vasp.IdentityCertificate.Revoked:
+		// The VASP's certificate has been revoked
+		return &api.AttentionMessage{
+			Message:  fmt.Sprintf(CertificateRevoked, network),
+			Severity: records.AttentionSeverity_ALERT.String(),
+			Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
+		}, nil
+	case vasp.IdentityCertificate != nil:
+		// Certificate has been issued, check if it is about to expire
+		var expiresAt time.Time
+		if expiresAt, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+			return nil, err
+		}
+
+		// Warn if less than 30 days before expiration
+		if time.Until(expiresAt) < 30*24*time.Hour {
+			return &api.AttentionMessage{
+				Message:  fmt.Sprintf(RenewCertificate, network, expiresAt.Format(expireLayout)),
+				Severity: records.AttentionSeverity_WARNING.String(),
+				Action:   records.AttentionAction_RENEW_CERTIFICATE.String(),
+			}, nil
+		}
+	default:
+	}
+	return nil, nil
+}
+
+// Attention returns the current attention messages for the authenticated user.
+func (s *Server) Attention(c *gin.Context) {
+	var err error
+
+	// Get the bff claims from the context
+	var claims *auth.Claims
+	if claims, err = auth.GetClaims(c); err != nil {
+		log.Error().Err(err).Msg("unable to retrieve bff claims from context")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Retrieve the organization from the claims
+	// NOTE: This method handles the error logging and response.
+	var org *records.Organization
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Attention messages to return
+	messages := make([]*api.AttentionMessage, 0)
+
+	// Check the registration state, at most one of these messages will be returned
+	testnetSubmitted := (org.Testnet != nil && org.Testnet.Submitted != "")
+	mainnetSubmitted := (org.Mainnet != nil && org.Mainnet.Submitted != "")
+	switch {
+	case org.Registration == nil:
+		// Registration has not started
+		// TODO: Is there a more robust way to check this?
+		messages = append(messages, &api.AttentionMessage{
+			Message:  StartRegistration,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_START_REGISTRATION.String(),
+		})
+	case !testnetSubmitted && !mainnetSubmitted:
+		// Registration has started but has not been completed
+		messages = append(messages, &api.AttentionMessage{
+			Message:  CompleteRegistration,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_COMPLETE_REGISTRATION.String(),
+		})
+	case testnetSubmitted && !mainnetSubmitted:
+		// Registration is submitted for testnet but not for mainnet
+		messages = append(messages, &api.AttentionMessage{
+			Message:  SubmitMainnet,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_SUBMIT_MAINNET.String(),
+		})
+	case !testnetSubmitted && mainnetSubmitted:
+		// Registration is submitted for mainnet but not for testnet
+		messages = append(messages, &api.AttentionMessage{
+			Message:  SubmitTestnet,
+			Severity: records.AttentionSeverity_INFO.String(),
+			Action:   records.AttentionAction_SUBMIT_TESTNET.String(),
+		})
+	default:
+	}
+
+	// Get the VASP records from the admin APIs
+	// NOTE: This will not attempt to retrieve the VASP records if the VASP ID is not
+	// set in the claims for a network and a nil result will be returned instead for
+	// that network.
+	testnetVASP, mainnetVASP, testnetErr, mainnetErr := s.GetVASPs(c.Request.Context(), claims.VASPs.TestNet, claims.VASPs.MainNet)
+
+	if testnetErr != nil {
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(testnetErr))
+		return
+	}
+
+	if mainnetErr != nil {
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(mainnetErr))
+		return
+	}
+
+	// Get attention messages relating to certificates
+	var testnetMsg *api.AttentionMessage
+	if testnetMsg, err = certificateMessage(testnetVASP, testnet); err != nil {
+		log.Error().Err(err).Msg("could not get testnet certificate attention message")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+	if testnetMsg != nil {
+		messages = append(messages, testnetMsg)
+	}
+
+	var mainnetMsg *api.AttentionMessage
+	if mainnetMsg, err = certificateMessage(mainnetVASP, mainnet); err != nil {
+		log.Error().Err(err).Msg("could not get mainnet certificate attention message")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+	if mainnetMsg != nil {
+		messages = append(messages, mainnetMsg)
+	}
+
+	// Build the response
+	if len(messages) == 0 {
+		c.JSON(http.StatusNoContent, nil)
+	} else {
+		c.JSON(http.StatusOK, &api.AttentionReply{
+			Messages: messages,
+		})
+	}
 }
