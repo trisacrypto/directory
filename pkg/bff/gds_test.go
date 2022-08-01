@@ -112,6 +112,11 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	form, err := s.client.LoadRegistrationForm(context.TODO())
 	require.NoError(err, "expected no error when no form data is stored")
 	require.NotNil(form, "expected empty registration form when no form data is stored")
+	require.NotNil(form.State, "expected form state to be populated")
+	require.Equal(int32(1), form.State.Current, "expected initial form step to be 1")
+	require.False(form.State.ReadyToSubmit, "expected form state to be not ready to submit")
+	require.Len(form.State.Steps, 1, "expected 1 step in initial form state")
+	require.Equal("progress", form.State.Steps[0].Status, "expected first form step to be in progress")
 
 	// Load a registration form from fixtures and store it in the database
 	org.Registration = &records.RegistrationForm{}

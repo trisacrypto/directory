@@ -32,6 +32,22 @@ func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 	}
 }
 
+// NewRegisterForm returns a new registration form with default values.
+func NewRegisterForm() *RegistrationForm {
+	// Make sure default values are populated for the frontend
+	return &RegistrationForm{
+		State: &FormState{
+			Current: 1,
+			Steps: []*FormStep{
+				{
+					Key:    1,
+					Status: "progress",
+				},
+			},
+		},
+	}
+}
+
 // ReadyToSubmit performs very lightweight validation, ensuring that there are non-nil
 // values on the nested data structures so that the request to the GDS does not fail.
 // For data validation (required fields, types, etc.), we should rely on the GDS

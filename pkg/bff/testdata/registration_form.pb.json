@@ -74,5 +74,15 @@
   "mainnet": {
     "common_name": "trisa.example.ua",
     "endpoint": "trisa.example.ua:443"
+  },
+  "state": {
+	"current": 1,
+	"ready_to_submit": false,
+	"steps": [
+		{
+			"key": 1,
+			"status": "progress"
+		}
+	]
   }
 }
