@@ -32,10 +32,9 @@ const AlertMessage: React.FC<AlertMessageProps> = ({ status, title, message, has
       justify={'center'}
       fontFamily={colors.font}
       fontSize={'xl'}
-      width={'100%'}
       mt={'10%'}
       bg={useColorModeValue('white', 'gray.800')}>
-      <Stack width={'100%'}>
+      <Stack>
         <Alert
           status={status}
           variant="subtle"

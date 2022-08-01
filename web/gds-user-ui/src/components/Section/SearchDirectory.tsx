@@ -5,20 +5,15 @@ import {
   Box,
   Flex,
   Text,
-  Thead,
-  Tbody,
   Link,
   Button,
   Tooltip,
-  InputRightElement,
-  Input,
   FormHelperText,
   FormControl,
   useColorModeValue,
   Table,
   Tr,
   Td,
-  Th,
   Heading,
   HStack,
   Tabs,
@@ -26,8 +21,9 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  chakra,
-  TableContainer
+  TableContainer,
+  Input,
+  Tbody
 } from '@chakra-ui/react';
 
 import { SearchIcon } from '@chakra-ui/icons';
@@ -51,7 +47,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   isLoading,
   result,
   error,
-  query,
   handleClose
 }) => {
   const [search, setSearch] = useState<string>('');
@@ -74,7 +69,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <Trans id="Enter the VASP Common Name or VASP ID. Not a TRISA Member?">
                 Enter the VASP Common Name or VASP ID. Not a TRISA Member?
               </Trans>
-              <Link href={'/getting-started'} color={'#1F4CED'} pl={2}>
+              <Link href={'/guide'} color={'#1F4CED'} pl={2}>
                 <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
               </Link>
             </Text>
@@ -90,12 +85,12 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                   <HStack>
                     <Input
                       size="md"
-                      pr="4.5rem"
+                      width={'100%'}
                       type="search"
                       isRequired
                       placeholder="Common name or VASP ID"
                       name="search"
-                      onChange={(event) => setSearch(event.currentTarget.value)}
+                      onChange={(event: any) => setSearch(event.currentTarget.value)}
                     />
                     <Button
                       isLoading={isLoading}
@@ -108,10 +103,32 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 
                   <FormHelperText ml={1} color={'#1F4CED'} cursor={'help'}>
                     <Tooltip
-                      label={t`TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate.`}>
-                      <Trans id="What’s a Common name or VASP ID?">
-                        What’s a Common name or VASP ID?
-                      </Trans>
+                      p={2}
+                      label={
+                        <>
+                          <Text
+                            id="TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.">
+                            TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which
+                            the VASP can be reached via secure channels.
+                          </Text>
+                          <Text>
+                            <Trans
+                              id="The Common Name typically matches the Endpoint, without the port number
+                            at the end (e.g. trisa.myvasp.com) and is used to identify the subject
+                            in the X.509 certificate.">
+                              The Common Name typically matches the Endpoint, without the port
+                              number at the end (e.g. trisa.myvasp.com) and is used to identify the
+                              subject in the X.509 certificate.
+                            </Trans>
+                          </Text>
+                        </>
+                      }>
+                      <Text>
+                        <Trans id="What’s a Common name or VASP ID?">
+                          What’s a Common name or VASP ID?
+                        </Trans>
+                      </Text>
                     </Tooltip>
                   </FormHelperText>
 
@@ -162,31 +179,31 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result?.testnet?.name}</Td>
+                            <Td colSpan={2}>{result?.testnet?.name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result?.testnet?.common_name}</Td>
+                            <Td>{result?.testnet?.common_name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result?.testnet?.endpoint}</Td>
+                            <Td>{result?.testnet?.endpoint || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory">Registered Directory</Trans>
                             </Td>
-                            <Td>{result?.testnet?.registered_directory}</Td>
+                            <Td>{result?.testnet?.registered_directory || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID">TRISA Member ID</Trans>
                             </Td>
-                            <Td>{result?.testnet?.id}</Td>
+                            <Td>{result?.testnet?.id || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
@@ -230,31 +247,31 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="Organization Name">Organization Name</Trans>
                             </Td>
-                            <Td colSpan={2}>{result?.mainet?.name || 'N/A'} </Td>
+                            <Td colSpan={2}>{result?.mainnet?.name || 'N/A'} </Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Common Name">Common Name</Trans>
                             </Td>
-                            <Td>{result?.mainet?.common_name || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.common_name || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
                             </Td>
-                            <Td>{result?.mainet?.endpoint || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.endpoint || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="Registered Directory"></Trans>
                             </Td>
-                            <Td>{result?.mainet?.registered_directory || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.registered_directory || 'N/A'}</Td>
                           </Tr>
                           <Tr>
                             <Td>
                               <Trans id="TRISA Member ID"></Trans>
                             </Td>
-                            <Td>{result?.mainet?.id || 'N/A'}</Td>
+                            <Td>{result?.mainnet?.id || 'N/A'}</Td>
                           </Tr>
 
                           <Tr>
@@ -262,9 +279,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                               <Trans id="Country">Country</Trans>
                             </Td>
                             <Td>
-                              {getCountryName(result?.mainet?.country as IsoCountryCode)}
+                              {getCountryName(result?.mainnet?.country as IsoCountryCode)}
                               {'  '}
-                              {countryCodeEmoji(result?.mainet?.country) || 'N/A'}
+                              {countryCodeEmoji(result?.mainnet?.country) || 'N/A'}
                             </Td>
                           </Tr>
 
@@ -272,11 +289,11 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             <Td>
                               <Trans id="TRISA Verification">TRISA Verification</Trans>
                             </Td>
-                            {result?.mainet?.verified_on ? (
+                            {result?.mainnet?.verified_on ? (
                               <Td>
                                 {' '}
                                 <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
-                                {result?.mainet?.verified_on}{' '}
+                                {result?.mainnet?.verified_on}{' '}
                               </Td>
                             ) : (
                               <Td>N/A</Td>

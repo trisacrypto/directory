@@ -10,19 +10,19 @@ const languages = {
   fr: {
     flag: '🇫🇷',
     title: 'Française'
-  },
-  de: {
-    flag: '🇩🇪',
-    title: 'Deutsch'
-  },
-  zh: {
-    flag: '🇨🇳',
-    title: '中文'
-  },
-  ja: {
-    flag: '🇯🇵',
-    title: '日本語'
   }
+  // de: {
+  //   flag: '🇩🇪',
+  //   title: 'Deutsch'
+  // },
+  // zh: {
+  //   flag: '🇨🇳',
+  //   title: '中文'
+  // },
+  // ja: {
+  //   flag: '🇯🇵',
+  //   title: '日本語'
+  // }
 };
 
 const LanguageOptions = () => {

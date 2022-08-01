@@ -22,6 +22,119 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// AttentionSeverity is used to indicate the importance of an attention message
+type AttentionSeverity int32
+
+const (
+	AttentionSeverity_SUCCESS AttentionSeverity = 0
+	AttentionSeverity_INFO    AttentionSeverity = 1
+	AttentionSeverity_WARNING AttentionSeverity = 2
+	AttentionSeverity_ALERT   AttentionSeverity = 3
+)
+
+// Enum value maps for AttentionSeverity.
+var (
+	AttentionSeverity_name = map[int32]string{
+		0: "SUCCESS",
+		1: "INFO",
+		2: "WARNING",
+		3: "ALERT",
+	}
+	AttentionSeverity_value = map[string]int32{
+		"SUCCESS": 0,
+		"INFO":    1,
+		"WARNING": 2,
+		"ALERT":   3,
+	}
+)
+
+func (x AttentionSeverity) Enum() *AttentionSeverity {
+	p := new(AttentionSeverity)
+	*p = x
+	return p
+}
+
+func (x AttentionSeverity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AttentionSeverity) Descriptor() protoreflect.EnumDescriptor {
+	return file_bff_models_v1_models_proto_enumTypes[0].Descriptor()
+}
+
+func (AttentionSeverity) Type() protoreflect.EnumType {
+	return &file_bff_models_v1_models_proto_enumTypes[0]
+}
+
+func (x AttentionSeverity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AttentionSeverity.Descriptor instead.
+func (AttentionSeverity) EnumDescriptor() ([]byte, []int) {
+	return file_bff_models_v1_models_proto_rawDescGZIP(), []int{0}
+}
+
+// AttentionAction is used to indicate the action that should be taken by the user in
+// response to an attention message.
+type AttentionAction int32
+
+const (
+	AttentionAction_START_REGISTRATION    AttentionAction = 0
+	AttentionAction_COMPLETE_REGISTRATION AttentionAction = 1
+	AttentionAction_SUBMIT_TESTNET        AttentionAction = 2
+	AttentionAction_SUBMIT_MAINNET        AttentionAction = 3
+	AttentionAction_RENEW_CERTIFICATE     AttentionAction = 4
+	AttentionAction_CONTACT_SUPPORT       AttentionAction = 5
+)
+
+// Enum value maps for AttentionAction.
+var (
+	AttentionAction_name = map[int32]string{
+		0: "START_REGISTRATION",
+		1: "COMPLETE_REGISTRATION",
+		2: "SUBMIT_TESTNET",
+		3: "SUBMIT_MAINNET",
+		4: "RENEW_CERTIFICATE",
+		5: "CONTACT_SUPPORT",
+	}
+	AttentionAction_value = map[string]int32{
+		"START_REGISTRATION":    0,
+		"COMPLETE_REGISTRATION": 1,
+		"SUBMIT_TESTNET":        2,
+		"SUBMIT_MAINNET":        3,
+		"RENEW_CERTIFICATE":     4,
+		"CONTACT_SUPPORT":       5,
+	}
+)
+
+func (x AttentionAction) Enum() *AttentionAction {
+	p := new(AttentionAction)
+	*p = x
+	return p
+}
+
+func (x AttentionAction) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AttentionAction) Descriptor() protoreflect.EnumDescriptor {
+	return file_bff_models_v1_models_proto_enumTypes[1].Descriptor()
+}
+
+func (AttentionAction) Type() protoreflect.EnumType {
+	return &file_bff_models_v1_models_proto_enumTypes[1]
+}
+
+func (x AttentionAction) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AttentionAction.Descriptor instead.
+func (AttentionAction) EnumDescriptor() ([]byte, []int) {
+	return file_bff_models_v1_models_proto_rawDescGZIP(), []int{1}
+}
+
 // The Organization document contains VASP-specific information for a single VASP record
 // in the directory service. This document differs in that it stores information
 // relevant to the BFF and should not be used to duplicate storage in the directory.
@@ -812,12 +925,25 @@ var file_bff_models_v1_models_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x18, 0x0e,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x1a, 0x0a,
 	0x08, 0x6d, 0x6f, 0x64, 0x69, 0x66, 0x69, 0x65, 0x64, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x6d, 0x6f, 0x64, 0x69, 0x66, 0x69, 0x65, 0x64, 0x42, 0x3e, 0x5a, 0x3c, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x72, 0x69, 0x73, 0x61, 0x63, 0x72, 0x79,
-	0x70, 0x74, 0x6f, 0x2f, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x6b,
-	0x67, 0x2f, 0x62, 0x66, 0x66, 0x2f, 0x64, 0x62, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x2f,
-	0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x08, 0x6d, 0x6f, 0x64, 0x69, 0x66, 0x69, 0x65, 0x64, 0x2a, 0x42, 0x0a, 0x11, 0x41, 0x74, 0x74,
+	0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x76, 0x65, 0x72, 0x69, 0x74, 0x79, 0x12, 0x0b,
+	0x0a, 0x07, 0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x49,
+	0x4e, 0x46, 0x4f, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x57, 0x41, 0x52, 0x4e, 0x49, 0x4e, 0x47,
+	0x10, 0x02, 0x12, 0x09, 0x0a, 0x05, 0x41, 0x4c, 0x45, 0x52, 0x54, 0x10, 0x03, 0x2a, 0x98, 0x01,
+	0x0a, 0x0f, 0x41, 0x74, 0x74, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x41, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x16, 0x0a, 0x12, 0x53, 0x54, 0x41, 0x52, 0x54, 0x5f, 0x52, 0x45, 0x47, 0x49, 0x53,
+	0x54, 0x52, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x10, 0x00, 0x12, 0x19, 0x0a, 0x15, 0x43, 0x4f, 0x4d,
+	0x50, 0x4c, 0x45, 0x54, 0x45, 0x5f, 0x52, 0x45, 0x47, 0x49, 0x53, 0x54, 0x52, 0x41, 0x54, 0x49,
+	0x4f, 0x4e, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x53, 0x55, 0x42, 0x4d, 0x49, 0x54, 0x5f, 0x54,
+	0x45, 0x53, 0x54, 0x4e, 0x45, 0x54, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x53, 0x55, 0x42, 0x4d,
+	0x49, 0x54, 0x5f, 0x4d, 0x41, 0x49, 0x4e, 0x4e, 0x45, 0x54, 0x10, 0x03, 0x12, 0x15, 0x0a, 0x11,
+	0x52, 0x45, 0x4e, 0x45, 0x57, 0x5f, 0x43, 0x45, 0x52, 0x54, 0x49, 0x46, 0x49, 0x43, 0x41, 0x54,
+	0x45, 0x10, 0x04, 0x12, 0x13, 0x0a, 0x0f, 0x43, 0x4f, 0x4e, 0x54, 0x41, 0x43, 0x54, 0x5f, 0x53,
+	0x55, 0x50, 0x50, 0x4f, 0x52, 0x54, 0x10, 0x05, 0x42, 0x3e, 0x5a, 0x3c, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x72, 0x69, 0x73, 0x61, 0x63, 0x72, 0x79, 0x70,
+	0x74, 0x6f, 0x2f, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x6b, 0x67,
+	0x2f, 0x62, 0x66, 0x66, 0x2f, 0x64, 0x62, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x2f, 0x76,
+	0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -832,34 +958,37 @@ func file_bff_models_v1_models_proto_rawDescGZIP() []byte {
 	return file_bff_models_v1_models_proto_rawDescData
 }
 
+var file_bff_models_v1_models_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_bff_models_v1_models_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bff_models_v1_models_proto_goTypes = []interface{}{
-	(*Organization)(nil),               // 0: bff.models.v1.Organization
-	(*FormState)(nil),                  // 1: bff.models.v1.FormState
-	(*FormStep)(nil),                   // 2: bff.models.v1.FormStep
-	(*DirectoryRecord)(nil),            // 3: bff.models.v1.DirectoryRecord
-	(*RegistrationForm)(nil),           // 4: bff.models.v1.RegistrationForm
-	(*NetworkDetails)(nil),             // 5: bff.models.v1.NetworkDetails
-	(*Announcement)(nil),               // 6: bff.models.v1.Announcement
-	(*AnnouncementMonth)(nil),          // 7: bff.models.v1.AnnouncementMonth
-	(v1beta1.BusinessCategory)(0),      // 8: trisa.gds.models.v1beta1.BusinessCategory
-	(*ivms101.LegalPerson)(nil),        // 9: ivms101.LegalPerson
-	(*v1beta1.Contacts)(nil),           // 10: trisa.gds.models.v1beta1.Contacts
-	(*v1beta1.TRIXOQuestionnaire)(nil), // 11: trisa.gds.models.v1beta1.TRIXOQuestionnaire
+	(AttentionSeverity)(0),             // 0: bff.models.v1.AttentionSeverity
+	(AttentionAction)(0),               // 1: bff.models.v1.AttentionAction
+	(*Organization)(nil),               // 2: bff.models.v1.Organization
+	(*FormState)(nil),                  // 3: bff.models.v1.FormState
+	(*FormStep)(nil),                   // 4: bff.models.v1.FormStep
+	(*DirectoryRecord)(nil),            // 5: bff.models.v1.DirectoryRecord
+	(*RegistrationForm)(nil),           // 6: bff.models.v1.RegistrationForm
+	(*NetworkDetails)(nil),             // 7: bff.models.v1.NetworkDetails
+	(*Announcement)(nil),               // 8: bff.models.v1.Announcement
+	(*AnnouncementMonth)(nil),          // 9: bff.models.v1.AnnouncementMonth
+	(v1beta1.BusinessCategory)(0),      // 10: trisa.gds.models.v1beta1.BusinessCategory
+	(*ivms101.LegalPerson)(nil),        // 11: ivms101.LegalPerson
+	(*v1beta1.Contacts)(nil),           // 12: trisa.gds.models.v1beta1.Contacts
+	(*v1beta1.TRIXOQuestionnaire)(nil), // 13: trisa.gds.models.v1beta1.TRIXOQuestionnaire
 }
 var file_bff_models_v1_models_proto_depIdxs = []int32{
-	3,  // 0: bff.models.v1.Organization.testnet:type_name -> bff.models.v1.DirectoryRecord
-	3,  // 1: bff.models.v1.Organization.mainnet:type_name -> bff.models.v1.DirectoryRecord
-	4,  // 2: bff.models.v1.Organization.registration:type_name -> bff.models.v1.RegistrationForm
-	2,  // 3: bff.models.v1.FormState.steps:type_name -> bff.models.v1.FormStep
-	8,  // 4: bff.models.v1.RegistrationForm.business_category:type_name -> trisa.gds.models.v1beta1.BusinessCategory
-	9,  // 5: bff.models.v1.RegistrationForm.entity:type_name -> ivms101.LegalPerson
-	10, // 6: bff.models.v1.RegistrationForm.contacts:type_name -> trisa.gds.models.v1beta1.Contacts
-	11, // 7: bff.models.v1.RegistrationForm.trixo:type_name -> trisa.gds.models.v1beta1.TRIXOQuestionnaire
-	5,  // 8: bff.models.v1.RegistrationForm.testnet:type_name -> bff.models.v1.NetworkDetails
-	5,  // 9: bff.models.v1.RegistrationForm.mainnet:type_name -> bff.models.v1.NetworkDetails
-	1,  // 10: bff.models.v1.RegistrationForm.state:type_name -> bff.models.v1.FormState
-	6,  // 11: bff.models.v1.AnnouncementMonth.announcements:type_name -> bff.models.v1.Announcement
+	5,  // 0: bff.models.v1.Organization.testnet:type_name -> bff.models.v1.DirectoryRecord
+	5,  // 1: bff.models.v1.Organization.mainnet:type_name -> bff.models.v1.DirectoryRecord
+	6,  // 2: bff.models.v1.Organization.registration:type_name -> bff.models.v1.RegistrationForm
+	4,  // 3: bff.models.v1.FormState.steps:type_name -> bff.models.v1.FormStep
+	10, // 4: bff.models.v1.RegistrationForm.business_category:type_name -> trisa.gds.models.v1beta1.BusinessCategory
+	11, // 5: bff.models.v1.RegistrationForm.entity:type_name -> ivms101.LegalPerson
+	12, // 6: bff.models.v1.RegistrationForm.contacts:type_name -> trisa.gds.models.v1beta1.Contacts
+	13, // 7: bff.models.v1.RegistrationForm.trixo:type_name -> trisa.gds.models.v1beta1.TRIXOQuestionnaire
+	7,  // 8: bff.models.v1.RegistrationForm.testnet:type_name -> bff.models.v1.NetworkDetails
+	7,  // 9: bff.models.v1.RegistrationForm.mainnet:type_name -> bff.models.v1.NetworkDetails
+	3,  // 10: bff.models.v1.RegistrationForm.state:type_name -> bff.models.v1.FormState
+	8,  // 11: bff.models.v1.AnnouncementMonth.announcements:type_name -> bff.models.v1.Announcement
 	12, // [12:12] is the sub-list for method output_type
 	12, // [12:12] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -975,13 +1104,14 @@ func file_bff_models_v1_models_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bff_models_v1_models_proto_rawDesc,
-			NumEnums:      0,
+			NumEnums:      2,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_bff_models_v1_models_proto_goTypes,
 		DependencyIndexes: file_bff_models_v1_models_proto_depIdxs,
+		EnumInfos:         file_bff_models_v1_models_proto_enumTypes,
 		MessageInfos:      file_bff_models_v1_models_proto_msgTypes,
 	}.Build()
 	File_bff_models_v1_models_proto = out.File
