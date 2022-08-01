@@ -100,3 +100,22 @@ message AnnouncementMonth {
     string created = 14;
     string modified = 15;
 }
+
+// AttentionSeverity is used to indicate the importance of an attention message
+enum AttentionSeverity {
+    SUCCESS = 0;
+    INFO = 1;
+    WARNING = 2;
+    ALERT = 3;
+}
+
+// AttentionAction is used to indicate the action that should be taken by the user in
+// response to an attention message.
+enum AttentionAction {
+    START_REGISTRATION = 0;
+    COMPLETE_REGISTRATION = 1;
+    SUBMIT_TESTNET = 2;
+    SUBMIT_MAINNET = 3;
+    RENEW_CERTIFICATE = 4;
+    CONTACT_SUPPORT = 5;
+}
