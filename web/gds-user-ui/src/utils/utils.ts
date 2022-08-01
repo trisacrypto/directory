@@ -146,3 +146,8 @@ export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
 };
+
+// uppercased first letter
+export const upperCaseFirstLetter = (str: any) => {
+  return str?.charAt(0)?.toUpperCase() + str.slice(1);
+};

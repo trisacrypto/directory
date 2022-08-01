@@ -26,6 +26,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/whisper"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 	"github.com/urfave/cli/v2"
@@ -39,7 +40,8 @@ var (
 )
 
 const (
-	dateFmt = "2006-01-02"
+	dateFmt                 = "2006-01-02"
+	whisperPasswordTemplate = "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
 )
 
 func main() {
@@ -208,6 +210,9 @@ func reissueCerts(c *cli.Context) (err error) {
 		vasp           *pb.VASP
 		certreq        *models.CertificateRequest
 		pkcs12password string
+		emailer        *emails.EmailManager
+		whisperLink    string
+		nsent          int
 	)
 
 	vaspID := c.String("vasp")
@@ -250,9 +255,6 @@ func reissueCerts(c *cli.Context) (err error) {
 	secretType := "password"
 	pkcs12password = secrets.CreateToken(16)
 
-	// TODO: instead of printing password create whisper link and send email with link.
-	fmt.Printf("PKCS12 Password is: %q\n", pkcs12password)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -262,6 +264,23 @@ func reissueCerts(c *cli.Context) (err error) {
 	if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
 		return cli.Exit(fmt.Errorf("could not create password version: %s", err), 1)
 	}
+
+	// Create a Whisper link for the provided PKCS12 password.
+	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, weekFromNow()); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Create the email manager.
+	if emailer, err = emails.New(conf.Email); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
+	if nsent, err = emailer.SendReissuanceStarted(vasp, whisperLink); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("successfully sent %d Whisper password notifications for PKCS12 password %q\n", nsent, pkcs12password)
 
 	// Save certificate request to database
 	if err = db.UpdateCertReq(certreq); err != nil {

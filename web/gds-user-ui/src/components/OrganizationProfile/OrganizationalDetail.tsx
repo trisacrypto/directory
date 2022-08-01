@@ -53,21 +53,20 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         <Stack mb={5}>
           <Heading fontSize={20}>
             TRISA Organization Profile:{' '}
-            <Text as={'span'} color={'blue.500'}>
+            <Text as={'span'} color={'blue'}>
               [pending registration]
             </Text>
           </Heading>
         </Stack>
       </Stack>
-      <HStack>
+      <SimpleGrid minChildWidth="120px" spacing="40px">
         <Stack
           border={'1px solid #eee'}
           p={4}
           my={5}
           px={7}
-          w={'70%'}
           bg={'white'}
-          minHeight={divHeight}
+          // minHeight={divHeight}
           id={'org'}
           // boxSize={'border-box'}
           ref={orgRef}>
@@ -94,7 +93,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                   {data?.vasp_categories && data?.vasp_categories.length
                     ? data?.vasp_categories?.map((categ: any) => {
                         return (
-                          <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
+                          <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
                             {getBusinessCategiryLabel(categ)}
                           </Tag>
                         );
@@ -123,7 +122,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>Identification Type</ListItem>
                 <ListItem>
                   {' '}
-                  <Tag color={'white'} bg={'blue.400'} size={'lg'}>
+                  <Tag color={'white'} bg={'blue'} size={'lg'}>
                     {getNationalIdentificationLabel(
                       data?.entity?.national_identification?.national_identifier_type
                     )}
@@ -144,10 +143,9 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           p={4}
           px={5}
           my={5}
-          w={'30%'}
           bg={'white'}
-          minHeight={divHeight}
-          boxSize={'content-box'}
+          // minHeight={divHeight}
+          // boxSize={'content-box'}
           id={'cnt'}>
           <Box>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
@@ -187,7 +185,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
             </SimpleGrid>
           </Box>
         </Stack>
-      </HStack>
+      </SimpleGrid>
     </Stack>
   );
 };

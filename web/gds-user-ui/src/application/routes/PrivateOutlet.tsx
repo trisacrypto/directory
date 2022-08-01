@@ -1,5 +1,4 @@
-import React from 'react';
-import { Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
 import DashboardLayout from 'layouts/DashboardLayout';

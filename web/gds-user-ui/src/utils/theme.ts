@@ -38,6 +38,21 @@ const customTheme = extendTheme({
       '*, *::before, ::after': {
         wordWrap: 'normal'
       }
+      // 'input[type="search"]': {
+      //   bg: 'red',
+      //   color: 'red'
+      // },
+      // 'input[type="search"]::-webkit-search-cancel-button': {
+      //   WebkitAppearance: 'none',
+      //   height: '1em',
+      //   width: '1em',
+      //   borderRadius: '50em',
+      //   background:
+      //     'url(https://pro.fontawesome.com/releases/v5.10.0/svgs/solid/times-circle.svg) no-repeat 50% 50%',
+      //   backgroundSize: 'contain',
+      //   opacity: 0,
+      //   pointerEvents: 'none'
+      // }
     }
   }
 });
