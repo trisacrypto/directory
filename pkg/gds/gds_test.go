@@ -38,7 +38,8 @@ func (s *gdsTestSuite) TestRegister() {
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
-	refVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	refVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect(ctx))
@@ -87,7 +88,7 @@ func (s *gdsTestSuite) TestRegister() {
 		EstablishedOn:    refVASP.EstablishedOn,
 		Trixo:            refVASP.Trixo,
 	}
-	_, err := client.Register(ctx, request)
+	_, err = client.Register(ctx, request)
 	require.Error(err)
 	request.TrisaEndpoint = "http://trisatest.net:443"
 	_, err = client.Register(ctx, request)
@@ -167,41 +168,41 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Error(err)
 
 	// Emails should be sent to the contacts
-	messages := []*emailMeta{
+	messages := []*emails.EmailMeta{
 		{
-			contact:   v.Contacts.Administrative,
-			to:        v.Contacts.Administrative.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: sent,
+			Contact:   v.Contacts.Administrative,
+			To:        v.Contacts.Administrative.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
 		},
 		{
-			contact:   v.Contacts.Billing,
-			to:        v.Contacts.Billing.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: sent,
+			Contact:   v.Contacts.Billing,
+			To:        v.Contacts.Billing.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
 		},
 		{
-			contact:   v.Contacts.Legal,
-			to:        v.Contacts.Legal.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: sent,
+			Contact:   v.Contacts.Legal,
+			To:        v.Contacts.Legal.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
 		},
 		{
-			contact:   v.Contacts.Technical,
-			to:        v.Contacts.Technical.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: sent,
+			Contact:   v.Contacts.Technical,
+			To:        v.Contacts.Technical.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
 		},
 	}
-	s.CheckEmails(messages)
+	emails.CheckEmails(s.T(), messages)
 }
 
 // TestLookup test that the Lookup RPC correctly returns details for a VASP.
@@ -212,7 +213,8 @@ func (s *gdsTestSuite) TestLookup() {
 	require := s.Require()
 	ctx := context.Background()
 
-	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect(ctx))
@@ -223,7 +225,7 @@ func (s *gdsTestSuite) TestLookup() {
 	request := &api.LookupRequest{
 		Id: "abc12345-41aa-11ec-9d29-acde48001122",
 	}
-	_, err := client.Lookup(ctx, request)
+	_, err = client.Lookup(ctx, request)
 	require.Error(err)
 
 	expected := &api.LookupReply{
@@ -277,7 +279,8 @@ func (s *gdsTestSuite) TestSearch() {
 	require.NoError(err)
 	require.Empty(reply.Error)
 	require.Len(reply.Results, 1)
-	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 	require.Equal(charlieVASP.Id, reply.Results[0].Id)
 	require.Equal(charlieVASP.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
 	require.Equal(charlieVASP.CommonName, reply.Results[0].CommonName)
@@ -289,7 +292,8 @@ func (s *gdsTestSuite) TestSearch() {
 	require.NoError(err)
 	require.Empty(reply.Error)
 	require.Len(reply.Results, 1)
-	bobVASP := s.fixtures[vasps]["novembercash"].(*pb.VASP)
+	bobVASP, err := s.fixtures.GetVASP("novembercash")
+	require.NoError(err)
 	require.Equal(bobVASP.Id, reply.Results[0].Id)
 
 	// Prefix search must have at least three characters
@@ -392,13 +396,14 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Cannot verify contact without a token
 	request := &api.VerifyContactRequest{
-		Id: charlieID,
+		Id: charlie.Id,
 	}
-	_, err := client.VerifyContact(ctx, request)
+	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
 	// VASP does not exist in the database
@@ -410,7 +415,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Error(err)
 
 	// Incorrect token - no verified contacts
-	request.Id = charlieID
+	request.Id = charlie.Id
 	request.Token = "invalid"
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
@@ -472,15 +477,15 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Equal(vasp.Contacts.Legal.Email, log[4].Source)
 
 	// Only one email should be sent to the admins
-	messages := []*emailMeta{
+	messages := []*emails.EmailMeta{
 		{
-			to:        s.svc.GetConf().Email.AdminEmail,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.ReviewRequestRE,
-			timestamp: sent,
+			To:        s.svc.GetConf().Email.AdminEmail,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.ReviewRequestRE,
+			Timestamp: sent,
 		},
 	}
-	s.CheckEmails(messages)
+	emails.CheckEmails(s.T(), messages)
 }
 
 // TestVerification tests that the Verification RPC returns the correct status
@@ -492,7 +497,8 @@ func (s *gdsTestSuite) TestVerification() {
 	require := s.Require()
 	ctx := context.Background()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect(ctx))
@@ -501,7 +507,7 @@ func (s *gdsTestSuite) TestVerification() {
 
 	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
 	// real VASP object here for comparison purposes.
-	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
 	require.NoError(err)
 
 	// Supplied VASP ID does not exist
@@ -520,7 +526,7 @@ func (s *gdsTestSuite) TestVerification() {
 	}
 
 	// VASP exists in the database
-	request.Id = charlieID
+	request.Id = charlie.Id
 	reply, err := client.Verification(ctx, request)
 	require.NoError(err)
 	require.True(proto.Equal(expected, reply))

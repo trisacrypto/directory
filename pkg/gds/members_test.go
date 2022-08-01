@@ -4,7 +4,6 @@ import (
 	"context"
 
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 )
@@ -66,7 +65,8 @@ func (s *gdsTestSuite) TestMembersSummary() {
 	require.Equal(int32(0), out.NewMembers, "unexpected new members count from Summary; have the fixtures changed?")
 
 	// Test retrieving VASP details
-	charlie := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 	name, err := charlie.Name()
 	require.NoError(err)
 	details := &members.VASPMember{
@@ -135,7 +135,7 @@ func (s *gdsTestSuite) TestMembersDetails() {
 	s.StatusError(err, codes.NotFound, "requested VASP not found")
 
 	// Test with a valid VASP
-	charlie := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlie, err := s.fixtures.GetVASP("charliebank")
 	name, err := charlie.Name()
 	require.NoError(err)
 	details := &members.VASPMember{

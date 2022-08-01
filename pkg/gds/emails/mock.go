@@ -8,13 +8,18 @@ import (
 	"hash/fnv"
 	"mime/multipart"
 	"net/http"
+	"net/mail"
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/sendgrid/rest"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/stretchr/testify/require"
+	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 var MockEmails [][]byte
@@ -209,4 +214,62 @@ func GetRecipient(msg *sgmail.SGMailV3) (recipient string, err error) {
 		}
 	}
 	return "", errors.New("no recipient found for email")
+}
+
+type EmailMeta struct {
+	Contact   *pb.Contact
+	To        string
+	From      string
+	Subject   string
+	Reason    string
+	Timestamp time.Time
+}
+
+// CheckEmails verifies that the provided email messages exist in both the email mock
+// and the audit log on the contact, if the email was sent to a contact. This method is
+// meant to be run from a test context.
+func CheckEmails(t *testing.T, messages []*EmailMeta) {
+	var sentEmails []*sgmail.SGMailV3
+
+	// Check total number of emails sent
+	require.Len(t, MockEmails, len(messages), "incorrect number of emails sent")
+
+	// Get emails from the mock
+	for _, data := range MockEmails {
+		msg := &sgmail.SGMailV3{}
+		require.NoError(t, json.Unmarshal(data, msg))
+		sentEmails = append(sentEmails, msg)
+	}
+
+	for _, msg := range messages {
+		// If the email was sent to a contact, check the audit log
+		if msg.Contact != nil {
+			log, err := models.GetEmailLog(msg.Contact)
+			require.NoError(t, err)
+			require.Len(t, log, 1, "contact %s has unexpected number of email logs", msg.Contact.Email)
+			require.Equal(t, msg.Reason, log[0].Reason)
+			ts, err := time.Parse(time.RFC3339, log[0].Timestamp)
+			require.NoError(t, err)
+			require.True(t, ts.Sub(msg.Timestamp) < time.Minute, "timestamp in email log is too old")
+		}
+
+		expectedRecipient, err := mail.ParseAddress(msg.To)
+		require.NoError(t, err)
+
+		// Search for the sent email in the mock and check the metadata
+		found := false
+		for _, sent := range sentEmails {
+			recipient, err := GetRecipient(sent)
+			require.NoError(t, err)
+			if recipient == expectedRecipient.Address {
+				found = true
+				sender, err := mail.ParseAddress(msg.From)
+				require.NoError(t, err)
+				require.Equal(t, sender.Address, sent.From.Address)
+				require.Equal(t, msg.Subject, sent.Subject)
+				break
+			}
+		}
+		require.True(t, found, "email not sent for recipient %s", msg.To)
+	}
 }

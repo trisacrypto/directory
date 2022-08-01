@@ -9,11 +9,11 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/certman"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
-	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -93,16 +93,6 @@ func New(conf config.Config) (s *Service, err error) {
 		return nil, err
 	}
 
-	// Create the Sectigo API client
-	if s.certs, err = sectigo.New(conf.Sectigo); err != nil {
-		return nil, err
-	}
-
-	// Ensure the certificate storage can be reached
-	if _, err = s.getCertStorage(); err != nil {
-		return nil, err
-	}
-
 	// Create the Email Manager with SendGrid API client
 	if s.email, err = emails.New(conf.Email); err != nil {
 		return nil, err
@@ -110,6 +100,11 @@ func New(conf config.Config) (s *Service, err error) {
 
 	// Create secret manager and connect to backend vault service
 	if s.secret, err = secrets.New(conf.Secrets); err != nil {
+		return nil, err
+	}
+
+	// Create the certificate manager
+	if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email, s.conf.DirectoryID); err != nil {
 		return nil, err
 	}
 
@@ -140,7 +135,7 @@ type Service struct {
 	admin   *Admin
 	members *Members
 	conf    config.Config
-	certs   *sectigo.Sectigo
+	certman *certman.CertificateManager
 	email   *emails.EmailManager
 	secret  *secrets.SecretManager
 	echan   chan error
@@ -167,7 +162,7 @@ func (s *Service) Serve() (err error) {
 
 		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
-		go s.CertManager(nil)
+		s.certman.Run(nil)
 
 		// Start the backup manager go routine process
 		go s.BackupManager(nil)
