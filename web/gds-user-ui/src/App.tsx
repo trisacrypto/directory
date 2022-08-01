@@ -6,7 +6,7 @@ import { useColorMode } from '@chakra-ui/react';
 
 const App: React.FC = () => {
   const { colorMode } = useColorMode();
-  console.log('[]', colorMode);
+
   return (
     <LanguageProvider>
       <BrowserRouter>

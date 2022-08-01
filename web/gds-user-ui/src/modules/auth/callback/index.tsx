@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
-import { Heading, Stack, Spinner, Flex, Box, useToast } from '@chakra-ui/react';
+import { Spinner, Box, useToast } from '@chakra-ui/react';
 import useHashQuery from 'hooks/useHashQuery';
-import { getAuth0User, userSelector, logout } from 'modules/auth/login/user.slice';
-import { getCookie, setCookie } from 'utils/cookies';
+import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
-import useAuth from 'hooks/useAuth';
 import Loader from 'components/Loader';
 import { t } from '@lingui/macro';
-import { useSelector, useDispatch } from 'react-redux';
-import { logUserInBff } from 'modules/auth/login/auth.service';
+import { useDispatch, useSelector } from 'react-redux';
+
 const CallbackPage: React.FC = () => {
   const query = useHashQuery();
   const accessToken = query.access_token;
@@ -62,6 +60,7 @@ const CallbackPage: React.FC = () => {
     //     setIsLoading(false);
     //   }
     // })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   useEffect(() => {
@@ -77,6 +76,7 @@ const CallbackPage: React.FC = () => {
     if (isLoggedIn) {
       navigate('/dashboard/overview');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError, isLoggedIn]);
 
   return (

@@ -23,7 +23,6 @@ axiosInstance.interceptors.response.use(
     // retry 3 time if request failed
 
     if (error.response.status === 401 && error.response.data.error === 'Unauthorized') {
-      console.log('[TokenError]', error);
       // if (originalRequest.retry < 3) {
       //   originalRequest.retry = originalRequest.retry || 0;
       //   originalRequest.retry += 1;

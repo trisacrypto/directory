@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Heading, position, Stack, useToast } from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/react';
 import Login from 'components/Section/Login';
 import useAuth from 'hooks/useAuth';
 import LandingLayout from 'layouts/LandingLayout';
-import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
@@ -40,6 +39,7 @@ const StartPage: React.FC = () => {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();

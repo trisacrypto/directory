@@ -1,7 +1,6 @@
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { userSelector, login, logout, isLoggedInSelector } from 'modules/auth/login/user.slice';
-import { useEffect, useState } from 'react';
-import { getCookie, setCookie } from 'utils/cookies';
+import { getCookie } from 'utils/cookies';
 import useCustomAuth0 from './useCustomAuth0';
 const useAuth = () => {
   const dispatch = useDispatch();
@@ -34,7 +33,7 @@ const useAuth = () => {
         } else {
         }
       } catch (error) {
-        console.log('[getUser error]', error);
+        console.error('[getUser error]', error);
         throw new Error('401');
       }
     } else {
@@ -44,7 +43,6 @@ const useAuth = () => {
   const isUserAuthenticated = !!isLoggedIn;
 
   const isAuthenticated = () => {
-    console.log('[isLoggedIn]', isLoggedIn);
     if (!isLoggedIn && getToken) {
       getUser();
       return true;

@@ -1,17 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
-import { setCookie, getCookie, removeCookie } from 'utils/cookies';
-import * as Sentry from '@sentry/browser';
+import { setCookie } from 'utils/cookies';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
-const userSession = getCookie('access_token');
-const userSignupWithSocial = (socialName: string) => {};
-export const userLoginWithSocial = (social: string) => {
-  if (social === 'google') {
-    auth0SignWithSocial('google-oauth2');
-  }
-};
+
 export const userLoginWithEmail = createAsyncThunk(
   'users/userLoginWithEmail',
   async (data: any, thunkAPI) => {
@@ -23,7 +15,6 @@ export const userLoginWithEmail = createAsyncThunk(
         realm: 'Username-Password-Authentication'
       });
     } catch (err: any) {
-      // handleError(e);
       thunkAPI.rejectWithValue(err.response.data);
     }
   }
@@ -53,13 +44,12 @@ export const getAuth0User: any = createAsyncThunk(
   async (hasToken: boolean, thunkAPI) => {
     try {
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
         setCookie('access_token', hasToken);
         setCookie('user_locale', getUserInfo?.locale);
         const getUser = await logUserInBff();
-        console.log('[getUser]', getUser);
+
         if (getUser.status === 204) {
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -70,9 +60,6 @@ export const getAuth0User: any = createAsyncThunk(
             }
           };
           return userInfo;
-
-          // }
-          // log this error to sentry
         } else {
           return thunkAPI.rejectWithValue(t`Something went wrong. Please try again later.`);
         }
@@ -111,11 +98,9 @@ const userSlice: any = createSlice({
 
       return state;
     }
-    // isloading: (state: any, { payload }: any) => {
   },
   extraReducers: {
     [getAuth0User.fulfilled]: (state, { payload }) => {
-      console.log('payload', payload);
       state.isFetching = false;
       state.isLoggedIn = true;
       state.user = payload.user;
@@ -124,7 +109,6 @@ const userSlice: any = createSlice({
       state.isFetching = true;
     },
     [getAuth0User.rejected]: (state, { payload }) => {
-      console.log('[getAuth0User.rejected]', payload);
       state.isFetching = false;
       state.isError = true;
       state.errorMessage = payload;
