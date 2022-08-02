@@ -781,6 +781,7 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	juliet, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err, "could not get juliet VASP")
 	xray, err := s.fixtures.GetCertReq("xray")
+	require.NoError(err, "could not get xray cert request")
 	golf, err := s.fixtures.GetVASP("golfbucks")
 	require.NoError(err, "could not get golfbucks VASP")
 
@@ -938,6 +939,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	a := s.svc.GetAdmin()
 
 	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 
 	// Attempt to update a VASP that doesn't exist
@@ -1109,6 +1111,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	a := s.svc.GetAdmin()
 
 	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not retrieve VASP record")
 	charlieID := charlieVASP.Id
 
 	// Attempt to delete a VASP that doesn't exist

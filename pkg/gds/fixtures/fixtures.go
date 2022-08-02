@@ -49,14 +49,12 @@ const (
 )
 
 var (
-	fakesFixturePath = filepath.Join("testdata", "fakes.tgz")
-	smallDBSubset    = map[string]map[string]struct{}{
+	smallDBSubset = map[string]map[string]struct{}{
 		wire.NamespaceVASPs: {
 			"charliebank": {},
 			"delta":       {},
 		},
 	}
-	dbPath = filepath.Join("testdata", "db")
 )
 
 func New(fixturesPath, dbPath string, stype StoreType) (lib *Library, err error) {

@@ -136,6 +136,7 @@ func (s *gdsTestSuite) TestMembersDetails() {
 
 	// Test with a valid VASP
 	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank VASP")
 	name, err := charlie.Name()
 	require.NoError(err)
 	details := &members.VASPMember{
