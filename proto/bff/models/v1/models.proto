@@ -41,6 +41,9 @@ message FormState {
 
     // The state of each step in the form
     repeated FormStep steps = 3;
+
+    // RFC 3339 timestamp -- if set, the user has started filling out the form
+    string started = 4;
 }
 
 // FormStep contains the state of a single step in an organization's registration form.
