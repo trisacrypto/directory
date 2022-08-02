@@ -410,13 +410,10 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 	switch namespace {
 	case wire.NamespaceVASPs:
 		var a *pb.VASP
-		var data pb.VASP
 		for _, f := range lib.fixtures[namespace] {
 			ref := f.(*pb.VASP)
 			if ref.Id == key {
-				// Avoid modifying the object in the fixtures map
-				data = *ref
-				a = &data
+				a = ref
 				break
 			}
 		}
@@ -448,19 +445,11 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 		}
 
 		if removeSerials {
-			// Data copy to avoid modifying the identity certificate in the fixtures map
-			data := *a.IdentityCertificate
-			a.IdentityCertificate = &data
 			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
 
-			// Allocate a new slice to avoid modifying the signing certificates in the fixtures map
-			certs := make([]*pb.Certificate, 0)
 			for _, cert := range a.SigningCertificates {
-				data := *cert
-				data.SerialNumber = nil
-				certs = append(certs, &data)
+				cert.SerialNumber = nil
 			}
-			a.SigningCertificates = certs
 
 			for _, cert := range b.SigningCertificates {
 				cert.SerialNumber = nil
@@ -471,13 +460,10 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 	case wire.NamespaceCerts:
 		var a *models.Certificate
-		var data models.Certificate
 		for _, f := range lib.fixtures[namespace] {
 			ref := f.(*models.Certificate)
 			if ref.Id == key {
-				// Avoid modifying the object in the fixtures map
-				data = *ref
-				a = &data
+				a = ref
 				break
 			}
 		}
@@ -493,13 +479,11 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 	case wire.NamespaceCertReqs:
 		var a *models.CertificateRequest
-		var data models.CertificateRequest
 		for _, f := range lib.fixtures[namespace] {
 			ref := f.(*models.CertificateRequest)
 			if ref.Id == key {
 				// Avoid modifying the object in the fixtures map
-				data = *ref
-				a = &data
+				a = ref
 				break
 			}
 		}

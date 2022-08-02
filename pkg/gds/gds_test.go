@@ -35,10 +35,11 @@ func (s *gdsTestSuite) TestRegister() {
 	s.LoadEmptyFixtures()
 	s.SetupGDS()
 	defer s.ResetFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
 	defer emails.PurgeMockEmails()
 	require := s.Require()
 	ctx := context.Background()
-	refVASP, err := s.fixtures.GetVASP("charliebank")
+	charlie, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Start the gRPC client
@@ -46,47 +47,43 @@ func (s *gdsTestSuite) TestRegister() {
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	// Emails need to be filled in for a valid VASP registration. Need to make copies
-	// of the contacts here to avoid modifying the fixtures for other tests.
-	var admin, billing, legal, technical pb.Contact
-	contacts := *refVASP.Contacts
-	if refVASP.Contacts.Administrative != nil {
-		admin = *refVASP.Contacts.Administrative
+	// Emails need to be filled in for a valid VASP registration. Note: This modifies
+	// the contacts on the original fixtures so LoadReferenceFixtures() must be
+	// deferred in order to restore them before the next test.
+	contacts := charlie.Contacts
+	if contacts.Administrative == nil {
+		contacts.Administrative = &pb.Contact{}
 	}
-	contacts.Administrative = &admin
 	contacts.Administrative.Name = "Admin Person"
 	contacts.Administrative.Email = "admin@example.com"
 
-	if refVASP.Contacts.Billing != nil {
-		billing = *refVASP.Contacts.Billing
+	if contacts.Billing == nil {
+		contacts.Billing = &pb.Contact{}
 	}
-	contacts.Billing = &billing
 	contacts.Billing.Name = "Billing Person"
 	contacts.Billing.Email = "billing@example.com"
 
-	if refVASP.Contacts.Legal != nil {
-		legal = *refVASP.Contacts.Legal
+	if contacts.Legal == nil {
+		contacts.Legal = &pb.Contact{}
 	}
-	contacts.Legal = &legal
 	contacts.Legal.Name = "Legal Person"
 	contacts.Legal.Email = "legal@example.com"
 
-	if refVASP.Contacts.Technical != nil {
-		technical = *refVASP.Contacts.Technical
+	if contacts.Technical == nil {
+		contacts.Technical = &pb.Contact{}
 	}
-	contacts.Technical = &technical
 	contacts.Technical.Name = "Technical Person"
 	contacts.Technical.Email = "technical@example.com"
 
 	// Request contains an invalid endpoint
 	request := &api.RegisterRequest{
-		Entity:           refVASP.Entity,
-		Contacts:         &contacts,
-		Website:          refVASP.Website,
-		BusinessCategory: refVASP.BusinessCategory,
-		VaspCategories:   refVASP.VaspCategories,
-		EstablishedOn:    refVASP.EstablishedOn,
-		Trixo:            refVASP.Trixo,
+		Entity:           charlie.Entity,
+		Contacts:         contacts,
+		Website:          charlie.Website,
+		BusinessCategory: charlie.BusinessCategory,
+		VaspCategories:   charlie.VaspCategories,
+		EstablishedOn:    charlie.EstablishedOn,
+		Trixo:            charlie.Trixo,
 	}
 	_, err = client.Register(ctx, request)
 	require.Error(err)
@@ -131,7 +128,7 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Error(err)
 
 	// Successful VASP registration
-	request.Entity = refVASP.Entity
+	request.Entity = charlie.Entity
 	sent := time.Now()
 	reply, err := client.Register(ctx, request)
 	require.NoError(err)

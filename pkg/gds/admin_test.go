@@ -411,7 +411,7 @@ func (s *gdsTestSuite) TestSummary() {
 		VASPsCount:           14,
 		PendingRegistrations: 6,
 		ContactsCount:        39,
-		VerifiedContacts:     24,
+		VerifiedContacts:     26,
 		CertificatesIssued:   3,
 		Statuses: map[string]int{
 			pb.VerificationState_APPEALED.String():            1,
@@ -605,6 +605,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 // Test the RetrieveVASP endpoint.
 func (s *gdsTestSuite) TestRetrieveVASP() {
 	s.LoadFullFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -679,11 +680,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	}
 
 	actualVASP, err := fixtures.RemarshalProto(wire.NamespaceVASPs, actual.VASP)
-	require.NoError(err, "could not remarshal actual VASP")
-
-	// RetrieveVASP removes the extra data and modifies the serial numbers before
-	// returning the VASP
-	s.fixtures.CompareFixture(wire.NamespaceVASPs, hotel.Id, actualVASP, true, true)
+	require.NoError(err, "could not remarshal retrieved VASP")
 
 	// Check the verified contacts
 	require.Len(actual.VerifiedContacts, 2)
@@ -704,6 +701,13 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 		expectedSerial := fmt.Sprintf("%X", hotel.SigningCertificates[i].SerialNumber)
 		require.Equal(expectedSerial, actualSerial)
 	}
+
+	// Compare to the reference VASP after removing the serial numbers and extra data
+	// Note: This modifies the original fixtures so LoadReferenceFixtures() must be
+	// deferred in order to restore them before the next test.
+	matches, err := s.fixtures.CompareFixture(wire.NamespaceVASPs, hotel.Id, actualVASP, true, true)
+	require.NoError(err, "could not compare retrieved VASP to fixture")
+	require.True(matches, "retrieved VASP does not match fixture")
 
 	// Compare the rest of the non-vasp results
 	actual.VASP = nil
@@ -771,7 +775,6 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 func (s *gdsTestSuite) TestDeleteVASP() {
 	s.LoadFullFixtures()
 	defer s.ResetFixtures()
-	defer s.fixtures.LoadReferenceFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -824,6 +827,8 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 		require.Error(err)
 
 		// Recreate the VASP
+		// Note: This modifies the reference fixtures so LoadReferenceFixtures() must
+		// be deferred in order to restore them before the next test.
 		golf.Id = ""
 		id, err = s.svc.GetStore().CreateVASP(golf)
 		require.NoError(err)
@@ -1007,6 +1012,8 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Successfully replacing a contact name
+	// Note: This modifies the reference fixtures so LoadReferenceFixtures() must be
+	// deferred in order to restore them before the next test.
 	contact = charlieVASP.Contacts.Administrative
 	contact.Name = "Clark Kent"
 	contactRequest, err = wire.Rewire(contact)
