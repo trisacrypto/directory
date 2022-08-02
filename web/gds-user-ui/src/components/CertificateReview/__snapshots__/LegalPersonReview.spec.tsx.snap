@@ -3,7 +3,7 @@
 exports[`<LegalPersonReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-17bwaio"
+    class="css-18e1pym"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -17,7 +17,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
           Section 2: Legal Person
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
           Edit
@@ -65,28 +65,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                   <tr
                     class="css-0"
                     role="row"
-                  >
-                    <td
-                      class="css-1pkyvl"
-                      role="gridcell"
-                    >
-                      KYC
-                    </td>
-                    <td
-                      class="css-uluo24"
-                      role="gridcell"
-                    >
-                      (
-                      Legal
-                      )
-                    </td>
-                    <td
-                      class="css-1pkyvl"
-                      role="gridcell"
-                    >
-                      N/A
-                    </td>
-                  </tr>
+                  />
                 </tbody>
               </td>
             </tr>
@@ -111,89 +90,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                   <td
                     class="css-1g75rv3"
                     role="gridcell"
-                  >
-                    <p
-                      class="chakra-text css-187crao"
-                    >
-                      Address 
-                      1
-                       : 
-                      Business
-                    </p>
-                    <div
-                      data-testid="addressLine"
-                    >
-                      <div>
-                        a
-                         
-                      </div>
-                      <div>
-                        Address 2
-                         
-                      </div>
-                      <div>
-                        Address 3
-                         
-                      </div>
-                      <div>
-                        AO
-                      </div>
-                    </div>
-                    <p
-                      class="chakra-text css-187crao"
-                    >
-                      Address 
-                      2
-                       : 
-                      Residential
-                    </p>
-                    <div
-                      data-testid="addressLine"
-                    >
-                      <div>
-                        705 Ryan Street
-                         
-                      </div>
-                      <div>
-                        Sylvania
-                         
-                      </div>
-                      <div>
-                        OH 43560
-                         
-                      </div>
-                      <div>
-                        US
-                      </div>
-                    </div>
-                    <p
-                      class="chakra-text css-187crao"
-                    >
-                      Address 
-                      3
-                       : 
-                      Residential
-                    </p>
-                    <div
-                      data-testid="addressLine"
-                    >
-                      <div>
-                        11 Garfield St.
-                         
-                      </div>
-                      <div>
-                        Libertyville
-                         
-                      </div>
-                      <div>
-                        IL 60048
-                         
-                      </div>
-                      <div>
-                        US
-                      </div>
-                    </div>
-                  </td>
+                  />
                 </tr>
               </td>
             </tr>
@@ -222,7 +119,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                       class="css-1uy98i6"
                       role="gridcell"
                     >
-                      Afghanistan
+                      N/A
                     </td>
                   </tr>
                 </tbody>
@@ -275,9 +172,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               <td
                 class="css-i257lr"
                 role="gridcell"
-              >
-                2
-              </td>
+              />
             </tr>
             <tr
               class="css-0"
@@ -294,10 +189,8 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-d6yzk9"
-                >
-                  Tax Identification Number
-                </span>
+                  class="css-vnm0v1"
+                />
               </td>
             </tr>
             <tr
@@ -314,7 +207,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Afghanistan
+                N/A
               </td>
             </tr>
             <tr
@@ -331,7 +224,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 class="css-oabm8g"
                 role="gridcell"
               >
-                RA777777
+                N/A
               </td>
             </tr>
           </tbody>

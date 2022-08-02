@@ -16,6 +16,7 @@ import {
   addStepToLocalStorage,
   clearStepperFromLocalStorage
 } from 'utils/localStorageHelper';
+import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
@@ -124,7 +125,7 @@ const useCertificateStepper = () => {
   };
 
   const resetForm = () => {
-    clearStepperFromLocalStorage();
+    setRegistrationDefaultValue();
     dispatch(clearStepper());
   };
 

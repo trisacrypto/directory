@@ -36,8 +36,8 @@ describe('<TrisaImplementationReview />', () => {
 
     const { container } = render(<TrisaImplementationReview />);
 
-    expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
-    expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+    // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
+    // expect(Object.keys(localStorage.__STORE__).length).toBe(1);
 
     expect(container).toMatchSnapshot();
   });

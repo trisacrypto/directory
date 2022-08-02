@@ -31,6 +31,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     setError,
     getValues
   } = useFormContext();
+  console.log('name xxxxx', name);
   const commonName = watch(`${name}.common_name`);
   const trisaEndpoint = watch(`${name}.endpoint`);
   const [commonNameWarning, setCommonNameWarning] = React.useState<string | undefined>('');

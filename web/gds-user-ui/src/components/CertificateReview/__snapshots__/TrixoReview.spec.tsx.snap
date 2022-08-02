@@ -3,7 +3,7 @@
 exports[`<TrixoReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-1g6acta"
+    class="css-18e1pym"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -17,12 +17,10 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
           Section 5: TRIXO Questionnaire
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
-           
           Edit
-           
         </button>
       </div>
       <div
@@ -49,7 +47,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Afghanistan
+                N/A
               </td>
             </tr>
             <tr
@@ -105,9 +103,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 >
                   <span
                     class="css-12rgubf"
-                  >
-                    NO
-                  </span>
+                  />
                 </span>
               </td>
             </tr>
@@ -161,7 +157,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                   <span
                     class="css-12rgubf"
                   >
-                    NO
+                    N/A
                   </span>
                 </span>
               </td>
@@ -189,9 +185,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 >
                   <span
                     class="css-12rgubf"
-                  >
-                    NO
-                  </span>
+                  />
                 </span>
               </td>
               <td
@@ -216,9 +210,9 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 <p
                   class="chakra-text css-0"
                 >
-                  $0.00
+                  $NaN
                    
-                  USD
+                  N/A
                 </p>
               </td>
               <td
@@ -268,13 +262,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
               <td
                 class="css-xumdn4"
                 role="gridcell"
-              >
-                <p
-                  class="chakra-text css-0"
-                >
-                  FATF Recommendation 16
-                </p>
-              </td>
+              />
               <td
                 class="css-xumdn4"
                 role="gridcell"
@@ -294,9 +282,9 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                $3,000.00
+                $NaN
                  
-                USD
+                N/A
               </td>
               <td
                 class="css-xumdn4"

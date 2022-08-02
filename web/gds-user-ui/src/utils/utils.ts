@@ -142,10 +142,12 @@ export const getRefreshToken = () => {
     );
   });
 };
-
-export const captureExceptionError = (message: string) => {
-  Sentry.captureException(message);
+export const handleError = (error: any, customMessage?: string) => {
+  Sentry.captureMessage(customMessage || error);
+  Sentry.captureException(error);
 };
-export const captureMessageError = (message: string) => {
-  Sentry.captureMessage(message);
+
+// uppercased first letter
+export const upperCaseFirstLetter = (str: any) => {
+  return str?.charAt(0)?.toUpperCase() + str.slice(1);
 };
