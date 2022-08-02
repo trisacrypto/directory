@@ -136,7 +136,7 @@ describe('<Certificate />', () => {
         });
       });
 
-      it('date of corporation field should have valid date', async () => {
+      it('date of corporation field should throw error for invalid date', async () => {
         await act(async () => {
           render(<Certificate />);
         });
@@ -162,7 +162,7 @@ describe('<Certificate />', () => {
           render(<Certificate />);
         });
 
-        const establishedOnField = screen.getByLabelText(/date of incorporation \/ establishment/i);
+        const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
         userEvent.type(establishedOnField, '2020-01-02');
 
         const submitButton = screen.getByRole('button', { name: /save & next/i });
