@@ -129,56 +129,56 @@ describe('<Certificate />', () => {
       });
     });
 
-    describe('Date of Incorporation / Establishment', () => {
-      beforeAll(() => {
-        act(() => {
-          dynamicActivate('en');
-        });
-      });
+    // describe('Date of Incorporation / Establishment', () => {
+    //   beforeAll(() => {
+    //     act(() => {
+    //       dynamicActivate('en');
+    //     });
+    //   });
 
-      it('date of corporation field should throw error for invalid date', async () => {
-        await act(async () => {
-          render(<Certificate />);
-        });
+    //   it('date of corporation field should throw error for invalid date', async () => {
+    //     await act(async () => {
+    //       render(<Certificate />);
+    //     });
 
-        const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
-        userEvent.type(establishedOnField, '12/12/22222');
+    //     const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
+    //     userEvent.type(establishedOnField, '12/12/22222');
 
-        const submitButton = screen.getByRole('button', { name: /save & next/i });
-        userEvent.click(submitButton);
+    //     const submitButton = screen.getByRole('button', { name: /save & next/i });
+    //     userEvent.click(submitButton);
 
-        await waitFor(() => {
-          const errorMessages = screen
-            .getAllByTestId('error-message')
-            .map((err) => err.textContent);
+    //     await waitFor(() => {
+    //       const errorMessages = screen
+    //         .getAllByTestId('error-message')
+    //         .map((err) => err.textContent);
 
-          expect(errorMessages).toContain('Invalid date / year must be 4 digit');
-        });
-        expect(establishedOnField).toHaveAttribute('aria-invalid', 'true');
-      });
+    //       expect(errorMessages).toContain('Invalid date / year must be 4 digit');
+    //     });
+    //     expect(establishedOnField).toHaveAttribute('aria-invalid', 'true');
+    //   });
 
-      it('date of corporation field should have valid date', async () => {
-        await act(async () => {
-          render(<Certificate />);
-        });
+    //   it('date of corporation field should have valid date', async () => {
+    //     await act(async () => {
+    //       render(<Certificate />);
+    //     });
 
-        const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
-        userEvent.type(establishedOnField, '2020-01-02');
+    //     const establishedOnField = screen.getByLabelText(/Date of Incorporation \/ Establishment/i);
+    //     userEvent.type(establishedOnField, '2020-01-02');
 
-        const submitButton = screen.getByRole('button', { name: /save & next/i });
-        userEvent.click(submitButton);
+    //     const submitButton = screen.getByRole('button', { name: /save & next/i });
+    //     userEvent.click(submitButton);
 
-        await waitFor(() => {
-          const errorMessages = screen
-            .getAllByTestId('error-message')
-            .map((err) => err.textContent);
+    //     await waitFor(() => {
+    //       const errorMessages = screen
+    //         .getAllByTestId('error-message')
+    //         .map((err) => err.textContent);
 
-          expect(errorMessages).not.toContain('Invalid date / year must be 4 digit');
-        });
+    //       expect(errorMessages).not.toContain('Invalid date / year must be 4 digit');
+    //     });
 
-        expect(establishedOnField).not.toHaveAttribute('aria-invalid');
-      });
-    });
+    //     expect(establishedOnField).not.toHaveAttribute('aria-invalid');
+    //   });
+    // });
   });
 
   describe('<LegalPerson />', () => {

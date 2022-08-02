@@ -81,7 +81,7 @@ const CallbackPage: React.FC = () => {
 
   return (
     <Box height={'100%'}>
-      {isFetching && <Loader />}
+      {isFetching && <Loader text="Loading Dashboard ..." />}
       {isError && <AlertMessage title={t`Token not valid`} message={errorMessage} status="error" />}
     </Box>
   );
