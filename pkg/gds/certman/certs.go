@@ -214,7 +214,6 @@ func (c *CertificateManager) HandleCertificateRequests(certDir string) {
 
 	// Conclude certificate handling successfully
 	log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
-	return
 }
 
 func (c *CertificateManager) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
