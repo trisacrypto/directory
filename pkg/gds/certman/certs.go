@@ -1,4 +1,4 @@
-package gds
+package certman
 
 import (
 	"bytes"
@@ -16,33 +16,103 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
+	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
+
+func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager, directoryID string) (cm *CertificateManager, err error) {
+	cm = &CertificateManager{
+		conf:        conf,
+		db:          db,
+		secret:      secret,
+		email:       email,
+		directoryID: directoryID,
+	}
+
+	if cm.directoryID == "" {
+		return nil, errors.New("directory ID is required for cert manager")
+	}
+
+	if cm.email == nil {
+		return nil, errors.New("email manager is required for cert manager")
+	}
+
+	if cm.secret == nil {
+		return nil, errors.New("secret manager is required for cert manager")
+	}
+
+	if conf.Sectigo.Testing {
+		if err = mock.Start(conf.Sectigo.Profile); err != nil {
+			return nil, err
+		}
+	}
+
+	if cm.certs, err = sectigo.New(conf.Sectigo); err != nil {
+		return nil, err
+	}
+
+	if _, err = cm.getCertStorage(); err != nil {
+		return nil, err
+	}
+
+	return cm, nil
+}
+
+// CertificateManager is a struct with a go routine that periodically checks on the
+// status of certificate requests and moves them through the request pipeline. This is
+// separated from the parent GDS to allow for isolated testing.
+type CertificateManager struct {
+	conf        config.CertManConfig
+	db          store.Store
+	secret      *secrets.SecretManager
+	certs       *sectigo.Sectigo
+	email       *emails.EmailManager
+	directoryID string
+}
+
+// Run starts the CertManager go routine with the given channel and returns a wait
+// group, allowing the caller to control synchronization from the outside.
+func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
+	if stop == nil {
+		stop = make(chan struct{})
+	}
+	wg = &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		go c.CertManager(stop)
+	}()
+	return wg
+}
 
 // CertManager is a go routine that periodically checks on the status of certificate
 // requests and moves them through the request pipeline. Once CertManager detects a
 // certificate request that is ready to submit, it submits the request via the Sectigo
 // API. If processing, it checks the batch status, and when it detects that the bact
 // is done processing it downloads the certs and emails them to the technical conacts.
-// If the certificate processing fails for any reason, it sends and error message to
+// If the certificate processing fails for any reason, it sends an error message to
 // the TRISA admins since this will prevent the integrator from joining the network.
 //
 // TODO: move completed certificate requests to archive so that the CertManger routine
 // isn't continuously handling a growing number of requests over time.
-func (s *Service) CertManager(stop <-chan struct{}) {
+func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 	// Check certificate download directory
-	certDir, err := s.getCertStorage()
+	certDir, err := c.getCertStorage()
 	if err != nil {
 		log.Fatal().Err(err).Msg("cert-manager cannot access certificate storage")
 	}
 
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
-	ticker := time.NewTicker(s.conf.CertMan.Interval)
-	log.Info().Dur("interval", s.conf.CertMan.Interval).Str("store", certDir).Msg("cert-manager process started")
+	ticker := time.NewTicker(c.conf.Interval)
+	log.Info().Dur("interval", c.conf.Interval).Str("store", certDir).Msg("cert-manager process started")
 
 	for {
 		// Wait for next tick or a stop signal
@@ -53,21 +123,23 @@ func (s *Service) CertManager(stop <-chan struct{}) {
 		case <-ticker.C:
 		}
 
-		if err := s.HandleCertificateRequests(certDir); err != nil {
-			log.WithLevel(zerolog.PanicLevel).Err(err).Msg("could not handle certificate requests, certificate manager shutting down")
-			return
-		}
+		c.HandleCertificateRequests(certDir)
 	}
 }
 
-func (s *Service) HandleCertificateRequests(certDir string) (err error) {
+// HandleCertificateRequests performs one iteration through the certificate requests in
+// the database and handles each sequentially, progressing them by modifying the status
+// fields in the database. Note that this method logs errors instead of returning them
+// to the caller.
+func (c *CertificateManager) HandleCertificateRequests(certDir string) {
 	// Retrieve all certificate requests from the database
 	var (
 		nrequests int
 		wg        sync.WaitGroup
+		err       error
 	)
 
-	careqs := s.db.ListCertReqs()
+	careqs := c.db.ListCertReqs()
 	defer careqs.Release()
 	log.Debug().Msg("cert-manager checking certificate request pipelines")
 
@@ -90,7 +162,7 @@ func (s *Service) HandleCertificateRequests(certDir string) (err error) {
 					vasp *pb.VASP
 					err  error
 				)
-				if vasp, err = s.db.RetrieveVASP(req.Vasp); err != nil {
+				if vasp, err = c.db.RetrieveVASP(req.Vasp); err != nil {
 					logctx.Error().Str("vasp_id", req.Vasp).Msg("could not retrieve vasp for certificate request submission")
 					return
 				}
@@ -102,11 +174,11 @@ func (s *Service) HandleCertificateRequests(certDir string) (err error) {
 						logctx.Error().Err(err).Msg("could not update certificate request status")
 						return
 					}
-					if err = s.db.UpdateCertReq(req); err != nil {
+					if err = c.db.UpdateCertReq(req); err != nil {
 						logctx.Error().Err(err).Msg("could not save updated certificate request")
 						return
 					}
-				} else if err = s.submitCertificateRequest(req, vasp); err != nil {
+				} else if err = c.submitCertificateRequest(req, vasp); err != nil {
 					// If certificate submission requests fail we want immediate notification
 					// so this is a CRITICAL severity that should alert us immediately.
 					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
@@ -120,7 +192,7 @@ func (s *Service) HandleCertificateRequests(certDir string) (err error) {
 			wg.Add(1)
 			go func(req *models.CertificateRequest, logctx zerolog.Logger) {
 				defer wg.Done()
-				if err := s.checkCertificateRequest(req); err != nil {
+				if err := c.checkCertificateRequest(req); err != nil {
 					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
 				} else {
 					logctx.Info().Msg("processing certificate request check complete")
@@ -137,37 +209,36 @@ func (s *Service) HandleCertificateRequests(certDir string) (err error) {
 	// Check if there was an error while processing certificate requests
 	if err = careqs.Error(); err != nil {
 		log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
-		return nil
+		return
 	}
 
 	// Conclude certificate handling successfully
 	log.Debug().Int("requests", nrequests).Msg("cert-manager check complete")
-	return nil
 }
 
-func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
+func (c *CertificateManager) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
 	// Step 0: mark the VASP status as issuing certificates
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_ISSUING_CERTIFICATE, "issuing certificate", "automated"); err != nil {
 		return err
 	}
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(vasp); err != nil {
 		return fmt.Errorf("could not update VASP status: %s", err)
 	}
 
 	// Step 1: find an authority with an available balance
 	var authority int
-	if authority, err = s.findCertAuthority(); err != nil {
+	if authority, err = c.findCertAuthority(); err != nil {
 		return err
 	}
 
 	// Step 2: get the password
 	secretType := "password"
-	pkcs12Password, err := s.secret.With(r.Id).GetLatestVersion(context.Background(), secretType)
+	pkcs12Password, err := c.secret.With(r.Id).GetLatestVersion(context.Background(), secretType)
 	if err != nil {
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	profile := s.certs.Profile()
+	profile := c.certs.Profile()
 	var params map[string]string
 	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
 		params = r.Params
@@ -185,8 +256,8 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *p
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
-	batchName := fmt.Sprintf("%s-certreq-%s)", s.conf.DirectoryID, r.Id)
-	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
+	batchName := fmt.Sprintf("%s-certreq-%s)", c.directoryID, r.Id)
+	if rep, err = c.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.
 		dict := zerolog.Dict()
@@ -220,21 +291,21 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *p
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "certificate submitted", "automated"); err != nil {
 		return fmt.Errorf("could not update certificate request status: %s", err)
 	}
-	if err = s.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(r); err != nil {
 		return fmt.Errorf("could not update certificate with batch details: %s", err)
 	}
 
 	return nil
 }
 
-func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err error) {
+func (c *CertificateManager) checkCertificateRequest(r *models.CertificateRequest) (err error) {
 	if r.BatchId == 0 {
 		return errors.New("missing batch ID - cannot retrieve status")
 	}
 
 	// Step 1: refresh batch info from the sectigo service
 	var info *sectigo.BatchResponse
-	if info, err = s.certs.BatchDetail(int(r.BatchId)); err != nil {
+	if info, err = c.certs.BatchDetail(int(r.BatchId)); err != nil {
 		return fmt.Errorf("could not fetch batch info for id %d: %s", r.BatchId, err)
 	}
 
@@ -245,14 +316,14 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	// Step 1c: check if the batch is in an unhandled state, and if so, refresh batch status
 	if info.Status == sectigo.BatchStatusCollected || info.Status == "" {
 		log.Warn().Int64("batch_id", r.BatchId).Str("batch_status", info.Status).Msg("unknown batch info status, refreshing batch status directly")
-		if r.BatchStatus, err = s.certs.BatchStatus(int(r.BatchId)); err != nil {
+		if r.BatchStatus, err = c.certs.BatchStatus(int(r.BatchId)); err != nil {
 			return fmt.Errorf("could not fetch batch status for id %d: %s", r.BatchId, err)
 		}
 	}
 
 	// Step 2: get the processing info for the batch
 	var proc *sectigo.ProcessingInfoResponse
-	if proc, err = s.certs.ProcessingInfo(int(r.BatchId)); err != nil {
+	if proc, err = c.certs.ProcessingInfo(int(r.BatchId)); err != nil {
 		return fmt.Errorf("could not fetch batch processing info for id %d: %s", r.BatchId, err)
 	}
 
@@ -269,7 +340,7 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "awaiting batch processing", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = s.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
@@ -306,7 +377,7 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 				logctx.Warn().Msg("certificate request errored")
 			}
 
-			if err = s.db.UpdateCertReq(r); err != nil {
+			if err = c.db.UpdateCertReq(r); err != nil {
 				return fmt.Errorf("could not save updated cert request: %s", err)
 			}
 			return nil
@@ -323,7 +394,7 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "unhandled sectigo state", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = s.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
@@ -333,13 +404,13 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADING, "certificate ready for download", "automated"); err != nil {
 		return fmt.Errorf("could not update certificate request status: %s", err)
 	}
-	if err = s.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(r); err != nil {
 		return fmt.Errorf("could not save updated cert request: %s", err)
 	}
 
 	// Fetch the VASP from the certificate request
 	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(r.Vasp); err != nil {
+	if vasp, err = c.db.RetrieveVASP(r.Vasp); err != nil {
 		return fmt.Errorf("could not retrieve vasp: %s", err)
 	}
 
@@ -349,27 +420,27 @@ func (s *Service) checkCertificateRequest(r *models.CertificateRequest) (err err
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "rejecting certificate request", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = s.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
 	}
 
 	// Send off downloader go routine to fetch the certs and notify the user
-	s.downloadCertificateRequest(r, vasp)
+	c.downloadCertificateRequest(r, vasp)
 	return nil
 }
 
 // finds the first authority with an available balance greater than 0.
-func (s *Service) findCertAuthority() (id int, err error) {
+func (c *CertificateManager) findCertAuthority() (id int, err error) {
 	var authorities []*sectigo.AuthorityResponse
-	if authorities, err = s.certs.UserAuthorities(); err != nil {
+	if authorities, err = c.certs.UserAuthorities(); err != nil {
 		return 0, fmt.Errorf("could not fetch user authorities: %s", err)
 	}
 
 	for _, authority := range authorities {
 		var balance int
-		if balance, err = s.certs.AuthorityAvailableBalance(authority.ID); err != nil {
+		if balance, err = c.certs.AuthorityAvailableBalance(authority.ID); err != nil {
 			log.Error().Err(err).Int("authority", authority.ID).Msg("could not fetch authority balance")
 		}
 		if balance > 0 {
@@ -382,7 +453,7 @@ func (s *Service) findCertAuthority() (id int, err error) {
 
 // a go routine that downloads the certificate in the background, then sends the certs
 // as an attachment to the technical contact if available.
-func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) {
+func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) {
 	var (
 		err        error
 		path       string
@@ -392,13 +463,13 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 	)
 
 	// Get the cert storage directory to download certs to
-	if certDir, err = s.getCertStorage(); err != nil {
+	if certDir, err = c.getCertStorage(); err != nil {
 		log.Error().Err(err).Msg("could not find cert storage directory")
 		return
 	}
 
 	// Download the certificates as a zip file to the cert storage directory
-	if path, err = s.certs.Download(int(r.BatchId), certDir); err != nil {
+	if path, err = c.certs.Download(int(r.BatchId), certDir); err != nil {
 		log.Error().Err(err).Int("batch", int(r.BatchId)).Msg("could not download certificates")
 		return
 	}
@@ -406,7 +477,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 	// Store zipped cert in Google Secrets using certRequestId
 	sctx := context.Background()
 	secretType = "cert"
-	if err = s.secret.With(r.Id).CreateSecret(sctx, secretType); err != nil {
+	if err = c.secret.With(r.Id).CreateSecret(sctx, secretType); err != nil {
 		log.Error().Err(err).Msg("could not create cert secret")
 		return
 	}
@@ -414,7 +485,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 		log.Error().Err(err).Msg("could not read in cert payload")
 		return
 	}
-	if err = s.secret.With(r.Id).AddSecretVersion(sctx, secretType, payload); err != nil {
+	if err = c.secret.With(r.Id).AddSecretVersion(sctx, secretType, payload); err != nil {
 		log.Error().Err(err).Msg("could not add secret version for cert payload")
 		return
 	}
@@ -424,7 +495,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 		log.Error().Err(err).Msg("could not update certificate request status")
 		return
 	}
-	if err = s.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
 	}
@@ -436,7 +507,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 
 	// Retrieve the latest secret version for the password
 	secretType = "password"
-	pkcs12password, err := s.secret.With(r.Id).GetLatestVersion(sctx, secretType)
+	pkcs12password, err := c.secret.With(r.Id).GetLatestVersion(sctx, secretType)
 	if err != nil {
 		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
@@ -455,7 +526,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 	}
 
 	// Update the certificate record
-	if err = s.db.UpdateCert(cert); err != nil {
+	if err = c.db.UpdateCert(cert); err != nil {
 		log.Error().Err(err).Msg("could not update certificate record")
 		return
 	}
@@ -472,19 +543,19 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 		log.Error().Err(err).Msg("could not update VASP verification status")
 		return
 	}
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP status as verified")
 		return
 	}
 
 	// Email the certificates to the technical contacts
-	if _, err = s.email.SendDeliverCertificates(vasp, path); err != nil {
+	if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
 		// If there is an error delivering emails, return here so we don't mark as completed
 		log.Error().Err(err).Msg("could not deliver certificates to technical contact")
 		return
 	}
 
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP email logs")
 		return
 	}
@@ -495,7 +566,7 @@ func (s *Service) downloadCertificateRequest(r *models.CertificateRequest, vasp 
 		return
 	}
 	r.Status = models.CertificateRequestState_COMPLETED
-	if err = s.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
 	}
@@ -575,16 +646,16 @@ func extractCertificate(path, pkcs12password string) (pub *pb.Certificate, err e
 }
 
 // get the configured cert storage directory or return a temporary directory
-func (s *Service) getCertStorage() (path string, err error) {
-	if s.conf.CertMan.Storage != "" {
+func (c *CertificateManager) getCertStorage() (path string, err error) {
+	if c.conf.Storage != "" {
 		var stat os.FileInfo
-		if stat, err = os.Stat(s.conf.CertMan.Storage); err != nil {
+		if stat, err = os.Stat(c.conf.Storage); err != nil {
 			if os.IsNotExist(err) {
 				// Create the directory if it does not exist and return
-				if err = os.MkdirAll(path, 0755); err != nil {
+				if err = os.MkdirAll(c.conf.Storage, 0755); err != nil {
 					return "", fmt.Errorf("could not create cert storage directory: %s", err)
 				}
-				return s.conf.CertMan.Storage, nil
+				return c.conf.Storage, nil
 			}
 
 			// Other permissions error, cannot access cert storage
@@ -594,7 +665,7 @@ func (s *Service) getCertStorage() (path string, err error) {
 		if !stat.IsDir() {
 			return "", errors.New("not a directory")
 		}
-		return s.conf.CertMan.Storage, nil
+		return c.conf.Storage, nil
 	}
 
 	// Create a temporary directory

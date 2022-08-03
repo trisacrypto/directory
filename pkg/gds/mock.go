@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/certman"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
@@ -14,7 +15,6 @@ import (
 	trtlstore "github.com/trisacrypto/directory/pkg/gds/store/trtl"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/sectigo"
-	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
 )
@@ -78,13 +78,7 @@ func NewMock(conf config.Config, trtlConn *grpc.ClientConn) (s *Service, err err
 	}
 	svc.admin = admin
 
-	if conf.Sectigo.Testing {
-		if err = mock.Start(conf.Sectigo.Profile); err != nil {
-			return nil, err
-		}
-	}
-
-	if svc.certs, err = sectigo.New(conf.Sectigo); err != nil {
+	if svc.certman, err = certman.New(conf.CertMan, svc.db, svc.secret, svc.email, conf.DirectoryID); err != nil {
 		return nil, err
 	}
 
@@ -126,12 +120,6 @@ func MockConfig() config.Config {
 			URL:           "leveldb:///testdata/testdb",
 			ReindexOnBoot: false,
 		},
-		Sectigo: sectigo.Config{
-			Username: "foo",
-			Password: "supersecretsquirrel",
-			Profile:  "CipherTrace EE",
-			Testing:  true,
-		},
 		Email: config.EmailConfig{
 			ServiceEmail:         "GDS <service@gds.dev>",
 			AdminEmail:           "GDS Admin <admin@gds.dev>",
@@ -144,6 +132,12 @@ func MockConfig() config.Config {
 		CertMan: config.CertManConfig{
 			Interval: 24 * time.Hour,
 			Storage:  "testdata/certs",
+			Sectigo: sectigo.Config{
+				Username: "foo",
+				Password: "supersecretsquirrel",
+				Profile:  "CipherTrace EE",
+				Testing:  true,
+			},
 		},
 		Backup: config.BackupConfig{
 			Enabled:  false,

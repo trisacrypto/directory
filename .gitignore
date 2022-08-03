@@ -18,7 +18,6 @@
 # vendor/
 
 # Local configuration
-fixtures/
 .env
 .secrets
 .idea
