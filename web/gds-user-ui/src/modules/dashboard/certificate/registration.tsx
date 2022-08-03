@@ -10,6 +10,7 @@ import {
   Flex,
   useDisclosure,
   Button,
+  HStack,
   Stack,
   useColorModeValue,
   chakra
@@ -29,6 +30,7 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
+import FileUploader from 'components/FileUpload';
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
@@ -39,6 +41,7 @@ const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -54,6 +57,11 @@ const Certificate: React.FC = () => {
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingRegistration, setIsLoadingRegistration] = useState<boolean>(false);
+  const [isLoadingRegistrationDefaultValue, setIsLoadingRegistrationDefaultValue] =
+    useState<boolean>(false);
+  const [shouldFillForm, setShouldFillForm] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -147,7 +155,7 @@ const Certificate: React.FC = () => {
   const onChangeResetForm = (value: boolean) => {
     setIsResetForm(value);
   };
-
+  // handle reset modal
   useEffect(() => {
     if (isResetModalOpen) {
       onOpen();
@@ -178,73 +186,103 @@ const Certificate: React.FC = () => {
     };
     fetchData();
   }, []);
+  // should choose to fill form or import file when value is default
+  useEffect(() => {
+    if (isDefaultValue()) {
+      setShouldFillForm(false);
+    }
+  }, [shouldFillForm, setShouldFillForm]);
   return (
     <SimpleDashboardLayout>
       <>
         <FormProvider {...methods}>
-          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <Flex justifyContent={'space-between'}>
-              <Heading size="lg" mb="24px" className="heading">
-                <Trans id="Certificate Registration">Certificate Registration</Trans>
-              </Heading>
-              <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
-            </Flex>
-
-            <VStack spacing={3}>
-              <Card maxW="100%" bg={backgroundColor} color={textColor}>
-                <Card.Body>
-                  <Text>
-                    <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
-                      This multi-section form is an important step in the registration and
-                      certificate issuance process. The information you provide will be used to
-                      verify the legal entity that you represent and, where appropriate, will be
-                      available to verified TRISA members to facilitate compliance decisions. If you
-                      need guidance, see the
-                    </Trans>{' '}
-                    <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
-                      <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
-                    </Link>
-                  </Text>
-                  <Text pt={4}>
-                    <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
-                      To assist in completing the registration form, the form is divided into
-                      multiple sections
+          <Flex justifyContent={'space-between'}>
+            <Heading size="lg" mb="24px" className="heading">
+              <Trans id="Certificate Registration">Certificate Registration</Trans>
+            </Heading>
+            <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
+          </Flex>
+          <Stack my={3}>
+            <Card maxW="100%" bg={backgroundColor} color={textColor}>
+              <Card.Body>
+                <Text>
+                  <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
+                    This multi-section form is an important step in the registration and certificate
+                    issuance process. The information you provide will be used to verify the legal
+                    entity that you represent and, where appropriate, will be available to verified
+                    TRISA members to facilitate compliance decisions. If you need guidance, see the
+                  </Trans>{' '}
+                  <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
+                    <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
+                  </Link>
+                </Text>
+                <Text pt={4}>
+                  <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
+                    To assist in completing the registration form, the form is divided into multiple
+                    sections
+                  </Trans>
+                  .{' '}
+                  <Text as={'span'} fontWeight={'bold'}>
+                    <Trans id="No information is sent until you complete Section 6 - Review & Submit">
+                      No information is sent until you complete Section 6 - Review & Submit
                     </Trans>
                     .{' '}
-                    <Text as={'span'} fontWeight={'bold'}>
-                      <Trans id="No information is sent until you complete Section 6 - Review & Submit">
-                        No information is sent until you complete Section 6 - Review & Submit
-                      </Trans>
-                      .{' '}
-                    </Text>
                   </Text>
-                </Card.Body>
-              </Card>
+                </Text>
+              </Card.Body>
+            </Card>
+          </Stack>
 
-              <Box width={'100%'}>
-                <TestNetCertificateProgressBar />
-                {!isProdEnv ? <DevTool control={methods.control} /> : null}
-              </Box>
-              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
-                {!hasReachSubmitStep && (
-                  <>
-                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
-                    </Button>
-                    <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                    </Button>
-                    {/* add review button when reach to final step */}
+          {shouldFillForm ? (
+            <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+              <VStack spacing={3}>
+                <Box width={'100%'}>
+                  <TestNetCertificateProgressBar />
+                  {!isProdEnv ? <DevTool control={methods.control} /> : null}
+                </Box>
+                <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
+                  {!hasReachSubmitStep && (
+                    <>
+                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                        <Trans id="Save & Previous">Save & Previous</Trans>
+                      </Button>
+                      <Button type="submit" variant="secondary">
+                        {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                      </Button>
+                      {/* add review button when reach to final step */}
 
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      </Button>
+                    </>
+                  )}
+                </Stack>
+              </VStack>
+            </chakra.form>
+          ) : (
+            <Card maxW="100%" bg={backgroundColor} color={textColor}>
+              <Card.Body>
+                <Box width={'100%'} border={'2px dashed #eee '} py={5}>
+                  <Stack textAlign={'center'} alignItems={'center'}>
+                    <FileUploader />
+                  </Stack>
+                </Box>
+                <VStack spacing={5} mt={5}>
+                  <Text> OR </Text>
+                  <Stack>
+                    <Button
+                      minWidth={150}
+                      bgColor="#555151"
+                      onClick={() => setShouldFillForm(true)}>
+                      Fill the form
                     </Button>
-                  </>
-                )}
-              </Stack>
-            </VStack>
-          </chakra.form>
+                  </Stack>
+                </VStack>
+              </Card.Body>
+            </Card>
+          )}
         </FormProvider>
+
         {isResetModalOpen && (
           <ConfirmationResetFormModal
             isOpen={isOpen}
