@@ -111,8 +111,9 @@ export const validationSchema = [
           //       return ctx && ctx.parent && ctx.parent.address_line[1];
           //     }),
           country: yup.string().required(),
-          postal_code: yup.string().required(),
-          state: yup.string().required(),
+          town_name: yup.string().required(),
+          post_code: yup.string().required(),
+          country_sub_division: yup.string().required(),
           address_type: yup.string().required()
         })
       ),
@@ -177,7 +178,8 @@ export const validationSchema = [
     })
   }),
   yup.object().shape({
-    testnet: yup.object().shape({
+    trisa_endpoint: yup.string().trim(),
+    trisa_endpoint_testnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
       common_name: yup
         .string()
@@ -188,14 +190,14 @@ export const validationSchema = [
           )
         )
     }),
-    mainnet: yup.object().shape({
+    trisa_endpoint_mainnet: yup.object().shape({
       endpoint: yup
         .string()
         .test(
           'uniqueMainetEndpoint',
           _i18n._(t`TestNet and MainNet endpoints should not be the same`),
           (value, ctx: any): any => {
-            return ctx.from[1].value.testnet.endpoint !== value;
+            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
           }
         )
         .matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
@@ -227,10 +229,14 @@ export const validationSchema = [
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(yup.string())
+        .of(
+          yup.object().shape({
+            name: yup.string()
+          })
+        )
         .transform((value, originalValue) => {
           if (originalValue) {
-            return originalValue.filter((item: any) => item.length > 0);
+            return originalValue.filter((item: any) => item.name.length > 0);
           }
           return value;
 

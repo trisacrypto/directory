@@ -54,9 +54,9 @@ const AddressForm: React.FC<AddressFormProps> = ({ name, rowIndex }) => {
 
         <InputFormControl
           formHelperText={t`City / Town / Municipality`}
-          controlId="city"
-          isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].city`)}
-          {...register(`${name}[${rowIndex}].city`)}
+          controlId="town_name"
+          isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].town_name`)}
+          {...register(`${name}[${rowIndex}].town_name`)}
           data-testid="city"
         />
 
@@ -64,19 +64,19 @@ const AddressForm: React.FC<AddressFormProps> = ({ name, rowIndex }) => {
           <GridItem>
             <InputFormControl
               formHelperText={t`Region / Province / State (required)`}
-              controlId="state"
-              isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].state`)}
-              {...register(`${name}[${rowIndex}].state`)}
+              controlId="country_sub_division"
+              isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].country_sub_division`)}
+              {...register(`${name}[${rowIndex}].country_sub_division`)}
               data-testid="state"
             />
           </GridItem>
           <GridItem>
             <InputFormControl
               formHelperText={t`Postal Code / Postcode / ZIP Code`}
-              controlId="postal_code"
-              isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].postal_code`)}
-              {...register(`${name}[${rowIndex}].postal_code`)}
-              data-testid="postal_code"
+              controlId="post_code"
+              isInvalid={!!getValueByPathname(errors, `${name}[${rowIndex}].post_code`)}
+              {...register(`${name}[${rowIndex}].post_code`)}
+              data-testid="post_code"
             />
           </GridItem>
         </Grid>
