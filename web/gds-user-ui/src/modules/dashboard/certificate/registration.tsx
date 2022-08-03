@@ -34,6 +34,7 @@ import {
   postRegistrationValue,
   setRegistrationDefaultValue
 } from 'modules/dashboard/registration/utils';
+
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
@@ -130,6 +131,12 @@ const Certificate: React.FC = () => {
     previousStep();
   };
 
+  const isDefaultValue = () => {
+    console.log('isDefaultValue1', registrationData);
+    console.log('isDefaultValue2', getRegistrationDefaultValues());
+    return _.isEqual(registrationData, getRegistrationDefaultValues());
+  };
+
   const handleResetForm = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
@@ -163,7 +170,6 @@ const Certificate: React.FC = () => {
         const data = await getRegistrationDefaultValue();
         console.log('[getRegistrationData]', data);
         setRegistrationData(data);
-        setIsLoadingDefaultValue(false);
       } catch (error) {
         console.log('[getRegistrationData]', error);
       } finally {
@@ -230,9 +236,7 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    <Button
-                      onClick={handleResetForm}
-                      isDisabled={Object.keys(registrationData).length === 0}>
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
                       <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
                     </Button>
                   </>
