@@ -178,8 +178,24 @@ func (s *bffTestSuite) TestAttention() {
 	require.Len(reply.Messages, 1, "expected start registration message")
 	require.Equal(expected, reply.Messages[0], "expected start registration message")
 
-	// Complete registration message should be returned when the registration form has been started but not submitted
+	// Start registration message should still be returned if the registration form state is empty
 	org.Registration = &records.RegistrationForm{}
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	reply, err = s.client.Attention(context.TODO())
+	require.NoError(err, "received error from attention endpoint")
+	require.Len(reply.Messages, 1, "expected start registration message")
+	require.Equal(expected, reply.Messages[0], "expected start registration message")
+
+	// Start registration message should still be returned if the registration form has not been started
+	org.Registration.State = records.NewFormState()
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	reply, err = s.client.Attention(context.TODO())
+	require.NoError(err, "received error from attention endpoint")
+	require.Len(reply.Messages, 1, "expected start registration message")
+	require.Equal(expected, reply.Messages[0], "expected start registration message")
+
+	// Complete registration message should be returned when the registration form has been started but not submitted
+	org.Registration.State.Started = time.Now().Format(time.RFC3339)
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.CompleteRegistration,

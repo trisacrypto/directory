@@ -250,6 +250,12 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
+	// Mark the form as started
+	// NOTE: If an empty form was passed in, the form will not be marked as started.
+	if form.State != nil && form.State.Started == "" {
+		form.State.Started = time.Now().Format(time.RFC3339)
+	}
+
 	// Update the organizations form
 	org.Registration = form
 	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
