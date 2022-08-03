@@ -230,7 +230,9 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    <Button onClick={handleResetForm}>
+                    <Button
+                      onClick={handleResetForm}
+                      isDisabled={Object.keys(registrationData).length === 0}>
                       <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
                     </Button>
                   </>

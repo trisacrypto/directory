@@ -4,7 +4,10 @@ import { setCookie, getCookie, removeCookie } from 'utils/cookies';
 import * as Sentry from '@sentry/browser';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
+import { persistor } from 'application/store';
+import localForage from 'localforage';
 import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
+import storage from 'redux-persist/lib/storage';
 const userSession = getCookie('access_token');
 const userSignupWithSocial = (socialName: string) => {};
 export const userLoginWithSocial = (social: string) => {
