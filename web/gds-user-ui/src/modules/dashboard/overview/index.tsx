@@ -61,8 +61,8 @@ const Overview: React.FC = () => {
     const fetchRegistration = async () => {
       try {
         const registration = await getRegistrationDefaultValue();
-        if (registration.status === 200) {
-          setStepperData(registration.data);
+        if (registration) {
+          setStepperData(registration);
         }
       } catch (e: any) {
         handleError(e, '[Overview] fetchRegistration failed');
