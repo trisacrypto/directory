@@ -76,11 +76,11 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	require.NoError(err)
 	s.conf = &conf
 
-	trtl, err := trtl.New(*s.conf)
+	s.trtl, err = trtl.New(*s.conf)
 	require.NoError(err)
 
 	s.grpc = bufconn.New(bufSize, "")
-	go trtl.Run(s.grpc.Listener)
+	go s.trtl.Run(s.grpc.Listener)
 }
 
 func (s *trtlStoreTestSuite) TearDownSuite() {
@@ -366,6 +366,13 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+	// Consume the rest of the iterator
+	for iter.Next() {
+		cert, err := iter.Cert()
+		require.NoError(err)
+		require.NotNil(cert)
+	}
+	require.NoError(iter.Error())
 	iter.Release()
 
 	// Create enough Certs to exceed the page size
@@ -500,6 +507,13 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+	// Consume the rest of the iterator
+	for iter.Next() {
+		crr, err := iter.CertReq()
+		require.NoError(err)
+		require.NotNil(crr)
+	}
+	require.NoError(iter.Error())
 	iter.Release()
 
 	// Create enough CertReqs to exceed the page size
