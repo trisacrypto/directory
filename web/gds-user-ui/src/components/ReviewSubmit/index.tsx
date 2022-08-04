@@ -14,6 +14,9 @@ import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+
+import { useNavigate } from 'react-router-dom';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -30,7 +33,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
-
+  const { jumpToLastStep } = useCertificateStepper();
+  const navigate = useNavigate();
   const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
   const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
   useEffect(() => {
@@ -47,6 +51,13 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTestNetSent, isMainNetSent]);
+
+  const handleJumpToLastStep = () => {
+    console.log('jump to last step');
+    jumpToLastStep();
+    navigate('/dashboard/certificate/registration');
+  };
+
   return (
     <>
       <Flex>
@@ -225,8 +236,9 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Button
               bgColor="#555151"
               color="#fff"
-              as="a"
-              href="/certificate/registration"
+              onClick={() => {
+                handleJumpToLastStep();
+              }}
               size="lg"
               py="2.5rem"
               whiteSpace="normal"
