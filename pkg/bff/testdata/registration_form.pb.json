@@ -3,6 +3,7 @@
   "business_category": "PRIVATE_ORGANIZATION",
   "vasp_categories": ["Miner", "Mixer", "P2P"],
   "established_on": "2022-04-07",
+  "organization_name": "Example Inc.",
 	"entity": {
 		"name": {
 			"name_identifiers": [{

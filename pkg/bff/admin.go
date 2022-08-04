@@ -277,9 +277,8 @@ func (s *Server) Attention(c *gin.Context) {
 	testnetSubmitted := (org.Testnet != nil && org.Testnet.Submitted != "")
 	mainnetSubmitted := (org.Mainnet != nil && org.Mainnet.Submitted != "")
 	switch {
-	case org.Registration == nil:
+	case org.Registration == nil || org.Registration.State == nil || org.Registration.State.Started == "":
 		// Registration has not started
-		// TODO: Is there a more robust way to check this?
 		messages = append(messages, &api.AttentionMessage{
 			Message:  StartRegistration,
 			Severity: records.AttentionSeverity_INFO.String(),
