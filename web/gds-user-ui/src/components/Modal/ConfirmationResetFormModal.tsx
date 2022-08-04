@@ -16,9 +16,11 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
 const ConfirmationResetForm = (props: any) => {
+  const navigate = useNavigate();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,6 +38,7 @@ const ConfirmationResetForm = (props: any) => {
     setIsLoading(false);
     props.onClose();
     onAlertClose();
+    navigate('/dashboard/certificate/registration');
     // props.onRefeshState();
   };
   return (
