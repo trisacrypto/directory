@@ -4,19 +4,11 @@ import React, { useEffect } from 'react';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 
-function TrisaImplementationReviewDataTable() {
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [trisa, setTrisa] = React.useState<any>({});
-  useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      mainnet: getStepperData.trisa_endpoint_mainnet,
-      testnet: getStepperData.trisa_endpoint_testnet
-    };
-
-    setTrisa(stepData);
-  }, [steps]);
-
+interface TrisaImplementationReviewProps {
+  mainnet?: any;
+  testnet?: any;
+}
+function TrisaImplementationReviewDataTable({ mainnet, testnet }: TrisaImplementationReviewProps) {
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -48,13 +40,13 @@ function TrisaImplementationReviewDataTable() {
             <Td pt={'1rem !important'}>
               <Trans id="TestNet TRISA Endpoint">TestNet TRISA Endpoint</Trans>
             </Td>
-            <Td pl={0}>{trisa?.testnet?.endpoint || 'N/A'}</Td>
+            <Td pl={0}>{testnet?.endpoint || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td>
               <Trans id="TestNet Certificate Common Name">TestNet Certificate Common Name</Trans>
             </Td>
-            <Td pl={0}>{trisa?.testnet?.common_name || 'N/A'}</Td>
+            <Td pl={0}>{testnet?.common_name || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td colSpan={2}></Td>
@@ -68,13 +60,13 @@ function TrisaImplementationReviewDataTable() {
             <Td pt={'1rem !important'}>
               <Trans id="MainNet TRISA Endpoint">MainNet TRISA Endpoint</Trans>
             </Td>
-            <Td pl={0}>{trisa?.mainnet?.endpoint || 'N/A'}</Td>
+            <Td pl={0}>{mainnet?.endpoint || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td>
               <Trans id="MainNet Certificate Common Name">MainNet Certificate Common Name</Trans>
             </Td>
-            <Td pl={0}>{trisa?.mainnet?.common_name || 'N/A'}</Td>
+            <Td pl={0}>{mainnet?.common_name || 'N/A'}</Td>
           </Tr>
         </Tbody>
       </Table>

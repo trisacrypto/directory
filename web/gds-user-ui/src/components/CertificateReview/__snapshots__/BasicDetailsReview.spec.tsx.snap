@@ -3,10 +3,10 @@
 exports[`<BasicDetailsReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-t0mv64"
+    class="css-18e1pym"
   >
     <div
-      class="chakra-stack css-1485kjp"
+      class="chakra-stack css-n21gh5"
     >
       <div
         class="css-18uk989"
@@ -17,7 +17,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
           Section 1: Basic Details
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
           Edit
@@ -47,14 +47,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-1vffylx"
                 role="gridcell"
               >
-                <a
-                  class="chakra-link css-f4h6uy"
-                  href="http://kyc.com"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  http://kyc.com
-                </a>
+                N/A
               </td>
               <td
                 class="css-xumdn4"
@@ -75,7 +68,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Government Entity
+                N/A
               </td>
               <td
                 class="css-xumdn4"
@@ -96,7 +89,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                2022-04-22
+                N/A
               </td>
               <td
                 class="css-xumdn4"
@@ -117,16 +110,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <span
-                  class="css-12dplt7"
-                >
-                  Person-to-Person Exchange
-                </span>
-                <span
-                  class="css-12dplt7"
-                >
-                  Kiosk / Crypto ATM Operator
-                </span>
+                N/A
               </td>
               <td
                 class="css-xumdn4"

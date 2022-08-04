@@ -348,6 +348,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.POST("/announcements", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
 		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
 		v1.GET("/details", auth.Authorize("read:vasp"), s.MemberDetails)
+		v1.GET("/attention", auth.Authorize("read:vasp"), s.Attention)
 	}
 
 	// NotFound and NotAllowed routes

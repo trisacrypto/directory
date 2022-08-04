@@ -21,6 +21,10 @@ import { COUNTRIES } from 'constants/countries';
 import { currencyFormatter } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+interface TrixoReviewProps {
+  data?: any;
+}
 import TrixoReviewDataTable from './TrixoReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
@@ -39,17 +43,20 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
     }
   };
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.trixo
+    const fetchData = async () => {
+      const getStepperData = await getRegistrationDefaultValue();
+      const stepData = {
+        ...getStepperData.trixo
+      };
+      setTrixo(stepData);
     };
-    setTrixo(stepData);
+    fetchData();
   }, [steps]);
 
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader title="Section 5: TRIXO Questionnaire" step={5} />
-      <TrixoReviewDataTable />
+      <TrixoReviewDataTable data={trixo} />
     </CertificateReviewLayout>
   );
 };

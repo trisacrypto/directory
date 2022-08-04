@@ -221,7 +221,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 	// Return the registration form, ensuring nil is not serialized.
 	if org.Registration == nil {
-		org.Registration = &records.RegistrationForm{}
+		org.Registration = records.NewRegisterForm()
 	}
 	c.JSON(http.StatusOK, org.Registration)
 }
@@ -248,6 +248,12 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// NOTE: this method will handle the error logging and response.
 	if org, err = s.OrganizationFromClaims(c); err != nil {
 		return
+	}
+
+	// Mark the form as started
+	// NOTE: If an empty form was passed in, the form will not be marked as started.
+	if form.State != nil && form.State.Started == "" {
+		form.State.Started = time.Now().Format(time.RFC3339)
 	}
 
 	// Update the organizations form

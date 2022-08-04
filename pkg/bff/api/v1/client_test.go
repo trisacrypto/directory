@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
@@ -594,6 +595,63 @@ func TestMemberDetails(t *testing.T) {
 	out, err := client.MemberDetails(context.TODO(), req)
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
+}
+
+func TestAttention(t *testing.T) {
+	fixture := &api.AttentionReply{
+		Messages: []*api.AttentionMessage{
+			{
+				Message:  bff.SubmitMainnet,
+				Severity: models.AttentionSeverity_INFO.String(),
+				Action:   models.AttentionAction_SUBMIT_MAINNET.String(),
+			},
+			{
+				Message:  fmt.Sprintf(bff.CertificateRevoked, "testnet"),
+				Severity: models.AttentionSeverity_ALERT.String(),
+				Action:   models.AttentionAction_CONTACT_SUPPORT.String(),
+			},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/attention", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.Attention(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
+func TestNoAttention(t *testing.T) {
+	// Create a Test Server that returns no content
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/attention", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	// Should return no error and nil response for 204 no content
+	out, err := client.Attention(context.TODO())
+	require.NoError(t, err)
+	require.Nil(t, out)
 }
 
 func loadFixture(path string, v interface{}) (err error) {

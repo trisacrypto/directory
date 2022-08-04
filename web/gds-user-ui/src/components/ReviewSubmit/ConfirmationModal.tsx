@@ -3,6 +3,11 @@ import {
   Box,
   chakra,
   Heading,
+  Alert,
+  AlertIcon,
+  Tag,
+  AlertTitle,
+  AlertDescription,
   Input,
   Text,
   Flex,
@@ -18,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import ModalAlert from 'components/ReviewSubmit/ModalAlert';
 import AlertContent from './AlertContent';
-
+import { upperCaseFirstLetter } from 'utils/utils';
 const ConfirmationModal = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { hasCopied, onCopy } = useClipboard(props.pkcs12password);
@@ -84,7 +89,7 @@ const ConfirmationModal = (props: any) => {
                       <Text fontWeight={'semibold'}>ID :</Text>
                     </chakra.td>
                     <chakra.td>
-                      <Text pl={2}>{props.id}</Text>
+                      <Text ml={5}>{props.id}</Text>
                     </chakra.td>
                   </chakra.tr>
                   <chakra.tr>
@@ -92,16 +97,20 @@ const ConfirmationModal = (props: any) => {
                       <Text fontWeight={'semibold'}>Verification Status : </Text>
                     </chakra.td>
                     <chakra.td>
-                      <Text pl={2}>{props.status}</Text>
+                      <Tag ml={5} bg={'green'} color={'white'}>
+                        {props.status}
+                      </Tag>
                     </chakra.td>
                   </chakra.tr>
                 </Box>
-                <Text>
-                  <Text as={'span'} fontWeight={'semibold'}>
-                    Message from server:
-                  </Text>{' '}
-                  {props.message}
-                </Text>
+                <Box mt={5}>
+                  <Alert status="info">
+                    <Box>
+                      <AlertTitle>Message from server:</AlertTitle>
+                      <AlertDescription>{upperCaseFirstLetter(props.message)}</AlertDescription>
+                    </Box>
+                  </Alert>
+                </Box>
               </ModalBody>
 
               <ModalFooter>

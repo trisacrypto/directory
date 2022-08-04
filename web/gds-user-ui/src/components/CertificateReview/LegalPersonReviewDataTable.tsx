@@ -9,18 +9,10 @@ import { useSelector, RootStateOrAny } from 'react-redux';
 import { renderAddress } from 'utils/address-utils';
 import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 
-function LegalPersonReviewDataTable() {
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [legalPerson, setLegalPerson] = React.useState<any>({});
-
-  useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.entity
-    };
-    setLegalPerson(stepData);
-  }, [steps]);
-
+interface LegalReviewProps {
+  data?: any;
+}
+function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
   return (
     <Stack fontSize={18}>
       <Table
@@ -57,7 +49,7 @@ function LegalPersonReviewDataTable() {
             <Td>
               <Tbody>
                 <Tr>
-                  {legalPerson.name?.name_identifiers?.map((nameIdentifier: any, index: number) => {
+                  {data.name?.name_identifiers?.map((nameIdentifier: any, index: number) => {
                     return (
                       <React.Fragment key={index}>
                         <Td paddingLeft={'0 !important'} border="none">
@@ -78,44 +70,40 @@ function LegalPersonReviewDataTable() {
                 </Tr>
               </Tbody>
               <>
-                {legalPerson.name?.local_name_identifiers?.map(
-                  (nameIdentifier: any, index: number) => {
-                    return (
-                      <React.Fragment key={index}>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          {nameIdentifier.legal_person_name}
-                        </Td>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          (
-                          {getNameIdentiferTypeLabel(
-                            nameIdentifier.legal_person_name_identifier_type
-                          )}
-                          )
-                        </Td>
-                      </React.Fragment>
-                    );
-                  }
-                )}
+                {data.name?.local_name_identifiers?.map((nameIdentifier: any, index: number) => {
+                  return (
+                    <React.Fragment key={index}>
+                      <Td paddingLeft={0} pt={0} border="none">
+                        {nameIdentifier.legal_person_name}
+                      </Td>
+                      <Td paddingLeft={0} pt={0} border="none">
+                        (
+                        {getNameIdentiferTypeLabel(
+                          nameIdentifier.legal_person_name_identifier_type
+                        )}
+                        )
+                      </Td>
+                    </React.Fragment>
+                  );
+                })}
               </>
               <>
-                {legalPerson.name?.phonetic_name_identifiers?.map(
-                  (nameIdentifier: any, index: number) => {
-                    return (
-                      <React.Fragment key={index}>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          {nameIdentifier.legal_person_name}
-                        </Td>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          (
-                          {getNameIdentiferTypeLabel(
-                            nameIdentifier.legal_person_name_identifier_type
-                          )}
-                          )
-                        </Td>
-                      </React.Fragment>
-                    );
-                  }
-                )}
+                {data.name?.phonetic_name_identifiers?.map((nameIdentifier: any, index: number) => {
+                  return (
+                    <React.Fragment key={index}>
+                      <Td paddingLeft={0} pt={0} border="none">
+                        {nameIdentifier.legal_person_name}
+                      </Td>
+                      <Td paddingLeft={0} pt={0} border="none">
+                        (
+                        {getNameIdentiferTypeLabel(
+                          nameIdentifier.legal_person_name_identifier_type
+                        )}
+                        )
+                      </Td>
+                    </React.Fragment>
+                  );
+                })}
               </>
             </Td>
           </Tr>
@@ -127,9 +115,9 @@ function LegalPersonReviewDataTable() {
             <Td pl={0}>
               <Tr>
                 <Td paddingLeft={'0px !important'} pt={0}>
-                  {legalPerson?.geographic_addresses?.map((address: any, index: number) => (
+                  {data?.geographic_addresses?.map((address: any, index: number) => (
                     <React.Fragment key={index}>
-                      {legalPerson?.geographic_addresses?.length > 1 && (
+                      {data?.geographic_addresses?.length > 1 && (
                         <Text py={1} fontWeight={'bold'}>
                           Address {index + 1} : {(addressType as any)[address.address_type]}
                         </Text>
@@ -138,9 +126,9 @@ function LegalPersonReviewDataTable() {
                     </React.Fragment>
                   ))}
                 </Td>
-                {legalPerson?.geographic_addresses?.length === 1 && (
+                {data?.geographic_addresses?.length === 1 && (
                   <Td pt={0}>
-                    ({(addressType as any)[legalPerson?.geographic_addresses?.[0].address_type]})
+                    ({(addressType as any)[data?.geographic_addresses?.[0].address_type]})
                   </Td>
                 )}
               </Tr>
@@ -155,7 +143,7 @@ function LegalPersonReviewDataTable() {
               <Tbody>
                 <Tr>
                   <Td pl={'0 !important'}>
-                    {(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}
+                    {(COUNTRIES as any)[data?.country_of_registration] || 'N/A'}
                   </Td>
                 </Tr>
               </Tbody>
@@ -178,7 +166,7 @@ function LegalPersonReviewDataTable() {
             <Td pt={0}>
               <Trans id="Identification Number">Identification Number</Trans>
             </Td>
-            <Td paddingLeft={0}>{legalPerson?.national_identification?.national_identifier}</Td>
+            <Td paddingLeft={0}>{data?.national_identification?.national_identifier}</Td>
           </Tr>
           <Tr>
             <Td pt={0}>
@@ -187,7 +175,7 @@ function LegalPersonReviewDataTable() {
             <Td pt={0}>
               <Tag color={'white'} bg={'blue.400'} size={'lg'}>
                 {getNationalIdentificationLabel(
-                  legalPerson?.national_identification?.national_identifier_type
+                  data?.national_identification?.national_identifier_type
                 )}
               </Tag>
             </Td>
@@ -196,13 +184,13 @@ function LegalPersonReviewDataTable() {
             <Td>
               <Trans id="Country of Registration">Country of Registration</Trans>
             </Td>
-            <Td>{(COUNTRIES as any)[legalPerson?.country_of_registration] || 'N/A'}</Td>
+            <Td>{(COUNTRIES as any)[data?.country_of_registration] || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td pt={0}>
               <Trans id="Reg Authority">Reg Authority</Trans>
             </Td>
-            <Td pt={0}>{legalPerson?.national_identification?.registration_authority || 'N/A'}</Td>
+            <Td pt={0}>{data?.national_identification?.registration_authority || 'N/A'}</Td>
           </Tr>
         </Tbody>
       </Table>

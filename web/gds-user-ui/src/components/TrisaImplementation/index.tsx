@@ -34,12 +34,12 @@ const TrisaImplementation: React.FC = () => {
       </FormLayout>
       <TrisaImplementationForm
         type="TestNet"
-        name="trisa_endpoint_testnet"
+        name="testnet"
         headerText={t`TRISA Endpoint: TestNet`}
       />
       <TrisaImplementationForm
         type="MainNet"
-        name="trisa_endpoint_mainnet"
+        name="mainnet"
         headerText={t`TRISA Endpoint: MainNet`}
       />
     </Stack>

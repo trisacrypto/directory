@@ -36,6 +36,7 @@ const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
             borderRadius={0}
             background="#55ACD8"
             color="#fff"
+            cursor="pointer"
             _hover={{ background: 'blue.200' }}>
             {buttonText}
           </Button>

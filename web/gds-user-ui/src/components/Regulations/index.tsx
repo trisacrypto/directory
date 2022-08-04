@@ -22,7 +22,7 @@ const Regulations: React.FC<RegulationsProps> = ({ name }) => {
           <GridItem>
             <InputFormControl
               controlId="applicable_regulation"
-              {...register(`${name}[${index}].name`)}
+              {...register(`${name}[${index}]`)}
             />
           </GridItem>
           <GridItem display="flex" alignItems="center">
@@ -30,7 +30,7 @@ const Regulations: React.FC<RegulationsProps> = ({ name }) => {
           </GridItem>
         </Grid>
       ))}
-      <Button onClick={() => append({ name: '' })} borderRadius={5}>
+      <Button onClick={() => append({})} borderRadius={5}>
         <Trans id="Add Regulation">Add Regulation</Trans>
       </Button>
     </VStack>

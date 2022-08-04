@@ -170,6 +170,7 @@ services:
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
       - GDS_BFF_AUTH0_CLIENT_ID
       - GDS_BFF_AUTH0_CLIENT_SECRET
+
     profiles:
       - api
       - testnet
