@@ -140,8 +140,6 @@ const Certificate: React.FC = () => {
   };
 
   const isDefaultValue = () => {
-    console.log('isDefaultValue1', registrationData);
-    console.log('isDefaultValue2', getRegistrationDefaultValues());
     return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
 
@@ -154,6 +152,56 @@ const Certificate: React.FC = () => {
   };
   const onChangeResetForm = (value: boolean) => {
     setIsResetForm(value);
+  };
+  // handle file upload by extract json file , validate schema  and post to server
+  const handleFileUploaded = (file: any) => {
+    console.log('[handleFileUploaded]', file);
+    setIsLoading(true);
+    const reader = new FileReader();
+    reader.onload = async (ev: any) => {
+      const data = JSON.parse(ev.target.result);
+      console.log('[read data]', data);
+      try {
+        const validationData = await validationSchema[0].validate(data);
+        console.log('[validationData]', validationData);
+        if (validationData.error) {
+          console.log('[validationData.error]', validationData.error);
+          toast({
+            position: 'top',
+            title: `Invalid file format`,
+            status: 'error',
+            isClosable: true,
+            containerStyle: {
+              width: '800px',
+              maxWidth: '100%'
+            }
+          });
+          setIsLoading(false);
+        }
+        if (validationData.value) {
+          console.log('[validationData.value]', validationData.value);
+
+          postRegistrationValue(validationData.value);
+          setIsLoading(false);
+          setShouldFillForm(true);
+        }
+
+        reader.readAsText(file);
+      } catch (e: any) {
+        toast({
+          position: 'top',
+          title: `Invalid file format`,
+          description: e.message || 'your json file is invalid',
+          status: 'error',
+          isClosable: true,
+          containerStyle: {
+            width: '800px',
+            maxWidth: '100%'
+          }
+        });
+        setIsLoading(false);
+      }
+    };
   };
   // handle reset modal
   useEffect(() => {
@@ -188,10 +236,11 @@ const Certificate: React.FC = () => {
   }, []);
   // should choose to fill form or import file when value is default
   useEffect(() => {
-    if (isDefaultValue()) {
-      setShouldFillForm(false);
+    console.log('[isDefaultValue]', isDefaultValue());
+    if (!isDefaultValue()) {
+      setShouldFillForm(true);
     }
-  }, [shouldFillForm, setShouldFillForm]);
+  }, [registrationData]);
   return (
     <SimpleDashboardLayout>
       <>
@@ -233,54 +282,31 @@ const Certificate: React.FC = () => {
             </Card>
           </Stack>
 
-          {shouldFillForm ? (
-            <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-              <VStack spacing={3}>
-                <Box width={'100%'}>
-                  <TestNetCertificateProgressBar />
-                  {!isProdEnv ? <DevTool control={methods.control} /> : null}
-                </Box>
-                <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
-                  {!hasReachSubmitStep && (
-                    <>
-                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                        <Trans id="Save & Previous">Save & Previous</Trans>
-                      </Button>
-                      <Button type="submit" variant="secondary">
-                        {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                      </Button>
-                      {/* add review button when reach to final step */}
-
-                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                      </Button>
-                    </>
-                  )}
-                </Stack>
-              </VStack>
-            </chakra.form>
-          ) : (
-            <Card maxW="100%" bg={backgroundColor} color={textColor}>
-              <Card.Body>
-                <Box width={'100%'} border={'2px dashed #eee '} py={5}>
-                  <Stack textAlign={'center'} alignItems={'center'}>
-                    <FileUploader />
-                  </Stack>
-                </Box>
-                <VStack spacing={5} mt={5}>
-                  <Text> OR </Text>
-                  <Stack>
-                    <Button
-                      minWidth={150}
-                      bgColor="#555151"
-                      onClick={() => setShouldFillForm(true)}>
-                      Fill the form
+          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+            <VStack spacing={3}>
+              <Box width={'100%'}>
+                <TestNetCertificateProgressBar />
+                {!isProdEnv ? <DevTool control={methods.control} /> : null}
+              </Box>
+              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
+                {!hasReachSubmitStep && (
+                  <>
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <Trans id="Save & Previous">Save & Previous</Trans>
                     </Button>
-                  </Stack>
-                </VStack>
-              </Card.Body>
-            </Card>
-          )}
+                    <Button type="submit" variant="secondary">
+                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                    </Button>
+                    {/* add review button when reach to final step */}
+
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </VStack>
+          </chakra.form>
         </FormProvider>
 
         {isResetModalOpen && (

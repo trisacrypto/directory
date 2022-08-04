@@ -9,17 +9,20 @@ import {
 } from '@chakra-ui/react';
 import { useForm, UseFormRegisterReturn } from 'react-hook-form';
 import { FiFile } from 'react-icons/fi';
-
+const MAX_FILE_SIZE = 10;
 type FileUploadProps = {
   register: UseFormRegisterReturn;
   accept?: string;
   multiple?: boolean;
   children?: ReactNode;
   onFileSubmit: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onReaderLoader: (data: string) => void;
 };
-
+type FileUploaderProps = {
+  onReadFileUploaded: (func: any) => void;
+};
 const FileUpload = (props: FileUploadProps) => {
-  const { register, accept, multiple, children, onFileSubmit } = props;
+  const { register, accept, multiple, children, onFileSubmit, onReaderLoader } = props;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { ref, ...rest } = register as { ref: (instance: HTMLInputElement | null) => void };
 
@@ -48,16 +51,16 @@ type FormValues = {
   file_: FileList;
 };
 
-const FileUploader = () => {
+const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
   const {
     register,
-    handleSubmit,
     formState: { errors }
   } = useForm<FormValues>();
   const onSubmit = (e: any) => {
     e.preventDefault();
     console.log('submitted');
-    console.log(e.target.files);
+    const file = e.target.files[0];
+    onReadFileUploaded(file);
   };
 
   const validateFiles = (value: FileList) => {
@@ -66,7 +69,6 @@ const FileUploader = () => {
     }
     for (const file of Array.from(value)) {
       const fsMb = file.size / (1024 * 1024);
-      const MAX_FILE_SIZE = 10;
       if (fsMb > MAX_FILE_SIZE) {
         return 'Max file size 10mb';
       }
@@ -79,9 +81,10 @@ const FileUploader = () => {
       <form>
         <FormControl isInvalid={!!errors.file_} isRequired>
           <FileUpload
-            accept={'image/*'}
+            accept={'.csv,application/JSON'}
             multiple
             onFileSubmit={onSubmit}
+            onReaderLoader={onReadFileUploaded}
             register={register('file_', { validate: validateFiles })}>
             <Button bg={'#555151'} leftIcon={<Icon as={FiFile} />} minWidth={150}>
               Import File
