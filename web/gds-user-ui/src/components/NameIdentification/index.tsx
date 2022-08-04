@@ -74,6 +74,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
     setValue,
     clearErrors
   } = useFormContext();
+
   const nationalIdentificationOptions = getNationalIdentificationOptions();
   const countries = getCountriesOptions();
 

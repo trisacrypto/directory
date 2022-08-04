@@ -66,6 +66,7 @@ services:
       - GDS_SENTRY_DSN
       - GDS_SENTRY_ENVIRONMENT
       - GDS_SENTRY_TRACK_PERFORMANCE
+    
     profiles:
       - gds
       - api

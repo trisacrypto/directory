@@ -1,10 +1,22 @@
+import React, { useState, useEffect } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
-import { Box, Heading, HStack, VStack, useToast, Text, Link, Flex } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  HStack,
+  VStack,
+  useToast,
+  Text,
+  Link,
+  Flex,
+  useDisclosure,
+  Button,
+  Stack
+} from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
-import FormButton from 'components/ui/FormButton';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { FormProvider, useForm, useFormState } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import useAuth from 'hooks/useAuth';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
@@ -12,7 +24,8 @@ import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
 import { hasStepError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
-import { fieldNamesPerSteps, validationSchema, getRegistrationDefaultValue } from './lib';
+import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
+import { fieldNamesPerSteps, validationSchema } from './lib';
 
 import {
   loadDefaultValueFromLocalStorage,
@@ -23,10 +36,16 @@ import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 const Certificate: React.FC = () => {
+  const [, updateState] = React.useState<any>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
+  const [isResetForm, setIsResetForm] = useState<boolean>(false);
+
   const { nextStep, previousStep } = useCertificateStepper();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -44,7 +63,7 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
-  const { formState } = methods;
+  const { formState, reset } = methods;
 
   const dirtyFields = formState.dirtyFields;
 
@@ -103,9 +122,32 @@ const Certificate: React.FC = () => {
   }
   const handlePreviousStep = () => {
     setCertificateFormValueToLocalStorage(methods.getValues());
-
     previousStep();
   };
+
+  const handleResetForm = () => {
+    // open confirmation modal
+    setIsResetModalOpen(true);
+  };
+  const onChangeModalState = (value: boolean) => {
+    setIsResetModalOpen(value);
+  };
+  const onChangeResetForm = (value: boolean) => {
+    setIsResetForm(value);
+  };
+
+  useEffect(() => {
+    if (isResetModalOpen) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetModalOpen]);
+
+  useEffect(() => {
+    reset({ ...loadDefaultValueFromLocalStorage() });
+    setIsResetForm(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm]);
 
   return (
     // <DashboardLayout>
@@ -135,7 +177,7 @@ const Certificate: React.FC = () => {
                       available to verified TRISA members to facilitate compliance decisions. If you
                       need guidance, see the
                     </Trans>{' '}
-                    <Link isExternal href="/getting-started" color={'blue'} fontWeight={'bold'}>
+                    <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
                       <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
                     </Link>
                   </Text>
@@ -159,49 +201,35 @@ const Certificate: React.FC = () => {
                 <TestNetCertificateProgressBar />
                 {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
-              <HStack width="100%" spacing={8} justifyContent={'center'} py={6}>
+              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    <FormButton
-                      onClick={handlePreviousStep}
-                      isDisabled={currentStep === 1}
-                      borderRadius={5}
-                      type="button"
-                      w="100%"
-                      _active={{ outline: 'none' }}
-                      _focus={{ outline: 'none' }}
-                      maxW="13rem">
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
                       <Trans id="Save & Previous">Save & Previous</Trans>
-                    </FormButton>
-                    <FormButton
-                      borderRadius={5}
-                      w="100%"
-                      _active={{ outline: 'none' }}
-                      _focus={{ outline: 'none' }}
-                      maxW="13rem"
-                      backgroundColor="#FF7A59"
-                      type="submit"
-                      _hover={{ backgroundColor: '#f07253' }}>
+                    </Button>
+                    <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                    </FormButton>
+                    </Button>
                     {/* add review button when reach to final step */}
-                    {/* {currentStep !== lastStep && (
-                      <FormButton
-                        borderRadius={5}
-                        w="100%"
-                        maxW="13rem"
-                        backgroundColor="#FF7A59"
-                        type="submit"
-                        _hover={{ backgroundColor: '#f07253' }}>
-                        Review Summary
-                      </FormButton>
-                    )} */}
+
+                    <Button onClick={handleResetForm}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
                   </>
                 )}
-              </HStack>
+              </Stack>
             </VStack>
           </form>
         </FormProvider>
+        {isResetModalOpen && (
+          <ConfirmationResetFormModal
+            isOpen={isOpen}
+            onClose={onClose}
+            onChangeState={onChangeModalState}
+            onRefeshState={forceUpdate}
+            onChangeResetState={onChangeResetForm}
+          />
+        )}
       </>
     </SimpleDashboardLayout>
   );

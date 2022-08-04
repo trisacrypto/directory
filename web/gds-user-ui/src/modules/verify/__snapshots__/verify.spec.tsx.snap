@@ -93,6 +93,11 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                     >
                       🇯🇵 JA
                     </option>
+                    <option
+                      value="en-dh"
+                    >
+                      - DH
+                    </option>
                   </select>
                   <div
                     class="chakra-select__icon-wrapper css-zj2dqk"

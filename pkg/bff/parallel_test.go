@@ -3,19 +3,73 @@ package bff_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 )
 
+func (s *bffTestSuite) TestParallelAdminRequests() {
+	var (
+		results []interface{}
+		errs    []error
+	)
+
+	require := s.Require()
+
+	// RPC that returns a status reply for both networks
+	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
+		if rep, err = client.Status(ctx); err != nil {
+			return nil, err
+		}
+		return rep, nil
+	}
+
+	// Handler that returns a healthy status reply
+	healthy := func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.StatusReply{
+			Status: "healthy",
+		})
+	}
+
+	// Test the case where the RPC returns two errors and flatten is true
+	s.testnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error")
+	s.mainnet.admin.UseError(mock.StatusEP, http.StatusInternalServerError, "internal error")
+	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
+	require.Len(results, 0, "results was not flattened")
+	require.Len(errs, 2, "errors were not returned")
+	require.NotNil(errs[0], "expected testnet error to be not nil")
+	require.NotNil(errs[1], "expected mainnet error to be not nil")
+
+	// Test the case where the RPC returns 2 results and flatten is true
+	s.testnet.admin.UseHandler(mock.StatusEP, healthy)
+	s.mainnet.admin.UseHandler(mock.StatusEP, healthy)
+	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, true)
+	require.Len(results, 2, "results was not flattened")
+	require.Len(errs, 0, "errors were not flattened")
+	require.NotNil(results[0], "testnet result expected")
+	require.NotNil(results[1], "mainnet result expected")
+
+	// Test the case where the RPC returns 2 results and flatten is false
+	results, errs = s.bff.ParallelAdminRequests(context.TODO(), rpc, false)
+	require.Len(results, 2, "results was flattened")
+	require.Len(errs, 2, "errors were flattened")
+	require.NotNil(results[0], "expected testnet result to be not nil")
+	require.Nil(errs[0], "expected testnet error to be nil")
+	require.NotNil(results[1], "expected mainnet result to be not nil")
+	require.Nil(errs[1], "expected mainnet error to be nil")
+}
+
 func (s *bffTestSuite) TestParallelGDSRequests() {
 	var (
-		results []proto.Message
+		results []interface{}
 		errs    []error
 	)
 
@@ -116,39 +170,39 @@ func (s *bffTestSuite) TestParallelGDSRequests() {
 }
 
 func TestFlatten(t *testing.T) {
-	rep := &gds.ServiceState{Status: gds.ServiceState_HEALTHY}
+	repProto := &gds.ServiceState{Status: gds.ServiceState_HEALTHY}
 	err := errors.New("something bad happened")
 
 	testCases := []struct {
-		results     []proto.Message
+		results     []interface{}
 		errs        []error
 		expectedLen int
 	}{
 		{
-			results:     []proto.Message{nil, nil},
+			results:     []interface{}{nil, nil},
 			errs:        []error{nil, nil},
 			expectedLen: 0,
 		},
 		{
-			results:     []proto.Message{rep, nil},
+			results:     []interface{}{repProto, nil},
 			errs:        []error{err, nil},
 			expectedLen: 1,
 		},
 		{
-			results:     []proto.Message{nil, rep},
+			results:     []interface{}{nil, repProto},
 			errs:        []error{nil, err},
 			expectedLen: 1,
 		},
 		{
-			results:     []proto.Message{rep, rep},
+			results:     []interface{}{repProto, repProto},
 			errs:        []error{err, err},
 			expectedLen: 2,
 		},
 	}
 
 	for idx, tc := range testCases {
-		results := FlattenResults(tc.results)
-		require.Len(t, results, tc.expectedLen, "unexpected length in test case %d", idx)
+		protoResults := FlattenResults(tc.results)
+		require.Len(t, protoResults, tc.expectedLen, "unexpected length in test case %d", idx)
 
 		errs := FlattenErrs(tc.errs)
 		require.Len(t, errs, tc.expectedLen, "unexpected length in test case %d", idx)

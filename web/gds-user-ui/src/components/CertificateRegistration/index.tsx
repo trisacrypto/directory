@@ -49,7 +49,7 @@ const defaultRowData = [
   },
   {
     section: '6',
-    name: t`Review & Submit`,
+    name: t`Submit`,
     description: t`Final review and form submission`,
     status: null
   }

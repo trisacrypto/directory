@@ -6,10 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
+	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestLookup() {
@@ -62,69 +65,172 @@ func (s *bffTestSuite) TestLookup() {
 	require.NotEmpty(rep.TestNet, "expected testnet result from server")
 }
 
-func (s *bffTestSuite) TestRegister() {
+func (s *bffTestSuite) TestLoadRegisterForm() {
 	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	_, err := s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint must have the read:vasp permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions from claims")
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID and the server must not panic if it does not
+	claims.Permissions = []string{"read:vasp"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
+
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic and should return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+
+	_, err = s.client.LoadRegistrationForm(context.TODO())
+	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+	// Create organization in the database, but without registration form.
+	// An empty registration form should be returned without panic.
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+
+	form, err := s.client.LoadRegistrationForm(context.TODO())
+	require.NoError(err, "expected no error when no form data is stored")
+	require.NotNil(form, "expected empty registration form when no form data is stored")
+
+	// Load a registration form from fixtures and store it in the database
+	org.Registration = &records.RegistrationForm{}
+	err = loadFixture("testdata/registration_form.pb.json", org.Registration)
+	require.NoError(err, "could not load registration form fixture")
+	require.False(proto.Equal(form, org.Registration), "expected fixture to not be empty")
+
+	err = s.db.Organizations().Update(context.TODO(), org)
+	require.NoError(err, "could not update organization in database")
+
+	form, err = s.client.LoadRegistrationForm(context.TODO())
+	require.NoError(err, "expected no error when form data is available")
+	require.NotNil(form, "expected completed registration form when form data is available")
+	require.True(proto.Equal(form, org.Registration), "expected completed registration form when form data is available")
+}
+
+func (s *bffTestSuite) TestSaveRegisterForm() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Load registration forms fixture
+	form := &records.RegistrationForm{}
+	err := loadFixture("testdata/registration_form.pb.json", form)
+	require.NoError(err, "could not load registration form fixture")
+
+	// Endpoint requires CSRF protection
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.EqualError(err, "[403] csrf verification failed for request", "expected error when request is not CSRF protected")
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the update:vasp permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID and the server must panic if it does not
+	claims.Permissions = []string{"update:vasp"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic and should return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+	// Create an organization in the database that does not contain a registration form
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	// Create valid credentials for the remaining tests
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+
+	// Should be able to save an empty registration form
+	err = s.client.SaveRegistrationForm(context.TODO(), &records.RegistrationForm{})
+	require.NoError(err, "should not receive an error when saving an empty registration form")
+
+	// Should be able to save the fixture form
+	err = s.client.SaveRegistrationForm(context.TODO(), form)
+	require.NoError(err, "should not receive an error when saving a registration form")
+
+	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	require.NoError(err, "could not retrieve updated org from database")
+	require.True(proto.Equal(org.Registration, form), "expected form saved in database to match form uploaded")
+
+	// Should be able to "clear" a registration by saving an empty registration form
+	err = s.client.SaveRegistrationForm(context.TODO(), &records.RegistrationForm{})
+	require.NoError(err, "should not receive an error when saving an empty registration form")
+
+	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	require.NoError(err, "could not retrieve updated org from database")
+	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
+	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected form saved in database to be empty")
+}
+
+func (s *bffTestSuite) TestSubmitRegistration() {
+	var err error
+	require := s.Require()
+
+	// Test setup: create an organization with a valid registration form that has not
+	// been submitted yet - at the end of the test both mainnet and testnet should be
+	// submitted and the response from the directory updated on the organization.
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	// Save the registration form fixture on the organization
+	org.Registration = &records.RegistrationForm{}
+	require.NoError(loadFixture("testdata/registration_form.pb.json", org.Registration), "could not load registration form from the fixtures")
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
 
 	// Test both the testnet and the mainnet registration
 	for _, network := range []string{"testnet", "mainnet"} {
-		req := &api.RegisterRequest{
-			Network: network,
+		// Create new claims and unset CSRF protection to ensure that the endpoint
+		// permissions tests are checked for both testnet and mainnet.
+		s.client.(*api.APIv1).SetCredentials(nil)
+		s.client.(*api.APIv1).SetCSRFProtect(false)
+		claims := &authtest.Claims{
+			Email:       "leopold.wentzel@gmail.com",
+			Permissions: []string{"read:nothing"},
 		}
-
-		// Test Errors first - should make no calls to the mock GDS because the input is invalid.
-		// Test Business Category is required
-		_, err := s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] business category is required")
-
-		// Test Entity is required
-		req.BusinessCategory = "FOO"
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] entity is required")
-
-		// Test Contacts are required
-		req.Entity = map[string]interface{}{"name": 1}
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] contacts are required")
-
-		// Test TRIXO is required
-		req.Contacts = map[string]interface{}{"technical": "red"}
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] trixo is required")
-
-		// Test entity must be valid
-		req.TRIXO = map[string]interface{}{"primary_regulator": 1}
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] could not parse legal person entity")
-
-		// Test contacts must be valid
-		req.Entity, err = loadFixture("testdata/entity.json")
-		require.NoError(err, "could not load testdata/entity.json")
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] could not parse contacts")
-
-		// Test business category must be valid
-		req.Contacts, err = loadFixture("testdata/contacts.json")
-		require.NoError(err, "could not load testdata/contacts.json")
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] could not parse \"FOO\" into a business category")
-
-		// Test TRIXO must be valid
-		req.BusinessCategory = models.BusinessCategoryPrivate.String()
-		_, err = s.client.Register(context.TODO(), req)
-		require.EqualError(err, "[400] could not parse TRIXO form")
-
-		// We now have a valid request from BFF's perspective because BFF only handles
-		// the intermediate parsing of the protocol buffers. However, the GDS can still
-		// validate e.g. if the common name doesn't match the endpoint or the entity is
-		// not a valid IVMS 101 LegalPerson struct. So we simulate the GDS returning an
-		// invalid argument, which the BFF should pass back as a 400 error.
-		req.TRIXO, err = loadFixture("testdata/trixo.json")
-		require.NoError(err, "could not load testdata/trixo.json")
-		req.TRISAEndpoint = "trisa.example.com:443"
-		req.CommonName = "trisa.example.com"
-		req.Website = "https://example.com"
-		req.VASPCategories = []string{models.VASPCategoryKiosk, models.VASPCategoryProject}
-		req.EstablishedOn = "2019-06-21"
 
 		// Identify the mock being used in this loop
 		var mgds *mock.GDS
@@ -140,51 +246,83 @@ func (s *bffTestSuite) TestRegister() {
 		s.testnet.gds.Reset()
 		s.mainnet.gds.Reset()
 
-		// Test Invalid Argument Error
+		// Endpoint should require CSRF protection
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[403] csrf verification failed for request", "expected error when request is not CSRF protected")
+
+		// Endpoint must be authenticated
+		require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+		// Endpoint requires the update:vasp permission
+		require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+		// Claims must have an organization ID and the server must panic if it does not
+		claims.Permissions = []string{"update:vasp"}
+		require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+		// Create valid claims but no record in the database - should not panic and should return an error
+		claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+		require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+		// From this point on submit valid claims and test responses from GDS
+		// NOTE: for registration form validation see TestSubmitRegistrationNotReady
+		claims.OrgID = org.Id
+		require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+
+		// Test GDS returns Invalid Argument Error
 		mgds.UseError(mock.RegisterRPC, codes.InvalidArgument, "the TRISA endpoint is not valid")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] the TRISA endpoint is not valid")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
-		// Test Already Exists error
+		// Test GDS returns Already Exists error
 		mgds.UseError(mock.RegisterRPC, codes.AlreadyExists, "this VASP is already registered")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[400] this VASP is already registered")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
-		// Test Aborted error
+		// Test GDS returns Aborted error
 		mgds.UseError(mock.RegisterRPC, codes.Aborted, "a conflict occurred")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, "[409] a conflict occurred")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
-		// Test Timeout error
+		// Test GDS returns Timeout error
 		mgds.UseError(mock.RegisterRPC, codes.DeadlineExceeded, "deadline exceeded")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
-		// Test FailedPrecondition error
+		// Test GDS returnsFailedPrecondition error
 		mgds.UseError(mock.RegisterRPC, codes.FailedPrecondition, "couldn't access database")
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
 		// Test a valid register reply
+		// TODO: we should validate what is being sent to the GDS server
 		err = mgds.UseFixture(mock.RegisterRPC, fmt.Sprintf("testdata/%s/register_reply.json", network))
 		require.NoError(err, "could not load register reply fixture")
 
-		rep, err := s.client.Register(context.TODO(), req)
+		rep, err := s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
 		require.NoError(err, "could not make register call with valid payload")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
@@ -194,17 +332,121 @@ func (s *bffTestSuite) TestRegister() {
 		require.Empty(rep.Error, "an error message was returned from the server")
 		require.NotEmpty(rep.Id, "the ID was not returned from the server")
 		require.NotEmpty(rep.RegisteredDirectory, "the registered directory was not returned from the server")
-		require.Equal(rep.CommonName, "trisa.example.com", "the common name was not returned from the server")
+		require.NotEmpty(rep.CommonName, "the common name was not returned from the server")
 		require.Equal(rep.Status, "PENDING_REVIEW", "the verification status was not returned by the server")
 		require.Equal(rep.Message, "thank you for registering", "a message was not returned from the server")
 		require.Equal(rep.PKCS12Password, "supersecret", "a pkcs12 password was not returned from the server")
 
 		// Test that a post to an incorrect network returns an error.
-		req.Network = "foo"
-		_, err = s.client.Register(context.TODO(), req)
+		_, err = s.client.SubmitRegistration(context.TODO(), "notanetwork")
 		require.EqualError(err, "[404] network should be either testnet or mainnet")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
+	}
+
+	// Ensure that the directory record is stored on the database after registration
+	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	require.NoError(err, "could not update organization from the database")
+
+	require.NotNil(org.Testnet, "missing testnet directory record after registration")
+	require.Equal(org.Testnet.Id, "6041571e-09b4-47e7-870a-723f8032cd6c", "incorrect testnet directory id")
+	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registerd directory ")
+	require.Equal(org.Testnet.CommonName, "test.trisa.example.ua", "incorrect testnet directory common name")
+	require.NotEmpty(org.Testnet.Submitted, "expected testnet submitted timestamp stored in database")
+
+	require.NotNil(org.Mainnet, "missing mainnet directory record after registration")
+	require.Equal(org.Mainnet.Id, "5bafb054-5868-439e-9b3c-75db91810714", "incorrect mainnet directory id")
+	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registerd directory ")
+	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
+	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
+}
+
+func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
+	require := s.Require()
+
+	// Ensure that a bad argument error is returned if the registration form is not
+	// ready to submit. Create an organization that has a registration form without
+	// network details and valid claims to access the record.
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	// Ensure the registration is not ready to submit by removing mainnet and testnet
+	org.Registration = &records.RegistrationForm{}
+	require.NoError(loadFixture("testdata/registration_form.pb.json", org.Registration), "could not load registration form from the fixtures")
+	org.Registration.Mainnet = nil
+	org.Registration.Testnet = nil
+	require.False(org.Registration.ReadyToSubmit("both"), "registration should not be ready to submit")
+
+	// Save the registration form fixture on the organization
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
+
+	// Create authenticated user context
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"update:vasp"},
+		OrgID:       org.Id,
+	}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	require.NoError(s.SetClientCSRFProtection(), "could not set CSRF protection on client")
+
+	// Expect 400 error for both mainnet and testnet
+	for _, network := range []string{"testnet", "mainnet"} {
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, "[400] registration form is not ready to submit", "expected error when registration form is not ready to submit")
+	}
+
+	// While we're here, also test that we receive a 404 for a bad network
+	_, err = s.client.SubmitRegistration(context.TODO(), "notanetwork")
+	require.EqualError(err, "[404] network should be either testnet or mainnet", "expected error when submitting registration to incorrect network name")
+}
+
+func (s *bffTestSuite) TestCannotResubmitRegistration() {
+	require := s.Require()
+
+	// Ensure that a conflict error is returned if the registration form has already
+	// been ready to submitted. Create an organization that has directory records for
+	// both networks and valid claims to access the record.
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	// Ensure the registration is not ready to submit by removing mainnet and testnet
+	org.Testnet = &records.DirectoryRecord{
+		Id:                  uuid.NewString(),
+		CommonName:          "test.trisa.example.com",
+		RegisteredDirectory: "trisatest.net",
+		Submitted:           "2022-02-21T15:32:31Z",
+	}
+	org.Mainnet = &records.DirectoryRecord{
+		Id:                  uuid.NewString(),
+		CommonName:          "trisa.example.com",
+		RegisteredDirectory: "vaspdirectory.net",
+		Submitted:           "2022-02-23T09:51:15Z",
+	}
+
+	// Save the registration form fixture on the organization
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
+
+	// Create authenticated user context
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"update:vasp"},
+		OrgID:       org.Id,
+	}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	require.NoError(s.SetClientCSRFProtection(), "could not set CSRF protection on client")
+
+	// Expect 400 error for both mainnet and testnet
+	for _, network := range []string{"testnet", "mainnet"} {
+		_, err = s.client.SubmitRegistration(context.TODO(), network)
+		require.EqualError(err, fmt.Sprintf("[409] registration form has already been submitted to the %s", network), "expected error when registration form has already been submitted")
 	}
 }
 

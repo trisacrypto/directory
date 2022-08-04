@@ -6,6 +6,13 @@ export const getMetrics = async (query?: string) => {
       Authorization: `Bearer ${getCookie('access_token')}`
     }
   });
-
+  return response;
+};
+export const getAnnouncementsData = async () => {
+  const response = await axiosInstance.get(`/announcements`, {
+    headers: {
+      Authorization: `Bearer ${getCookie('access_token')}`
+    }
+  });
   return response;
 };

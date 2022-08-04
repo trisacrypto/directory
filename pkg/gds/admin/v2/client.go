@@ -17,15 +17,27 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 )
 
-// New creates a new admin.v2 API client that implements the Service interface.
-func New(endpoint string, creds Credentials) (_ DirectoryAdministrationClient, err error) {
+// New creates a new admin.v2 API client from the provided http.Client. If no http
+// Client is provided, a defaul one is created.
+func New(endpoint string, creds Credentials, opts ...ClientOption) (_ DirectoryAdministrationClient, err error) {
 	c := &APIv2{
 		creds: creds,
-		client: &http.Client{
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		if err = opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// If a client hasn't been specified, create a default one
+	if c.client == nil {
+		c.client = &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
 			Timeout:       30 * time.Second,
-		},
+		}
 	}
 
 	// Create cookie jar

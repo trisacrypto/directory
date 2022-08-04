@@ -12,8 +12,8 @@ import (
 
 const (
 	HD    = "hd"
-	EMAIL = "bff@rotational.io"
-	NAME  = "GDS BFF"
+	Email = "bff@rotational.io"
+	Name  = "GDS BFF"
 )
 
 // New creates a new DirectoryAdministrationClient which uses its own self signed
@@ -44,6 +44,16 @@ func NewCredentials(tokenKeys map[string]string, audience string) (_ admin.Crede
 	return creds, nil
 }
 
+// NewCredentialsFromTokens creates a new Credentials object from a token manager for
+// testing purposes.
+func NewCredentialsFromTokens(tm *tokens.TokenManager) (_ admin.Credentials, err error) {
+	creds := &Credentials{
+		tm: tm,
+	}
+
+	return creds, nil
+}
+
 // Credentials implements the admin.Credentials interface to provide access tokens to
 // authenticated requests.
 type Credentials struct {
@@ -63,8 +73,8 @@ func (c *Credentials) Generate(api admin.DirectoryAdministrationClient) (err err
 
 	claims := map[string]interface{}{
 		"hd":      HD,
-		"email":   EMAIL,
-		"name":    NAME,
+		"email":   Email,
+		"name":    Name,
 		"picture": "",
 	}
 
