@@ -16,9 +16,13 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
+import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 import { useNavigate } from 'react-router-dom';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
+import { useForm } from 'react-hook-form';
+
+interface ConfirmationModalProps {}
 const ConfirmationResetForm = (props: any) => {
   const navigate = useNavigate();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
@@ -33,6 +37,7 @@ const ConfirmationResetForm = (props: any) => {
     setIsLoading(true);
     // props.onReset(loadDefaultValueFromLocalStorage);
     resetForm();
+    props.onReset(getRegistrationDefaultValues());
     props.onChangeResetState(true);
     props.onChangeState(false);
     setIsLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
@@ -126,7 +126,6 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      console.log('handleNextStepClick', methods.getValues());
       postRegistrationValue(methods.getValues());
       nextStep({
         isFormCompleted: isFormCompleted(),
@@ -153,56 +152,19 @@ const Certificate: React.FC = () => {
   const onChangeResetForm = (value: boolean) => {
     setIsResetForm(value);
   };
-  // handle file upload by extract json file , validate schema  and post to server
-  const handleFileUploaded = (file: any) => {
-    console.log('[handleFileUploaded]', file);
-    setIsLoading(true);
-    const reader = new FileReader();
-    reader.onload = async (ev: any) => {
-      const data = JSON.parse(ev.target.result);
-      console.log('[read data]', data);
-      try {
-        const validationData = await validationSchema[0].validate(data);
-        console.log('[validationData]', validationData);
-        if (validationData.error) {
-          console.log('[validationData.error]', validationData.error);
-          toast({
-            position: 'top',
-            title: `Invalid file format`,
-            status: 'error',
-            isClosable: true,
-            containerStyle: {
-              width: '800px',
-              maxWidth: '100%'
-            }
-          });
-          setIsLoading(false);
-        }
-        if (validationData.value) {
-          console.log('[validationData.value]', validationData.value);
 
-          postRegistrationValue(validationData.value);
-          setIsLoading(false);
-          setShouldFillForm(true);
-        }
+  const resetForm = useCallback(() => {
+    const defaultValue =
+      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
+    
+    reset(defaultValue);
+  }, [reset, registrationData]);
 
-        reader.readAsText(file);
-      } catch (e: any) {
-        toast({
-          position: 'top',
-          title: `Invalid file format`,
-          description: e.message || 'your json file is invalid',
-          status: 'error',
-          isClosable: true,
-          containerStyle: {
-            width: '800px',
-            maxWidth: '100%'
-          }
-        });
-        setIsLoading(false);
-      }
-    };
-  };
+  useEffect(() => {
+    resetForm();
+    setIsResetForm(false);
+  }, [isResetForm, resetForm]);
+
   // handle reset modal
   useEffect(() => {
     if (isResetModalOpen) {
@@ -211,13 +173,11 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
-  useEffect(() => {
-    const defaultValue =
-      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-    reset(defaultValue);
-    setIsResetForm(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registrationData, isResetForm]);
+  // useEffect(() => {
+
+  //   setIsResetForm(false);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [registrationData, isResetForm]);
 
   // load default value from trtl
   useEffect(() => {
@@ -315,6 +275,7 @@ const Certificate: React.FC = () => {
             onClose={onClose}
             onChangeState={onChangeModalState}
             onRefeshState={forceUpdate}
+            onReset={reset}
             onChangeResetState={onChangeResetForm}
           />
         )}
