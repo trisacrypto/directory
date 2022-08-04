@@ -31,6 +31,9 @@ const stepperSlice: any = createSlice({
         }
       });
     },
+    setHasReachSubmitStep: (state: any, { payload }: any) => {
+      state.hasReachSubmitStep = payload.hasReachSubmitStep;
+    },
     setLastStep: (state: any, { payload }: any) => {
       state.lastStep = payload.lastStep;
     },
@@ -77,5 +80,6 @@ export const {
   setStepFormValue,
   getCurrentFormValues,
   setSubmitStep,
-  clearStepper
+  clearStepper,
+  setHasReachSubmitStep
 } = stepperSlice.actions;

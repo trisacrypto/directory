@@ -24,8 +24,8 @@ describe('<AddressForm />', () => {
     expect(secondAddressLine.name).toBe(`${name}[${rowIndex}].address_line[1]`);
 
     // postal code
-    const thirdAddressLine = screen.getByTestId('postal_code') as HTMLInputElement;
+    const thirdAddressLine = screen.getByTestId('post_code') as HTMLInputElement;
     expect(thirdAddressLine).toBeVisible();
-    expect(thirdAddressLine.name).toBe(`${name}[${rowIndex}].postal_code`);
+    expect(thirdAddressLine.name).toBe(`${name}[${rowIndex}].post_code`);
   });
 });

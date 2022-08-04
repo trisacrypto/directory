@@ -159,10 +159,16 @@ const Certificate: React.FC = () => {
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getRegistrationDefaultValue();
-      console.log('[getRegistrationData]', data);
-      setRegistrationData(data);
-      setIsLoadingDefaultValue(false);
+      try {
+        const data = await getRegistrationDefaultValue();
+        console.log('[getRegistrationData]', data);
+        setRegistrationData(data);
+        setIsLoadingDefaultValue(false);
+      } catch (error) {
+        console.log('[getRegistrationData]', error);
+      } finally {
+        setIsLoadingDefaultValue(false);
+      }
     };
     fetchData();
   }, []);
