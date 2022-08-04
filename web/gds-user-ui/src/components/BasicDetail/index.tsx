@@ -9,15 +9,17 @@ import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 import FileUploader from 'components/FileUpload';
 import MinusLoader from 'components/Loader/MinusLoader';
+import { useNavigate } from 'react-router-dom';
 import { fieldNamesPerSteps, validationSchema } from 'modules/dashboard/certificate/lib';
 import { postRegistrationValue } from 'modules/dashboard/registration/utils';
 const BasicDetails: React.FC = () => {
+  const navigate = useNavigate();
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
   const bg = useColorModeValue('#F7F8FC', 'gray.800');
-  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(true);
+  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
     console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
@@ -28,9 +30,9 @@ const BasicDetails: React.FC = () => {
       try {
         const validationData = await validationSchema[0].validate(data);
         console.log('[validationData]', validationData);
-
-        postRegistrationValue(validationData.value);
+        postRegistrationValue(validationData);
         setIsLoadingDefaultValue(false);
+        navigate('/dashboard/certificate/registration');
       } catch (e: any) {
         toast({
           title: 'Invalid file',
@@ -40,7 +42,6 @@ const BasicDetails: React.FC = () => {
           isClosable: true,
           position: 'top-right'
         });
-
         setIsLoadingDefaultValue(false);
         handleError(e, 'Importing data failed');
       } finally {

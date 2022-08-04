@@ -5,7 +5,8 @@ import {
   FormErrorMessage,
   FormLabel,
   Icon,
-  InputGroup
+  InputGroup,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { useForm, UseFormRegisterReturn } from 'react-hook-form';
 import { FiFile } from 'react-icons/fi';
@@ -86,7 +87,11 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
             onFileSubmit={onSubmit}
             onReaderLoader={onReadFileUploaded}
             register={register('file_', { validate: validateFiles })}>
-            <Button bg={'#555151'} leftIcon={<Icon as={FiFile} />} minWidth={150}>
+            <Button
+              bg={useColorModeValue('black', 'white')}
+              color={useColorModeValue('white', 'black')}
+              leftIcon={<Icon as={FiFile} />}
+              minWidth={150}>
               Import File
             </Button>
           </FileUpload>

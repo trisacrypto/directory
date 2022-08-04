@@ -14,6 +14,12 @@ import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalD
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
+import {
+  getRegistrationDefaultValue,
+  postRegistrationValue,
+  setRegistrationDefaultValue
+} from 'modules/dashboard/registration/utils';
+import { handleError } from 'utils/utils';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
@@ -52,16 +58,25 @@ const Overview: React.FC = () => {
 
   // load legal person & contact information
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
+    const fetchRegistration = async () => {
+      try {
+        const registration = await getRegistrationDefaultValue();
+        if (registration.status === 200) {
+          setStepperData(registration.data);
+        }
+      } catch (e: any) {
+        handleError(e, '[Overview] fetchRegistration failed');
+      }
+    };
+    fetchRegistration();
+
     const trisaDetailData = {
-      mainnet: getStepperData.trisa_endpoint_mainnet,
-      testnet: getStepperData.trisa_endpoint_testnet,
+      mainnet: stepperData.trisa_endpoint_mainnet,
+      testnet: stepperData.trisa_endpoint_testnet,
       organization: result.organization
     };
 
     setTrisaData(trisaDetailData);
-
-    setStepperData(getStepperData);
   }, [result]);
 
   return (
