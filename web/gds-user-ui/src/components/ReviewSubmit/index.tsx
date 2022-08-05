@@ -53,7 +53,6 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   }, [isTestNetSent, isMainNetSent]);
 
   const handleJumpToLastStep = () => {
-    console.log('jump to last step');
     jumpToLastStep();
     navigate('/dashboard/certificate/registration');
   };

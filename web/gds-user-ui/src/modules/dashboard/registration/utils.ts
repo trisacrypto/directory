@@ -26,6 +26,7 @@ export const getRegistrationDefaultValue = async () => {
 };
 
 export const postRegistrationValue = (data: any) => {
+  console.log('[postRegistrationValue]', data);
   return new Promise((resolve, reject) => {
     postRegistrationData(data)
       .then((res) => {
@@ -79,4 +80,57 @@ export const downloadRegistrationData = async () => {
   } catch (err: any) {
     handleError(err, 'failed to get registration data');
   }
+};
+
+// load default stepper
+
+export const getDefaultStepper = async () => {
+  try {
+    const regData = await getRegistrationData();
+    if (regData.status === 200 && Object.keys(regData.data).length > 0) {
+      return {
+        currentStep: regData.data.state.current,
+        steps: regData.data.state.steps,
+        lastStep: null,
+        hasReachSubmitStep: false
+      };
+    }
+    const defaultValue: any = {
+      current: 1,
+      steps: [
+        {
+          key: 1,
+          status: 'progress'
+        }
+      ]
+    };
+    // update registrations state object
+    const postData = await postRegistrationData({ state: defaultValue });
+    if (postData.status === 204) {
+      const getData = await getRegistrationData();
+      return {
+        currentStep: getData.data.state.current,
+        steps: getData.data.state.steps,
+        lastStep: null,
+        hasReachSubmitStep: false
+      };
+    }
+  } catch (err: any) {
+    handleError(err, 'failed to get stepper data');
+  }
+};
+
+// load default stepper without async call
+export const loadDefaultStepperSync = () => {
+  return Promise.resolve({
+    currentStep: 1,
+    steps: [
+      {
+        key: 1,
+        status: 'progress'
+      }
+    ],
+    lastStep: null,
+    hasReachSubmitStep: false
+  });
 };

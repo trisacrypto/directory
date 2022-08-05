@@ -1,10 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { clear } from 'console';
 import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
+import { loadDefaultStepperSync } from 'modules/dashboard/registration/utils';
 export type TStep = {
   status: string;
   key?: number;
-  data?: any;
 };
 export type TPayload = {
   currentStep: number | string;
@@ -12,7 +12,16 @@ export type TPayload = {
   lastStep: number | null;
   hasReachSubmitStep?: boolean;
 };
-export const initialValue: TPayload = loadStepperFromLocalStorage();
+export const initialValue: TPayload = {
+  currentStep: 1,
+  steps: [
+    {
+      status: 'progress'
+    }
+  ],
+  lastStep: null,
+  hasReachSubmitStep: false
+};
 
 const stepperSlice: any = createSlice({
   name: 'stepper',
@@ -56,12 +65,22 @@ const stepperSlice: any = createSlice({
     setSubmitStep: (state: any, { payload }: any) => {
       state.hasReachSubmitStep = payload.submitStep;
     },
+    // set initial value
+    setInitialValue: (state: TPayload, { payload }: any) => {
+      state.currentStep = payload.currentStep;
+      state.steps = payload.steps;
+      state.lastStep = payload.lastStep;
+      state.hasReachSubmitStep = payload.hasReachSubmitStep;
+    },
+    // get current state
+    getCurrentState: (state: TPayload) => {
+      return state;
+    },
     clearStepper: (state: any) => {
       state.steps = [
         {
           key: 1,
-          status: 'progress',
-          data: {}
+          status: 'progress'
         }
       ];
       state.currentStep = 1;
@@ -81,5 +100,7 @@ export const {
   getCurrentFormValues,
   setSubmitStep,
   clearStepper,
-  setHasReachSubmitStep
+  setHasReachSubmitStep,
+  setInitialValue,
+  getCurrentState
 } = stepperSlice.actions;

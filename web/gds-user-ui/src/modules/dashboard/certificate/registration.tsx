@@ -30,7 +30,7 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-import FileUploader from 'components/FileUpload';
+
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
@@ -41,27 +41,28 @@ const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-
+import {
+  getCurrentStep,
+  getSteps,
+  getCurrentState,
+  getLastStep
+} from 'application/store/selectors/stepper';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   const [isResetForm, setIsResetForm] = useState<boolean>(false);
-  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(true);
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
-  const { nextStep, previousStep } = useCertificateStepper();
+  const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
-  const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const currentStep: number = useSelector(getCurrentStep);
+  const lastStep: number = useSelector(getLastStep);
+  const steps: number = useSelector(getSteps);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
+  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLoadingRegistration, setIsLoadingRegistration] = useState<boolean>(false);
-  const [isLoadingRegistrationDefaultValue, setIsLoadingRegistrationDefaultValue] =
-    useState<boolean>(false);
-  const [shouldFillForm, setShouldFillForm] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -69,10 +70,11 @@ const Certificate: React.FC = () => {
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
+    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
-  console.log('[registrationData from state]', registrationData);
+  // console.log('[registrationData from state]', registrationData);
   const methods = useForm({
     defaultValues: registrationData,
     resolver,
@@ -105,7 +107,7 @@ const Certificate: React.FC = () => {
       if (hasStepError(steps)) {
         toast({
           position: 'top',
-          title: `Please fill in all required fields before proceeding`,
+          title: t`Please fill in all required fields before proceeding`,
           status: 'error',
           isClosable: true,
           containerStyle: {
@@ -126,7 +128,10 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      postRegistrationValue(methods.getValues());
+      postRegistrationValue({
+        ...methods.getValues(),
+        state: { ...currentState() }
+      });
       nextStep({
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue()
@@ -156,7 +161,7 @@ const Certificate: React.FC = () => {
   const resetForm = useCallback(() => {
     const defaultValue =
       Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-    
+
     reset(defaultValue);
   }, [reset, registrationData]);
 
@@ -186,6 +191,9 @@ const Certificate: React.FC = () => {
         const data = await getRegistrationDefaultValue();
         console.log('[getRegistrationData]', data);
         setRegistrationData(data);
+        if (data?.state && data?.state?.current) {
+          setInitialState(data.state);
+        }
       } catch (error) {
         console.log('[getRegistrationData]', error);
       } finally {
@@ -194,13 +202,7 @@ const Certificate: React.FC = () => {
     };
     fetchData();
   }, []);
-  // should choose to fill form or import file when value is default
-  useEffect(() => {
-    console.log('[isDefaultValue]', isDefaultValue());
-    if (!isDefaultValue()) {
-      setShouldFillForm(true);
-    }
-  }, [registrationData]);
+
   return (
     <SimpleDashboardLayout>
       <>

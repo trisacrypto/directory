@@ -71,8 +71,8 @@ const Overview: React.FC = () => {
     fetchRegistration();
 
     const trisaDetailData = {
-      mainnet: stepperData.trisa_endpoint_mainnet,
-      testnet: stepperData.trisa_endpoint_testnet,
+      mainnet: stepperData.mainnet,
+      testnet: stepperData.testnet,
       organization: result.organization
     };
 

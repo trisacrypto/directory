@@ -1,5 +1,9 @@
 import { getSteps, getLastStep, resetStepper } from './../application/store/selectors/stepper';
-import { getCurrentStep, getHasReachSubmitStep } from 'application/store/selectors/stepper';
+import {
+  getCurrentStep,
+  getHasReachSubmitStep,
+  getCurrentState
+} from 'application/store/selectors/stepper';
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
@@ -10,7 +14,8 @@ import {
   setStepFormValue,
   setSubmitStep,
   clearStepper,
-  setHasReachSubmitStep
+  setHasReachSubmitStep,
+  setInitialValue
 } from 'application/store/stepper.slice';
 import {
   setStepperFromLocalStorage,
@@ -39,15 +44,10 @@ const useCertificateStepper = () => {
   const steps: TStep[] = useSelector(getSteps);
   const lastStep: number = useSelector(getLastStep);
   const hasReachSubmitStep: any = useSelector(getHasReachSubmitStep);
-
+  const currentValue: TPayload = useSelector(getCurrentState);
   const nextStep = (state?: TState) => {
-    // if form value is set then save it to the dedicated step
-    if (state?.formValues) {
-      dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
-    }
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
-      setStepperFromLocalStorage({ step: currentStep, status: LSTATUS.COMPLETE });
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
     // if we got an error that means require element are not completed
@@ -80,7 +80,7 @@ const useCertificateStepper = () => {
     if (currentStep === lastStep) {
       // that mean we move to submit step
       if (!hasStepError(steps)) {
-        setStepperFromLocalStorage({ step: lastStep });
+        // setStepperFromLocalStorage({ step: lastStep });
         dispatch(setSubmitStep({ submitStep: true }));
         dispatch(setCurrentStep({ currentStep: lastStep }));
       }
@@ -88,8 +88,8 @@ const useCertificateStepper = () => {
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
-        setStepperFromLocalStorage({ step: currentStep + 1, status: LSTATUS.PROGRESS });
-        addStepToLocalStorage({ key: currentStep + 1, status: LSTATUS.PROGRESS });
+        // setStepperFromLocalStorage({ step: currentStep + 1, status: LSTATUS.PROGRESS });
+        // addStepToLocalStorage({ key: currentStep + 1, status: LSTATUS.PROGRESS });
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
@@ -105,9 +105,7 @@ const useCertificateStepper = () => {
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
     }
-
     // do not allow to go back for the first step
-
     const step = currentStep;
     if (currentStep === 1) {
       return;
@@ -135,12 +133,35 @@ const useCertificateStepper = () => {
     dispatch(clearStepper());
   };
 
+  const setInitialState = (value: any) => {
+    const state: TPayload = {
+      currentStep: value.current,
+      steps: value.steps,
+      lastStep: 6,
+      hasReachSubmitStep: value.ready_to_submit
+    };
+    dispatch(setInitialValue(state));
+  };
+
+  // get current state
+
+  const currentState = () => {
+    console.log('currentState', currentValue);
+    const formatState = {
+      current: currentValue.currentStep,
+      steps: currentValue.steps,
+      ready_to_submit: currentValue.hasReachSubmitStep
+    };
+    return formatState;
+  };
   return {
     nextStep,
     previousStep,
     jumpToStep,
     resetForm,
-    jumpToLastStep
+    jumpToLastStep,
+    setInitialState,
+    currentState
   };
 };
 

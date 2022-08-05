@@ -26,21 +26,6 @@ const CertificateReview = () => {
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
-      // const formValue = loadDefaultValueFromLocalStorage();
-      // const getMainnetObj = formValue.trisa_endpoint_mainnet;
-      // const getTestnetObj = formValue.trisa_endpoint_testnet;
-
-      // delete formValue.trisa_endpoint_mainnet;
-      // delete formValue.trisa_endpoint_testnet;
-      // if (network === 'testnet') {
-      //   formValue.trisa_endpoint = getTestnetObj.endpoint;
-      //   formValue.common_name = getTestnetObj.common_name;
-      // }
-      // if (network === 'mainnet') {
-      //   formValue.trisa_endpoint = getMainnetObj.endpoint;
-      //   formValue.common_name = getMainnetObj.common_name;
-      // }
-
       if (network === 'testnet') {
         const response = await submitTestnetRegistration();
         console.log('[response testnet]', response);
@@ -58,10 +43,9 @@ const CertificateReview = () => {
         }
       }
     } catch (err: any) {
-      console.log('[err catched 0]', err);
-
+      console.log('[err catched]', err);
       if (!err?.response?.data?.success) {
-        console.log('[err catched]', err?.response);
+        console.log('[err catched]', err?.response.data.error);
         toast({
           position: 'top-right',
           title: t`Error Submitting Certificate`,
