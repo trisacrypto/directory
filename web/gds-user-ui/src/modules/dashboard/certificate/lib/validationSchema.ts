@@ -228,7 +228,11 @@ export const validationSchema = [
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(yup.string())
+        .of(
+          yup.object().shape({
+            name: yup.string()
+          })
+        )
         .transform((value, originalValue) => {
           if (originalValue) {
             return originalValue.filter((item: any) => item.length > 0);

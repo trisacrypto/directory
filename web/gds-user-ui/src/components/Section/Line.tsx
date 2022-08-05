@@ -13,7 +13,7 @@ export const Line: React.FC<Props> = ({ children, title, ...rest }) => {
         <Flex rounded="md" bg={useColorModeValue('brand.500', '')} color="white"></Flex>
       </Flex>
       <Box ml={4}>
-        <chakra.dt fontSize="lg" data-testid="title" fontWeight="medium" lineHeight="6" {...rest}>
+        <chakra.dt fontSize="lg" data-testid="title" fontWeight="bold" lineHeight="6" {...rest}>
           {title}
         </chakra.dt>
         <chakra.dd mt={2}>{children}</chakra.dd>

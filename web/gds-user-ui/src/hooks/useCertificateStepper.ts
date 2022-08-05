@@ -17,11 +17,6 @@ import {
   setHasReachSubmitStep,
   setInitialValue
 } from 'application/store/stepper.slice';
-import {
-  setStepperFromLocalStorage,
-  addStepToLocalStorage,
-  clearStepperFromLocalStorage
-} from 'utils/localStorageHelper';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';

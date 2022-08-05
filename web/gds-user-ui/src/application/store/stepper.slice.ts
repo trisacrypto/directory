@@ -1,7 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { clear } from 'console';
-import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
-import { loadDefaultStepperSync } from 'modules/dashboard/registration/utils';
+import { createSlice } from '@reduxjs/toolkit';
+
 export type TStep = {
   status: string;
   key?: number;
