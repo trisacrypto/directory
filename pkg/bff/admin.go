@@ -134,16 +134,17 @@ func (s *Server) Certificates(c *gin.Context) {
 }
 
 const (
+	supportEmail         = "support@rotational.io"
 	StartRegistration    = "Start the registration and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
 	CompleteRegistration = "Complete the registration process and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
 	SubmitTestnet        = "Review and submit your TestNet registration."
 	SubmitMainnet        = "Review and submit your MainNet registration."
-	VerifyEmails         = "Your organization's %s registration has been submitted and verification emails have been sent to the contacts specified in the form. Contacts and email addresses must be verified as the first step in the approval process. Please request that contacts verify their email addresses promptly so that the TRISA Validation Team can proceed with the validation process. Please contact TRISA support at support@trisa.io if contacts have not received the verification email and link."
+	VerifyEmails         = "Your organization's %s registration has been submitted and verification emails have been sent to the contacts specified in the form. Contacts and email addresses must be verified as the first step in the approval process. Please request that contacts verify their email addresses promptly so that the TRISA Validation Team can proceed with the validation process. Please contact TRISA support at " + supportEmail + " if contacts have not received the verification email and link."
 	RegistrationPending  = "Your organization's %s registration has been received and is pending approval. The TRISA Validation Team will notify you about the outcome."
-	RegistrationRejected = "Your organization's %s registration has been rejected by the TRISA Validation Team. This means your organization is not a verified member of the TRISA network and cannot communicate with other members. Please contact TRISA support at support@trisa.io for additional details and next steps."
+	RegistrationRejected = "Your organization's %s registration has been rejected by the TRISA Validation Team. This means your organization is not a verified member of the TRISA network and cannot communicate with other members. Please contact TRISA support at " + supportEmail + " for additional details and next steps."
 	RegistrationApproved = "Your organization's %s registration has been approved by the TRISA Validation Team. Take the next steps to integrate, test, and begin sending complicance messages with TRISA-verified counterparties."
 	RenewCertificate     = "Your organization's %s X.509 Identity Certificate will expire on %s. Start the renewal process to receive a new X.509 Identity Certificate and remain a trusted member of the TRISA network."
-	CertificateRevoked   = "Your organization's %s X.509 Identity Certificate has been revoked by TRISA. This means your organization is no longer a verified member of the TRISA network and can no longer communicate with other members. Please contact TRISA support at support@trisa.io for additional details and next steps."
+	CertificateRevoked   = "Your organization's %s X.509 Identity Certificate has been revoked by TRISA. This means your organization is no longer a verified member of the TRISA network and can no longer communicate with other members. Please contact TRISA support at " + supportEmail + " for additional details and next steps."
 )
 
 // GetVASPs makes parallel calls to the admin APIs to retrieve VASP records from
