@@ -149,5 +149,5 @@ export const handleError = (error: any, customMessage?: string) => {
 
 // uppercased first letter
 export const upperCaseFirstLetter = (str: any) => {
-  return str?.charAt(0)?.toUpperCase() + str.slice(1);
+  return str?.charAt(0)?.toUpperCase() + str?.slice(1);
 };

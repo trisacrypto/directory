@@ -1,5 +1,5 @@
 import { getSteps, getLastStep, resetStepper } from './../application/store/selectors/stepper';
-import { getCurrentStep } from 'application/store/selectors/stepper';
+import { getCurrentStep, getHasReachSubmitStep } from 'application/store/selectors/stepper';
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
@@ -9,7 +9,8 @@ import {
   TStep,
   setStepFormValue,
   setSubmitStep,
-  clearStepper
+  clearStepper,
+  setHasReachSubmitStep
 } from 'application/store/stepper.slice';
 import {
   setStepperFromLocalStorage,
@@ -37,6 +38,7 @@ const useCertificateStepper = () => {
   const currentStep: number = useSelector(getCurrentStep);
   const steps: TStep[] = useSelector(getSteps);
   const lastStep: number = useSelector(getLastStep);
+  const hasReachSubmitStep: any = useSelector(getHasReachSubmitStep);
 
   const nextStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
@@ -124,6 +126,10 @@ const useCertificateStepper = () => {
     dispatch(setCurrentStep({ currentStep: step }));
   };
 
+  const jumpToLastStep = () => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
+  };
+
   const resetForm = () => {
     setRegistrationDefaultValue();
     dispatch(clearStepper());
@@ -133,7 +139,8 @@ const useCertificateStepper = () => {
     nextStep,
     previousStep,
     jumpToStep,
-    resetForm
+    resetForm,
+    jumpToLastStep
   };
 };
 
