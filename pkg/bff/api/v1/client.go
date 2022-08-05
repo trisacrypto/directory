@@ -209,6 +209,22 @@ func (s *APIv1) SubmitRegistration(ctx context.Context, network string) (out *Re
 	return out, nil
 }
 
+// RegistrationStatus returns the status of the VASP registrations for the organization.
+func (s *APIv1) RegistrationStatus(ctx context.Context) (out *RegistrationStatus, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/registration", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &RegistrationStatus{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Overview returns a high-level summary of the organization account and networks.
 func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	// Make the HTTP request

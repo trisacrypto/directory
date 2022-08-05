@@ -24,6 +24,7 @@ type BFFClient interface {
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
+	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *models.Announcement) error
@@ -103,6 +104,14 @@ type RegisterReply struct {
 	Status              string                 `json:"status"`
 	Message             string                 `json:"message"`
 	PKCS12Password      string                 `json:"pkcs12password"`
+}
+
+// RegistrationStatus is returned on registration status requests. This will contain
+// RFC3339 formatted timestamps indicating when the registration was submitted for
+// testnet and mainnet.
+type RegistrationStatus struct {
+	TestNetSubmitted string `json:"testnet_submitted,omitempty"`
+	MainNetSubmitted string `json:"mainnet_submitted,omitempty"`
 }
 
 // OverviewReply is returned on overview requests.
