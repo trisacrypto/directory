@@ -409,3 +409,80 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(err, "received error from attention endpoint")
 	require.Nil(reply, "expected nil reply")
 }
+
+func (s *bffTestSuite) TestRegistrationStatus() {
+	require := s.Require()
+
+	// Create an organization in the database with no directory records
+	org, err := s.db.Organizations().Create(context.TODO())
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.Organizations().Delete(context.TODO(), org.Id)
+	}()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+		VASPs:       map[string]string{},
+	}
+
+	// Endpoint must be authenticated
+	_, err = s.client.RegistrationStatus(context.TODO())
+	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the read:vasp permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.RegistrationStatus(context.TODO())
+	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID
+	claims.Permissions = []string{"read:vasp"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	_, err = s.client.RegistrationStatus(context.TODO())
+	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic and should return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	_, err = s.client.RegistrationStatus(context.TODO())
+	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+	// Should return an empty response when there are no directory records
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	reply, err := s.client.RegistrationStatus(context.TODO())
+	require.NoError(err, "received error from registration status endpoint")
+	require.Empty(reply, "expected empty response when there are no directory records")
+
+	// Should return only the testnet timestamp when testnet registration has been submitted
+	org.Testnet = &records.DirectoryRecord{
+		Submitted: time.Now().Format(time.RFC3339),
+	}
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	reply, err = s.client.RegistrationStatus(context.TODO())
+	require.NoError(err, "received error from registration status endpoint")
+	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
+	require.Empty(reply.MainNetSubmitted, "expected mainnet timestamp to be empty")
+
+	// Should return only the mainnet timestamp when mainnet registration has been submitted
+	org.Testnet.Submitted = ""
+	org.Mainnet = &records.DirectoryRecord{
+		Submitted: time.Now().Format(time.RFC3339),
+	}
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	reply, err = s.client.RegistrationStatus(context.TODO())
+	require.NoError(err, "received error from registration status endpoint")
+	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
+	require.Empty(reply.TestNetSubmitted, "expected testnet timestamp to be empty")
+
+	// Should return both timestamps when both registrations have been submitted
+	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
+	org.Mainnet.Submitted = time.Now().Format(time.RFC3339)
+	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	reply, err = s.client.RegistrationStatus(context.TODO())
+	require.NoError(err, "received error from registration status endpoint")
+	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
+	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
+}

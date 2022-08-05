@@ -379,3 +379,27 @@ func (s *Server) Attention(c *gin.Context) {
 		})
 	}
 }
+
+// RegistrationStatus returns the registration status for both testnet and mainnet for
+// the user.
+func (s *Server) RegistrationStatus(c *gin.Context) {
+	var err error
+
+	// Retrieve the organization from the claims
+	// NOTE: This method handles the error logging and response.
+	var org *records.Organization
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response
+	// TODO: We should be querying the VASP record instead to allow for re-registration
+	out := &api.RegistrationStatus{}
+	if org.Testnet != nil && org.Testnet.Submitted != "" {
+		out.TestNetSubmitted = org.Testnet.Submitted
+	}
+	if org.Mainnet != nil && org.Mainnet.Submitted != "" {
+		out.MainNetSubmitted = org.Mainnet.Submitted
+	}
+	c.JSON(http.StatusOK, out)
+}
