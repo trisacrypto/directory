@@ -111,8 +111,9 @@ export const validationSchema = [
           //       return ctx && ctx.parent && ctx.parent.address_line[1];
           //     }),
           country: yup.string().required(),
-          postal_code: yup.string().required(),
-          state: yup.string().required(),
+          town_name: yup.string().required(),
+          post_code: yup.string().required(),
+          country_sub_division: yup.string().required(),
           address_type: yup.string().required()
         })
       ),
@@ -227,7 +228,11 @@ export const validationSchema = [
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(yup.string())
+        .of(
+          yup.object().shape({
+            name: yup.string()
+          })
+        )
         .transform((value, originalValue) => {
           if (originalValue) {
             return originalValue.filter((item: any) => item.length > 0);
