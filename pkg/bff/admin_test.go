@@ -253,14 +253,87 @@ func (s *bffTestSuite) TestAttention() {
 	_, err = s.client.Attention(context.TODO())
 	require.EqualError(err, "[500] 404 Not Found", "expected error when VASP does not exist in mainnet")
 
+	// Verify emails message should be returned when the VASP has been submitted but
+	// emails are not yet verified
+	vasp := &pb.VASP{}
+	require.NoError(wire.Unwire(mainnetReply.VASP, vasp))
+	vasp.VerificationStatus = pb.VerificationState_SUBMITTED
+	data, err := wire.Rewire(vasp)
+	require.NoError(err, "could not rewire VASP")
+	s.mainnet.admin.UseHandler(mock.RetrieveVASPEP, func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.RetrieveVASPReply{
+			VASP: data,
+		})
+	})
+	verifyMainnet := &api.AttentionMessage{
+		Message:  fmt.Sprintf(bff.VerifyEmails, "MainNet"),
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_VERIFY_EMAILS.String(),
+	}
+	messages := []*api.AttentionMessage{
+		submitTestnet,
+		verifyMainnet,
+	}
+	reply, err = s.client.Attention(context.TODO())
+	require.NoError(err, "received error from attention endpoint")
+	require.Len(reply.Messages, 2, "wrong number of messages returned")
+	require.ElementsMatch(messages, reply.Messages, "wrong messages returned")
+
+	// Registration pending message should be returned when the VASP has been submitted
+	// and is pending email verification
+	vasp.VerificationStatus = pb.VerificationState_PENDING_REVIEW
+	data, err = wire.Rewire(vasp)
+	require.NoError(err, "could not rewire VASP")
+	s.mainnet.admin.UseHandler(mock.RetrieveVASPEP, func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.RetrieveVASPReply{
+			VASP: data,
+		})
+	})
+	pendingMainnet := &api.AttentionMessage{
+		Message:  fmt.Sprintf(bff.RegistrationPending, "MainNet"),
+		Severity: records.AttentionSeverity_INFO.String(),
+		Action:   records.AttentionAction_NO_ACTION.String(),
+	}
+	messages = []*api.AttentionMessage{
+		submitTestnet,
+		pendingMainnet,
+	}
+	reply, err = s.client.Attention(context.TODO())
+	require.NoError(err, "received error from attention endpoint")
+	require.Len(reply.Messages, 2, "wrong number of messages returned")
+	require.ElementsMatch(messages, reply.Messages, "wrong messages returned")
+
+	// Registration approved message should be returned when the VASP is verified
+	vasp.VerificationStatus = pb.VerificationState_VERIFIED
+	data, err = wire.Rewire(vasp)
+	require.NoError(err, "could not rewire VASP")
+	s.mainnet.admin.UseHandler(mock.RetrieveVASPEP, func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.RetrieveVASPReply{
+			VASP: data,
+		})
+	})
+	approvedMainnet := &api.AttentionMessage{
+		Message:  fmt.Sprintf(bff.RegistrationApproved, "MainNet"),
+		Severity: records.AttentionSeverity_SUCCESS.String(),
+		Action:   records.AttentionAction_NO_ACTION.String(),
+	}
+	messages = []*api.AttentionMessage{
+		submitTestnet,
+		approvedMainnet,
+	}
+	reply, err = s.client.Attention(context.TODO())
+	require.NoError(err, "received error from attention endpoint")
+	require.Len(reply.Messages, 2, "wrong number of messages returned")
+	require.ElementsMatch(messages, reply.Messages, "wrong messages returned")
+
 	// Rejected message should be returned when the VASP state is rejected
 	require.NoError(s.mainnet.admin.UseFixture(mock.RetrieveVASPEP, mainnetFixture))
 	rejectMainnet := &api.AttentionMessage{
-		Message:  fmt.Sprintf(bff.CertificateRejected, "mainnet"),
+		Message:  fmt.Sprintf(bff.RegistrationRejected, "MainNet"),
 		Severity: records.AttentionSeverity_ALERT.String(),
 		Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 	}
-	messages := []*api.AttentionMessage{
+	messages = []*api.AttentionMessage{
 		submitTestnet,
 		rejectMainnet,
 	}
@@ -270,9 +343,18 @@ func (s *bffTestSuite) TestAttention() {
 	require.ElementsMatch(messages, reply.Messages, "wrong messages returned")
 
 	// Revoked message should be returned when the certificate is revoked
-	require.NoError(s.mainnet.admin.UseFixture(mock.RetrieveVASPEP, testnetFixture))
+	require.NoError(wire.Unwire(testnetReply.VASP, vasp))
+	vasp.VerificationStatus = pb.VerificationState_VERIFIED
+	vasp.IdentityCertificate.Revoked = true
+	mainnetData, err := wire.Rewire(vasp)
+	require.NoError(err, "could not rewire VASP")
+	s.mainnet.admin.UseHandler(mock.RetrieveVASPEP, func(c *gin.Context) {
+		c.JSON(http.StatusOK, &admin.RetrieveVASPReply{
+			VASP: mainnetData,
+		})
+	})
 	revokedMainnet := &api.AttentionMessage{
-		Message:  fmt.Sprintf(bff.CertificateRevoked, "mainnet"),
+		Message:  fmt.Sprintf(bff.CertificateRevoked, "MainNet"),
 		Severity: records.AttentionSeverity_ALERT.String(),
 		Action:   records.AttentionAction_CONTACT_SUPPORT.String(),
 	}
@@ -290,27 +372,28 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
-	vasp := &pb.VASP{}
+	vasp = &pb.VASP{}
 	require.NoError(wire.Unwire(testnetReply.VASP, vasp))
 	expires := time.Now().AddDate(0, 0, 28)
+	vasp.VerificationStatus = pb.VerificationState_VERIFIED
 	vasp.IdentityCertificate.Revoked = false
 	vasp.IdentityCertificate.NotAfter = expires.Format(time.RFC3339)
-	data, err := wire.Rewire(vasp)
+	testnetData, err := wire.Rewire(vasp)
 	require.NoError(err, "could not rewire VASP")
 
 	// Expired message should be returned when the certificate is expired
 	s.testnet.admin.UseHandler(mock.RetrieveVASPEP, func(c *gin.Context) {
 		c.JSON(http.StatusOK, &admin.RetrieveVASPReply{
-			VASP: data,
+			VASP: testnetData,
 		})
 	})
-	revokedTestnet := &api.AttentionMessage{
-		Message:  fmt.Sprintf(bff.RenewCertificate, "testnet", expires.Format("February 2, 2006")),
+	expiredTestnet := &api.AttentionMessage{
+		Message:  fmt.Sprintf(bff.RenewCertificate, "TestNet", expires.Format("January 2, 2006")),
 		Severity: records.AttentionSeverity_WARNING.String(),
 		Action:   records.AttentionAction_RENEW_CERTIFICATE.String(),
 	}
 	messages = []*api.AttentionMessage{
-		revokedTestnet,
+		expiredTestnet,
 		revokedMainnet,
 	}
 	reply, err = s.client.Attention(context.TODO())

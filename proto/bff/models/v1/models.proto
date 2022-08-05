@@ -138,10 +138,12 @@ enum AttentionSeverity {
 // AttentionAction is used to indicate the action that should be taken by the user in
 // response to an attention message.
 enum AttentionAction {
-    START_REGISTRATION = 0;
-    COMPLETE_REGISTRATION = 1;
-    SUBMIT_TESTNET = 2;
-    SUBMIT_MAINNET = 3;
-    RENEW_CERTIFICATE = 4;
-    CONTACT_SUPPORT = 5;
+    NO_ACTION = 0;
+    START_REGISTRATION = 1;
+    COMPLETE_REGISTRATION = 2;
+    SUBMIT_TESTNET = 3;
+    SUBMIT_MAINNET = 4;
+    VERIFY_EMAILS = 5;
+    RENEW_CERTIFICATE = 6;
+    CONTACT_SUPPORT = 7;
 }
