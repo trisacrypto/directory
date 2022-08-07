@@ -8,6 +8,7 @@ interface MetricsProps {
   type: string;
 }
 const Metrics = ({ data, type }: MetricsProps) => {
+  console.log('[Metrics] data', data.status);
   return (
     <Flex>
       <Box textAlign={'center'} justifyContent="center" justifyItems={'center'} mx={'auto'}>
@@ -16,8 +17,8 @@ const Metrics = ({ data, type }: MetricsProps) => {
             <Text color={'red'} pt={20}>{`An error has occurred to load ${type} metric`}</Text>
           }>
           <SimpleGrid columns={{ base: 4, sm: 2, lg: 4, md: 4 }} spacingX="20px" spacingY="20px">
-            <StatusCard isOnline={data?.status || 'UNKNOW'} />
-            <StatCard title="Verified VASPs" number={data?.vasps_count} />
+            <StatusCard isOnline={data?.status || 'UNKNOWN'} />
+            <StatCard title="Verified VASPs" number={data?.vasps} />
             <StatCard title="Identity Certificates" number={data?.certificates_issued} />
             <StatCard title="New Members" number={data?.new_members} />
           </SimpleGrid>
