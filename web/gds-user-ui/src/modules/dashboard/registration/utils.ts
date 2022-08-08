@@ -1,6 +1,10 @@
 import { getDefaultValue } from 'components/BasicDetailsForm/validation';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-import { postRegistrationData, getRegistrationData } from 'modules/dashboard/registration/service';
+import {
+  postRegistrationData,
+  getRegistrationData,
+  getSubmissionStatus
+} from 'modules/dashboard/registration/service';
 import { handleError } from 'utils/utils';
 export const getRegistrationDefaultValue = async () => {
   try {
@@ -26,6 +30,7 @@ export const getRegistrationDefaultValue = async () => {
 };
 
 export const postRegistrationValue = (data: any) => {
+  console.log('[postRegistrationValue]', data);
   return new Promise((resolve, reject) => {
     postRegistrationData(data)
       .then((res) => {
@@ -78,5 +83,89 @@ export const downloadRegistrationData = async () => {
     }
   } catch (err: any) {
     handleError(err, 'failed to get registration data');
+  }
+};
+
+// load default stepper
+
+export const getDefaultStepper = async () => {
+  try {
+    const [regData, regStatus] = await Promise.all([getRegistrationData(), getSubmissionStatus()]);
+    console.log('[regStatus]', regStatus.data);
+    if (regData.status === 200 && Object.keys(regData.data).length > 0) {
+      return {
+        currentStep: regData.data.state.current,
+        steps: regData.data.state.steps,
+        lastStep: null,
+        hasReachSubmitStep: regData.data.state.ready_to_submit,
+        testnetSubmitted: regStatus?.data?.testnetSubmitted || false,
+        mainnetSubmitted: regStatus?.data?.mainnetSubmitted || false
+      };
+    }
+    const defaultValue: any = {
+      current: 1,
+      steps: [
+        {
+          key: 1,
+          status: 'progress'
+        }
+      ]
+    };
+    // update registrations state object
+    const postData = await postRegistrationData({ state: defaultValue });
+    if (postData.status === 204) {
+      const getData = await getRegistrationData();
+      return {
+        currentStep: getData.data.state.current,
+        steps: getData.data.state.steps,
+        lastStep: null,
+        hasReachSubmitStep: false,
+        testnetSubmitted: false,
+        mainnetSubmitted: false
+      };
+    }
+  } catch (err: any) {
+    handleError(err, 'failed to get stepper data');
+  }
+};
+
+// // load default stepper without async call
+// export const loadDefaultStepperSync = () => {
+//   return Promise.resolve({
+//     currentStep: 1,
+//     steps: [
+//       {
+//         key: 1,
+//         status: 'progress'
+//       }
+//     ],
+//     lastStep: null,
+//     hasReachSubmitStep: false
+//   });
+// };
+
+// set stepper data
+export const getRegistrationAndStepperData = async () => {
+  try {
+    const [regData, regStatus] = await Promise.all([
+      getRegistrationDefaultValue(),
+      getSubmissionStatus()
+    ]);
+    if (regData) {
+      const reponse: any = {
+        registrationData: regData,
+        stepperData: {
+          currentStep: (regData?.state?.ready_to_submit ? 6 : regData?.state?.current) || 1,
+          steps: regData?.state?.steps || [{ key: 1, status: 'progress' }],
+          lastStep: null,
+          hasReachSubmitStep: regData?.state?.ready_to_submit || false,
+          testnetSubmitted: !!regStatus?.data?.testnet_submitted,
+          mainnetSubmitted: !!regStatus?.data?.mainnet_submitted
+        }
+      };
+      return reponse;
+    }
+  } catch (err: any) {
+    handleError(err, 'failed to get stepper data');
   }
 };

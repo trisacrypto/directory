@@ -229,9 +229,8 @@ export const validationSchema = [
       applicable_regulations: yup
         .array()
         .of(
-          yup.object().shape({
-            name: yup.string()
-          })
+           yup.string()
+        
         )
         .transform((value, originalValue) => {
           if (originalValue) {
@@ -246,5 +245,20 @@ export const validationSchema = [
       must_safeguard_pii: yup.boolean().default(false),
       safeguards_pii: yup.boolean().default(false)
     })
-  })
+  }),
+  yup
+    .object()
+    .shape({
+      state: yup.object().shape({
+        current: yup.number(),
+        steps: yup.array().of(
+          yup.object().shape({
+            status: yup.string().oneOf(['complete', 'incomplete', 'pending']),
+            key: yup.number().required()
+          })
+        ),
+        reach_submit_step: yup.boolean().default(false)
+      })
+    })
+    .notRequired()
 ];

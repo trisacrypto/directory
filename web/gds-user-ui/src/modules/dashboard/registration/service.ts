@@ -26,3 +26,30 @@ export const submitMainnetRegistration = async () => {
   const response = await axiosInstance.post(`/register/mainnet`);
   return response;
 };
+
+// set default state for registration
+
+export const setRegistrationDefaultState = async () => {
+  setAuthorization();
+  const response = await axiosInstance.put(`/register`, {
+    state: {
+      current: 1,
+      ready_to_submit: false,
+      steps: [
+        {
+          key: 1,
+          status: 'progress'
+        }
+      ]
+    }
+  });
+  return response;
+};
+
+// get submission status
+
+export const getSubmissionStatus = async () => {
+  setAuthorization();
+  const response = await axiosInstance.get(`/registration`);
+  return response;
+};

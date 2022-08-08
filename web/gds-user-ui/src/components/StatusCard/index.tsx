@@ -6,7 +6,8 @@ interface StatusCardProps {
 }
 
 const StatusCard = ({ isOnline }: StatusCardProps) => {
-  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTH');
+  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTHY');
+
   return (
     <Box
       bg={'white'}
