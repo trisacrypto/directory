@@ -29,10 +29,8 @@ export const getNationalIdentificationOptions = () =>
     isDisabled: disabledIdentifiers.includes(k)
   }));
 
-export const getNationalIdentificationLabel = (nationalIdentifierTypeCode: any) => {
-  return Object.entries(NATIONAL_IDENTIFICATION).map(([k, v]) => {
-    if (k === nationalIdentifierTypeCode) {
-      return v;
-    }
-  });
+export const getNationalIdentificationLabel = (
+  nationalIdentifierTypeCode: keyof typeof NATIONAL_IDENTIFICATION
+) => {
+  return NATIONAL_IDENTIFICATION[nationalIdentifierTypeCode];
 };

@@ -9,7 +9,7 @@ describe("<NationalIdentification/>", () => {
     it("should render data", () => {
         const data = {
             customer_number: faker.phone.phoneNumberFormat(),
-            country_of_registration: faker.address.countryCode(),
+            country_of_registration: 'US',
             national_identification: {
                 national_identifier: "36-40XXXX",
                 national_identifier_type: "NATIONAL_IDENTIFIER_TYPE_CODE_TXID",

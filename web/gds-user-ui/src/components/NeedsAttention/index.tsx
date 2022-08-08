@@ -5,12 +5,11 @@ import { NavLink } from 'react-router-dom';
 import { Trans } from '@lingui/react';
 
 export type NeedsAttentionProps = {
-  text: string;
   buttonText: string;
   onClick?: (ev?: any) => void;
 };
 
-const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
+const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
   return (
     <Stack
       minHeight={67}
@@ -37,7 +36,9 @@ const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
             background="#55ACD8"
             color="#fff"
             cursor="pointer"
-            _hover={{ background: 'blue.200' }}>
+            _hover={{ background: 'blue.200' }}
+            role="button
+            ">
             {buttonText}
           </Button>
         </Box>

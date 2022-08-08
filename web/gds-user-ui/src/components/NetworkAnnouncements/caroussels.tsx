@@ -43,27 +43,6 @@ const AnnouncementCarousel: FC<AnnouncementProps> = ({ announcements }) => {
   const top = useBreakpointValue({ base: '90%', md: '50%' });
   const side = useBreakpointValue({ base: '30%', md: '40px' });
 
-  //   const datas = [
-  //     {
-  //       title: 'Upcoming TRISA Working Group Call',
-  //       body: 'Join us on Thursday Apr 28 for the TRISA Working Group.',
-  //       post_date: '2022-04-20',
-  //       author: 'admin@trisa.io'
-  //     },
-  //     {
-  //       title: 'Routine Maintenance Scheduled',
-  //       body: 'The GDS will be undergoing routine maintenance on Apr 7.',
-  //       post_date: '2022-04-01',
-  //       author: 'admin@trisa.io'
-  //     },
-  //     {
-  //       title: 'Beware the Ides of March',
-  //       body: 'I have a bad feeling about tomorrow.',
-  //       post_date: '2022-03-14',
-  //       author: 'julius@caesar.com'
-  //     }
-  //   ];
-
   return (
     <Box position={'relative'} width={'full'} overflow={'hidden'}>
       {/* CSS files for react-slick */}

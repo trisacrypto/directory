@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Heading, Stack, Table, Tbody, Tr, Td, Thead } from '@chakra-ui/react';
-import { Trans } from '@lingui/react';
+
 type TrisaDetailProps = {
   data: any;
 };
@@ -17,8 +17,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
       px={7}>
       <Stack width={'100%'}>
         <Heading as={'h1'} fontSize={19} pb={7} pt={4}>
-          {' '}
-          TRISA Details{' '}
+          TRISA Details
         </Heading>
         <Stack fontSize={18}>
           <Table
@@ -54,10 +53,10 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
                 }
               }}>
               <Tr>
-                <Td>{data?.organization?.vasp_id || 'N/A'}</Td>
-                <Td>{data?.organization?.first_listed || 'N/A'}</Td>
-                <Td>{data?.organization?.verified_on || 'N/A'}</Td>
-                <Td>{data?.organization?.last_updated || 'N/A'}</Td>
+                <Td data-testid="vasp_id">{data?.organization?.vasp_id || 'N/A'}</Td>
+                <Td data-testid="first_listed">{data?.organization?.first_listed || 'N/A'}</Td>
+                <Td data-testid="verified_on">{data?.organization?.verified_on || 'N/A'}</Td>
+                <Td data-testid="last_updated">{data?.organization?.last_updated || 'N/A'}</Td>
               </Tr>
             </Tbody>
           </Table>

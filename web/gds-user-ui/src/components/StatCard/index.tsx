@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Stack, Box, Text, Heading, Flex, chakra } from '@chakra-ui/react';
 
-interface StatCardProps {
+export interface StatCardProps {
   title: string;
-  number: number;
+  children: ReactNode;
 }
-const StatCard = ({ title, number }: StatCardProps) => {
+const StatCard = ({ title = 'Verified VASPs', children = 0 }: StatCardProps) => {
   return (
     <Box
       bg={'white'}
@@ -13,26 +13,24 @@ const StatCard = ({ title, number }: StatCardProps) => {
       fontFamily={'Open Sans'}
       color={'#252733'}
       textAlign={'center'}
-      // minWidth={250}
-      // height={170}
-      fontSize={18}
       p={5}
       mt={10}
       px={5}>
       <Stack>
-        <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
+        <chakra.h1
+          textAlign={'center'}
+          fontSize={20}
+          fontWeight={'bold'}
+          textTransform="capitalize"
+          data-testid="start-card__title">
           {title}
         </chakra.h1>
-        <Text fontSize={40} pt={3} fontWeight={'bold'}>
-          {number}
+        <Text fontSize={40} pt={3} fontWeight={'bold'} data-testid="start-card__body">
+          {children}
         </Text>
       </Stack>
     </Box>
   );
-};
-StatCard.defaultProps = {
-  title: 'Verified VASPs',
-  number: 0
 };
 
 export default StatCard;

@@ -33,7 +33,7 @@ function CertificateManagement({}: CertificateManagementProps) {
   return (
     <DashboardLayout>
       <Heading marginBottom="30px">Certificate Management</Heading>
-      <NeedsAttention text={'Complete Certficate Registration'} buttonText={'Continue'} />
+      <NeedsAttention buttonText={'Continue'} />
 
       <Flex
         border="1px solid #DFE0EB"

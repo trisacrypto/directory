@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Clothing
+                    Tools
                      
                     <br />
-                    Automotive
+                    Shoes
                      
                     <br />
                     23
                      
-                    Daniel Courts
+                    Bruen Street
                     <br />
-                    Union City
+                    Des Plaines
                      
                     
                      
                     MA
                      
-                    72763-4767
+                    65854
                       
                     <br />
                     US

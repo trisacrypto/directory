@@ -72,11 +72,11 @@ export const validationSchema = [
                 (value, ctx): any => {
                   return !(ctx.parent.legal_person_name_identifier_type && !value);
                 }
-              ),
-            legal_person_name_identifier_type: yup.string().when('legal_person_name', {
-              is: (value: string) => !!value,
-              then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
-            })
+              )
+            // legal_person_name_identifier_type: yup.string().when('legal_person_name', {
+            //   is: (value: string) => !!value,
+            //   then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
+            // })
           })
         ),
         phonetic_name_identifiers: yup.array(
@@ -228,10 +228,7 @@ export const validationSchema = [
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(
-           yup.string()
-        
-        )
+        .of(yup.string())
         .transform((value, originalValue) => {
           if (originalValue) {
             return originalValue.filter((item: any) => item.length > 0);

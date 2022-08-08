@@ -1,5 +1,4 @@
-import React from 'react';
-import { Stack, Box, Text, Heading, HStack, Flex, SimpleGrid } from '@chakra-ui/react';
+import { Text, SimpleGrid } from '@chakra-ui/react';
 import StatCard from 'components/StatCard';
 import StatusCard from 'components/StatusCard';
 import * as Sentry from '@sentry/react';
@@ -10,21 +9,19 @@ interface MetricsProps {
 const Metrics = ({ data, type }: MetricsProps) => {
   console.log('[Metrics] data', data.status);
   return (
-    <Flex>
-      <Box textAlign={'center'} justifyContent="center" justifyItems={'center'} mx={'auto'}>
-        <Sentry.ErrorBoundary
-          fallback={
-            <Text color={'red'} pt={20}>{`An error has occurred to load ${type} metric`}</Text>
-          }>
-          <SimpleGrid columns={{ base: 4, sm: 2, lg: 4, md: 4 }} spacingX="20px" spacingY="20px">
-            <StatusCard isOnline={data?.status || 'UNKNOWN'} />
-            <StatCard title="Verified VASPs" number={data?.vasps} />
-            <StatCard title="Identity Certificates" number={data?.certificates_issued} />
-            <StatCard title="New Members" number={data?.new_members} />
-          </SimpleGrid>
-        </Sentry.ErrorBoundary>
-      </Box>
-    </Flex>
+    <Sentry.ErrorBoundary
+      fallback={
+        <Text color={'red'} pt={20}>{`An error has occurred to load ${type} metric`}</Text>
+      }>
+      <SimpleGrid columns={{ base: 4, sm: 2, lg: 4, md: 4 }} spacingX="20px" spacingY="20px">
+        <StatCard title="Network Status">
+          <StatusCard isOnline={data?.status || 'UNKNOWN'} />
+        </StatCard>
+        <StatCard title="Verified VASPs">{data?.vasps_count}</StatCard>
+        <StatCard title="Identity Certificates">{data?.certificates_issued}</StatCard>
+        <StatCard title="New Members">{data?.new_members}</StatCard>
+      </SimpleGrid>
+    </Sentry.ErrorBoundary>
   );
 };
 

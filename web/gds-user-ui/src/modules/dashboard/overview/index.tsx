@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
-import { Box, Heading, Text, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+import { Box, Heading } from '@chakra-ui/react';
 import OverviewLoader from 'components/ContentLoader/Overview';
-import DashboardLayout from 'layouts/DashboardLayout';
 import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
-import Metrics from 'components/Metrics';
 import { getMetrics, getAnnouncementsData } from './service';
 import { useNavigate } from 'react-router-dom';
-import { t } from '@lingui/macro';
-import { Trans } from '@lingui/react';
 import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
-import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
-import {
-  getRegistrationDefaultValue,
-  postRegistrationValue,
-  setRegistrationDefaultValue
-} from 'modules/dashboard/registration/utils';
+import NetworkMetricsTabs from '../../../components/NetworkMetricsTabs';
+import { getRegistrationDefaultValue } from '../registration/utils';
 import { handleError } from 'utils/utils';
+
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
@@ -27,13 +20,17 @@ const Overview: React.FC = () => {
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
   const navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       try {
+        console.log(1);
         const [metrics, getAnnouncements] = await Promise.all([
           getMetrics(),
           getAnnouncementsData()
         ]);
+        console.log('[]', metrics);
+
         if (metrics.status === 200) {
           setResult(metrics.data);
         }
@@ -87,46 +84,13 @@ const Overview: React.FC = () => {
         <>
           <Heading marginBottom="30px">Overview</Heading>
           <NeedsAttention
-            text={t`Start Certificate Registration`}
             buttonText={'Start'}
             onClick={() => navigate('/dashboard/certificate/registration')}
           />
-          {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
+          {announcements.length > 0 && <NetworkAnnouncements data={announcements} />}
 
           <Box fontSize={'md'} mx={'auto'} w={'100%'}>
-            <Box>
-              <Tabs my={'10'}>
-                <TabList>
-                  <Tab
-                    bg={'#E5EDF1'}
-                    sx={{ width: '100%' }}
-                    _focus={{ outline: 'none' }}
-                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                    <Text fontSize={['x-small', 'medium']}>
-                      <Trans id="MainNet Network Metrics">MainNet Network Metrics</Trans>
-                    </Text>
-                  </Tab>
-                  <Tab
-                    bg={'#E5EDF1'}
-                    fontWeight={'bold'}
-                    sx={{ width: '100%' }}
-                    _focus={{ outline: 'none' }}
-                    _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
-                    <Text fontSize={['x-small', 'medium']}>
-                      <Trans id="TestNet Network Metrics">TestNet Network Metrics</Trans>
-                    </Text>
-                  </Tab>
-                </TabList>
-                <TabPanels>
-                  <TabPanel p={0}>
-                    <Metrics data={result?.mainnet} type="Testnet" />
-                  </TabPanel>
-                  <TabPanel p={0}>
-                    <Metrics data={result?.testnet} type="Mainnet" />
-                  </TabPanel>
-                </TabPanels>
-              </Tabs>
-            </Box>
+            <NetworkMetricsTabs data={result} />
           </Box>
           {/* </Sentry.ErrorBoundary> */}
           <OrganizationalDetail data={stepperData} />
