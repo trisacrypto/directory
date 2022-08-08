@@ -20,13 +20,17 @@ import {
   setRegistrationDefaultValue
 } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
+import useFetchAttention from 'hooks/useFetchAttention';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
+  const { attentionResponse, attentionError, attentionLoading } = useFetchAttention();
   const navigate = useNavigate();
+
+  console.log('[attenionResponse]', attentionResponse);
   useEffect(() => {
     (async () => {
       try {
@@ -86,11 +90,17 @@ const Overview: React.FC = () => {
       ) : (
         <>
           <Heading marginBottom="30px">Overview</Heading>
-          <NeedsAttention
-            text={t`Start Certificate Registration`}
-            buttonText={'Start'}
-            onClick={() => navigate('/dashboard/certificate/registration')}
-          />
+          {attentionResponse && (
+            <NeedsAttention
+              loading={attentionLoading}
+              error={attentionError}
+              data={attentionResponse}
+              text={t`Start Certificate Registration`}
+              buttonText={'Start'}
+              onClick={() => navigate('/dashboard/certificate/registration')}
+            />
+          )}
+
           {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
 
           <Box fontSize={'md'} mx={'auto'} w={'100%'}>
