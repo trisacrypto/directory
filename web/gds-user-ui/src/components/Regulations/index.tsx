@@ -15,8 +15,6 @@ const Regulations: React.FC<RegulationsProps> = ({ name }) => {
     name,
     control
   });
-  console.log('[Regulations] fields name', name);
-  console.log('[Regulations] fields', fields);
   return (
     <VStack align="start" w="100%">
       {fields.map((field, index) => (

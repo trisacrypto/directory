@@ -212,7 +212,6 @@ const Certificate: React.FC = () => {
     };
     fetchData();
   }, []);
-
   return (
     <SimpleDashboardLayout>
       <>
