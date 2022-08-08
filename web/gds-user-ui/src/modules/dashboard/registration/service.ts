@@ -7,7 +7,7 @@ export const getRegistrationData = async () => {
 };
 export const postRegistrationData = async (data: any) => {
   setAuthorization();
-  const response = await axiosInstance.post(`/register`, { ...data });
+  const response = await axiosInstance.put(`/register`, { ...data });
   return response;
 };
 

@@ -1,4 +1,4 @@
-import { Button, Grid, GridItem, VStack } from '@chakra-ui/react';
+import { Button, Grid, GridItem, VStack, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
@@ -15,11 +15,13 @@ const Regulations: React.FC<RegulationsProps> = ({ name }) => {
     name,
     control
   });
+  console.log('[Regulations] fields', name, fields);
   return (
     <VStack align="start" w="100%">
       {fields.map((field, index) => (
         <Grid key={field.id} templateColumns={{ base: '1fr auto' }} gap={6} width="100%">
           <GridItem>
+            <Text>{`${name}[${index}]`}</Text>
             <InputFormControl
               controlId="applicable_regulation"
               {...register(`${name}[${index}]`)}
