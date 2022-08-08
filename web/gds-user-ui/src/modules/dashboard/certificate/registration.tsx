@@ -30,7 +30,6 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-import FileUploader from 'components/FileUpload';
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
