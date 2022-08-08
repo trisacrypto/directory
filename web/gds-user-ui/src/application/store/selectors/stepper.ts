@@ -9,3 +9,11 @@ export const getLastStep = createSelector(rootState, (state) => state.lastStep);
 export const resetStepper = createSelector(rootState, (state) => state.clearStepper);
 export const getHasReachSubmitStep = createSelector(rootState, (state) => state.hasReachSubmitStep);
 export const getCurrentState = createSelector(rootState, (state) => state);
+export const getTestNetSubmittedStatus = createSelector(
+  rootState,
+  (state) => state.testnetSubmitted
+);
+export const getMainNetSubmittedStatus = createSelector(
+  rootState,
+  (state) => state.mainnetSubmitted
+);

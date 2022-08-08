@@ -130,10 +130,12 @@ const useCertificateStepper = () => {
 
   const setInitialState = (value: any) => {
     const state: TPayload = {
-      currentStep: value.current,
+      currentStep: value.currentStep,
       steps: value.steps,
       lastStep: 6,
-      hasReachSubmitStep: value.ready_to_submit
+      hasReachSubmitStep: value.hasReachSubmitStep,
+      testnetSubmitted: value.testnetSubmitted,
+      mainnetSubmitted: value.mainnetSubmitted
     };
     dispatch(setInitialValue(state));
   };

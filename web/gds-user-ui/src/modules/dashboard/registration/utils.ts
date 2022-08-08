@@ -129,35 +129,41 @@ export const getDefaultStepper = async () => {
   }
 };
 
-// load default stepper without async call
-export const loadDefaultStepperSync = () => {
-  return Promise.resolve({
-    currentStep: 1,
-    steps: [
-      {
-        key: 1,
-        status: 'progress'
-      }
-    ],
-    lastStep: null,
-    hasReachSubmitStep: false
-  });
-};
+// // load default stepper without async call
+// export const loadDefaultStepperSync = () => {
+//   return Promise.resolve({
+//     currentStep: 1,
+//     steps: [
+//       {
+//         key: 1,
+//         status: 'progress'
+//       }
+//     ],
+//     lastStep: null,
+//     hasReachSubmitStep: false
+//   });
+// };
 
 // set stepper data
-export const getStepperData = async (data: any) => {
+export const getRegistrationAndStepperData = async () => {
   try {
-    const regStatus = await getSubmissionStatus();
-    console.log('[regStatus]', regStatus.data);
-    if (regStatus.status === 200) {
-      return {
-        currentStep: data?.current || 1,
-        steps: data?.state?.steps || [{ key: 1, status: 'progress' }],
-        lastStep: null,
-        hasReachSubmitStep: data?.state?.ready_to_submit || false,
-        testnetSubmitted: regStatus?.data?.testnetSubmitted || false,
-        mainnetSubmitted: regStatus?.data?.mainnetSubmitted || false
+    const [regData, regStatus] = await Promise.all([
+      getRegistrationDefaultValue(),
+      getSubmissionStatus()
+    ]);
+    if (regData) {
+      const reponse: any = {
+        registrationData: regData,
+        stepperData: {
+          currentStep: regData?.state?.current || 1,
+          steps: regData?.state?.steps || [{ key: 1, status: 'progress' }],
+          lastStep: null,
+          hasReachSubmitStep: regData?.state?.ready_to_submit || false,
+          testnetSubmitted: !!regStatus?.data?.testnet_submitted,
+          mainnetSubmitted: !!regStatus?.data?.mainnet_submitted
+        }
       };
+      return reponse;
     }
   } catch (err: any) {
     handleError(err, 'failed to get stepper data');
