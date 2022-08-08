@@ -156,7 +156,7 @@ const Certificate: React.FC = () => {
   const resetForm = useCallback(() => {
     const defaultValue =
       Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-    
+
     reset(defaultValue);
   }, [reset, registrationData]);
 

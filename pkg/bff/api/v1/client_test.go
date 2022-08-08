@@ -330,6 +330,32 @@ func TestSubmitRegistration(t *testing.T) {
 	require.Equal(t, fixture.PKCS12Password, out.PKCS12Password)
 }
 
+func TestRegistrationStatus(t *testing.T) {
+	fixture := &api.RegistrationStatus{
+		TestNetSubmitted: time.Now().Format(time.RFC3339),
+		MainNetSubmitted: time.Now().Add(time.Hour).Format(time.RFC3339),
+	}
+
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/registration", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+
+	// Create a client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.RegistrationStatus(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture.TestNetSubmitted, out.TestNetSubmitted)
+	require.Equal(t, fixture.MainNetSubmitted, out.MainNetSubmitted)
+}
+
 func TestOverview(t *testing.T) {
 	fixture := &api.OverviewReply{
 		OrgID: "ba2202bf-635e-414e-a7bc-86f309dc95e0",

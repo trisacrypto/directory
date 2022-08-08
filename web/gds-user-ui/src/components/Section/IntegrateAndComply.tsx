@@ -20,17 +20,6 @@ import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
 
 export default function IntegrateAndComply() {
-  const variant = useBreakpointValue({
-    md: {
-      content: "''",
-      position: 'absolute',
-      height: '100%',
-      width: '2px',
-      bg: 'gray.300',
-      left: '50%'
-    }
-  });
-
   return (
     <>
       <LandingHeader />
@@ -73,7 +62,7 @@ export default function IntegrateAndComply() {
           <Stack>
             <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 14 }}>
               <Box pl={5} my={{ base: 4 }} color="black">
-                <Text fontFamily={'heading'} fontSize={'xl'}>
+                <Text fontSize="lg">
                   <Trans id="Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data.">
                     Upon verification, integrate with TRISA to begin exchanging Travel Rule
                     compliance
@@ -81,8 +70,10 @@ export default function IntegrateAndComply() {
                 </Text>
               </Box>
               <Box bg={'gray.100'} p={5}>
-                <Text fontSize={'xl'} color={'black'}>
-                  VASPs have two options to integrate with TRISA.
+                <Text fontSize="lg" color={'black'}>
+                  <Trans id="VASPs have two options to integrate with TRISA.">
+                    VASPs have two options to integrate with TRISA.
+                  </Trans>
                 </Text>
               </Box>
               <Box mt={20} pt={10}>
@@ -93,49 +84,60 @@ export default function IntegrateAndComply() {
                   color={'black'}
                   gridColumnGap={{ md: 20, lg: 54 }}
                   gridRowGap={{ md: 6 }}
-                  position="relative"
-                  _after={{
-                    ...variant
-                  }}>
-                  <Line title="Option 1. Set Up Your Own TRISA Node" fontWeight={'bold'}>
-                    Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set
+                  position="relative">
+                  <Line title="Option 1. Set Up Your Own TRISA Node">
+                    <Trans
+                      id="Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set
                     up and maintain their own TRISA server to exhange encrypted Travel Rule
-                    compliance data. TRISA maintains an{' '}
+                    compliance data. TRISA maintains an">
+                      Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can
+                      set up and maintain their own TRISA server to exhange encrypted Travel Rule
+                      compliance data. TRISA maintains an
+                    </Trans>{' '}
                     <Link href="https://github.com/trisacrypto/trisa" isExternal color="link">
                       <Trans id="GitHub repository">GitHub repository</Trans>
                     </Link>{' '}
-                    with detailed documentation, a reference implemenation, and “robot” VASPs for
-                    testing purposes.
+                    <Trans
+                      id="with detailed documentation, a reference implemenation, and “robot” VASPs for
+                    testing purposes.">
+                      with detailed documentation, a reference implemenation, and “robot” VASPs for
+                      testing purposes.
+                    </Trans>
                   </Line>
-                  <Line title="Option 2. Use a 3rd-party Solution" fontWeight={'bold'}>
-                    TRISA is designed to be interoperable. There are several Travel Rule solutions
+                  <Line title="Option 2. Use a 3rd-party Solution">
+                    <Trans
+                      id="TRISA is designed to be interoperable. There are several Travel Rule solutions
                     providers available on the market. If you are a customer, work with them to
-                    integrate TRISA into your Travel Rule compliance workflow.
+                    integrate TRISA into your Travel Rule compliance workflow.">
+                      TRISA is designed to be interoperable. There are several Travel Rule solutions
+                      providers available on the market. If you are a customer, work with them to
+                      integrate TRISA into your Travel Rule compliance workflow.
+                    </Trans>
                   </Line>
-                  <Line title="How to set up your own node?" fontWeight={'bold'}>
-                    Talk to a member of your technical team to determine the requirements and
+                  <Line title="How to set up your own node?" fontStyle="italic">
+                    <Trans
+                      id="Talk to a member of your technical team to determine the requirements and
                     resources to integrate TRISA with your system. Have members of your technical
                     team integrate your systems with TRISA. Or work with a solutions provider that
-                    can help your VASP set up your TRISA server and maintain it.
+                    can help your VASP set up your TRISA server and maintain it.">
+                      Talk to a member of your technical team to determine the requirements and
+                      resources to integrate TRISA with your system. Have members of your technical
+                      team integrate your systems with TRISA. Or work with a solutions provider that
+                      can help your VASP set up your TRISA server and maintain it.
+                    </Trans>
                   </Line>
-                  <Line title="3rd Party Travel Rule Providers" fontWeight={'bold'}>
+                  <Line title="3rd Party Travel Rule Providers">
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
                         <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
-                          CipherTrace Providers
+                          <Trans id="CipherTrace Providers">CipherTrace Providers</Trans>
                         </Link>
                       </ListItem>
                       <ListItem>
                         <Link href="https://sygna.io" isExternal>
-                          Synga Bridge
+                          <Trans id="Synga Bridge">Synga Bridge</Trans>
                         </Link>
                       </ListItem>
-                      {/* <ListItem>
-                        <Link>NotaBene</Link> (not interoperable)
-                      </ListItem>
-                      <ListItem>
-                        <Link>VerifyVASP</Link> (not interoperable)
-                      </ListItem> */}
                     </UnorderedList>
                   </Line>
                 </Stack>
@@ -145,23 +147,27 @@ export default function IntegrateAndComply() {
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
                           <Link href="https://github.com/trisacrypto/trisa" isExternal>
-                            TRISA’s Github repo
+                            <Trans id="TRISA’s Github repo">TRISA’s Github repo</Trans>
                           </Link>
                         </ListItem>
                         <ListItem>
                           <Link href="https://trisa.dev/" isExternal>
-                            Documentation
+                            <Trans id="Documentation">Documentation</Trans>
                           </Link>
                         </ListItem>
                         <ListItem>
                           <Link
                             href="https://github.com/trisacrypto/trisa/commit/436fd73fc48973ce09ccbae4260df6213d0c2894"
                             isExternal>
-                            Reference implementation
+                            <Trans id="Reference implementation">Reference implementation</Trans>
                           </Link>
                         </ListItem>
                         <ListItem>
-                          <Link>Meet Alice VASP, Bob VASP, and “Evil” VASP</Link>
+                          <Link href=" https://vaspbot.net/" isExternal>
+                            <Trans id="Meet Alice VASP, Bob VASP, and “Evil” VASP">
+                              Meet Alice VASP, Bob VASP, and “Evil” VASP
+                            </Trans>
+                          </Link>
                         </ListItem>
                       </UnorderedList>
                     </Line>
@@ -171,12 +177,12 @@ export default function IntegrateAndComply() {
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
                           <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
-                            Learn How TRISA Works
+                            <Trans id="Learn How TRISA Works">Learn How TRISA Works</Trans>
                           </Link>
                         </ListItem>
                         <ListItem>
                           <Link isExternal href="https://intervasp.org/">
-                            What is IVMS101?
+                            <Trans id="What is IVMS101?">What is IVMS101?</Trans>
                           </Link>
                         </ListItem>
                       </UnorderedList>
@@ -184,32 +190,19 @@ export default function IntegrateAndComply() {
                   </Stack>
                 </Stack>
               </Box>
-              <Stack direction={['column', 'row']} pt={10} mx={10} justifyContent="center">
-                <VStack>
-                  <RouterLink to={'/auth/register'}>
-                    <Button
-                      bg={colors.system.blue}
-                      color={'white'}
-                      minWidth={'300px'}
-                      _hover={{
-                        bg: '#10aaed'
-                      }}
-                      _focus={{
-                        borderColor: 'transparent'
-                      }}>
-                      Create account
-                    </Button>
+              <Stack direction={['column']} pt={5} justifyContent="center">
+                <Button as={RouterLink} to={'/auth/register'} alignSelf="center" minWidth={'300px'}>
+                  Create account
+                </Button>
+                <Text textAlign="center">
+                  <Trans id="Already have an account?">Already have an account?</Trans>{' '}
+                  <RouterLink to={'/auth/login'}>
+                    <Link color={colors.system.cyan}>
+                      {' '}
+                      <Trans id="Log in.">Log in.</Trans>
+                    </Link>
                   </RouterLink>
-                  <Text textAlign="center">
-                    <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-                    <RouterLink to={'/auth/login'}>
-                      <Link color={colors.system.cyan}>
-                        {' '}
-                        <Trans id="Log in.">Log in.</Trans>
-                      </Link>
-                    </RouterLink>
-                  </Text>
-                </VStack>
+                </Text>
               </Stack>
             </Stack>
           </Stack>
