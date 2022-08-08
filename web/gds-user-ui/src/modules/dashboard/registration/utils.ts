@@ -155,7 +155,7 @@ export const getRegistrationAndStepperData = async () => {
       const reponse: any = {
         registrationData: regData,
         stepperData: {
-          currentStep: regData?.state?.current || 1,
+          currentStep: (regData?.state?.ready_to_submit ? 6 : regData?.state?.current) || 1,
           steps: regData?.state?.steps || [{ key: 1, status: 'progress' }],
           lastStep: null,
           hasReachSubmitStep: regData?.state?.ready_to_submit || false,

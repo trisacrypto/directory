@@ -10,6 +10,7 @@ interface StepsProps {
 const CertificateSteps: FC<StepsProps> = (props: any): any => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
+
   const dispatch = useDispatch();
   return React.Children.map(props.children, (child: any, index: any) => {
     const isCurrentStep = +child.key === currentStep;

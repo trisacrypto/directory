@@ -229,9 +229,8 @@ export const validationSchema = [
       applicable_regulations: yup
         .array()
         .of(
-          yup.object().shape({
-            name: yup.string()
-          })
+           yup.string()
+        
         )
         .transform((value, originalValue) => {
           if (originalValue) {

@@ -2,7 +2,7 @@ const getColorScheme = (status: string | boolean) => {
   if (status === 'yes' || status === true) {
     return 'green';
   } else {
-    return 'orange';
+    return 'red';
   }
 };
 

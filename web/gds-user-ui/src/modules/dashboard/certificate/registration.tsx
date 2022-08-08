@@ -46,7 +46,9 @@ import {
   getCurrentStep,
   getSteps,
   getCurrentState,
-  getLastStep
+  getLastStep,
+  getTestNetSubmittedStatus,
+  getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
@@ -58,8 +60,11 @@ const Certificate: React.FC = () => {
   const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
+
   const lastStep: number = useSelector(getLastStep);
   const steps: number = useSelector(getSteps);
+  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
+  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
@@ -92,7 +97,16 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
-
+  // check if the form is submitted or not
+  const isFormSubmitted = () => {
+    if (isTestNetSubmitted && isMainNetSubmitted) {
+      return true;
+    }
+    if (isTestNetSubmitted || isMainNetSubmitted) {
+      return true;
+    }
+    return false;
+  };
   function getCurrentFormValue() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
@@ -129,13 +143,11 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      postRegistrationValue({
-        ...methods.getValues(),
-        state: { ...currentState() }
-      });
       nextStep({
         isFormCompleted: isFormCompleted(),
-        formValues: getCurrentFormValue()
+        formValues: getCurrentFormValue(),
+        values: methods.getValues(),
+        registrationValues: registrationData
       });
     }
   }
@@ -190,7 +202,6 @@ const Certificate: React.FC = () => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationAndStepperData();
-        console.log('[getRegistrationData]', data.registrationData);
         setRegistrationData(data.registrationData);
         setInitialState(data.stepperData);
       } catch (error) {
@@ -252,17 +263,21 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
-                    </Button>
+                    {!isFormSubmitted() && (
+                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                        <Trans id="Save & Previous">Save & Previous</Trans>
+                      </Button>
+                    )}
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </Button>
+                    {!isFormSubmitted() && (
+                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      </Button>
+                    )}
                   </>
                 )}
               </Stack>

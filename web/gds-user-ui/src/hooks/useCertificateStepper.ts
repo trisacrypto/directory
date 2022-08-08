@@ -2,7 +2,9 @@ import { getSteps, getLastStep, resetStepper } from './../application/store/sele
 import {
   getCurrentStep,
   getHasReachSubmitStep,
-  getCurrentState
+  getCurrentState,
+  getTestNetSubmittedStatus,
+  getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
 import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
@@ -15,9 +17,14 @@ import {
   setSubmitStep,
   clearStepper,
   setHasReachSubmitStep,
-  setInitialValue
+  setInitialValue,
+  setTestnetSubmitted,
+  setMainnetSubmitted
 } from 'application/store/stepper.slice';
-import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+import {
+  setRegistrationDefaultValue,
+  postRegistrationValue
+} from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
@@ -29,6 +36,8 @@ interface TState {
   errors?: any;
   isFormCompleted?: boolean;
   formValues?: any;
+  values?: any;
+  registrationValues?: any;
 }
 
 // 'TODO:' this hook should be improve
@@ -40,9 +49,42 @@ const useCertificateStepper = () => {
   const lastStep: number = useSelector(getLastStep);
   const hasReachSubmitStep: any = useSelector(getHasReachSubmitStep);
   const currentValue: TPayload = useSelector(getCurrentState);
+  const testnetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
+  const mainnetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
+
+  // get current state
+
+  const currentState = () => {
+    console.log('currentState', currentValue);
+    const formatState = {
+      current: currentValue.currentStep,
+      steps: currentValue.steps,
+      ready_to_submit: currentValue.hasReachSubmitStep
+    };
+    return formatState;
+  };
+
+  // update steps of state
+  const updateLastStep = (formValues: any) => {
+    const ls = formValues.state.steps.length - 1;
+    formValues.state.steps[ls].status = LSTATUS.COMPLETE;
+    return formValues.state.steps;
+  };
+
   const nextStep = (state?: TState) => {
+    const formValues = state?.values;
+    const registrationValues = state?.registrationValues;
+
+    const _mergedData = {
+      ...registrationValues,
+      ...formValues
+    };
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
+      // update step status
+      // const v = updateFormValuesStateStep(currentStep, LSTATUS.PROGRESS, formValues);
+      // await postRegistrationValue(v);
+
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
     // if we got an error that means require element are not completed
@@ -65,6 +107,7 @@ const useCertificateStepper = () => {
       } else {
         if (currentStep === lastStep && state.isFormCompleted) {
           // that mean we move to submit step
+
           dispatch(setSubmitStep({ submitStep: true }));
         }
         dispatch(addStep({ key: currentStep, status: state.status }));
@@ -76,15 +119,30 @@ const useCertificateStepper = () => {
       // that mean we move to submit step
       if (!hasStepError(steps)) {
         // setStepperFromLocalStorage({ step: lastStep });
+        // set current step to last step
+        console.log('[setSubmitStep]', currentStep);
+        // const v = updateFormValuesCurrentState(lastStep, formValues);
+        // await postRegistrationValue(v);
         dispatch(setSubmitStep({ submitStep: true }));
         dispatch(setCurrentStep({ currentStep: lastStep }));
+
+        postRegistrationValue({
+          ..._mergedData,
+          state: {
+            ...currentState(),
+            ready_to_submit: true,
+            current: currentStep,
+            steps: updateLastStep(formValues)
+          }
+        });
+        return;
       }
     } else {
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
-        // setStepperFromLocalStorage({ step: currentStep + 1, status: LSTATUS.PROGRESS });
-        // addStepToLocalStorage({ key: currentStep + 1, status: LSTATUS.PROGRESS });
+        // const v = updateFormValuesStateStep(currentStep, LSTATUS.PROGRESS, formValues);
+        // await postRegistrationValue(v);
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
@@ -94,6 +152,10 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
     }
+    postRegistrationValue({
+      ..._mergedData,
+      state: { ...currentState(), ready_to_submit: true, current: currentStep }
+    });
   };
   const previousStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
@@ -128,6 +190,15 @@ const useCertificateStepper = () => {
     dispatch(clearStepper());
   };
 
+  // testnet submission state
+  const testnetSubmissionState = () => {
+    dispatch(setTestnetSubmitted({ testnetSubmitted: true }));
+  };
+  // mainnet submission state
+  const mainnetSubmissionState = () => {
+    dispatch(setMainnetSubmitted({ mainnetSubmitted: true }));
+  };
+
   const setInitialState = (value: any) => {
     const state: TPayload = {
       currentStep: value.currentStep,
@@ -140,17 +211,6 @@ const useCertificateStepper = () => {
     dispatch(setInitialValue(state));
   };
 
-  // get current state
-
-  const currentState = () => {
-    console.log('currentState', currentValue);
-    const formatState = {
-      current: currentValue.currentStep,
-      steps: currentValue.steps,
-      ready_to_submit: currentValue.hasReachSubmitStep
-    };
-    return formatState;
-  };
   return {
     nextStep,
     previousStep,
@@ -158,7 +218,9 @@ const useCertificateStepper = () => {
     resetForm,
     jumpToLastStep,
     setInitialState,
-    currentState
+    currentState,
+    testnetSubmissionState,
+    mainnetSubmissionState
   };
 };
 

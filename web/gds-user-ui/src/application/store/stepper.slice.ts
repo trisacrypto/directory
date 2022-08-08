@@ -83,6 +83,16 @@ const stepperSlice: any = createSlice({
       state.currentStep = 1;
       state.lastStep = null;
       state.hasReachSubmitStep = false;
+      state.testnetSubmitted = false;
+      state.mainnetSubmitted = false;
+    },
+    // set testnet submission
+    setTestnetSubmitted: (state: any, { payload }: any) => {
+      state.testnetSubmitted = payload.testnetSubmitted;
+    },
+    // set mainnet submission
+    setMainnetSubmitted: (state: any, { payload }: any) => {
+      state.mainnetSubmitted = payload.mainnetSubmitted;
     }
   }
 });
@@ -99,5 +109,7 @@ export const {
   clearStepper,
   setHasReachSubmitStep,
   setInitialValue,
-  getCurrentState
+  getCurrentState,
+  setTestnetSubmitted,
+  setMainnetSubmitted
 } = stepperSlice.actions;

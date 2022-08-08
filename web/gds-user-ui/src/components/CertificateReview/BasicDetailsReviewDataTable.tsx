@@ -68,7 +68,7 @@ function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
               {data?.vasp_categories && data?.vasp_categories.length
                 ? data?.vasp_categories?.map((categ: any) => {
                     return (
-                      <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
+                      <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
                         {getBusinessCategiryLabel(categ)}
                       </Tag>
                     );

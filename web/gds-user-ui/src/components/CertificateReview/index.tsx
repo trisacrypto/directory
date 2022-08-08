@@ -14,8 +14,10 @@ import {
   submitMainnetRegistration,
   submitTestnetRegistration
 } from 'modules/dashboard/registration/service';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 const CertificateReview = () => {
   const toast = useToast();
+  const { testnetSubmissionState, mainnetSubmissionState } = useCertificateStepper();
 
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
@@ -31,6 +33,7 @@ const CertificateReview = () => {
         console.log('[response testnet]', response);
         if (response.status === 200) {
           setIsTestNetSent(true);
+          testnetSubmissionState();
           setResult(response?.data);
         }
       }
@@ -39,6 +42,7 @@ const CertificateReview = () => {
         console.log('[response mainnet]', response);
         if (response?.status === 200) {
           setIsMainNetSent(true);
+          mainnetSubmissionState();
           setResult(response?.data);
         }
       }

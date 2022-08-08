@@ -99,7 +99,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
@@ -152,7 +152,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
@@ -181,7 +181,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
@@ -207,13 +207,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                <p
-                  class="chakra-text css-0"
-                >
-                  $NaN
-                   
-                  N/A
-                </p>
+                N/A
               </td>
               <td
                 class="css-xumdn4"
@@ -235,7 +229,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
@@ -336,7 +330,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
@@ -365,7 +359,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <span
-                  class="css-mvy5bm"
+                  class="css-kydp95"
                 >
                   <span
                     class="css-12rgubf"
