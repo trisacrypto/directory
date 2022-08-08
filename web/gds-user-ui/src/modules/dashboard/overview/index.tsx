@@ -34,8 +34,6 @@ const Overview: React.FC = () => {
           getMetrics(),
           getAnnouncementsData()
         ]);
-        console.log('[metrics]', metrics);
-        console.log('[getAnnouncements]', getAnnouncements);
         if (metrics.status === 200) {
           setResult(metrics.data);
         }
