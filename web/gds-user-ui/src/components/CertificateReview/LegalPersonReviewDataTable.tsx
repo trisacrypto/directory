@@ -173,7 +173,7 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               <Trans id="Identification Type">Identification Type</Trans>
             </Td>
             <Td pt={0}>
-              <Tag color={'white'} bg={'blue.400'} size={'lg'}>
+              <Tag color={'white'} bg={'blue'} size={'lg'}>
                 {getNationalIdentificationLabel(
                   data?.national_identification?.national_identifier_type
                 )}

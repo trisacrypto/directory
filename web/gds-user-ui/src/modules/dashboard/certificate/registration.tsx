@@ -30,37 +30,45 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
+
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
-  setRegistrationDefaultValue
+  setRegistrationDefaultValue,
+  getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
 
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-
+import {
+  getCurrentStep,
+  getSteps,
+  getCurrentState,
+  getLastStep,
+  getTestNetSubmittedStatus,
+  getMainNetSubmittedStatus
+} from 'application/store/selectors/stepper';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   const [isResetForm, setIsResetForm] = useState<boolean>(false);
-  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(true);
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
-  const { nextStep, previousStep } = useCertificateStepper();
+  const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
-  const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
-  const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
+  const currentStep: number = useSelector(getCurrentStep);
+
+  const lastStep: number = useSelector(getLastStep);
+  const steps: number = useSelector(getSteps);
+  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
+  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
+  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLoadingRegistration, setIsLoadingRegistration] = useState<boolean>(false);
-  const [isLoadingRegistrationDefaultValue, setIsLoadingRegistrationDefaultValue] =
-    useState<boolean>(false);
-  const [shouldFillForm, setShouldFillForm] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -68,10 +76,11 @@ const Certificate: React.FC = () => {
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
+    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
-  console.log('[registrationData from state]', registrationData);
+  // console.log('[registrationData from state]', registrationData);
   const methods = useForm({
     defaultValues: registrationData,
     resolver,
@@ -88,7 +97,16 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
-
+  // check if the form is submitted or not
+  const isFormSubmitted = () => {
+    if (isTestNetSubmitted && isMainNetSubmitted) {
+      return true;
+    }
+    if (isTestNetSubmitted || isMainNetSubmitted) {
+      return true;
+    }
+    return false;
+  };
   function getCurrentFormValue() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
@@ -104,7 +122,7 @@ const Certificate: React.FC = () => {
       if (hasStepError(steps)) {
         toast({
           position: 'top',
-          title: `Please fill in all required fields before proceeding`,
+          title: t`Please fill in all required fields before proceeding`,
           status: 'error',
           isClosable: true,
           containerStyle: {
@@ -125,10 +143,11 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      postRegistrationValue(methods.getValues());
       nextStep({
         isFormCompleted: isFormCompleted(),
-        formValues: getCurrentFormValue()
+        formValues: getCurrentFormValue(),
+        values: methods.getValues(),
+        registrationValues: registrationData
       });
     }
   }
@@ -182,9 +201,9 @@ const Certificate: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getRegistrationDefaultValue();
-        console.log('[getRegistrationData]', data);
-        setRegistrationData(data);
+        const data = await getRegistrationAndStepperData();
+        setRegistrationData(data.registrationData);
+        setInitialState(data.stepperData);
       } catch (error) {
         console.log('[getRegistrationData]', error);
       } finally {
@@ -193,13 +212,6 @@ const Certificate: React.FC = () => {
     };
     fetchData();
   }, []);
-  // should choose to fill form or import file when value is default
-  useEffect(() => {
-    console.log('[isDefaultValue]', isDefaultValue());
-    if (!isDefaultValue()) {
-      setShouldFillForm(true);
-    }
-  }, [registrationData]);
   return (
     <SimpleDashboardLayout>
       <>
@@ -250,17 +262,21 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
-                    </Button>
+                    {!isFormSubmitted() && (
+                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                        <Trans id="Save & Previous">Save & Previous</Trans>
+                      </Button>
+                    )}
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </Button>
+                    {!isFormSubmitted() && (
+                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      </Button>
+                    )}
                   </>
                 )}
               </Stack>

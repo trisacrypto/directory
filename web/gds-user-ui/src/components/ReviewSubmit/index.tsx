@@ -8,15 +8,21 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link
+  Link,
+  Tooltip
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+
+import {
+  getTestNetSubmittedStatus,
+  getMainNetSubmittedStatus
+} from 'application/store/selectors/stepper';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -29,22 +35,22 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   isMainNetSent,
   result
 }) => {
+  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
+  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep } = useCertificateStepper();
   const navigate = useNavigate();
-  const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
-  const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
   useEffect(() => {
-    if (getTestnetFromLocalStorage === 'true') {
+    if (isTestNetSubmitted) {
       setTestnet(true);
     }
-    if (getMainnetFromLocalStorage === 'true') {
+    if (isMainNetSubmitted) {
       setMainnet(true);
     }
-  }, [getTestnetFromLocalStorage, getMainnetFromLocalStorage]);
+  }, [isTestNetSubmitted, isMainNetSubmitted]);
   useEffect(() => {
     if (isSent) {
       onOpen();
@@ -53,7 +59,6 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   }, [isTestNetSent, isMainNetSent]);
 
   const handleJumpToLastStep = () => {
-    console.log('jump to last step');
     jumpToLastStep();
     navigate('/dashboard/certificate/registration');
   };
@@ -142,25 +147,27 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 pb={4}
                 alignItems={'center'}>
-                <Button
-                  bgColor="#ff7a59f0"
-                  color="#fff"
-                  isDisabled={testnet}
-                  data-testid="testnet-submit-btn"
-                  size="lg"
-                  py="2.5rem"
-                  whiteSpace="normal"
-                  maxW="200px"
-                  width="100%"
-                  boxShadow="lg"
-                  onClick={(e) => {
-                    onSubmitHandler(e, 'testnet');
-                  }}
-                  _hover={{
-                    bgColor: '#f55c35'
-                  }}>
-                  {t`Submit TestNet Registration`}
-                </Button>
+                <Tooltip label={t`TestNet already submitted`} shouldWrapChildren>
+                  <Button
+                    bgColor="#ff7a59f0"
+                    color="#fff"
+                    isDisabled={testnet}
+                    data-testid="testnet-submit-btn"
+                    size="lg"
+                    py="2.5rem"
+                    whiteSpace="normal"
+                    maxW="200px"
+                    width="100%"
+                    boxShadow="lg"
+                    onClick={(e) => {
+                      onSubmitHandler(e, 'testnet');
+                    }}
+                    _hover={{
+                      bgColor: '#f55c35'
+                    }}>
+                    {t`Submit TestNet Registration`}
+                  </Button>
+                </Tooltip>
               </Stack>
             </Stack>
 
@@ -209,25 +216,27 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 alignItems={'center'}
                 pb={4}>
-                <Button
-                  bgColor="#23a7e0e8"
-                  color="#fff"
-                  size="lg"
-                  py="2.5rem"
-                  isDisabled={mainnet}
-                  whiteSpace="normal"
-                  boxShadow="lg"
-                  data-testid="mainnet-submit-btn"
-                  maxW="200px"
-                  onClick={(e) => {
-                    onSubmitHandler(e, 'mainnet');
-                  }}
-                  width="100%"
-                  _hover={{
-                    bgColor: '#189fda'
-                  }}>
-                  {t`Submit MainNet Registration`}
-                </Button>
+                <Tooltip label={t`MainNet already submitted`} shouldWrapChildren>
+                  <Button
+                    bgColor="#23a7e0e8"
+                    color="#fff"
+                    size="lg"
+                    py="2.5rem"
+                    isDisabled={mainnet}
+                    whiteSpace="normal"
+                    boxShadow="lg"
+                    data-testid="mainnet-submit-btn"
+                    maxW="200px"
+                    onClick={(e) => {
+                      onSubmitHandler(e, 'mainnet');
+                    }}
+                    width="100%"
+                    _hover={{
+                      bgColor: '#189fda'
+                    }}>
+                    {t`Submit MainNet Registration`}
+                  </Button>
+                </Tooltip>
               </Stack>
             </Stack>
           </Stack>

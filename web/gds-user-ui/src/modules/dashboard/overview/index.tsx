@@ -35,7 +35,7 @@ const Overview: React.FC = () => {
           getAnnouncementsData()
         ]);
         if (metrics.status === 200) {
-          setResult(metrics);
+          setResult(metrics.data);
         }
         if (getAnnouncements.status === 200) {
           setAnnouncements(getAnnouncements.data.announcements);
@@ -71,8 +71,8 @@ const Overview: React.FC = () => {
     fetchRegistration();
 
     const trisaDetailData = {
-      mainnet: stepperData.trisa_endpoint_mainnet,
-      testnet: stepperData.trisa_endpoint_testnet,
+      mainnet: stepperData.mainnet,
+      testnet: stepperData.testnet,
       organization: result.organization
     };
 
@@ -119,10 +119,10 @@ const Overview: React.FC = () => {
                 </TabList>
                 <TabPanels>
                   <TabPanel p={0}>
-                    <Metrics data={result?.testnet} type="Testnet" />
+                    <Metrics data={result?.mainnet} type="Testnet" />
                   </TabPanel>
                   <TabPanel p={0}>
-                    <Metrics data={result?.mainnet} type="Mainnet" />
+                    <Metrics data={result?.testnet} type="Mainnet" />
                   </TabPanel>
                 </TabPanels>
               </Tabs>
