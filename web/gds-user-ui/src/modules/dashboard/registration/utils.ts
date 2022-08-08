@@ -18,10 +18,10 @@ export const getRegistrationDefaultValue = async () => {
         return getData.data;
       }
     }
-    return getDefaultValue();
+    return getRegistrationDefaultValues();
   } catch (err: any) {
     handleError(err, 'failed to get registration data');
-    return getDefaultValue();
+    return getRegistrationDefaultValues();
   }
 };
 

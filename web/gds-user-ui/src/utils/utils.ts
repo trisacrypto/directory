@@ -4,8 +4,9 @@ import registrationAuthority from './registration-authority.json';
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
-const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
+const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
 
@@ -150,4 +151,17 @@ export const handleError = (error: any, customMessage?: string) => {
 // uppercased first letter
 export const upperCaseFirstLetter = (str: any) => {
   return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+};
+
+// load default value for registration
+export const loadStepperDefaultValue = () => {
+  const fetchDefaultValue = async () => {
+    const response = await getRegistrationDefaultValue();
+    return response.stepper;
+  };
+  const defaultValue = fetchDefaultValue();
+  return {
+    ...defaultValue,
+    hasReachSubmitStep: false
+  };
 };

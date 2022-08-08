@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
@@ -10,6 +10,7 @@ import {
   Flex,
   useDisclosure,
   Button,
+  HStack,
   Stack,
   useColorModeValue,
   chakra
@@ -29,15 +30,18 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
+
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
   setRegistrationDefaultValue
 } from 'modules/dashboard/registration/utils';
+
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -53,6 +57,11 @@ const Certificate: React.FC = () => {
   const steps: number = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingRegistration, setIsLoadingRegistration] = useState<boolean>(false);
+  const [isLoadingRegistrationDefaultValue, setIsLoadingRegistrationDefaultValue] =
+    useState<boolean>(false);
+  const [shouldFillForm, setShouldFillForm] = useState<boolean>(false);
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
@@ -117,7 +126,6 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      console.log('handleNextStepClick', methods.getValues());
       postRegistrationValue(methods.getValues());
       nextStep({
         isFormCompleted: isFormCompleted(),
@@ -128,6 +136,10 @@ const Certificate: React.FC = () => {
   const handlePreviousStep = () => {
     postRegistrationValue(methods.getValues());
     previousStep();
+  };
+
+  const isDefaultValue = () => {
+    return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
 
   const handleResetForm = () => {
@@ -141,6 +153,19 @@ const Certificate: React.FC = () => {
     setIsResetForm(value);
   };
 
+  const resetForm = useCallback(() => {
+    const defaultValue =
+      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
+
+    reset(defaultValue);
+  }, [reset, registrationData]);
+
+  useEffect(() => {
+    resetForm();
+    setIsResetForm(false);
+  }, [isResetForm, resetForm]);
+
+  // handle reset modal
   useEffect(() => {
     if (isResetModalOpen) {
       onOpen();
@@ -148,13 +173,11 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
-  useEffect(() => {
-    const defaultValue =
-      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-    reset(defaultValue);
-    setIsResetForm(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registrationData, isResetForm]);
+  // useEffect(() => {
+
+  //   setIsResetForm(false);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [registrationData, isResetForm]);
 
   // load default value from trtl
   useEffect(() => {
@@ -163,7 +186,6 @@ const Certificate: React.FC = () => {
         const data = await getRegistrationDefaultValue();
         console.log('[getRegistrationData]', data);
         setRegistrationData(data);
-        setIsLoadingDefaultValue(false);
       } catch (error) {
         console.log('[getRegistrationData]', error);
       } finally {
@@ -172,49 +194,56 @@ const Certificate: React.FC = () => {
     };
     fetchData();
   }, []);
+  // should choose to fill form or import file when value is default
+  useEffect(() => {
+    console.log('[isDefaultValue]', isDefaultValue());
+    if (!isDefaultValue()) {
+      setShouldFillForm(true);
+    }
+  }, [registrationData]);
   return (
     <SimpleDashboardLayout>
       <>
         <FormProvider {...methods}>
-          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <Flex justifyContent={'space-between'}>
-              <Heading size="lg" mb="24px" className="heading">
-                <Trans id="Certificate Registration">Certificate Registration</Trans>
-              </Heading>
-              <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
-            </Flex>
-
-            <VStack spacing={3}>
-              <Card maxW="100%" bg={backgroundColor} color={textColor}>
-                <Card.Body>
-                  <Text>
-                    <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
-                      This multi-section form is an important step in the registration and
-                      certificate issuance process. The information you provide will be used to
-                      verify the legal entity that you represent and, where appropriate, will be
-                      available to verified TRISA members to facilitate compliance decisions. If you
-                      need guidance, see the
-                    </Trans>{' '}
-                    <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
-                      <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
-                    </Link>
-                  </Text>
-                  <Text pt={4}>
-                    <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
-                      To assist in completing the registration form, the form is divided into
-                      multiple sections
+          <Flex justifyContent={'space-between'}>
+            <Heading size="lg" mb="24px" className="heading">
+              <Trans id="Certificate Registration">Certificate Registration</Trans>
+            </Heading>
+            <Box>{!isLoggedIn && <HomeButton link={'/'} />}</Box>
+          </Flex>
+          <Stack my={3}>
+            <Card maxW="100%" bg={backgroundColor} color={textColor}>
+              <Card.Body>
+                <Text>
+                  <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
+                    This multi-section form is an important step in the registration and certificate
+                    issuance process. The information you provide will be used to verify the legal
+                    entity that you represent and, where appropriate, will be available to verified
+                    TRISA members to facilitate compliance decisions. If you need guidance, see the
+                  </Trans>{' '}
+                  <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
+                    <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
+                  </Link>
+                </Text>
+                <Text pt={4}>
+                  <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
+                    To assist in completing the registration form, the form is divided into multiple
+                    sections
+                  </Trans>
+                  .{' '}
+                  <Text as={'span'} fontWeight={'bold'}>
+                    <Trans id="No information is sent until you complete Section 6 - Review & Submit">
+                      No information is sent until you complete Section 6 - Review & Submit
                     </Trans>
                     .{' '}
-                    <Text as={'span'} fontWeight={'bold'}>
-                      <Trans id="No information is sent until you complete Section 6 - Review & Submit">
-                        No information is sent until you complete Section 6 - Review & Submit
-                      </Trans>
-                      .{' '}
-                    </Text>
                   </Text>
-                </Card.Body>
-              </Card>
+                </Text>
+              </Card.Body>
+            </Card>
+          </Stack>
 
+          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+            <VStack spacing={3}>
               <Box width={'100%'}>
                 <TestNetCertificateProgressBar />
                 {!isProdEnv ? <DevTool control={methods.control} /> : null}
@@ -230,7 +259,7 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    <Button onClick={handleResetForm}>
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
                       <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
                     </Button>
                   </>
@@ -239,12 +268,14 @@ const Certificate: React.FC = () => {
             </VStack>
           </chakra.form>
         </FormProvider>
+
         {isResetModalOpen && (
           <ConfirmationResetFormModal
             isOpen={isOpen}
             onClose={onClose}
             onChangeState={onChangeModalState}
             onRefeshState={forceUpdate}
+            onReset={reset}
             onChangeResetState={onChangeResetForm}
           />
         )}

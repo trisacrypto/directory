@@ -26,13 +26,15 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import { removeCookie } from 'utils/cookies';
 import { useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
+import { resetStore } from 'application/store';
+import Storage from 'reduxjs-toolkit-persist/lib/storage/session';
 import AvatarContentLoader from 'components/ContentLoader/Avatar';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
+
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
 }
-
 const DEFAULT_AVARTAR = 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200';
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const dispatch = useDispatch();
@@ -42,7 +44,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const handleLogout = (e: any) => {
     e.preventDefault();
     removeCookie('access_token');
+    localStorage.removeItem('persist:root');
     dispatch(logout());
+    resetStore();
     navigate('/');
   };
   return (
