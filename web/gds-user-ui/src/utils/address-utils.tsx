@@ -73,7 +73,6 @@ export const renderField = (address: any) => (
 );
 
 export const renderAddress = (address: any) => {
-  console.log('[address]', address);
   if (hasAddressFieldAndLine(address)) {
     console.error('[ERROR]', 'invalid address with both fields and lines');
     return <div>Invalid Address</div>;

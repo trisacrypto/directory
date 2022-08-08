@@ -36,13 +36,18 @@ func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 func NewRegisterForm() *RegistrationForm {
 	// Make sure default values are populated for the frontend
 	return &RegistrationForm{
-		State: &FormState{
-			Current: 1,
-			Steps: []*FormStep{
-				{
-					Key:    1,
-					Status: "progress",
-				},
+		State: NewFormState(),
+	}
+}
+
+// NewFormState returns a new form state with default values.
+func NewFormState() *FormState {
+	return &FormState{
+		Current: 1,
+		Steps: []*FormStep{
+			{
+				Key:    1,
+				Status: "progress",
 			},
 		},
 	}

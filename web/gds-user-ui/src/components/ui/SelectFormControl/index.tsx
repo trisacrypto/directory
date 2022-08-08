@@ -40,6 +40,10 @@ const SelectFormControl = React.forwardRef<any, _FormControlProps>(
         ...provided,
         background: bgColorMode,
         borderRadius: 0
+      }),
+      option: (provided, state) => ({
+        ...provided,
+        color: state.isSelected ? 'gray.500' : undefined
       })
     };
 
