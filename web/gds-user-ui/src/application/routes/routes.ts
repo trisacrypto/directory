@@ -147,6 +147,12 @@ const appRoutes = [
     layout: 'dashboard',
     route: '/dashboard/certificate-management'
   },
+  {
+    path: '/dashboard/logout',
+    name: 'Logout',
+    component: Logout,
+    layout: 'dashboard'
+  },
 
   //  -------ERROR ROUTES-------
   {
