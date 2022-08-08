@@ -45,3 +45,11 @@ export const setRegistrationDefaultState = async () => {
   });
   return response;
 };
+
+// get submission status
+
+export const getSubmissionStatus = async () => {
+  setAuthorization();
+  const response = await axiosInstance.get(`/registration`);
+  return response;
+};

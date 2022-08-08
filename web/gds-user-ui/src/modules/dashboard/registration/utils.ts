@@ -1,6 +1,10 @@
 import { getDefaultValue } from 'components/BasicDetailsForm/validation';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-import { postRegistrationData, getRegistrationData } from 'modules/dashboard/registration/service';
+import {
+  postRegistrationData,
+  getRegistrationData,
+  getSubmissionStatus
+} from 'modules/dashboard/registration/service';
 import { handleError } from 'utils/utils';
 export const getRegistrationDefaultValue = async () => {
   try {
@@ -86,13 +90,16 @@ export const downloadRegistrationData = async () => {
 
 export const getDefaultStepper = async () => {
   try {
-    const regData = await getRegistrationData();
+    const [regData, regStatus] = await Promise.all([getRegistrationData(), getSubmissionStatus()]);
+    console.log('[regStatus]', regStatus.data);
     if (regData.status === 200 && Object.keys(regData.data).length > 0) {
       return {
         currentStep: regData.data.state.current,
         steps: regData.data.state.steps,
         lastStep: null,
-        hasReachSubmitStep: false
+        hasReachSubmitStep: regData.data.state.ready_to_submit,
+        testnetSubmitted: regStatus?.data?.testnetSubmitted || false,
+        mainnetSubmitted: regStatus?.data?.mainnetSubmitted || false
       };
     }
     const defaultValue: any = {
@@ -112,7 +119,9 @@ export const getDefaultStepper = async () => {
         currentStep: getData.data.state.current,
         steps: getData.data.state.steps,
         lastStep: null,
-        hasReachSubmitStep: false
+        hasReachSubmitStep: false,
+        testnetSubmitted: false,
+        mainnetSubmitted: false
       };
     }
   } catch (err: any) {
@@ -133,4 +142,24 @@ export const loadDefaultStepperSync = () => {
     lastStep: null,
     hasReachSubmitStep: false
   });
+};
+
+// set stepper data
+export const getStepperData = async (data: any) => {
+  try {
+    const regStatus = await getSubmissionStatus();
+    console.log('[regStatus]', regStatus.data);
+    if (regStatus.status === 200) {
+      return {
+        currentStep: data?.current || 1,
+        steps: data?.state?.steps || [{ key: 1, status: 'progress' }],
+        lastStep: null,
+        hasReachSubmitStep: data?.state?.ready_to_submit || false,
+        testnetSubmitted: regStatus?.data?.testnetSubmitted || false,
+        mainnetSubmitted: regStatus?.data?.mainnetSubmitted || false
+      };
+    }
+  } catch (err: any) {
+    handleError(err, 'failed to get stepper data');
+  }
 };

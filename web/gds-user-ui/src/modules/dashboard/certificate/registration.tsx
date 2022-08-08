@@ -34,7 +34,8 @@ import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib'
 import {
   getRegistrationDefaultValue,
   postRegistrationValue,
-  setRegistrationDefaultValue
+  setRegistrationDefaultValue,
+  getStepperData
 } from 'modules/dashboard/registration/utils';
 
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
@@ -189,10 +190,12 @@ const Certificate: React.FC = () => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationDefaultValue();
+
+        const stepData = await getStepperData(data);
         console.log('[getRegistrationData]', data);
         setRegistrationData(data);
         if (data?.state && data?.state?.current) {
-          setInitialState(data.state);
+          setInitialState(stepData);
         }
       } catch (error) {
         console.log('[getRegistrationData]', error);

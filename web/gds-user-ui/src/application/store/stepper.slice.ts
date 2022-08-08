@@ -4,12 +4,7 @@ export type TStep = {
   status: string;
   key?: number;
 };
-export type TPayload = {
-  currentStep: number | string;
-  steps: TStep[];
-  lastStep: number | null;
-  hasReachSubmitStep?: boolean;
-};
+
 export const initialValue: TPayload = {
   currentStep: 1,
   steps: [
@@ -18,7 +13,9 @@ export const initialValue: TPayload = {
     }
   ],
   lastStep: null,
-  hasReachSubmitStep: false
+  hasReachSubmitStep: false,
+  testnetSubmitted: false,
+  mainnetSubmitted: false
 };
 
 const stepperSlice: any = createSlice({
@@ -69,6 +66,8 @@ const stepperSlice: any = createSlice({
       state.steps = payload.steps;
       state.lastStep = payload.lastStep;
       state.hasReachSubmitStep = payload.hasReachSubmitStep;
+      state.testnetSubmitted = payload.testnetSubmitted;
+      state.mainnetSubmitted = payload.mainnetSubmitted;
     },
     // get current state
     getCurrentState: (state: TPayload) => {
