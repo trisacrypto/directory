@@ -13,6 +13,6 @@ export default {
   component: PasswordReset
 };
 
-export const standard: Story<PasswordResetProps> = ({ ...props }) => <PasswordReset {...props} />;
+export const standard: Story = ({ ...props }) => <PasswordReset {...props} />;
 
 standard.bind({});

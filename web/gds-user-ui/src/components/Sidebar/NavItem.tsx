@@ -1,11 +1,20 @@
-import { Flex, FlexProps, Icon, Box, Text, chakra } from '@chakra-ui/react';
+import {
+  Flex,
+  FlexProps,
+  Icon,
+  Box,
+  Text,
+  chakra,
+  ComponentWithAs,
+  IconProps
+} from '@chakra-ui/react';
 import { ReactText } from 'react';
 import { IconType } from 'react-icons';
 import { NavLink as RouterLink, useLocation } from 'react-router-dom';
 
 const ChakraRouterLink = chakra(RouterLink);
-interface NavItemProps extends FlexProps {
-  icon?: IconType;
+export interface NavItemProps extends FlexProps {
+  icon?: IconType | ComponentWithAs<'svg', IconProps>;
   href?: string;
   children: ReactText;
   path?: string;
