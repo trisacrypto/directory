@@ -634,8 +634,16 @@ def make_common_name(cert, rng=random.Random()):
     """
     Make a synthetic but well-structured common name
     """
-    return cert + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS)
+    return cert.lower() + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS)
 
+def make_dns_names(cert, rng=random.Random()):
+    """
+    Make a synthetic but well-structured dns names
+    """
+    dns_names = []
+    for _ in range(rng.randint(1, 4)):
+        dns_names.append(cert.lower() + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS))
+    return dns_names
 
 def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -648,6 +656,7 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "COMPLETED"
     batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
@@ -693,6 +702,7 @@ def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.js
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "INITIALIZED"
     start = make_dates(count=1)[0]
     record["created"] = start
@@ -711,6 +721,7 @@ def make_ready_to_submit(cert, idx, template="fixtures/datagen/templates/cert_re
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "READY_TO_SUBMIT"
     start, end = make_dates(count=2)
     record["created"] = start
@@ -729,6 +740,7 @@ def make_processing(cert, idx, template="fixtures/datagen/templates/cert_req.jso
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "PROCESSING"
     batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
@@ -749,6 +761,7 @@ def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.jso
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "CR_ERRORED"
     batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
@@ -776,6 +789,7 @@ def make_cr_rejected(cert, idx, template="fixtures/datagen/templates/cert_req.js
     record["vasp"] = make_uuid(rng)
     common_name = make_common_name(cert)
     record["common_name"] = common_name
+    record["dns_names"] = make_dns_names(cert)
     record["status"] = "CR_REJECTED"
     batch = str(rng.randint(100000, 999999))
     record["batch_id"] = batch
@@ -872,6 +886,7 @@ def add_vasp_cert_relationships(vasps, certreqs, certs):
             certreq_ids.append(certreqs[name]["id"])
             certreqs[name]["vasp"] = vasps[vasp_name]["id"]
             certreqs[name]["common_name"] = vasps[vasp_name]["common_name"]
+            certreqs[name]["dns_names"] = make_dns_names(vasp_name.split(" ")[0])
 
             # Add the certificate relationships if it exists
             if name in certs:

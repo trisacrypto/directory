@@ -54,6 +54,7 @@ func (s *gdsTestSuite) TestCertManager() {
 	// Certificate request should be updated
 	certReq, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
 	require.NoError(err)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.Status)
 	require.Greater(int(certReq.AuthorityId), 0)
 	require.Greater(int(certReq.BatchId), 0)
 	require.NotEmpty(certReq.BatchName)
@@ -62,7 +63,6 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.NotEmpty(certReq.CreationDate)
 	require.NotEmpty(certReq.Profile)
 	require.Empty(certReq.RejectReason)
-	require.Equal(models.CertificateRequestState_PROCESSING, certReq.Status)
 	// Audit log should contain one additional entry for PROCESSING
 	require.Len(certReq.AuditLog, 3)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, certReq.AuditLog[2].PreviousState)
@@ -154,6 +154,62 @@ func (s *gdsTestSuite) TestCertManager() {
 	require.Equal(models.CertificateRequestState_DOWNLOADED, certReq.AuditLog[5].PreviousState)
 	require.Equal(models.CertificateRequestState_COMPLETED, certReq.AuditLog[5].CurrentState)
 	require.Equal("automated", certReq.AuditLog[5].Source)
+}
+
+// Test that certificate submission still works when no additional DNS names are provided.
+func (s *gdsTestSuite) TestCertManagerSubmitNoDNS() {
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	defer s.loadReferenceFixtures()
+	require := s.Require()
+
+	echoVASP := s.fixtures[vasps]["echo"].(*pb.VASP)
+	quebecCertReq := s.fixtures[certreqs]["quebec"].(*models.CertificateRequest)
+
+	// Remove additional DNS names from the certificate request
+	quebecCertReq.DnsNames = []string{}
+	err := s.svc.GetStore().UpdateCertReq(quebecCertReq)
+	require.NoError(err, "could not update certificate request before test")
+
+	// Create a secret that the certificate manager can retrieve
+	sm := s.svc.GetSecretManager().With(quebecCertReq.Id)
+	ctx := context.Background()
+	require.NoError(sm.CreateSecret(ctx, "password"))
+	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
+
+	// Let the certificate manager submit the certificate request
+	err = s.svc.HandleCertificateRequests(certDir)
+	require.NoError(err, "certman loop unsuccessful")
+
+	// VASP state should be changed to ISSUING_CERTIFICATE
+	v, err := s.svc.GetStore().RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+	// Audit log should contain one additional entry for ISSUING_CERTIFICATE
+	log, err := models.GetAuditLog(v)
+	require.NoError(err)
+	require.Len(log, 5)
+	require.Equal(pb.VerificationState_REVIEWED, log[4].PreviousState)
+	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, log[4].CurrentState)
+	require.Equal("automated", log[4].Source)
+
+	// Certificate request should be updated
+	certReq, err := s.svc.GetStore().RetrieveCertReq(quebecCertReq.Id)
+	require.NoError(err)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.Status)
+	require.Greater(int(certReq.AuthorityId), 0)
+	require.Greater(int(certReq.BatchId), 0)
+	require.NotEmpty(certReq.BatchName)
+	require.NotEmpty(certReq.BatchStatus)
+	require.Greater(int(certReq.OrderNumber), 0)
+	require.NotEmpty(certReq.CreationDate)
+	require.NotEmpty(certReq.Profile)
+	require.Empty(certReq.RejectReason)
+	// Audit log should contain one additional entry for PROCESSING
+	require.Len(certReq.AuditLog, 3)
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, certReq.AuditLog[2].PreviousState)
+	require.Equal(models.CertificateRequestState_PROCESSING, certReq.AuditLog[2].CurrentState)
+	require.Equal("automated", certReq.AuditLog[2].Source)
 }
 
 // Test that the certificate manager rejects requests when the VASP state is invalid.

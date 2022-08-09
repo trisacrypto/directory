@@ -179,8 +179,11 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *p
 		params = make(map[string]string)
 	}
 
+	// Allow multiple DNS names to be specified in addition to the common name
+	dnsNames := []string{r.CommonName}
+	dnsNames = append(dnsNames, r.DnsNames...)
+	params["dNSName"] = strings.Join(dnsNames, "\n")
 	params["commonName"] = r.CommonName
-	params["dNSName"] = r.CommonName
 	params["pkcs12Password"] = string(pkcs12Password)
 
 	// Step 3: submit the certificate

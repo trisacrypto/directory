@@ -60,6 +60,9 @@ message CertificateRequest {
     // Generic parameters used for making requests to certificate issuing services
     map<string, string> params = 13;
 
+    // Optional list of alternate dns names in addition to the common name
+    repeated string dns_names = 14;
+
     // Logging information timestamps
     string created = 15;
     string modified = 16;
