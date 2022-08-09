@@ -14,11 +14,7 @@ import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalD
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
-import {
-  getRegistrationDefaultValue,
-  postRegistrationValue,
-  setRegistrationDefaultValue
-} from 'modules/dashboard/registration/utils';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
 import useFetchAttention from 'hooks/useFetchAttention';
 const Overview: React.FC = () => {
@@ -90,11 +86,11 @@ const Overview: React.FC = () => {
       ) : (
         <>
           <Heading marginBottom="30px">Overview</Heading>
-          {attentionResponse && (
+          {attentionResponse && Object.keys(attentionResponse).length > 0 && (
             <NeedsAttention
               loading={attentionLoading}
               error={attentionError}
-              data={attentionResponse}
+              data={attentionResponse.messages}
               text={t`Start Certificate Registration`}
               buttonText={'Start'}
               onClick={() => navigate('/dashboard/certificate/registration')}

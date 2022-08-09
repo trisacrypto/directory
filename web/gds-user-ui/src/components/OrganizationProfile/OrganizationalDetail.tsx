@@ -52,10 +52,10 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
       <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
         <Stack mb={5}>
           <Heading fontSize={20}>
-            TRISA Organization Profile:{' '}
-            <Text as={'span'} color={'blue'}>
+            TRISA Organization Profile{' '}
+            {/* <Text as={'span'} color={'blue'}>
               [pending registration]
-            </Text>
+            </Text> */}
           </Heading>
         </Stack>
       </Stack>
@@ -90,7 +90,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>VASP Category</ListItem>
                 <ListItem>
                   {' '}
-                  {data?.vasp_categories && data?.vasp_categories.length
+                  {data?.vasp_categories && data?.vasp_categories.length > 0
                     ? data?.vasp_categories?.map((categ: any) => {
                         return (
                           <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
@@ -122,11 +122,15 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>Identification Type</ListItem>
                 <ListItem>
                   {' '}
-                  <Tag color={'white'} bg={'blue'} size={'lg'}>
-                    {getNationalIdentificationLabel(
-                      data?.entity?.national_identification?.national_identifier_type
-                    )}
-                  </Tag>
+                  {data?.entity?.national_identification?.national_identifier_type ? (
+                    <Tag color={'white'} bg={'blue'} size={'lg'}>
+                      {getNationalIdentificationLabel(
+                        data?.entity?.national_identification?.national_identifier_type
+                      )}
+                    </Tag>
+                  ) : (
+                    'N/A'
+                  )}
                 </ListItem>
               </List>
               <List>
