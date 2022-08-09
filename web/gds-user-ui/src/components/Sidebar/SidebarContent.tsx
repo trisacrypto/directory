@@ -54,15 +54,17 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
                 {menu.title}
               </NavItem>
               {menu.children &&
-                menu.children.map((child) => (
-                  <SubMenuItem
-                    key={child.title}
-                    icon={child.icon}
-                    href={child.path || '/#'}
-                    path={child.path}>
-                    {child.title}
-                  </SubMenuItem>
-                ))}
+                menu.children
+                  .filter((m) => m.activated)
+                  .map((child) => (
+                    <SubMenuItem
+                      key={child.title}
+                      icon={child.icon}
+                      href={child.path || '/#'}
+                      path={child.path}>
+                      {child.title}
+                    </SubMenuItem>
+                  ))}
             </>
           ))}
         </VStack>

@@ -80,33 +80,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
 
       <HStack spacing={{ base: '0', md: '6' }}>
         <HStack>
-          {/* <IconButton
-            size="lg"
-            variant="ghost"
-            aria-label="open menu"
-            borderRadius={50}
-            color="gray.700"
-            _focus={{ boxShadow: 'none' }}
-            icon={<FiSearch />}
-          />
-          <IconButton
-            size="lg"
-            variant="ghost"
-            aria-label="open menu"
-            borderRadius={50}
-            color="gray.700"
-            _focus={{ boxShadow: 'none' }}
-            icon={<FiBell />}
-          />
-          <IconButton
-            size="lg"
-            variant="ghost"
-            aria-label="open menu"
-            borderRadius={50}
-            color="gray.700"
-            _focus={{ boxShadow: 'none' }}
-            icon={<FiBell />}
-          /> */}
           <LanguagesDropdown />
         </HStack>
         <Divider orientation="vertical" height={8} />
