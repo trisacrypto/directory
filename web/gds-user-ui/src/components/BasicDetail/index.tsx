@@ -30,8 +30,7 @@ const BasicDetails: React.FC = () => {
       try {
         const validationData = await validationSchema[0].validate(data);
         console.log('[validationData]', validationData);
-        postRegistrationValue(validationData);
-        setIsLoadingDefaultValue(false);
+        const posted = await postRegistrationValue(validationData);
         navigate('/dashboard/certificate/registration');
       } catch (e: any) {
         toast({
@@ -42,7 +41,6 @@ const BasicDetails: React.FC = () => {
           isClosable: true,
           position: 'top-right'
         });
-        setIsLoadingDefaultValue(false);
         handleError(e, 'Importing data failed');
       } finally {
         setIsLoadingDefaultValue(false);

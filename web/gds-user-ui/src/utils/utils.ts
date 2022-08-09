@@ -5,7 +5,7 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-
+import { clearCookies } from 'utils/cookies';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -137,7 +137,7 @@ export const getRefreshToken = () => {
         if (err) {
           reject(err);
         } else {
-          resolve(authResult.accessToken);
+          resolve(authResult);
         }
       }
     );
@@ -146,6 +146,10 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
+  if (error.response.status === 401 || error.response.status === 403) {
+    clearCookies();
+    window.location.href = '/auth/login';
+  }
 };
 
 // uppercased first letter

@@ -19,7 +19,7 @@ import { FiMenu } from 'react-icons/fi';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
-import { removeCookie } from 'utils/cookies';
+import { removeCookie, clearCookies } from 'utils/cookies';
 import { useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
@@ -41,6 +41,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const handleLogout = (e: any) => {
     e.preventDefault();
     removeCookie('access_token');
+    clearCookies();
     localStorage.removeItem('persist:root');
     dispatch(logout());
     resetStore();

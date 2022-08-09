@@ -13,3 +13,12 @@ export const getCookie = (key: string) => {
 export const removeCookie = (key: string, path?: string) => {
   cookie.remove(key, { path: path || '/' });
 };
+
+// clear all cookies
+
+export const clearCookies = () => {
+  Object.keys(cookie.getAll()).forEach((key) => {
+    console.log('[clearCookies]', key);
+    removeCookie(key);
+  });
+};
