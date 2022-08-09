@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import axiosInstance, { setAuthorization } from 'utils/axios';
+import { handleError } from 'utils/utils';
 const useFetchAttention = () => {
   const [attentionResponse, setAttentionResponse] = useState<any>();
   const [attentionError, setAttentionError] = useState<AxiosError | any>();
@@ -17,6 +18,7 @@ const useFetchAttention = () => {
       }
     } catch (err: any) {
       setAttentionError(err);
+      handleError(err, '[useFetchAttention] fetchAttentionData failed');
     } finally {
       setAttentionLoading(false);
     }

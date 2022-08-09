@@ -47,8 +47,7 @@ const Overview: React.FC = () => {
         if (e.response.status === 403) {
           navigate('/auth/login?from=/dashboard/overview&q=token_expired');
         }
-
-        Sentry.captureException(e);
+        handleError(e);
       } finally {
         setIsLoading(false);
       }
