@@ -146,6 +146,7 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
+  console.log(error.response);
   if (error.response.status === 401 || error.response.status === 403) {
     clearCookies();
     window.location.href = '/auth/login';

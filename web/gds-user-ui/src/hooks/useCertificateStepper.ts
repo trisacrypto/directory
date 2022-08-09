@@ -52,14 +52,43 @@ const useCertificateStepper = () => {
   const testnetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const mainnetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
 
-  // get current state
+  // get current state after dispatch
+
+  const _getCurrentState = (): TPayload => {
+    return useSelector(getCurrentState);
+  };
+
+  // get current step after dispatch
+  const _getCurrentStep = (): number => {
+    return useSelector(getCurrentStep);
+  };
+
+  // get steps after dispatch
+  const _getSteps = (): TStep[] => {
+    return useSelector(getSteps);
+  };
+  // get last step after dispatch
+  const _getLastStep = (): number => {
+    return useSelector(getLastStep);
+  };
+  // get has reach submit step after dispatch
+  const _getHasReachSubmitStep = (): any => {
+    return useSelector(getHasReachSubmitStep);
+  };
+  // get testnet submitted status after dispatch
+  const _getTestNetSubmittedStatus = (): boolean => {
+    return useSelector(getTestNetSubmittedStatus);
+  };
+  // get mainnet submitted status after dispatch
+  const _getMainNetSubmittedStatus = (): boolean => {
+    return useSelector(getMainNetSubmittedStatus);
+  };
 
   const currentState = () => {
-    console.log('currentState', currentValue);
     const formatState = {
-      current: currentValue.currentStep,
-      steps: currentValue.steps,
-      ready_to_submit: currentValue.hasReachSubmitStep
+      current: _getCurrentStep(),
+      steps: _getSteps(),
+      ready_to_submit: _getHasReachSubmitStep()
     };
     return formatState;
   };
@@ -155,7 +184,11 @@ const useCertificateStepper = () => {
     }
     postRegistrationValue({
       ..._mergedData,
-      state: { ...currentState(), ready_to_submit: true, current: currentStep }
+      state: {
+        ...currentState(),
+        ready_to_submit: _getHasReachSubmitStep(),
+        current: _getCurrentStep() + 1
+      }
     });
   };
   const previousStep = (state?: TState) => {
