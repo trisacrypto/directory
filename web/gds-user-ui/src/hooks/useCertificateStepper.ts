@@ -79,6 +79,7 @@ const useCertificateStepper = () => {
       ...registrationValues,
       ...formValues
     };
+    console.log('[_mergedData]', _mergedData);
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
       // update step status

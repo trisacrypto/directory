@@ -203,6 +203,8 @@ const Certificate: React.FC = () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
+        console.log('[registrationData]', data.registrationData);
+        console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
         console.log('[getRegistrationData]', error);
@@ -263,21 +265,21 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    {!isFormSubmitted() && (
-                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                        <Trans id="Save & Previous">Save & Previous</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <Trans id="Save & Previous">Save & Previous</Trans>
+                    </Button>
+                    {/* )} */}
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    {!isFormSubmitted() && (
-                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
+                    {/* )} */}
                   </>
                 )}
               </Stack>
