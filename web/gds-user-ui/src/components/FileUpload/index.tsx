@@ -89,9 +89,13 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
             register={register('file_', { validate: validateFiles })}>
             <Button
               bg={useColorModeValue('black', 'white')}
+              _hover={{
+                bg: useColorModeValue('black', 'white')
+              }}
               color={useColorModeValue('white', 'black')}
               leftIcon={<Icon as={FiFile} />}
-              minWidth={150}>
+              minWidth={150}
+            >
               Import File
             </Button>
           </FileUpload>
