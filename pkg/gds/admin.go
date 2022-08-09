@@ -179,7 +179,7 @@ func (s *Admin) setupRoutes() (err error) {
 		cors.New(cors.Config{
 			AllowOrigins:     s.conf.AllowOrigins,
 			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
-			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace"},
+			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace", "baggage"},
 			AllowCredentials: true,
 			MaxAge:           12 * time.Hour,
 		}),
