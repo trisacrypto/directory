@@ -1,4 +1,6 @@
-import { getSteps, getLastStep, resetStepper } from './../application/store/selectors/stepper';
+import React, { useState, useEffect } from 'react';
+import { getSteps, getLastStep, resetStepper } from '../application/store/selectors/stepper';
+import Store from '../application/store';
 import {
   getCurrentStep,
   getHasReachSubmitStep,
@@ -6,7 +8,6 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
-import React, { FC, useEffect } from 'react';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
   addStep,
@@ -52,43 +53,15 @@ const useCertificateStepper = () => {
   const testnetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const mainnetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
 
-  // get current state after dispatch
-
-  const _getCurrentState = (): TPayload => {
-    return useSelector(getCurrentState);
-  };
-
-  // get current step after dispatch
-  const _getCurrentStep = (): number => {
-    return useSelector(getCurrentStep);
-  };
-
-  // get steps after dispatch
-  const _getSteps = (): TStep[] => {
-    return useSelector(getSteps);
-  };
-  // get last step after dispatch
-  const _getLastStep = (): number => {
-    return useSelector(getLastStep);
-  };
-  // get has reach submit step after dispatch
-  const _getHasReachSubmitStep = (): any => {
-    return useSelector(getHasReachSubmitStep);
-  };
-  // get testnet submitted status after dispatch
-  const _getTestNetSubmittedStatus = (): boolean => {
-    return useSelector(getTestNetSubmittedStatus);
-  };
-  // get mainnet submitted status after dispatch
-  const _getMainNetSubmittedStatus = (): boolean => {
-    return useSelector(getMainNetSubmittedStatus);
-  };
+  // get store state after dispatch action
 
   const currentState = () => {
+    // log store state
+    const updatedState = Store.getState().stepper;
     const formatState = {
-      current: _getCurrentStep(),
-      steps: _getSteps(),
-      ready_to_submit: _getHasReachSubmitStep()
+      current: updatedState.currentStep,
+      steps: updatedState.steps,
+      ready_to_submit: updatedState.hasReachSubmitStep
     };
     return formatState;
   };
@@ -185,9 +158,7 @@ const useCertificateStepper = () => {
     postRegistrationValue({
       ..._mergedData,
       state: {
-        ...currentState(),
-        ready_to_submit: _getHasReachSubmitStep(),
-        current: _getCurrentStep() + 1
+        ...currentState()
       }
     });
   };
@@ -244,6 +215,12 @@ const useCertificateStepper = () => {
     };
     dispatch(setInitialValue(state));
   };
+
+  // update state dispatch by using useeffect
+
+  useEffect(() => {
+    console.log('[useEffect]', currentState());
+  }, [postRegistrationValue]);
 
   return {
     nextStep,

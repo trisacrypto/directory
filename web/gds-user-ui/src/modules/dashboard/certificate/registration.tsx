@@ -60,7 +60,7 @@ const Certificate: React.FC = () => {
   const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
-
+  const currentStateValue = useSelector(getCurrentState);
   const lastStep: number = useSelector(getLastStep);
   const steps: number = useSelector(getSteps);
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
