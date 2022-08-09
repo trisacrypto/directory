@@ -4,7 +4,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
 
 # Each container image is built in its own job. To add an image, simply copy and paste
 # one of the jobs and configure the build to point to the container's Dockerfile and
@@ -88,6 +88,26 @@ jobs:
             REACT_APP_SENTRY_ENVIRONMENT=staging
             REACT_APP_USE_DASH_LOCALE=true
 
+      - name: Slack Notify Staging UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Staging UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
   # GDS Staging Admin UI: admin.vaspdirectory.dev
   gds-staging-admin-ui:
     name: GDS Staging Admin UI
@@ -152,6 +172,26 @@ jobs:
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
             REACT_APP_SENTRY_ENVIRONMENT=staging
 
+      - name: Slack Notify Staging Admin UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Staging Admin UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
   # GDS Staging TestNet Admin UI: admin.trisatest.dev
   gds-staging-testnet-admin-ui:
     name: GDS Staging TestNet Admin UI
@@ -215,3 +255,23 @@ jobs:
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_STAGING_TRISATEST_CLIENT_ID }}
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
             REACT_APP_SENTRY_ENVIRONMENT=staging
+
+      - name: Slack Notify Staging TestNet UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Staging TestNet UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
