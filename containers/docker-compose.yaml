@@ -152,7 +152,7 @@ services:
       - GDS_BFF_MAINNET_DIRECTORY_INSECURE=true
       - GDS_BFF_MAINNET_DIRECTORY_ENDPOINT=gds-mainnet:8433
       - GDS_BFF_MAINNET_DIRECTORY_TIMEOUT=5s
-      - GDS_BFF_MAINNET_ADMIN_ENDPOINT=http://gds:8434
+      - GDS_BFF_MAINNET_ADMIN_ENDPOINT=http://gds-mainnet:8434
       - GDS_BFF_MAINNET_ADMIN_AUDIENCE=http://localhost:8433
       - GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS=1y9jUjVqRqRJaiKsNqrZmQkhTqe:/data/creds/current_token_key.pem,1y9jTDgrljWl0iVUOQBcCev7rBG:/data/creds/rotated_token_key.pem
       - GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE=true
