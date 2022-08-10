@@ -29,9 +29,24 @@ const (
 	ProfileIDCipherTraceEndEntityCertificate = "85"
 )
 
-var AllProfiles = [4]string{
-	ProfileCipherTraceEE, ProfileIDCipherTraceEE,
-	ProfileCipherTraceEndEntityCertificate, ProfileIDCipherTraceEndEntityCertificate,
+// Map containing all the supported Sectigo profiles and their required parameters.
+var Profiles = map[string][]string{
+	ProfileCipherTraceEE:                   nameParams[:],
+	ProfileIDCipherTraceEE:                 nameParams[:],
+	ProfileCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...), ProfileIDCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...),
+}
+
+var subjectParams = [4]string{
+	"organizationName",
+	"localityName",
+	"stateOrProvinceName",
+	"countryName",
+}
+
+var nameParams = [3]string{
+	"commonName",
+	"dNSName",
+	"pkcs12Password",
 }
 
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.
