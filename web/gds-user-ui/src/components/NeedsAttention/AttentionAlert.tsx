@@ -56,13 +56,16 @@ const AttentionAlert = ({
                 <Text> {message}</Text>
                 <Button
                   onClick={onClick}
+                  border={'1px solid white'}
                   width={142}
+                  px={8}
                   as={'a'}
                   borderRadius={0}
                   background="transparent"
                   color="#fff"
                   cursor="pointer"
-                  _hover={{ background: 'blue' }}>
+                  _active={{ background: '#000' }}
+                  _hover={{ background: '#111', color: 'white' }}>
                   Start
                 </Button>
               </HStack>
@@ -79,12 +82,15 @@ const AttentionAlert = ({
                 <Button
                   onClick={onClick}
                   width={142}
+                  border={'1px solid white'}
+                  px={8}
                   as={'a'}
                   borderRadius={0}
                   background="transparent"
                   color="#fff"
                   cursor="pointer"
-                  _hover={{ background: 'blue' }}>
+                  _active={{ background: '#000' }}
+                  _hover={{ background: '#111', color: 'white' }}>
                   Complete
                 </Button>
               </HStack>

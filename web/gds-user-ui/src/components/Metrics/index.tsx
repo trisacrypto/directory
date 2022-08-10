@@ -8,7 +8,6 @@ interface MetricsProps {
   type: string;
 }
 const Metrics = ({ data, type }: MetricsProps) => {
-  console.log('[Metrics] data', data.status);
   return (
     <Flex>
       <Box textAlign={'center'} justifyContent="center" justifyItems={'center'} mx={'auto'}>

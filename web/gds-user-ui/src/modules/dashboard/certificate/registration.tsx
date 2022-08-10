@@ -181,7 +181,7 @@ const Certificate: React.FC = () => {
   useEffect(() => {
     resetForm();
     setIsResetForm(false);
-  }, [isResetForm, resetForm]);
+  }, [isResetForm, resetForm, registrationData]);
 
   // handle reset modal
   useEffect(() => {
