@@ -13,15 +13,11 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
-  Select
+  Show
 } from '@chakra-ui/react';
-import { FiBell, FiMenu, FiSearch } from 'react-icons/fi';
-import UsaIcon from 'assets/usa-flag-large.jpg';
-import SelectFormControl from 'components/ui/SelectFormControl';
+import { FiMenu } from 'react-icons/fi';
 import LanguagesDropdown from 'components/LanguagesDropdown';
-// import FranceIcon from 'assets/france.svg';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import useAuth from 'hooks/useAuth';
+import { useDispatch, useSelector } from 'react-redux';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 import { removeCookie, clearCookies } from 'utils/cookies';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +26,7 @@ import { resetStore } from 'application/store';
 import Storage from 'reduxjs-toolkit-persist/lib/storage/session';
 import AvatarContentLoader from 'components/ContentLoader/Avatar';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
+import Logo from 'components/ui/Logo';
 
 interface MobileProps extends FlexProps {
   onOpen: () => void;
@@ -63,22 +60,19 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
       {...rest}>
       <IconButton
         display={{ base: 'flex', md: 'none' }}
-        borderRadius={50}
         onClick={onOpen}
         variant="outline"
         aria-label="open menu"
         icon={<FiMenu />}
       />
-
-      <Text
-        display={{ base: 'flex', md: 'none' }}
-        fontSize="2xl"
-        fontFamily="monospace"
-        fontWeight="bold">
-        Logo
-      </Text>
-
-      <HStack spacing={{ base: '0', md: '6' }}>
+      <Show below="md">
+        <Logo sx={{ '& img': { width: '50%' } }} />
+      </Show>
+      <HStack
+        spacing={{ base: '0', md: '6' }}
+        w={{ base: '100%', md: 'none' }}
+        gap={{ base: 4, md: 0 }}
+        justifyContent="end">
         <HStack>
           <LanguagesDropdown />
         </HStack>
@@ -86,9 +80,11 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         <Menu>
           <MenuButton transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
             <HStack>
-              <Text fontSize="sm" color="blackAlpha.700">
-                {user?.name || 'Guest'}
-              </Text>
+              <Show above="lg">
+                <Text fontSize="sm" color="blackAlpha.700">
+                  {user?.name || 'Guest'}
+                </Text>
+              </Show>
               <Box borderRadius="50%" borderWidth={2} padding={0.5}>
                 <Avatar
                   size={'md'}
@@ -102,7 +98,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
-            {/* <MenuItem>Profile</MenuItem> */}
             <MenuDivider />
             <MenuItem onClick={handleLogout}>Sign out</MenuItem>
           </MenuList>

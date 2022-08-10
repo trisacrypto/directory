@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { getRefreshToken } from 'utils/utils';
-
 import { getCookie, setCookie, removeCookie, clearCookies } from 'utils/cookies';
 const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_TRISA_BASE_URL,
