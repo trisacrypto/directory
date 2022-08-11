@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -576,7 +577,7 @@ func TestNewCertificateRequest(t *testing.T) {
 	_, err := NewCertificateRequest(nil)
 	require.Error(t, err)
 
-	// If the name does not exist, the default value should be populated
+	// If the name does not exist, it should not be populated
 	vasp := &pb.VASP{
 		Id:         "b5841869-105f-411c-8722-4045aad72717",
 		CommonName: "charlieVASP",
@@ -586,8 +587,7 @@ func TestNewCertificateRequest(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, vasp.Id, cr.Vasp)
 	require.Equal(t, vasp.CommonName, cr.CommonName)
-	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "TRISA Member VASP", cr.Params["organizationName"])
+	require.NotContains(t, cr.Params, sectigo.ParamOrganizationName)
 
 	vasp.Entity.Name = &ivms101.LegalPersonName{
 		NameIdentifiers: []*ivms101.LegalPersonNameId{
@@ -599,23 +599,20 @@ func TestNewCertificateRequest(t *testing.T) {
 	}
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
-	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
+	require.Contains(t, cr.Params, sectigo.ParamOrganizationName)
+	require.Equal(t, "Charlie Inc.", cr.Params[sectigo.ParamOrganizationName])
 
 	// Valid organization name, unspecified location info
 	vasp.Entity.Name.NameIdentifiers[0].LegalPersonNameIdentifierType = ivms101.LegalPersonLegal
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
-	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
-	require.Contains(t, cr.Params, "localityName")
-	require.Equal(t, "Menlo Park", cr.Params["localityName"])
-	require.Contains(t, cr.Params, "stateOrProvinceName")
-	require.Equal(t, "California", cr.Params["stateOrProvinceName"])
-	require.Contains(t, cr.Params, "countryName")
-	require.Equal(t, "US", cr.Params["countryName"])
+	require.Contains(t, cr.Params, sectigo.ParamOrganizationName)
+	require.Equal(t, "Charlie Inc.", cr.Params[sectigo.ParamOrganizationName])
+	require.NotContains(t, cr.Params, sectigo.ParamLocalityName)
+	require.NotContains(t, cr.Params, sectigo.ParamStateOrProvinceName)
+	require.NotContains(t, cr.Params, sectigo.ParamCountryName)
 
-	// Valid organization name, partial location info is overridden
+	// Valid organization name, partial location info is not accepted
 	vasp.Entity.GeographicAddresses = []*ivms101.Address{
 		{
 			Country: "CA",
@@ -623,12 +620,11 @@ func TestNewCertificateRequest(t *testing.T) {
 	}
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
-	require.Contains(t, cr.Params, "localityName")
-	require.Equal(t, "Menlo Park", cr.Params["localityName"])
-	require.Contains(t, cr.Params, "stateOrProvinceName")
-	require.Equal(t, "California", cr.Params["stateOrProvinceName"])
-	require.Contains(t, cr.Params, "countryName")
-	require.Equal(t, "US", cr.Params["countryName"])
+	require.Contains(t, cr.Params, sectigo.ParamOrganizationName)
+	require.Equal(t, "Charlie Inc.", cr.Params[sectigo.ParamOrganizationName])
+	require.NotContains(t, cr.Params, sectigo.ParamLocalityName)
+	require.NotContains(t, cr.Params, sectigo.ParamStateOrProvinceName)
+	require.NotContains(t, cr.Params, sectigo.ParamCountryName)
 
 	// Complete organization name and location info
 	vasp.Entity.GeographicAddresses[0].TownLocationName = "Toronto"
@@ -636,14 +632,14 @@ func TestNewCertificateRequest(t *testing.T) {
 	vasp.Entity.GeographicAddresses[0].Country = "CA"
 	cr, err = NewCertificateRequest(vasp)
 	require.NoError(t, err)
-	require.Contains(t, cr.Params, "organizationName")
-	require.Equal(t, "Charlie Inc.", cr.Params["organizationName"])
-	require.Contains(t, cr.Params, "localityName")
-	require.Equal(t, "Toronto", cr.Params["localityName"])
-	require.Contains(t, cr.Params, "stateOrProvinceName")
-	require.Equal(t, "Ontario", cr.Params["stateOrProvinceName"])
-	require.Contains(t, cr.Params, "countryName")
-	require.Equal(t, "CA", cr.Params["countryName"])
+	require.Contains(t, cr.Params, sectigo.ParamOrganizationName)
+	require.Equal(t, "Charlie Inc.", cr.Params[sectigo.ParamOrganizationName])
+	require.Contains(t, cr.Params, sectigo.ParamLocalityName)
+	require.Equal(t, "Toronto", cr.Params[sectigo.ParamLocalityName])
+	require.Contains(t, cr.Params, sectigo.ParamStateOrProvinceName)
+	require.Equal(t, "Ontario", cr.Params[sectigo.ParamStateOrProvinceName])
+	require.Contains(t, cr.Params, sectigo.ParamCountryName)
+	require.Equal(t, "CA", cr.Params[sectigo.ParamCountryName])
 }
 
 func TestUpdateCertificateRequestStatus(t *testing.T) {

@@ -167,27 +167,27 @@ func (s *Service) submitCertificateRequest(r *models.CertificateRequest, vasp *p
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	profile := s.certs.Profile()
-	var params map[string]string
-	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
-		params = r.Params
-		if params == nil {
-			log.Error().Str("vasp", vasp.Id).Str("certreq", r.Id).Msg("certificate request params are nil")
-			return errors.New("no params are available on the certificate request")
-		}
-	} else {
-		params = make(map[string]string)
-	}
-
 	// Allow multiple DNS names to be specified in addition to the common name
 	dnsNames := []string{r.CommonName}
 	dnsNames = append(dnsNames, r.DnsNames...)
-	params["dNSName"] = strings.Join(dnsNames, "\n")
-	params["commonName"] = r.CommonName
-	params["pkcs12Password"] = string(pkcs12Password)
+	models.UpdateCertificateRequestParams(r, sectigo.ParamDNSNames, strings.Join(dnsNames, "\n"))
+	models.UpdateCertificateRequestParams(r, sectigo.ParamCommonName, r.CommonName)
+	models.UpdateCertificateRequestParams(r, sectigo.ParamPassword, string(pkcs12Password))
+
+	// Validate the parameters, filling in any default values before submitting to Sectigo
+	profile := s.certs.Profile()
+	if err = models.ValidateCertificateRequestParams(r, profile); err != nil {
+		return fmt.Errorf("certificate request parameter validation failed for profile %s: %s", profile, err)
+	}
 
 	// Step 3: submit the certificate
-	var rep *sectigo.BatchResponse
+	var (
+		rep    *sectigo.BatchResponse
+		params map[string]string
+	)
+	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
+		return fmt.Errorf("could not retrieve certificate request parameters for profile %s: %s", profile, err)
+	}
 	batchName := fmt.Sprintf("%s-certreq-%s)", s.conf.DirectoryID, r.Id)
 	if rep, err = s.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error

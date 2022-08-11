@@ -20,13 +20,20 @@ import (
 	"sync"
 )
 
-// Valid Sectigo Certificate Profile Names and IDs
+// Valid Sectigo Certificate Profile Names, IDs, and parameters.
 // TODO: do not hardcode this, but get programatically from Sectigo API
 const (
 	ProfileCipherTraceEE                     = "CipherTrace EE"
 	ProfileIDCipherTraceEE                   = "17"
 	ProfileCipherTraceEndEntityCertificate   = "CipherTrace End Entity Certificate"
 	ProfileIDCipherTraceEndEntityCertificate = "85"
+	ParamOrganizationName                    = "organizationName"
+	ParamLocalityName                        = "localityName"
+	ParamStateOrProvinceName                 = "stateOrProvinceName"
+	ParamCountryName                         = "countryName"
+	ParamCommonName                          = "commonName"
+	ParamDNSNames                            = "dNSName"
+	ParamPassword                            = "pkcs12Password"
 )
 
 // Map containing all the supported Sectigo profiles and their required parameters.
@@ -37,16 +44,31 @@ var Profiles = map[string][]string{
 }
 
 var subjectParams = [4]string{
-	"organizationName",
-	"localityName",
-	"stateOrProvinceName",
-	"countryName",
+	ParamOrganizationName,
+	ParamLocalityName,
+	ParamStateOrProvinceName,
+	ParamCountryName,
 }
 
 var nameParams = [3]string{
-	"commonName",
-	"dNSName",
-	"pkcs12Password",
+	ParamCommonName,
+	ParamDNSNames,
+	ParamPassword,
+}
+
+var Defaults = map[string]string{
+	ParamOrganizationName:    "TRISA Member VASP",
+	ParamLocalityName:        "Menlo Park",
+	ParamStateOrProvinceName: "California",
+	ParamCountryName:         "US",
+}
+
+func AllProfiles() []string {
+	var profiles []string
+	for k := range Profiles {
+		profiles = append(profiles, k)
+	}
+	return profiles
 }
 
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.

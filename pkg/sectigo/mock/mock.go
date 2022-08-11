@@ -45,34 +45,34 @@ type ProfileParam struct {
 
 var subjectParams = [4]ProfileParam{
 	{
-		Name:     "organizationName",
+		Name:     sectigo.ParamOrganizationName,
 		Validate: hasValue,
 	},
 	{
-		Name:     "localityName",
+		Name:     sectigo.ParamLocalityName,
 		Validate: hasValue,
 	},
 	{
-		Name:     "stateOrProvinceName",
+		Name:     sectigo.ParamStateOrProvinceName,
 		Validate: hasValue,
 	},
 	{
-		Name:     "countryName",
+		Name:     sectigo.ParamCountryName,
 		Validate: hasValue,
 	},
 }
 
 var nameParams = [3]ProfileParam{
 	{
-		Name:     "commonName",
+		Name:     sectigo.ParamCommonName,
 		Validate: hasValue,
 	},
 	{
-		Name:     "dNSName",
+		Name:     sectigo.ParamDNSNames,
 		Validate: newlineSeparated,
 	},
 	{
-		Name:     "pkcs12Password",
+		Name:     sectigo.ParamPassword,
 		Validate: hasValue,
 	},
 }

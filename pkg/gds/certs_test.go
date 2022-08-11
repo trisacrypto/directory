@@ -433,13 +433,10 @@ func (s *gdsTestSuite) TestSubmitBatchError() {
 	require.NoError(sm.CreateSecret(ctx, "password"))
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
-	// Certificate request with a missing country name
-	quebecCertReq.Params = map[string]string{
-		"organizationName":    "TRISA Member VASP",
-		"localityName":        "Menlo Park",
-		"stateOrProvinceName": "California",
-	}
-	require.NoError(s.svc.GetStore().UpdateCertReq(quebecCertReq))
+	// Make the create batch endpoint return an error
+	mock.Handle(sectigo.CreateSingleCertBatchEP, func(c *gin.Context) {
+		c.Status(http.StatusBadRequest)
+	})
 
 	// Run the CertManager for a tick
 	err := s.svc.HandleCertificateRequests(certDir)
