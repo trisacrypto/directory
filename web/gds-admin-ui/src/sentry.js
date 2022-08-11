@@ -5,8 +5,6 @@ import config from './config';
 const defaultTracingOrigins = ['localhost', /^\//];
 
 const initSentry = () => {
-    console.log(config.appVersion)
-
     if (process.env.REACT_APP_SENTRY_DSN) {
         let tracingOrigins = defaultTracingOrigins;
         if (process.env.REACT_APP_GDS_API_ENDPOINT) {
