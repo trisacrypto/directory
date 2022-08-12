@@ -9,7 +9,9 @@ import localForage from 'localforage';
 import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
 import storage from 'redux-persist/lib/storage';
 import { handleError } from 'utils/utils';
+
 const userSignupWithSocial = (socialName: string) => {};
+
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
     auth0SignWithSocial('google-oauth2');
@@ -59,8 +61,8 @@ export const getAuth0User: any = createAsyncThunk(
       console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        setCookie('access_token', hasToken);
-        setCookie('user_locale', getUserInfo?.locale);
+        setCookie('access_token', getUserInfo?.accessToken || hasToken);
+        setCookie('user_locale', getUserInfo?.idTokenPayload.locale);
         const getUser = await logUserInBff();
         if (getUser.status === 204) {
           const userInfo: TUser = {
