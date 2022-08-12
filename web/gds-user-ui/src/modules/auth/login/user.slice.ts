@@ -56,7 +56,7 @@ export const getAuth0User: any = createAsyncThunk(
   async (hasToken: boolean, thunkAPI) => {
     try {
       const getUserInfo: any = hasToken && (await auth0Hash());
-      // console.log('[getUserInfo]', getUserInfo);
+      console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
         setCookie('access_token', hasToken);
@@ -118,12 +118,13 @@ const userSlice: any = createSlice({
   },
   extraReducers: {
     [getAuth0User.fulfilled]: (state, { payload }) => {
-      console.log('payload', payload);
+      console.log('[getAuth0User.fulfilled]', payload);
       state.isFetching = false;
       state.isLoggedIn = true;
       state.user = payload.user;
     },
     [getAuth0User.pending]: (state) => {
+      console.log('[getAuth0User.pending]', state);
       state.isFetching = true;
     },
     [getAuth0User.rejected]: (state, { payload }) => {
