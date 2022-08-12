@@ -33,6 +33,7 @@ const CallbackPage: React.FC = () => {
     if (isLoggedIn) {
       navigate('/dashboard/overview');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError, isLoggedIn]);
 
   return (

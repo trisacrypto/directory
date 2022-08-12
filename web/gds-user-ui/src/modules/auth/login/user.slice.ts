@@ -58,11 +58,10 @@ export const getAuth0User: any = createAsyncThunk(
       const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
 
-      if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
+      if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         setCookie('access_token', hasToken);
         setCookie('user_locale', getUserInfo?.locale);
         const getUser = await logUserInBff();
-        // console.log('[getUser]', getUser);
         if (getUser.status === 204) {
           const userInfo: TUser = {
             isLoggedIn: true,
