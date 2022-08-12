@@ -26,7 +26,7 @@ func Connect(conf config.DatabaseConfig) (db *DB, err error) {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		var mtls grpc.DialOption
-		if mtls, err = conf.MTLS.DialOption(conf.URL); err != nil {
+		if mtls, err = conf.MTLS.DialOption(dsn.Hostname()); err != nil {
 			return nil, fmt.Errorf("could not create mTLS dial option: %s", err)
 		}
 		opts = append(opts, mtls)

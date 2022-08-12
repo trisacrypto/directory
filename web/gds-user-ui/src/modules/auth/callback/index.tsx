@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
+
 import { Box, useToast } from '@chakra-ui/react';
 import useHashQuery from 'hooks/useHashQuery';
 import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
 import { clearCookies, getCookie } from 'utils/cookies';
+
 import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
 import { t } from '@lingui/macro';
 import { useSelector, useDispatch } from 'react-redux';
+
 const CallbackPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const query = useHashQuery();
