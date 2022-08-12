@@ -11,7 +11,7 @@ const (
 	VersionMinor         = 5
 	VersionPatch         = 0
 	VersionReleaseLevel  = "rc"
-	VersionReleaseNumber = 22
+	VersionReleaseNumber = 23
 )
 
 // Set the GitVersion via -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$(git rev-parse --short HEAD)'"
