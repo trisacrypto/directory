@@ -26,12 +26,13 @@ const BasicDetails: React.FC = () => {
     const reader = new FileReader();
     reader.onload = async (ev: any) => {
       const data = JSON.parse(ev.target.result);
-      console.log('[read data]', data);
       try {
         const validationData = await validationSchema[0].validate(data);
         console.log('[validationData]', validationData);
-        const posted = await postRegistrationValue(validationData);
-        navigate('/dashboard/certificate/registration');
+        const updatedCertificate: any = await postRegistrationValue(validationData);
+        if (updatedCertificate.status === 204) {
+          navigate('/dashboard/certificate/registration');
+        }
       } catch (e: any) {
         toast({
           title: 'Invalid file',
