@@ -8,7 +8,7 @@ import { persistor } from 'application/store';
 import localForage from 'localforage';
 import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
 import storage from 'redux-persist/lib/storage';
-const userSession = getCookie('access_token');
+import { handleError } from 'utils/utils';
 const userSignupWithSocial = (socialName: string) => {};
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -72,9 +72,6 @@ export const getAuth0User: any = createAsyncThunk(
             }
           };
           return userInfo;
-
-          // }
-          // log this error to sentry
         } else {
           return thunkAPI.rejectWithValue(t`Something went wrong. Please try again later.`);
         }
@@ -84,6 +81,7 @@ export const getAuth0User: any = createAsyncThunk(
         );
       }
     } catch (err: any) {
+      handleError(err, '[getAuth0User] failed to get user');
       return thunkAPI.rejectWithValue(err.response.data);
     }
   }
