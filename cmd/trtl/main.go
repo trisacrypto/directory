@@ -2,11 +2,14 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -125,6 +128,26 @@ func main() {
 					Name:    "timestamps",
 					Aliases: []string{"t"},
 					Usage:   "fill in missing verified timestamps on the VASP records",
+				},
+			},
+		},
+		{
+			Name:     "restore-certs",
+			Usage:    "create certificate records in the database from a sectigo audit log",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   restoreCerts,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "path",
+					Aliases:  []string{"p"},
+					Required: true,
+					Usage:    "path to the sectigo audit log",
+				},
+				&cli.StringFlag{
+					Name:    "report",
+					Aliases: []string{"r"},
+					Usage:   "dump a migration report to a file",
 				},
 			},
 		},
@@ -655,6 +678,7 @@ vaspLoop:
 						if c.Bool("cleanup") {
 							if err = models.DeleteCertReqID(vasp, id); err != nil {
 								results = multierror.Append(results, err)
+							} else {
 								fmt.Printf("cleaning up dangling certreq ID %s for vasp %s (%s)\n", id, vasp.Id, vasp.CommonName)
 								if report != nil {
 									report.WriteString(fmt.Sprintf("cleaning up dangling certreq ID %s for vasp %s (%s)\n", id, vasp.Id, vasp.CommonName))
@@ -805,6 +829,352 @@ vaspLoop:
 
 	fmt.Println("Migrated", migrated, "certificates")
 	fmt.Println("Skipped", skipped, "vasps")
+	if results != nil {
+		fmt.Println(results.Error())
+	}
+	if report != nil {
+		fmt.Println("Report written to", c.String("report"))
+	}
+	return nil
+}
+
+func restoreCerts(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Open the report file if requested
+	var report *os.File
+	if c.String("report") != "" {
+		if report, err = os.Create(c.String("report")); err != nil {
+			return cli.Exit(err, 1)
+		}
+		defer report.Close()
+	}
+
+	// Get all the VASPs in the database, indexed by common name
+	vasps := make(map[string]*gds.VASP)
+	req := &pb.CursorRequest{
+		Namespace: wire.NamespaceVASPs,
+	}
+	var stream pb.Trtl_CursorClient
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err != io.EOF {
+				return cli.Exit(err, 1)
+			}
+			break
+		}
+
+		vasp := &gds.VASP{}
+		if err = proto.Unmarshal(rep.Value, vasp); err != nil {
+			return cli.Exit(err, 1)
+		}
+		if _, ok := vasps[vasp.CommonName]; ok {
+			return cli.Exit(fmt.Errorf("duplicate VASP common name in database: %s", vasp.CommonName), 1)
+		}
+		vasps[vasp.CommonName] = vasp
+	}
+	fmt.Printf("found %d VASPs in database\n", len(vasps))
+	if report != nil {
+		report.WriteString(fmt.Sprintf("found %d VASPs in database\n", len(vasps)))
+	}
+
+	// Get all the certificate requests in the database, indexed by batch ID
+	certReqs := make(map[int64]*models.CertificateRequest)
+	req = &pb.CursorRequest{
+		Namespace: wire.NamespaceCertReqs,
+	}
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err != io.EOF {
+				return cli.Exit(err, 1)
+			}
+			break
+		}
+
+		certReq := &models.CertificateRequest{}
+		if err = proto.Unmarshal(rep.Value, certReq); err != nil {
+			return cli.Exit(err, 1)
+		}
+		if _, ok := certReqs[certReq.BatchId]; ok {
+			return cli.Exit(fmt.Errorf("duplicate certificate request batch ID in database: %d", certReq.BatchId), 1)
+		}
+		certReqs[certReq.BatchId] = certReq
+	}
+	fmt.Printf("found %d certificate requests in database\n", len(certReqs))
+	if report != nil {
+		report.WriteString(fmt.Sprintf("found %d certificate requests in database\n", len(certReqs)))
+	}
+
+	// Load the audit log from the CSV file
+	var file *os.File
+	if file, err = os.Open(c.String("path")); err != nil {
+		return cli.Exit(err, 1)
+	}
+	defer file.Close()
+
+	// Read the CSV file
+	var records [][]string
+	if records, err = csv.NewReader(file).ReadAll(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	if len(records) == 0 {
+		return cli.Exit("no records found in CSV file", 1)
+	}
+
+	// Parse the CSV header
+	rows := make(map[string]int)
+	for i, col := range records[0] {
+		rows[col] = i
+	}
+
+	var migrated, skipped int
+	var results *multierror.Error
+
+	migratedCerts := make(map[string]*models.Certificate)
+recordLoop:
+	for i, record := range records[1:] {
+		cert := &models.Certificate{}
+
+		status := record[rows["Status"]]
+		switch status {
+		case "ISSUED":
+			cert.Status = models.CertificateState_ISSUED
+		case "REVOKED":
+			cert.Status = models.CertificateState_REVOKED
+		default:
+			fmt.Printf("skipping record %d with status %s\n", i, status)
+			if report != nil {
+				report.WriteString(fmt.Sprintf("skipping record %d with status %s\n", i, status))
+			}
+			skipped++
+			continue recordLoop
+		}
+
+		id := record[rows["Serial Number"]]
+		if id == "" {
+			results = multierror.Append(results, fmt.Errorf("record %d has no serial number", i))
+			continue recordLoop
+		}
+		cert.Id = id
+
+		// Make sure there are no duplicates
+		if _, ok := migratedCerts[id]; ok {
+			fmt.Printf("skipping record %d: duplicate certificate id %s\n", i, id)
+			if report != nil {
+				report.WriteString(fmt.Sprintf("skipping record %d: duplicate certificate id %s\n", i, id))
+			}
+			skipped++
+			continue recordLoop
+		}
+
+		// Only put the certificate record if it doesn't already exist
+		if _, err = dbClient.Get(ctx, &pb.GetRequest{
+			Namespace: wire.NamespaceCerts,
+			Key:       []byte(id),
+		}); err == nil {
+			fmt.Printf("skipping record %d: certificate already exists\n", i)
+			if report != nil {
+				report.WriteString(fmt.Sprintf("skipping record %d: certificate already exists\n", i))
+			}
+			skipped++
+			continue recordLoop
+		}
+		if status, ok := grpc.FromError(err); !ok || status.Code() != codes.NotFound {
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+
+		// Parse the issued at timestamp
+		var issuedAt time.Time
+		const layout = "2006-01-02T15:04:05.000000"
+		if issuedAt, err = time.Parse(layout, record[rows["Issued At"]]); err != nil {
+			results = multierror.Append(results, fmt.Errorf("record %d has invalid issued at time: %s", i, err))
+			continue recordLoop
+		}
+		expiresAt := issuedAt.AddDate(0, 13, 0)
+		if expiresAt.After(time.Now()) {
+			cert.Status = models.CertificateState_EXPIRED
+		}
+
+		// Parse the subject params into the subject and issuer
+		subject := &gds.Name{}
+		issuer := &gds.Name{
+			CommonName: "CipherTrace Issuing CA",
+		}
+		var profileId string
+		if profileId = record[rows["Subject"]]; profileId == "" {
+			results = multierror.Append(results, fmt.Errorf("record %d has no subject params", i))
+			continue recordLoop
+		}
+		params := strings.Split(profileId, ",")
+		if len(params) == 1 {
+			subject.CommonName = params[0]
+		} else {
+			// Parse the individual profile params
+			for _, param := range params {
+				kv := strings.Split(param, "=")
+				if len(kv) != 2 {
+					results = multierror.Append(results, fmt.Errorf("record %d has invalid profile param: %s", i, param))
+					continue recordLoop
+				}
+				switch kv[0] {
+				case "CN":
+					subject.CommonName = kv[1]
+				case "O":
+					subject.Organization = []string{kv[1]}
+					issuer.Organization = []string{kv[1]}
+				case "L":
+					subject.Locality = []string{kv[1]}
+					issuer.Locality = []string{kv[1]}
+				case "ST":
+					subject.Province = []string{kv[1]}
+					issuer.Province = []string{kv[1]}
+				case "C":
+					subject.Country = []string{kv[1]}
+					issuer.Country = []string{kv[1]}
+				default:
+					results = multierror.Append(results, fmt.Errorf("record %d has unknown profile param: %s", i, param))
+					continue recordLoop
+				}
+			}
+		}
+
+		if subject.CommonName == "" {
+			results = multierror.Append(results, fmt.Errorf("could not parse common name from record %d", i))
+			continue recordLoop
+		}
+
+		// Get the VASP from the common name
+		var vasp *gds.VASP
+		var ok bool
+		if vasp, ok = vasps[subject.CommonName]; !ok {
+			results = multierror.Append(results, fmt.Errorf("could not find VASP with common name %s", subject.CommonName))
+			continue recordLoop
+		}
+
+		// Get the certificate request from the batch ID
+		var batchId int64
+		if batchId, err = strconv.ParseInt(record[rows["Batch Id"]], 10, 64); err != nil {
+			results = multierror.Append(results, fmt.Errorf("record %d has invalid batch id: %s", i, err))
+			continue recordLoop
+		}
+		var certReq *models.CertificateRequest
+		if certReq, ok = certReqs[batchId]; !ok {
+			cert.Status = models.CertificateState_REVOKED
+			results = multierror.Append(results, fmt.Errorf("WARNING: could not find certificate request with batch id %d", batchId))
+		}
+
+		// Amend the records with the reference IDs
+		cert.Vasp = vasp.Id
+		if certReq != nil {
+			cert.Request = certReq.Id
+			certReq.Certificate = cert.Id
+		}
+		if err = models.AppendCertID(vasp, cert.Id); err != nil {
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+
+		// Add the certificate details
+		cert.Details = &gds.Certificate{
+			SerialNumber: []byte(id),
+			Subject:      subject,
+			Issuer:       issuer,
+			NotBefore:    issuedAt.Format(time.RFC3339),
+			NotAfter:     expiresAt.Format(time.RFC3339),
+			Revoked:      cert.Status == models.CertificateState_REVOKED,
+		}
+
+		// Put the certificate record
+		var putReply *pb.PutReply
+		var certData []byte
+		if certData, err = proto.Marshal(cert); err != nil {
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+			Namespace: wire.NamespaceCerts,
+			Key:       []byte(cert.Id),
+			Value:     certData,
+		}); err != nil {
+			err = fmt.Errorf("could not put certificate %s: %s", cert.Id, err)
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+		if !putReply.Success {
+			err = fmt.Errorf("could not put certificate %s", cert.Id)
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+
+		// Put the vasp record
+		var vaspData []byte
+		if vaspData, err = proto.Marshal(vasp); err != nil {
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+		if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+			Namespace: wire.NamespaceVASPs,
+			Key:       []byte(vasp.Id),
+			Value:     vaspData,
+		}); err != nil {
+			err = fmt.Errorf("could not put vasp %s: %s", vasp.Id, err)
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+		if !putReply.Success {
+			err = fmt.Errorf("could not put vasp %s", vasp.Id)
+			results = multierror.Append(results, err)
+			continue recordLoop
+		}
+
+		if certReq != nil {
+			// Put the certreq record
+			var certreqData []byte
+			if certreqData, err = proto.Marshal(certReq); err != nil {
+				results = multierror.Append(results, err)
+				continue recordLoop
+			}
+			if putReply, err = dbClient.Put(ctx, &pb.PutRequest{
+				Namespace: wire.NamespaceCertReqs,
+				Key:       []byte(certReq.Id),
+				Value:     certreqData,
+			}); err != nil {
+				err = fmt.Errorf("could not put certreq %s: %s", certReq.Id, err)
+				results = multierror.Append(results, err)
+				continue recordLoop
+			}
+			if !putReply.Success {
+				err = fmt.Errorf("could not put certreq %s", certReq.Id)
+				results = multierror.Append(results, err)
+				continue recordLoop
+			}
+		}
+
+		migratedCerts[cert.Id] = cert
+		migrated++
+		fmt.Printf("migrated certificate %s (%s)\n", cert.Id, cert.Details.Subject.CommonName)
+		if report != nil {
+			report.WriteString(fmt.Sprintf("migrated certificate %s (%s)\n", cert.Id, cert.Details.Subject.CommonName))
+			if err = writeJSON(cert, report); err != nil {
+				results = multierror.Append(results, err)
+				continue recordLoop
+			}
+			report.WriteString("\n\n")
+		}
+	}
+
+	fmt.Println("Migrated", migrated, "records")
+	fmt.Println("Skipped", skipped, "records")
 	if results != nil {
 		fmt.Println(results.Error())
 	}
