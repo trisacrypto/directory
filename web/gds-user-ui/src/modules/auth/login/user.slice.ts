@@ -8,8 +8,10 @@ import { persistor } from 'application/store';
 import localForage from 'localforage';
 import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
 import storage from 'redux-persist/lib/storage';
-const userSession = getCookie('access_token');
+import { handleError } from 'utils/utils';
+
 const userSignupWithSocial = (socialName: string) => {};
+
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
     auth0SignWithSocial('google-oauth2');
@@ -58,11 +60,10 @@ export const getAuth0User: any = createAsyncThunk(
       const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
 
-      if (getUserInfo && getUserInfo?.idTokenPayload.email_verified) {
-        setCookie('access_token', hasToken);
-        setCookie('user_locale', getUserInfo?.locale);
+      if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
+        setCookie('access_token', getUserInfo?.accessToken || hasToken);
+        setCookie('user_locale', getUserInfo?.idTokenPayload.locale);
         const getUser = await logUserInBff();
-        // console.log('[getUser]', getUser);
         if (getUser.status === 204) {
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -73,9 +74,6 @@ export const getAuth0User: any = createAsyncThunk(
             }
           };
           return userInfo;
-
-          // }
-          // log this error to sentry
         } else {
           return thunkAPI.rejectWithValue(t`Something went wrong. Please try again later.`);
         }
@@ -85,6 +83,7 @@ export const getAuth0User: any = createAsyncThunk(
         );
       }
     } catch (err: any) {
+      handleError(err, '[getAuth0User] failed to get user');
       return thunkAPI.rejectWithValue(err.response.data);
     }
   }
