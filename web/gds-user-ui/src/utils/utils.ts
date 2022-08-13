@@ -147,16 +147,16 @@ export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
   console.log(error.response);
-  if (error.response.status === 401 || error.response.status === 403) {
-    clearCookies();
-    const origin = window.location.origin;
-    if (error.response.status === 401) {
-      window.location.href = `/auth/login?from=${origin}&q=unauthorized`;
-    }
-    if (error.response.status === 403) {
-      window.location.href = `/auth/login?from=${origin}&q=token_expired`;
-    }
-  }
+  // if (error.response.status === 401 || error.response.status === 403) {
+  //   clearCookies();
+  //   const origin = window.location.origin;
+  //   if (error.response.status === 401) {
+  //     window.location.href = `/auth/login?from=${origin}&q=unauthorized`;
+  //   }
+  //   if (error.response.status === 403) {
+  //     window.location.href = `/auth/login?from=${origin}&q=token_expired`;
+  //   }
+  // }
 };
 
 // uppercased first letter
