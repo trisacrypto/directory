@@ -19,17 +19,11 @@ const CallbackPage: React.FC = () => {
   const accessToken = query.access_token;
   const callbackError = query.error;
   const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
-
+  console.log('[userSlector data]', isFetching, isLoggedIn, isError, errorMessage);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const toast = useToast();
-  const getErrorMessage = () => {
-    if (errorMessage?.error) {
-      return errorMessage.error;
-    } else {
-      return ErrorMessage;
-    }
-  };
+
   useEffect(() => {
     dispatch(getAuth0User(accessToken));
   }, [accessToken]);
@@ -46,7 +40,7 @@ const CallbackPage: React.FC = () => {
     }
     if (isError) {
       toast({
-        description: getErrorMessage(),
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -60,7 +54,7 @@ const CallbackPage: React.FC = () => {
   }, [isError, isLoggedIn, callbackError]);
 
   useEffect(() => {
-    if (isFetching) {
+    if (!isFetching) {
       setIsloading(true);
     } else {
       setIsloading(false);
@@ -74,7 +68,7 @@ const CallbackPage: React.FC = () => {
       {isError && (
         <AlertMessage
           title={callbackError || t`Token not valid`}
-          message={query.error_description || getErrorMessage()}
+          message={query.error_description || errorMessage}
           status="error"
         />
       )}

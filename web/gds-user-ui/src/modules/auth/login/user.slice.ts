@@ -130,7 +130,7 @@ const userSlice: any = createSlice({
       console.log('[getAuth0User.rejected]', payload);
       state.isFetching = false;
       state.isError = true;
-      state.errorMessage = payload;
+      state.errorMessage = payload?.error ? payload.error : payload;
     }
   }
 });
