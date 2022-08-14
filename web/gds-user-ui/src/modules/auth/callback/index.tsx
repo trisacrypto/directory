@@ -10,21 +10,34 @@ import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
 import { t } from '@lingui/macro';
 import { useSelector, useDispatch } from 'react-redux';
-
+import * as Sentry from '@sentry/browser';
+import ErrorMessage from 'components/ui/ErrorMessage';
 const CallbackPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
+
   const query = useHashQuery();
   const accessToken = query.access_token;
+  const callbackError = query.error;
   const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
+  console.log('[userSlector data]', isFetching, isLoggedIn, isError, errorMessage);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const toast = useToast();
-  useEffect(() => {
-    clearCookies();
-    dispatch(getAuth0User(accessToken));
-  }, [accessToken, dispatch]);
 
   useEffect(() => {
+    dispatch(getAuth0User(accessToken));
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (callbackError) {
+      toast({
+        description: query.error_description,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right'
+      });
+    }
     if (isError) {
       toast({
         description: errorMessage,
@@ -38,10 +51,10 @@ const CallbackPage: React.FC = () => {
       navigate('/dashboard/overview');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isError, isLoggedIn]);
+  }, [isError, isLoggedIn, callbackError]);
 
   useEffect(() => {
-    if (isFetching) {
+    if (!isFetching) {
       setIsloading(true);
     } else {
       setIsloading(false);
@@ -52,7 +65,13 @@ const CallbackPage: React.FC = () => {
     <Box height={'100%'}>
       {isLoading && <Loader />}
       {isFetching && <Loader text="Loading Dashboard ..." />}
-      {isError && <AlertMessage title={t`Token not valid`} message={errorMessage} status="error" />}
+      {isError && (
+        <AlertMessage
+          title={callbackError || t`Token not valid`}
+          message={query.error_description || errorMessage}
+          status="error"
+        />
+      )}
     </Box>
   );
 };

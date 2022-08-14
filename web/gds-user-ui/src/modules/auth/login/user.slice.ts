@@ -58,10 +58,10 @@ export const getAuth0User: any = createAsyncThunk(
   async (hasToken: boolean, thunkAPI) => {
     try {
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo);
+      console.log('[getUserInfo]', getUserInfo.idTokenPayload);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        setCookie('access_token', getUserInfo?.accessToken || hasToken);
+        setCookie('access_token', hasToken);
         setCookie('user_locale', getUserInfo?.idTokenPayload.locale);
         const getUser = await logUserInBff();
         if (getUser.status === 204) {
@@ -130,7 +130,7 @@ const userSlice: any = createSlice({
       console.log('[getAuth0User.rejected]', payload);
       state.isFetching = false;
       state.isError = true;
-      state.errorMessage = payload;
+      state.errorMessage = payload?.error ? payload.error : payload;
     }
   }
 });
