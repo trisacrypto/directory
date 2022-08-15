@@ -31,12 +31,14 @@ const MENU: Menu[] = [
       {
         title: 'Certificate Registration',
         icon: CheckCircleIcon,
-        path: '/dashboard/certificate/registration'
+        path: '/dashboard/certificate/registration',
+        activated: true
       },
       {
         title: 'Certificate Details',
         icon: BsFillInfoCircleFill,
-        path: '/dashboard/certificate/details'
+        path: '/dashboard/certificate/details',
+        activated: false
       }
     ]
   },

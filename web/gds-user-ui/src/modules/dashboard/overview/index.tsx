@@ -26,7 +26,7 @@ const Overview: React.FC = () => {
   const { attentionResponse, attentionError, attentionLoading } = useFetchAttention();
   const navigate = useNavigate();
 
-  console.log('[attenionResponse]', attentionResponse);
+  // console.log('[attentionResponse]', attentionResponse);
   useEffect(() => {
     (async () => {
       try {

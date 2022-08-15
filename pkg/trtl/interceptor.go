@@ -49,27 +49,29 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 			log.WithLevel(zerolog.PanicLevel).
 				Err(fmt.Errorf("%v", r)).
 				Str("stack_trace", string(debug.Stack())).
-				Msg("grpc server has recovered from a panic")
+				Msg("trtl server has recovered from a panic")
 			err = status.Error(codes.Internal, "an unhandled exception occurred")
 		}
 	}()
 
-	// Check if we're in maintenance mode
-	if t.conf.Maintenance {
-		// The only RPC we allow in maintenance mode is Status
-		if info.FullMethod == "/trtl.v1.Trtl/Status" {
-			return handler(ctx, in)
-		}
+	// Check if we're in maintenance mode - status method should still return a full response
+	if t.conf.Maintenance && info.FullMethod != "/trtl.v1.Trtl/Status" {
+		err = status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
+		log.Trace().Err(err).Str("method", info.FullMethod).Msg("trtl service unavailable during maintenance mode")
 
-		// Otherwise we stop processing here and return unavailable
-		return nil, status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
+		panicked = false
+		return nil, err
 	}
 
 	// Fetch peer information from the TLS info if we're not in insecure mode.
 	if !t.conf.MTLS.Insecure {
 		var peer *PeerInfo
 		if peer, err = PeerFromTLS(ctx); err != nil {
-			return nil, status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
+			err = status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
+			log.Warn().Err(err).Str("method", info.FullMethod).Msg("unauthenticated access detected")
+
+			panicked = false
+			return nil, err
 		}
 
 		// Add peer information to the context.
@@ -85,7 +87,6 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 	if t.conf.Sentry.UsePerformanceTracking() {
 		span.Finish()
 	}
-	panicked = false
 
 	// Log with zerolog - checkout grpclog.LoggerV2 for default logging.
 	log.Debug().
@@ -93,7 +94,74 @@ func (t *Server) interceptor(ctx context.Context, in interface{}, info *grpc.Una
 		Str("method", info.FullMethod).
 		Str("latency", time.Since(start).String()).
 		Msg("gRPC request complete")
+
+	panicked = false
 	return out, err
+}
+
+// The streamInterceptor intercepts incoming gRPC streaming requests and adds remote
+// peer information to the context, performing maintenance mode checks and panic recovery.
+func (t *Server) streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	// Track how long the method takes to execute
+	start := time.Now()
+	panicked := true
+
+	// Set the service tag for sentry
+	if t.conf.Sentry.UseSentry() {
+		sentry.CurrentHub().Scope().SetTag("service", "trtl")
+	}
+
+	// Recover from panics in the handler
+	defer func() {
+		if r := recover(); r != nil || panicked {
+			if t.conf.Sentry.UseSentry() {
+				sentry.CurrentHub().Recover(r)
+			}
+			log.WithLevel(zerolog.PanicLevel).
+				Err(fmt.Errorf("%v", r)).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("trtl server has recovered from a panic")
+			err = status.Error(codes.Internal, "an unhandled exception occurred")
+		}
+	}()
+
+	// Check if we're in maintenance mode -- no streaming method should be available
+	if t.conf.Maintenance {
+		err = status.Error(codes.Unavailable, "the trtl service is currently in maintenance mode")
+		log.Trace().Err(err).Str("method", info.FullMethod).Msg("trtl service unavailable during maintenance mode")
+
+		panicked = false
+		return err
+	}
+
+	// Fetch peer information from the TLS info if we're not in insecure mode.
+	if !t.conf.MTLS.Insecure {
+		if _, err = PeerFromTLS(ss.Context()); err != nil {
+			err = status.Error(codes.Unauthenticated, "unable to retrieve authenticated peer information")
+			log.Warn().Err(err).Str("method", info.FullMethod).Msg("unauthenticated access detected")
+
+			panicked = false
+			return err
+		}
+
+		// TODO: add peer information to the context, this requires wrapping the ServerStream
+		// See: https://stackoverflow.com/questions/60982406/how-to-safely-add-values-to-grpc-serverstream-in-interceptor
+	}
+
+	// Call the handler to execute the stream RPC
+	// NOTE: sentry performance tracking is not valid here since streams can take an
+	// arbitrarily long time to complete and minimizing latency is not necessarily desirable.
+	err = handler(srv, ss)
+
+	// Log with zerolog - check grpclog.LoggerV2 for default logging
+	log.Debug().
+		Err(err).
+		Str("method", info.FullMethod).
+		Str("duration", time.Since(start).String()).
+		Msg("grpc stream request complete")
+
+	panicked = false
+	return err
 }
 
 // PeerFromTLS looks up the TLSInfo from the incoming gRPC connection to retrieve

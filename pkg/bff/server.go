@@ -143,6 +143,12 @@ func ConnectGDS(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) 
 		}
 	}
 
+	log.Info().
+		Str("directory", conf.Directory.Endpoint).
+		Bool("directory_insecure", conf.Directory.Insecure).
+		Str("members", conf.Members.Endpoint).
+		Bool("members_insecure", conf.Members.MTLS.Insecure).
+		Msg("connected to the GDS")
 	return client, nil
 }
 

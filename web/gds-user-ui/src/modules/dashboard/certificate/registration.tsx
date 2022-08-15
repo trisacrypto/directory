@@ -60,7 +60,7 @@ const Certificate: React.FC = () => {
   const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
-
+  const currentStateValue = useSelector(getCurrentState);
   const lastStep: number = useSelector(getLastStep);
   const steps: number = useSelector(getSteps);
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
@@ -181,7 +181,7 @@ const Certificate: React.FC = () => {
   useEffect(() => {
     resetForm();
     setIsResetForm(false);
-  }, [isResetForm, resetForm]);
+  }, [isResetForm, resetForm, registrationData]);
 
   // handle reset modal
   useEffect(() => {
@@ -203,6 +203,8 @@ const Certificate: React.FC = () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
+        console.log('[registrationData]', data.registrationData);
+        console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
         console.log('[getRegistrationData]', error);
@@ -263,21 +265,21 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    {!isFormSubmitted() && (
-                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                        <Trans id="Save & Previous">Save & Previous</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <Trans id="Save & Previous">Save & Previous</Trans>
+                    </Button>
+                    {/* )} */}
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    {!isFormSubmitted() && (
-                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
+                    {/* )} */}
                   </>
                 )}
               </Stack>
