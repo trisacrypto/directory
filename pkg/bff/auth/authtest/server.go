@@ -144,8 +144,8 @@ func (s *Server) NewToken(permissions ...string) (tks string, err error) {
 		Email: Email,
 		OrgID: OrgID,
 		VASPs: map[string]string{
-			"testnet": TestNetVASP,
-			"mainnet": MainNetVASP,
+			config.TestNetKey: TestNetVASP,
+			config.MainNetKey: MainNetVASP,
 		},
 		Scope:       Scope,
 		Permissions: permissions,

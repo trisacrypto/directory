@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 )
 
 var (
-	ErrNetworkRequired    = errors.New("request requires a valid network (mainnet or testnet)")
+	ErrNetworkRequired    = fmt.Errorf("request requires a valid network (%s or %s)", config.TestNetKey, config.MainNetKey)
 	ErrInvalidCredentials = errors.New("auth0 credentials are missing or invalid")
 	ErrExpiredCredentials = errors.New("auth0 credentials have expired")
 	ErrPathRequired       = errors.New("local credentials requires a path to the stored json credential")

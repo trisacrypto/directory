@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 )
 
 var (
@@ -64,11 +65,11 @@ func (r *RegistrationForm) ReadyToSubmit(network string) bool {
 	}
 
 	switch network {
-	case "testnet":
+	case config.TestNetKey:
 		if r.Testnet == nil {
 			return false
 		}
-	case "mainnet":
+	case config.MainNetKey:
 		if r.Mainnet == nil {
 			return false
 		}

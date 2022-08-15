@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -28,9 +29,9 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
 		req := &members.SummaryRequest{}
 		switch network {
-		case testnet:
+		case config.TestNetKey:
 			req.MemberId = testnetID
-		case mainnet:
+		case config.MainNetKey:
 			req.MemberId = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -190,7 +191,7 @@ func (s *Server) MemberDetails(c *gin.Context) {
 
 	// Validate the registered directory
 	params.Directory = strings.ToLower(params.Directory)
-	if params.Directory != trisatest && params.Directory != vaspdirectory {
+	if params.Directory != config.TrisaTest && params.Directory != config.VaspDirectory {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
 		return
 	}
@@ -209,9 +210,9 @@ func (s *Server) MemberDetails(c *gin.Context) {
 	)
 
 	switch params.Directory {
-	case trisatest:
+	case config.TrisaTest:
 		rep, err = s.testnetGDS.Details(ctx, req)
-	case vaspdirectory:
+	case config.VaspDirectory:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
