@@ -27,7 +27,7 @@ export type NeedsAttentionProps = {
 };
 
 const NeedsAttention = ({ text, buttonText, onClick, data }: NeedsAttentionProps) => {
-  console.log('[NeedsAttention] data', data?.[0]);
+  // console.log('[NeedsAttention] data', data?.[0]);
   return (
     <Sentry.ErrorBoundary
       fallback={

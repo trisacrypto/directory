@@ -25,7 +25,6 @@ export const getRegistrationDefaultValue = async () => {
     return getRegistrationDefaultValues();
   } catch (err: any) {
     handleError(err, 'failed to get registration data');
-    return getRegistrationDefaultValues();
   }
 };
 
@@ -152,10 +151,10 @@ export const getRegistrationAndStepperData = async () => {
       getSubmissionStatus()
     ]);
     if (regData) {
-      const reponse: any = {
+      const response: any = {
         registrationData: regData,
         stepperData: {
-          currentStep: (regData?.state?.ready_to_submit ? 6 : regData?.state?.current) || 1,
+          currentStep: regData?.state?.current || 1,
           steps: regData?.state?.steps || [{ key: 1, status: 'progress' }],
           lastStep: null,
           hasReachSubmitStep: regData?.state?.ready_to_submit || false,
@@ -163,7 +162,7 @@ export const getRegistrationAndStepperData = async () => {
           mainnetSubmitted: !!regStatus?.data?.mainnet_submitted
         }
       };
-      return reponse;
+      return response;
     }
   } catch (err: any) {
     handleError(err, 'failed to get stepper data');
