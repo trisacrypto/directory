@@ -146,9 +146,16 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
+  console.log(error.response);
   if (error.response.status === 401 || error.response.status === 403) {
     clearCookies();
-    window.location.href = '/auth/login';
+
+    if (error.response.status === 401) {
+      window.location.href = `/auth/login?q=token_expired`;
+    }
+    if (error.response.status === 403) {
+      window.location.href = `/auth/login?q=unauthorized`;
+    }
   }
 };
 

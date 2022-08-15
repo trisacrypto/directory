@@ -45,9 +45,9 @@ const useAuth = () => {
 
   const isAuthenticated = () => {
     console.log('[isLoggedIn]', isLoggedIn);
-    if (!isLoggedIn && getToken) {
-      getUser();
-      return true;
+    if (isLoggedIn && !getToken) {
+      logoutUser();
+      return false;
     }
     return isUserAuthenticated;
   };
