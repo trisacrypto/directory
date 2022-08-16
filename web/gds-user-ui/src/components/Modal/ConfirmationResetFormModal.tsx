@@ -79,7 +79,7 @@ const ConfirmationResetForm = (props: any) => {
                   }}>
                   <Trans id="Reset">Reset</Trans>
                 </Button>
-                <Button onClick={handleOnClose} bgColor="#555151" color={'#fff'}>
+                <Button onClick={handleOnClose} bgColor="#555151" color={'#fff'} _hover={{ boxShadow: "#555151", bgColor: "#555151D4" }}>
                   <Trans id="Cancel">Cancel</Trans>
                 </Button>
               </ModalFooter>
