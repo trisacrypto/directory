@@ -125,6 +125,53 @@ func AppendAuditLog(vasp *pb.VASP, entry *AuditLogEntry) (err error) {
 	return nil
 }
 
+// GetAdminEmailLog from the extra data on the VASP record.
+func GetAdminEmailLog(vasp *pb.VASP) (_ []*EmailLogEntry, err error) {
+	// If the extra data is nil, return nil (no email log).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetEmailLog(), nil
+}
+
+// Create and add a new entry to the EmailLog on the extra data on the VASP record.
+func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err error) {
+	// VASP must be non-nil.
+	if vasp == nil {
+		return errors.New("cannot append to nil VASP")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.EmailLog = make([]*EmailLogEntry, 0, 1)
+	}
+
+	// Append entry to the previous log.
+	entry := &EmailLogEntry{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Reason:    reason,
+		Subject:   subject,
+	}
+	extra.EmailLog = append(extra.EmailLog, entry)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.
 func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 	// If the extra data is nil, return nil (no certificate requests).
