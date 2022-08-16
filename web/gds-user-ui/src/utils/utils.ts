@@ -6,6 +6,7 @@ import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { clearCookies } from 'utils/cookies';
+import { defaultIfEmpty } from 'rxjs';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -150,12 +151,23 @@ export const handleError = (error: any, customMessage?: string) => {
   if (error.response.status === 401 || error.response.status === 403) {
     clearCookies();
 
-    if (error.response.status === 401) {
-      window.location.href = `/auth/login?q=token_expired`;
+    switch (error.response.status) {
+      case '401':
+        window.location.href = `/auth/login?q=token_expired`;
+        break;
+      case '403':
+        window.location.href = `/auth/login?q=unauthorized`;
+        break;
+      default:
+        window.location.href = `/auth/login?error_description=${error.response.data.error}`;
     }
-    if (error.response.status === 403) {
-      window.location.href = `/auth/login?q=unauthorized`;
-    }
+
+    // if (error.response.status === 401) {
+    //   window.location.href = `/auth/login?q=token_expired`;
+    // }
+    // if (error.response.status === 403) {
+    //   window.location.href = `/auth/login?q=unauthorized`;
+    // }
   }
 };
 
