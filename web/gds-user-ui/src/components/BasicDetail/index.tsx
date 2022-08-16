@@ -53,7 +53,7 @@ const BasicDetails: React.FC = () => {
     <Stack spacing={7} mt="2rem" bg={bg}>
       <HStack justifyContent={'space-between'}>
         <Box display={'flex'}>
-          <Heading size="md" pr={3}>
+          <Heading size="md" pr={3} ml={2}>
             <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
           </Heading>{' '}
           {stepStatus ? <SectionStatus status={stepStatus} /> : null}
