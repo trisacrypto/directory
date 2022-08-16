@@ -15,6 +15,7 @@ import {
   Thead,
   Tr
 } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 import FormLayout from '../../layouts/FormLayout';
 import StatisticCard from './StatisticCard';
 import X509IdentityCertificateInventoryDataTable from './X509IdentityCertificateInventoryDataTable';
@@ -25,13 +26,19 @@ function X509IdentityCertificateInventory() {
   return (
     <>
       <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'}>
-        X.509 Identity Certificate Inventory
+        <Trans id="X.509 Identity Certificate Inventory">
+          X.509 Identity Certificate Inventory
+        </Trans>
       </Heading>
       <Box>
         <Tabs isFitted>
           <TabList bg={'#E5EDF1'} border={'1px solid rgba(0, 0, 0, 0.29)'}>
-            <Tab _selected={{ bg: '#60C4CA', fontWeight: 700 }}>MainNet Certificates</Tab>
-            <Tab _selected={{ bg: '#60C4CA', fontWeight: 700 }}>TestNet Certificates</Tab>
+            <Tab _selected={{ bg: '#60C4CA', fontWeight: 700 }}>
+              <Trans id="MainNet Certificates">MainNet Certificates</Trans>
+            </Tab>
+            <Tab _selected={{ bg: '#60C4CA', fontWeight: 700 }}>
+              <Trans id="TestNet Certificates">TestNet Certificates</Trans>
+            </Tab>
           </TabList>
           <TabPanels>
             <TabPanel>
@@ -49,7 +56,7 @@ function X509IdentityCertificateInventory() {
         </Tabs>
       </Box>
       <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'}>
-        Sealing Certificate Inventory
+        <Trans id="Sealing Certificate Inventory">Sealing Certificate Inventory</Trans>
       </Heading>
     </>
   );

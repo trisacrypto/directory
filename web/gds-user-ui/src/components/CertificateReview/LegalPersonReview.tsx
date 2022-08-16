@@ -7,6 +7,7 @@ import { getRegistrationDefaultValue } from 'modules/dashboard/registration/util
 import LegalPersonReviewDataTable from './LegalPersonReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
+import { t } from '@lingui/macro';
 
 const LegalPersonReview = () => {
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
@@ -23,7 +24,7 @@ const LegalPersonReview = () => {
   }, [steps]);
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader step={2} title="Section 2: Legal Person" />
+      <CertificateReviewHeader step={2} title={t`Section 2: Legal Person`} />
       <LegalPersonReviewDataTable data={legalPerson} />
     </CertificateReviewLayout>
   );

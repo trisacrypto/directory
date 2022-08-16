@@ -22,6 +22,7 @@ import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
 import { FaChevronDown } from 'react-icons/fa';
 import { useState } from 'react';
+import { Trans } from '@lingui/react';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -46,7 +47,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         <Stack width="100%" direction={['row']}>
           <Image src={trisaLogo} alt="GDS UI" />
           <Heading size="sm" color="#FFFFFF" lineHeight={1.35}>
-            Global Directory Service
+            <Trans id="Global Directory Service">Global Directory Service</Trans>
           </Heading>
         </Stack>
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
@@ -114,7 +115,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
               _groupHover={{
                 color: 'white'
               }}>
-              Support
+              <Trans id="Support">Support</Trans>
             </Text>
           </Link>
           <Link
