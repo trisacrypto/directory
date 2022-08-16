@@ -68,7 +68,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
       <Flex>
         <VStack mt="2rem">
           <Stack align="start" w="full">
-            <Heading size="md" pt={2}>
+            <Heading size="md" pr={3} ml={2}>
               <Trans id="Registration Submission">Registration Submission</Trans>
             </Heading>
           </Stack>

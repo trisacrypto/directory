@@ -18,7 +18,7 @@ const LegalPerson: React.FC = () => {
   return (
     <Stack spacing={7} mt="2rem">
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id={'Section 2: Legal Person'}>Section 2: Legal Person</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}

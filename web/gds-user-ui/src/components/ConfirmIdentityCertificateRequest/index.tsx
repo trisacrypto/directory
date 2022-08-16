@@ -53,7 +53,7 @@ function ConfirmIdentityCertificate() {
               <Button bg="#55ACD8" type="submit">
                 Next
               </Button>
-              <Button bg="#555151D4" onClick={onClose}>
+              <Button bg="#555151D4" _hover={{ boxShadow: "#555151D4" }} onClick={onClose}>
                 Cancel
               </Button>
             </ModalFooter>

@@ -14,7 +14,8 @@ const StartPage: React.FC = () => {
   const { auth0SignIn, auth0SignWithSocial, auth0Hash } = useCustomAuth0();
 
   const { loginUser } = useAuth();
-  const { q } = useSearchParams();
+  const { q, error_description } = useSearchParams();
+  console.log('[error_description', error_description);
   const toast = useToast();
   useEffect(() => {
     // rend tost if q is not empty
@@ -40,7 +41,16 @@ const StartPage: React.FC = () => {
         });
       }
     }
-  }, [q]);
+    if (error_description) {
+      toast({
+        description: error_description,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right'
+      });
+    }
+  }, [q, error_description]);
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
     if (type === 'google') {
