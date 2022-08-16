@@ -45,74 +45,37 @@ const AttentionAlert = ({
   onClick,
   buttonText
 }: AttentionAlertProps) => {
-  if (severity === AttentionSeverity.INFO.toUpperCase()) {
-    switch (action as AttentionAction) {
-      case AttentionAction.START_REGISTRATION:
-        return (
-          <>
-            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
-              <AlertIcon />
-              <HStack justifyContent={'space-between'}>
-                <Text> {message}</Text>
-                <Button
-                  onClick={onClick}
-                  border={'1px solid white'}
-                  width={142}
-                  px={8}
-                  as={'a'}
-                  borderRadius={0}
-                  background="transparent"
-                  color="#fff"
-                  cursor="pointer"
-                  _active={{ background: '#000' }}
-                  _hover={{ background: '#111', color: 'white' }}>
-                  Start
-                </Button>
-              </HStack>
-            </Alert>{' '}
-          </>
-        );
-      case AttentionAction.COMPLETE_REGISTRATION:
-        return (
-          <>
-            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
-              <AlertIcon />
-              <HStack justifyContent={'space-between'}>
-                <Text> {message}</Text>
-                <Button
-                  onClick={onClick}
-                  width={142}
-                  border={'1px solid white'}
-                  px={8}
-                  as={'a'}
-                  borderRadius={0}
-                  background="transparent"
-                  color="#fff"
-                  cursor="pointer"
-                  _active={{ background: '#000' }}
-                  _hover={{ background: '#111', color: 'white' }}>
-                  Complete
-                </Button>
-              </HStack>
-            </Alert>{' '}
-          </>
-        );
-
-      default:
-        return (
+  switch (action as AttentionAction) {
+    case AttentionAction.START_REGISTRATION:
+      return (
+        <>
           <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
             <AlertIcon />
-            {message}
-          </Alert>
-        );
-    }
-  } else {
-    return (
-      <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
-        <AlertIcon />
-        {message}
-      </Alert>
-    );
+            <HStack justifyContent={'space-between'}>
+              <Text> {message}</Text>
+              <Button
+                onClick={onClick}
+                width={142}
+                as={'a'}
+                borderRadius={0}
+                background="transparent"
+                color="#fff"
+                cursor="pointer"
+                boxShadow={'none'}
+                _hover={{ background: '#4da0ca' }}>
+                {buttonText}
+              </Button>
+            </HStack>
+          </Alert>{' '}
+        </>
+      );
+    default:
+      return (
+        <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
+          <AlertIcon />
+          {message}
+        </Alert>
+      );
   }
 };
 
