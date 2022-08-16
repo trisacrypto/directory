@@ -41,7 +41,7 @@ export const getRegistrationDefaultValue = async () => {
         return getData.data;
       }
     }
-    const v = getRegistrationDefaultValues;
+    const v = getRegistrationDefaultValues();
     await postRegistrationValue(v);
     return getRegistrationDefaultValues();
   } catch (err: any) {

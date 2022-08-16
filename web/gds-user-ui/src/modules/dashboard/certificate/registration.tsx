@@ -32,9 +32,7 @@ import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 
 import {
-  getRegistrationDefaultValue,
   postRegistrationValue,
-  setRegistrationDefaultValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
 
