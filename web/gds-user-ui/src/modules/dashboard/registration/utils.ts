@@ -6,27 +6,6 @@ import {
   getSubmissionStatus
 } from 'modules/dashboard/registration/service';
 import { handleError } from 'utils/utils';
-export const getRegistrationDefaultValue = async () => {
-  try {
-    const regData = await getRegistrationData();
-    if (regData.status === 200 && Object.keys(regData.data).length > 0) {
-      return regData.data;
-    }
-    const defaultValue: any = localStorage.getItem('certificateForm');
-    if (defaultValue) {
-      const val = JSON.parse(defaultValue);
-      const postData = await postRegistrationData(val);
-      if (postData.status === 204) {
-        const getData = await getRegistrationData();
-        localStorage.removeItem('certificateForm');
-        return getData.data;
-      }
-    }
-    return getRegistrationDefaultValues();
-  } catch (err: any) {
-    handleError(err, 'failed to get registration data');
-  }
-};
 
 export const postRegistrationValue = (data: any) => {
   console.log('[postRegistrationValue]', data);
@@ -46,6 +25,29 @@ export const postRegistrationValue = (data: any) => {
       });
   });
 };
+export const getRegistrationDefaultValue = async () => {
+  try {
+    const regData = await getRegistrationData();
+    if (regData.status === 200 && Object.keys(regData.data).length > 0) {
+      return regData.data;
+    }
+    const defaultValue: any = localStorage.getItem('certificateForm');
+    if (defaultValue) {
+      const val = JSON.parse(defaultValue);
+      const postData = await postRegistrationData(val);
+      if (postData.status === 204) {
+        const getData = await getRegistrationData();
+        localStorage.removeItem('certificateForm');
+        return getData.data;
+      }
+    }
+    const v = getRegistrationDefaultValues();
+    await postRegistrationValue(v);
+    return getRegistrationDefaultValues();
+  } catch (err: any) {
+    handleError(err, 'failed to get registration data');
+  }
+};
 
 export const setRegistrationDefaultValue = () => {
   console.log('[setRegistrationDefaultValue]');
@@ -53,7 +55,7 @@ export const setRegistrationDefaultValue = () => {
   return new Promise((resolve, reject) => {
     postRegistrationData(defaultValue)
       .then((res) => {
-        console.log('[default postRegistration value]', res);
+        // console.log('[default postRegistration value]', res);
         if (res.status === 204) {
           resolve(res);
         } else {
@@ -61,7 +63,7 @@ export const setRegistrationDefaultValue = () => {
         }
       })
       .catch((err) => {
-        console.log('[postRegistrationData]', err);
+        handleError(err, 'failed to post registration value');
         reject(err);
       });
   });

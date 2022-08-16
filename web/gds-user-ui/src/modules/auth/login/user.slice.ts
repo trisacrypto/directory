@@ -117,17 +117,17 @@ const userSlice: any = createSlice({
   },
   extraReducers: {
     [getAuth0User.fulfilled]: (state, { payload }) => {
-      console.log('[getAuth0User.fulfilled]', payload);
+      // console.log('[getAuth0User.fulfilled]', payload);
       state.isFetching = false;
       state.isLoggedIn = true;
       state.user = payload.user;
     },
     [getAuth0User.pending]: (state) => {
-      console.log('[getAuth0User.pending]', state);
+      // console.log('[getAuth0User.pending]', state);
       state.isFetching = true;
     },
     [getAuth0User.rejected]: (state, { payload }) => {
-      console.log('[getAuth0User.rejected]', payload);
+      // console.log('[getAuth0User.rejected]', payload);
       state.isFetching = false;
       state.isError = true;
       state.errorMessage = payload?.error ? payload.error : payload;
