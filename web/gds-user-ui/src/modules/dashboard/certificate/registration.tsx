@@ -25,7 +25,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError } from 'utils/utils';
+import { hasStepError, handleError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
@@ -201,11 +201,11 @@ const Certificate: React.FC = () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
-        console.log('[registrationData]', data.registrationData);
-        console.log('[registrationData from state]', data.stepperData);
+        // console.log('[registrationData]', data.registrationData);
+        // console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
-        console.log('[getRegistrationData]', error);
+        handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
       } finally {
         setIsLoadingDefaultValue(false);
       }

@@ -55,7 +55,7 @@ export const setRegistrationDefaultValue = () => {
   return new Promise((resolve, reject) => {
     postRegistrationData(defaultValue)
       .then((res) => {
-        console.log('[default postRegistration value]', res);
+        // console.log('[default postRegistration value]', res);
         if (res.status === 204) {
           resolve(res);
         } else {
@@ -63,7 +63,7 @@ export const setRegistrationDefaultValue = () => {
         }
       })
       .catch((err) => {
-        console.log('[postRegistrationData]', err);
+        handleError(err, 'failed to post registration value');
         reject(err);
       });
   });
