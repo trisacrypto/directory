@@ -69,7 +69,9 @@ const PasswordReset = () => {
           {message && <SuccessMessage message={message} handleClose={() => {}} />}
           <Stack align={'left'}>
             <Text fontSize="lg" mb={3} fontWeight="bold">
-              Follow the instructions below to reset your TRISA password
+              <Trans id="Follow the instructions below to reset your TRISA password">
+                Follow the instructions below to reset your TRISA password
+              </Trans>
             </Text>
             <Text fontSize={'sm'}>
               <Trans id="Enter your email address">Enter your email address</Trans>

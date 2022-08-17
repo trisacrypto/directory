@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 
 import { MdClose, MdDone } from 'react-icons/md';
+import { Trans } from '@lingui/react';
 const PasswordStrength = (props: any) => {
   const [isContains9Characters, setIsContains9Characters] = useState<boolean>(false);
   const [isContainsOneLowerCase, setIsContainsOneLowerCase] = useState<boolean>(false);
@@ -75,11 +76,15 @@ const PasswordStrength = (props: any) => {
               data-testid="contains9Characters__icon"
             />{' '}
           </Text>
-          At least 9 characters in length
+          <Trans id="At least 9 characters in length">At least 9 characters in length</Trans>
         </Text>
       </Box>
       <Box mt={2}>
-        <Text fontWeight="semibold">Contain at least 3 of the following 4 types of characters</Text>
+        <Text fontWeight="semibold">
+          <Trans id="Contain at least 3 of the following 4 types of characters">
+            Contain at least 3 of the following 4 types of characters
+          </Trans>
+        </Text>
       </Box>
       <Box>
         <Text
@@ -93,9 +98,9 @@ const PasswordStrength = (props: any) => {
               as={isContainsOneLowerCase ? MdDone : MdClose}
               color={isContainsOneLowerCase ? 'green' : 'gray.200'}
               data-testid="containsOneLowerCase__icon"
-            />{' '}
+            />
           </Text>
-          lower case letters (a-z)
+          <Trans id="lower case letters (a-z)">lower case letters (a-z)</Trans>
         </Text>
       </Box>
       <Box>
@@ -112,7 +117,7 @@ const PasswordStrength = (props: any) => {
               data-testid="containsOneUpperCase__icon"
             />{' '}
           </Text>
-          upper case letters (A-Z)
+          <Trans id="upper case letters (A-Z)">upper case letters (A-Z)</Trans>
         </Text>
       </Box>
       <Box>
@@ -126,7 +131,7 @@ const PasswordStrength = (props: any) => {
               data-testid="containsOneNumber__icon"
             />{' '}
           </Text>
-          numbers (i.e. 0-9)
+          <Trans id="numbers (i.e. 0-9)">numbers (i.e. 0-9)</Trans>
         </Text>
       </Box>
       <Box>
@@ -140,7 +145,7 @@ const PasswordStrength = (props: any) => {
               data-testid="containsOneSpecialChar__icon"
             />{' '}
           </Text>
-          special characters (e.g. !@#$%^&*)
+          <Trans id="special characters (e.g. !@#$%^&*)">special characters (e.g. !@#$%^&*)</Trans>
         </Text>
       </Box>
     </Box>

@@ -51,7 +51,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
             </GridItem>
           </Grid>
           <Box marginTop="23px" alignSelf={{ base: 'flex-end', md: 'initial' }}>
-            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: 'Remove line' }} />
+            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
           </Box>
         </HStack>
       ))}

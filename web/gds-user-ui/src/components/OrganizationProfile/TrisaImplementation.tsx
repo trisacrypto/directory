@@ -17,11 +17,13 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
       px={7}>
       <Stack width={'100%'}>
         <Heading as={'h1'} fontSize={19} pb={2} pt={4}>
-          {' '}
-          TRISA Implementations{' '}
+          <Trans id="TRISA Implementations">TRISA Implementations</Trans>
         </Heading>
         <Text pb={7}>
-          You must request a new X.509 Identity Certificate to change your Enpoint and Common Name.
+          <Trans id="You must request a new X.509 Identity Certificate to change your Enpoint and Common Name.">
+            You must request a new X.509 Identity Certificate to change your Enpoint and Common
+            Name.
+          </Trans>
         </Text>
         <Stack fontSize={18}>
           <Table
@@ -73,7 +75,6 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
               <Tr>
                 <Td pt={'1rem !important'} pl={'1rem !important'}>
                   <Trans id="Endpoint">Endpoint</Trans>
-                  Endpoint
                 </Td>
                 <Td>{data?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>

@@ -8,6 +8,7 @@ import { getRegistrationDefaultValue } from 'modules/dashboard/registration/util
 import ContactsReviewDataTable from './ContactsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
+import { t } from '@lingui/macro';
 
 const ContactsReview = () => {
   const { jumpToStep } = useCertificateStepper();
@@ -26,7 +27,7 @@ const ContactsReview = () => {
 
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader step={3} title="Section 3: Contacts" />
+      <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />
       <ContactsReviewDataTable data={contacts} />
     </CertificateReviewLayout>
   );

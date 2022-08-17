@@ -16,7 +16,6 @@ const NotSavedSectionStatus: React.FC = () => {
           }
         }}
       />
-      {'  '}
       <Text as={'span'} fontSize={'sm'} pl={1}>
         <Trans id="(not saved)"> (not saved)</Trans>
       </Text>

@@ -19,6 +19,7 @@ import {
 import { BsThreeDots } from 'react-icons/bs';
 import FormLayout from 'layouts/FormLayout';
 import React from 'react';
+import { Trans } from '@lingui/react';
 
 type Row = {
   id: string;
@@ -138,17 +139,31 @@ const CollaboratorsSection: React.FC = () => {
     <FormLayout overflowX={'scroll'}>
       <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
         <TableCaption placement="top" textAlign="start" p={0} m={0} fontSize={20}>
-          Organization Collaborators
+          <Trans id="Organization Collaborators">Organization Collaborators</Trans>
         </TableCaption>
         <Thead>
           <Tr>
-            <Th>User ID</Th>
-            <Th>Name</Th>
-            <Th>Permission</Th>
-            <Th>Added</Th>
-            <Th>Role</Th>
-            <Th>Status</Th>
-            <Th textAlign="center">Action</Th>
+            <Th>
+              <Trans id="User ID">User ID</Trans>
+            </Th>
+            <Th>
+              <Trans id="Name">Name</Trans>
+            </Th>
+            <Th>
+              <Trans id="Permission">Permission</Trans>
+            </Th>
+            <Th>
+              <Trans id="Added">Added</Trans>
+            </Th>
+            <Th>
+              <Trans id="Role">Role</Trans>
+            </Th>
+            <Th>
+              <Trans id="Status">Status</Trans>
+            </Th>
+            <Th textAlign="center">
+              <Trans id="Action">Action</Trans>
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -156,7 +171,9 @@ const CollaboratorsSection: React.FC = () => {
         </Tbody>
       </Table>
       <VStack align="center" w="100%">
-        <Button>Add Contact</Button>
+        <Button>
+          <Trans id="Add Contact">Add Contact</Trans>
+        </Button>
       </VStack>
     </FormLayout>
   );
