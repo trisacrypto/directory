@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -294,4 +295,28 @@ func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err err
 		return err
 	}
 	return nil
+}
+
+func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (sent int, err error) {
+
+	emailLog, err := GetEmailLog(contact)
+	if err != nil {
+		return sent, err
+	}
+
+	for _, value := range emailLog {
+		strTimestamp := value.Timestamp
+		timestamp, err := time.Parse(time.RFC3339, strTimestamp)
+		if err != nil {
+			return sent, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+
+		matchedReason := (strings.Compare(reason, value.Reason) == 0)
+		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
+
+		if matchedReason && withinTimeWindow {
+			sent++
+		}
+	}
+	return sent, nil
 }
