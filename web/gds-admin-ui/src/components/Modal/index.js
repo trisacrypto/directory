@@ -41,6 +41,8 @@ const ModalContentBase = ({ isOpen, title, children, ...props }) => {
 const ModalContent = ({ ...props }) => {
     const [isOpen, setIsOpen] = React.useContext(ModalContext)
 
+    if (!isOpen) return null
+
     return <ModalContentBase isOpen={isOpen} onHide={() => setIsOpen(false)} {...props} />
 }
 
