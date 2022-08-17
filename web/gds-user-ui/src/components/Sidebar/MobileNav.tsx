@@ -40,7 +40,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const { auth0Logout } = useCustomAuth0();
   const handleLogout = (e: any) => {
     e.preventDefault();
-    removeCookie('access_token');
     clearCookies();
     localStorage.removeItem('persist:root');
     dispatch(logout());

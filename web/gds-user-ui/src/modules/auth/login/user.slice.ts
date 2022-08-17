@@ -1,16 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
-import { setCookie, getCookie, removeCookie } from 'utils/cookies';
-import * as Sentry from '@sentry/browser';
+import { setCookie, clearCookies } from 'utils/cookies';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
-import { persistor } from 'application/store';
-import localForage from 'localforage';
-import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
-import storage from 'redux-persist/lib/storage';
-import { handleError } from 'utils/utils';
 
-const userSignupWithSocial = (socialName: string) => {};
+import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
+import { handleError } from 'utils/utils';
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -57,13 +51,16 @@ export const getAuth0User: any = createAsyncThunk(
   'users/getuser',
   async (hasToken: boolean, thunkAPI) => {
     try {
+      // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo.idTokenPayload);
+      console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        setCookie('access_token', hasToken);
-        setCookie('user_locale', getUserInfo?.idTokenPayload.locale);
+        setCookie('access_token', getUserInfo?.accessToken);
+        setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
         const getUser = await logUserInBff();
+        console.log('[getUser]', getUser);
+        // return;
         if (getUser.status === 204) {
           const userInfo: TUser = {
             isLoggedIn: true,
