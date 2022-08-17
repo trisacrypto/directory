@@ -156,6 +156,38 @@ func TestVASPExtra(t *testing.T) {
 	token, err = GetAdminVerificationToken(vasp)
 	require.NoError(t, err)
 	require.Equal(t, "jetskis", token)
+
+	// Initial email log should be nil
+	emailLog, err := GetAdminEmailLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 0)
+
+	// Should not be able to append on a nil VASP
+	err = AppendAdminEmailLog(nil, "certificate_reissued", "certificate has been reissued to Alice VASP")
+	require.Error(t, err)
+
+	// Append an entry to an empty log
+	err = AppendAdminEmailLog(vasp, "certificate_reissued", "certificate has been reissued to Alice VASP")
+	require.NoError(t, err)
+	emailLog, err = GetAdminEmailLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, "certificate_reissued", emailLog[0].Reason)
+	require.Equal(t, "certificate has been reissued to Alice VASP", emailLog[0].Subject)
+	require.NotEmpty(t, emailLog[0].Timestamp)
+
+	// Append another entry to the email log
+	err = AppendAdminEmailLog(vasp, "certificate_reissued_again", "certificate has been reissued to Alice VASP (again)")
+	require.NoError(t, err)
+	emailLog, err = GetAdminEmailLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 2)
+	require.Equal(t, "certificate_reissued", emailLog[0].Reason)
+	require.Equal(t, "certificate has been reissued to Alice VASP", emailLog[0].Subject)
+	require.NotEmpty(t, emailLog[0].Timestamp)
+	require.Equal(t, "certificate_reissued_again", emailLog[1].Reason)
+	require.Equal(t, "certificate has been reissued to Alice VASP (again)", emailLog[1].Subject)
+	require.NotEmpty(t, emailLog[1].Timestamp)
 }
 
 func TestAuditLog(t *testing.T) {
@@ -455,7 +487,7 @@ func TestContactExtra(t *testing.T) {
 	require.Equal(t, "verification", emailLog[0].Subject)
 }
 
-func TestEmailLog(t *testing.T) {
+func TestContactEmailLog(t *testing.T) {
 	// Test that the email log functions are working as expected
 	contact := &pb.Contact{
 		Name:  "Test Contact",
