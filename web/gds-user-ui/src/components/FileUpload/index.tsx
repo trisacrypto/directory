@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useForm, UseFormRegisterReturn } from 'react-hook-form';
 import { FiFile } from 'react-icons/fi';
+import { t, Trans } from '@lingui/macro';
 const MAX_FILE_SIZE = 10;
 type FileUploadProps = {
   register: UseFormRegisterReturn;
@@ -66,12 +67,12 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
 
   const validateFiles = (value: FileList) => {
     if (value.length < 1) {
-      return 'Files is required';
+      return t`Files is required`;
     }
     for (const file of Array.from(value)) {
       const fsMb = file.size / (1024 * 1024);
       if (fsMb > MAX_FILE_SIZE) {
-        return 'Max file size 10mb';
+        return t`Max file size 10mb`;
       }
     }
     return true;
@@ -94,9 +95,8 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
               }}
               color={useColorModeValue('white', 'black')}
               leftIcon={<Icon as={FiFile} />}
-              minWidth={150}
-            >
-              Import File
+              minWidth={150}>
+              <Trans id="Import File">Import File</Trans>
             </Button>
           </FileUpload>
 

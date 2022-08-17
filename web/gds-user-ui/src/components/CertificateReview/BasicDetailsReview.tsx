@@ -31,7 +31,7 @@ const BasicDetailsReview = () => {
   }, [steps]);
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader step={1} title="Section 1: Basic Details" />
+      <CertificateReviewHeader step={1} title={t`Section 1: Basic Details`} />
       <BasicDetailsReviewDataTable data={basicDetail} />
     </CertificateReviewLayout>
   );

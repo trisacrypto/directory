@@ -220,7 +220,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 key={'sm'}
                 variant="subtle"
                 colorScheme={getColorScheme(data?.must_safeguard_pii)}>
-                <TagLabel fontWeight={'bold'}>{data?.must_safeguard_pii ? 'YES' : 'NO'}</TagLabel>
+                <TagLabel fontWeight={'bold'}>{data?.must_safeguard_pii ? t`YES` : t`NO`}</TagLabel>
               </Tag>
             </Td>
             <Td></Td>
@@ -238,7 +238,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 key={'sm'}
                 variant="subtle"
                 colorScheme={getColorScheme(data?.safeguards_pii)}>
-                <TagLabel fontWeight={'bold'}>{data?.safeguards_pii ? 'YES' : 'NO'}</TagLabel>
+                <TagLabel fontWeight={'bold'}>{data?.safeguards_pii ? t`YES` : t`NO`}</TagLabel>
               </Tag>
             </Td>
             <Td></Td>

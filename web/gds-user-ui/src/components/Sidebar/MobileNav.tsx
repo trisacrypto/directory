@@ -27,6 +27,7 @@ import Storage from 'reduxjs-toolkit-persist/lib/storage/session';
 import AvatarContentLoader from 'components/ContentLoader/Avatar';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
 import Logo from 'components/ui/Logo';
+import { Trans } from '@lingui/react';
 
 interface MobileProps extends FlexProps {
   onOpen: () => void;
@@ -81,7 +82,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
             <HStack>
               <Show above="lg">
                 <Text fontSize="sm" color="blackAlpha.700">
-                  {user?.name || 'Guest'}
+                  {user?.name || <Trans id="Guest">Guest</Trans>}
                 </Text>
               </Show>
               <Box borderRadius="50%" borderWidth={2} padding={0.5}>
@@ -98,7 +99,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
             <MenuDivider />
-            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <Trans id="Sign out">Sign out</Trans>
+            </MenuItem>
           </MenuList>
         </Menu>
       </HStack>

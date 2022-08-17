@@ -88,7 +88,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       width={'100%'}
                       type="search"
                       isRequired
-                      placeholder="Common name or VASP ID"
+                      placeholder={t`Common name or VASP ID`}
                       name="search"
                       onChange={(event: any) => setSearch(event.currentTarget.value)}
                     />

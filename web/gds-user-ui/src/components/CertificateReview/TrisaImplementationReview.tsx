@@ -22,6 +22,7 @@ import TrisaImplementationReviewDataTable from './TrisaImplementationReviewDataT
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { MdSystemUpdateAlt } from 'react-icons/md';
+import { t } from '@lingui/macro';
 
 interface TrisaImplementationReviewProps {
   mainnetData?: any;
@@ -47,7 +48,7 @@ const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
   }, [steps]);
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader step={4} title="Section 4: TRISA Implementation" />
+      <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />
       <TrisaImplementationReviewDataTable mainnet={trisa.mainnet} testnet={trisa.testnet} />
     </CertificateReviewLayout>
   );

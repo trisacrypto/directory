@@ -1,25 +1,8 @@
 import React, { useEffect } from 'react';
-import {
-  Stack,
-  Box,
-  Text,
-  Heading,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  Button,
-  Tag,
-  TagLabel,
-  useColorModeValue
-} from '@chakra-ui/react';
-import { colors } from 'utils/theme';
+import { useColorModeValue } from '@chakra-ui/react';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
+import { TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { COUNTRIES } from 'constants/countries';
-import { currencyFormatter } from 'utils/utils';
-import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 interface TrixoReviewProps {
@@ -55,7 +38,7 @@ const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
 
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader title="Section 5: TRIXO Questionnaire" step={5} />
+      <CertificateReviewHeader title={t`Section 5: TRIXO Questionnaire`} step={5} />
       <TrixoReviewDataTable data={trixo} />
     </CertificateReviewLayout>
   );

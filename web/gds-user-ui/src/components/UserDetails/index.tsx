@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Box, Heading, VStack, Flex, Text, Stack } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 type UserDetailsProps = {
   userId: string;
   createdDate: string;
@@ -14,13 +15,23 @@ const UserDetails: React.FC<UserDetailsProps> = (props) => {
       <VStack spacing={4}>
         <Box mt={2}>
           <Heading pb={3} size="md">
-            User Details
+            <Trans id="User Details">User Details</Trans>
           </Heading>
-          <Text> User ID : {props.userId} </Text>
-          <Text> Profile Created : {props.createdDate}</Text>
-          <Text> Status: {props.status}</Text>
-          <Text> Permission: {props.permissions} </Text>
-          <Text> Last Login: {props.lastLogin} </Text>
+          <Text>
+            <Trans id="User ID:">User ID:</Trans> {props.userId}
+          </Text>
+          <Text>
+            <Trans id="Profile Created:">Profile Created:</Trans> {props.createdDate}
+          </Text>
+          <Text>
+            <Trans id="Status:">Status:</Trans> {props.status}
+          </Text>
+          <Text>
+            <Trans id="Permission:">Permission:</Trans> {props.permissions}
+          </Text>
+          <Text>
+            <Trans id="Last Login:">Last Login:</Trans> {props.lastLogin}
+          </Text>
         </Box>
       </VStack>
     </Flex>

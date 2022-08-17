@@ -10,12 +10,10 @@ import {
   AlertDescription
 } from '@chakra-ui/react';
 
-import { NavLink } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
-import { Trans } from '@lingui/react';
-import MinusLoading from 'components/Loader/MinusLoader';
 
 import AttentionAlert, { AttentionResponseType } from './AttentionAlert';
+import { t } from '@lingui/macro';
 
 export type NeedsAttentionProps = {
   text: string;
@@ -27,14 +25,13 @@ export type NeedsAttentionProps = {
 };
 
 const NeedsAttention = ({ text, buttonText, onClick, data }: NeedsAttentionProps) => {
-  // console.log('[NeedsAttention] data', data?.[0]);
   return (
     <Sentry.ErrorBoundary
       fallback={
         <Text
           color={'red'}
           textAlign={'center'}
-          pt={20}>{`An error has occurred to load attention data`}</Text>
+          pt={20}>{t`An error has occurred to load attention data`}</Text>
       }>
       <Stack minHeight={67}>
         {data?.map((item: AttentionResponseType, key: any) => (
