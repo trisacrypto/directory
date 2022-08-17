@@ -188,3 +188,38 @@ export const loadStepperDefaultValue = () => {
     hasReachSubmitStep: false
   };
 };
+
+// isObject function
+export const isObject = (value: any) => {
+  return value && typeof value === 'object' && value.constructor === Object;
+};
+
+// compare two object deeply key by key
+export const compareObject = (obj1: any, obj2: any) => {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (const key of keys1) {
+    const val1 = obj1[key];
+    const val2 = obj2[key];
+    const areObjects = isObject(val1) && isObject(val2);
+    if ((areObjects && !compareObject(val1, val2)) || (!areObjects && val1 !== val2)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// compare default certificate object
+
+export const hasDefaultCertificateProperties = (obj: any) => {
+  const defaultKeys = ['contacts', 'entity', 'mainnet', 'testnet', 'trixo'];
+  const keys = Object.keys(obj);
+  const hasDefaultKeys = defaultKeys.every((key) => keys.includes(key));
+  return hasDefaultKeys;
+};
