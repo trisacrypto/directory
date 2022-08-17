@@ -216,7 +216,6 @@ export const compareObject = (obj1: any, obj2: any) => {
 };
 
 // compare default certificate object
-
 export const hasDefaultCertificateProperties = (obj: any) => {
   const defaultKeys = ['contacts', 'entity', 'mainnet', 'testnet', 'trixo'];
   const keys = Object.keys(obj);
