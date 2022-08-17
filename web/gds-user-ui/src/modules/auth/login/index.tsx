@@ -15,7 +15,6 @@ const StartPage: React.FC = () => {
 
   const { loginUser } = useAuth();
   const { q, error_description } = useSearchParams();
-  console.log('[error_description', error_description);
   const toast = useToast();
   useEffect(() => {
     // rend tost if q is not empty
@@ -51,6 +50,9 @@ const StartPage: React.FC = () => {
       });
     }
   }, [q, error_description]);
+
+  // clean cookies
+
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
     if (type === 'google') {

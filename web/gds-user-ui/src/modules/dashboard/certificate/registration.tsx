@@ -201,8 +201,8 @@ const Certificate: React.FC = () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
-        // console.log('[registrationData]', data.registrationData);
-        // console.log('[registrationData from state]', data.stepperData);
+        console.log('[registrationData]', data.registrationData);
+        console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
