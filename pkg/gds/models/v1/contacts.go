@@ -297,6 +297,7 @@ func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err err
 	return nil
 }
 
+// GetSentEmailCount returns the number of emails sent to the contact for the given reason.
 func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (sent int, err error) {
 
 	emailLog, err := GetEmailLog(contact)
