@@ -308,7 +308,7 @@ func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (
 		strTimestamp := value.Timestamp
 		timestamp, err := time.Parse(time.RFC3339, strTimestamp)
 		if err != nil {
-			return sent, fmt.Errorf("error parsing timestamp: %v", err)
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
 		}
 
 		matchedReason := reason == value.Reason
