@@ -12,23 +12,21 @@ import {
   Link,
   Icon,
   Text,
-  HStack,
-  Collapse
+  Collapse,
+  List,
+  ListItem
 } from '@chakra-ui/react';
 import trisaLogo from '../../assets/trisa.svg';
-import NavItem, { getLinkStyle, NavItemProps } from './NavItem';
+import NavItem, { StyledNavItem } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
-import { FaChevronDown } from 'react-icons/fa';
 import { useState } from 'react';
 import { Trans } from '@lingui/react';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
 }
-
-const SubMenuItem = (props: NavItemProps) => <NavItem {...props} pl="3rem" />;
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
   const [open, setOpen] = useState(false);
@@ -53,7 +51,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
-        <VStack w="100%">
+        <List w="100%">
           {MenuItems.filter((m) => m.activated).map((menu) => (
             <>
               <NavItem
@@ -61,17 +59,10 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
                 icon={menu.icon}
                 href={menu.path || '/#'}
                 path={menu.path}
-                hasChildren={!!menu.children}
-                onOpen={() => setOpen(!open)}>
+                hasChildren={!!menu.children?.length}
+                onOpen={() => setOpen(!open)}
+                isCollapse={open}>
                 {menu.title}
-                {menu.children && (
-                  <FaChevronDown
-                    style={{
-                      transform: open ? 'rotate(180deg)' : undefined,
-                      transition: '200ms'
-                    }}
-                  />
-                )}
               </NavItem>
               {menu.children?.length && (
                 <Collapse in={open} style={{ width: '100%' }}>
@@ -79,30 +70,31 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
                     menu.children
                       .filter((m) => m.activated)
                       .map((child) => (
-                        <SubMenuItem
+                        <NavItem
                           key={child.title}
                           icon={child.icon}
                           href={child.path || '/#'}
-                          path={child.path}>
+                          path={child.path}
+                          isCollapse={false}
+                          isSubMenu={true}>
                           {child.title}
-                        </SubMenuItem>
+                        </NavItem>
                       ))}
                 </Collapse>
               )}
             </>
           ))}
-        </VStack>
+        </List>
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
-        <VStack w="100%">
-          <Link
+        <List w="100%">
+          <StyledNavItem
             w="100%"
             display="flex"
             alignItems="center"
             color="#8391a2"
             role="group"
             href="mailto:support@trisa.io"
-            isExternal
-            {...getLinkStyle()}>
+            as={Link}>
             <Icon
               mr="4"
               fontSize="16"
@@ -117,16 +109,15 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
               }}>
               <Trans id="Support">Support</Trans>
             </Text>
-          </Link>
-          <Link
+          </StyledNavItem>
+          <StyledNavItem
             href="https://trisa-workspace.slack.com/"
             w={'100%'}
             display="flex"
             alignItems="center"
             color="#8391a2"
             role="group"
-            isExternal
-            {...getLinkStyle()}>
+            as={Link}>
             <Icon
               mr="4"
               fontSize="16"
@@ -141,11 +132,11 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
               }}>
               Slack
             </Text>
-          </Link>
+          </StyledNavItem>
           {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
           Slack
         </NavItem> */}
-        </VStack>
+        </List>
       </VStack>
     </Box>
   );
