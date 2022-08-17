@@ -124,7 +124,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_EMAIL_STORAGE"], conf.Email.Storage)
 	require.True(t, conf.Email.Testing)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
-	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
+	require.Equal(t, 1*time.Minute, conf.CertMan.RequestInterval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
 	require.Equal(t, true, conf.Backup.Enabled)
 	require.Equal(t, 36*time.Hour, conf.Backup.Interval)

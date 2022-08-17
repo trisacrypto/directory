@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/mail"
 	"os"
 	"strings"
 	"sync"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -96,7 +98,7 @@ func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
 // requests and moves them through the request pipeline. Once CertManager detects a
 // certificate request that is ready to submit, it submits the request via the Sectigo
 // API. If processing, it checks the batch status, and when it detects that the bact
-// is done processing it downloads the certs and emails them to the technical conacts.
+// is done processing it downloads the certs and emails them to the technical contacts.
 // If the certificate processing fails for any reason, it sends an error message to
 // the TRISA admins since this will prevent the integrator from joining the network.
 //
@@ -111,8 +113,9 @@ func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
-	ticker := time.NewTicker(c.conf.Interval)
-	log.Info().Dur("interval", c.conf.Interval).Str("store", certDir).Msg("cert-manager process started")
+	requestsTicker := time.NewTicker(c.conf.RequestInterval)
+	reissuanceTicker := time.NewTicker(c.conf.ReissuenceInterval)
+	log.Info().Dur("interval", c.conf.RequestInterval).Str("store", certDir).Msg("cert-manager process started")
 
 	for {
 		// Wait for next tick or a stop signal
@@ -120,11 +123,13 @@ func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 		case <-stop:
 			log.Info().Msg("certificate manager received stop signal")
 			return
-		case <-ticker.C:
+		case <-requestsTicker.C:
+			c.HandleCertificateRequests(certDir)
+		case <-reissuanceTicker.C:
+			c.HandleCertificateReissuance()
 		}
-
-		c.HandleCertificateRequests(certDir)
 	}
+
 }
 
 // HandleCertificateRequests performs one iteration through the certificate requests in
@@ -674,4 +679,123 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	}
 	log.Warn().Str("certs", path).Msg("using a temporary directory for cert downloads")
 	return path, err
+}
+
+func (c *CertificateManager) HandleCertificateReissuance() {
+	var err error
+	vasps := c.db.ListVASPs()
+	for vasps.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vasps.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse vasp request from database")
+			continue
+		}
+
+		var certExpiration time.Duration
+		var reissuanceDate time.Time
+		notAfter := vasp.IdentityCertificate.NotAfter
+		if reissuanceDate, err = time.Parse("YYYY-MM-DD", notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
+		}
+
+		if certExpiration, err = time.ParseDuration(notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert expiration date", vasp.Id))
+			continue
+		}
+
+		// Although this will just be a rough approximation of the precise, it will work for our purposes
+		switch daysBeforeReissuance := certExpiration.Hours() / 24; {
+		case daysBeforeReissuance <= 7:
+			vaspEmailReminder(vasp, 7, reissuanceDate)
+		case daysBeforeReissuance <= 10:
+			// Reissue certs
+			// Send reissuance notification to TRISA Admins
+		case daysBeforeReissuance <= 30:
+			vaspEmailReminder(vasp, 30, reissuanceDate)
+			// Send email reminder to TRISA Admins
+		}
+	}
+}
+
+func vaspEmailReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) {
+	var (
+		verifiedContacts int
+		emailCount       int
+		conf             config.Config
+		emailer          *emails.EmailManager
+		serviceEmail     *mail.Address
+	)
+
+	ReissuanceData := emails.ReissuanceReminderData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: conf.Email.DirectoryID,
+		Reissuance:          reissuanceDate,
+	}
+
+	if vasp.IdentityCertificate != nil {
+		// TODO: ensure the timestamp format is correct
+		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		ReissuanceData.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+	}
+
+	var err error
+	if conf, err = config.New(); err != nil {
+		log.Error().Err(err).Msg("could not create new config for email manager")
+		return
+	}
+
+	if emailer, err = emails.New(conf.Email); err != nil {
+		log.Error().Err(err).Msg("could not create new email manager")
+		return
+	}
+
+	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	for iter.Next() {
+		contact, kind := iter.Value()
+		if emailCount, err = models.GetSentEmailCount(contact, string(admin.ReissuanceReminder), timeWindow); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not retrieve email count from %s's %s email log", vasp.Id, contact))
+			continue
+		}
+
+		if emailCount > 0 {
+			break
+		}
+
+		ReissuanceData.Name = contact.Name
+
+		if serviceEmail, err = mail.ParseAddress(conf.Email.ServiceEmail); err != nil {
+			log.Error().Err(err).Msg("could not parse the configured service email address")
+			continue
+		}
+
+		msg, err := emails.ReissuanceReminderEmail(
+			serviceEmail.Name, serviceEmail.Address,
+			contact.Name, contact.Email,
+			ReissuanceData,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not create %s's %s reissuance reminder email", vasp.Id, contact))
+		}
+
+		switch kind {
+		case "technical", "administrative":
+			if err = emailer.Send(msg); err != nil {
+				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
+				continue
+			} else {
+				return
+			}
+		case "legal", "billing":
+			if err = emailer.Send(msg); err != nil {
+				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
+			}
+			verifiedContacts++
+		case "":
+			if verifiedContacts == 0 {
+				log.WithLevel(zerolog.FatalLevel).Msg(fmt.Sprintf("cert-manager could not find a verified contact for %s", vasp.Id))
+			}
+		}
+	}
 }

@@ -130,8 +130,8 @@ func MockConfig() config.Config {
 			Testing:              true,
 		},
 		CertMan: config.CertManConfig{
-			Interval: 24 * time.Hour,
-			Storage:  "testdata/certs",
+			RequestInterval: 24 * time.Hour,
+			Storage:         "testdata/certs",
 			Sectigo: sectigo.Config{
 				Username: "foo",
 				Password: "supersecretsquirrel",
