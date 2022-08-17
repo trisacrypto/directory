@@ -11,13 +11,17 @@ import {
   Heading,
   Link,
   Icon,
-  Text
+  Text,
+  HStack,
+  Collapse
 } from '@chakra-ui/react';
 import trisaLogo from '../../assets/trisa.svg';
 import NavItem, { getLinkStyle, NavItemProps } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
+import { FaChevronDown } from 'react-icons/fa';
+import { useState } from 'react';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -26,6 +30,7 @@ interface SidebarProps extends BoxProps {
 const SubMenuItem = (props: NavItemProps) => <NavItem {...props} pl="3rem" />;
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
+  const [open, setOpen] = useState(false);
   return (
     <Box
       transition="3s ease"
@@ -34,7 +39,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 275 }}
       pos="fixed"
-      px={2}
+      // px={2}
       h="full"
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
@@ -50,21 +55,39 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         <VStack w="100%">
           {MenuItems.filter((m) => m.activated).map((menu) => (
             <>
-              <NavItem key={menu.title} icon={menu.icon} href={menu.path || '/#'} path={menu.path}>
+              <NavItem
+                key={menu.title}
+                icon={menu.icon}
+                href={menu.path || '/#'}
+                path={menu.path}
+                hasChildren={!!menu.children}
+                onOpen={() => setOpen(!open)}>
                 {menu.title}
+                {menu.children && (
+                  <FaChevronDown
+                    style={{
+                      transform: open ? 'rotate(180deg)' : undefined,
+                      transition: '200ms'
+                    }}
+                  />
+                )}
               </NavItem>
-              {menu.children &&
-                menu.children
-                  .filter((m) => m.activated)
-                  .map((child) => (
-                    <SubMenuItem
-                      key={child.title}
-                      icon={child.icon}
-                      href={child.path || '/#'}
-                      path={child.path}>
-                      {child.title}
-                    </SubMenuItem>
-                  ))}
+              {menu.children?.length && (
+                <Collapse in={open} style={{ width: '100%' }}>
+                  {menu.children &&
+                    menu.children
+                      .filter((m) => m.activated)
+                      .map((child) => (
+                        <SubMenuItem
+                          key={child.title}
+                          icon={child.icon}
+                          href={child.path || '/#'}
+                          path={child.path}>
+                          {child.title}
+                        </SubMenuItem>
+                      ))}
+                </Collapse>
+              )}
             </>
           ))}
         </VStack>

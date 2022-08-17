@@ -8,7 +8,7 @@ import {
   ComponentWithAs,
   IconProps
 } from '@chakra-ui/react';
-import { ReactText } from 'react';
+import { ReactNode } from 'react';
 import { IconType } from 'react-icons';
 import { NavLink as RouterLink, useLocation } from 'react-router-dom';
 
@@ -16,8 +16,10 @@ const ChakraRouterLink = chakra(RouterLink);
 export interface NavItemProps extends FlexProps {
   icon?: IconType | ComponentWithAs<'svg', IconProps>;
   href?: string;
-  children: ReactText;
+  children: ReactNode;
   path?: string;
+  hasChildren?: boolean;
+  onOpen?: () => void;
 }
 
 export const getLinkStyle: any = () => ({
@@ -52,9 +54,60 @@ const getActiveLinkStyle = ({ isActive }: { isActive: boolean }) =>
       }
     : {};
 
-const NavItem = ({ icon, children, href = '#', path, ...rest }: NavItemProps) => {
+const NavItem = ({
+  icon,
+  children,
+  hasChildren,
+  href = '#',
+  onOpen,
+  path,
+  ...rest
+}: NavItemProps) => {
   const location = useLocation();
   const isActive = location.pathname === path;
+
+  if (hasChildren) {
+    return (
+      <ChakraRouterLink w="100%" to={href} style={getActiveLinkStyle}>
+        <Flex
+          onClick={onOpen}
+          align="center"
+          borderRadius="md"
+          w="100%"
+          role="group"
+          color={isActive ? 'white' : '#8391a2'}
+          fontSize="0.9375rem"
+          _hover={{
+            color: 'white'
+          }}
+          {...getLinkStyle()}
+          {...rest}>
+          {icon && (
+            <Icon
+              mr="4"
+              fontSize="16"
+              _groupHover={{
+                color: 'white'
+              }}
+              color={isActive ? 'white' : '#8391a2'}
+              as={icon}
+            />
+          )}
+          <Box
+            width="100%"
+            pr={3}
+            _groupHover={{
+              color: 'white'
+            }}>
+            <Text display="flex" justifyContent="space-between" alignItems="center">
+              {children}
+            </Text>
+          </Box>
+        </Flex>
+      </ChakraRouterLink>
+    );
+  }
+
   return (
     <ChakraRouterLink w="100%" to={href} style={getActiveLinkStyle}>
       <Flex
@@ -81,10 +134,14 @@ const NavItem = ({ icon, children, href = '#', path, ...rest }: NavItemProps) =>
           />
         )}
         <Box
+          width="100%"
+          pr={3}
           _groupHover={{
             color: 'white'
           }}>
-          <Text>{children}</Text>
+          <Text display="flex" justifyContent="space-between" alignItems="center">
+            {children}
+          </Text>
         </Box>
       </Flex>
     </ChakraRouterLink>
