@@ -172,6 +172,28 @@ func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err erro
 	return nil
 }
 
+func GetSentAdminEmailCount(vasp *pb.VASP, reason string, timeWindowDays int) (sent int, err error) {
+	var adminEmailLog []*EmailLogEntry
+	if adminEmailLog, err = GetAdminEmailLog(vasp); err != nil {
+		return 0, err
+	}
+
+	for _, value := range adminEmailLog {
+		var timestamp time.Time
+		if timestamp, err = time.Parse(time.RFC3339, value.Timestamp); err != nil {
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+
+		matchedReason := reason == value.Reason
+		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
+
+		if matchedReason && withinTimeWindow {
+			sent++
+		}
+	}
+	return sent, nil
+}
+
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.
 func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 	// If the extra data is nil, return nil (no certificate requests).

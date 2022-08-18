@@ -62,6 +62,10 @@ type EmailManager struct {
 	adminsEmail  *mail.Address
 }
 
+func (m *EmailManager) ServiceEmail() *mail.Address {
+	return m.serviceEmail
+}
+
 // EmailClient is an interface that can be implemented by SendGrid email clients.
 type EmailClient interface {
 	Send(email *sgmail.SGMailV3) (*rest.Response, error)
