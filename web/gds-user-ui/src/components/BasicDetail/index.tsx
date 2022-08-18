@@ -13,7 +13,10 @@ import { useNavigate } from 'react-router-dom';
 import { fieldNamesPerSteps, validationSchema } from 'modules/dashboard/certificate/lib';
 import { postRegistrationValue } from 'modules/dashboard/registration/utils';
 import { getRegistrationData } from '../../modules/dashboard/registration/service';
-const BasicDetails: React.FC = () => {
+interface BasicDetailProps {
+  onChangeRegistrationState?: any;
+}
+const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState }) => {
   const navigate = useNavigate();
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
@@ -35,6 +38,7 @@ const BasicDetails: React.FC = () => {
         if (updatedCertificate.status === 204) {
           const getValue = await getRegistrationData();
           // console.log('[getValue]', getValue);
+          onChangeRegistrationState(getValue.data);
           updateStateFromFormValues(getValue.data.state);
         }
       } catch (e: any) {
