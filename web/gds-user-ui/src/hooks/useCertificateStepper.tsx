@@ -177,7 +177,18 @@ const useCertificateStepper = () => {
     dispatch(setInitialValue(state));
   };
 
-  // update state dispatch by using useeffect
+  // update state from form values
+  const updateStateFromFormValues = (values: any) => {
+    const state: TPayload = {
+      currentStep: values.current,
+      steps: values.steps,
+      lastStep: 6,
+      hasReachSubmitStep: values.ready_to_submit,
+      testnetSubmitted: false,
+      mainnetSubmitted: false
+    };
+    dispatch(setInitialValue(state));
+  };
 
   return {
     nextStep,
@@ -188,7 +199,8 @@ const useCertificateStepper = () => {
     setInitialState,
     currentState,
     testnetSubmissionState,
-    mainnetSubmissionState
+    mainnetSubmissionState,
+    updateStateFromFormValues
   };
 };
 

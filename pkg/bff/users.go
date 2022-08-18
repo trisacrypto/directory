@@ -8,6 +8,7 @@ import (
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 )
 
@@ -27,7 +28,10 @@ const (
 // to date with the auth0 app_data. If the user does not have an organization, it is
 // assumed that this is the first time the user has logged in and an organization is
 // created for the user and they are assigned the organization leader role. If they have
-// an organization but no role, they are assigned the organization collaborator role.
+// an organization but no role, they are assigned the organization collaborator role. If
+// the auth0 app data was changed, this returns a response with the refresh_token field
+// set to true, indicating that the frontend should refresh the access token to ensure
+// that the user claims are up to date.
 func (s *Server) Login(c *gin.Context) {
 	var (
 		err   error
@@ -119,8 +123,20 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	// Once work has been performed reply with success no content
-	c.Status(http.StatusNoContent)
+	// Get the old user app metadata for comparison
+	oldAppdata := &auth.AppMetadata{}
+	if err = oldAppdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, "could not parse user app metadata")
+		return
+	}
+
+	// If the user app metadata has changed, set the refresh flag in the response
+	if *appdata != *oldAppdata {
+		c.JSON(http.StatusOK, api.Reply{Success: true, RefreshToken: true})
+	} else {
+		c.Status(http.StatusNoContent)
+	}
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {
