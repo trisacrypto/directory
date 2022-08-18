@@ -10,30 +10,31 @@ type RegulationsProps = {
 };
 
 const Regulations: React.FC<RegulationsProps> = ({ name }) => {
-  const { control, register } = useFormContext();
+  const { control, register, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     name,
     control
   });
-  console.log('[Regulations] fields name', name);
-  console.log('[Regulations] fields', fields);
+
   return (
     <VStack align="start" w="100%">
       {fields.map((field, index) => (
         <Grid key={field.id} templateColumns={{ base: '1fr auto' }} gap={6} width="100%">
           <GridItem>
-            <Text>{`${name}[${index}]`}</Text>
             <InputFormControl
               controlId="applicable_regulation"
               {...register(`${name}[${index}]`)}
             />
           </GridItem>
           <GridItem display="flex" alignItems="center">
-            <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
+            <DeleteButton
+              onDelete={() => remove(index)}
+              tooltip={{ label: <Trans id="Remove line">Remove line</Trans> }}
+            />
           </GridItem>
         </Grid>
       ))}
-      <Button onClick={() => append({})} borderRadius={5}>
+      <Button onClick={() => append('')} borderRadius={5}>
         <Trans id="Add Regulation">Add Regulation</Trans>
       </Button>
     </VStack>
