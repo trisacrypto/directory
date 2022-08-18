@@ -19,21 +19,20 @@ const CallbackPage: React.FC = () => {
   const accessToken = query.access_token;
   const callbackError = query.error;
   const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
-  console.log('[userSlector data]', isFetching, isLoggedIn, isError, errorMessage);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const toast = useToast();
 
   useEffect(() => {
     dispatch(getAuth0User(accessToken));
-  }, [accessToken]);
+  }, [accessToken, dispatch]);
 
   useEffect(() => {
     if (callbackError) {
-      navigate(`/login?error_description=${callbackError}`);
+      navigate(`/auth/login?error_description=${query.error_description}`);
     }
     if (isError) {
-      navigate(`/login?error_description=${errorMessage}`);
+      navigate(`/auth/login?error_description=${errorMessage}`);
     }
     if (isLoggedIn) {
       navigate('/dashboard/overview');
