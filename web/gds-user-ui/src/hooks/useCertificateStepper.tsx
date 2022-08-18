@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSteps, getLastStep, resetStepper } from '../application/store/selectors/stepper';
-import Store from '../application/store';
+import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
@@ -33,6 +33,7 @@ interface TState {
   formValues?: any;
   values?: any;
   registrationValues?: any;
+  setRegistrationState?: any;
 }
 
 // 'TODO:' this hook should be improve
@@ -59,7 +60,7 @@ const useCertificateStepper = () => {
   const nextStep = (state?: TState) => {
     const formValues = state?.values;
     const registrationValues = state?.registrationValues;
-
+    const setRegistrationState = state?.setRegistrationState;
     const _mergedData = {
       ...registrationValues,
       ...formValues
@@ -116,12 +117,16 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
     }
-    postRegistrationValue({
-      ..._mergedData,
-      state: {
-        ...currentState()
-      }
-    });
+    const getRegistrationData = () => {
+      return {
+        ..._mergedData,
+        state: {
+          ...currentState()
+        }
+      };
+    };
+    postRegistrationValue(getRegistrationData());
+    setRegistrationState(getRegistrationData());
   };
   const previousStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
