@@ -20,7 +20,7 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
           <Trans id="TRISA Implementations">TRISA Implementations</Trans>
         </Heading>
         <Text pb={7}>
-          <Trans id="You must request a new X.509 Identity Certificate to change your Enpoint and Common Name.">
+          <Trans id="You must request a new X.509 Identity Certificate to change your Endpoint and Common Name.">
             You must request a new X.509 Identity Certificate to change your Endpoint and Common
             Name.
           </Trans>
