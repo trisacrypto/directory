@@ -217,6 +217,14 @@ const Certificate: React.FC = () => {
 
   // refresh registration data when redirect to registration page
 
+  // set default value if registrationData equal to default value
+  useEffect(() => {
+    if (isDefaultValue()) {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationData, onChangeResetForm]);
+
   return (
     <SimpleDashboardLayout>
       <>
