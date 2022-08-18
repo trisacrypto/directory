@@ -58,3 +58,10 @@ func NotFound(c *gin.Context) {
 func NotAllowed(c *gin.Context) {
 	c.JSON(http.StatusMethodNotAllowed, notAllowed)
 }
+
+// MustRefreshToken returns a JSON 401 response with the refresh_token flag set to true.
+func MustRefreshToken(c *gin.Context, err interface{}) {
+	rep := ErrorResponse(err)
+	rep.RefreshToken = true
+	c.JSON(http.StatusUnauthorized, rep)
+}
