@@ -169,17 +169,15 @@ const Certificate: React.FC = () => {
     setIsResetForm(value);
   };
 
-  const resetForm = useCallback(() => {
-    const defaultValue =
-      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-
-    reset(defaultValue);
-  }, [reset, registrationData]);
+  const resetForm = () => {
+    reset(getRegistrationDefaultValues());
+  };
 
   useEffect(() => {
     resetForm();
     setIsResetForm(false);
-  }, [isResetForm, resetForm, registrationData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm, registrationData]);
 
   // handle reset modal
   useEffect(() => {
@@ -205,16 +203,18 @@ const Certificate: React.FC = () => {
       }
     };
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isLoggedIn, setInitialState]);
 
   // set default value if registrationData equal to default value
   useEffect(() => {
     if (isDefaultValue()) {
+      setRegistrationData(getRegistrationDefaultValues());
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registrationData, onChangeResetForm]);
+
+  // refresh registration data when redirect to registration page
 
   return (
     <SimpleDashboardLayout>
