@@ -75,22 +75,21 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 
           <FormLayout>
             <Text>
-              <Trans id="You must submit your registration for TestNet and MainNet separately">
-                You must submit your registration for TestNet and MainNet separately
+              <Trans id="You must submit your registration for TestNet and MainNet separately.">
+                You must submit your registration for TestNet and MainNet separately.
               </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                <Trans id="Note">Note:</Trans>
+                <Trans id="Note:">Note:</Trans>
               </Text>{' '}
-              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process">
+              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process.">
                 You will receive two separate emails with confirmation links for each registration.
-                You must click on each confirmation link to complete the registration process
+                You must click on each confirmation link to complete the registration process.{' '}
               </Trans>
-              .
               <Text as="span" fontWeight="bold">
-                <Trans id="Failure to click either confirmation will result in an incomplete registration">
-                  Failure to click either confirmation will result in an incomplete registration
+                <Trans id=" Failure to click either confirmation will result in an incomplete registration">
+                  {' '}
+                  Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
-                .
               </Text>
             </Text>
           </FormLayout>
