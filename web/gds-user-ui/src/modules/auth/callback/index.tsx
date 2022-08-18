@@ -30,22 +30,10 @@ const CallbackPage: React.FC = () => {
 
   useEffect(() => {
     if (callbackError) {
-      toast({
-        description: query.error_description,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right'
-      });
+      navigate(`/login?error_description=${callbackError}`);
     }
     if (isError) {
-      toast({
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right'
-      });
+      navigate(`/login?error_description=${errorMessage}`);
     }
     if (isLoggedIn) {
       navigate('/dashboard/overview');
