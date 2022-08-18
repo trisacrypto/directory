@@ -31,7 +31,7 @@ msgstr ""
 " create your TRISA account with your VASP email address. Add collaborators in your\n"
 "            organization."
 
-#: src/components/ReviewSubmit/index.tsx:198
+#: src/components/ReviewSubmit/index.tsx:196
 msgid " for MainNet registration so your MainNet certificate will be issued upon review by the validation team"
 msgstr " for MainNet registration so your MainNet certificate will be issued upon review by the validation team"
 
@@ -44,7 +44,7 @@ msgid "(2)Sealing Certificates"
 msgstr "(2)Sealing Certificates"
 
 #: src/components/CertificateSection/index.tsx:96
-#: src/components/SectionStatus/SavedSectionStatus.tsx:19
+#: src/components/SectionStatus/SavedSectionStatus.tsx:20
 msgid "(Saved)"
 msgstr "(Saved)"
 
@@ -53,7 +53,7 @@ msgstr "(Saved)"
 msgid "(not interoperable)"
 msgstr "(not interoperable)"
 
-#: src/components/SectionStatus/NotSavedSectionSection.tsx:19
+#: src/components/SectionStatus/NotSavedSectionSection.tsx:20
 msgid "(not saved)"
 msgstr "(not saved)"
 
@@ -116,8 +116,8 @@ msgstr "A business phone number is required to complete physical verification fo
 msgid "A component of"
 msgstr "A component of"
 
-#: src/components/ReviewSubmit/index.tsx:121
-#: src/components/ReviewSubmit/index.tsx:192
+#: src/components/ReviewSubmit/index.tsx:119
+#: src/components/ReviewSubmit/index.tsx:190
 msgid "A physical verification check in the form of a phone call"
 msgstr "A physical verification check in the form of a phone call"
 
@@ -261,12 +261,12 @@ msgstr "BFF & GDS version {bffAndGdsVersion}"
 msgid "Back Home"
 msgstr "Back Home"
 
-#: src/components/ReviewSubmit/index.tsx:260
+#: src/components/ReviewSubmit/index.tsx:258
 msgid "Back to Review Page"
 msgstr "Back to Review Page"
 
 #: src/components/MemberDetails/index.tsx:90
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:146
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:147
 msgid "Basic Details"
 msgstr "Basic Details"
 
@@ -336,11 +336,11 @@ msgstr "Certificate Details"
 msgid "Certificate Management"
 msgstr "Certificate Management"
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:117
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:118
 msgid "Certificate Progress"
 msgstr "Certificate Progress"
 
-#: src/modules/dashboard/certificate/registration.tsx:224
+#: src/modules/dashboard/certificate/registration.tsx:222
 msgid "Certificate Registration"
 msgstr "Certificate Registration"
 
@@ -361,7 +361,7 @@ msgstr "CipherTrace Providers"
 msgid "City / Town / Municipality"
 msgstr "City / Town / Municipality"
 
-#: src/modules/dashboard/certificate/registration.tsx:280
+#: src/modules/dashboard/certificate/registration.tsx:278
 msgid "Clear & Reset Form"
 msgstr "Clear & Reset Form"
 
@@ -369,8 +369,8 @@ msgstr "Clear & Reset Form"
 msgid "Clear & Reset Registration Form"
 msgstr "Clear & Reset Registration Form"
 
-#: src/components/ReviewSubmit/index.tsx:109
-#: src/components/ReviewSubmit/index.tsx:180
+#: src/components/ReviewSubmit/index.tsx:107
+#: src/components/ReviewSubmit/index.tsx:178
 msgid "Click below to submit your"
 msgstr "Click below to submit your"
 
@@ -452,7 +452,7 @@ msgstr "Contact information for representatives of your organization. Contacts i
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:21
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:167
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:200
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:201
 msgid "Contacts"
 msgstr "Contacts"
 
@@ -688,7 +688,7 @@ msgstr "Expiry Date:"
 msgid "Export Data"
 msgstr "Export Data"
 
-#: src/components/ReviewSubmit/index.tsx:90
+#: src/components/ReviewSubmit/index.tsx:89
 msgid "Failure to click either confirmation will result in an incomplete registration"
 msgstr "Failure to click either confirmation will result in an incomplete registration"
 
@@ -740,7 +740,7 @@ msgstr "GLEIF Registration Authorities"
 msgid "Geographic"
 msgstr "Geographic"
 
-#: src/modules/dashboard/certificate/registration.tsx:239
+#: src/modules/dashboard/certificate/registration.tsx:237
 msgid "Getting Started Help Guide"
 msgstr "Getting Started Help Guide"
 
@@ -752,11 +752,11 @@ msgstr "Git Revision {gitRevision} -"
 msgid "GitHub repository"
 msgstr "GitHub repository"
 
-#: src/components/Sidebar/SidebarContent.tsx:45
+#: src/components/Sidebar/SidebarContent.tsx:48
 msgid "Global Directory Service"
 msgstr "Global Directory Service"
 
-#: src/components/Sidebar/MobileNav.tsx:86
+#: src/components/Sidebar/MobileNav.tsx:85
 msgid "Guest"
 msgstr "Guest"
 
@@ -819,8 +819,8 @@ msgstr "If supplied, use full phone number with country code"
 msgid "If you lose the PKCS12 password, you will have to the start the registration process from the beginning."
 msgstr "If you lose the PKCS12 password, you will have to the start the registration process from the beginning."
 
-#: src/components/ReviewSubmit/index.tsx:134
-#: src/components/ReviewSubmit/index.tsx:204
+#: src/components/ReviewSubmit/index.tsx:132
+#: src/components/ReviewSubmit/index.tsx:202
 msgid "If you would like to edit your registration form before submitting, please return to the"
 msgstr "If you would like to edit your registration form before submitting, please return to the"
 
@@ -945,7 +945,7 @@ msgstr "Legal Entity Identifier (LEI)"
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:15
 #: src/components/MemberDetails/index.tsx:152
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:174
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:175
 msgid "Legal Person"
 msgstr "Legal Person"
 
@@ -996,13 +996,13 @@ msgstr "Login"
 msgid "MAINNET DIRECTORY RECORD"
 msgstr "MAINNET DIRECTORY RECORD"
 
-#: src/components/ReviewSubmit/index.tsx:177
+#: src/components/ReviewSubmit/index.tsx:175
 msgid "MAINNET SUBMISSION"
 msgstr "MAINNET SUBMISSION"
 
 #: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:56
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:72
-#: src/components/ReviewSubmit/index.tsx:182
+#: src/components/ReviewSubmit/index.tsx:180
 msgid "MainNet"
 msgstr "MainNet"
 
@@ -1023,7 +1023,7 @@ msgstr "MainNet Network Metrics"
 msgid "MainNet TRISA Endpoint"
 msgstr "MainNet TRISA Endpoint"
 
-#: src/components/ReviewSubmit/index.tsx:219
+#: src/components/ReviewSubmit/index.tsx:217
 msgid "MainNet already submitted"
 msgstr "MainNet already submitted"
 
@@ -1047,7 +1047,7 @@ msgstr "Message from server:"
 msgid "Misc"
 msgstr "Misc"
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:122
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:123
 msgid "Missing required element"
 msgstr "Missing required element"
 
@@ -1128,7 +1128,7 @@ msgid "New X.509 Identity Certificate Request"
 msgstr "New X.509 Identity Certificate Request"
 
 #: src/components/ConfirmIdentityCertificateRequest/index.tsx:61
-#: src/modules/dashboard/certificate/registration.tsx:274
+#: src/modules/dashboard/certificate/registration.tsx:272
 msgid "Next"
 msgstr "Next"
 
@@ -1139,7 +1139,7 @@ msgstr "Next"
 msgid "No"
 msgstr "No"
 
-#: src/modules/dashboard/certificate/registration.tsx:249
+#: src/modules/dashboard/certificate/registration.tsx:247
 msgid "No information is sent until you complete Section 6 - Review & Submit"
 msgstr "No information is sent until you complete Section 6 - Review & Submit"
 
@@ -1271,7 +1271,7 @@ msgstr "Please enter the information that identify your organization as a Legal 
 msgid "Please enter the information that identify your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
 msgstr "Please enter the information that identify your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
 
-#: src/modules/dashboard/certificate/registration.tsx:125
+#: src/modules/dashboard/certificate/registration.tsx:123
 msgid "Please fill in all required fields before proceeding"
 msgstr "Please fill in all required fields before proceeding"
 
@@ -1390,12 +1390,12 @@ msgid "Return to vaspdirectory.net"
 msgstr "Return to vaspdirectory.net"
 
 #: src/components/CertificateReview/ReviewsSummary.tsx:37
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:278
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:279
 msgid "Review"
 msgstr "Review"
 
-#: src/components/ReviewSubmit/index.tsx:139
-#: src/components/ReviewSubmit/index.tsx:209
+#: src/components/ReviewSubmit/index.tsx:137
+#: src/components/ReviewSubmit/index.tsx:207
 msgid "Review page"
 msgstr "Review page"
 
@@ -1411,11 +1411,11 @@ msgstr "Routine Maintenance Scheduled"
 msgid "Safeguards PII"
 msgstr "Safeguards PII"
 
-#: src/modules/dashboard/certificate/registration.tsx:274
+#: src/modules/dashboard/certificate/registration.tsx:272
 msgid "Save & Next"
 msgstr "Save & Next"
 
-#: src/modules/dashboard/certificate/registration.tsx:270
+#: src/modules/dashboard/certificate/registration.tsx:268
 msgid "Save & Previous"
 msgstr "Save & Previous"
 
@@ -1504,7 +1504,7 @@ msgstr "Set up your TRISA node or integrate with a 3rd-party Travel Rule solutio
 msgid "Short"
 msgstr "Short"
 
-#: src/components/Sidebar/MobileNav.tsx:104
+#: src/components/Sidebar/MobileNav.tsx:103
 msgid "Sign out"
 msgstr "Sign out"
 
@@ -1531,8 +1531,8 @@ msgstr "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs 
 msgid "Social Security Number"
 msgstr "Social Security Number"
 
-#: src/modules/auth/login/user.slice.ts:78
-#: src/modules/auth/login/user.slice.ts:78
+#: src/modules/auth/login/user.slice.ts:75
+#: src/modules/auth/login/user.slice.ts:75
 msgid "Something went wrong. Please try again later."
 msgstr "Something went wrong. Please try again later."
 
@@ -1579,11 +1579,11 @@ msgstr "Step 1"
 msgid "Submit"
 msgstr "Submit"
 
-#: src/components/ReviewSubmit/index.tsx:237
+#: src/components/ReviewSubmit/index.tsx:235
 msgid "Submit MainNet Registration"
 msgstr "Submit MainNet Registration"
 
-#: src/components/ReviewSubmit/index.tsx:168
+#: src/components/ReviewSubmit/index.tsx:166
 msgid "Submit TestNet Registration"
 msgstr "Submit TestNet Registration"
 
@@ -1591,7 +1591,7 @@ msgstr "Submit TestNet Registration"
 msgid "Submitted"
 msgstr "Submitted"
 
-#: src/components/Sidebar/SidebarContent.tsx:95
+#: src/components/Sidebar/SidebarContent.tsx:110
 msgid "Support"
 msgstr "Support"
 
@@ -1603,7 +1603,7 @@ msgstr "Synga Bridge"
 msgid "TESTNET DIRECTORY RECORD"
 msgstr "TESTNET DIRECTORY RECORD"
 
-#: src/components/ReviewSubmit/index.tsx:106
+#: src/components/ReviewSubmit/index.tsx:104
 msgid "TESTNET SUBMISSION"
 msgstr "TESTNET SUBMISSION"
 
@@ -1691,7 +1691,7 @@ msgstr "TRISA endpoint for communication"
 msgid "TRISA endpoint is not valid"
 msgstr "TRISA endpoint is not valid"
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:226
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:227
 msgid "TRISA implementation"
 msgstr "TRISA implementation"
 
@@ -1754,7 +1754,7 @@ msgid "TRISA’s verification form includes five sections and may require inform
 msgstr "TRISA’s verification form includes five sections and may require information from several parties in your organization."
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:33
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:252
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:253
 msgid "TRIXO Questionnaire"
 msgstr "TRIXO Questionnaire"
 
@@ -1788,7 +1788,7 @@ msgstr "Technical information about your endpoint for certificate issuance. Each
 
 #: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:36
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:52
-#: src/components/ReviewSubmit/index.tsx:111
+#: src/components/ReviewSubmit/index.tsx:109
 msgid "TestNet"
 msgstr "TestNet"
 
@@ -1809,7 +1809,7 @@ msgstr "TestNet Network Metrics"
 msgid "TestNet TRISA Endpoint"
 msgstr "TestNet TRISA Endpoint"
 
-#: src/components/ReviewSubmit/index.tsx:150
+#: src/components/ReviewSubmit/index.tsx:148
 msgid "TestNet already submitted"
 msgstr "TestNet already submitted"
 
@@ -1883,7 +1883,7 @@ msgstr "The name of primary regulator or supervisory authority for your national
 msgid "This is the only time the PKCS12 password is shown during the registration process."
 msgstr "This is the only time the PKCS12 password is shown during the registration process."
 
-#: src/modules/dashboard/certificate/registration.tsx:232
+#: src/modules/dashboard/certificate/registration.tsx:230
 msgid "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 msgstr "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 
@@ -1895,7 +1895,7 @@ msgstr "This questionnaire is designed to help TRISA members understand the regu
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 
-#: src/modules/dashboard/certificate/registration.tsx:243
+#: src/modules/dashboard/certificate/registration.tsx:241
 msgid "To assist in completing the registration form, the form is divided into multiple sections"
 msgstr "To assist in completing the registration form, the form is divided into multiple sections"
 
@@ -2069,8 +2069,8 @@ msgstr "You will receive two separate emails with confirmation links for each re
 msgid "Your TRISA Implementation"
 msgstr "Your TRISA Implementation"
 
-#: src/modules/auth/login/user.slice.ts:82
-#: src/modules/auth/login/user.slice.ts:82
+#: src/modules/auth/login/user.slice.ts:79
+#: src/modules/auth/login/user.slice.ts:79
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr "Your account has not been verified. Please check your email to verify your account."
 
@@ -2111,7 +2111,7 @@ msgstr "create your account"
 msgid "for Cryptocurrency Travel Rule compliance."
 msgstr "for Cryptocurrency Travel Rule compliance."
 
-#: src/components/ReviewSubmit/index.tsx:127
+#: src/components/ReviewSubmit/index.tsx:125
 msgid "for TestNet registration so your TestNet certificate will be issued upon review by the validation team"
 msgstr "for TestNet registration so your TestNet certificate will be issued upon review by the validation team"
 
@@ -2127,11 +2127,11 @@ msgstr "in partnership with"
 msgid "is a global, open source, secure, and peer-to-peer protocol for"
 msgstr "is a global, open source, secure, and peer-to-peer protocol for"
 
-#: src/components/ReviewSubmit/index.tsx:125
+#: src/components/ReviewSubmit/index.tsx:123
 msgid "is not required"
 msgstr "is not required"
 
-#: src/components/ReviewSubmit/index.tsx:196
+#: src/components/ReviewSubmit/index.tsx:194
 msgid "is required"
 msgstr "is required"
 
@@ -2151,8 +2151,8 @@ msgstr "numbers (i.e. 0-9)"
 msgid "on behalf of"
 msgstr "on behalf of"
 
-#: src/components/ReviewSubmit/index.tsx:113
-#: src/components/ReviewSubmit/index.tsx:184
+#: src/components/ReviewSubmit/index.tsx:111
+#: src/components/ReviewSubmit/index.tsx:182
 msgid "registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration"
 msgstr "registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration"
 
