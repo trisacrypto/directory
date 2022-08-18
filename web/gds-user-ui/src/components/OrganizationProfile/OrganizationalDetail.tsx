@@ -93,9 +93,9 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem>
                   {' '}
                   {data?.vasp_categories && data?.vasp_categories.length > 0
-                    ? data?.vasp_categories?.map((categ: any) => {
+                    ? data?.vasp_categories?.map((categ: any, index: any) => {
                         return (
-                          <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
+                          <Tag key={index} color={'white'} bg={'blue'} mr={2} mb={1}>
                             {getBusinessCategiryLabel(categ)}
                           </Tag>
                         );
@@ -169,7 +169,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
             <SimpleGrid minChildWidth="360px" spacing="40px">
               {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
                 <>
-                  <List>
+                  <List key={index}>
                     <ListItem fontWeight={'bold'}>
                       {' '}
                       {contact === 'legal'

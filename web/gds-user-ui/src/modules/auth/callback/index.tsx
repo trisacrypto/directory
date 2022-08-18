@@ -1,44 +1,32 @@
 import React, { useEffect, useState } from 'react';
-
-import { Box, useToast } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import useHashQuery from 'hooks/useHashQuery';
 import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
-import { clearCookies, getCookie } from 'utils/cookies';
-
-import AlertMessage from 'components/ui/AlertMessage';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
-import { t } from '@lingui/macro';
 import { useSelector, useDispatch } from 'react-redux';
-import * as Sentry from '@sentry/browser';
-import ErrorMessage from 'components/ui/ErrorMessage';
 const CallbackPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
 
   const query = useHashQuery();
-  const accessToken = query.access_token;
-  const callbackError = query.error;
+  const { access_token: accessToken, error: callbackError } = query as any;
   const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const toast = useToast();
 
   useEffect(() => {
+    setIsloading(true);
     dispatch(getAuth0User(accessToken));
   }, [accessToken, dispatch]);
 
   useEffect(() => {
-    if (callbackError) {
-      navigate(`/auth/login?error_description=${query.error_description}`);
-    }
-    if (isError) {
-      navigate(`/auth/login?error_description=${errorMessage}`);
+    if (callbackError || isError) {
+      navigate(`/auth/login?error_description=${query.error_description || errorMessage}`);
     }
     if (isLoggedIn) {
       navigate('/dashboard/overview');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isError, isLoggedIn, callbackError]);
+  }, [isError, isLoggedIn, callbackError, errorMessage, navigate, query.error_description]);
 
   useEffect(() => {
     if (!isFetching) {
@@ -52,13 +40,6 @@ const CallbackPage: React.FC = () => {
     <Box height={'100%'}>
       {isLoading && <Loader />}
       {isFetching && <Loader text="Loading Dashboard ..." />}
-      {/* {isError && (
-        <AlertMessage
-          title={callbackError || t`Token not valid`}
-          message={query.error_description || errorMessage}
-          status="error"
-        />
-      )} */}
     </Box>
   );
 };
