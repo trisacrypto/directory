@@ -1,0 +1,20 @@
+Hello TRISA Admins,
+
+The TRISA Identity Certificate automated reissuance for {{ .CommonName }} has been completed on {{ .ReissueDate }} by the Global Directory Service.
+
+Current certificate and directory entry details:
+
+ID: {{ .VID }}
+Registered Directory: {{ .RegisteredDirectory }}
+Common Name: {{ .CommonName }}
+Endpoint: {{ .Endpoint }}
+Serial Number: {{ .SerialNumber }}
+Expiration: {{ .ExpirationDate }}
+Reissuance: {{ .ReissueDate }}
+
+You can view the full record on the TRISA Admin UI:
+
+{{ .AdminReviewURL }}
+
+Best Regards,
+TRISA Global Directory Service Team
