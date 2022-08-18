@@ -17,7 +17,7 @@ const TrisaImplementation: React.FC = () => {
   return (
     <Stack spacing={7} pt={8}>
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id="Section 4: TRISA Implementation">Section 4: TRISA Implementation</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}

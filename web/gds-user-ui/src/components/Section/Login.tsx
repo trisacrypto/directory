@@ -36,7 +36,7 @@ const Login: React.FC<LoginProps> = (props) => (
         }}>
         <GoogleIcon h={24} />
         <Text as={'span'} ml={3}>
-          Continue with Google
+          <Trans id="Continue with Google">Continue with Google</Trans>
         </Text>
       </Button>
     </Box>

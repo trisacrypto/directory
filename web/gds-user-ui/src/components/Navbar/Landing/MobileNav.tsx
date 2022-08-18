@@ -15,6 +15,7 @@ import React, { useRef, ReactElement } from 'react';
 
 import { NavItem } from './NavItem';
 import Logo from '../../ui/Logo';
+import { t } from '@lingui/macro';
 export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const openMenuRef = useRef(null);
@@ -66,11 +67,11 @@ export const MobileNavBar: React.FC = ({ ...props }): ReactElement => {
 
               <DrawerBody p={0}>
                 <Stack spacing={0}>
-                  <NavItem to="Dashboard" pageName="Dashboard" disabled={true} />
-                  <NavItem to="home" pageName="Home" />
-                  <NavItem to="about" pageName="about us" />
-                  <NavItem to="documentation" pageName="Documentation" />
-                  <NavItem to="login" pageName="Log in" />
+                  <NavItem to="Dashboard" pageName={t`Dashboard`} disabled={true} />
+                  <NavItem to="home" pageName={t`Home`} />
+                  <NavItem to="about" pageName={t`about us`} />
+                  <NavItem to="documentation" pageName={t`Documentation`} />
+                  <NavItem to="login" pageName={t`Log in`} />
                 </Stack>
               </DrawerBody>
             </DrawerContent>

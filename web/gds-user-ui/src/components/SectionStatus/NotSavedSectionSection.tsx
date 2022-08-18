@@ -1,6 +1,6 @@
 import Icon from '@chakra-ui/icon';
 import { InfoIcon } from '@chakra-ui/icons';
-import { Box } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 
 const NotSavedSectionStatus: React.FC = () => {
@@ -8,16 +8,17 @@ const NotSavedSectionStatus: React.FC = () => {
     <Box>
       <Icon
         as={InfoIcon}
-        w={7}
-        h={7}
+        w={5}
+        h={5}
         sx={{
           path: {
             fill: '#F29C36'
           }
         }}
       />
-      {'  '}
-      <Trans id="(not saved)"> (not saved)</Trans>
+      <Text as={'span'} fontSize={'sm'} pl={1}>
+        <Trans id="(not saved)"> (not saved)</Trans>
+      </Text>
     </Box>
   );
 };

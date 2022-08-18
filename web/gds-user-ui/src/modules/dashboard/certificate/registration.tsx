@@ -25,16 +25,14 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError } from 'utils/utils';
+import { hasStepError, handleError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 
 import {
-  getRegistrationDefaultValue,
   postRegistrationValue,
-  setRegistrationDefaultValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
 
@@ -60,7 +58,7 @@ const Certificate: React.FC = () => {
   const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
-
+  const currentStateValue = useSelector(getCurrentState);
   const lastStep: number = useSelector(getLastStep);
   const steps: number = useSelector(getSteps);
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
@@ -171,17 +169,15 @@ const Certificate: React.FC = () => {
     setIsResetForm(value);
   };
 
-  const resetForm = useCallback(() => {
-    const defaultValue =
-      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-
-    reset(defaultValue);
-  }, [reset, registrationData]);
+  const resetForm = () => {
+    reset(getRegistrationDefaultValues());
+  };
 
   useEffect(() => {
     resetForm();
     setIsResetForm(false);
-  }, [isResetForm, resetForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm, registrationData]);
 
   // handle reset modal
   useEffect(() => {
@@ -191,27 +187,34 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
-  // useEffect(() => {
-
-  //   setIsResetForm(false);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [registrationData, isResetForm]);
-
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
+        // console.log('[registrationData]', data.registrationData);
+        // console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
-        console.log('[getRegistrationData]', error);
+        handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
       } finally {
         setIsLoadingDefaultValue(false);
       }
     };
     fetchData();
-  }, []);
+  }, [isLoggedIn, setInitialState]);
+
+  // set default value if registrationData equal to default value
+  useEffect(() => {
+    if (isDefaultValue()) {
+      setRegistrationData(getRegistrationDefaultValues());
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationData, onChangeResetForm]);
+
+  // refresh registration data when redirect to registration page
 
   return (
     <SimpleDashboardLayout>
@@ -263,21 +266,21 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    {!isFormSubmitted() && (
-                      <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                        <Trans id="Save & Previous">Save & Previous</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <Trans id="Save & Previous">Save & Previous</Trans>
+                    </Button>
+                    {/* )} */}
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    {!isFormSubmitted() && (
-                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                      </Button>
-                    )}
+                    {/* {!isFormSubmitted() && ( */}
+                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                    </Button>
+                    {/* )} */}
                   </>
                 )}
               </Stack>
@@ -290,7 +293,7 @@ const Certificate: React.FC = () => {
             isOpen={isOpen}
             onClose={onClose}
             onChangeState={onChangeModalState}
-            onRefeshState={forceUpdate}
+            onRefreshState={forceUpdate}
             onReset={reset}
             onChangeResetState={onChangeResetForm}
           />

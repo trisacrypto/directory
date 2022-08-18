@@ -12,27 +12,33 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { useNavigate } from 'react-router-dom';
 import { fieldNamesPerSteps, validationSchema } from 'modules/dashboard/certificate/lib';
 import { postRegistrationValue } from 'modules/dashboard/registration/utils';
+import { getRegistrationData } from '../../modules/dashboard/registration/service';
 const BasicDetails: React.FC = () => {
   const navigate = useNavigate();
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
+  const { updateStateFromFormValues } = useCertificateStepper();
   const bg = useColorModeValue('#F7F8FC', 'gray.800');
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
-    console.log('[handleFileUploaded]', file);
+    // console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
     const reader = new FileReader();
     reader.onload = async (ev: any) => {
       const data = JSON.parse(ev.target.result);
-      console.log('[read data]', data);
       try {
         const validationData = await validationSchema[0].validate(data);
-        console.log('[validationData]', validationData);
-        const posted = await postRegistrationValue(validationData);
-        navigate('/dashboard/certificate/registration');
+        // console.log('[validationData]', validationData);
+        const updatedCertificate: any = await postRegistrationValue(validationData);
+        if (updatedCertificate.status === 204) {
+          const getValue = await getRegistrationData();
+          // console.log('[getValue]', getValue);
+          updateStateFromFormValues(getValue.data.state);
+        }
       } catch (e: any) {
+        console.log(e);
         toast({
           title: 'Invalid file',
           description: e.message || 'your json file is invalid',
@@ -52,7 +58,7 @@ const BasicDetails: React.FC = () => {
     <Stack spacing={7} mt="2rem" bg={bg}>
       <HStack justifyContent={'space-between'}>
         <Box display={'flex'}>
-          <Heading size="md" pr={3}>
+          <Heading size="md" pr={3} ml={2}>
             <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
           </Heading>{' '}
           {stepStatus ? <SectionStatus status={stepStatus} /> : null}

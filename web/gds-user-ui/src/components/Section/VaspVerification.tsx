@@ -215,7 +215,7 @@ export default function VaspVerification() {
                   _focus={{
                     borderColor: 'transparent'
                   }}>
-                  Create account
+                  <Trans id="Create account">Create account</Trans>
                 </Button>
               </RouterLink>
               <Text textAlign="center">

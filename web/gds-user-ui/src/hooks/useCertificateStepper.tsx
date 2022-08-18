@@ -1,12 +1,7 @@
-import { getSteps, getLastStep, resetStepper } from './../application/store/selectors/stepper';
-import {
-  getCurrentStep,
-  getHasReachSubmitStep,
-  getCurrentState,
-  getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus
-} from 'application/store/selectors/stepper';
-import React, { FC, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getSteps, getLastStep, resetStepper } from '../application/store/selectors/stepper';
+import Store from '../application/store';
+import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
   addStep,
@@ -47,28 +42,18 @@ const useCertificateStepper = () => {
   const currentStep: number = useSelector(getCurrentStep);
   const steps: TStep[] = useSelector(getSteps);
   const lastStep: number = useSelector(getLastStep);
-  const hasReachSubmitStep: any = useSelector(getHasReachSubmitStep);
-  const currentValue: TPayload = useSelector(getCurrentState);
-  const testnetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
-  const mainnetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
 
-  // get current state
+  // get store state after dispatch action
 
   const currentState = () => {
-    console.log('currentState', currentValue);
+    // log store state
+    const updatedState = Store.getState().stepper;
     const formatState = {
-      current: currentValue.currentStep,
-      steps: currentValue.steps,
-      ready_to_submit: currentValue.hasReachSubmitStep
+      current: updatedState.currentStep,
+      steps: updatedState.steps,
+      ready_to_submit: updatedState.hasReachSubmitStep
     };
     return formatState;
-  };
-
-  // update steps of state
-  const updateLastStep = (formValues: any) => {
-    const ls = formValues.state.steps.length - 1;
-    formValues.state.steps[ls].status = LSTATUS.COMPLETE;
-    return formValues.state.steps;
   };
 
   const nextStep = (state?: TState) => {
@@ -79,12 +64,9 @@ const useCertificateStepper = () => {
       ...registrationValues,
       ...formValues
     };
+    console.log('[_mergedData]', _mergedData);
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
-      // update step status
-      // const v = updateFormValuesStateStep(currentStep, LSTATUS.PROGRESS, formValues);
-      // await postRegistrationValue(v);
-
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
     // if we got an error that means require element are not completed
@@ -118,31 +100,13 @@ const useCertificateStepper = () => {
     if (currentStep === lastStep) {
       // that mean we move to submit step
       if (!hasStepError(steps)) {
-        // setStepperFromLocalStorage({ step: lastStep });
-        // set current step to last step
-        console.log('[setSubmitStep]', currentStep);
-        // const v = updateFormValuesCurrentState(lastStep, formValues);
-        // await postRegistrationValue(v);
         dispatch(setSubmitStep({ submitStep: true }));
         dispatch(setCurrentStep({ currentStep: lastStep }));
-
-        postRegistrationValue({
-          ..._mergedData,
-          state: {
-            ...currentState(),
-            ready_to_submit: true,
-            current: currentStep,
-            steps: updateLastStep(formValues)
-          }
-        });
-        return;
       }
     } else {
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
-        // const v = updateFormValuesStateStep(currentStep, LSTATUS.PROGRESS, formValues);
-        // await postRegistrationValue(v);
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
@@ -154,7 +118,9 @@ const useCertificateStepper = () => {
     }
     postRegistrationValue({
       ..._mergedData,
-      state: { ...currentState(), ready_to_submit: true, current: currentStep }
+      state: {
+        ...currentState()
+      }
     });
   };
   const previousStep = (state?: TState) => {
@@ -211,6 +177,19 @@ const useCertificateStepper = () => {
     dispatch(setInitialValue(state));
   };
 
+  // update state from form values
+  const updateStateFromFormValues = (values: any) => {
+    const state: TPayload = {
+      currentStep: values.current,
+      steps: values.steps,
+      lastStep: 6,
+      hasReachSubmitStep: values.ready_to_submit,
+      testnetSubmitted: false,
+      mainnetSubmitted: false
+    };
+    dispatch(setInitialValue(state));
+  };
+
   return {
     nextStep,
     previousStep,
@@ -220,7 +199,8 @@ const useCertificateStepper = () => {
     setInitialState,
     currentState,
     testnetSubmissionState,
-    mainnetSubmissionState
+    mainnetSubmissionState,
+    updateStateFromFormValues
   };
 };
 

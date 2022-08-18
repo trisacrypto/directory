@@ -30,6 +30,7 @@ import { COUNTRIES } from 'constants/countries';
 import { addressType } from 'constants/address';
 import { renderAddress } from 'utils/address-utils';
 import { hasValue } from 'utils/utils';
+import { Trans } from '@lingui/react';
 type OrganizationalDetailProps = {
   data: any;
 };
@@ -45,17 +46,13 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
     setDivOrgHeight(orgRef?.current?.clientHeight || 500);
     setDivCntHeight(cntRef?.current?.clientHeight || 500);
   }, [getOrgDivEl, getCntDivEl]);
-  // keep the same div container to have a good experience
-  const divHeight = divOrgHeight >= divCntHeight ? divOrgHeight : divCntHeight;
+
   return (
     <Stack py={5} w="full">
       <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
         <Stack mb={5}>
           <Heading fontSize={20}>
-            TRISA Organization Profile{' '}
-            {/* <Text as={'span'} color={'blue'}>
-              [pending registration]
-            </Text> */}
+            <Trans id="TRISA Organization Profile">TRISA Organization Profile</Trans>
           </Heading>
         </Stack>
       </Stack>
@@ -72,28 +69,33 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
-              {' '}
-              Organizational Details{' '}
+              <Trans id="Organizational Details">Organizational Details</Trans>
             </Heading>
             <SimpleGrid minChildWidth="280px" spacing="40px">
               <List>
-                <ListItem fontWeight={'bold'}>Name Identifiers</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Name Identifiers">Name Identifiers</Trans>
+                </ListItem>
                 <ListItem>
                   {data?.entity?.name?.name_identifiers?.[0].legal_person_name || 'N/A'}
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Organization Type</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Organization Type">Organization Type</Trans>
+                </ListItem>
                 <ListItem>{(BUSINESS_CATEGORY as any)[data.business_category] || 'N/A'}</ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>VASP Category</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="VASP Category">VASP Category</Trans>
+                </ListItem>
                 <ListItem>
                   {' '}
                   {data?.vasp_categories && data?.vasp_categories.length > 0
-                    ? data?.vasp_categories?.map((categ: any) => {
+                    ? data?.vasp_categories?.map((categ: any, index: any) => {
                         return (
-                          <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
+                          <Tag key={index} color={'white'} bg={'blue'} mr={2} mb={1}>
                             {getBusinessCategiryLabel(categ)}
                           </Tag>
                         );
@@ -102,24 +104,31 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Incorporation Date</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Incorporation Date">Incorporation Date</Trans>
+                </ListItem>
                 <ListItem>{data?.established_on || 'N/A'}</ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Business Address</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Business Address">Business Address</Trans>
+                </ListItem>
                 <ListItem>
-                  {' '}
                   {renderAddress(data?.entity?.geographic_addresses?.[0] || 'N/A')}
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Identification Number </ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Identification Number">Identification Number</Trans>
+                </ListItem>
                 <ListItem>
                   {data?.entity?.national_identification?.national_identifier || 'N/A'}
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Identification Type</ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Identification Type">Identification Type</Trans>
+                </ListItem>
                 <ListItem>
                   {' '}
                   {data?.entity?.national_identification?.national_identifier_type ? (
@@ -134,7 +143,9 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>Country of Registration </ListItem>
+                <ListItem fontWeight={'bold'}>
+                  <Trans id="Country of Registration">Country of Registration</Trans>
+                </ListItem>
                 <ListItem>
                   {(COUNTRIES as any)[data?.entity?.country_of_registration] || 'N/A'}
                 </ListItem>
@@ -153,13 +164,12 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           id={'cnt'}>
           <Box>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
-              {' '}
-              Contacts{' '}
+              <Trans id="Contacts">Contacts</Trans>
             </Heading>
             <SimpleGrid minChildWidth="360px" spacing="40px">
               {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
                 <>
-                  <List>
+                  <List key={index}>
                     <ListItem fontWeight={'bold'}>
                       {' '}
                       {contact === 'legal'

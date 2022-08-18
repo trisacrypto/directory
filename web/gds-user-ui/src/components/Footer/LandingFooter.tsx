@@ -66,7 +66,7 @@ const Footer = (): React.ReactElement => {
               {' '}
               CipherTrace
             </Link>{' '}
-            on behalf of{' '}
+            <Trans id="on behalf of">on behalf of</Trans>{' '}
             <Link href="https://trisa.io" color={colors.system.cyan}>
               TRISA
             </Link>{' '}
@@ -74,9 +74,23 @@ const Footer = (): React.ReactElement => {
 
           {isProdEnv && (
             <Text width="100%" textAlign="center" color="white" fontSize="12" pt={1}>
-              {appVersion && <Text as="span">App version {appVersion} - </Text>}
-              {gitRevision && <Text as="span">Git Revision {gitRevision} - </Text>}
-              {bffAndGdsVersion && <Text as="span">BFF & GDS version {bffAndGdsVersion} </Text>}
+              {appVersion && (
+                <Text as="span">
+                  <Trans id="App version {appVersion} -">App version {appVersion} -</Trans>
+                </Text>
+              )}
+              {gitRevision && (
+                <Text as="span">
+                  <Trans id="Git Revision {gitRevision} -">Git Revision {gitRevision} -</Trans>
+                </Text>
+              )}
+              {bffAndGdsVersion && (
+                <Text as="span">
+                  <Trans id="BFF & GDS version {bffAndGdsVersion}">
+                    BFF & GDS version {bffAndGdsVersion}
+                  </Trans>
+                </Text>
+              )}
             </Text>
           )}
         </Flex>

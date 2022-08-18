@@ -10,6 +10,7 @@ import {
   useDisclosure,
   AlertDialogCloseButton
 } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 
 interface ModalProps {}
 const ModalAlert = (props: any) => {
@@ -30,10 +31,10 @@ const ModalAlert = (props: any) => {
           <AlertDialogBody>{props.message}</AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={props.onClose}>
-              No
+              <Trans id="No">No</Trans>
             </Button>
             <Button colorScheme="green" ml={3} onClick={props.handleYesBtn}>
-              Yes
+              <Trans id="Yes">Yes</Trans>
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
