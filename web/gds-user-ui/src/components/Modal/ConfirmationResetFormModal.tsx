@@ -43,8 +43,8 @@ const ConfirmationResetForm = (props: any) => {
     setIsLoading(false);
     props.onClose();
     onAlertClose();
+    // props.onRefreshState();
     navigate('/dashboard/certificate/registration');
-    // props.onRefeshState();
   };
   return (
     <>
@@ -79,7 +79,11 @@ const ConfirmationResetForm = (props: any) => {
                   }}>
                   <Trans id="Reset">Reset</Trans>
                 </Button>
-                <Button onClick={handleOnClose} bgColor="#555151" color={'#fff'} _hover={{ boxShadow: "#555151", bgColor: "#555151D4" }}>
+                <Button
+                  onClick={handleOnClose}
+                  bgColor="#555151"
+                  color={'#fff'}
+                  _hover={{ boxShadow: '#555151', bgColor: '#555151D4' }}>
                   <Trans id="Cancel">Cancel</Trans>
                 </Button>
               </ModalFooter>

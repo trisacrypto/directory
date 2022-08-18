@@ -30,7 +30,6 @@ const CertificateReview = () => {
     try {
       if (network === 'testnet') {
         const response = await submitTestnetRegistration();
-        console.log('[response testnet]', response);
         if (response.status === 200) {
           setIsTestNetSent(true);
           testnetSubmissionState();
@@ -39,7 +38,6 @@ const CertificateReview = () => {
       }
       if (network === 'mainnet') {
         const response = await submitMainnetRegistration();
-        console.log('[response mainnet]', response);
         if (response?.status === 200) {
           setIsMainNetSent(true);
           mainnetSubmissionState();
