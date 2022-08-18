@@ -210,7 +210,7 @@ type ReissuanceAdminNotificationData struct {
 	Endpoint            string    // The expected endpoint for the TRISA service
 	RegisteredDirectory string    // The directory name for the certificates that was issued
 	Expiration          time.Time // The timestamp when the certificate expires
-	Reissuance          time.Time // The timestamp the certificates was reissued
+	Reissuance          time.Time // The timestamp when the certificate was reissued
 	BaseURL             string    // The URL of the admin review endpoint to build the AdminReviewURL
 }
 
