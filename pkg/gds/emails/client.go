@@ -488,7 +488,7 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 }
 
 // SendReissuanceAdminNotification sends the admins a notice that an identity certificate
-// has been reissued. This allows the admins that the reissuance has been done automatically
+// has been reissued. This allows the admins to know that the reissuance has been done automatically
 func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
 	// Create the template context
 	ctx := ReissuanceAdminNotificationData{
