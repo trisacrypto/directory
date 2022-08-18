@@ -681,9 +681,58 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	return path, err
 }
 
+// HandleCertificateReissuance iteration through each VASP in the database and checks
+// is their identity certificate will be expiring soon, sending reminder email within
+// the 30 and 7 day checkpoints and reissuing the identity certificate 10 days before
+// expiration.
+func (c *CertificateManager) HandleCertificateReissuance() {
+	var (
+		err            error
+		certExpiration time.Duration
+		reissuanceDate time.Time
+	)
+
+	// Iterate through the VASPs in the database.
+	vasps := c.db.ListVASPs()
+	for vasps.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vasps.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse vasp request from database")
+			continue
+		}
+
+		// Calculate the number of days before the VASP's certificate expires.
+		notAfter := vasp.IdentityCertificate.NotAfter
+		if reissuanceDate, err = time.Parse("YYYY-MM-DD", notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
+		}
+		if certExpiration, err = time.ParseDuration(notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert expiration date", vasp.Id))
+			continue
+		}
+
+		// NOTE: Although this will just be an approximation of the precise number of days,
+		// it will work for our purposes
+		switch daysBeforeReissuance := certExpiration.Hours() / 24; {
+		case daysBeforeReissuance <= 7:
+			c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate)
+		case daysBeforeReissuance <= 10:
+			c.reissueIdentityCertificates(vasp)
+			// SendReissuanceAdminNotification
+		case daysBeforeReissuance <= 30:
+			c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate)
+			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
+				if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
+					log.Error().Err(err).Msg(fmt.Sprintf("error sending admin reissuance reminder for %s", vasp.Id))
+				}
+			}
+		}
+	}
+}
+
 // Helper function for HandleCertificateReissuance that reissues identity certificates
 // for the given vasp.
-func (c *CertificateManager) reissueCerts(vasp *pb.VASP) {
+func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
 	var (
 		err         error
 		certreq     *models.CertificateRequest
@@ -753,56 +802,8 @@ func (c *CertificateManager) reissueCerts(vasp *pb.VASP) {
 	}
 }
 
-// HandleCertificateReissuance iteration through each VASP in the database and checks
-// is their identity certificate will be expiring soon, sending reminder email within
-// the 30 and 7 day checkpoints and reissuing the identity certificate 10 days before
-// expiration.
-func (c *CertificateManager) HandleCertificateReissuance() {
-	var (
-		err            error
-		certExpiration time.Duration
-		reissuanceDate time.Time
-	)
-
-	// Iterate through the VASPs in the database.
-	vasps := c.db.ListVASPs()
-	for vasps.Next() {
-		var vasp *pb.VASP
-		if vasp, err = vasps.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse vasp request from database")
-			continue
-		}
-
-		// Calculate the number of days before the VASP's certificate expires.
-		notAfter := vasp.IdentityCertificate.NotAfter
-		if reissuanceDate, err = time.Parse("YYYY-MM-DD", notAfter); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
-		}
-		if certExpiration, err = time.ParseDuration(notAfter); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert expiration date", vasp.Id))
-			continue
-		}
-
-		// NOTE: Although this will just be an approximation of the precise number of days,
-		// it will work for our purposes
-		switch daysBeforeReissuance := certExpiration.Hours() / 24; {
-		case daysBeforeReissuance <= 7:
-			c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate)
-		case daysBeforeReissuance <= 10:
-			c.reissueCerts(vasp)
-			// SendReissuanceAdminNotification
-		case daysBeforeReissuance <= 30:
-			c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate)
-			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
-				if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
-					log.Error().Err(err).Msg(fmt.Sprintf("error sending admin reissuance reminder for %s", vasp.Id))
-				}
-			}
-		}
-	}
-}
-
-// Helper function for HandleCertificateReissuance that sends reissuance reminder emails to the TRISA admin.
+// Helper function for HandleCertificateReissuance checks if a certificate reissuance reminder
+// has been sent to the TRISA admin within the given time window.
 func NoAdminEmailSent(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) bool {
 	// Make sure that the email hasn't already been sent previously.
 	emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow)
