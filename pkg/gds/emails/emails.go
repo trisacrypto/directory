@@ -208,7 +208,7 @@ type ReissuanceAdminNotificationData struct {
 	CommonName          string    // The common name assigned to the cert
 	SerialNumber        string    // The serial number of the certificate
 	Endpoint            string    // The expected endpoint for the TRISA service
-	RegisteredDirectory string    // The directory name for the certificates that was issued
+	RegisteredDirectory string    // The directory name for the certificate that was issued
 	Expiration          time.Time // The timestamp when the certificate expires
 	Reissuance          time.Time // The timestamp when the certificate was reissued
 	BaseURL             string    // The URL of the admin review endpoint to build the AdminReviewURL
