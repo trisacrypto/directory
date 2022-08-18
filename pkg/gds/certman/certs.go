@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/mail"
 	"os"
 	"strings"
 	"sync"
@@ -682,51 +681,6 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	return path, err
 }
 
-// HandleCertificateReissuance iteration through each VASP in the database and checks
-// is their identity certificate will be expiring soon, sending reminder email within
-// the 30 and 7 day checkpoints and reissuing the identity certificate 10 days before
-// expiration.
-func (c *CertificateManager) HandleCertificateReissuance() {
-	var (
-		err            error
-		certExpiration time.Duration
-		reissuanceDate time.Time
-	)
-
-	// Iterate through the VASPs in the database.
-	vasps := c.db.ListVASPs()
-	for vasps.Next() {
-		var vasp *pb.VASP
-		if vasp, err = vasps.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse vasp request from database")
-			continue
-		}
-
-		// Calculate the number of days before the VASP's certificate expires.
-		notAfter := vasp.IdentityCertificate.NotAfter
-		if reissuanceDate, err = time.Parse("YYYY-MM-DD", notAfter); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
-		}
-		if certExpiration, err = time.ParseDuration(notAfter); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert expiration date", vasp.Id))
-			continue
-		}
-
-		// NOTE: Although this will just be an approximation of the precise number of days,
-		// it will work for our purposes
-		switch daysBeforeReissuance := certExpiration.Hours() / 24; {
-		case daysBeforeReissuance <= 7:
-			c.customerEmailReminder(vasp, 7, reissuanceDate)
-		case daysBeforeReissuance <= 10:
-			c.reissueCerts(vasp)
-			// SendReissuanceAdminNotification
-		case daysBeforeReissuance <= 30:
-			c.customerEmailReminder(vasp, 30, reissuanceDate)
-			c.adminEmailReminder(vasp, 30, reissuanceDate)
-		}
-	}
-}
-
 // Helper function for HandleCertificateReissuance that reissues identity certificates
 // for the given vasp.
 func (c *CertificateManager) reissueCerts(vasp *pb.VASP) {
@@ -799,101 +753,65 @@ func (c *CertificateManager) reissueCerts(vasp *pb.VASP) {
 	}
 }
 
-// Helper function for HandleCertificateReissuance that sends reissuance reminder emails
-// a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
-// critical alert is raised.
-func (c *CertificateManager) customerEmailReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) {
+// HandleCertificateReissuance iteration through each VASP in the database and checks
+// is their identity certificate will be expiring soon, sending reminder email within
+// the 30 and 7 day checkpoints and reissuing the identity certificate 10 days before
+// expiration.
+func (c *CertificateManager) HandleCertificateReissuance() {
 	var (
-		verifiedContacts int
-		emailCount       int
-		serviceEmail     *mail.Address
-		err              error
+		err            error
+		certExpiration time.Duration
+		reissuanceDate time.Time
 	)
 
-	ReissuanceData := emails.ReissuanceReminderData{
-		VID:                 vasp.Id,
-		CommonName:          vasp.CommonName,
-		Endpoint:            vasp.TrisaEndpoint,
-		RegisteredDirectory: c.directoryID,
-		Reissuance:          reissuanceDate,
-	}
-
-	if vasp.IdentityCertificate != nil {
-		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
-		ReissuanceData.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
-	}
-
-	if serviceEmail, err = mail.ParseAddress(c.email.ServiceEmail().Address); err != nil {
-		log.Error().Err(err).Msg("could not parse the configured service email address")
-		return
-	}
-
-	// Iterate through the VASP's verified contacts and send the reissuance reminder email.
-	iter := models.NewContactIterator(vasp.Contacts, true, true)
-	for iter.Next() {
-		contact, kind := iter.Value()
-
-		// Make sure that the reminder email hasn't already been sent to this contact.
-		reason := string(admin.ReissuanceReminder)
-		if emailCount, err = models.GetSentEmailCount(contact, reason, timeWindow); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not retrieve email count from %s's %s email log", vasp.Id, contact))
-			continue
-		}
-		if emailCount > 0 {
+	// Iterate through the VASPs in the database.
+	vasps := c.db.ListVASPs()
+	for vasps.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vasps.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse vasp request from database")
 			continue
 		}
 
-		// Create the reissuance reminder email.
-		ReissuanceData.Name = contact.Name
-		msg, err := emails.ReissuanceReminderEmail(
-			serviceEmail.Name, serviceEmail.Address,
-			contact.Name, contact.Email,
-			ReissuanceData,
-		)
-		if err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not create %s's %s reissuance reminder email", vasp.Id, contact))
+		// Calculate the number of days before the VASP's certificate expires.
+		notAfter := vasp.IdentityCertificate.NotAfter
+		if reissuanceDate, err = time.Parse("YYYY-MM-DD", notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
+		}
+		if certExpiration, err = time.ParseDuration(notAfter); err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert expiration date", vasp.Id))
+			continue
 		}
 
-		// Send the reissuance reminder email to the VASP's verified contacts using the following logic:
-		// 		1. Send to the Technical contact if verified, else
-		// 		2. Send to the Administrative contact if verified, else
-		// 		3. Send to all other verified contacts
-		switch kind {
-		case "technical", "administrative":
-			if err = c.email.Send(msg); err != nil {
-				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
-				continue
-			} else {
-				models.AppendEmailLog(contact, reason, msg.Subject)
-				return
-			}
-		case "legal", "billing":
-			if err = c.email.Send(msg); err != nil {
-				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
-			}
-			models.AppendEmailLog(contact, reason, msg.Subject)
-			verifiedContacts++
-		case "":
-			if verifiedContacts == 0 {
-				log.WithLevel(zerolog.FatalLevel).Msg(fmt.Sprintf("cert-manager could not find a verified contact for %s", vasp.Id))
+		// NOTE: Although this will just be an approximation of the precise number of days,
+		// it will work for our purposes
+		switch daysBeforeReissuance := certExpiration.Hours() / 24; {
+		case daysBeforeReissuance <= 7:
+			c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate)
+		case daysBeforeReissuance <= 10:
+			c.reissueCerts(vasp)
+			// SendReissuanceAdminNotification
+		case daysBeforeReissuance <= 30:
+			c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate)
+			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
+				if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
+					log.Error().Err(err).Msg(fmt.Sprintf("error sending admin reissuance reminder for %s", vasp.Id))
+				}
 			}
 		}
 	}
 }
 
 // Helper function for HandleCertificateReissuance that sends reissuance reminder emails to the TRISA admin.
-func (c *CertificateManager) adminEmailReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) {
+func NoAdminEmailSent(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) bool {
 	// Make sure that the email hasn't already been sent previously.
 	emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow)
 	if err != nil {
 		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
+		return false
 	}
-	if emailCount > 1 {
-		return
+	if emailCount > 0 {
+		return false
 	}
-
-	// Send the reissuance reminder email to the TRISA admin
-	if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error sending admin reissuance reminder for %s", vasp.Id))
-	}
+	return true
 }
