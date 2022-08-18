@@ -189,20 +189,14 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
-  // useEffect(() => {
-
-  //   setIsResetForm(false);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [registrationData, isResetForm]);
-
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationAndStepperData();
         setRegistrationData(data.registrationData);
-        console.log('[registrationData]', data.registrationData);
-        console.log('[registrationData from state]', data.stepperData);
+        // console.log('[registrationData]', data.registrationData);
+        // console.log('[registrationData from state]', data.stepperData);
         setInitialState(data.stepperData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
@@ -211,7 +205,16 @@ const Certificate: React.FC = () => {
       }
     };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // set default value if registrationData equal to default value
+  useEffect(() => {
+    if (isDefaultValue()) {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationData, onChangeResetForm]);
 
   return (
     <SimpleDashboardLayout>
@@ -290,7 +293,7 @@ const Certificate: React.FC = () => {
             isOpen={isOpen}
             onClose={onClose}
             onChangeState={onChangeModalState}
-            onRefeshState={forceUpdate}
+            onRefreshState={forceUpdate}
             onReset={reset}
             onChangeResetState={onChangeResetForm}
           />
