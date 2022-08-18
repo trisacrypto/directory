@@ -30,7 +30,7 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-
+import Store from 'application/store';
 import {
   postRegistrationValue,
   getRegistrationAndStepperData
@@ -145,7 +145,8 @@ const Certificate: React.FC = () => {
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
-        registrationValues: registrationData
+        registrationValues: registrationData,
+        setRegistrationState: setRegistrationData
       });
     }
   }
@@ -157,6 +158,11 @@ const Certificate: React.FC = () => {
   const isDefaultValue = () => {
     return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
+
+  const updateCurrentStep = useCallback(() => {
+    const updatedState = Store.getState().stepper;
+    return updatedState.currentStep;
+  }, []);
 
   const handleResetForm = () => {
     // open confirmation modal
@@ -187,6 +193,13 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
+  // set registration data value
+  useEffect(() => {
+    if (registrationData) {
+      reset(registrationData);
+    }
+  }, [registrationData]);
+
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
@@ -203,16 +216,17 @@ const Certificate: React.FC = () => {
       }
     };
     fetchData();
-  }, [isLoggedIn, setInitialState]);
-
-  // set default value if registrationData equal to default value
-  useEffect(() => {
-    if (isDefaultValue()) {
-      setRegistrationData(getRegistrationDefaultValues());
-      resetForm();
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registrationData, onChangeResetForm]);
+  }, []);
+
+  // // set default value if registrationData equal to default value
+  // useEffect(() => {
+  //   if (isDefaultValue()) {
+  //     setRegistrationData(getRegistrationDefaultValues());
+  //     resetForm();
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [registrationData, onChangeResetForm]);
 
   // refresh registration data when redirect to registration page
 
@@ -260,7 +274,7 @@ const Certificate: React.FC = () => {
           <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <VStack spacing={3}>
               <Box width={'100%'}>
-                <TestNetCertificateProgressBar />
+                <TestNetCertificateProgressBar onSetRegistrationState={setRegistrationData} />
                 {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>

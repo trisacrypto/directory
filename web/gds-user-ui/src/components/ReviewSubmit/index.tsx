@@ -147,27 +147,25 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 pb={4}
                 alignItems={'center'}>
-                <Tooltip label={t`TestNet already submitted`} shouldWrapChildren>
-                  <Button
-                    bgColor="#ff7a59f0"
-                    color="#fff"
-                    isDisabled={testnet}
-                    data-testid="testnet-submit-btn"
-                    size="lg"
-                    py="2.5rem"
-                    whiteSpace="normal"
-                    maxW="200px"
-                    width="100%"
-                    boxShadow="lg"
-                    onClick={(e) => {
-                      onSubmitHandler(e, 'testnet');
-                    }}
-                    _hover={{
-                      bgColor: '#f55c35'
-                    }}>
-                    {t`Submit TestNet Registration`}
-                  </Button>
-                </Tooltip>
+                <Button
+                  bgColor="#ff7a59f0"
+                  color="#fff"
+                  isDisabled={testnet}
+                  data-testid="testnet-submit-btn"
+                  size="lg"
+                  py="2.5rem"
+                  whiteSpace="normal"
+                  maxW="200px"
+                  width="100%"
+                  boxShadow="lg"
+                  onClick={(e) => {
+                    onSubmitHandler(e, 'testnet');
+                  }}
+                  _hover={{
+                    bgColor: '#f55c35'
+                  }}>
+                  {t`Submit TestNet Registration`}
+                </Button>
               </Stack>
             </Stack>
 
@@ -216,27 +214,25 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 alignItems={'center'}
                 pb={4}>
-                <Tooltip label={t`MainNet already submitted`} shouldWrapChildren>
-                  <Button
-                    bgColor="#23a7e0e8"
-                    color="#fff"
-                    size="lg"
-                    py="2.5rem"
-                    isDisabled={mainnet}
-                    whiteSpace="normal"
-                    boxShadow="lg"
-                    data-testid="mainnet-submit-btn"
-                    maxW="200px"
-                    onClick={(e) => {
-                      onSubmitHandler(e, 'mainnet');
-                    }}
-                    width="100%"
-                    _hover={{
-                      bgColor: '#189fda'
-                    }}>
-                    {t`Submit MainNet Registration`}
-                  </Button>
-                </Tooltip>
+                <Button
+                  bgColor="#23a7e0e8"
+                  color="#fff"
+                  size="lg"
+                  py="2.5rem"
+                  isDisabled={mainnet}
+                  whiteSpace="normal"
+                  boxShadow="lg"
+                  data-testid="mainnet-submit-btn"
+                  maxW="200px"
+                  onClick={(e) => {
+                    onSubmitHandler(e, 'mainnet');
+                  }}
+                  width="100%"
+                  _hover={{
+                    bgColor: '#189fda'
+                  }}>
+                  {t`Submit MainNet Registration`}
+                </Button>
               </Stack>
             </Stack>
           </Stack>
