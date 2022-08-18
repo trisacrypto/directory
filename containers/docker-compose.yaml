@@ -54,7 +54,8 @@ services:
       - GDS_ADMIN_REVIEW_URL=http://localhost:3001/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
-      - GDS_CERTMAN_INTERVAL=96h
+      - GDS_CERTMAN_REQUEST_INTERVAL=96h
+      - GDS_CERTMAN_REISSUANCE_INTERVAL=24h
       - GDS_CERTMAN_STORAGE=/data/certs
       - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
@@ -303,7 +304,8 @@ services:
       - GDS_ADMIN_REVIEW_URL=http://localhost:3002/vasps/
       - GDS_EMAIL_TESTING=true
       - GDS_EMAIL_STORAGE=/data/emails
-      - GDS_CERTMAN_INTERVAL=96h
+      - GDS_CERTMAN_REQUEST_INTERVAL=96h
+      - GDS_CERTMAN_REISSUANCE_INTERVAL=24h
       - GDS_CERTMAN_STORAGE=/data/certs
       - GDS_BACKUP_ENABLED=false
       - GDS_BACKUP_INTERVAL=1h
