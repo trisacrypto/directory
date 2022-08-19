@@ -139,7 +139,7 @@ func (c *mockSendGridClient) Send(msg *sgmail.SGMailV3) (rep *rest.Response, err
 		}, err
 	}
 
-	// Email recepients are stored in Personalizations
+	// Email recipients are stored in Personalizations
 	if len(msg.Personalizations) == 0 {
 		return &rest.Response{
 			StatusCode: http.StatusBadRequest,

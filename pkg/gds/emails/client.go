@@ -414,7 +414,6 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		if emailCount > 0 {
 			continue
 		}
-
 		// Create the reissuance reminder email.
 		ReissuanceData.Name = contact.Name
 		msg, err := ReissuanceReminderEmail(
@@ -436,14 +435,18 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
 				continue
 			} else {
-				models.AppendEmailLog(contact, reason, msg.Subject)
+				if err = models.AppendEmailLog(contact, reason, msg.Subject); err != nil {
+					log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
+				}
 				return
 			}
 		case "legal", "billing":
 			if err = m.Send(msg); err != nil {
 				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
 			}
-			models.AppendEmailLog(contact, reason, msg.Subject)
+			if err = models.AppendEmailLog(contact, reason, msg.Subject); err != nil {
+				log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
+			}
 			verifiedContacts++
 		case "":
 			if verifiedContacts == 0 {

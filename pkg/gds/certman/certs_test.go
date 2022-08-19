@@ -205,6 +205,101 @@ func (s *certTestSuite) TestCertManager() {
 	require.Equal("automated", certReq.AuditLog[5].Source)
 }
 
+func (s *certTestSuite) TestCertManagerCertificateReissuance() {
+	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+	require := s.Require()
+
+	vaspsIter := s.db.ListVASPs()
+	allVasps, err := vaspsIter.All()
+	require.NoError(err)
+	for _, vasp := range allVasps {
+		s.db.DeleteVASP(vasp.Id)
+	}
+
+	echoVASP, err := s.fixtures.GetVASP("echo")
+	require.NoError(err, "could not get echo VASP")
+
+	models.AddContact(echoVASP, "technical", &pb.Contact{
+		Name:  "technical",
+		Email: "technical@notmyemail.com",
+	})
+	models.SetContactVerification(echoVASP.Contacts.Technical, "", true)
+
+	models.AddContact(echoVASP, "administrative", &pb.Contact{
+		Name:  "administrative",
+		Email: "administrative@notmyemail.com",
+	})
+	models.SetContactVerification(echoVASP.Contacts.Administrative, "", true)
+
+	s.db.CreateVASP(echoVASP)
+
+	s.updateVaspIdentityCert(echoVASP, 29)
+	firstCallTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	s.updateVaspIdentityCert(echoVASP, 6)
+	secondCallTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	s.updateVaspIdentityCert(echoVASP, 9)
+	thirdCallTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	messages := []*emails.EmailMeta{
+		{
+			Contact:   echoVASP.Contacts.Technical,
+			To:        echoVASP.Contacts.Technical.Email,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceReminderRE,
+			Reason:    "reissuance_reminder",
+			Timestamp: firstCallTime,
+		},
+		{
+			Contact:   echoVASP.Contacts.Administrative,
+			To:        s.conf.Email.AdminEmail,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceReminderRE,
+			Reason:    "expires_admin_notification",
+			Timestamp: firstCallTime,
+		},
+		{
+			Contact:   echoVASP.Contacts.Technical,
+			To:        echoVASP.Contacts.Technical.Email,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceReminderRE,
+			Reason:    "reissuance_reminder",
+			Timestamp: secondCallTime,
+		},
+		{
+			Contact:   echoVASP.Contacts.Administrative,
+			To:        s.conf.Email.AdminEmail,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceStartedRE,
+			Reason:    "reissuance_started",
+			Timestamp: thirdCallTime,
+		},
+		{
+			Contact:   echoVASP.Contacts.Administrative,
+			To:        s.conf.Email.AdminEmail,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceAdminNotificationRE,
+			Reason:    "reissuance_admin_notification",
+			Timestamp: thirdCallTime,
+		},
+	}
+
+	emails.CheckEmails(s.T(), messages)
+}
+
+func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiration time.Duration) {
+	days := time.Hour * 24
+	daysFromNow := time.Now().Add(days * daysUntilExpiration).Format(time.RFC3339Nano)
+	vasp.IdentityCertificate = &pb.Certificate{NotAfter: daysFromNow}
+	s.db.UpdateVASP(vasp)
+}
+
 // Test that the certificate manager rejects requests when the VASP state is invalid.
 func (s *certTestSuite) TestCertManagerBadState() {
 	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
@@ -682,7 +777,7 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 func (s *certTestSuite) TestCertManagerLoop() {
 	s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
-	s.runCertManager(s.conf.CertMan.Interval)
+	s.runCertManager(s.conf.CertMan.RequestInterval)
 }
 
 func (s *certTestSuite) setupCertManager(profile string) (certPath string) {
@@ -699,7 +794,7 @@ func (s *certTestSuite) setupCertManager(profile string) (certPath string) {
 	certPath, err = ioutil.TempDir("testdata", "certs-*")
 	require.NoError(err, "could not create cert storage")
 	s.conf.CertMan.Storage = certPath
-	s.conf.CertMan.Interval = time.Millisecond
+	s.conf.CertMan.RequestInterval = time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
 
 	// Initialize the trtl store
@@ -733,13 +828,13 @@ func (s *certTestSuite) teardownCertManager() {
 
 // Helper function that spins up the CertificateManager for the specified duration,
 // sends the stop signal, and waits for it to finish.
-func (s *certTestSuite) runCertManager(interval time.Duration) {
+func (s *certTestSuite) runCertManager(requestInterval time.Duration) {
 	// Start the certificate manager
 	stop := make(chan struct{})
 	wg := s.certman.Run(stop)
 
 	// Wait for the interval to elapse
-	time.Sleep(interval)
+	time.Sleep(requestInterval)
 
 	// Make sure that the certificate manager is stopped before we proceed
 	close(stop)
