@@ -347,6 +347,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate t
 		Reissuance:          reissueDate,
 		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
+	// TODO: check if email has been sent to trisa admin regarding this specific vasp
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
@@ -571,4 +572,46 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 	}
 
 	return sent, errs.ErrorOrNil()
+}
+
+// SendReissuanceAdminNotification sends the admins a notice that an identity certificate
+// has been reissued. This allows the admins to know that the reissuance has been done automatically
+func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
+	// Create the template context
+	ctx := ReissuanceAdminNotificationData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: m.conf.DirectoryID,
+		Reissuance:          reissueDate,
+		BaseURL:             m.conf.AdminReviewBaseURL,
+	}
+	// TODO: check if email has been sent to trisa admin regarding this specific vasp
+
+	if vasp.IdentityCertificate != nil {
+		// TODO: ensure the timestamp format is correct
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		ctx.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+	} else if vasp.IdentityCertificate == nil {
+		return 0, fmt.Errorf("no identity certificate for vasp %s", vasp.Id)
+	}
+
+	// Create reissuance admin notifications email.
+	msg, err := ReissuanceAdminNotificationEmail(
+		m.serviceEmail.Name, m.serviceEmail.Address,
+		m.adminsEmail.Name, m.adminsEmail.Address,
+		ctx,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	if err = m.Send(msg); err != nil {
+		return 0, err
+	}
+
+	return sent, nil
 }
