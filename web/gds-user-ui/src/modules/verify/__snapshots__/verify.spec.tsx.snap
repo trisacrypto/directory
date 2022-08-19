@@ -246,6 +246,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             </a>
              
           </p>
+          <div />
         </div>
       </div>
     </footer>

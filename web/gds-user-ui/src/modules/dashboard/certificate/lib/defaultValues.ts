@@ -61,7 +61,7 @@ export const getRegistrationDefaultValues = () => {
       financial_transfers_permitted: 'no',
       has_required_regulatory_program: 'no',
       conducts_customer_kyc: false,
-      kyc_threshold: 0,
+      kyc_threshold: 10,
       kyc_threshold_currency: 'USD',
       must_comply_travel_rule: false,
       applicable_regulations: ['FATF Recommendation 16'],
