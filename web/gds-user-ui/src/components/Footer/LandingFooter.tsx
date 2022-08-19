@@ -1,40 +1,10 @@
-/* eslint-disable no-console */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Flex, Text, Link, useColorModeValue, Stack } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
-import {
-  getAppVersionNumber,
-  getBffAndGdsVersion,
-  getAppGitVersion,
-  isProdEnv
-} from 'application/config';
 import { Trans } from '@lingui/react';
+import Version from './Version';
 
 const Footer = (): React.ReactElement => {
-  const [appVersion, setAppVersion] = useState<any>();
-  const [gitRevision, setGitRevision] = useState<any>();
-  const [bffAndGdsVersion, setBffAndGdsVersion] = useState<any>();
-  const fetchAsyncBffAndGdsVersion = async () => {
-    const request = await getBffAndGdsVersion();
-    if (request) {
-      setBffAndGdsVersion(request.version);
-    }
-  };
-
-  useEffect(() => {
-    // console.log(data);
-    const getAppVersion = getAppVersionNumber();
-    const getGitRevision = getAppGitVersion();
-    setAppVersion(getAppVersion);
-    setGitRevision(getGitRevision);
-    fetchAsyncBffAndGdsVersion();
-  }, []);
-  //  log this out in the console
-  if (isProdEnv) {
-    console.log('appVersion', appVersion);
-    console.log('gitRevision', gitRevision);
-    console.log('bffAndGdsVersion', bffAndGdsVersion);
-  }
   return (
     <footer style={{ width: '100%' }}>
       <Stack
@@ -71,28 +41,7 @@ const Footer = (): React.ReactElement => {
               TRISA
             </Link>{' '}
           </Text>
-
-          {isProdEnv && (
-            <Text width="100%" textAlign="center" color="white" fontSize="12" pt={1}>
-              {appVersion && (
-                <Text as="span">
-                  <Trans id="App version {appVersion} -">App version {appVersion} -</Trans>
-                </Text>
-              )}
-              {gitRevision && (
-                <Text as="span">
-                  <Trans id="Git Revision {gitRevision} -">Git Revision {gitRevision} -</Trans>
-                </Text>
-              )}
-              {bffAndGdsVersion && (
-                <Text as="span">
-                  <Trans id="BFF & GDS version {bffAndGdsVersion}">
-                    BFF & GDS version {bffAndGdsVersion}
-                  </Trans>
-                </Text>
-              )}
-            </Text>
-          )}
+          <Version />
         </Flex>
       </Stack>
     </footer>
