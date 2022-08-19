@@ -127,6 +127,11 @@ func TestClientSendEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 
+	reissuedDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
+	sent, err = email.SendReissuanceAdminNotification(vasp, reissuedDate)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+
 	// Technical is verified and first so should get Rejection and DeliverCerts emails
 	// It should also receive the reissuance started email after the reminder.
 	emailLog, err := models.GetEmailLog(vasp.Contacts.Technical)
