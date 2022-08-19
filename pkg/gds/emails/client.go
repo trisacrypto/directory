@@ -504,7 +504,12 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, reissueDat
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
 		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
-		ctx.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+		ctx.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+	} else if vasp.IdentityCertificate == nil {
+		return 0, fmt.Errorf("no identity certificate for vasp %s", vasp.Id)
 	}
 
 	// Create reissuance admin notifications email.
@@ -521,5 +526,5 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, reissueDat
 		return 0, err
 	}
 
-	return 1, nil
+	return sent, nil
 }
