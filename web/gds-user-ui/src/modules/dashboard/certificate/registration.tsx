@@ -73,9 +73,7 @@ const Certificate: React.FC = () => {
   const { isLoggedIn } = useSelector(userSelector);
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
-  console.log('[registrationData #########]', registrationData);
   function getCurrentStepValidationSchema() {
-    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());

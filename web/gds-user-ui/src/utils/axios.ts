@@ -18,7 +18,6 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     // let _retry = 0;
     const originalRequest = error.config;
-    console.log('[AxiosError]', error.response.status);
     //
 
     if (error && !error.response) {
@@ -35,7 +34,6 @@ axiosInstance.interceptors.response.use(
       console.log('tokenPayload', tokenPayload);
       const token = tokenPayload?.accessToken;
       if (token) {
-        console.log('[AxiosError] tokenPayload regenerated', tokenPayload);
         setCookie('access_token', tokenPayload.accessToken);
         setCookie('user_locale', tokenPayload?.idTokenPayload?.locale || 'en');
         const csrfToken = getCookie('csrf_token');

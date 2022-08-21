@@ -5,8 +5,7 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { clearCookies } from 'utils/cookies';
-import { defaultIfEmpty } from 'rxjs';
+
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -184,7 +183,7 @@ export const loadStepperDefaultValue = () => {
 export const isObject = (value: any) => {
   return value && typeof value === 'object' && value.constructor === Object;
 };
-
+//
 // compare two object deeply key by key
 export const compareObject = (obj1: any, obj2: any) => {
   const keys1 = Object.keys(obj1);
