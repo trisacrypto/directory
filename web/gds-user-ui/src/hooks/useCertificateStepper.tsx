@@ -34,6 +34,7 @@ interface TState {
   values?: any;
   registrationValues?: any;
   setRegistrationState?: any;
+  isDirty?: boolean;
 }
 
 // 'TODO:' this hook should be improve
@@ -58,9 +59,8 @@ const useCertificateStepper = () => {
   };
 
   const nextStep = (state?: TState) => {
-    const formValues = state?.values;
-    const registrationValues = state?.registrationValues;
-    const setRegistrationState = state?.setRegistrationState;
+    const { values: formValues, registrationValues, setRegistrationState, isDirty } = state || {};
+    console.log('[isDirty]', isDirty);
     const _mergedData = {
       ...registrationValues,
       ...formValues

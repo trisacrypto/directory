@@ -6,7 +6,7 @@ import {
   getRegistrationData,
   getSubmissionStatus
 } from 'modules/dashboard/registration/service';
-import { handleError, hasDefaultCertificateProperties } from 'utils/utils';
+import { handleError, hasDefaultCertificateProperties, format2ShortDate } from 'utils/utils';
 
 export const postRegistrationValue = (data: any) => {
   console.log('[postRegistrationValue]', data);
@@ -29,14 +29,19 @@ export const postRegistrationValue = (data: any) => {
 export const getRegistrationDefaultValue = async () => {
   try {
     const regData = await getRegistrationData();
-    console.log('[getRegistrationDefaultValue regData]', regData.data);
+    // console.log('[getRegistrationDefaultValue regData]', regData.data);
     const isValidObject = hasDefaultCertificateProperties(regData.data);
-    console.log('[getRegistrationDefaultValues1]', getRegistrationDefaultValues());
-    console.log('[getRegistrationDefaultValue2]', regData.data);
-    console.log('[isValidData]', isValidObject);
+    // console.log('[getRegistrationDefaultValues1]', getRegistrationDefaultValues());
+    // console.log('[getRegistrationDefaultValue2]', regData.data);
+    // console.log('[isValidData]', isValidObject);
     if (regData.status === 200 && isValidObject) {
-      console.log('[here1]');
-      return regData.data;
+      const response = regData.data;
+      const values = {
+        ...response,
+        established_on: response.established_on ? format2ShortDate(response.established_on) : ''
+      };
+      console.log('[getRegistrationDefaultValue]', values);
+      return values;
     } else if (localStorage.getItem('certificateForm')) {
       const defaultValue: any = localStorage.getItem('certificateForm');
 
@@ -48,9 +53,7 @@ export const getRegistrationDefaultValue = async () => {
         return getData.data;
       }
     } else {
-      console.log('[here4]');
       const v = getRegistrationDefaultValues();
-      console.log('[getRegistrationDefaultValue3]', v);
       await postRegistrationValue(v);
       return v;
     }

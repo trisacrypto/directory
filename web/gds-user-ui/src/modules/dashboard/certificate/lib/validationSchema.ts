@@ -1,7 +1,7 @@
 import { t } from '@lingui/macro';
 import * as yup from 'yup';
 import { setupI18n } from '@lingui/core';
-
+import { format2ShortDate } from 'utils/utils';
 const _i18n = setupI18n();
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
@@ -22,6 +22,7 @@ export const validationSchema = [
       .required(_i18n._(t`Invalid date`))
       .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
         if (value) {
+          console.log('value', value);
           const getYear = value.getFullYear();
           if (getYear.toString().length !== 4) {
             return false;
@@ -228,10 +229,7 @@ export const validationSchema = [
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(
-           yup.string()
-        
-        )
+        .of(yup.string())
         .transform((value, originalValue) => {
           if (originalValue) {
             return originalValue.filter((item: any) => item.length > 0);

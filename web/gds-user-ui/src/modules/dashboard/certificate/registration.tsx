@@ -73,6 +73,7 @@ const Certificate: React.FC = () => {
   const { isLoggedIn } = useSelector(userSelector);
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
+  console.log('[registrationData #########]', registrationData);
   function getCurrentStepValidationSchema() {
     console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
@@ -115,6 +116,12 @@ const Certificate: React.FC = () => {
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
 
+  // if fields if filled
+  const isFieldFilled = () => {
+    const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
+    return fieldsNames.some((n: any) => !!getFieldValue(n));
+  };
+
   function handleNextStepClick() {
     if (currentStep === lastStep) {
       if (hasStepError(steps)) {
@@ -146,6 +153,7 @@ const Certificate: React.FC = () => {
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
         registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
         setRegistrationState: setRegistrationData
       });
     }
@@ -198,6 +206,7 @@ const Certificate: React.FC = () => {
     if (registrationData) {
       reset(registrationData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registrationData]);
 
   // load default value from trtl
@@ -218,17 +227,6 @@ const Certificate: React.FC = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // // set default value if registrationData equal to default value
-  // useEffect(() => {
-  //   if (isDefaultValue()) {
-  //     setRegistrationData(getRegistrationDefaultValues());
-  //     resetForm();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [registrationData, onChangeResetForm]);
-
-  // refresh registration data when redirect to registration page
 
   return (
     <SimpleDashboardLayout>

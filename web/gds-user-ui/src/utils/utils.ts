@@ -147,19 +147,19 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
-  if (error.response.status === 401 || error.response.status === 403) {
-    clearCookies();
-    switch (error.response.status) {
-      case '401':
-        window.location.href = `/auth/login?q=token_expired`;
-        break;
-      case '403':
-        window.location.href = `/auth/login?q=unauthorized`;
-        break;
-      default:
-        window.location.href = `/auth/login?error_description=${error.response.data.error}`;
-    }
-  }
+  // if (error.response.status === 401 || error.response.status === 403) {
+  //   clearCookies();
+  //   switch (error.response.status) {
+  //     case '401':
+  //       window.location.href = `/auth/login?q=token_expired`;
+  //       break;
+  //     case '403':
+  //       window.location.href = `/auth/login?q=unauthorized`;
+  //       break;
+  //     default:
+  //       window.location.href = `/auth/login?error_description=${error.response.data.error}`;
+  //   }
+  // }
 };
 
 // uppercased first letter
@@ -212,4 +212,15 @@ export const hasDefaultCertificateProperties = (obj: any) => {
   const keys = Object.keys(obj);
   const hasDefaultKeys = defaultKeys.every((key) => keys.includes(key));
   return hasDefaultKeys;
+};
+
+// format to short date
+export const format2ShortDate = (date: any) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  // convert month with 2 digits
+  const month2Digits = month < 10 ? `0${month}` : month;
+  return `${year}-${month2Digits}-${day}`;
 };
