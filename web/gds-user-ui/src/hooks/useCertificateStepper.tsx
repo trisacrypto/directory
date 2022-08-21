@@ -58,14 +58,31 @@ const useCertificateStepper = () => {
     return formatState;
   };
 
-  const nextStep = (state?: TState) => {
-    const { values: formValues, registrationValues, setRegistrationState, isDirty } = state || {};
-    console.log('[isDirty]', isDirty);
-    const _mergedData = {
-      ...registrationValues,
-      ...formValues
+  // save form data to trtl if field is dirty
+
+  const saveFormValue = async (stateData: any, formValue: any, setState?: any) => {
+    // form value
+    const _mergedData = { ...stateData, ...formValue };
+
+    const getRegistrationData = () => {
+      return {
+        ..._mergedData,
+        state: {
+          ...currentState()
+        }
+      };
     };
-    console.log('[_mergedData]', _mergedData);
+    // save the form value if fields changed
+
+    await postRegistrationValue(getRegistrationData());
+    if (setState) {
+      setState(getRegistrationData());
+    }
+  };
+
+  const nextStep = async (state?: TState) => {
+    const { values: formValues, registrationValues, setRegistrationState, isDirty } = state || {};
+
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
@@ -117,18 +134,13 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
     }
-    const getRegistrationData = () => {
-      return {
-        ..._mergedData,
-        state: {
-          ...currentState()
-        }
-      };
-    };
-    postRegistrationValue(getRegistrationData());
-    setRegistrationState(getRegistrationData());
+    // save the form value if fields changed
+    if (isDirty) {
+      await saveFormValue(registrationValues, formValues, setRegistrationState);
+    }
   };
-  const previousStep = (state?: TState) => {
+  const previousStep = async (state?: TState) => {
+    const { values: formValues, registrationValues, isDirty } = state || {};
     // if form value is set then save it to the dedicated step
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
@@ -145,6 +157,10 @@ const useCertificateStepper = () => {
     const found = findStepKey(steps, currentStep);
     if (found.length > 0 && found[0].status !== LSTATUS.COMPLETE) {
       dispatch(setStepStatus({ step, status: LSTATUS.PROGRESS }));
+    }
+    // save the form value if fields changed
+    if (isDirty) {
+      await saveFormValue(registrationValues, formValues);
     }
   };
 

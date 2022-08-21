@@ -117,26 +117,8 @@ const Certificate: React.FC = () => {
   }
 
   // if fields if filled
-  const isFieldFilled = () => {
-    const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
-    return fieldsNames.some((n: any) => !!getFieldValue(n));
-  };
 
   function handleNextStepClick() {
-    if (currentStep === lastStep) {
-      if (hasStepError(steps)) {
-        toast({
-          position: 'top',
-          title: t`Please fill in all required fields before proceeding`,
-          status: 'error',
-          isClosable: true,
-          containerStyle: {
-            width: '800px',
-            maxWidth: '100%'
-          }
-        });
-      }
-    }
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
@@ -159,8 +141,11 @@ const Certificate: React.FC = () => {
     }
   }
   const handlePreviousStep = () => {
-    postRegistrationValue(methods.getValues());
-    previousStep();
+    previousStep({
+      isDirty: methods.formState.isDirty,
+      registrationValues: registrationData,
+      values: methods.getValues()
+    });
   };
 
   const isDefaultValue = () => {

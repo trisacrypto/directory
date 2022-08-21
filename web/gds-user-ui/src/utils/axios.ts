@@ -15,17 +15,27 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     // let _retry = 0;
     const originalRequest = error.config;
     console.log('[AxiosError]', error.response.status);
+    //
 
-    // handle 403 error by regenerating the new token and retrying the request
-    if (error.response.status === 403 && !originalRequest._retry) {
+    if (error && !error.response) {
+      return Promise.reject<any>(new Error('Network connection error'));
+    }
+    // handle 403/401 error by regenerating a new token and retrying the request
+
+    if (
+      (error?.response?.status === 403 || error?.response?.status === 401) &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
-      const tokenPayload: any = auth0CheckSession();
+      const tokenPayload: any = await auth0CheckSession();
+      console.log('tokenPayload', tokenPayload);
       const token = tokenPayload?.accessToken;
       if (token) {
+        console.log('[AxiosError] tokenPayload regenerated', tokenPayload);
         setCookie('access_token', tokenPayload.accessToken);
         setCookie('user_locale', tokenPayload?.idTokenPayload?.locale || 'en');
         const csrfToken = getCookie('csrf_token');
@@ -34,12 +44,6 @@ axiosInstance.interceptors.response.use(
 
         return axiosInstance(originalRequest);
       }
-    }
-
-    //
-
-    if (error && !error.response) {
-      return Promise.reject<any>(new Error('Network connection error'));
     }
 
     return Promise.reject(error);
