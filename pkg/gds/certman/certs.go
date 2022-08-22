@@ -681,9 +681,9 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	return path, err
 }
 
-// HandleCertificateReissuance iteration through each VASP in the database and checks
-// is their identity certificate will be expiring soon, sending reminder email within
-// the 30 and 7 day checkpoints and reissuing the identity certificate 10 days before
+// HandleCertificateReissuance iterates through each VASP in the database and checks
+// if their identity certificate will be expiring soon, sending reminder email within
+// the 30 and 7 day checkpoints if so, and reissuing the identity certificate 10 days before
 // expiration.
 func (c *CertificateManager) HandleCertificateReissuance() {
 	var (
@@ -705,19 +705,23 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 		if expirationDate, err = time.Parse(time.RFC3339, notAfter); err != nil {
 			log.Error().Err(err).Msg(fmt.Sprintf("could not parse %s's cert reissuance date", vasp.Id))
 		}
-		reissuanceDate := expirationDate.Add(-time.Hour * 240)
+		reissuanceDate := expirationDate.Add(-time.Hour * 240) // Calculate the reissuance date, 10 days before expiration
 		timeBeforeExpiration := time.Until(expirationDate)
 
-		// NOTE: Although this will just be an approximation of the precise number of days,
-		// it will work for our purposes
 		switch daysBeforeReissuance := timeBeforeExpiration.Hours() / 24; {
+		// Seven days before expiration, send a cert reissuance reminder to VASP.
 		case daysBeforeReissuance <= 7:
 			c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate)
+
+		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
+		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
 		case daysBeforeReissuance <= 10:
 			c.reissueIdentityCertificates(vasp)
 			if _, err = c.email.SendReissuanceAdminNotification(vasp, reissuanceDate); err != nil {
 				log.Error().Err(err).Msg(fmt.Sprintf("error sending admin reissuance notification for %s", vasp.Id))
 			}
+
+		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
 		case daysBeforeReissuance <= 30:
 			c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate)
 			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
@@ -726,6 +730,7 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 				}
 			}
 		}
+
 		c.db.UpdateVASP(vasp)
 	}
 }
@@ -739,11 +744,13 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
 		whisperLink string
 	)
 
+	// Create a new certificate request.
 	if certreq, err = models.NewCertificateRequest(vasp); err != nil {
 		log.Error().Err(err).Msg(fmt.Sprintf("error creating certificate request for vasp %s", vasp.Id))
 		return
 	}
 
+	// Update the cert req to be ready for submission.
 	if err = models.UpdateCertificateRequestStatus(
 		certreq,
 		models.CertificateRequestState_READY_TO_SUBMIT,
@@ -754,6 +761,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
 		return
 	}
 
+	// Generate a new PKCS12 password
 	secretType := "password"
 	pkcs12password := secrets.CreateToken(16)
 	whisperPasswordTemplate := "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
