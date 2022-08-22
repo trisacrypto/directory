@@ -74,7 +74,6 @@ const Certificate: React.FC = () => {
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
-    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
@@ -115,21 +114,9 @@ const Certificate: React.FC = () => {
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
 
+  // if fields if filled
+
   function handleNextStepClick() {
-    if (currentStep === lastStep) {
-      if (hasStepError(steps)) {
-        toast({
-          position: 'top',
-          title: t`Please fill in all required fields before proceeding`,
-          status: 'error',
-          isClosable: true,
-          containerStyle: {
-            width: '800px',
-            maxWidth: '100%'
-          }
-        });
-      }
-    }
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
@@ -146,13 +133,17 @@ const Certificate: React.FC = () => {
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
         registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
         setRegistrationState: setRegistrationData
       });
     }
   }
   const handlePreviousStep = () => {
-    postRegistrationValue(methods.getValues());
-    previousStep();
+    previousStep({
+      isDirty: methods.formState.isDirty,
+      registrationValues: registrationData,
+      values: methods.getValues()
+    });
   };
 
   const isDefaultValue = () => {
@@ -198,6 +189,7 @@ const Certificate: React.FC = () => {
     if (registrationData) {
       reset(registrationData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registrationData]);
 
   // load default value from trtl
@@ -208,6 +200,7 @@ const Certificate: React.FC = () => {
         setRegistrationData(data.registrationData);
         // console.log('[registrationData]', data.registrationData);
         // console.log('[registrationData from state]', data.stepperData);
+        console.log('[called from useEffect]');
         setInitialState(data.stepperData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
@@ -218,17 +211,6 @@ const Certificate: React.FC = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // // set default value if registrationData equal to default value
-  // useEffect(() => {
-  //   if (isDefaultValue()) {
-  //     setRegistrationData(getRegistrationDefaultValues());
-  //     resetForm();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [registrationData, onChangeResetForm]);
-
-  // refresh registration data when redirect to registration page
 
   return (
     <SimpleDashboardLayout>
@@ -286,7 +268,7 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* )} */}
                     <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                      {currentStep === lastStep ? t`Save & Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 

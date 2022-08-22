@@ -10,6 +10,8 @@ interface StepsProps {
 const CertificateSteps: FC<StepsProps> = (props: any): any => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const lastStep: number = useSelector((state: RootStateOrAny) => state.stepper.lastStep);
+  // check if react children is already mounted
+  const isMounted = React.useRef(false);
 
   const dispatch = useDispatch();
   return React.Children.map(props.children, (child: any, index: any) => {

@@ -5,8 +5,7 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { clearCookies } from 'utils/cookies';
-import { defaultIfEmpty } from 'rxjs';
+
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -147,19 +146,19 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
-  if (error.response.status === 401 || error.response.status === 403) {
-    clearCookies();
-    switch (error.response.status) {
-      case '401':
-        window.location.href = `/auth/login?q=token_expired`;
-        break;
-      case '403':
-        window.location.href = `/auth/login?q=unauthorized`;
-        break;
-      default:
-        window.location.href = `/auth/login?error_description=${error.response.data.error}`;
-    }
-  }
+  // if (error.response.status === 401 || error.response.status === 403) {
+  //   clearCookies();
+  //   switch (error.response.status) {
+  //     case '401':
+  //       window.location.href = `/auth/login?q=token_expired`;
+  //       break;
+  //     case '403':
+  //       window.location.href = `/auth/login?q=unauthorized`;
+  //       break;
+  //     default:
+  //       window.location.href = `/auth/login?error_description=${error.response.data.error}`;
+  //   }
+  // }
 };
 
 // uppercased first letter
@@ -184,7 +183,7 @@ export const loadStepperDefaultValue = () => {
 export const isObject = (value: any) => {
   return value && typeof value === 'object' && value.constructor === Object;
 };
-
+//
 // compare two object deeply key by key
 export const compareObject = (obj1: any, obj2: any) => {
   const keys1 = Object.keys(obj1);
@@ -212,4 +211,15 @@ export const hasDefaultCertificateProperties = (obj: any) => {
   const keys = Object.keys(obj);
   const hasDefaultKeys = defaultKeys.every((key) => keys.includes(key));
   return hasDefaultKeys;
+};
+
+// format to short date
+export const format2ShortDate = (date: any) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  // convert month with 2 digits
+  const month2Digits = month < 10 ? `0${month}` : month;
+  return `${year}-${month2Digits}-${day}`;
 };

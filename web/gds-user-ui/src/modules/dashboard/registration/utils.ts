@@ -6,14 +6,12 @@ import {
   getRegistrationData,
   getSubmissionStatus
 } from 'modules/dashboard/registration/service';
-import { handleError, hasDefaultCertificateProperties } from 'utils/utils';
+import { handleError, hasDefaultCertificateProperties, format2ShortDate } from 'utils/utils';
 
 export const postRegistrationValue = (data: any) => {
-  console.log('[postRegistrationValue]', data);
   return new Promise((resolve, reject) => {
     postRegistrationData(data)
       .then((res) => {
-        console.log('[postRegistrationData]', res);
         if (res.status === 204) {
           resolve(res);
         } else {
@@ -21,7 +19,6 @@ export const postRegistrationValue = (data: any) => {
         }
       })
       .catch((err) => {
-        console.log('[postRegistrationData]', err);
         reject(err);
       });
   });
@@ -29,14 +26,16 @@ export const postRegistrationValue = (data: any) => {
 export const getRegistrationDefaultValue = async () => {
   try {
     const regData = await getRegistrationData();
-    console.log('[getRegistrationDefaultValue regData]', regData.data);
     const isValidObject = hasDefaultCertificateProperties(regData.data);
-    console.log('[getRegistrationDefaultValues1]', getRegistrationDefaultValues());
-    console.log('[getRegistrationDefaultValue2]', regData.data);
-    console.log('[isValidData]', isValidObject);
+
     if (regData.status === 200 && isValidObject) {
-      console.log('[here1]');
-      return regData.data;
+      const response = regData.data;
+      const values = {
+        ...response,
+        established_on: response.established_on ? format2ShortDate(response.established_on) : ''
+      };
+
+      return values;
     } else if (localStorage.getItem('certificateForm')) {
       const defaultValue: any = localStorage.getItem('certificateForm');
 
@@ -48,25 +47,20 @@ export const getRegistrationDefaultValue = async () => {
         return getData.data;
       }
     } else {
-      console.log('[here4]');
       const v = getRegistrationDefaultValues();
-      console.log('[getRegistrationDefaultValue3]', v);
       await postRegistrationValue(v);
       return v;
     }
   } catch (err: any) {
-    console.log('[getRegistrationDefaultValueError]', err);
     handleError(err, 'failed to get registration data');
   }
 };
 
 export const setRegistrationDefaultValue = () => {
-  console.log('[setRegistrationDefaultValue]');
   const defaultValue: any = getRegistrationDefaultValues();
   return new Promise((resolve, reject) => {
     postRegistrationData(defaultValue)
       .then((res) => {
-        // console.log('[default postRegistration value]', res);
         if (res.status === 204) {
           resolve(res);
         } else {
@@ -141,21 +135,6 @@ export const getDefaultStepper = async () => {
   }
 };
 
-// // load default stepper without async call
-// export const loadDefaultStepperSync = () => {
-//   return Promise.resolve({
-//     currentStep: 1,
-//     steps: [
-//       {
-//         key: 1,
-//         status: 'progress'
-//       }
-//     ],
-//     lastStep: null,
-//     hasReachSubmitStep: false
-//   });
-// };
-
 // set stepper data
 export const getRegistrationAndStepperData = async () => {
   try {
@@ -163,7 +142,6 @@ export const getRegistrationAndStepperData = async () => {
       getRegistrationDefaultValue(),
       getSubmissionStatus()
     ]);
-    console.log('[regData]', regData);
     if (regData) {
       const response: any = {
         registrationData: regData,

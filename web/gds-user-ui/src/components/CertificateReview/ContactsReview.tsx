@@ -9,26 +9,14 @@ import ContactsReviewDataTable from './ContactsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
-
-const ContactsReview = () => {
-  const { jumpToStep } = useCertificateStepper();
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [contacts, setContacts] = React.useState<any>({});
-  useEffect(() => {
-    const fetchData = async () => {
-      const getStepperData = await getRegistrationDefaultValue();
-      const stepData = {
-        ...getStepperData.contacts
-      };
-      setContacts(stepData);
-    };
-    fetchData();
-  }, [steps]);
-
+interface ContactsReviewProps {
+  data: any;
+}
+const ContactsReview = ({ data }: ContactsReviewProps) => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />
-      <ContactsReviewDataTable data={contacts} />
+      <ContactsReviewDataTable data={data} />
     </CertificateReviewLayout>
   );
 };

@@ -172,18 +172,6 @@ const TrixoQuestionnaireForm: React.FC = () => {
           {...register('trixo.must_comply_travel_rule')}
         />
       </VStack>
-      <VStack align="start" w="100%">
-        <Heading size="md">
-          <Trans id="Applicable Regulations">Applicable Regulations</Trans>
-        </Heading>
-        <Text fontSize="sm">
-          <Trans id='Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"'>
-            Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.
-            "FATF Recommendation 16"
-          </Trans>
-        </Text>
-        <Regulations name={`trixo.applicable_regulations`} />
-      </VStack>
       {getMustComplyRegulations && (
         <VStack align="start" w="100%">
           <Text>
@@ -225,6 +213,18 @@ const TrixoQuestionnaireForm: React.FC = () => {
           </Text>
         </VStack>
       )}
+      <VStack align="start" w="100%">
+        <Heading size="md">
+          <Trans id="Applicable Regulations">Applicable Regulations</Trans>
+        </Heading>
+        <Text fontSize="sm">
+          <Trans id='Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"'>
+            Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.
+            "FATF Recommendation 16"
+          </Trans>
+        </Text>
+        <Regulations name={`trixo.applicable_regulations`} />
+      </VStack>
       <VStack align="start" w="100%" spacing={4}>
         <Heading size="md">
           <Trans id="Data Protection Policies">Data Protection Policies</Trans>
