@@ -23,9 +23,9 @@ const Contacts: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed.">
+          <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed.">
             Please supply contact information for representatives of your organization. All contacts
-            will receive an email verification token and the contact email must be verified before
+            will receive an email verification token and the contact emails must be verified before
             the registration can proceed.
           </Trans>
         </Text>

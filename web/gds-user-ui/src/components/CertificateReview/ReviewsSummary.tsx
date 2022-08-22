@@ -78,7 +78,7 @@ const ReviewsSummary: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, you will be contacted to verify details. Once verified, your TestNet certificate will be issued.">
+          <Trans id="Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, emails will be sent to the provided contacts for verification. Once verified, your TestNet certificate will be issued.">
             Please review the information provided, edit as needed, and submit to complete the
             registration form. After the information is reviewed, you will be contacted to verify
             details. Once verified, your TestNet certificate will be issued.
