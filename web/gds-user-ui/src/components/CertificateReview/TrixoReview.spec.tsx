@@ -34,9 +34,7 @@ describe('<TrixoReview />', () => {
   });
 
   it('should match snapshot', () => {
-    localStorage.setItem('certificateForm', JSON.stringify(defaultValues));
-
-    const { container } = render(<TrixoReview />);
+    const { container } = render(<TrixoReview data={defaultValues.trixo} />);
 
     // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     // expect(Object.keys(localStorage.__STORE__).length).toBe(1);

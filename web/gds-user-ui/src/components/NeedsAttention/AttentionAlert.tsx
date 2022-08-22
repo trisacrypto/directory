@@ -72,38 +72,10 @@ const AttentionAlert = ({
             </Alert>{' '}
           </>
         );
-      case AttentionAction.SUBMIT_TESTNET || AttentionAction.SUBMIT_MAINNET:
-        return (
-          <>
-            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
-              <AlertIcon />
-              <HStack justifyContent={'space-between'}>
-                <Text> {message}</Text>
-                <Button
-                  onClick={onClick}
-                  border={'1px solid white'}
-                  width={142}
-                  px={8}
-                  as={'a'}
-                  borderRadius={0}
-                  background="transparent"
-                  color="#fff"
-                  cursor="pointer"
-                  _active={{ background: '#000' }}
-                  _hover={{ background: '#111', color: 'white' }}>
-                  {buttonText}
-                </Button>
-              </HStack>
-            </Alert>{' '}
-          </>
-        );
+
       case AttentionAction.COMPLETE_REGISTRATION:
         return (
           <>
-            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
-              <AlertIcon />
-              {message}
-            </Alert>
             <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
               <AlertIcon />
               <HStack justifyContent={'space-between'}>

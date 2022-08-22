@@ -200,6 +200,7 @@ const Certificate: React.FC = () => {
         setRegistrationData(data.registrationData);
         // console.log('[registrationData]', data.registrationData);
         // console.log('[registrationData from state]', data.stepperData);
+        console.log('[called from useEffect]');
         setInitialState(data.stepperData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
@@ -267,7 +268,7 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* )} */}
                     <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                      {currentStep === lastStep ? t`Save & Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 

@@ -25,7 +25,7 @@ describe('<ContactsReview />', () => {
   it('should match snapshot', () => {
     // localStorage.setItem('certificateForm', JSON.stringify(defaultValues));
 
-    const { container } = render(<ContactsReview />);
+    const { container } = render(<ContactsReview data={defaultValues.contacts} />);
 
     // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     // expect(Object.keys(localStorage.__STORE__).length).toBe(1);

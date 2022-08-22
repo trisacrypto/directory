@@ -21,14 +21,10 @@ describe('<BasicDetailsReview />', () => {
     });
   });
 
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
   it('should match snapshot', () => {
     // localStorage.setItem('certificateForm', JSON.stringify(defaultValues));
 
-    const { container } = render(<BasicDetailsReview />);
+    const { container } = render(<BasicDetailsReview data={defaultValues} />);
 
     // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     // expect(Object.keys(localStorage.__STORE__).length).toBe(1);

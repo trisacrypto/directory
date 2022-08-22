@@ -25,31 +25,13 @@ import { MdSystemUpdateAlt } from 'react-icons/md';
 import { t } from '@lingui/macro';
 
 interface TrisaImplementationReviewProps {
-  mainnetData?: any;
-  testnetData?: any;
+  data: any;
 }
-const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
-  const { jumpToStep } = useCertificateStepper();
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [trisa, setTrisa] = React.useState<any>({});
-  const textColor = useColorModeValue('gray.800', '#F7F8FC');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const getStepperData = await getRegistrationDefaultValue();
-      const stepData = {
-        mainnet: getStepperData.mainnet,
-        testnet: getStepperData.testnet
-      };
-
-      setTrisa(stepData);
-    };
-    fetchData();
-  }, [steps]);
+const TrisaImplementationReview = ({ data }: TrisaImplementationReviewProps) => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />
-      <TrisaImplementationReviewDataTable mainnet={trisa.mainnet} testnet={trisa.testnet} />
+      <TrisaImplementationReviewDataTable mainnet={data.mainnet} testnet={data.testnet} />
     </CertificateReviewLayout>
   );
 };
