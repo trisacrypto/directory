@@ -406,8 +406,8 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		contact, kind := iter.Value()
 
 		// Make sure that the reminder email hasn't already been sent to this contact.
-		reason := string(admin.ReissuanceReminder)
-		if emailCount, err = models.GetSentEmailCount(contact, reason, timeWindow); err != nil {
+		reissuanceReminder := string(admin.ReissuanceReminder)
+		if emailCount, err = models.GetSentEmailCount(contact, reissuanceReminder, timeWindow); err != nil {
 			log.Error().Err(err).Msg(fmt.Sprintf("could not retrieve email count from %s's %s email log", vasp.Id, contact))
 			continue
 		}
@@ -435,7 +435,7 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
 				continue
 			} else {
-				if err = models.AppendEmailLog(contact, reason, msg.Subject); err != nil {
+				if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
 					log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
 				}
 				return
@@ -444,7 +444,7 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 			if err = m.Send(msg); err != nil {
 				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
 			}
-			if err = models.AppendEmailLog(contact, reason, msg.Subject); err != nil {
+			if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
 				log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
 			}
 			verifiedContacts++

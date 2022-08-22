@@ -205,91 +205,127 @@ func (s *certTestSuite) TestCertManager() {
 	require.Equal("automated", certReq.AuditLog[5].Source)
 }
 
-func (s *certTestSuite) TestCertManagerCertificateReissuance() {
+func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	vaspsIter := s.db.ListVASPs()
-	allVasps, err := vaspsIter.All()
-	require.NoError(err)
-	for _, vasp := range allVasps {
-		s.db.DeleteVASP(vasp.Id)
-	}
-
+	// setup the datastore to contain the modified echoVASP
+	s.resetVASPDatabase()
 	echoVASP, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
+	echoVASP = s.setupVASP(echoVASP)
 
-	models.AddContact(echoVASP, "technical", &pb.Contact{
-		Name:  "technical",
-		Email: "technical@notmyemail.com",
-	})
-	models.SetContactVerification(echoVASP.Contacts.Technical, "", true)
-
-	models.AddContact(echoVASP, "administrative", &pb.Contact{
-		Name:  "administrative",
-		Email: "administrative@notmyemail.com",
-	})
-	models.SetContactVerification(echoVASP.Contacts.Administrative, "", true)
-
-	s.db.CreateVASP(echoVASP)
-
+	// Call the certman function at 29 days, which will send
+	// the thirty day cert reissuance reminder to echoVASP and
+	// the TRISA admin.
 	s.updateVaspIdentityCert(echoVASP, 29)
-	firstCallTime := time.Now()
+	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
-	s.updateVaspIdentityCert(echoVASP, 6)
-	secondCallTime := time.Now()
-	s.certman.HandleCertificateReissuance()
+	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
 
-	s.updateVaspIdentityCert(echoVASP, 9)
-	thirdCallTime := time.Now()
-	s.certman.HandleCertificateReissuance()
-
+	// Ensure that the expected emails have been sent, using
+	// the mock email client.
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   echoVASP.Contacts.Technical,
-			To:        echoVASP.Contacts.Technical.Email,
+			To:        v.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceReminderRE,
 			Reason:    "reissuance_reminder",
-			Timestamp: firstCallTime,
+			Timestamp: callTime,
 		},
 		{
-			Contact:   echoVASP.Contacts.Administrative,
 			To:        s.conf.Email.AdminEmail,
 			From:      s.conf.Email.ServiceEmail,
-			Subject:   emails.ReissuanceReminderRE,
+			Subject:   emails.ExpiresAdminNotificationRE,
 			Reason:    "expires_admin_notification",
-			Timestamp: firstCallTime,
+			Timestamp: callTime,
 		},
+	}
+	emails.CheckEmails(s.T(), messages)
+}
+
+func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
+	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+	require := s.Require()
+
+	// setup the datastore to contain the modified echoVASP
+	s.resetVASPDatabase()
+	echoVASP, err := s.fixtures.GetVASP("echo")
+	require.NoError(err, "could not get echo VASP")
+	echoVASP = s.setupVASP(echoVASP)
+
+	// Call the certman function at 6 days, which will send
+	// the seven day cert reissuance reminder to echoVASP.
+	s.updateVaspIdentityCert(echoVASP, 6)
+	callTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
+
+	// Ensure that the expected email has been sent, using
+	// the mock email client.
+	messages := []*emails.EmailMeta{
 		{
-			Contact:   echoVASP.Contacts.Technical,
-			To:        echoVASP.Contacts.Technical.Email,
+			To:        v.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceReminderRE,
 			Reason:    "reissuance_reminder",
-			Timestamp: secondCallTime,
+			Timestamp: callTime,
 		},
+	}
+	emails.CheckEmails(s.T(), messages)
+}
+
+func (s *certTestSuite) TestCertManagerReissuance() {
+	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+
+	// setup the datastore to contain the modified echoVASP
+	require := s.Require()
+	s.resetVASPDatabase()
+	echoVASP, err := s.fixtures.GetVASP("echo")
+	require.NoError(err, "could not get echo VASP")
+	echoVASP = s.setupVASP(echoVASP)
+
+	// Call the certman function at 8 days, which should
+	// reissue the VASP's identity certificate, send the
+	// email with the created pkcs12 password and send
+	// the whisper link, as well as notifying the TRISA
+	// admin that reissuance has started.
+	s.updateVaspIdentityCert(echoVASP, 8)
+	callTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	require.NoError(err)
+
+	// Ensure that the expected email has been sent, using
+	// the mock email client.
+	messages := []*emails.EmailMeta{
 		{
-			Contact:   echoVASP.Contacts.Administrative,
-			To:        s.conf.Email.AdminEmail,
+			Contact:   v.Contacts.Technical,
+			To:        v.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceStartedRE,
 			Reason:    "reissuance_started",
-			Timestamp: thirdCallTime,
+			Timestamp: callTime,
 		},
 		{
-			Contact:   echoVASP.Contacts.Administrative,
 			To:        s.conf.Email.AdminEmail,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceAdminNotificationRE,
 			Reason:    "reissuance_admin_notification",
-			Timestamp: thirdCallTime,
+			Timestamp: callTime,
 		},
 	}
-
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -298,6 +334,34 @@ func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiratio
 	daysFromNow := time.Now().Add(days * daysUntilExpiration).Format(time.RFC3339Nano)
 	vasp.IdentityCertificate = &pb.Certificate{NotAfter: daysFromNow}
 	s.db.UpdateVASP(vasp)
+}
+
+func (s *certTestSuite) resetVASPDatabase() {
+	require := s.Require()
+
+	vaspsIter := s.db.ListVASPs()
+	allVasps, err := vaspsIter.All()
+	require.NoError(err)
+	for _, vasp := range allVasps {
+		s.db.DeleteVASP(vasp.Id)
+	}
+}
+
+func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
+	models.AddContact(vasp, "technical", &pb.Contact{
+		Name:  "technical",
+		Email: "technical@notmyemail.com",
+	})
+	models.SetContactVerification(vasp.Contacts.Technical, "", true)
+
+	models.AddContact(vasp, "administrative", &pb.Contact{
+		Name:  "administrative",
+		Email: "administrative@notmyemail.com",
+	})
+	models.SetContactVerification(vasp.Contacts.Administrative, "", true)
+
+	s.db.CreateVASP(vasp)
+	return vasp
 }
 
 // Test that the certificate manager rejects requests when the VASP state is invalid.

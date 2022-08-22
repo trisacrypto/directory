@@ -726,6 +726,7 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 				}
 			}
 		}
+		c.db.UpdateVASP(vasp)
 	}
 }
 
