@@ -25,8 +25,8 @@ const LegalPerson: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please enter the information that identify your organization as a Legal Person. This form represents the">
-            Please enter the information that identify your organization as a Legal Person. This
+          <Trans id="Please enter the information that identifies your organization as a Legal Person. This form represents the">
+            Please enter the information that identifies your organization as a Legal Person. This
             form represents the
           </Trans>{' '}
           <Link isExternal href="https://intervasp.org/" color={'blue'} fontWeight={'bold'}>
