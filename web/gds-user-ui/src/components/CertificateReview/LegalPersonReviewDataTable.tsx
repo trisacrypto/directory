@@ -14,6 +14,7 @@ interface LegalReviewProps {
   data?: any;
 }
 function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
+  console.log('data', data);
   return (
     <Stack fontSize={18}>
       <Sentry.ErrorBoundary

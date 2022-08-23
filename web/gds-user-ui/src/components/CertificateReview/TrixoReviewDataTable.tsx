@@ -11,6 +11,7 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  console.log('data-TrixoReviewDataTable', data);
   return (
     <Stack fontSize={'1rem'}>
       <Table
