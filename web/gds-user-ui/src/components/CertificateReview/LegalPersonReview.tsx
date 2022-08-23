@@ -10,7 +10,7 @@ import { getCurrentState } from 'application/store/selectors/stepper';
 const LegalPersonReview = () => {
   const currentStateValue = useSelector(getCurrentState);
   const legalPerson = {
-    ...currentStateValue.entity
+    ...currentStateValue.data.entity
   };
   return (
     <CertificateReviewLayout>
