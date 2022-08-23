@@ -359,6 +359,7 @@ func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
 		Email: "administrative@notmyemail.com",
 	})
 	models.SetContactVerification(vasp.Contacts.Administrative, "", true)
+	vasp.VerificationStatus = pb.VerificationState_VERIFIED
 
 	s.db.CreateVASP(vasp)
 	return vasp
