@@ -38,10 +38,15 @@ const TrixoQuestionnaireForm: React.FC = () => {
       setValue(`trixo.kyc_threshold`, 0);
     }
     // if applicable regulations is empty, set default value
-    if (getApplicableRegulations.length === 0) {
+    if (getApplicableRegulations?.length === 0) {
       setValue(`trixo.applicable_regulations`, ['FATF Recommendation 16']);
     }
-  }, [getMustComplyRegulations, getHasRequiredRegulatoryProgram, setValue, getApplicableRegulations]);
+  }, [
+    getMustComplyRegulations,
+    getHasRequiredRegulatoryProgram,
+    setValue,
+    getApplicableRegulations
+  ]);
 
   return (
     <FormLayout spacing={5}>

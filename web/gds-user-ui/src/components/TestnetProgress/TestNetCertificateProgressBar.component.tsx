@@ -13,7 +13,7 @@ interface ProgressBarProps {
   onSetRegistrationState?: any;
   registrationState?: any;
 }
-const ProgressBar = ({ onSetRegistrationState, registrationState }: ProgressBarProps) => {
+const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
   return (
     <>
       <CertificateSteps>
@@ -26,11 +26,7 @@ const ProgressBar = ({ onSetRegistrationState, registrationState }: ProgressBarP
         <CertificateStepContainer key="3" component={<Contacts />} />
         <CertificateStepContainer key="4" component={<TrisaImplementation />} />
         <CertificateStepContainer key="5" component={<TrixoQuestionnaire />} />
-        <CertificateStepContainer
-          key="6"
-          isLast
-          component={<CertificateReview data={registrationState} />}
-        />
+        <CertificateStepContainer key="6" isLast component={<CertificateReview />} />
       </CertificateSteps>
     </>
   );

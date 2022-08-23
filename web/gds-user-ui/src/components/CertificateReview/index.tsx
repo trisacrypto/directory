@@ -15,10 +15,8 @@ import {
   submitTestnetRegistration
 } from 'modules/dashboard/registration/service';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-type CertificateReviewProps = {
-  data?: any;
-};
-const CertificateReview = ({ data }: CertificateReviewProps) => {
+
+const CertificateReview = () => {
   const toast = useToast();
   const { testnetSubmissionState, mainnetSubmissionState } = useCertificateStepper();
 
@@ -66,7 +64,7 @@ const CertificateReview = ({ data }: CertificateReviewProps) => {
   };
 
   if (!hasReachSubmitStep) {
-    return <ReviewsSummary data={data} />;
+    return <ReviewsSummary />;
   }
 
   return (

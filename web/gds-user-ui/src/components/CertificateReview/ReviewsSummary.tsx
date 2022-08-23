@@ -13,10 +13,8 @@ import {
   downloadRegistrationData
 } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
-interface ReviewProps {
-  data?: any;
-}
-const ReviewsSummary: React.FC<ReviewProps> = ({ data }) => {
+
+const ReviewsSummary: React.FC = () => {
   const [isLoadingExport, setIsLoadingExport] = useState(false);
   const handleExport = () => {
     const downloadData = async () => {

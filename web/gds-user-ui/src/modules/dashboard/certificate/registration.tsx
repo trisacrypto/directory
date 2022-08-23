@@ -271,7 +271,7 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* )} */}
                     <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Save & Next` : t`Save & Next`}
+                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 

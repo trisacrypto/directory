@@ -48,7 +48,7 @@ describe('<ReviewSummary />', () => {
   };
 
   it('should match snapshot', () => {
-    const { container } = render(<ReviewsSummary data={defaultValues} />);
+    const { container } = render(<ReviewsSummary />);
 
     expect(container).toMatchSnapshot();
   });
