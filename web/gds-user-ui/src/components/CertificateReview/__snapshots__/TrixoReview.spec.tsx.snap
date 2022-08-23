@@ -180,13 +180,11 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <span
-                  class="css-kydp95"
+                <p
+                  class="chakra-text css-0"
                 >
-                  <span
-                    class="css-12rgubf"
-                  />
-                </span>
+                  N/A
+                </p>
               </td>
               <td
                 class="css-xumdn4"
