@@ -88,7 +88,7 @@ type EmailConfig struct {
 }
 
 type CertManConfig struct {
-	RequestInterval    time.Duration `split_words:"true" default:"10m"`
+	RequestInterval    time.Duration `split_words:"true" default:"24h"`
 	ReissuenceInterval time.Duration `split_words:"true" default:"24h"`
 	Storage            string        `split_words:"true" required:"false"`
 	Sectigo            sectigo.Config

@@ -172,6 +172,7 @@ func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err erro
 	return nil
 }
 
+// TODO: cleanup the duplicated code between this function and contacts.GetSentEmailCount
 func GetSentAdminEmailCount(vasp *pb.VASP, reason string, timeWindowDays int) (sent int, err error) {
 	var adminEmailLog []*EmailLogEntry
 	if adminEmailLog, err = GetAdminEmailLog(vasp); err != nil {

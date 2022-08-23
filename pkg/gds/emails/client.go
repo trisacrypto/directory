@@ -63,10 +63,6 @@ type EmailManager struct {
 	adminsEmail  *mail.Address
 }
 
-func (m *EmailManager) ServiceEmail() *mail.Address {
-	return m.serviceEmail
-}
-
 // EmailClient is an interface that can be implemented by SendGrid email clients.
 type EmailClient interface {
 	Send(email *sgmail.SGMailV3) (*rest.Response, error)
@@ -374,12 +370,10 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate t
 // Helper function for HandleCertificateReissuance that sends reissuance reminder emails
 // a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
 // critical alert is raised.
-func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) {
+func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
 	var (
 		verifiedContacts int
 		emailCount       int
-		serviceEmail     *mail.Address
-		err              error
 	)
 
 	ReissuanceData := ReissuanceReminderData{
@@ -392,12 +386,10 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 
 	if vasp.IdentityCertificate != nil {
 		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
-		ReissuanceData.Expiration, _ = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
-	}
-
-	if serviceEmail, err = mail.ParseAddress(m.serviceEmail.Address); err != nil {
-		log.Error().Err(err).Msg("could not parse the configured service email address")
-		return
+		if ReissuanceData.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse vasp certificate expiration date")
+			return err
+		}
 	}
 
 	// Iterate through the VASP's verified contacts and send the reissuance reminder email.
@@ -408,7 +400,7 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		// Make sure that the reminder email hasn't already been sent to this contact.
 		reissuanceReminder := string(admin.ReissuanceReminder)
 		if emailCount, err = models.GetSentEmailCount(contact, reissuanceReminder, timeWindow); err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not retrieve email count from %s's %s email log", vasp.Id, contact))
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
 			continue
 		}
 		if emailCount > 0 {
@@ -417,12 +409,12 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		// Create the reissuance reminder email.
 		ReissuanceData.Name = contact.Name
 		msg, err := ReissuanceReminderEmail(
-			serviceEmail.Name, serviceEmail.Address,
+			m.serviceEmail.Name, m.serviceEmail.Address,
 			contact.Name, contact.Email,
 			ReissuanceData,
 		)
 		if err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("could not create %s's %s reissuance reminder email", vasp.Id, contact))
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
 		}
 
 		// Send the reissuance reminder email to the VASP's verified contacts using the following logic:
@@ -430,30 +422,36 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		// 		2. Send to the Administrative contact if verified, else
 		// 		3. Send to all other verified contacts
 		switch kind {
-		case "technical", "administrative":
+		case models.TechnicalContact, models.AdministrativeContact:
 			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
 				continue
 			} else {
 				if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
-					log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
+					log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
 				}
-				return
+				return nil
 			}
-		case "legal", "billing":
+		case models.LegalContact, models.BillingContact:
 			if err = m.Send(msg); err != nil {
-				log.Error().Err(err).Msg(fmt.Sprintf("error sending %s's %s reissuance reminder email", vasp.Id, contact))
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
 			}
 			if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
-				log.Error().Err(err).Msg(fmt.Sprintf("error appending to %s's email log", contact))
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
 			}
 			verifiedContacts++
-		case "":
-			if verifiedContacts == 0 {
-				log.WithLevel(zerolog.FatalLevel).Msg(fmt.Sprintf("cert-manager could not find a verified contact for %s", vasp.Id))
+		default:
+			if kind == "" && verifiedContacts == 0 {
+				log.WithLevel(zerolog.FatalLevel).Str("vasp_id", vasp.Id).Msg("cert-manager could not find a verified contact for vasp")
+			} else {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("unknown contact type")
 			}
 		}
+		if err = iter.Error(); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not iterate through contacts")
+		}
 	}
+	return nil
 }
 
 // SendReissuanceReminder sends a reminder to all verified contacts that their identity
