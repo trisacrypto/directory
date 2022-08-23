@@ -47,7 +47,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           };
           onChangeRegistrationState(values);
           setRegistrationValue(values);
-          updateStateFromFormValues(getValue.data.state);
+          updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
         console.log(e);
