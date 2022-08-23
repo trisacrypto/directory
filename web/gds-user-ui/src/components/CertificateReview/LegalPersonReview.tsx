@@ -1,23 +1,17 @@
 import React, { useEffect } from 'react';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { useFormContext } from 'react-hook-form';
-import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
 // NOTE: need some clean up.
 import LegalPersonReviewDataTable from './LegalPersonReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
-import Store from 'application/store';
+import { getCurrentState } from 'application/store/selectors/stepper';
 const LegalPersonReview = () => {
-  const [legalPerson, setLegalPerson] = React.useState<any>({});
-  useEffect(() => {
-    const getStepperData = Store.getState().stepper.data;
-    const stepData = {
-      ...getStepperData.entity
-    };
-    setLegalPerson(stepData);
-  }, []);
+  const currentStateValue = useSelector(getCurrentState);
+  const legalPerson = {
+    ...currentStateValue.entity
+  };
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={2} title={t`Section 2: Legal Person`} />

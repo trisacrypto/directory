@@ -29,10 +29,6 @@ describe('<TrixoReview />', () => {
     });
   });
 
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
   it('should match snapshot', () => {
     const { container } = render(<TrixoReview />);
 

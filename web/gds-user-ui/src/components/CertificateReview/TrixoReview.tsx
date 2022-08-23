@@ -7,19 +7,13 @@ import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { useFormContext } from 'react-hook-form';
 import Store from 'application/store';
+import { getCurrentState } from 'application/store/selectors/stepper';
+import { RootStateOrAny, useSelector } from 'react-redux';
 const TrixoReview: React.FC = () => {
-  const [trixo, setTrixo] = React.useState<any>({});
-
-  useEffect(() => {
-    // wait 1 second before getting the state
-    setTimeout(() => {
-      const getStepperData = Store.getState().stepper.data;
-      const stepData = {
-        ...getStepperData.trixo
-      };
-      setTrixo(stepData);
-    }, 1000);
-  }, []);
+  const currentStateValue = useSelector(getCurrentState);
+  const trixo = {
+    ...currentStateValue.data.trixo
+  };
 
   return (
     <CertificateReviewLayout>

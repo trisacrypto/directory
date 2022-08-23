@@ -9,23 +9,15 @@ import ContactsReviewDataTable from './ContactsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
+import { getCurrentState } from 'application/store/selectors/stepper';
 
-import Store from 'application/store';
 const ContactsReview = () => {
-  const [contacts, setContacts] = React.useState<any>({});
-
-  useEffect(() => {
-    const getStepperData = Store.getState().stepper.data;
-    const stepData = {
-      ...getStepperData.contacts
-    };
-    setContacts(stepData);
-  }, []);
+  const currentStateValue = useSelector(getCurrentState);
 
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />
-      <ContactsReviewDataTable data={contacts} />
+      <ContactsReviewDataTable data={currentStateValue.data.contacts} />
     </CertificateReviewLayout>
   );
 };

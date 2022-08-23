@@ -23,22 +23,16 @@ import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { MdSystemUpdateAlt } from 'react-icons/md';
 import { t } from '@lingui/macro';
+import { getCurrentState } from 'application/store/selectors/stepper';
 
-import { useFormContext } from 'react-hook-form';
-import Store from 'application/store';
 const TrisaImplementationReview = () => {
-  const [trisa, setTrisa] = React.useState<any>({});
-  const textColor = useColorModeValue('gray.800', '#F7F8FC');
+  const currentStateValue = useSelector(getCurrentState);
+  const { data: trisaData } = currentStateValue;
 
-  useEffect(() => {
-    const getStepperData = Store.getState().stepper.data;
-    const stepData = {
-      mainnet: getStepperData.mainnet,
-      testnet: getStepperData.testnet
-    };
-
-    setTrisa(stepData);
-  }, []);
+  const trisa = {
+    mainnet: trisaData.mainnet,
+    testnet: trisaData.testnet
+  };
 
   return (
     <CertificateReviewLayout>
