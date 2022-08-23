@@ -22,7 +22,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
-  const { updateStateFromFormValues } = useCertificateStepper();
+  const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
   const bg = useColorModeValue('#F7F8FC', 'gray.800');
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
@@ -39,6 +39,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           const getValue = await getRegistrationData();
           // console.log('[getValue]', getValue);
           onChangeRegistrationState(getValue.data);
+          setRegistrationValue(getValue.data);
           updateStateFromFormValues(getValue.data.state);
         }
       } catch (e: any) {

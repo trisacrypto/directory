@@ -11,6 +11,7 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  console.log('data-TrixoReviewDataTable', data);
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -198,7 +199,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td pl={0}>
               {data?.compliance_threshold || data?.compliance_threshold !== 0 ? (
                 <Text>
-                  {currencyFormatter(data?.compliance_threshold, {
+                  {currencyFormatter(data?.compliance_threshold || 0, {
                     currency: data?.compliance_threshold_currency
                   }) || 'USD'}{' '}
                   {data?.compliance_threshold_currency || 'USD'}
