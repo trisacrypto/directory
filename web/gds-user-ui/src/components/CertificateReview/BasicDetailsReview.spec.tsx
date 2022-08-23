@@ -21,17 +21,8 @@ describe('<BasicDetailsReview />', () => {
     });
   });
 
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
   it('should match snapshot', () => {
-    // localStorage.setItem('certificateForm', JSON.stringify(defaultValues));
-
     const { container } = render(<BasicDetailsReview />);
-
-    // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
-    // expect(Object.keys(localStorage.__STORE__).length).toBe(1);
 
     expect(container).toMatchSnapshot();
   });

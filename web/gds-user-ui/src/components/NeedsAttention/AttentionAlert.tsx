@@ -72,6 +72,7 @@ const AttentionAlert = ({
             </Alert>{' '}
           </>
         );
+
       case AttentionAction.COMPLETE_REGISTRATION:
         return (
           <>

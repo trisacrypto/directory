@@ -2,9 +2,14 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { setCookie, clearCookies } from 'utils/cookies';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
-
-import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
-import { handleError } from 'utils/utils';
+import {
+  auth0SignIn,
+  auth0SignUp,
+  auth0SignWithSocial,
+  auth0Hash,
+  auth0CheckSession
+} from 'utils/auth0.helper';
+import { handleError, getRefreshToken } from 'utils/utils';
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -54,12 +59,28 @@ export const getAuth0User: any = createAsyncThunk(
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
-
+      setCookie('access_token', getUserInfo?.accessToken);
+      setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        setCookie('access_token', getUserInfo?.accessToken);
-        setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
         const getUser = await logUserInBff();
-        console.log('[getUser]', getUser);
+        // check if user response contains refresh_token flag
+        if (getUser?.data?.refresh_token) {
+          // refresh token
+          const newUserPayload: any = await auth0CheckSession();
+          // get user info data
+          // console.log('[newUserPayload]', newUserPayload);
+          setCookie('access_token', newUserPayload?.accessToken);
+          setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
+          const userInfo: TUser = {
+            isLoggedIn: true,
+            user: {
+              name: newUserPayload?.idTokenPayload?.name,
+              pictureUrl: newUserPayload?.idTokenPayload?.picture,
+              email: newUserPayload?.idTokenPayload?.email
+            }
+          };
+          return userInfo;
+        }
         // return;
         if (getUser.status === 204) {
           const userInfo: TUser = {

@@ -19,11 +19,10 @@ const initialValue: CertificateSteps = {
   ]
 };
 
-const CertificateStepsContext =
-  React.createContext<
-    | [Partial<CertificateSteps>, React.Dispatch<React.SetStateAction<Partial<CertificateSteps>>>]
-    | typeof initialValue
-  >(initialValue);
+const CertificateStepsContext = React.createContext<
+  | [Partial<CertificateSteps>, React.Dispatch<React.SetStateAction<Partial<CertificateSteps>>>]
+  | typeof initialValue
+>(initialValue);
 
 const CertificateStepsProvider: React.FC<CertificateSteps> = (props) => {
   const [certificateSteps, setCertificateSteps] =

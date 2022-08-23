@@ -30,7 +30,7 @@ import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-
+import Store from 'application/store';
 import {
   postRegistrationValue,
   getRegistrationAndStepperData
@@ -48,6 +48,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
+import { setCertificateValue } from 'application/store/stepper.slice';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -55,7 +56,12 @@ const Certificate: React.FC = () => {
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
-  const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
+  const {
+    nextStep,
+    previousStep,
+    setInitialState,
+    setRegistrationValue: setRegistrationStore
+  } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
   const currentStateValue = useSelector(getCurrentState);
@@ -74,7 +80,6 @@ const Certificate: React.FC = () => {
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
-    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
@@ -115,21 +120,9 @@ const Certificate: React.FC = () => {
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
 
+  // if fields if filled
+
   function handleNextStepClick() {
-    if (currentStep === lastStep) {
-      if (hasStepError(steps)) {
-        toast({
-          position: 'top',
-          title: t`Please fill in all required fields before proceeding`,
-          status: 'error',
-          isClosable: true,
-          containerStyle: {
-            width: '800px',
-            maxWidth: '100%'
-          }
-        });
-      }
-    }
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
@@ -145,13 +138,18 @@ const Certificate: React.FC = () => {
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
-        registrationValues: registrationData
+        registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
+        setRegistrationState: setRegistrationData
       });
     }
   }
   const handlePreviousStep = () => {
-    postRegistrationValue(methods.getValues());
-    previousStep();
+    previousStep({
+      isDirty: methods.formState.isDirty,
+      registrationValues: registrationData,
+      values: methods.getValues()
+    });
   };
 
   const isDefaultValue = () => {
@@ -187,15 +185,26 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
+  // set registration data value
+  useEffect(() => {
+    if (registrationData) {
+      reset(registrationData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationData]);
+
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationAndStepperData();
+
         setRegistrationData(data.registrationData);
         // console.log('[registrationData]', data.registrationData);
         // console.log('[registrationData from state]', data.stepperData);
+        console.log('[called from useEffect]');
         setInitialState(data.stepperData);
+        setRegistrationStore(data.registrationData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
       } finally {
@@ -203,18 +212,8 @@ const Certificate: React.FC = () => {
       }
     };
     fetchData();
-  }, [isLoggedIn, setInitialState]);
-
-  // set default value if registrationData equal to default value
-  useEffect(() => {
-    if (isDefaultValue()) {
-      setRegistrationData(getRegistrationDefaultValues());
-      resetForm();
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registrationData, onChangeResetForm]);
-
-  // refresh registration data when redirect to registration page
+  }, []);
 
   return (
     <SimpleDashboardLayout>
@@ -260,7 +259,7 @@ const Certificate: React.FC = () => {
           <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
             <VStack spacing={3}>
               <Box width={'100%'}>
-                <TestNetCertificateProgressBar />
+                <TestNetCertificateProgressBar onSetRegistrationState={setRegistrationData} />
                 {!isProdEnv ? <DevTool control={methods.control} /> : null}
               </Box>
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
@@ -268,7 +267,7 @@ const Certificate: React.FC = () => {
                   <>
                     {/* {!isFormSubmitted() && ( */}
                     <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
+                      {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
                     </Button>
                     {/* )} */}
                     <Button type="submit" variant="secondary">
@@ -276,11 +275,11 @@ const Certificate: React.FC = () => {
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    {/* {!isFormSubmitted() && ( */}
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </Button>
-                    {/* )} */}
+                    {!isFormSubmitted() && (
+                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      </Button>
+                    )}
                   </>
                 )}
               </Stack>

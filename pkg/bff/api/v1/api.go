@@ -39,8 +39,9 @@ type BFFClient interface {
 
 // Reply contains standard fields that are used for generic API responses and errors
 type Reply struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty" yaml:"error,omitempty"`
+	Success      bool   `json:"success"`
+	Error        string `json:"error,omitempty" yaml:"error,omitempty"`
+	RefreshToken bool   `json:"refresh_token,omitempty" yaml:"refresh_token,omitempty"`
 }
 
 // StatusParams is parsed from the query parameters of the GET request

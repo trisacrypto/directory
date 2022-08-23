@@ -23,29 +23,17 @@ import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { MdSystemUpdateAlt } from 'react-icons/md';
 import { t } from '@lingui/macro';
+import { getCurrentState } from 'application/store/selectors/stepper';
 
-interface TrisaImplementationReviewProps {
-  mainnetData?: any;
-  testnetData?: any;
-}
-const TrisaImplementationReview = (props: TrisaImplementationReviewProps) => {
-  const { jumpToStep } = useCertificateStepper();
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [trisa, setTrisa] = React.useState<any>({});
-  const textColor = useColorModeValue('gray.800', '#F7F8FC');
+const TrisaImplementationReview = () => {
+  const currentStateValue = useSelector(getCurrentState);
+  const { data: trisaData } = currentStateValue;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const getStepperData = await getRegistrationDefaultValue();
-      const stepData = {
-        mainnet: getStepperData.mainnet,
-        testnet: getStepperData.testnet
-      };
+  const trisa = {
+    mainnet: trisaData.mainnet,
+    testnet: trisaData.testnet
+  };
 
-      setTrisa(stepData);
-    };
-    fetchData();
-  }, [steps]);
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />

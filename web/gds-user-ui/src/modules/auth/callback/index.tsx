@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
 import { useSelector, useDispatch } from 'react-redux';
 const CallbackPage: React.FC = () => {
-  const [isLoading, setIsloading] = useState(false);
+  const [isLoading, setIsloading] = useState(true);
 
   const query = useHashQuery();
   const { access_token: accessToken, error: callbackError } = query as any;
@@ -15,7 +15,6 @@ const CallbackPage: React.FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setIsloading(true);
     dispatch(getAuth0User(accessToken));
   }, [accessToken, dispatch]);
 
