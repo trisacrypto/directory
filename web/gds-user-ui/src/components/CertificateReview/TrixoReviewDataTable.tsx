@@ -11,11 +11,6 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
-<<<<<<< HEAD
-  console.log('data-TrixoReviewDataTable', data);
-=======
-  console.log('data TrixoReviewDataTable', data);
->>>>>>> 950bb6c3 (fix(user-ui): fix trixo conduct customer kyc switch value)
   return (
     <Stack fontSize={'1rem'}>
       <Table
