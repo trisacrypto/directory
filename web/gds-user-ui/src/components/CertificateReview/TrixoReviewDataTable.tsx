@@ -11,7 +11,11 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+<<<<<<< HEAD
   console.log('data-TrixoReviewDataTable', data);
+=======
+  console.log('data TrixoReviewDataTable', data);
+>>>>>>> 950bb6c3 (fix(user-ui): fix trixo conduct customer kyc switch value)
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -119,15 +123,19 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td>
-              <Tag
-                size={'sm'}
-                key={'sm'}
-                variant="subtle"
-                colorScheme={getColorScheme(data?.financial_transfers_permitted)}>
-                <TagLabel fontWeight={'bold'}>
-                  {data?.financial_transfers_permitted?.toUpperCase()}
-                </TagLabel>
-              </Tag>
+              {data?.conducts_customer_kyc ? (
+                <Tag
+                  size={'sm'}
+                  key={'sm'}
+                  variant="subtle"
+                  colorScheme={getColorScheme(data?.conducts_customer_kyc)}>
+                  <TagLabel fontWeight={'bold'}>
+                    {data?.conducts_customer_kyc ? 'YES' : 'NO'}
+                  </TagLabel>
+                </Tag>
+              ) : (
+                <Text>{'N/A'}</Text>
+              )}
             </Td>
             <Td></Td>
           </Tr>
