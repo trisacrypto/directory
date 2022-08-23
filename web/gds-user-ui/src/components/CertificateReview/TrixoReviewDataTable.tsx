@@ -118,19 +118,15 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td>
-              {data?.conducts_customer_kyc ? (
-                <Tag
-                  size={'sm'}
-                  key={'sm'}
-                  variant="subtle"
-                  colorScheme={getColorScheme(data?.conducts_customer_kyc)}>
-                  <TagLabel fontWeight={'bold'}>
-                    {data?.conducts_customer_kyc ? 'YES' : 'NO'}
-                  </TagLabel>
-                </Tag>
-              ) : (
-                <Text>{'N/A'}</Text>
-              )}
+              <Tag
+                size={'sm'}
+                key={'sm'}
+                variant="subtle"
+                colorScheme={getColorScheme(data?.conducts_customer_kyc)}>
+                <TagLabel fontWeight={'bold'}>
+                  {data?.conducts_customer_kyc ? 'YES' : 'NO'}
+                </TagLabel>
+              </Tag>
             </Td>
             <Td></Td>
           </Tr>
