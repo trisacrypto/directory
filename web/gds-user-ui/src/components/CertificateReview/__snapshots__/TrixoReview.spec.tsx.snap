@@ -284,7 +284,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 <p
                   class="chakra-text css-0"
                 >
-                  $NaN
+                  $0.00
                    
                   USD
                 </p>
