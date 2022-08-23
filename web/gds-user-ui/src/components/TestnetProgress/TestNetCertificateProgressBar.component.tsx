@@ -11,6 +11,7 @@ import TrisaImplementation from 'components/TrisaImplementation';
 import CertificateReview from 'components/CertificateReview';
 interface ProgressBarProps {
   onSetRegistrationState?: any;
+  registrationState?: any;
 }
 const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
   return (

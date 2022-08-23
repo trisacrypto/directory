@@ -19,7 +19,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const currencies = getCurrenciesOptions();
   const getHasRequiredRegulatoryProgram = watch('trixo.has_required_regulatory_program');
   const getMustComplyRegulations = watch('trixo.must_comply_travel_rule');
-
+  const getApplicableRegulations = watch('trixo.applicable_regulations');
   const getCountryFromLegalAddress = watch('entity.country_of_registration');
 
   useEffect(() => {
@@ -28,6 +28,25 @@ const TrixoQuestionnaireForm: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getCountryFromLegalAddress]);
+
+  // set default value if getMustComplyRegulations or  is false
+  useEffect(() => {
+    if (!getMustComplyRegulations) {
+      setValue(`trixo.compliance_threshold`, 0);
+    }
+    if (!getHasRequiredRegulatoryProgram || getHasRequiredRegulatoryProgram === 'no') {
+      setValue(`trixo.kyc_threshold`, 0);
+    }
+    // if applicable regulations is empty, set default value
+    if (getApplicableRegulations?.length === 0) {
+      setValue(`trixo.applicable_regulations`, ['FATF Recommendation 16']);
+    }
+  }, [
+    getMustComplyRegulations,
+    getHasRequiredRegulatoryProgram,
+    setValue,
+    getApplicableRegulations
+  ]);
 
   return (
     <FormLayout spacing={5}>

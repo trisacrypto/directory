@@ -14,11 +14,13 @@ import {
   setHasReachSubmitStep,
   setInitialValue,
   setTestnetSubmitted,
-  setMainnetSubmitted
+  setMainnetSubmitted,
+  setCertificateValue
 } from 'application/store/stepper.slice';
 import {
   setRegistrationDefaultValue,
-  postRegistrationValue
+  postRegistrationValue,
+  getRegistrationDefaultValue
 } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
@@ -92,28 +94,7 @@ const useCertificateStepper = () => {
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
     // allow manually setting the step status
-    if (state?.status) {
-      const found = findStepKey(steps, currentStep);
-      if (found.length === 1) {
-        dispatch(setStepStatus(state));
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-        const foundNext = findStepKey(steps, currentStep + 1);
-        if (foundNext.length === 0) {
-          if (currentStep === lastStep) {
-            return;
-          }
-          dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
-        }
-      } else {
-        if (currentStep === lastStep && state.isFormCompleted) {
-          // that mean we move to submit step
 
-          dispatch(setSubmitStep({ submitStep: true }));
-        }
-        dispatch(addStep({ key: currentStep, status: state.status }));
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-      }
-    }
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
       // that mean we move to submit step
@@ -136,6 +117,7 @@ const useCertificateStepper = () => {
     }
     // save the form value if fields changed
     if (isDirty) {
+      dispatch(setCertificateValue({ value: { ...registrationValues, ...formValues } }));
       await saveFormValue(registrationValues, formValues, setRegistrationState);
     }
   };
@@ -186,6 +168,11 @@ const useCertificateStepper = () => {
     dispatch(setMainnetSubmitted({ mainnetSubmitted: true }));
   };
 
+  // save the registration value to the store
+  const setRegistrationValue = (value: any) => {
+    dispatch(setCertificateValue({ value }));
+  };
+
   const setInitialState = (value: any) => {
     const state: TPayload = {
       currentStep: value.currentStep,
@@ -193,7 +180,8 @@ const useCertificateStepper = () => {
       lastStep: 6,
       hasReachSubmitStep: value.hasReachSubmitStep,
       testnetSubmitted: value.testnetSubmitted,
-      mainnetSubmitted: value.mainnetSubmitted
+      mainnetSubmitted: value.mainnetSubmitted,
+      data: value.data
     };
     dispatch(setInitialValue(state));
   };
@@ -221,7 +209,8 @@ const useCertificateStepper = () => {
     currentState,
     testnetSubmissionState,
     mainnetSubmissionState,
-    updateStateFromFormValues
+    updateStateFromFormValues,
+    setRegistrationValue
   };
 };
 

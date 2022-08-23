@@ -1,33 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useColorModeValue } from '@chakra-ui/react';
-import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep } from 'utils/localStorageHelper';
-import useCertificateStepper from 'hooks/useCertificateStepper';
+
 import { t } from '@lingui/macro';
-import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import TrixoReviewDataTable from './TrixoReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
-interface TrixoReviewProps {
-  data: any;
-}
-
-const TrixoReview: React.FC<TrixoReviewProps> = ({ data }) => {
-  // const textColor = useColorModeValue('gray.800', '#F7F8FC');
-  // const getColorScheme = (status: string | boolean) => {
-  //   if (status === 'yes' || status === true) {
-  //     return 'green';
-  //   } else {
-  //     return 'orange';
-  //   }
-  // };
-
-  console.log('[Called] TrixoReview.tsx');
+import { useFormContext } from 'react-hook-form';
+import Store from 'application/store';
+import { getCurrentState } from 'application/store/selectors/stepper';
+import { RootStateOrAny, useSelector } from 'react-redux';
+const TrixoReview: React.FC = () => {
+  const currentStateValue = useSelector(getCurrentState);
+  const trixo = {
+    ...currentStateValue.data.trixo
+  };
 
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader title={t`Section 5: TRIXO Questionnaire`} step={5} />
-      <TrixoReviewDataTable data={data} />
+      <Suspense fallback={'Loading trixo data'}>
+        <TrixoReviewDataTable data={trixo} />
+      </Suspense>
     </CertificateReviewLayout>
   );
 };

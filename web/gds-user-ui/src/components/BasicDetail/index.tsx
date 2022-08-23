@@ -4,7 +4,7 @@ import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
-import { getStepStatus, handleError } from 'utils/utils';
+import { getStepStatus, handleError, format2ShortDate } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 import FileUploader from 'components/FileUpload';
@@ -12,7 +12,8 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { useNavigate } from 'react-router-dom';
 import { fieldNamesPerSteps, validationSchema } from 'modules/dashboard/certificate/lib';
 import { postRegistrationValue } from 'modules/dashboard/registration/utils';
-import { getRegistrationData } from '../../modules/dashboard/registration/service';
+import { getRegistrationData } from 'modules/dashboard/registration/service';
+
 interface BasicDetailProps {
   onChangeRegistrationState?: any;
 }
@@ -22,7 +23,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
-  const { updateStateFromFormValues } = useCertificateStepper();
+  const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
   const bg = useColorModeValue('#F7F8FC', 'gray.800');
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
@@ -38,8 +39,15 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
         if (updatedCertificate.status === 204) {
           const getValue = await getRegistrationData();
           // console.log('[getValue]', getValue);
-          onChangeRegistrationState(getValue.data);
-          updateStateFromFormValues(getValue.data.state);
+          const values = {
+            ...getValue.data,
+            established_on: getValue?.data?.established_on
+              ? format2ShortDate(getValue?.data?.established_on)
+              : ''
+          };
+          onChangeRegistrationState(values);
+          setRegistrationValue(values);
+          updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
         console.log(e);

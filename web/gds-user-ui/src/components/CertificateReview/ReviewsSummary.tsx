@@ -13,16 +13,9 @@ import {
   downloadRegistrationData
 } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
-import LegalPerson from 'components/LegalPerson';
 
 const ReviewsSummary: React.FC = () => {
   const [isLoadingExport, setIsLoadingExport] = useState(false);
-  const [basicDetail, setBasicDetail] = React.useState<any>({});
-  const [_, setLegalPerson] = React.useState<any>({});
-  const [contacts, setContacts] = React.useState<any>({});
-  const [trisa, setTrisa] = React.useState<any>({});
-  const [trixo, setTrixo] = React.useState<any>({});
-
   const handleExport = () => {
     const downloadData = async () => {
       try {
@@ -36,33 +29,6 @@ const ReviewsSummary: React.FC = () => {
     };
     downloadData();
   };
-
-  // load value from trtl and set it to review pages
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const getStepperData = await getRegistrationDefaultValue();
-        const basicDetailData = {
-          website: getStepperData.website,
-          established_on: getStepperData.established_on,
-          vasp_categories: getStepperData.vasp_categories,
-          business_category: getStepperData.business_category
-        };
-        const trisaData = {
-          mainnet: getStepperData.mainnet,
-          testnet: getStepperData.testnet
-        };
-        setBasicDetail(basicDetailData);
-        setLegalPerson(getStepperData.entity);
-        setContacts(getStepperData.contacts);
-        setTrisa(trisaData);
-        setTrixo(getStepperData.trixo);
-      } catch (error) {
-        handleError(error, 'Error while getting registration data');
-      }
-    };
-    fetchData();
-  }, []);
 
   return (
     <Stack spacing={7}>
@@ -78,18 +44,18 @@ const ReviewsSummary: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, emails will be sent to the provided contacts for verification. Once verified, your TestNet certificate will be issued.">
+          <Trans id="Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, you will be contacted to verify details. Once verified, your TestNet certificate will be issued.">
             Please review the information provided, edit as needed, and submit to complete the
             registration form. After the information is reviewed, you will be contacted to verify
             details. Once verified, your TestNet certificate will be issued.
           </Trans>
         </Text>
       </FormLayout>
-      <BasicDetailsReview data={basicDetail} />
-      <LegalPersonReview data={LegalPerson} />
-      <ContactsReview data={contacts} />
-      <TrisaImplementationReview data={trisa} />
-      <TrixoReview data={trixo} />
+      <BasicDetailsReview />
+      <LegalPersonReview />
+      <ContactsReview />
+      <TrisaImplementationReview />
+      <TrixoReview />
     </Stack>
   );
 };

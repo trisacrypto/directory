@@ -29,12 +29,8 @@ describe('<TrixoReview />', () => {
     });
   });
 
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
   it('should match snapshot', () => {
-    const { container } = render(<TrixoReview data={defaultValues.trixo} />);
+    const { container } = render(<TrixoReview />);
 
     // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     // expect(Object.keys(localStorage.__STORE__).length).toBe(1);
