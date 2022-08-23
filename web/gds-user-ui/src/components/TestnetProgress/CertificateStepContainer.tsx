@@ -8,7 +8,6 @@ interface StepLabelProps {
 }
 
 const CertificateStepContainer: FC<StepLabelProps> = (props) => {
- 
   return (
     <>
       <Collapse in={props.isCurrentStep} unmountOnExit>
