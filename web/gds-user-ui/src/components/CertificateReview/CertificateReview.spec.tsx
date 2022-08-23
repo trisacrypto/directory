@@ -3,6 +3,15 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { render, screen } from 'utils/test-utils';
 import CertificateReview from '.';
 
+// mock useformcontext of react-hook-form
+jest.mock('react-hook-form', () => ({
+  ...jest.requireActual('react-hook-form'),
+  useFormContext: () => ({
+    handleSubmit: () => jest.fn(),
+    getValues: () => ({})
+  })
+}));
+
 describe('<CertificateReview />', () => {
   beforeEach(() => {
     dynamicActivate('en');

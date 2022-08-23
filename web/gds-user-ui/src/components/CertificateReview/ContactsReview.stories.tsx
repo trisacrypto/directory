@@ -10,7 +10,7 @@ export default {
   component: ContactsReview
 } as Meta;
 
-const Template: Story<ContactsReviewProps> = (args) => <ContactsReview {...args} />;
+const Template: Story = (args) => <ContactsReview {...args} />;
 
 export const Default = Template.bind({});
 Default.args = {};

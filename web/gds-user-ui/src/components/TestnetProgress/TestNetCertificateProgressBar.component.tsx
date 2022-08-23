@@ -11,8 +11,9 @@ import TrisaImplementation from 'components/TrisaImplementation';
 import CertificateReview from 'components/CertificateReview';
 interface ProgressBarProps {
   onSetRegistrationState?: any;
+  registrationState?: any;
 }
-const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
+const ProgressBar = ({ onSetRegistrationState, registrationState }: ProgressBarProps) => {
   return (
     <>
       <CertificateSteps>
@@ -25,7 +26,11 @@ const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
         <CertificateStepContainer key="3" component={<Contacts />} />
         <CertificateStepContainer key="4" component={<TrisaImplementation />} />
         <CertificateStepContainer key="5" component={<TrixoQuestionnaire />} />
-        <CertificateStepContainer key="6" isLast component={<CertificateReview />} />
+        <CertificateStepContainer
+          key="6"
+          isLast
+          component={<CertificateReview data={registrationState} />}
+        />
       </CertificateSteps>
     </>
   );

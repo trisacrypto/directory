@@ -15,7 +15,8 @@ export const initialValue: TPayload = {
   lastStep: null,
   hasReachSubmitStep: false,
   testnetSubmitted: false,
-  mainnetSubmitted: false
+  mainnetSubmitted: false,
+  data: {}
 };
 
 const stepperSlice: any = createSlice({
@@ -85,6 +86,7 @@ const stepperSlice: any = createSlice({
       state.hasReachSubmitStep = false;
       state.testnetSubmitted = false;
       state.mainnetSubmitted = false;
+      state.data = {};
     },
     // set testnet submission
     setTestnetSubmitted: (state: any, { payload }: any) => {
@@ -93,6 +95,15 @@ const stepperSlice: any = createSlice({
     // set mainnet submission
     setMainnetSubmitted: (state: any, { payload }: any) => {
       state.mainnetSubmitted = payload.mainnetSubmitted;
+    },
+    // set certificate data
+    setCertificateValue: (state: any, { payload }: any) => {
+      state.data = { ...payload.value };
+    },
+
+    // get certificate data
+    getCertificateData: (state: any) => {
+      return state.data;
     }
   }
 });
@@ -111,5 +122,7 @@ export const {
   setInitialValue,
   getCurrentState,
   setTestnetSubmitted,
-  setMainnetSubmitted
+  setMainnetSubmitted,
+  setCertificateValue,
+  getCertificateData
 } = stepperSlice.actions;

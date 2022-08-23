@@ -48,6 +48,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
+import { setCertificateValue } from 'application/store/stepper.slice';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -55,7 +56,12 @@ const Certificate: React.FC = () => {
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
-  const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
+  const {
+    nextStep,
+    previousStep,
+    setInitialState,
+    setRegistrationValue: setRegistrationStore
+  } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
   const currentStateValue = useSelector(getCurrentState);
@@ -150,11 +156,6 @@ const Certificate: React.FC = () => {
     return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
 
-  const updateCurrentStep = useCallback(() => {
-    const updatedState = Store.getState().stepper;
-    return updatedState.currentStep;
-  }, []);
-
   const handleResetForm = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
@@ -197,11 +198,13 @@ const Certificate: React.FC = () => {
     const fetchData = async () => {
       try {
         const data = await getRegistrationAndStepperData();
+
         setRegistrationData(data.registrationData);
         // console.log('[registrationData]', data.registrationData);
         // console.log('[registrationData from state]', data.stepperData);
         console.log('[called from useEffect]');
         setInitialState(data.stepperData);
+        setRegistrationStore(data.registrationData);
       } catch (error) {
         handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
       } finally {
@@ -264,19 +267,19 @@ const Certificate: React.FC = () => {
                   <>
                     {/* {!isFormSubmitted() && ( */}
                     <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
+                      {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
                     </Button>
                     {/* )} */}
                     <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Save & Next` : t`Save & Next`}
+                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
                     {/* add review button when reach to final step */}
 
-                    {/* {!isFormSubmitted() && ( */}
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </Button>
-                    {/* )} */}
+                    {!isFormSubmitted() && (
+                      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                      </Button>
+                    )}
                   </>
                 )}
               </Stack>

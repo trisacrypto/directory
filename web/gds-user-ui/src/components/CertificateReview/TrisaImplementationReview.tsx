@@ -23,15 +23,25 @@ import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { MdSystemUpdateAlt } from 'react-icons/md';
 import { t } from '@lingui/macro';
+import { useFormContext } from 'react-hook-form';
+import Store from 'application/store';
+const TrisaImplementationReview = () => {
+  const [trisa, setTrisa] = React.useState<any>({});
+  const textColor = useColorModeValue('gray.800', '#F7F8FC');
 
-interface TrisaImplementationReviewProps {
-  data: any;
-}
-const TrisaImplementationReview = ({ data }: TrisaImplementationReviewProps) => {
+  useEffect(() => {
+    const getStepperData = Store.getState().stepper.data;
+    const stepData = {
+      mainnet: getStepperData.mainnet,
+      testnet: getStepperData.testnet
+    };
+
+    setTrisa(stepData);
+  }, []);
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />
-      <TrisaImplementationReviewDataTable mainnet={data.mainnet} testnet={data.testnet} />
+      <TrisaImplementationReviewDataTable mainnet={trisa.mainnet} testnet={trisa.testnet} />
     </CertificateReviewLayout>
   );
 };

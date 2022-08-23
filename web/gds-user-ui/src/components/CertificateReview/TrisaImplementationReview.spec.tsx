@@ -27,7 +27,7 @@ describe('<TrisaImplementationReview />', () => {
   it('should match snapshot', () => {
     // localStorage.setItem('certificateForm', JSON.stringify(defaultValues));
 
-    const { container } = render(<TrisaImplementationReview data={defaultValues} />);
+    const { container } = render(<TrisaImplementationReview />);
 
     // expect(localStorage.getItem).toHaveBeenCalledWith('certificateForm');
     // expect(Object.keys(localStorage.__STORE__).length).toBe(1);

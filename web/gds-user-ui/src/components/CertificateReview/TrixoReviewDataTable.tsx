@@ -137,7 +137,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td pl={0}>
-              {data?.kyc_threshold ? (
+              {data?.kyc_threshold || data?.kyc_threshold !== 0 ? (
                 <Text>
                   {currencyFormatter(data?.kyc_threshold, {
                     currency: data?.kyc_threshold_currency
@@ -177,7 +177,13 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td>
               {data?.applicable_regulations?.map((o: any, i: any) => {
                 if (o?.length > 0) {
-                  return <Text key={i}>{o || 'N/A'}</Text>;
+                  return (
+                    <Tag bg={'blue'} color={'white'} key={i}>
+                      {o}
+                    </Tag>
+                  );
+                } else {
+                  return <Text>{'N/A'}</Text>;
                 }
               })}
             </Td>
@@ -190,10 +196,16 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td pl={0}>
-              {currencyFormatter(data?.compliance_threshold, {
-                currency: data?.compliance_threshold_currency
-              }) || 'N/A'}{' '}
-              {data?.compliance_threshold_currency || 'N/A'}
+              {data?.compliance_threshold || data?.compliance_threshold !== 0 ? (
+                <Text>
+                  {currencyFormatter(data?.compliance_threshold, {
+                    currency: data?.compliance_threshold_currency
+                  }) || 'USD'}{' '}
+                  {data?.compliance_threshold_currency || 'USD'}
+                </Text>
+              ) : (
+                <Text>{'N/A'}</Text>
+              )}
             </Td>
             <Td></Td>
           </Tr>

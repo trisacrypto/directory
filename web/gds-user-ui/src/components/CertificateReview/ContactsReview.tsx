@@ -4,19 +4,26 @@ import { useSelector, RootStateOrAny } from 'react-redux';
 import { TStep } from 'utils/localStorageHelper';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-
+import { useFormContext } from 'react-hook-form';
 import ContactsReviewDataTable from './ContactsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
-interface ContactsReviewProps {
-  data: any;
-}
-const ContactsReview = ({ data }: ContactsReviewProps) => {
+import Store from 'application/store';
+const ContactsReview = () => {
+  const [contacts, setContacts] = React.useState<any>({});
+
+  useEffect(() => {
+    const getStepperData = Store.getState().stepper.data;
+    const stepData = {
+      ...getStepperData.contacts
+    };
+    setContacts(stepData);
+  }, []);
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />
-      <ContactsReviewDataTable data={data} />
+      <ContactsReviewDataTable data={contacts} />
     </CertificateReviewLayout>
   );
 };
