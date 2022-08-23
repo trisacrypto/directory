@@ -22,7 +22,7 @@ export const validationSchema = [
       .required(_i18n._(t`Invalid date`))
       .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
         if (value) {
-          console.log('value', value);
+          // console.log('value', value);
           const getYear = value.getFullYear();
           if (getYear.toString().length !== 4) {
             return false;

@@ -11,7 +11,6 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
-  console.log('data-TrixoReviewDataTable', data);
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -123,9 +122,9 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(data?.financial_transfers_permitted)}>
+                colorScheme={getColorScheme(data?.conducts_customer_kyc)}>
                 <TagLabel fontWeight={'bold'}>
-                  {data?.financial_transfers_permitted?.toUpperCase()}
+                  {data?.conducts_customer_kyc ? 'YES' : 'NO'}
                 </TagLabel>
               </Tag>
             </Td>

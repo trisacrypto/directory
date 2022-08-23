@@ -200,9 +200,7 @@ const Certificate: React.FC = () => {
         const data = await getRegistrationAndStepperData();
 
         setRegistrationData(data.registrationData);
-        // console.log('[registrationData]', data.registrationData);
-        // console.log('[registrationData from state]', data.stepperData);
-        console.log('[called from useEffect]');
+
         setInitialState(data.stepperData);
         setRegistrationStore(data.registrationData);
       } catch (error) {

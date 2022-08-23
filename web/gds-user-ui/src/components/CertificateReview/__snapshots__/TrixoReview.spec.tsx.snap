@@ -185,7 +185,9 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 >
                   <span
                     class="css-12rgubf"
-                  />
+                  >
+                    NO
+                  </span>
                 </span>
               </td>
               <td
