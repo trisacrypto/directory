@@ -6,9 +6,9 @@ const AlertContent = () => {
     <>
       <Text>
         <Text as={'span'}>
-          <Trans id="Yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password.">
-            Yes, I understand that this is the only time the PKCS12 Password is displayed and I have
-            copied and securely saved the password.
+          <Trans id="By answering yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password.">
+            By answering yes, I understand that this is the only time the PKCS12 Password is
+            displayed and I have copied and securely saved the password.
           </Trans>
           <br />
           <Trans id="Click “No” if you have not copied the PKCS12 password yet and would like to view and copy the password.">

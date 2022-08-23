@@ -23,6 +23,7 @@ import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { MdSystemUpdateAlt } from 'react-icons/md';
 import { t } from '@lingui/macro';
+
 import { useFormContext } from 'react-hook-form';
 import Store from 'application/store';
 const TrisaImplementationReview = () => {
@@ -38,6 +39,7 @@ const TrisaImplementationReview = () => {
 
     setTrisa(stepData);
   }, []);
+
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />

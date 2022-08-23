@@ -9,6 +9,7 @@ import ContactsReviewDataTable from './ContactsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
+
 import Store from 'application/store';
 const ContactsReview = () => {
   const [contacts, setContacts] = React.useState<any>({});
@@ -20,6 +21,7 @@ const ContactsReview = () => {
     };
     setContacts(stepData);
   }, []);
+
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />

@@ -41,7 +41,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
     if (getApplicableRegulations.length === 0) {
       setValue(`trixo.applicable_regulations`, ['FATF Recommendation 16']);
     }
-  }, [getMustComplyRegulations, getHasRequiredRegulatoryProgram, setValue]);
+  }, [getMustComplyRegulations, getHasRequiredRegulatoryProgram, setValue, getApplicableRegulations]);
 
   return (
     <FormLayout spacing={5}>

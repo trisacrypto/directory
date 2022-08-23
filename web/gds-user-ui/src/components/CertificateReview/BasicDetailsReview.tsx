@@ -10,6 +10,7 @@ import { useFormContext } from 'react-hook-form';
 import BasicDetailsReviewDataTable from './BasicDetailsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
+
 import Store from 'application/store';
 const BasicDetailsReview = () => {
   const [basicDetail, setBasicDetail] = React.useState<any>({});
@@ -24,6 +25,7 @@ const BasicDetailsReview = () => {
     };
     setBasicDetail(stepData);
   }, []);
+
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={1} title={t`Section 1: Basic Details`} />
