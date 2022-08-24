@@ -9,7 +9,7 @@ const FINANCIAL_TRANSFERTS_PERMITTED_OPTIONS = {
 
 export const getFinancialTransfertsPermittedOptions = () =>
   Object.entries(FINANCIAL_TRANSFERTS_PERMITTED_OPTIONS).map(([k, v]) => ({
-    value: k === 'partial' ? 'no' : k,
+    value: k,
     label: v
   }));
 
