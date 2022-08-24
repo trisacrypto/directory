@@ -11,6 +11,10 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
+    return conductsCustomerKYC ? t`Yes` : t`No`;
+  };
+
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -122,9 +126,9 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(data?.conducts_customer_kyc)}>
+                colorScheme={getColorScheme(data?.conducts_customer_kyc || 'no')}>
                 <TagLabel fontWeight={'bold'}>
-                  {data?.conducts_customer_kyc ? 'YES' : 'NO'}
+                  {getConductsCustomerKYC(data?.conducts_customer_kyc || false)}
                 </TagLabel>
               </Tag>
             </Td>
