@@ -23,6 +23,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -87,7 +88,6 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               </Trans>
               <Text as="span" fontWeight="bold">
                 <Trans id=" Failure to click either confirmation will result in an incomplete registration">
-                  {' '}
                   Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
               </Text>
@@ -134,7 +134,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link color="link" onClick={handleJumpToLastStep} fontWeight={'bold'}>
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                   .
@@ -202,7 +202,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link onClick={handleJumpToLastStep} color="link" fontWeight="bold">
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                 </Text>
@@ -240,9 +240,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Button
               bgColor="#555151"
               color="#fff"
-              onClick={() => {
-                handleJumpToLastStep();
-              }}
+              onClick={handleJumpToLastStep}
               size="lg"
               py="2.5rem"
               whiteSpace="normal"

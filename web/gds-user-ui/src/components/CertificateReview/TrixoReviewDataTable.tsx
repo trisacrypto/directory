@@ -11,7 +11,10 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
-  console.log('data-TrixoReviewDataTable', data);
+  const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
+    return conductsCustomerKYC ? t`Yes` : t`No`;
+  };
+
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -123,9 +126,9 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(data?.financial_transfers_permitted)}>
+                colorScheme={getColorScheme(data?.conducts_customer_kyc || 'no')}>
                 <TagLabel fontWeight={'bold'}>
-                  {data?.financial_transfers_permitted?.toUpperCase()}
+                  {getConductsCustomerKYC(data?.conducts_customer_kyc || false)}
                 </TagLabel>
               </Tag>
             </Td>
@@ -175,7 +178,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td>
               <Trans id="Applicable Regulations">Applicable Regulations</Trans>
             </Td>
-            <Td>
+            <Td display="flex" flexWrap="wrap" gap={1}>
               {data?.applicable_regulations?.map((o: any, i: any) => {
                 if (o?.length > 0) {
                   return (
