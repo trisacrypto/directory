@@ -81,6 +81,8 @@ func (s *gdsTestSuite) TestMembersSummary() {
 		VaspCategories:      charlie.VaspCategories,
 		VerifiedOn:          charlie.VerifiedOn,
 		Status:              charlie.VerificationStatus,
+		FirstListed:         charlie.FirstListed,
+		LastUpdated:         charlie.LastUpdated,
 	}
 	out, err = client.Summary(ctx, &members.SummaryRequest{
 		MemberId: charlie.Id,
@@ -150,6 +152,8 @@ func (s *gdsTestSuite) TestMembersDetails() {
 		VaspCategories:      charlie.VaspCategories,
 		VerifiedOn:          charlie.VerifiedOn,
 		Status:              charlie.VerificationStatus,
+		FirstListed:         charlie.FirstListed,
+		LastUpdated:         charlie.LastUpdated,
 	}
 	out, err := client.Details(ctx, &members.DetailsRequest{
 		MemberId: charlie.Id,

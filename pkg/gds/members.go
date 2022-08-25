@@ -357,6 +357,8 @@ func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
 		VaspCategories:      vasp.VaspCategories,
 		VerifiedOn:          vasp.VerifiedOn,
 		Status:              vasp.VerificationStatus,
+		FirstListed:         vasp.FirstListed,
+		LastUpdated:         vasp.LastUpdated,
 	}
 
 	// Try to add the name information

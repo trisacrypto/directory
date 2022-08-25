@@ -137,6 +137,9 @@ func (s *Server) Overview(c *gin.Context) {
 				ID:          testnet.MemberInfo.Id,
 				Status:      testnet.MemberInfo.Status.String(),
 				CountryCode: testnet.MemberInfo.Country,
+				FirstListed: testnet.MemberInfo.FirstListed,
+				VerifiedOn:  testnet.MemberInfo.VerifiedOn,
+				LastUpdated: testnet.MemberInfo.LastUpdated,
 			}
 		}
 	}
@@ -160,6 +163,9 @@ func (s *Server) Overview(c *gin.Context) {
 				ID:          mainnet.MemberInfo.Id,
 				Status:      mainnet.MemberInfo.Status.String(),
 				CountryCode: mainnet.MemberInfo.Country,
+				FirstListed: mainnet.MemberInfo.FirstListed,
+				VerifiedOn:  mainnet.MemberInfo.VerifiedOn,
+				LastUpdated: mainnet.MemberInfo.LastUpdated,
 			}
 		} else {
 			out.MainNet.MemberDetails = api.MemberDetails{

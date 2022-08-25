@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
@@ -30,6 +31,9 @@ func (s *bffTestSuite) TestGetSummaries() {
 			RegisteredDirectory: "testnet",
 			CommonName:          "alice.vaspbot.net",
 			Status:              pb.VerificationState_VERIFIED,
+			FirstListed:         time.Now().AddDate(0, 0, -2).Format(time.RFC3339),
+			VerifiedOn:          time.Now().AddDate(0, 0, -1).Format(time.RFC3339),
+			LastUpdated:         time.Now().Format(time.RFC3339),
 		},
 	}
 	testnetSummary := func(ctx context.Context, in *members.SummaryRequest) (*members.SummaryReply, error) {
@@ -45,6 +49,9 @@ func (s *bffTestSuite) TestGetSummaries() {
 			RegisteredDirectory: "mainnet",
 			CommonName:          "alice.vaspbot.net",
 			Status:              pb.VerificationState_SUBMITTED,
+			FirstListed:         time.Now().AddDate(0, 0, -3).Format(time.RFC3339),
+			VerifiedOn:          time.Now().AddDate(0, 0, -2).Format(time.RFC3339),
+			LastUpdated:         time.Now().Format(time.RFC3339),
 		},
 	}
 	mainnetSummary := func(ctx context.Context, in *members.SummaryRequest) (*members.SummaryReply, error) {
@@ -171,6 +178,9 @@ func (s *bffTestSuite) TestOverview() {
 	require.Equal(expected, reply, "overview reply did not match")
 
 	// Test with both valid responses, one endpoint returns VASP details
+	firstListed := time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
+	verifiedOn := time.Now().AddDate(0, 0, -2).Format(time.RFC3339)
+	lastUpdated := time.Now().Format(time.RFC3339)
 	claims.VASPs["mainnet"] = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with VASP ID")
 	s.mainnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
@@ -184,9 +194,12 @@ func (s *bffTestSuite) TestOverview() {
 			CertificatesIssued: 23,
 			NewMembers:         5,
 			MemberInfo: &members.VASPMember{
-				Id:      claims.VASPs["mainnet"],
-				Status:  pb.VerificationState_SUBMITTED,
-				Country: "US",
+				Id:          claims.VASPs["mainnet"],
+				Status:      pb.VerificationState_SUBMITTED,
+				Country:     "US",
+				FirstListed: firstListed,
+				VerifiedOn:  verifiedOn,
+				LastUpdated: lastUpdated,
 			},
 		}, nil
 	}
@@ -198,6 +211,9 @@ func (s *bffTestSuite) TestOverview() {
 		ID:          claims.VASPs["mainnet"],
 		Status:      pb.VerificationState_SUBMITTED.String(),
 		CountryCode: "US",
+		FirstListed: firstListed,
+		VerifiedOn:  verifiedOn,
+		LastUpdated: lastUpdated,
 	}
 	expected.Error.MainNet = ""
 	reply, err = s.client.Overview(context.TODO())
@@ -213,9 +229,12 @@ func (s *bffTestSuite) TestOverview() {
 			CertificatesIssued: 6,
 			NewMembers:         3,
 			MemberInfo: &members.VASPMember{
-				Id:      claims.VASPs["testnet"],
-				Status:  pb.VerificationState_VERIFIED,
-				Country: "FR",
+				Id:          claims.VASPs["testnet"],
+				Status:      pb.VerificationState_VERIFIED,
+				Country:     "FR",
+				FirstListed: firstListed,
+				VerifiedOn:  verifiedOn,
+				LastUpdated: lastUpdated,
 			},
 		}, nil
 	}
@@ -223,6 +242,9 @@ func (s *bffTestSuite) TestOverview() {
 		ID:          claims.VASPs["testnet"],
 		Status:      pb.VerificationState_VERIFIED.String(),
 		CountryCode: "FR",
+		FirstListed: firstListed,
+		VerifiedOn:  verifiedOn,
+		LastUpdated: lastUpdated,
 	}
 	reply, err = s.client.Overview(context.TODO())
 	require.NoError(err, "could not get overview")
