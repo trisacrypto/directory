@@ -149,11 +149,7 @@ jobs:
             REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.dev/v2
             REACT_APP_GDS_IS_TESTNET=false
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID }}
-<<<<<<< HEAD
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_SENTRY_DSN }}
-=======
-            REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
->>>>>>> 0cea5fe6c5a4f49cab09abb680c1a543cf55e59e
             REACT_APP_SENTRY_ENVIRONMENT=staging
 
   # GDS Staging TestNet Admin UI: admin.trisatest.dev
@@ -217,9 +213,5 @@ jobs:
             REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.dev/v2
             REACT_APP_GDS_IS_TESTNET=true
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_STAGING_TRISATEST_CLIENT_ID }}
-<<<<<<< HEAD
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_SENTRY_DSN }}
-=======
-            REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
->>>>>>> 0cea5fe6c5a4f49cab09abb680c1a543cf55e59e
             REACT_APP_SENTRY_ENVIRONMENT=staging
