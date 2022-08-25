@@ -15,7 +15,7 @@ func TestMarshalRegistrationForm(t *testing.T) {
 	form := &models.RegistrationForm{}
 	data, err := json.Marshal(form)
 	require.NoError(t, err, "error marshaling empty registration form to JSON")
-	require.NotEqual(t, []byte("{}"), data, "missing fields should be populated in marshaled JSON")
+	require.Greater(t, len(string(data)), 2, "missing fields should be populated in marshaled JSON")
 
 	// Empty form should be unmarshaled correctly
 	require.NoError(t, json.Unmarshal(data, form), "error unmarshaling empty registration form from JSON")
@@ -29,5 +29,7 @@ func TestMarshalRegistrationForm(t *testing.T) {
 	require.NoError(t, err, "error marshaling registration form to JSON")
 
 	// Form with data should be unmarshaled correctly
-	require.NoError(t, json.Unmarshal(data, form), "error unmarshaling registration form from JSON")
+	result := &models.RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
 }
