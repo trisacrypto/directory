@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
@@ -288,6 +290,22 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user from the context
+	var user *management.User
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("submit registration requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user info"))
+		return
+	}
+
+	// Load the app metadata for the user for updating
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
+		return
+	}
+
 	// Do not allow a registration form to be submitted twice
 	switch network {
 	case testnet:
@@ -366,6 +384,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		Status:              rep.Status.String(),
 		Message:             rep.Message,
 		PKCS12Password:      rep.Pkcs12Password,
+		RefreshToken:        true,
 	}
 
 	if rep.Error != nil && rep.Error.Code != 0 {
@@ -394,13 +413,22 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	switch network {
 	case testnet:
 		org.Testnet = directoryRecord
+		appdata.VASPs.TestNet = rep.Id
 	case mainnet:
 		org.Mainnet = directoryRecord
+		appdata.VASPs.MainNet = rep.Id
 	}
 
 	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
+		return
+	}
+
+	// Commit the user metadata updates to auth0
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save user app metadata"))
 		return
 	}
 

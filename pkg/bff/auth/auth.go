@@ -202,10 +202,21 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 // not for endpoints that simply need access to resources or permissions (those should
 // be added to the claims to prevent calls to Auth0 on every RPC). If the user is not
 // authenticated before this step, a 401 is returned.
-func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
+func UserInfo(conf config.AuthConfig, options ...management.Option) (_ gin.HandlerFunc, err error) {
+	domain := conf.Domain
+	if conf.Testing && len(options) == 0 {
+		var ts *authtest.Server
+		if ts, err = authtest.Serve(); err != nil {
+			return nil, err
+		}
+		options = append(options, management.WithClient(ts.Client()))
+		domain = ts.URL.Host
+	}
+	options = append(options, conf.ClientCredentials())
+
 	// Connect to the management API
 	var manager *management.Management
-	if manager, err = management.New(conf.Domain, conf.ClientCredentials()); err != nil {
+	if manager, err = management.New(domain, options...); err != nil {
 		return nil, err
 	}
 

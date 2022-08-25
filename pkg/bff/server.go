@@ -348,7 +348,7 @@ func (s *Server) setupRoutes() (err error) {
 		// Authenticated routes
 		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)
 		v1.PUT("/register", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SaveRegisterForm)
-		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SubmitRegistration)
+		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), userinfo, s.SubmitRegistration)
 		v1.GET("/registration", auth.Authorize("read:vasp"), s.RegistrationStatus)
 		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
 		v1.GET("/announcements", auth.Authorize("read:vasp"), s.Announcements)
