@@ -19,6 +19,7 @@ var testEnv = map[string]string{
 	"GDS_BFF_ALLOW_ORIGINS":                  "https://vaspdirectory.net",
 	"GDS_BFF_COOKIE_DOMAIN":                  "vaspdirectory.net",
 	"GDS_BFF_AUTH0_DOMAIN":                   "example.auth0.com",
+	"GDS_BFF_AUTH0_ISSUER":                   "https://auth.example.com",
 	"GDS_BFF_AUTH0_AUDIENCE":                 "https://vaspdirectory.net",
 	"GDS_BFF_AUTH0_PROVIDER_CACHE":           "10m",
 	"GDS_BFF_AUTH0_CLIENT_ID":                "exampleid",
@@ -88,6 +89,7 @@ func TestConfig(t *testing.T) {
 	require.Len(t, conf.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_DOMAIN"], conf.Auth0.Domain)
+	require.Equal(t, testEnv["GDS_BFF_AUTH0_ISSUER"], conf.Auth0.Issuer)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_AUDIENCE"], conf.Auth0.Audience)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_ID"], conf.Auth0.ClientID)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_SECRET"], conf.Auth0.ClientSecret)
@@ -233,6 +235,12 @@ func TestAuthConfig(t *testing.T) {
 			require.Error(t, conf.Validate())
 		}
 	}
+
+	// Ensure that if issuer is set it is returned instead of the domain
+	conf.Issuer = "https://auth.example.com/"
+	u, err := conf.IssuerURL()
+	require.NoError(t, err, "could not parse issuer string")
+	require.Equal(t, conf.Issuer, u.String())
 }
 
 func TestMembersConfigValidation(t *testing.T) {
