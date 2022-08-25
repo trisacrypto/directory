@@ -250,7 +250,9 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// Mark the form as started
+	// Mark the form as started, the BFF relies on this state so the frontend should
+	// capture the updated form returned from this endpoint to avoid overwriting the
+	// state metadata.
 	// NOTE: If an empty form was passed in, the form will not be marked as started.
 	if form.State != nil && form.State.Started == "" {
 		form.State.Started = time.Now().Format(time.RFC3339)
@@ -264,8 +266,13 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// If successful respond with 204: No Content so that the front-end can continue.
-	c.Status(http.StatusNoContent)
+	if org.Registration.State == nil || org.Registration.State.Started == "" {
+		// If an empty form was passed in, return a 204 No Content response
+		c.Status(http.StatusNoContent)
+	} else {
+		// Otherwise, return the form in a 200 OK response
+		c.JSON(http.StatusOK, org.Registration)
+	}
 }
 
 // SubmitRegistration makes a request on behalf of the user to either the TestNet or the
