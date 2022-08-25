@@ -46,9 +46,11 @@ import {
   getCurrentState,
   getLastStep,
   getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus
+  getMainNetSubmittedStatus,
+  getHasReachedSubmitStep
 } from 'application/store/selectors/stepper';
 import { setCertificateValue } from 'application/store/stepper.slice';
+import { useNavigate } from 'react-router-dom';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -60,6 +62,8 @@ const Certificate: React.FC = () => {
     nextStep,
     previousStep,
     setInitialState,
+    jumpToLastStep,
+    jumpToStep,
     setRegistrationValue: setRegistrationStore
   } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -73,17 +77,17 @@ const Certificate: React.FC = () => {
   const [registrationData, setRegistrationData] = useState<any>([]);
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const hasReachSubmitStep: boolean = useSelector(
-    (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
-  );
+  const hasReachSubmitStep: boolean = useSelector(getHasReachedSubmitStep);
   const { isLoggedIn } = useSelector(userSelector);
   const toast = useToast();
+  const hasReachedLastStep = lastStep === 6;
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
-  // console.log('[registrationData from state]', registrationData);
+  const navigate = useNavigate();
+
   const methods = useForm({
     defaultValues: registrationData,
     resolver,
@@ -213,6 +217,11 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleJumpToLastStep = () => {
+    jumpToLastStep();
+    // navigate('/dashboard/certificate/registration');
+  };
+
   return (
     <SimpleDashboardLayout>
       <>
@@ -263,7 +272,6 @@ const Certificate: React.FC = () => {
               <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
                 {!hasReachSubmitStep && (
                   <>
-                    {/* {!isFormSubmitted() && ( */}
                     <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
                       {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
                     </Button>
@@ -271,8 +279,15 @@ const Certificate: React.FC = () => {
                     <Button type="submit" variant="secondary">
                       {currentStep === lastStep ? t`Next` : t`Save & Next`}
                     </Button>
-                    {/* add review button when reach to final step */}
+                  </>
+                )}
 
+                {hasReachedLastStep && currentStep < lastStep && (
+                  <Button onClick={() => jumpToStep(lastStep)}>Go to review page</Button>
+                )}
+
+                {!hasReachSubmitStep && (
+                  <>
                     {!isFormSubmitted() && (
                       <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
                         <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>

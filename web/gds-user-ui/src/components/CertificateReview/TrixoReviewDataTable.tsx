@@ -178,7 +178,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td>
               <Trans id="Applicable Regulations">Applicable Regulations</Trans>
             </Td>
-            <Td>
+            <Td display="flex" flexWrap="wrap" gap={1}>
               {data?.applicable_regulations?.map((o: any, i: any) => {
                 if (o?.length > 0) {
                   return (
