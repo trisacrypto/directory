@@ -442,8 +442,9 @@ func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact,
 		contact, kind := iter.Value()
 		switch kind {
 		case models.TechnicalContact, models.AdministrativeContact:
-			contactsToNotify = append(contactsToNotify, contact)
-			return contactsToNotify, nil
+			return []*pb.Contact{
+				contact,
+			}, nil
 		case models.LegalContact, models.BillingContact:
 			contactsToNotify = append(contactsToNotify, contact)
 		}

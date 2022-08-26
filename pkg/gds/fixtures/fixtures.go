@@ -206,7 +206,7 @@ func (lib *Library) SetupTrtl() (err error) {
 	conf := trtlmock.Config()
 	conf.Database.URL = "leveldb:///" + lib.dbPath
 
-	// Mark as processed since the config wasn't loaded from the envrionment
+	// Mark as processed since the config wasn't loaded from the environment
 	if conf, err = conf.Mark(); err != nil {
 		return err
 	}

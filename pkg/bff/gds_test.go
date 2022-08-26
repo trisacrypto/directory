@@ -350,13 +350,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 
 	require.NotNil(org.Testnet, "missing testnet directory record after registration")
 	require.Equal(org.Testnet.Id, "6041571e-09b4-47e7-870a-723f8032cd6c", "incorrect testnet directory id")
-	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registerd directory ")
+	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registered directory ")
 	require.Equal(org.Testnet.CommonName, "test.trisa.example.ua", "incorrect testnet directory common name")
 	require.NotEmpty(org.Testnet.Submitted, "expected testnet submitted timestamp stored in database")
 
 	require.NotNil(org.Mainnet, "missing mainnet directory record after registration")
 	require.Equal(org.Mainnet.Id, "5bafb054-5868-439e-9b3c-75db91810714", "incorrect mainnet directory id")
-	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registerd directory ")
+	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registered directory ")
 	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
 	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
 }
