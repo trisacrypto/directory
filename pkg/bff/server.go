@@ -71,29 +71,31 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Connect to the TestNet and MainNet directory services and database if we're not
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
-	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
-		if s.testnetAdmin, err = admin.New(conf.TestNet.Admin); err != nil {
-			return nil, err
+	if !s.conf.Maintenance {
+		if s.conf.Mode != gin.TestMode {
+			if s.testnetAdmin, err = admin.New(conf.TestNet.Admin); err != nil {
+				return nil, err
+			}
+
+			if s.mainnetAdmin, err = admin.New(conf.MainNet.Admin); err != nil {
+				return nil, err
+			}
+
+			if s.testnetGDS, err = ConnectGDS(s.conf.TestNet); err != nil {
+				return nil, fmt.Errorf("could not connect to testnet: %s", err)
+			}
+
+			if s.mainnetGDS, err = ConnectGDS(s.conf.MainNet); err != nil {
+				return nil, fmt.Errorf("could not connect to mainnet: %s", err)
+			}
+
+			if s.db, err = db.Connect(s.conf.Database); err != nil {
+				return nil, fmt.Errorf("could not connect to trtl database: %s", err)
+			}
+			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.MTLS.Insecure).Msg("connected to trtl database")
 		}
 
-		if s.mainnetAdmin, err = admin.New(conf.MainNet.Admin); err != nil {
-			return nil, err
-		}
-
-		if s.testnetGDS, err = ConnectGDS(s.conf.TestNet); err != nil {
-			return nil, fmt.Errorf("could not connect to testnet: %s", err)
-		}
-
-		if s.mainnetGDS, err = ConnectGDS(s.conf.MainNet); err != nil {
-			return nil, fmt.Errorf("could not connect to mainnet: %s", err)
-		}
-
-		if s.db, err = db.Connect(s.conf.Database); err != nil {
-			return nil, fmt.Errorf("could not connect to trtl database: %s", err)
-		}
-		log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.MTLS.Insecure).Msg("connected to trtl database")
-
-		if s.auth0, err = management.New(s.conf.Auth0.Domain, s.conf.Auth0.ClientCredentials()); err != nil {
+		if s.auth0, err = auth.NewManagementClient(s.conf.Auth0); err != nil {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")

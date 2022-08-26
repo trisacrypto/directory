@@ -80,6 +80,29 @@ func (c Claims) IsAnonymous() bool {
 	return c.HasScope(ScopeAnonymous)
 }
 
+// NewManagementClient creates a new Auth0 management client from the configuration.
+func NewManagementClient(conf config.AuthConfig) (manager *management.Management, err error) {
+	var options []management.Option
+	domain := conf.Domain
+	if conf.Testing {
+		var ts *authtest.Server
+		if ts, err = authtest.Serve(); err != nil {
+			return nil, err
+		}
+		options = append(options, management.WithClient(ts.Client()))
+		options = append(options, management.WithStaticToken(conf.ClientSecret))
+		domain = ts.URL.Host
+	} else {
+		options = append(options, conf.ClientCredentials())
+	}
+
+	// Connect to the management API
+	if manager, err = management.New(domain, options...); err != nil {
+		return nil, err
+	}
+	return manager, nil
+}
+
 // NewClaims implements the validator custom claims initializer interface.
 func NewClaims() validator.CustomClaims {
 	return &Claims{}
@@ -202,23 +225,9 @@ func Authorize(permissions ...string) gin.HandlerFunc {
 // not for endpoints that simply need access to resources or permissions (those should
 // be added to the claims to prevent calls to Auth0 on every RPC). If the user is not
 // authenticated before this step, a 401 is returned.
-func UserInfo(conf config.AuthConfig, options ...management.Option) (_ gin.HandlerFunc, err error) {
-	domain := conf.Domain
-	if conf.Testing && len(options) == 0 {
-		var ts *authtest.Server
-		if ts, err = authtest.Serve(); err != nil {
-			return nil, err
-		}
-		options = append(options, management.WithClient(ts.Client()))
-		domain = ts.URL.Host
-	}
-	options = append(options, conf.ClientCredentials())
-	options = append(options, management.WithDebug(true))
-	options = append(options, management.WithStaticToken(conf.ClientSecret))
-
-	// Connect to the management API
+func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 	var manager *management.Management
-	if manager, err = management.New(domain, options...); err != nil {
+	if manager, err = NewManagementClient(conf); err != nil {
 		return nil, err
 	}
 
@@ -236,7 +245,6 @@ func UserInfo(conf config.AuthConfig, options ...management.Option) (_ gin.Handl
 		user, err := manager.User.Read(claims.Subject)
 		if err != nil {
 			c.Error(err)
-			fmt.Println(err)
 			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))
 			return
 		}

@@ -103,7 +103,7 @@ func New() (s *Server, err error) {
 	s.mux = http.NewServeMux()
 	s.mux.HandleFunc("/.well-known/openid-configuration", s.OpenIDConfiguration)
 	s.mux.HandleFunc("/.well-known/jwks.json", s.JWKS)
-	s.mux.HandleFunc("/api/v2/users/"+UserID, s.GetUser)
+	s.mux.HandleFunc("/api/v2/users/"+UserID, s.Users)
 
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
@@ -212,6 +212,17 @@ func (s *Server) JWKS(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(webkeys)
 }
 
+func (s *Server) Users(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.GetUser(w, r)
+	case http.MethodPatch:
+		s.PatchUserAppMetadata(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
 func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	// Return the user object from the map
 	// TODO: Parse the user id from the request
@@ -223,7 +234,28 @@ func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Update the test user with unstructured app metadata
+func (s *Server) PatchUserAppMetadata(w http.ResponseWriter, r *http.Request) {
+	// Get the user object from the request
+	user := &management.User{}
+	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Replace the user app metadata
+	s.users[UserID].AppMetadata = user.AppMetadata
+
+	// Return the user object in the response
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+// Expose the test user's app metadata to the tests.
+func (s *Server) GetUserAppMetadata() map[string]interface{} {
+	return s.users[UserID].AppMetadata
+}
+
+// Update the test user with unstructured app metadata.
 func (s *Server) UseAppMetadata(appdata map[string]interface{}) {
 	s.users[UserID].AppMetadata = appdata
 }
