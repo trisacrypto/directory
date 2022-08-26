@@ -213,6 +213,8 @@ func UserInfo(conf config.AuthConfig, options ...management.Option) (_ gin.Handl
 		domain = ts.URL.Host
 	}
 	options = append(options, conf.ClientCredentials())
+	options = append(options, management.WithDebug(true))
+	options = append(options, management.WithStaticToken(conf.ClientSecret))
 
 	// Connect to the management API
 	var manager *management.Management
@@ -234,6 +236,7 @@ func UserInfo(conf config.AuthConfig, options ...management.Option) (_ gin.Handl
 		user, err := manager.User.Read(claims.Subject)
 		if err != nil {
 			c.Error(err)
+			fmt.Println(err)
 			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))
 			return
 		}
