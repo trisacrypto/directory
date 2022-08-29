@@ -6,15 +6,20 @@ import LandingLayout from 'layouts/LandingLayout';
 import useQuery from 'hooks/useQuery';
 import verifyService from './verify.service';
 import AlertMessage from 'components/ui/AlertMessage';
+import useAuth from 'hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import Loader from 'components/Loader';
 const VerifyPage: React.FC = () => {
-  console.log('vaspID called');
   const query = useQuery();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>();
   const [result, setResult] = useState<any>(null);
+  const [isRedirected, setIsRedirected] = useState(false);
   const vaspID = query.get('vaspID');
   const token = query.get('token');
   const registered_directory = query.get('registered_directory');
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   // to-do : should be improve later
 
   useEffect(() => {
@@ -25,6 +30,12 @@ const VerifyPage: React.FC = () => {
           const response = await verifyService(params);
           if (!response.error) {
             setResult(response);
+            // redirect to dashboard if user is logged in
+            if (isLoggedIn()) {
+              setTimeout(() => {
+                navigate('/dashboard');
+              }, 2000);
+            }
           } else {
             console.error('Something went wrong');
             // setError(false)
@@ -44,9 +55,11 @@ const VerifyPage: React.FC = () => {
       }
     })();
   }, [vaspID, token, registered_directory]);
+
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
+      {isRedirected && <Loader text={'Redirection to dashboard '} />}
       {result && (
         <AlertMessage message={result.message} status="success" title="Contact Verified " />
       )}
