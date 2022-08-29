@@ -5,10 +5,8 @@ import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
 import CertificateRegistrationPage from 'modules/dashboard/certificate/registration';
-import { Routes, Route, Link, Outlet } from 'react-router-dom';
 import Home from 'modules/home';
 import Start from 'modules/start';
-import VerifyPage from 'modules/verify';
 import SuccessPage from 'modules/auth/register/success';
 import Login from 'modules/auth/login';
 import Register from 'modules/auth/register';
@@ -44,12 +42,6 @@ const appRoutes = [
     path: '/certificate/registration',
     name: 'Certificate Registration',
     component: CertificateRegistration,
-    layout: 'landing'
-  },
-  {
-    path: '/verify',
-    name: 'Verify',
-    component: VerifyPage,
     layout: 'landing'
   },
   {
