@@ -9,6 +9,7 @@ import AlertMessage from 'components/ui/AlertMessage';
 import useAuth from 'hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
+import TransparentLoader from 'components/Loader/TransparentLoader';
 const VerifyPage: React.FC = () => {
   const query = useQuery();
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +34,7 @@ const VerifyPage: React.FC = () => {
             // redirect to dashboard if user is logged in
             if (isLoggedIn()) {
               setTimeout(() => {
+                setIsRedirected(true);
                 navigate('/dashboard');
               }, 2000);
             }
@@ -54,12 +56,13 @@ const VerifyPage: React.FC = () => {
         setIsLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vaspID, token, registered_directory]);
 
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {isRedirected && <Loader text={'Redirection to dashboard '} />}
+      {isRedirected && <TransparentLoader title={'Redirection to dashboard '} />}
       {result && (
         <AlertMessage message={result.message} status="success" title="Contact Verified " />
       )}
