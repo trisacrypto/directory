@@ -711,6 +711,55 @@ func TestIsTraveler(t *testing.T) {
 	require.True(t, IsTraveler(vasp))
 }
 
+func TestValidateVASP(t *testing.T) {
+	vasp := &pb.VASP{
+		CommonName:         "trisa.charliebank.com",
+		TrisaEndpoint:      "trisa.charliebank.io:123",
+		VerificationStatus: pb.VerificationState_SUBMITTED,
+		Contacts: &pb.Contacts{
+			Administrative: &pb.Contact{
+				Email: "glenn@charliebank.com",
+				Name:  "Glenn Davis",
+			},
+		},
+		Entity: &ivms101.LegalPerson{
+			CountryOfRegistration: "CA",
+			GeographicAddresses: []*ivms101.Address{
+				{
+					AddressLine: []string{"123 Main St"},
+					AddressType: ivms101.AddressTypeCode_ADDRESS_TYPE_CODE_BIZZ,
+					Country:     "CA",
+				},
+			},
+			Name: &ivms101.LegalPersonName{
+				NameIdentifiers: []*ivms101.LegalPersonNameId{
+					{
+						LegalPersonName:               "Charlie Inc.",
+						LegalPersonNameIdentifierType: ivms101.LegalPersonNameTypeCode_LEGAL_PERSON_NAME_TYPE_CODE_LEGL,
+					},
+				},
+			},
+			NationalIdentification: &ivms101.NationalIdentification{
+				NationalIdentifier:     "123456789",
+				NationalIdentifierType: ivms101.NationalIdentifierLEIX,
+			},
+		},
+	}
+	require.Error(t, ValidateVASP(vasp, false), "expected failed validation if fields are missing and partial is false")
+	require.NoError(t, ValidateVASP(vasp, true), "expected successful validation if fields are missing but partial is true")
+
+	vasp.Id = "b5841869-105f-411c-8722-4045aad72717"
+	vasp.RegisteredDirectory = "trisatest.net"
+	vasp.FirstListed = time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
+	vasp.LastUpdated = time.Now().Format(time.RFC3339)
+	vasp.Signature = []byte("abc123")
+	require.NoError(t, ValidateVASP(vasp, false), "expected successful validation when partial is false")
+
+	// Verify that the validation helper ignores C9 constraint errors
+	vasp.Entity.NationalIdentification.CountryOfIssue = "CA"
+	require.NoError(t, ValidateVASP(vasp, false), "expected successful validation even when C9 constraint is violated")
+}
+
 func TestUpdateVerificationStatus(t *testing.T) {
 	vasp := &pb.VASP{}
 

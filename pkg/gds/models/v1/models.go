@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -506,4 +507,22 @@ func DeleteReviewNote(vasp *pb.VASP, id string) (err error) {
 // IsTraveler returns true if the VASP common name ends in traveler.ciphertrace.com
 func IsTraveler(vasp *pb.VASP) bool {
 	return strings.HasSuffix(vasp.CommonName, "traveler.ciphertrace.com")
+}
+
+// ValidateVASP checks if a VASP model is valid using the method from the TRISA
+// codebase and returns an error if it is not. If partial is true, "partial" validation
+// is performed which allows for some fields such as timestamps and IDs to be empty.
+func ValidateVASP(vasp *pb.VASP, partial bool) (err error) {
+	err = vasp.Validate(partial)
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson):
+		// TODO: ErrCompleteNationalIdentifierLegalPerson must be ignored to support older
+		// VASP records, see issue #34
+		log.Warn().Str("vasp_id", vasp.Id).Err(err).Msg("ignoring ErrCompleteNationalIdentifierLegalPerson validation error")
+		return nil
+	default:
+		return err
+	}
 }

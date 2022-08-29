@@ -222,7 +222,7 @@ func (s *gdsTestSuite) TestFixtures() {
 	for name, obj := range s.fixtures[vasps] {
 		vasp, ok := obj.(*pb.VASP)
 		require.True(ok, "could not marshal VASP record %s", name)
-		require.NoError(vasp.Validate(true), "VASP record %s is invalid", name)
+		require.NoError(models.ValidateVASP(vasp, true), "VASP record %s is invalid", name)
 	}
 
 	for ftype := range expected {
