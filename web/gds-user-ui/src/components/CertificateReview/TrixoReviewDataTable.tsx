@@ -87,7 +87,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} fontWeight="bold" background="#E5EDF1" pl={'1rem !important'}>
               <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
             </Td>
           </Tr>
@@ -219,7 +219,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
               <Trans id="Data Protection Policies">Data Protection Policies</Trans>
             </Td>
           </Tr>
