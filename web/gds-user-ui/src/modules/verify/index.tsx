@@ -15,18 +15,20 @@ const VerifyPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>();
   const [result, setResult] = useState<any>(null);
-  const [isRedirected, setIsRedirected] = useState(false);
+  const [isRedirected, setIsRedirected] = useState<boolean>(false);
   const vaspID = query.get('vaspID');
   const token = query.get('token');
   const registered_directory = query.get('registered_directory');
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
-  // to-do : should be improve later
+
+  // to-do : should be improve later -  Also improve the alert message to be more user friendly
 
   useEffect(() => {
     (async () => {
       try {
         if (vaspID && token && registered_directory) {
+          setIsRedirected(false);
           const params = { vaspID, token, registered_directory };
           const response = await verifyService(params);
           if (!response.error) {
@@ -62,7 +64,7 @@ const VerifyPage: React.FC = () => {
   return (
     <LandingLayout>
       {isLoading && <Spinner size={'2xl'} />}
-      {isRedirected && <TransparentLoader title={'Redirection to dashboard '} />}
+      {isRedirected && <TransparentLoader title={'Redirecting to the Dashboard...'} />}
       {result && (
         <AlertMessage message={result.message} status="success" title="Contact Verified " />
       )}
