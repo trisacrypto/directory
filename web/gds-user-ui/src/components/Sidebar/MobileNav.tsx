@@ -88,8 +88,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
               <Box borderRadius="50%" borderWidth={2} padding={0.5}>
                 <Avatar
                   size={'md'}
-                  height="43.3"
-                  w="43.3"
+                  height="43.3px"
+                  width="43.3px"
                   src={user?.pictureUrl || DefaultAvatar}
                 />
               </Box>
