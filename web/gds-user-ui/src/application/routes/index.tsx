@@ -19,8 +19,7 @@ const AppRouter: React.FC = () => {
   const getProtectedRoutes = () => {
     return appRoutes.map((prop, key) => {
       if (prop.route && (prop.layout === 'dashboard' || prop.layout === 'dash-landing')) {
-        const dashPath = `/${prop.path}${prop.route}`;
-
+        const dashPath = `/${prop.layout}${prop.route}`;
         return <Route key={key} path={dashPath} element={<prop.component />} />;
       } else {
         return null;
