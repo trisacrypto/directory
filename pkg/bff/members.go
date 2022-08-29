@@ -216,9 +216,9 @@ func (s *Server) MemberDetails(c *gin.Context) {
 	)
 
 	switch registeredDirectoryType(params.Directory) {
-	case config.TestNet:
+	case testnet:
 		rep, err = s.testnetGDS.Details(ctx, req)
-	case config.MainNet:
+	case mainnet:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
