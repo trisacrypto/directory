@@ -6,6 +6,9 @@ const PrivateOutlet = () => {
   const isLoggedIn = isAuthenticated();
 
   const { pathname } = useLocation();
+  // get current route from pathname
+  const currentRoute = pathname.split('/')[1];
+  console.log('currentRoute', currentRoute);
   return isLoggedIn ? (
     <DashboardLayout>
       <Outlet />

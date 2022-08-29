@@ -7,6 +7,7 @@ import useQuery from 'hooks/useQuery';
 import verifyService from './verify.service';
 import AlertMessage from 'components/ui/AlertMessage';
 const VerifyPage: React.FC = () => {
+  console.log('vaspID called');
   const query = useQuery();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>();
@@ -21,9 +22,9 @@ const VerifyPage: React.FC = () => {
       try {
         if (vaspID && token && registered_directory) {
           const params = { vaspID, token, registered_directory };
-          const reponse = await verifyService(params);
-          if (!reponse.error) {
-            setResult(reponse);
+          const response = await verifyService(params);
+          if (!response.error) {
+            setResult(response);
           } else {
             console.error('Something went wrong');
             // setError(false)
