@@ -89,7 +89,7 @@ func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		go c.CertManager(stop)
+		c.CertManager(stop)
 	}()
 	return wg
 }

@@ -214,7 +214,6 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	// setup the datastore to contain the modified charlieVASP
 	charlieVASP, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charlie VASP")
-	//s.resetVASPDatabase(echoVASP)
 	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Call the certman function at 29 days, which will send
@@ -300,7 +299,7 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(deltaVASP))
 
-	// Capture the number of certificate requests on the delta VASP
+	// Capture the number of certificate requests on the charlie VASP
 	// before reissuance is triggered.
 	previousReqIds, err := models.GetCertReqIDs(charlieVASP)
 	require.NoError(err)
@@ -323,7 +322,8 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	require.Equal(len(reqIDs), previousNumberOfReqs+1)
 
 	// Retrieve the latest certificate request for charlie.
-	certReq, err := s.db.RetrieveCertReq(reqIDs[len(reqIDs)-1])
+	certReqId := reqIDs[len(reqIDs)-1]
+	certReq, err := s.db.RetrieveCertReq(certReqId)
 	require.NoError(err)
 	require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
 
@@ -345,10 +345,16 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// On the second call to the cert request loop the certificate should be downloaded and
-	// attached to the VASP.
+	// attached to the VASP. The VASP should be in the VERIFIED state.
 	s.certman.HandleCertificateRequests(certDir)
 	v, err = s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
+	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
+
+	// Ensure that the certificate request is in the COMPLETED state.
+	certReq, err = s.db.RetrieveCertReq(certReqId)
+	require.NoError(err)
+	require.Equal(certReq.Status, models.CertificateRequestState_COMPLETED)
 
 	// Retrieve the newly created certificate and ensure it is valid.
 	idCert := v.IdentityCertificate

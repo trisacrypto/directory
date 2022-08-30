@@ -247,7 +247,7 @@ func CheckEmails(t *testing.T, messages []*EmailMeta) {
 		if msg.Contact != nil {
 			log, err := models.GetEmailLog(msg.Contact)
 			require.NoError(t, err)
-			//require.Len(t, log, 1, "contact %s has unexpected number of email logs", msg.Contact.Email)
+			require.GreaterOrEqual(t, len(log), 1, "contact %s is expected to have at least one email log", msg.Contact.Email)
 			require.Equal(t, msg.Reason, log[0].Reason)
 			ts, err := time.Parse(time.RFC3339, log[0].Timestamp)
 			require.NoError(t, err)
