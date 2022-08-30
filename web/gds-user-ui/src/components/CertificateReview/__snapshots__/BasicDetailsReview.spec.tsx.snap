@@ -41,7 +41,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
                 class="css-16ezt52"
                 role="gridcell"
               >
-                Business Category
+                Organization Name
               </td>
               <td
                 class="css-xumdn4"
