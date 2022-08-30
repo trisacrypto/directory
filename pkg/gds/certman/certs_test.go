@@ -211,20 +211,20 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	// setup the datastore to contain the modified echoVASP
-	echoVASP, err := s.fixtures.GetVASP("echo")
-	require.NoError(err, "could not get echo VASP")
+	// setup the datastore to contain the modified charlieVASP
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charlie VASP")
 	//s.resetVASPDatabase(echoVASP)
-	echoVASP = s.setupVASP(echoVASP)
+	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Call the certman function at 29 days, which will send
 	// the thirty day cert reissuance reminder to echoVASP and
 	// the TRISA admin.
-	s.updateVaspIdentityCert(echoVASP, 29)
+	s.updateVaspIdentityCert(charlieVASP, 29)
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected emails have been sent, using
@@ -254,19 +254,19 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	// setup the datastore to contain the modified echoVASP
-	echoVASP, err := s.fixtures.GetVASP("echo")
-	require.NoError(err, "could not get echo VASP")
+	// setup the datastore to contain the modified charlieVASP
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charlie VASP")
 	//s.resetVASPDatabase(echoVASP)
-	echoVASP = s.setupVASP(echoVASP)
+	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Call the certman function at 6 days, which will send
 	// the seven day cert reissuance reminder to echoVASP.
-	s.updateVaspIdentityCert(echoVASP, 6)
+	s.updateVaspIdentityCert(charlieVASP, 6)
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected email has been sent, using
