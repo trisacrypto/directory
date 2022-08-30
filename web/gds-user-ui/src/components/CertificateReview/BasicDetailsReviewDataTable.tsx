@@ -1,4 +1,4 @@
-import { Stack, Table, Tbody, Tr, Td, Tag, Link } from '@chakra-ui/react';
+import { Stack, Table, Tbody, Tr, Td, Tag, Link, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import React, { useEffect } from 'react';
@@ -29,6 +29,13 @@ function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
               fontSize: '1rem'
             }
           }}>
+          <Tr>
+            <Td pl={'1rem !important'}>
+              <Trans id="Business Category">Organization Name</Trans>
+            </Td>
+            <Td>{data?.organization_name || 'N/A'}</Td>
+            <Td></Td>
+          </Tr>
           <Tr>
             <Td borderBottom={'none'} pl={'1rem !important'}>
               <Trans id="Website">Website</Trans>

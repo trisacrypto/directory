@@ -1,7 +1,7 @@
 import { Stack, Table, Tbody, Tr, Td, Tag, TagLabel, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { COUNTRIES } from 'constants/countries';
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import getColorScheme from 'utils/getColorScheme';
 import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
