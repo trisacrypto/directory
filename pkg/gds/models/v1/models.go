@@ -210,6 +210,29 @@ func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 	return extra.GetCertificateRequests(), nil
 }
 
+// GetLatestCertReqID returns the latest CertificateRequest ID for the VASP record.
+// TODO: This relies on the assumption that IDs can only be appended to the list.
+func GetLatestCertReqID(vasp *pb.VASP) (_ string, err error) {
+	// If the extra data is nil, return nil (no certificate requests).
+	if vasp.Extra == nil {
+		return "", nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return "", err
+	}
+
+	// Return nil if there are no certificate requests.
+	if len(extra.CertificateRequests) == 0 {
+		return "", nil
+	}
+
+	// Get the latest certificate request ID
+	return extra.CertificateRequests[len(extra.CertificateRequests)-1], nil
+}
+
 // AppendCertReqID adds the certificate request ID to the VASP if its not already added.
 func AppendCertReqID(vasp *pb.VASP, certreqID string) (err error) {
 	// Entry must be non-nil.

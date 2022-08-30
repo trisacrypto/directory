@@ -734,8 +734,23 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
 		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
 		case daysBeforeExpiration <= 10:
-			// TODO: check that the vasps certreq is in the READY_TO_SUBMIT state to avoid the double reissue
-			c.reissueIdentityCertificates(vasp)
+			// Check if the reissuance process has already started for this VASP
+			started, err := c.reissuanceInProgress(vasp)
+			if err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not check vasp reissuance status")
+				continue
+			}
+
+			if started {
+				log.Info().Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
+				continue
+			}
+
+			// Start the reissuance process for this VASP by creating a new certificate request
+			if err = c.reissueIdentityCertificates(vasp); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not start reissuance process")
+				continue
+			}
 			if _, err = c.email.SendReissuanceAdminNotification(vasp, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance notification")
 				continue
@@ -760,19 +775,39 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 	}
 }
 
+// Helper to check if the reissuance process has already started for a VASP.
+func (c *CertificateManager) reissuanceInProgress(vasp *pb.VASP) (_ bool, err error) {
+	// Get the latest certificate request ID for the VASP.
+	var certReqID string
+	if certReqID, err = models.GetLatestCertReqID(vasp); err != nil {
+		return false, err
+	}
+
+	// If there are no existing certificate requests, then the reissuance process has not started.
+	if certReqID == "" {
+		return false, nil
+	}
+
+	// Get the certificate request from the database.
+	var certReq *models.CertificateRequest
+	if certReq, err = c.db.RetrieveCertReq(certReqID); err != nil {
+		return false, err
+	}
+
+	return certReq.Status >= models.CertificateRequestState_READY_TO_SUBMIT && certReq.Status < models.CertificateRequestState_COMPLETED, nil
+}
+
 // Helper function for HandleCertificateReissuance that reissues identity certificates
 // for the given vasp.
-func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
+func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err error) {
 	var (
-		err         error
 		certreq     *models.CertificateRequest
 		whisperLink string
 	)
 
 	// Create a new certificate request.
 	if certreq, err = models.NewCertificateRequest(vasp); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error creating certificate request for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error creating certificate request for vasp %s", vasp.Id)
 	}
 
 	// Update the cert req to be ready for submission.
@@ -782,8 +817,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
 		"automated certificate reissuance",
 		"automated",
 	); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error updating certificate request for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error updating certificate request for vasp %s", vasp.Id)
 	}
 
 	// Generate a new PKCS12 password
@@ -796,43 +830,37 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
 
 	// Create a new secret using the secret manager.
 	if err = c.secret.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error creating password secret for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error creating password secret for vasp %s", vasp.Id)
 	}
 	if err = c.secret.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error creating password version for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error creating password version for vasp %s", vasp.Id)
 	}
 
 	// Using the whisper utility, create a whisper link to be sent with the ReissuanceStarted email.
 	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error creating whisper link for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error creating whisper link for vasp %s", vasp.Id)
 	}
 
 	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
 	if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error sending reissuance started email for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error sending reissuance started email for vasp %s", vasp.Id)
 	}
 
 	// Update the certificate request in the datastore.
 	if err = c.db.UpdateCertReq(certreq); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error updating certificate request for vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error updating certificate request for vasp %s", vasp.Id)
 	}
 
 	// Save the certificate request on the VASP.
 	if err = models.AppendCertReqID(vasp, certreq.Id); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error appending certificate request to vasp %s", vasp.Id))
-		return
+		return fmt.Errorf("error appending certificate request to vasp %s", vasp.Id)
 	}
 
 	// Update the VASP information in the datastore.
 	if err = c.db.UpdateVASP(vasp); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error updating vasp %s in the certman store", vasp.Id))
-		return
+		return fmt.Errorf("error updating vasp %s in the certman store", vasp.Id)
 	}
+	return nil
 }
 
 // Helper function for HandleCertificateReissuance checks if a certificate reissuance reminder

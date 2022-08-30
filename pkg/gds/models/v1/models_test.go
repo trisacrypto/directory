@@ -107,6 +107,9 @@ func TestVASPExtra(t *testing.T) {
 	for _, cfid := range certReqs {
 		err = AppendCertReqID(vasp, cfid)
 		require.NoError(t, err)
+		latest, err := GetLatestCertReqID(vasp)
+		require.NoError(t, err)
+		require.Equal(t, cfid, latest)
 	}
 
 	// Should be able to fetch the certificate request IDs

@@ -319,7 +319,7 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 
 	reqIDs, err := models.GetCertReqIDs(v)
 	require.NoError(err)
-	require.Equal(len(reqIDs), previousNumberOfReqs+1)
+	require.Len(reqIDs, previousNumberOfReqs+1)
 
 	// Retrieve the latest certificate request for charlie.
 	certReqId := reqIDs[len(reqIDs)-1]
@@ -337,6 +337,14 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	// the fixture certificate used for testing, overriding the randomly
 	// generated password created by updateVaspIdentityCert.
 	require.NoError(sm.AddSecretVersion(context.Background(), "password", []byte("qDhAwnfMjgDEzzUC")))
+
+	// Verify that the reissuance logic does not submit duplicate certificate requests.
+	s.certman.HandleCertificateReissuance()
+	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	require.NoError(err)
+	reqIDs, err = models.GetCertReqIDs(v)
+	require.NoError(err)
+	require.Len(reqIDs, previousNumberOfReqs+1, "should not have created a new certificate request")
 
 	// Call the cert request loop once to submit the certificate request and start it's processing.
 	s.certman.HandleCertificateRequests(certDir)
