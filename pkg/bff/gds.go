@@ -19,6 +19,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var (
+	trisatest = map[string]struct{}{
+		"trisatest.net": {},
+		"trisatest.dev": {},
+	}
+	vaspdirectory = map[string]struct{}{
+		"vaspdirectory.net": {},
+		"vaspdirectory.dev": {},
+	}
+)
+
 // Lookup makes a request on behalf of the user to both the TestNet and MainNet GDS
 // servers, returning 1-2 results (e.g. either or both GDS responses). If no results
 // are returned, Lookup returns a 404 not found error. If one of the GDS requests fails,
@@ -143,7 +154,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	// Ensure the registered_directory is one we understand
 	params.Directory = strings.ToLower(params.Directory)
-	if params.Directory != config.TrisaTest && params.Directory != config.VaspDirectory {
+	if !validRegisteredDirectory(params.Directory) {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
 		return
 	}
@@ -159,10 +170,10 @@ func (s *Server) VerifyContact(c *gin.Context) {
 		rep *gds.VerifyContactReply
 	)
 
-	switch params.Directory {
-	case config.TrisaTest:
+	switch registeredDirectoryType(params.Directory) {
+	case config.TestNet:
 		rep, err = s.testnetGDS.VerifyContact(ctx, req)
-	case config.VaspDirectory:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
@@ -270,7 +281,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Get the network from the URL
 	var err error
 	network := strings.ToLower(c.Param("network"))
-	if network != config.TestNetKey && network != config.MainNetKey {
+	if network != config.TestNet && network != config.MainNet {
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
 		return
 	}
@@ -284,14 +295,14 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Do not allow a registration form to be submitted twice
 	switch network {
-	case config.TestNetKey:
+	case config.TestNet:
 		if org.Testnet != nil && org.Testnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 			return
 		}
-	case config.MainNetKey:
+	case config.MainNet:
 		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
@@ -324,11 +335,11 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	defer cancel()
 
 	switch network {
-	case config.TestNetKey:
+	case config.TestNet:
 		req.TrisaEndpoint = org.Registration.Testnet.Endpoint
 		req.CommonName = org.Registration.Testnet.CommonName
 		rep, err = s.testnetGDS.Register(ctx, req)
-	case config.MainNetKey:
+	case config.MainNet:
 		req.TrisaEndpoint = org.Registration.Mainnet.Endpoint
 		req.CommonName = org.Registration.Mainnet.CommonName
 		rep, err = s.mainnetGDS.Register(ctx, req)
@@ -386,9 +397,9 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	switch network {
-	case config.TestNetKey:
+	case config.TestNet:
 		org.Testnet = directoryRecord
-	case config.MainNetKey:
+	case config.MainNet:
 		org.Mainnet = directoryRecord
 	}
 
@@ -399,4 +410,31 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+// Checks if the user supplied registered directory is one of the known directories that
+// maps to either the testnet or to the mainnet (by domain).
+func validRegisteredDirectory(r string) bool {
+	if _, ok := trisatest[r]; ok {
+		return true
+	}
+
+	if _, ok := vaspdirectory[r]; ok {
+		return true
+	}
+
+	return false
+}
+
+// Returns either testnet or mainnet depending on the user supplied registered directory.
+func registeredDirectoryType(r string) string {
+	if _, ok := trisatest[r]; ok {
+		return config.TestNet
+	}
+
+	if _, ok := vaspdirectory[r]; ok {
+		return config.MainNet
+	}
+
+	return ""
 }

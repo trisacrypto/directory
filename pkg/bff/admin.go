@@ -28,9 +28,9 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
 		switch network {
-		case config.TestNetKey:
+		case config.TestNet:
 			vaspID = testnetID
-		case config.MainNetKey:
+		case config.MainNet:
 			vaspID = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -159,9 +159,9 @@ func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (tes
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
 		switch network {
-		case config.TestNetKey:
+		case config.TestNet:
 			vaspID = testnetID
-		case config.MainNetKey:
+		case config.MainNet:
 			vaspID = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)

@@ -29,9 +29,9 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
 		req := &members.SummaryRequest{}
 		switch network {
-		case config.TestNetKey:
+		case config.TestNet:
 			req.MemberId = testnetID
-		case config.MainNetKey:
+		case config.MainNet:
 			req.MemberId = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -191,7 +191,7 @@ func (s *Server) MemberDetails(c *gin.Context) {
 
 	// Validate the registered directory
 	params.Directory = strings.ToLower(params.Directory)
-	if params.Directory != config.TrisaTest && params.Directory != config.VaspDirectory {
+	if !validRegisteredDirectory(params.Directory) {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
 		return
 	}
@@ -209,10 +209,10 @@ func (s *Server) MemberDetails(c *gin.Context) {
 		rep *members.MemberDetails
 	)
 
-	switch params.Directory {
-	case config.TrisaTest:
+	switch registeredDirectoryType(params.Directory) {
+	case config.TestNet:
 		rep, err = s.testnetGDS.Details(ctx, req)
-	case config.VaspDirectory:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")

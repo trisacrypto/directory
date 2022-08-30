@@ -11,4 +11,5 @@ type TPayload = {
   hasReachSubmitStep?: boolean;
   testnetSubmitted?: boolean;
   mainnetSubmitted?: boolean;
+  data?: any;
 };

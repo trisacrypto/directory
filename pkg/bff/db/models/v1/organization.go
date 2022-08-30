@@ -65,11 +65,11 @@ func (r *RegistrationForm) ReadyToSubmit(network string) bool {
 	}
 
 	switch network {
-	case config.TestNetKey:
+	case config.TestNet:
 		if r.Testnet == nil {
 			return false
 		}
-	case config.MainNetKey:
+	case config.MainNet:
 		if r.Mainnet == nil {
 			return false
 		}

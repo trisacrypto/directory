@@ -19,10 +19,8 @@ import (
 )
 
 const (
-	TestNetKey    = "testnet"
-	MainNetKey    = "mainnet"
-	TrisaTest     = "trisatest.net"
-	VaspDirectory = "vaspdirectory.net"
+	TestNet = "testnet"
+	MainNet = "mainnet"
 )
 
 // Config uses envconfig to load the required settings from the environment, parse and
@@ -46,6 +44,7 @@ type Config struct {
 // AuthConfig handles Auth0 configuration and authentication
 type AuthConfig struct {
 	Domain        string        `split_words:"true" required:"true"`
+	Issuer        string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
 	Audience      string        `split_words:"true" required:"true"`
 	ProviderCache time.Duration `split_words:"true" default:"5m"`
 	ClientID      string        `split_words:"true"`
@@ -198,6 +197,14 @@ func (c AuthConfig) Validate() error {
 }
 
 func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
+	// Use the configured issuer if its set.
+	if c.Issuer != "" {
+		if u, err = url.Parse(c.Issuer); err != nil {
+			return nil, errors.New("invalid configuration: could not parse issuer")
+		}
+		return u, nil
+	}
+
 	if c.Domain == "" {
 		return nil, errors.New("invalid configuration: auth0 domain must be configured")
 	}

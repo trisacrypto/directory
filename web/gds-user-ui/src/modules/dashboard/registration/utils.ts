@@ -1,19 +1,44 @@
 import { getDefaultValue } from 'components/BasicDetailsForm/validation';
-import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
+import { getRegistrationDefaultValues, validationSchema } from 'modules/dashboard/certificate/lib';
+
 import {
   postRegistrationData,
   getRegistrationData,
   getSubmissionStatus
 } from 'modules/dashboard/registration/service';
-import { handleError } from 'utils/utils';
+import { handleError, hasDefaultCertificateProperties, format2ShortDate } from 'utils/utils';
+
+export const postRegistrationValue = (data: any) => {
+  return new Promise((resolve, reject) => {
+    postRegistrationData(data)
+      .then((res) => {
+        if (res.status === 204) {
+          resolve(res);
+        } else {
+          reject(res);
+        }
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+};
 export const getRegistrationDefaultValue = async () => {
   try {
     const regData = await getRegistrationData();
-    if (regData.status === 200 && Object.keys(regData.data).length > 0) {
-      return regData.data;
-    }
-    const defaultValue: any = localStorage.getItem('certificateForm');
-    if (defaultValue) {
+    const isValidObject = hasDefaultCertificateProperties(regData.data);
+
+    if (regData.status === 200 && isValidObject) {
+      const response = regData.data;
+      const values = {
+        ...response,
+        established_on: response.established_on ? format2ShortDate(response.established_on) : ''
+      };
+
+      return values;
+    } else if (localStorage.getItem('certificateForm')) {
+      const defaultValue: any = localStorage.getItem('certificateForm');
+
       const val = JSON.parse(defaultValue);
       const postData = await postRegistrationData(val);
       if (postData.status === 204) {
@@ -21,39 +46,21 @@ export const getRegistrationDefaultValue = async () => {
         localStorage.removeItem('certificateForm');
         return getData.data;
       }
+    } else {
+      const v = getRegistrationDefaultValues();
+      await postRegistrationValue(v);
+      return v;
     }
-    return getRegistrationDefaultValues();
   } catch (err: any) {
     handleError(err, 'failed to get registration data');
   }
 };
 
-export const postRegistrationValue = (data: any) => {
-  console.log('[postRegistrationValue]', data);
-  return new Promise((resolve, reject) => {
-    postRegistrationData(data)
-      .then((res) => {
-        console.log('[postRegistrationData]', res);
-        if (res.status === 204) {
-          resolve(res);
-        } else {
-          reject(res);
-        }
-      })
-      .catch((err) => {
-        console.log('[postRegistrationData]', err);
-        reject(err);
-      });
-  });
-};
-
 export const setRegistrationDefaultValue = () => {
-  console.log('[setRegistrationDefaultValue]');
   const defaultValue: any = getRegistrationDefaultValues();
   return new Promise((resolve, reject) => {
     postRegistrationData(defaultValue)
       .then((res) => {
-        console.log('[default postRegistration value]', res);
         if (res.status === 204) {
           resolve(res);
         } else {
@@ -61,7 +68,7 @@ export const setRegistrationDefaultValue = () => {
         }
       })
       .catch((err) => {
-        console.log('[postRegistrationData]', err);
+        handleError(err, 'failed to post registration value');
         reject(err);
       });
   });
@@ -90,7 +97,7 @@ export const downloadRegistrationData = async () => {
 export const getDefaultStepper = async () => {
   try {
     const [regData, regStatus] = await Promise.all([getRegistrationData(), getSubmissionStatus()]);
-    console.log('[regStatus]', regStatus.data);
+
     if (regData.status === 200 && Object.keys(regData.data).length > 0) {
       return {
         currentStep: regData.data.state.current,
@@ -127,21 +134,6 @@ export const getDefaultStepper = async () => {
     handleError(err, 'failed to get stepper data');
   }
 };
-
-// // load default stepper without async call
-// export const loadDefaultStepperSync = () => {
-//   return Promise.resolve({
-//     currentStep: 1,
-//     steps: [
-//       {
-//         key: 1,
-//         status: 'progress'
-//       }
-//     ],
-//     lastStep: null,
-//     hasReachSubmitStep: false
-//   });
-// };
 
 // set stepper data
 export const getRegistrationAndStepperData = async () => {

@@ -38,7 +38,7 @@ const ReviewsSummary: React.FC = () => {
         </Heading>
         <Box>
           <Button bg={'black'} onClick={handleExport} isLoading={isLoadingExport}>
-            Export Data{' '}
+            <Trans id="Export Data">Export Data</Trans>
           </Button>
         </Box>
       </HStack>

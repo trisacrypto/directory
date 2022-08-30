@@ -17,7 +17,7 @@ var (
 )
 
 var (
-	ErrNetworkRequired    = fmt.Errorf("request requires a valid network (%s or %s)", config.TestNetKey, config.MainNetKey)
+	ErrNetworkRequired    = fmt.Errorf("request requires a valid network (%s or %s)", config.TestNet, config.MainNet)
 	ErrInvalidCredentials = errors.New("auth0 credentials are missing or invalid")
 	ErrExpiredCredentials = errors.New("auth0 credentials have expired")
 	ErrPathRequired       = errors.New("local credentials requires a path to the stored json credential")
@@ -58,4 +58,11 @@ func NotFound(c *gin.Context) {
 // NotAllowed returns a JSON 405 response for the API.
 func NotAllowed(c *gin.Context) {
 	c.JSON(http.StatusMethodNotAllowed, notAllowed)
+}
+
+// MustRefreshToken returns a JSON 401 response with the refresh_token flag set to true.
+func MustRefreshToken(c *gin.Context, err interface{}) {
+	rep := ErrorResponse(err)
+	rep.RefreshToken = true
+	c.JSON(http.StatusUnauthorized, rep)
 }

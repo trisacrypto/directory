@@ -6,6 +6,7 @@ const PrivateOutlet = () => {
   const isLoggedIn = isAuthenticated();
 
   const { pathname } = useLocation();
+
   return isLoggedIn ? (
     <DashboardLayout>
       <Outlet />

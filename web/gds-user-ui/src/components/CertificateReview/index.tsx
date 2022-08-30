@@ -15,6 +15,7 @@ import {
   submitTestnetRegistration
 } from 'modules/dashboard/registration/service';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+
 const CertificateReview = () => {
   const toast = useToast();
   const { testnetSubmissionState, mainnetSubmissionState } = useCertificateStepper();
@@ -30,7 +31,6 @@ const CertificateReview = () => {
     try {
       if (network === 'testnet') {
         const response = await submitTestnetRegistration();
-        console.log('[response testnet]', response);
         if (response.status === 200) {
           setIsTestNetSent(true);
           testnetSubmissionState();
@@ -39,7 +39,6 @@ const CertificateReview = () => {
       }
       if (network === 'mainnet') {
         const response = await submitMainnetRegistration();
-        console.log('[response mainnet]', response);
         if (response?.status === 200) {
           setIsMainNetSent(true);
           mainnetSubmissionState();
@@ -47,9 +46,7 @@ const CertificateReview = () => {
         }
       }
     } catch (err: any) {
-      console.log('[err catched]', err);
       if (!err?.response?.data?.success) {
-        console.log('[err catched]', err?.response.data.error);
         toast({
           position: 'top-right',
           title: t`Error Submitting Certificate`,

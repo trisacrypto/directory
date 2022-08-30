@@ -185,7 +185,9 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 >
                   <span
                     class="css-12rgubf"
-                  />
+                  >
+                    No
+                  </span>
                 </span>
               </td>
               <td
@@ -207,7 +209,12 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                N/A
+                <p
+                  class="chakra-text css-0"
+                >
+                  $0.00
+                   
+                </p>
               </td>
               <td
                 class="css-xumdn4"
@@ -254,7 +261,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 Applicable Regulations
               </td>
               <td
-                class="css-xumdn4"
+                class="css-134pck8"
                 role="gridcell"
               />
               <td
@@ -276,9 +283,13 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-i257lr"
                 role="gridcell"
               >
-                $NaN
-                 
-                N/A
+                <p
+                  class="chakra-text css-0"
+                >
+                  $0.00
+                   
+                  USD
+                </p>
               </td>
               <td
                 class="css-xumdn4"

@@ -18,15 +18,15 @@ const LegalPerson: React.FC = () => {
   return (
     <Stack spacing={7} mt="2rem">
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id={'Section 2: Legal Person'}>Section 2: Legal Person</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please enter the information that identify your organization as a Legal Person. This form represents the">
-            Please enter the information that identify your organization as a Legal Person. This
+          <Trans id="Please enter the information that identifies your organization as a Legal Person. This form represents the">
+            Please enter the information that identifies your organization as a Legal Person. This
             form represents the
           </Trans>{' '}
           <Link isExternal href="https://intervasp.org/" color={'blue'} fontWeight={'bold'}>
