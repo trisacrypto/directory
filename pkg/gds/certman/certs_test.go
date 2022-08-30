@@ -71,7 +71,7 @@ func (s *certTestSuite) TearDownSuite() {
 // Test that the certificate manger correctly moves certificates across the request
 // pipeline.
 func (s *certTestSuite) TestCertManager() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -206,15 +206,15 @@ func (s *certTestSuite) TestCertManager() {
 }
 
 func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
-	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
 	// setup the datastore to contain the modified echoVASP
-	s.resetVASPDatabase()
 	echoVASP, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
+	//s.resetVASPDatabase(echoVASP)
 	echoVASP = s.setupVASP(echoVASP)
 
 	// Call the certman function at 29 days, which will send
@@ -249,15 +249,15 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 }
 
 func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
-	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
 	// setup the datastore to contain the modified echoVASP
-	s.resetVASPDatabase()
 	echoVASP, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
+	//s.resetVASPDatabase(echoVASP)
 	echoVASP = s.setupVASP(echoVASP)
 
 	// Call the certman function at 6 days, which will send
@@ -284,34 +284,95 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 }
 
 func (s *certTestSuite) TestCertManagerReissuance() {
-	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	require := s.Require()
+
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 
-	// setup the datastore to contain the modified echoVASP
-	require := s.Require()
-	s.resetVASPDatabase()
-	echoVASP, err := s.fixtures.GetVASP("echo")
-	require.NoError(err, "could not get echo VASP")
-	echoVASP = s.setupVASP(echoVASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charlie VASP")
+	charlieVASP = s.setupVASP(charlieVASP)
+
+	// Set the second VASP in the fixtures.Small set's verification status
+	// to REJECTED so that it does not get triggered for reissuance.
+	deltaVASP, err := s.fixtures.GetVASP("delta")
+	require.NoError(err)
+	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.db.UpdateVASP(deltaVASP))
+
+	// Capture the number of certificate requests on the delta VASP
+	// before reissuance is triggered.
+	previousReqIds, err := models.GetCertReqIDs(charlieVASP)
+	require.NoError(err)
+	previousNumberOfReqs := len(previousReqIds)
 
 	// Call the certman function at 8 days, which should
 	// reissue the VASP's identity certificate, send the
 	// email with the created pkcs12 password and send
 	// the whisper link, as well as notifying the TRISA
 	// admin that reissuance has started.
-	s.updateVaspIdentityCert(echoVASP, 8)
+	s.updateVaspIdentityCert(charlieVASP, 8)
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
+
+	reqIDs, err := models.GetCertReqIDs(v)
+	require.NoError(err)
+	require.Equal(len(reqIDs), previousNumberOfReqs+1)
+
+	// Retrieve the latest certificate request for charlie.
+	certReq, err := s.db.RetrieveCertReq(reqIDs[len(reqIDs)-1])
+	require.NoError(err)
+	require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
+
+	// Make sure a new secret was created in the secret manager.
+	sm := s.secret.With(certReq.Id)
+	secret, err := sm.GetLatestVersion(context.Background(), "password")
+	require.NoError(err)
+	require.NotNil(secret)
+
+	// Update the secret manager with the password that will decrypt
+	// the fixture certificate used for testing, overriding the randomly
+	// generated password created by updateVaspIdentityCert.
+	require.NoError(sm.AddSecretVersion(context.Background(), "password", []byte("qDhAwnfMjgDEzzUC")))
+
+	// Call the cert request loop once to submit the certificate request and start it's processing.
+	s.certman.HandleCertificateRequests(certDir)
+	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	require.NoError(err)
+	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+	// On the second call to the cert request loop the certificate should be downloaded and
+	// attached to the VASP.
+	s.certman.HandleCertificateRequests(certDir)
+	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	require.NoError(err)
+
+	// Retrieve the newly created certificate and ensure it is valid.
+	idCert := v.IdentityCertificate
+	require.NotNil(idCert)
+	require.Greater(int(idCert.Version), 0)
+	require.NotEmpty(idCert.SerialNumber)
+	require.NotEmpty(idCert.Signature)
+	require.NotEmpty(idCert.SignatureAlgorithm)
+	require.NotEmpty(idCert.PublicKeyAlgorithm)
+	require.NotNil(idCert.Subject)
+	require.NotNil(idCert.Issuer)
+	_, err = time.Parse(time.RFC3339, idCert.NotBefore)
+	require.NoError(err)
+	_, err = time.Parse(time.RFC3339, idCert.NotAfter)
+	require.NoError(err)
+	require.False(idCert.Revoked)
+	require.NotEmpty(idCert.Data)
+	require.NotEmpty(idCert.Chain)
 
 	// Ensure that the expected email has been sent, using
 	// the mock email client.
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   v.Contacts.Technical,
 			To:        v.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceStartedRE,
@@ -325,7 +386,16 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 			Reason:    "reissuance_admin_notification",
 			Timestamp: callTime,
 		},
+		{
+			To:        v.Contacts.Technical.Email,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.DeliverCertsRE,
+			Reason:    "deliver_certs",
+			Timestamp: callTime,
+		},
 	}
+
+	// TODO: add additional testing for the email send logic in emails.getContactsToNotify()
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -334,17 +404,6 @@ func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiratio
 	daysFromNow := time.Now().Add(days * daysUntilExpiration).Format(time.RFC3339Nano)
 	vasp.IdentityCertificate = &pb.Certificate{NotAfter: daysFromNow}
 	s.db.UpdateVASP(vasp)
-}
-
-func (s *certTestSuite) resetVASPDatabase() {
-	require := s.Require()
-
-	vaspsIter := s.db.ListVASPs()
-	allVasps, err := vaspsIter.All()
-	require.NoError(err)
-	for _, vasp := range allVasps {
-		s.db.DeleteVASP(vasp.Id)
-	}
 }
 
 func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
@@ -367,7 +426,7 @@ func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
 
 // Test that the certificate manager rejects requests when the VASP state is invalid.
 func (s *certTestSuite) TestCertManagerBadState() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -430,7 +489,7 @@ func (s *certTestSuite) TestCertManagerBadState() {
 
 // Test that the certificate manager is able to process an end entity profile.
 func (s *certTestSuite) TestCertManagerEndEntityProfile() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -473,7 +532,7 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 
 // Test that the certificate manager is able to process a CipherTraceEE profile.
 func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -510,7 +569,7 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 
 // Test that certificate submission fails if the user available balance is 0.
 func (s *certTestSuite) TestSubmitNoBalance() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -547,7 +606,7 @@ func (s *certTestSuite) TestSubmitNoBalance() {
 
 // Test that the certificate submission fails if there is no available password.
 func (s *certTestSuite) TestSubmitNoPassword() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -580,7 +639,7 @@ func (s *certTestSuite) TestSubmitNoPassword() {
 
 // Test that the certificate submission fails if the batch request fails.
 func (s *certTestSuite) TestSubmitBatchError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -628,7 +687,7 @@ func (s *certTestSuite) TestSubmitBatchError() {
 
 // Test that the certificate processing fails if the batch status request fails.
 func (s *certTestSuite) TestProcessBatchDetailError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -669,7 +728,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 
 // Test that the certificate processing fails if there is still an active batch.
 func (s *certTestSuite) TestProcessActiveBatch() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -709,7 +768,7 @@ func (s *certTestSuite) TestProcessActiveBatch() {
 
 // Test that the certificate processing fails if the batch request is rejected.
 func (s *certTestSuite) TestProcessRejected() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -755,7 +814,7 @@ func (s *certTestSuite) TestProcessRejected() {
 
 // Test that the certificate processing fails if the batch request errors.
 func (s *certTestSuite) TestProcessBatchError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -802,7 +861,7 @@ func (s *certTestSuite) TestProcessBatchError() {
 // Test that the certificate processing fails if the batch processing info request
 // returns an unhandled sectigo state.
 func (s *certTestSuite) TestProcessBatchNoSuccess() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -840,16 +899,16 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 }
 
 func (s *certTestSuite) TestCertManagerLoop() {
-	s.setupCertManager(sectigo.ProfileCipherTraceEE)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	s.runCertManager(s.conf.CertMan.RequestInterval)
 }
 
-func (s *certTestSuite) setupCertManager(profile string) (certPath string) {
+func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureType) (certPath string) {
 	require := s.Require()
 
 	// Load fixtures into the library
-	require.NoError(s.fixtures.Load(fixtures.Full))
+	require.NoError(s.fixtures.Load(fType))
 
 	// Get mock configuration values
 	s.conf = gds.MockConfig()
@@ -880,13 +939,13 @@ func (s *certTestSuite) setupCertManager(profile string) (certPath string) {
 	require.NoError(os.MkdirAll(s.conf.CertMan.Storage, 0755))
 	s.certman, err = certman.New(s.conf.CertMan, s.db, s.secret, email, s.conf.DirectoryID)
 	require.NoError(err, "could not create certificate manager")
-
 	return certPath
 }
 
 func (s *certTestSuite) teardownCertManager() {
 	require := s.Require()
 	emails.PurgeMockEmails()
+	s.db.Close()
 	s.fixtures.Reset()
 	require.NoError(os.RemoveAll(s.conf.CertMan.Storage))
 }
