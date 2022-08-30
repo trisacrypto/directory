@@ -257,7 +257,6 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	// setup the datastore to contain the modified charlieVASP
 	charlieVASP, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charlie VASP")
-	//s.resetVASPDatabase(echoVASP)
 	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Call the certman function at 6 days, which will send
@@ -925,7 +924,7 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	require.NoError(err, "could not create cert storage")
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
-	s.conf.CertMan.ReissuenceInterval = 2 * time.Millisecond
+	s.conf.CertMan.ReissuenceInterval = 10 * time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
 
 	// Initialize the trtl store
