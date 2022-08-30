@@ -898,10 +898,16 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 	require.Equal("automated", cert.AuditLog[3].Source)
 }
 
-func (s *certTestSuite) TestCertManagerLoop() {
+func (s *certTestSuite) TestCertManagerRequestLoop() {
 	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	s.runCertManager(s.conf.CertMan.RequestInterval)
+}
+
+func (s *certTestSuite) TestCertManagerReissuanceLoop() {
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	defer s.teardownCertManager()
+	s.runCertManager(s.conf.CertMan.ReissuenceInterval)
 }
 
 func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureType) (certPath string) {
@@ -919,6 +925,7 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	require.NoError(err, "could not create cert storage")
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
+	s.conf.CertMan.ReissuenceInterval = 2 * time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
 
 	// Initialize the trtl store
