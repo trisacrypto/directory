@@ -16,6 +16,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -23,6 +24,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
+	"github.com/trisacrypto/directory/pkg/utils/whisper"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
@@ -87,7 +89,7 @@ func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		go c.CertManager(stop)
+		c.CertManager(stop)
 	}()
 	return wg
 }
@@ -96,7 +98,7 @@ func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
 // requests and moves them through the request pipeline. Once CertManager detects a
 // certificate request that is ready to submit, it submits the request via the Sectigo
 // API. If processing, it checks the batch status, and when it detects that the bact
-// is done processing it downloads the certs and emails them to the technical conacts.
+// is done processing it downloads the certs and emails them to the technical contacts.
 // If the certificate processing fails for any reason, it sends an error message to
 // the TRISA admins since this will prevent the integrator from joining the network.
 //
@@ -111,8 +113,9 @@ func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 
 	// Ticker is created in the go routine to prevent backpressure if the cert manager
 	// process takes longer than the specified ticker interval.
-	ticker := time.NewTicker(c.conf.Interval)
-	log.Info().Dur("interval", c.conf.Interval).Str("store", certDir).Msg("cert-manager process started")
+	requestsTicker := time.NewTicker(c.conf.RequestInterval)
+	reissuanceTicker := time.NewTicker(c.conf.ReissuenceInterval)
+	log.Info().Dur("RequestInterval", c.conf.RequestInterval).Dur("ReissuenceInterval", c.conf.ReissuenceInterval).Str("store", certDir).Msg("cert-manager process started")
 
 	for {
 		// Wait for next tick or a stop signal
@@ -120,11 +123,13 @@ func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 		case <-stop:
 			log.Info().Msg("certificate manager received stop signal")
 			return
-		case <-ticker.C:
+		case <-requestsTicker.C:
+			c.HandleCertificateRequests(certDir)
+		case <-reissuanceTicker.C:
+			c.HandleCertificateReissuance()
 		}
-
-		c.HandleCertificateRequests(certDir)
 	}
+
 }
 
 // HandleCertificateRequests performs one iteration through the certificate requests in
@@ -674,4 +679,173 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	}
 	log.Warn().Str("certs", path).Msg("using a temporary directory for cert downloads")
 	return path, err
+}
+
+// HandleCertificateReissuance iterates through each VASP in the database and checks
+// if their identity certificate will be expiring soon, sending a reminder email at
+// the 30 and 7 day checkpoints if so, and reissuing the identity certificate 10 days before
+// expiration.
+func (c *CertificateManager) HandleCertificateReissuance() {
+	var (
+		err            error
+		expirationDate time.Time
+	)
+
+	// Iterate through the VASPs in the database.
+	vasps := c.db.ListVASPs()
+	defer vasps.Release()
+	for vasps.Next() {
+		if vasps.Error() != nil {
+			log.Error().Err(err).Msg("could not iterate through database")
+		}
+		var vasp *pb.VASP
+		if vasp, err = vasps.VASP(); err != nil {
+			log.Error().Err(err).Msg("could not parse vasp record from database")
+			continue
+		}
+
+		// Skip the current vasp if it is not verified, if it is verified and the
+		// identity certificate is nil, log an error.
+		if vasp.GetVerificationStatus() != pb.VerificationState_VERIFIED {
+			continue
+		} else if vasp.IdentityCertificate == nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("vasp is verified but does not have an identity certificate")
+			continue
+		}
+
+		// Calculate the number of days before the VASP's certificate expires.
+		notAfter := vasp.IdentityCertificate.NotAfter
+		if expirationDate, err = time.Parse(time.RFC3339, notAfter); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
+		}
+		reissuanceDate := expirationDate.Add(-time.Hour * 240) // Calculate the reissuance date, 10 days before expiration
+		timeBeforeExpiration := time.Until(expirationDate)
+
+		// TODO: handle the case were the certificate has expired, we should update the certificate record to the EXPIRED state
+		switch daysBeforeExpiration := timeBeforeExpiration.Hours() / 24; {
+		// Seven days before expiration, send a cert reissuance reminder to VASP.
+		// NOTE: the SendContactReissuanceReminder will not send emails more than
+		// once to a contact.
+		case daysBeforeExpiration <= 7:
+			if err = c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
+			}
+
+		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
+		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
+		case daysBeforeExpiration <= 10:
+			// TODO: check that the vasps certreq is in the READY_TO_SUBMIT state to avoid the double reissue
+			c.reissueIdentityCertificates(vasp)
+			if _, err = c.email.SendReissuanceAdminNotification(vasp, reissuanceDate); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance notification")
+				continue
+			}
+
+		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
+		case daysBeforeExpiration <= 30:
+			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
+			}
+			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
+				if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
+					log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
+					continue
+				}
+			}
+		}
+		// We need to update the vasp record in the database so that the email logs are preserved.
+		if err = c.db.UpdateVASP(vasp); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+		}
+	}
+}
+
+// Helper function for HandleCertificateReissuance that reissues identity certificates
+// for the given vasp.
+func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) {
+	var (
+		err         error
+		certreq     *models.CertificateRequest
+		whisperLink string
+	)
+
+	// Create a new certificate request.
+	if certreq, err = models.NewCertificateRequest(vasp); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error creating certificate request for vasp %s", vasp.Id))
+		return
+	}
+
+	// Update the cert req to be ready for submission.
+	if err = models.UpdateCertificateRequestStatus(
+		certreq,
+		models.CertificateRequestState_READY_TO_SUBMIT,
+		"automated certificate reissuance",
+		"automated",
+	); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error updating certificate request for vasp %s", vasp.Id))
+		return
+	}
+
+	// Generate a new PKCS12 password
+	secretType := "password"
+	pkcs12password := secrets.CreateToken(16)
+	whisperPasswordTemplate := "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create a new secret using the secret manager.
+	if err = c.secret.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error creating password secret for vasp %s", vasp.Id))
+		return
+	}
+	if err = c.secret.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error creating password version for vasp %s", vasp.Id))
+		return
+	}
+
+	// Using the whisper utility, create a whisper link to be sent with the ReissuanceStarted email.
+	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error creating whisper link for vasp %s", vasp.Id))
+		return
+	}
+
+	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
+	if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error sending reissuance started email for vasp %s", vasp.Id))
+		return
+	}
+
+	// Update the certificate request in the datastore.
+	if err = c.db.UpdateCertReq(certreq); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error updating certificate request for vasp %s", vasp.Id))
+		return
+	}
+
+	// Save the certificate request on the VASP.
+	if err = models.AppendCertReqID(vasp, certreq.Id); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error appending certificate request to vasp %s", vasp.Id))
+		return
+	}
+
+	// Update the VASP information in the datastore.
+	if err = c.db.UpdateVASP(vasp); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error updating vasp %s in the certman store", vasp.Id))
+		return
+	}
+}
+
+// Helper function for HandleCertificateReissuance checks if a certificate reissuance reminder
+// has been sent to the TRISA admin within the given time window.
+func NoAdminEmailSent(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) bool {
+	// Make sure that the email hasn't already been sent previously.
+	emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow)
+	if err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
+		return false
+	}
+	if emailCount > 0 {
+		return false
+	}
+	return true
 }

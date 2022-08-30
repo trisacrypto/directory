@@ -50,7 +50,8 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_EMAIL_TESTING":                        "true",
 	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
-	"GDS_CERTMAN_INTERVAL":                     "60s",
+	"GDS_CERTMAN_REQUEST_INTERVAL":             "60s",
+	"GDS_CERTMAN_REISSUANCE_INTERVAL":          "90s",
 	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
 	"GDS_BACKUP_ENABLED":                       "true",
 	"GDS_BACKUP_INTERVAL":                      "36h",
@@ -124,7 +125,7 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_EMAIL_STORAGE"], conf.Email.Storage)
 	require.True(t, conf.Email.Testing)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
-	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
+	require.Equal(t, 1*time.Minute, conf.CertMan.RequestInterval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
 	require.Equal(t, true, conf.Backup.Enabled)
 	require.Equal(t, 36*time.Hour, conf.Backup.Interval)
