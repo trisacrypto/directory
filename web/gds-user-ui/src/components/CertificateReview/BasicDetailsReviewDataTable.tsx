@@ -31,7 +31,7 @@ function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
           }}>
           <Tr>
             <Td pl={'1rem !important'}>
-              <Trans id="Business Category">Organization Name</Trans>
+              <Trans id="Organization Name">Organization Name</Trans>
             </Td>
             <Td>{data?.organization_name || 'N/A'}</Td>
             <Td></Td>
