@@ -89,14 +89,14 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	s.requireError(err, http.StatusBadRequest, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	s.requireError(err, http.StatusNotFound, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
@@ -167,13 +167,13 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	claims.Permissions = []string{"update:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	s.requireError(err, http.StatusBadRequest, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	s.requireError(err, http.StatusNotFound, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database that does not contain a registration form
 	org, err := s.db.Organizations().Create(context.TODO())
@@ -277,13 +277,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		claims.Permissions = []string{"update:vasp"}
 		require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		s.requireError(err, http.StatusBadRequest, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+		s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 		// Create valid claims but no record in the database - should not panic and should return an error
 		claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 		require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		s.requireError(err, http.StatusNotFound, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+		s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 		// From this point on submit valid claims and test responses from GDS
 		// NOTE: for registration form validation see TestSubmitRegistrationNotReady

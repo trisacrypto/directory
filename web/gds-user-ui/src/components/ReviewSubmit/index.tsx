@@ -23,6 +23,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -68,29 +69,27 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
       <Flex>
         <VStack mt="2rem">
           <Stack align="start" w="full">
-            <Heading size="md" pt={2}>
+            <Heading size="md" pr={3} ml={2}>
               <Trans id="Registration Submission">Registration Submission</Trans>
             </Heading>
           </Stack>
 
           <FormLayout>
             <Text>
-              <Trans id="You must submit your registration for TestNet and MainNet separately">
-                You must submit your registration for TestNet and MainNet separately
+              <Trans id="You must submit your registration for TestNet and MainNet separately.">
+                You must submit your registration for TestNet and MainNet separately.
               </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                <Trans id="Note">Note:</Trans>
+                <Trans id="Note:">Note:</Trans>
               </Text>{' '}
-              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process">
+              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process.">
                 You will receive two separate emails with confirmation links for each registration.
-                You must click on each confirmation link to complete the registration process
+                You must click on each confirmation link to complete the registration process.{' '}
               </Trans>
-              .
               <Text as="span" fontWeight="bold">
-                <Trans id="Failure to click either confirmation will result in an incomplete registration">
-                  Failure to click either confirmation will result in an incomplete registration
+                <Trans id=" Failure to click either confirmation will result in an incomplete registration">
+                  Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
-                .
               </Text>
             </Text>
           </FormLayout>
@@ -135,7 +134,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link color="link" onClick={handleJumpToLastStep} fontWeight={'bold'}>
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                   .
@@ -147,27 +146,25 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 pb={4}
                 alignItems={'center'}>
-                <Tooltip label={t`TestNet already submitted`} shouldWrapChildren>
-                  <Button
-                    bgColor="#ff7a59f0"
-                    color="#fff"
-                    isDisabled={testnet}
-                    data-testid="testnet-submit-btn"
-                    size="lg"
-                    py="2.5rem"
-                    whiteSpace="normal"
-                    maxW="200px"
-                    width="100%"
-                    boxShadow="lg"
-                    onClick={(e) => {
-                      onSubmitHandler(e, 'testnet');
-                    }}
-                    _hover={{
-                      bgColor: '#f55c35'
-                    }}>
-                    {t`Submit TestNet Registration`}
-                  </Button>
-                </Tooltip>
+                <Button
+                  bgColor="#ff7a59f0"
+                  color="#fff"
+                  isDisabled={testnet}
+                  data-testid="testnet-submit-btn"
+                  size="lg"
+                  py="2.5rem"
+                  whiteSpace="normal"
+                  maxW="200px"
+                  width="100%"
+                  boxShadow="lg"
+                  onClick={(e) => {
+                    onSubmitHandler(e, 'testnet');
+                  }}
+                  _hover={{
+                    bgColor: '#f55c35'
+                  }}>
+                  {t`Submit TestNet Registration`}
+                </Button>
               </Stack>
             </Stack>
 
@@ -205,7 +202,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link onClick={handleJumpToLastStep} color="link" fontWeight="bold">
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                 </Text>
@@ -216,27 +213,25 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 mx="auto"
                 alignItems={'center'}
                 pb={4}>
-                <Tooltip label={t`MainNet already submitted`} shouldWrapChildren>
-                  <Button
-                    bgColor="#23a7e0e8"
-                    color="#fff"
-                    size="lg"
-                    py="2.5rem"
-                    isDisabled={mainnet}
-                    whiteSpace="normal"
-                    boxShadow="lg"
-                    data-testid="mainnet-submit-btn"
-                    maxW="200px"
-                    onClick={(e) => {
-                      onSubmitHandler(e, 'mainnet');
-                    }}
-                    width="100%"
-                    _hover={{
-                      bgColor: '#189fda'
-                    }}>
-                    {t`Submit MainNet Registration`}
-                  </Button>
-                </Tooltip>
+                <Button
+                  bgColor="#23a7e0e8"
+                  color="#fff"
+                  size="lg"
+                  py="2.5rem"
+                  isDisabled={mainnet}
+                  whiteSpace="normal"
+                  boxShadow="lg"
+                  data-testid="mainnet-submit-btn"
+                  maxW="200px"
+                  onClick={(e) => {
+                    onSubmitHandler(e, 'mainnet');
+                  }}
+                  width="100%"
+                  _hover={{
+                    bgColor: '#189fda'
+                  }}>
+                  {t`Submit MainNet Registration`}
+                </Button>
               </Stack>
             </Stack>
           </Stack>
@@ -245,9 +240,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Button
               bgColor="#555151"
               color="#fff"
-              onClick={() => {
-                handleJumpToLastStep();
-              }}
+              onClick={handleJumpToLastStep}
               size="lg"
               py="2.5rem"
               whiteSpace="normal"

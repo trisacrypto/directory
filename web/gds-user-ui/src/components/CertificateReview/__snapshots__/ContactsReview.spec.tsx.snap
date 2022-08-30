@@ -41,7 +41,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                technical Contact
+                Compliance / legal Contact
               </td>
               <td
                 class="css-xumdn4"
@@ -58,7 +58,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                Compliance / legal Contact
+                technical Contact
               </td>
               <td
                 class="css-xumdn4"

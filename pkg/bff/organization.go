@@ -28,7 +28,7 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	// If there is no organization ID, something went wrong
 	if claims.OrgID == "" {
 		log.Warn().Msg("claims do not contain an orgID")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("missing claims info, try logging out and logging back in"))
+		api.MustRefreshToken(c, "missing claims info, try logging out and logging back in")
 		return nil, errors.New("missing organization ID in claims")
 	}
 
@@ -36,7 +36,7 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	if org, err = s.db.Organizations().Retrieve(c.Request.Context(), claims.OrgID); err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
-			c.JSON(http.StatusNotFound, api.ErrorResponse("no organization found, try logging out and logging back in"))
+			api.MustRefreshToken(c, "no organization found, try logging out and logging back in")
 			return nil, err
 		}
 

@@ -17,8 +17,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
       px={7}>
       <Stack width={'100%'}>
         <Heading as={'h1'} fontSize={19} pb={7} pt={4}>
-          {' '}
-          TRISA Details{' '}
+          <Trans id="TRISA Details">TRISA Details</Trans>
         </Heading>
         <Stack fontSize={18}>
           <Table
@@ -35,10 +34,18 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
                 }
               }}>
               <Tr>
-                <Td pt={'1rem !important'}>ID</Td>
-                <Td>First Listed</Td>
-                <Td>Verified On</Td>
-                <Td>Last Updated</Td>
+                <Td pt={'1rem !important'}>
+                  <Trans id="ID">ID</Trans>
+                </Td>
+                <Td>
+                  <Trans id="First Listed">First Listed</Trans>
+                </Td>
+                <Td>
+                  <Trans id="Verified On">Verified On</Trans>
+                </Td>
+                <Td>
+                  <Trans id="Last Updated">Last Updated</Trans>
+                </Td>
               </Tr>
             </Thead>
             <Tbody

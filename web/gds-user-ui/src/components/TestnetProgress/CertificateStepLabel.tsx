@@ -105,10 +105,11 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   return (
     <>
       <Stack
-        boxShadow="0 24px 50px rgba(55,65, 81, 0.25) "
+        boxShadow="0 24px 50px rgba(55,65, 81, 0.05) "
         borderColor={'#C1C9D2'}
         borderRadius={8}
         borderWidth={1}
+        bg={'white'}
         p={5}
         fontFamily={'Open Sans'}
         width="100%">

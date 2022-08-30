@@ -157,13 +157,13 @@ func (s *bffTestSuite) TestAttention() {
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.Attention(context.TODO())
-	s.requireError(err, http.StatusBadRequest, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.Attention(context.TODO())
-	s.requireError(err, http.StatusNotFound, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Start registration message should be returned when there is no registration form
 	claims.OrgID = org.Id
@@ -243,7 +243,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	s.testnet.admin.UseError(mock.RetrieveVASPEP, http.StatusNotFound, "could not find VASP in database")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[500] 404 Not Found", "expected error when VASP does not exist in testnet")
+	s.requireError(err, http.StatusInternalServerError, "404 Not Found", "expected error when VASP does not exist in testnet")
 
 	// Test an error is returned when VASP does not exist in mainnet
 	claims.VASPs["testnet"] = ""
@@ -251,7 +251,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	s.mainnet.admin.UseError(mock.RetrieveVASPEP, http.StatusNotFound, "could not find VASP in database")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[500] 404 Not Found", "expected error when VASP does not exist in mainnet")
+	s.requireError(err, http.StatusInternalServerError, "404 Not Found", "expected error when VASP does not exist in mainnet")
 
 	// Verify emails message should be returned when the VASP has been submitted but
 	// emails are not yet verified
@@ -441,13 +441,13 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	s.requireError(err, http.StatusBadRequest, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	s.requireError(err, http.StatusNotFound, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Should return an empty response when there are no directory records
 	claims.OrgID = org.Id

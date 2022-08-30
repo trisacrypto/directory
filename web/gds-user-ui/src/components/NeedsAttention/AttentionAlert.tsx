@@ -1,18 +1,9 @@
-import {
-  Box,
-  Text,
-  Stack,
-  Button,
-  HStack,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription
-} from '@chakra-ui/react';
+import { Text, Button, HStack, Alert, AlertIcon } from '@chakra-ui/react';
 
 import { NavLink } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 import { NeedsAttentionProps } from '.';
 const enum AttentionSeverity {
   INFO = 'info',
@@ -72,6 +63,7 @@ const AttentionAlert = ({
             </Alert>{' '}
           </>
         );
+
       case AttentionAction.COMPLETE_REGISTRATION:
         return (
           <>
@@ -97,10 +89,35 @@ const AttentionAlert = ({
             </Alert>{' '}
           </>
         );
+      case AttentionAction.SUBMIT_TESTNET || AttentionAction.SUBMIT_MAINNET:
+        return (
+          <>
+            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
+              <AlertIcon />
+              <HStack justifyContent={'space-between'}>
+                <Text> {message}</Text>
+                <Button
+                  onClick={onClick}
+                  width={142}
+                  border={'1px solid white'}
+                  px={8}
+                  as={'a'}
+                  borderRadius={0}
+                  background="transparent"
+                  color="#fff"
+                  cursor="pointer"
+                  _active={{ background: '#000' }}
+                  _hover={{ background: '#111', color: 'white' }}>
+                  {t`Submit`}
+                </Button>
+              </HStack>
+            </Alert>{' '}
+          </>
+        );
 
       default:
         return (
-          <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
+          <Alert status={AttentionSeverity.INFO} borderRadius={'10px'}>
             <AlertIcon />
             {message}
           </Alert>

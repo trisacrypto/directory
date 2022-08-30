@@ -1,93 +1,125 @@
 import {
-  Flex,
-  FlexProps,
   Icon,
   Box,
-  Text,
-  chakra,
   ComponentWithAs,
-  IconProps
+  IconProps,
+  styled,
+  ListItem,
+  ListItemProps
 } from '@chakra-ui/react';
-import { ReactText } from 'react';
+import { ReactNode } from 'react';
 import { IconType } from 'react-icons';
 import { NavLink as RouterLink, useLocation } from 'react-router-dom';
+import ArrowIcon from './ArrowIcon';
 
-const ChakraRouterLink = chakra(RouterLink);
-export interface NavItemProps extends FlexProps {
-  icon?: IconType | ComponentWithAs<'svg', IconProps>;
-  href?: string;
-  children: ReactText;
-  path?: string;
-}
-
-export const getLinkStyle: any = () => ({
-  w: '100%',
-  py: '0.9rem',
-  cursor: 'pointer',
-  position: 'relative',
-  textDecor: 'none',
-  pl: 7,
-  _focus: { boxShadow: 'none' },
-  _hover: {
-    _after: {
-      background: 'hsla(231, 12%, 66%, 0.16)',
-      position: 'absolute',
-      content: '""',
-      height: '100%',
-      top: 0,
-      color: 'white',
-      left: 0,
-      right: 0,
-      borderLeft: '2px solid #DDE2FF'
-    }
+export const StyledNavItem = styled(ListItem, {
+  baseStyle: ({ isActive, isSubMenu }: any) => {
+    return {
+      w: '100%',
+      py: '15px',
+      cursor: 'pointer',
+      position: 'relative',
+      textDecor: 'none',
+      color: '#A4A6B3',
+      alignItems: 'center',
+      display: 'flex',
+      pl: 7,
+      _focus: { boxShadow: 'none' },
+      _hover: {
+        _after: {
+          background: 'hsla(231, 12%, 66%, 0.16)',
+          position: 'absolute',
+          content: '""',
+          height: '100%',
+          top: 0,
+          color: 'white',
+          left: 0,
+          right: 0,
+          borderLeft: '2px solid #DDE2FF'
+        }
+      },
+      '& > svg': {
+        verticalAlign: 'text-bottom'
+      },
+      ...(isActive && {
+        borderLeft: '2px solid #DDE2FF',
+        background: 'hsla(231, 12%, 66%, 0.16)',
+        width: '100%',
+        color: '#DDE2FF'
+      }),
+      ...(isSubMenu && {
+        pl: 10
+      })
+    };
   }
 });
 
-const getActiveLinkStyle = ({ isActive }: { isActive: boolean }) =>
-  isActive
-    ? {
-        borderLeft: '2px solid #DDE2FF',
-        background: 'hsla(231, 12%, 66%, 0.16)',
-        width: '100%'
-      }
-    : {};
+export interface NavItemProps extends ListItemProps {
+  icon?: IconType | ComponentWithAs<'svg', IconProps>;
+  href?: string;
+  children: ReactNode;
+  path?: string;
+  hasChildren?: boolean;
+  onOpen?: () => void;
+  isCollapse?: boolean;
+  isSubMenu?: boolean;
+}
 
-const NavItem = ({ icon, children, href = '#', path, ...rest }: NavItemProps) => {
+const NavItem = ({
+  icon,
+  children,
+  hasChildren,
+  href = '#',
+  onOpen,
+  path,
+  isCollapse,
+  ...rest
+}: NavItemProps) => {
   const location = useLocation();
   const isActive = location.pathname === path;
-  return (
-    <ChakraRouterLink w="100%" to={href} style={getActiveLinkStyle}>
-      <Flex
-        align="center"
-        borderRadius="md"
+
+  if (hasChildren) {
+    return (
+      <StyledNavItem
         w="100%"
-        role="group"
-        color={isActive ? 'white' : '#8391a2'}
-        fontSize="0.9375rem"
-        _hover={{
-          color: 'white'
-        }}
-        {...getLinkStyle()}
+        to={'/#'}
+        onClick={onOpen}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        pr={3}
+        isActive={isActive}
         {...rest}>
-        {icon && (
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: 'white'
-            }}
-            color={isActive ? 'white' : '#8391a2'}
-            as={icon}
-          />
-        )}
-        <Box
+        <Box>
+          {icon && (
+            <Icon
+              mr="4"
+              _groupHover={{
+                color: 'white'
+              }}
+              as={icon}
+            />
+          )}
+          {children}
+        </Box>
+        <ArrowIcon open={isCollapse!} />
+      </StyledNavItem>
+    );
+  }
+
+  return (
+    <StyledNavItem w="100%" as={RouterLink} display="flex" to={href} isActive={isActive} {...rest}>
+      {icon && (
+        <Icon
+          mr="4"
           _groupHover={{
             color: 'white'
-          }}>
-          <Text>{children}</Text>
-        </Box>
-      </Flex>
-    </ChakraRouterLink>
+          }}
+          as={icon}
+        />
+      )}
+      {children}
+    </StyledNavItem>
   );
 };
 

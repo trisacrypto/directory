@@ -17,3 +17,8 @@ export const getMainNetSubmittedStatus = createSelector(
   rootState,
   (state) => state.mainnetSubmitted
 );
+export const getCertificateData = createSelector(rootState, (state) => state.data);
+export const getHasReachedSubmitStep = createSelector(
+  rootState,
+  (state) => state.hasReachSubmitStep
+);

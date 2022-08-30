@@ -1,5 +1,6 @@
 import React from 'react';
 import { Stack, Box, Text, Heading, Flex, chakra } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
 
 interface StatCardProps {
   title: string;
@@ -31,7 +32,7 @@ const StatCard = ({ title, number }: StatCardProps) => {
   );
 };
 StatCard.defaultProps = {
-  title: 'Verified VASPs',
+  title: t`Verified VASPs`,
   number: 0
 };
 

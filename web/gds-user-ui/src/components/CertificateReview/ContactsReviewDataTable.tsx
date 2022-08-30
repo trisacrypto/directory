@@ -25,7 +25,7 @@ function ContactsReviewDataTable({ data }: ContactsProps) {
           }
         }}>
         <Tbody>
-          {['technical', 'legal', 'administrative', 'billing'].map((contact, index) => (
+          {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
             <Tr key={index}>
               <Td textTransform="capitalize">
                 {t`${contact === 'legal' ? `Compliance / ${contact}` : contact} Contact`}

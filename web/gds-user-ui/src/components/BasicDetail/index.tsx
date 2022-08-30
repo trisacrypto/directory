@@ -4,7 +4,7 @@ import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
-import { getStepStatus, handleError } from 'utils/utils';
+import { getStepStatus, handleError, format2ShortDate } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 import FileUploader from 'components/FileUpload';
@@ -12,26 +12,42 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { useNavigate } from 'react-router-dom';
 import { fieldNamesPerSteps, validationSchema } from 'modules/dashboard/certificate/lib';
 import { postRegistrationValue } from 'modules/dashboard/registration/utils';
-const BasicDetails: React.FC = () => {
+import { getRegistrationData } from 'modules/dashboard/registration/service';
+
+interface BasicDetailProps {
+  onChangeRegistrationState?: any;
+}
+const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState }) => {
   const navigate = useNavigate();
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
+  const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
   const bg = useColorModeValue('#F7F8FC', 'gray.800');
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
-    console.log('[handleFileUploaded]', file);
+    // console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
     const reader = new FileReader();
     reader.onload = async (ev: any) => {
       const data = JSON.parse(ev.target.result);
       try {
         const validationData = await validationSchema[0].validate(data);
-        console.log('[validationData]', validationData);
+        // console.log('[validationData]', validationData);
         const updatedCertificate: any = await postRegistrationValue(validationData);
         if (updatedCertificate.status === 204) {
-          navigate('/dashboard/certificate/registration');
+          const getValue = await getRegistrationData();
+          // console.log('[getValue]', getValue);
+          const values = {
+            ...getValue.data,
+            established_on: getValue?.data?.established_on
+              ? format2ShortDate(getValue?.data?.established_on)
+              : ''
+          };
+          onChangeRegistrationState(values);
+          setRegistrationValue(values);
+          updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
         toast({
@@ -53,7 +69,7 @@ const BasicDetails: React.FC = () => {
     <Stack spacing={7} mt="2rem" bg={bg}>
       <HStack justifyContent={'space-between'}>
         <Box display={'flex'}>
-          <Heading size="md" pr={3}>
+          <Heading size="md" pr={3} ml={2}>
             <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
           </Heading>{' '}
           {stepStatus ? <SectionStatus status={stepStatus} /> : null}

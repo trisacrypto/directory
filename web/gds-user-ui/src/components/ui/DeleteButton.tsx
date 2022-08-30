@@ -1,5 +1,6 @@
 import { DeleteIcon } from '@chakra-ui/icons';
 import { Button, Icon, Tooltip, TooltipProps } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
 
 type DeleteButtonProps = {
   tooltip?: Omit<TooltipProps, 'children'>;
@@ -11,7 +12,7 @@ const TOOLTIPS_DELAY = 2 * 1000;
 
 const DeleteButton: React.FC<DeleteButtonProps> = ({ tooltip, onDelete, isDisabled }) => {
   return (
-    <Tooltip label="Delete" openDelay={TOOLTIPS_DELAY} {...tooltip}>
+    <Tooltip label={t`Delete`} openDelay={TOOLTIPS_DELAY} {...tooltip}>
       <Button
         onClick={onDelete}
         visibility={isDisabled ? 'hidden' : 'visible'}

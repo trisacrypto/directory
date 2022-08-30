@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -211,7 +210,7 @@ func (s *bffTestSuite) SetupTrtl() {
 	require := s.Require()
 
 	// Create a temporary directory for the testing database
-	s.dbPath, err = ioutil.TempDir("", "trtldb-*")
+	s.dbPath, err = os.MkdirTemp("", "trtldb-*")
 	require.NoError(err, "could not create a temporary directory for trtl")
 
 	conf := trtlmock.Config()
@@ -268,7 +267,7 @@ func loadFixture(path string, v interface{}) (err error) {
 
 func loadPBFixture(path string, v proto.Message) (err error) {
 	var data []byte
-	if data, err = ioutil.ReadFile(path); err != nil {
+	if data, err = os.ReadFile(path); err != nil {
 		return err
 	}
 

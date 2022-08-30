@@ -18,7 +18,6 @@ export const hasAddressField = (address: any) => {
 
 export const hasAddressFieldAndLine = (address: any) => {
   if (hasAddressField(address) && hasAddressLine(address)) {
-    console.error('[ERROR]', 'cannot render address');
     return true;
   }
   return false;
@@ -29,6 +28,7 @@ export const renderLines = (address: any) => (
     {address.address_line.map(
       (addressLine: any, index: number) => addressLine && <div key={index}>{addressLine} </div>
     )}
+    <div>{`${address.town_name}, ${address.country_sub_division} ${address.post_code}`}</div>
     <div>{address?.country}</div>
   </div>
 );
@@ -74,7 +74,6 @@ export const renderField = (address: any) => (
 
 export const renderAddress = (address: any) => {
   if (hasAddressFieldAndLine(address)) {
-    console.error('[ERROR]', 'invalid address with both fields and lines');
     return <div>Invalid Address</div>;
   }
 
@@ -86,6 +85,5 @@ export const renderAddress = (address: any) => {
     return renderField(address);
   }
 
-  console.error('[ERROR]', 'could not render address');
   return <div>Unparseable Address</div>;
 };
