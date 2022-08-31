@@ -202,6 +202,54 @@ type ReissuanceStartedData struct {
 	WhisperURL          string // Secure one-time whisper link for password retrieval
 }
 
+// ReissuanceAdminNotificationData to complete reissuance admin notification email templates.
+type ReissuanceAdminNotificationData struct {
+	VID                 string    // The ID of the VASP/Registration
+	CommonName          string    // The common name assigned to the cert
+	SerialNumber        string    // The serial number of the certificate
+	Endpoint            string    // The expected endpoint for the TRISA service
+	RegisteredDirectory string    // The directory name for the certificate that was issued
+	Expiration          time.Time // The timestamp when the certificate expires
+	Reissuance          time.Time // The timestamp when the certificate was reissued
+	BaseURL             string    // The URL of the admin review endpoint to build the AdminReviewURL
+}
+
+// AdminReviewURL composes a link to the VASP detail in the admin UI. If the base url is
+// missing or can't be parsed, it logs an warning and returns empty string.
+// The AdminReviewURL is useful, but it is not a critical error.
+func (d ReissuanceAdminNotificationData) AdminReviewURL() string {
+	var (
+		link *url.URL
+		err  error
+	)
+	if d.BaseURL != "" {
+		if link, err = url.Parse(d.BaseURL); err != nil {
+			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			return ""
+		}
+	} else {
+		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		return ""
+	}
+	return link.ResolveReference(&url.URL{Path: d.VID}).String()
+}
+
+// ExpirationDate formats the expiration date for rendering in the email.
+func (d ReissuanceAdminNotificationData) ExpirationDate() string {
+	if d.Expiration.IsZero() {
+		return UnknownDate
+	}
+	return d.Expiration.Format(DateFormat)
+}
+
+// ReissueDate formats the reissuance date for rendering in the email.
+func (d ReissuanceAdminNotificationData) ReissueDate() string {
+	if d.Reissuance.IsZero() {
+		return UnknownDate
+	}
+	return d.Reissuance.Format(DateFormat)
+}
+
 //===========================================================================
 // Email Builders
 //===========================================================================
@@ -338,6 +386,25 @@ func ReissuanceStartedEmail(sender, senderEmail, recipient, recipientEmail strin
 	message = mail.NewSingleEmail(
 		mail.NewEmail(sender, senderEmail),
 		ReissuanceStartedRE,
+		mail.NewEmail(recipient, recipientEmail),
+		text,
+		html,
+	)
+
+	return message, nil
+}
+
+// ReissuanceAdminNotificationEmail creates a new certs reissuance admin notification email,
+// ready for sending by rendering the text and html templates with the supplied data.
+func ReissuanceAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail string, data ReissuanceAdminNotificationData) (message *mail.SGMailV3, err error) {
+	var text, html string
+	if text, html, err = Render("reissuance_admin_notification", data); err != nil {
+		return nil, err
+	}
+
+	message = mail.NewSingleEmail(
+		mail.NewEmail(sender, senderEmail),
+		ReissuanceAdminNotificationRE,
 		mail.NewEmail(recipient, recipientEmail),
 		text,
 		html,
