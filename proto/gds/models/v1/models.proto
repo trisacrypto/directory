@@ -116,6 +116,9 @@ message GDSExtraData {
 
     // Certificate IDs associated with this VASP
     repeated string certificates = 5;
+
+    // Log which records emails sent to the TRISA admins regarding this VASP
+    repeated EmailLogEntry email_log = 6;
 }
 
 // AuditLogEntry contains information about an event relevant to a VASP

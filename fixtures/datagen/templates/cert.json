@@ -1,0 +1,52 @@
+{
+    "details": {
+        "version": "3",
+        "serial_number": "",
+        "signature": "",
+        "signature_algorithm": "SHA384-RSA",
+        "public_key_algorithm": "RSA",
+        "subject": {
+            "common_name": "trisa.rotational.io",
+            "serial_number": "",
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "street_address": [],
+            "locality": [
+                "Menlo Park"
+            ],
+            "province": [
+                "California"
+            ],
+            "postal_code": [],
+            "country": [
+                "US"
+            ]
+        },
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "serial_number": "",
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "street_address": [],
+            "locality": [
+                "Menlo Park"
+            ],
+            "province": [
+                "California"
+            ],
+            "postal_code": [],
+            "country": [
+                "US"
+            ]
+        },
+        "not_before": "2021-06-01T17:16:15Z",
+        "not_after": "2022-07-01T17:16:14Z",
+        "revoked": false,
+        "data": "",
+        "chain": ""
+    }
+}
