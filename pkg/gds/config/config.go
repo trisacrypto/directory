@@ -26,7 +26,6 @@ type Config struct {
 	Admin       AdminConfig
 	Members     MembersConfig
 	Database    DatabaseConfig
-	Sectigo     sectigo.Config
 	Email       EmailConfig
 	CertMan     CertManConfig
 	Backup      BackupConfig
@@ -89,8 +88,11 @@ type EmailConfig struct {
 }
 
 type CertManConfig struct {
-	Interval time.Duration `split_words:"true" default:"10m"`
-	Storage  string        `split_words:"true" required:"false"`
+	RequestInterval    time.Duration `split_words:"true" default:"10m"`
+	ReissuanceInterval time.Duration `split_words:"true" default:"24h"`
+	Storage            string        `split_words:"true" required:"false"`
+	DirectoryID        string        `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
+	Sectigo            sectigo.Config
 }
 
 type BackupConfig struct {
@@ -161,11 +163,11 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
-	if err = c.Sectigo.Validate(); err != nil {
+	if err = c.Email.Validate(); err != nil {
 		return err
 	}
 
-	if err = c.Email.Validate(); err != nil {
+	if err = c.CertMan.Validate(); err != nil {
 		return err
 	}
 
@@ -241,6 +243,14 @@ func (c EmailConfig) Validate() error {
 
 	if c.Storage != "" && !c.Testing {
 		return errors.New("invalid configuration: email archiving is only supported in testing mode")
+	}
+
+	return nil
+}
+
+func (c CertManConfig) Validate() (err error) {
+	if err = c.Sectigo.Validate(); err != nil {
+		return err
 	}
 
 	return nil
