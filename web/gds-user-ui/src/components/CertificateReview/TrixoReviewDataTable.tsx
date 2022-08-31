@@ -11,6 +11,7 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  console.log('[TrixoReviewDataTable data]', data?.kyc_threshold);
   const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
     return conductsCustomerKYC ? t`Yes` : t`No`;
   };
@@ -86,7 +87,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} fontWeight="bold" background="#E5EDF1" pl={'1rem !important'}>
               <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
             </Td>
           </Tr>
@@ -141,15 +142,16 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td pl={0}>
-              {data?.kyc_threshold || data?.kyc_threshold !== 0 ? (
+              {(data?.kyc_threshold && typeof data.kyc_threshold !== 'undefined') ||
+              parseInt(data?.kyc_threshold) !== 0 ? (
                 <Text>
-                  {currencyFormatter(data?.kyc_threshold, {
+                  {currencyFormatter(data?.kyc_threshold || 0, {
                     currency: data?.kyc_threshold_currency
                   }) || 'USD'}{' '}
                   {data?.kyc_threshold_currency}
                 </Text>
               ) : (
-                'N/A'
+                <Text>{'N/A'}</Text>
               )}
             </Td>
             <Td></Td>
@@ -217,7 +219,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
               <Trans id="Data Protection Policies">Data Protection Policies</Trans>
             </Td>
           </Tr>

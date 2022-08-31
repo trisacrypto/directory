@@ -196,7 +196,7 @@ func (s *Server) MemberDetails(c *gin.Context) {
 
 	// Validate the registered directory
 	params.Directory = strings.ToLower(params.Directory)
-	if params.Directory != trisatest && params.Directory != vaspdirectory {
+	if !validRegisteredDirectory(params.Directory) {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
 		return
 	}
@@ -214,10 +214,10 @@ func (s *Server) MemberDetails(c *gin.Context) {
 		rep *members.MemberDetails
 	)
 
-	switch params.Directory {
-	case trisatest:
+	switch registeredDirectoryType(params.Directory) {
+	case testnet:
 		rep, err = s.testnetGDS.Details(ctx, req)
-	case vaspdirectory:
+	case mainnet:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
