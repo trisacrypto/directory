@@ -34,7 +34,6 @@ const useAuth = () => {
         } else {
         }
       } catch (error) {
-        console.log('[getUser error]', error);
         throw new Error('401');
       }
     } else {
@@ -44,10 +43,9 @@ const useAuth = () => {
   const isUserAuthenticated = !!isLoggedIn;
 
   const isAuthenticated = () => {
-    console.log('[isLoggedIn]', isLoggedIn);
-    if (!isLoggedIn && getToken) {
-      getUser();
-      return true;
+    if (isLoggedIn && !getToken) {
+      logoutUser();
+      return false;
     }
     return isUserAuthenticated;
   };

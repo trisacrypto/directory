@@ -4,18 +4,10 @@ import React, { useEffect } from 'react';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { hasValue } from 'utils/utils';
-
-function ContactsReviewDataTable() {
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [contacts, setContacts] = React.useState<any>({});
-  useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.contacts
-    };
-    setContacts(stepData);
-  }, [steps]);
-
+interface ContactsProps {
+  data?: any;
+}
+function ContactsReviewDataTable({ data }: ContactsProps) {
   return (
     <Stack fontSize={'1rem'}>
       <Table
@@ -33,17 +25,17 @@ function ContactsReviewDataTable() {
           }
         }}>
         <Tbody>
-          {['technical', 'legal', 'administrative', 'billing'].map((contact, index) => (
+          {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
             <Tr key={index}>
               <Td textTransform="capitalize">
                 {t`${contact === 'legal' ? `Compliance / ${contact}` : contact} Contact`}
               </Td>
               <Td>
-                {hasValue(contacts?.[contact]) ? (
+                {hasValue(data?.[contact]) ? (
                   <>
-                    {contacts?.[contact]?.name && <Text>{contacts?.[contact]?.name}</Text>}
-                    {contacts?.[contact]?.email && <Text>{contacts?.[contact]?.email}</Text>}
-                    {contacts?.[contact]?.phone && <Text>{contacts?.[contact]?.phone}</Text>}
+                    {data?.[contact]?.name && <Text>{data?.[contact]?.name}</Text>}
+                    {data?.[contact]?.email && <Text>{data?.[contact]?.email}</Text>}
+                    {data?.[contact]?.phone && <Text>{data?.[contact]?.phone}</Text>}
                   </>
                 ) : (
                   'N/A'

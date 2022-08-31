@@ -62,7 +62,7 @@ const useCustomAuth0 = () => {
         if (err) {
           reject(err);
         } else {
-          const decodeToken: any = jwt_decode(authResult.accessToken);
+          const decodeToken: any = jwt_decode(authResult.acpaxiocessToken);
           authResult.idTokenPayload.permissions = decodeToken.permissions;
 
           resolve(authResult);

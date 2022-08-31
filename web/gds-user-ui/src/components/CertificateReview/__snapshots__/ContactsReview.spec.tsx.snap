@@ -3,7 +3,7 @@
 exports[`<ContactsReview /> should match snapshot 1`] = `
 <div>
   <div
-    class="css-17bwaio"
+    class="css-18e1pym"
   >
     <div
       class="chakra-stack css-n21gh5"
@@ -17,7 +17,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
           Section 3: Contacts
         </h2>
         <button
-          class="chakra-button css-qhu6kf"
+          class="chakra-button css-10fawgy"
           type="button"
         >
           Edit
@@ -41,27 +41,13 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                technical Contact
+                Compliance / legal Contact
               </td>
               <td
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <p
-                  class="chakra-text css-0"
-                >
-                  Test
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  test@test.com
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  +4535557757
-                </p>
+                N/A
               </td>
             </tr>
             <tr
@@ -72,27 +58,13 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
                 class="css-woxhqh"
                 role="gridcell"
               >
-                Compliance / legal Contact
+                technical Contact
               </td>
               <td
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <p
-                  class="chakra-text css-0"
-                >
-                  Info 
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  info@gmail.com
-                </p>
-                <p
-                  class="chakra-text css-0"
-                >
-                  +93400583484
-                </p>
+                N/A
               </td>
             </tr>
             <tr

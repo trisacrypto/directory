@@ -19,11 +19,23 @@ const Button: ComponentStyleConfig = {
     },
     primary: {
       color: 'white',
-      background: 'blue'
+      background: 'blue',
+      _focus: {
+        boxShadow: 'none'
+      },
+      _hover: {
+        background: '#4389ac',
+        _disabled: {
+          background: 'blue'
+        }
+      }
     },
     secondary: {
       color: 'white',
-      background: 'orange'
+      background: 'orange',
+      _hover: {
+        background: '#c85d42'
+      }
     }
   },
   defaultProps: {

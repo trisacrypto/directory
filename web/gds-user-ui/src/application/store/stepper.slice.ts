@@ -1,18 +1,23 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { clear } from 'console';
-import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
+import { createSlice } from '@reduxjs/toolkit';
+
 export type TStep = {
   status: string;
   key?: number;
-  data?: any;
 };
-export type TPayload = {
-  currentStep: number | string;
-  steps: TStep[];
-  lastStep: number | null;
-  hasReachSubmitStep?: boolean;
+
+export const initialValue: TPayload = {
+  currentStep: 1,
+  steps: [
+    {
+      status: 'progress'
+    }
+  ],
+  lastStep: null,
+  hasReachSubmitStep: false,
+  testnetSubmitted: false,
+  mainnetSubmitted: false,
+  data: {}
 };
-export const initialValue: TPayload = loadStepperFromLocalStorage();
 
 const stepperSlice: any = createSlice({
   name: 'stepper',
@@ -30,6 +35,9 @@ const stepperSlice: any = createSlice({
           step.status = payload.status;
         }
       });
+    },
+    setHasReachSubmitStep: (state: any, { payload }: any) => {
+      state.hasReachSubmitStep = payload.hasReachSubmitStep;
     },
     setLastStep: (state: any, { payload }: any) => {
       state.lastStep = payload.lastStep;
@@ -53,17 +61,49 @@ const stepperSlice: any = createSlice({
     setSubmitStep: (state: any, { payload }: any) => {
       state.hasReachSubmitStep = payload.submitStep;
     },
+    // set initial value
+    setInitialValue: (state: TPayload, { payload }: any) => {
+      state.currentStep = payload.currentStep;
+      state.steps = payload.steps;
+      state.lastStep = payload.lastStep;
+      state.hasReachSubmitStep = payload.hasReachSubmitStep;
+      state.testnetSubmitted = payload.testnetSubmitted;
+      state.mainnetSubmitted = payload.mainnetSubmitted;
+    },
+    // get current state
+    getCurrentState: (state: TPayload) => {
+      return state;
+    },
     clearStepper: (state: any) => {
       state.steps = [
         {
           key: 1,
-          status: 'progress',
-          data: {}
+          status: 'progress'
         }
       ];
       state.currentStep = 1;
       state.lastStep = null;
       state.hasReachSubmitStep = false;
+      state.testnetSubmitted = false;
+      state.mainnetSubmitted = false;
+      state.data = {};
+    },
+    // set testnet submission
+    setTestnetSubmitted: (state: any, { payload }: any) => {
+      state.testnetSubmitted = payload.testnetSubmitted;
+    },
+    // set mainnet submission
+    setMainnetSubmitted: (state: any, { payload }: any) => {
+      state.mainnetSubmitted = payload.mainnetSubmitted;
+    },
+    // set certificate data
+    setCertificateValue: (state: any, { payload }: any) => {
+      state.data = { ...payload.value };
+    },
+
+    // get certificate data
+    getCertificateData: (state: any) => {
+      return state.data;
     }
   }
 });
@@ -77,5 +117,12 @@ export const {
   setStepFormValue,
   getCurrentFormValues,
   setSubmitStep,
-  clearStepper
+  clearStepper,
+  setHasReachSubmitStep,
+  setInitialValue,
+  getCurrentState,
+  setTestnetSubmitted,
+  setMainnetSubmitted,
+  setCertificateValue,
+  getCertificateData
 } = stepperSlice.actions;

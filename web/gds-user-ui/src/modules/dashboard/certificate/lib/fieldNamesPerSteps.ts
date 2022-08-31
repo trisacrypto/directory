@@ -19,10 +19,7 @@ export const fieldNamesPerSteps = {
     ])
   ],
   trisaImplementation: [
-    ...['trisa_endpoint_testnet', 'trisa_endpoint_mainnet'].flatMap((value) => [
-      `${value}.common_name`,
-      `${value}.endpoint`
-    ])
+    ...['testnet', 'mainnet'].flatMap((value) => [`${value}.common_name`, `${value}.endpoint`])
   ],
   trixoImplementation: [
     'trixo.primary_national_jurisdiction',

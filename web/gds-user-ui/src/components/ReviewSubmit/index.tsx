@@ -8,12 +8,22 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link
+  Link,
+  Tooltip
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
+import {
+  getTestNetSubmittedStatus,
+  getMainNetSubmittedStatus
+} from 'application/store/selectors/stepper';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
@@ -26,55 +36,60 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   isMainNetSent,
   result
 }) => {
+  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
+  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
-
-  const getTestnetFromLocalStorage = localStorage.getItem('isTestNetSent');
-  const getMainnetFromLocalStorage = localStorage.getItem('isMainNetSent');
+  const { jumpToLastStep } = useCertificateStepper();
+  const navigate = useNavigate();
   useEffect(() => {
-    if (getTestnetFromLocalStorage === 'true') {
+    if (isTestNetSubmitted) {
       setTestnet(true);
     }
-    if (getMainnetFromLocalStorage === 'true') {
+    if (isMainNetSubmitted) {
       setMainnet(true);
     }
-  }, [getTestnetFromLocalStorage, getMainnetFromLocalStorage]);
+  }, [isTestNetSubmitted, isMainNetSubmitted]);
   useEffect(() => {
     if (isSent) {
       onOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTestNetSent, isMainNetSent]);
+
+  const handleJumpToLastStep = () => {
+    jumpToLastStep();
+    navigate('/dashboard/certificate/registration');
+  };
+
   return (
     <>
       <Flex>
         <VStack mt="2rem">
           <Stack align="start" w="full">
-            <Heading size="md" pt={2}>
+            <Heading size="md" pr={3} ml={2}>
               <Trans id="Registration Submission">Registration Submission</Trans>
             </Heading>
           </Stack>
 
           <FormLayout>
             <Text>
-              <Trans id="You must submit your registration for TestNet and MainNet separately">
-                You must submit your registration for TestNet and MainNet separately
+              <Trans id="You must submit your registration for TestNet and MainNet separately.">
+                You must submit your registration for TestNet and MainNet separately.
               </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                <Trans id="Note">Note:</Trans>
+                <Trans id="Note:">Note:</Trans>
               </Text>{' '}
-              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process">
+              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process.">
                 You will receive two separate emails with confirmation links for each registration.
-                You must click on each confirmation link to complete the registration process
+                You must click on each confirmation link to complete the registration process.{' '}
               </Trans>
-              .
               <Text as="span" fontWeight="bold">
-                <Trans id="Failure to click either confirmation will result in an incomplete registration">
-                  Failure to click either confirmation will result in an incomplete registration
+                <Trans id=" Failure to click either confirmation will result in an incomplete registration">
+                  Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
-                .
               </Text>
             </Text>
           </FormLayout>
@@ -119,7 +134,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link color="link" onClick={handleJumpToLastStep} fontWeight={'bold'}>
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                   .
@@ -187,7 +202,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
-                  <Link color={'blue'} href="/certificate/registration" fontWeight={'bold'}>
+                  <Link onClick={handleJumpToLastStep} color="link" fontWeight="bold">
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                 </Text>
@@ -225,8 +240,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Button
               bgColor="#555151"
               color="#fff"
-              as="a"
-              href="/certificate/registration"
+              onClick={handleJumpToLastStep}
               size="lg"
               py="2.5rem"
               whiteSpace="normal"

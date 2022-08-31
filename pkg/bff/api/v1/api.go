@@ -24,11 +24,13 @@ type BFFClient interface {
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
+	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *models.Announcement) error
 	Certificates(context.Context) (*CertificatesReply, error)
 	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
+	Attention(context.Context) (*AttentionReply, error)
 }
 
 //===========================================================================
@@ -37,8 +39,9 @@ type BFFClient interface {
 
 // Reply contains standard fields that are used for generic API responses and errors
 type Reply struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty" yaml:"error,omitempty"`
+	Success      bool   `json:"success"`
+	Error        string `json:"error,omitempty" yaml:"error,omitempty"`
+	RefreshToken bool   `json:"refresh_token,omitempty" yaml:"refresh_token,omitempty"`
 }
 
 // StatusParams is parsed from the query parameters of the GET request
@@ -104,6 +107,14 @@ type RegisterReply struct {
 	PKCS12Password      string                 `json:"pkcs12password"`
 }
 
+// RegistrationStatus is returned on registration status requests. This will contain
+// RFC3339 formatted timestamps indicating when the registration was submitted for
+// testnet and mainnet.
+type RegistrationStatus struct {
+	TestNetSubmitted string `json:"testnet_submitted,omitempty"`
+	MainNetSubmitted string `json:"mainnet_submitted,omitempty"`
+}
+
 // OverviewReply is returned on overview requests.
 type OverviewReply struct {
 	Error   NetworkError    `json:"error,omitempty"`
@@ -164,6 +175,19 @@ type MemberDetailsReply struct {
 	Summary     *members.VASPMember    `json:"summary"`
 	LegalPerson map[string]interface{} `json:"legal_person"`
 	Trixo       map[string]interface{} `json:"trixo"`
+}
+
+// AttentionReply contains all the current attention messages relevant to an
+// organization.
+type AttentionReply struct {
+	Messages []*AttentionMessage `json:"messages"`
+}
+
+// AttentionMessage contains details about a single attention message.
+type AttentionMessage struct {
+	Message  string `json:"message"`
+	Severity string `json:"severity"`
+	Action   string `json:"action"`
 }
 
 // NetworkError is populated when the BFF receives an error from a network endpoint,

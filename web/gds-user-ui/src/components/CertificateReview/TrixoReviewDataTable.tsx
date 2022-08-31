@@ -6,18 +6,15 @@ import { useSelector, RootStateOrAny } from 'react-redux';
 import getColorScheme from 'utils/getColorScheme';
 import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { currencyFormatter } from 'utils/utils';
-
-function TrixoReviewDataTable() {
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [trixo, setTrixo] = React.useState<any>({});
-
-  useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
-    const stepData = {
-      ...getStepperData.trixo
-    };
-    setTrixo(stepData);
-  }, [steps]);
+import { t } from '@lingui/macro';
+interface TrixoReviewProps {
+  data?: any;
+}
+function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  console.log('[TrixoReviewDataTable data]', data?.kyc_threshold);
+  const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
+    return conductsCustomerKYC ? t`Yes` : t`No`;
+  };
 
   return (
     <Stack fontSize={'1rem'}>
@@ -41,21 +38,21 @@ function TrixoReviewDataTable() {
             <Td>
               <Trans id="Primary National Jurisdiction">Primary National Jurisdiction</Trans>
             </Td>
-            <Td>{(COUNTRIES as any)[trixo?.primary_national_jurisdiction] || 'N/A'}</Td>
+            <Td>{(COUNTRIES as any)[data?.primary_national_jurisdiction] || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td>
               <Trans id="Name of Primary Regulator">Name of Primary Regulator</Trans>
             </Td>
-            <Td>{trixo?.primary_regulator || 'N/A'}</Td>
+            <Td>{data?.primary_regulator || 'N/A'}</Td>
           </Tr>
           <Tr>
             <Td>
               <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
             </Td>
             <Td>
-              {trixo?.other_jurisdictions?.length > 0
-                ? trixo?.other_jurisdictions?.map((o: any, i: any) => {
+              {data?.other_jurisdictions?.length > 0
+                ? data?.other_jurisdictions?.map((o: any, i: any) => {
                     if (o?.regulator_name?.length > 0) {
                       return (
                         <Text key={i}>
@@ -79,9 +76,9 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo.financial_transfers_permitted)}>
+                colorScheme={getColorScheme(data.financial_transfers_permitted)}>
                 <TagLabel fontWeight={'bold'}>
-                  {trixo?.financial_transfers_permitted?.toString().toUpperCase()}
+                  {data?.financial_transfers_permitted?.toString().toUpperCase()}
                 </TagLabel>
               </Tag>
             </Td>
@@ -90,7 +87,7 @@ function TrixoReviewDataTable() {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} fontWeight="bold" background="#E5EDF1" pl={'1rem !important'}>
               <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
             </Td>
           </Tr>
@@ -110,9 +107,9 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo.has_required_regulatory_program)}>
+                colorScheme={getColorScheme(data?.has_required_regulatory_program)}>
                 <TagLabel fontWeight={'bold'}>
-                  {trixo?.has_required_regulatory_program?.toUpperCase() || 'N/A'}
+                  {data?.has_required_regulatory_program?.toUpperCase() || 'N/A'}
                 </TagLabel>
               </Tag>
             </Td>
@@ -130,9 +127,9 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo?.financial_transfers_permitted)}>
+                colorScheme={getColorScheme(data?.conducts_customer_kyc || 'no')}>
                 <TagLabel fontWeight={'bold'}>
-                  {trixo?.financial_transfers_permitted?.toUpperCase()}
+                  {getConductsCustomerKYC(data?.conducts_customer_kyc || false)}
                 </TagLabel>
               </Tag>
             </Td>
@@ -145,12 +142,17 @@ function TrixoReviewDataTable() {
               </Trans>
             </Td>
             <Td pl={0}>
-              <Text>
-                {currencyFormatter(trixo.kyc_threshold, {
-                  currency: trixo.kyc_threshold_currency
-                }) || 'N/A'}{' '}
-                {trixo.kyc_threshold_currency || 'N/A'}
-              </Text>
+              {(data?.kyc_threshold && typeof data.kyc_threshold !== 'undefined') ||
+              parseInt(data?.kyc_threshold) !== 0 ? (
+                <Text>
+                  {currencyFormatter(data?.kyc_threshold || 0, {
+                    currency: data?.kyc_threshold_currency
+                  }) || 'USD'}{' '}
+                  {data?.kyc_threshold_currency}
+                </Text>
+              ) : (
+                <Text>{'N/A'}</Text>
+              )}
             </Td>
             <Td></Td>
           </Tr>
@@ -166,9 +168,9 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo.must_comply_travel_rule)}>
+                colorScheme={getColorScheme(data?.must_comply_travel_rule)}>
                 <TagLabel fontWeight={'bold'}>
-                  {trixo?.must_comply_travel_rule ? 'YES' : 'NO'}
+                  {data?.must_comply_travel_rule ? 'YES' : 'NO'}
                 </TagLabel>
               </Tag>
             </Td>
@@ -178,10 +180,16 @@ function TrixoReviewDataTable() {
             <Td>
               <Trans id="Applicable Regulations">Applicable Regulations</Trans>
             </Td>
-            <Td>
-              {trixo?.applicable_regulations?.map((reg: any) => {
-                if (reg?.name.length > 0) {
-                  return <Text key={reg.name}>{reg.name || 'N/A'}</Text>;
+            <Td display="flex" flexWrap="wrap" gap={1}>
+              {data?.applicable_regulations?.map((o: any, i: any) => {
+                if (o?.length > 0) {
+                  return (
+                    <Tag bg={'blue'} color={'white'} key={i}>
+                      {o}
+                    </Tag>
+                  );
+                } else {
+                  return <Text>{'N/A'}</Text>;
                 }
               })}
             </Td>
@@ -194,10 +202,16 @@ function TrixoReviewDataTable() {
               </Trans>
             </Td>
             <Td pl={0}>
-              {currencyFormatter(trixo.compliance_threshold, {
-                currency: trixo.compliance_threshold_currency
-              }) || 'N/A'}{' '}
-              {trixo.compliance_threshold_currency || 'N/A'}
+              {data?.compliance_threshold || data?.compliance_threshold !== 0 ? (
+                <Text>
+                  {currencyFormatter(data?.compliance_threshold || 0, {
+                    currency: data?.compliance_threshold_currency
+                  }) || 'USD'}{' '}
+                  {data?.compliance_threshold_currency || 'USD'}
+                </Text>
+              ) : (
+                <Text>{'N/A'}</Text>
+              )}
             </Td>
             <Td></Td>
           </Tr>
@@ -205,7 +219,7 @@ function TrixoReviewDataTable() {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td colSpan={3} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
               <Trans id="Data Protection Policies">Data Protection Policies</Trans>
             </Td>
           </Tr>
@@ -223,8 +237,8 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo.must_safeguard_pii)}>
-                <TagLabel fontWeight={'bold'}>{trixo.must_safeguard_pii ? 'YES' : 'NO'}</TagLabel>
+                colorScheme={getColorScheme(data?.must_safeguard_pii)}>
+                <TagLabel fontWeight={'bold'}>{data?.must_safeguard_pii ? t`YES` : t`NO`}</TagLabel>
               </Tag>
             </Td>
             <Td></Td>
@@ -241,8 +255,8 @@ function TrixoReviewDataTable() {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(trixo.safeguards_pii)}>
-                <TagLabel fontWeight={'bold'}>{trixo.safeguards_pii ? 'YES' : 'NO'}</TagLabel>
+                colorScheme={getColorScheme(data?.safeguards_pii)}>
+                <TagLabel fontWeight={'bold'}>{data?.safeguards_pii ? t`YES` : t`NO`}</TagLabel>
               </Tag>
             </Td>
             <Td></Td>

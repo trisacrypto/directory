@@ -1,22 +1,11 @@
 import {
   Flex,
-  Box,
-  FormControl,
-  FormLabel,
-  Input,
-  Checkbox,
   Stack,
-  Link,
   Button,
-  Heading,
-  Text,
   useColorModeValue,
-  Image,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription
 } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
+import { Trans } from '@lingui/react';
 
 import { colors } from '../../utils/theme';
 interface AuthEmailConfirmationProps {
@@ -35,7 +24,7 @@ const AuthEmailConfirmation: React.FC<AuthEmailConfirmationProps> = (props) => {
       bg={useColorModeValue('white', 'gray.800')}>
       <Stack spacing={6} mx={'auto'} maxW={'xl'} py={12} px={6}>
         <Stack>
-          <AlertMessage message={props.message} status="success" title={'Contact Verified'} />
+          <AlertMessage message={props.message} status="success" title={t`Contact Verified`} />
         </Stack>
         <Stack spacing={8} direction={['column', 'row']} py="10">
           <Button
@@ -49,7 +38,7 @@ const AuthEmailConfirmation: React.FC<AuthEmailConfirmationProps> = (props) => {
             _focus={{
               borderColor: 'transparent'
             }}>
-            Log In
+            <Trans id="Log In">Log In</Trans>
           </Button>
         </Stack>
       </Stack>

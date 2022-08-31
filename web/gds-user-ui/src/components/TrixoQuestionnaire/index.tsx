@@ -16,7 +16,7 @@ const TrixoQuestionnaire: React.FC = () => {
   return (
     <Stack spacing={4} mt="2rem">
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id="Section 5: TRIXO Questionnaire">Section 5: TRIXO Questionnaire</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}

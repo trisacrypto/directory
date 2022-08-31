@@ -14,13 +14,19 @@ import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalD
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
+import { handleError } from 'utils/utils';
+import useFetchAttention from 'hooks/useFetchAttention';
 const Overview: React.FC = () => {
   const [result, setResult] = React.useState<any>('');
   const [announcements, setAnnouncements] = React.useState<any>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [stepperData, setStepperData] = React.useState<any>({});
   const [trisaData, setTrisaData] = React.useState<any>({});
+  const { attentionResponse, attentionError, attentionLoading } = useFetchAttention();
   const navigate = useNavigate();
+
+  // console.log('[attentionResponse]', attentionResponse);
   useEffect(() => {
     (async () => {
       try {
@@ -29,20 +35,13 @@ const Overview: React.FC = () => {
           getAnnouncementsData()
         ]);
         if (metrics.status === 200) {
-          setResult(metrics);
+          setResult(metrics.data);
         }
         if (getAnnouncements.status === 200) {
           setAnnouncements(getAnnouncements.data.announcements);
         }
       } catch (e: any) {
-        if (e.response.status === 401) {
-          navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
-        }
-        if (e.response.status === 403) {
-          navigate('/auth/login?from=/dashboard/overview&q=token_expired');
-        }
-
-        Sentry.captureException(e);
+        handleError(e);
       } finally {
         setIsLoading(false);
       }
@@ -52,16 +51,25 @@ const Overview: React.FC = () => {
 
   // load legal person & contact information
   useEffect(() => {
-    const getStepperData = loadDefaultValueFromLocalStorage();
+    const fetchRegistration = async () => {
+      try {
+        const registration = await getRegistrationDefaultValue();
+        if (registration) {
+          setStepperData(registration);
+        }
+      } catch (e: any) {
+        handleError(e, '[Overview] fetchRegistration failed');
+      }
+    };
+    fetchRegistration();
+
     const trisaDetailData = {
-      mainnet: getStepperData.trisa_endpoint_mainnet,
-      testnet: getStepperData.trisa_endpoint_testnet,
+      mainnet: stepperData.mainnet,
+      testnet: stepperData.testnet,
       organization: result.organization
     };
 
     setTrisaData(trisaDetailData);
-
-    setStepperData(getStepperData);
   }, [result]);
 
   return (
@@ -71,11 +79,17 @@ const Overview: React.FC = () => {
       ) : (
         <>
           <Heading marginBottom="30px">Overview</Heading>
-          <NeedsAttention
-            text={t`Start Certificate Registration`}
-            buttonText={'Start'}
-            onClick={() => navigate('/dashboard/certificate/registration')}
-          />
+          {attentionResponse && Object.keys(attentionResponse).length > 0 && (
+            <NeedsAttention
+              loading={attentionLoading}
+              error={attentionError}
+              data={attentionResponse.messages}
+              text={t`Start Certificate Registration`}
+              buttonText={'Start'}
+              onClick={() => navigate('/dashboard/certificate/registration')}
+            />
+          )}
+
           {announcements.length > 0 && <NetworkAnnouncements datas={announcements} />}
 
           <Box fontSize={'md'} mx={'auto'} w={'100%'}>
@@ -104,10 +118,10 @@ const Overview: React.FC = () => {
                 </TabList>
                 <TabPanels>
                   <TabPanel p={0}>
-                    <Metrics data={result?.testnet} type="Testnet" />
+                    <Metrics data={result?.mainnet} type="Testnet" />
                   </TabPanel>
                   <TabPanel p={0}>
-                    <Metrics data={result?.mainnet} type="Mainnet" />
+                    <Metrics data={result?.testnet} type="Mainnet" />
                   </TabPanel>
                 </TabPanels>
               </Tabs>

@@ -20,7 +20,6 @@ import {
   VStack
 } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
-import { getPreferredColorScheme } from '@storybook/theming/dist/ts3.9/utils';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { COUNTRIES } from 'constants/countries';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';

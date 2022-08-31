@@ -88,14 +88,14 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
@@ -112,6 +112,12 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	form, err := s.client.LoadRegistrationForm(context.TODO())
 	require.NoError(err, "expected no error when no form data is stored")
 	require.NotNil(form, "expected empty registration form when no form data is stored")
+	require.NotNil(form.State, "expected form state to be populated")
+	require.Equal(int32(1), form.State.Current, "expected initial form step to be 1")
+	require.False(form.State.ReadyToSubmit, "expected form state to be not ready to submit")
+	require.Len(form.State.Steps, 1, "expected 1 step in initial form state")
+	require.Equal("progress", form.State.Steps[0].Status, "expected first form step to be in progress")
+	require.Empty(form.State.Started, "expected form started timestamp to be empty")
 
 	// Load a registration form from fixtures and store it in the database
 	org.Registration = &records.RegistrationForm{}
@@ -160,13 +166,13 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	claims.Permissions = []string{"update:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database that does not contain a registration form
 	org, err := s.db.Organizations().Create(context.TODO())
@@ -184,12 +190,19 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	err = s.client.SaveRegistrationForm(context.TODO(), &records.RegistrationForm{})
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 
+	// Empty registration form should be saved in the database
+	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	require.NoError(err, "could not retrieve organization from database")
+	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected empty registration form")
+
 	// Should be able to save the fixture form
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
 	require.NoError(err, "should not receive an error when saving a registration form")
 
 	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
 	require.NoError(err, "could not retrieve updated org from database")
+	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
+	org.Registration.State.Started = ""
 	require.True(proto.Equal(org.Registration, form), "expected form saved in database to match form uploaded")
 
 	// Should be able to "clear" a registration by saving an empty registration form
@@ -199,7 +212,6 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
 	require.NoError(err, "could not retrieve updated org from database")
 	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
-	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected form saved in database to be empty")
 }
 
 func (s *bffTestSuite) TestSubmitRegistration() {
@@ -264,13 +276,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		claims.Permissions = []string{"update:vasp"}
 		require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+		require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 		// Create valid claims but no record in the database - should not panic and should return an error
 		claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 		require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+		require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 		// From this point on submit valid claims and test responses from GDS
 		// NOTE: for registration form validation see TestSubmitRegistrationNotReady

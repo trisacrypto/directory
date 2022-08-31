@@ -1,6 +1,6 @@
 {
     "name": "gds-admin-ui",
-    "version": "1.4.1",
+    "version": "1.5.0",
     "private": true,
     "dependencies": {
         "@hookform/devtools": "^4.1.0",

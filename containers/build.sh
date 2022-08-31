@@ -43,6 +43,13 @@ else
     TAG=$1
 fi
 
+# Get the platform as the second argument or use linux/amd64 by default
+if [ -z "$2" ]; then
+    PLATFORM="linux/amd64"
+else
+    PLATFORM=$2
+fi
+
 # Confirm that we're continuing with the tag
 if ! ask "Continue with tag $TAG?" N; then
     exit 1
@@ -61,25 +68,25 @@ if [ -f $DOTENV ]; then
 fi
 
 # Check the environment variables
-if [ -z "$REACT_APP_VASPDIRECTORY_CLIENT_ID" ]; then
-    echo "REACT_APP_VASPDIRECTORY_CLIENT_ID environment variable required"
-    exit 1
-fi
+REQUIRED_ENV=(
+    "REACT_APP_VASPDIRECTORY_CLIENT_ID"
+    "REACT_APP_VASPDIRECTORY_ANALYTICS_ID"
+    "REACT_APP_TRISATEST_CLIENT_ID"
+    "REACT_APP_TRISATEST_ANALYTICS_ID"
+    "REACT_APP_STAGING_VASPDIRECTORY_ANALYTICS_ID"
+    "REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID"
+    "REACT_APP_STAGING_TESTNET_ANALYTICS_ID"
+    "REACT_APP_STAGING_TRISATEST_CLIENT_ID"
+    "REACT_APP_AUTH0_CLIENT_ID"
+    "REACT_APP_STAGING_AUTH0_CLIENT_ID"
+)
 
-if [ -z "$REACT_APP_VASPDIRECTORY_ANALYTICS_ID" ]; then
-    echo "REACT_APP_VASPDIRECTORY_ANALYTICS_ID environment variable required"
-    exit 1
-fi
-
-if [ -z "$REACT_APP_TRISATEST_CLIENT_ID" ]; then
-    echo "REACT_APP_TRISATEST_CLIENT_ID environment variable required"
-    exit 1
-fi
-
-if [ -z "$REACT_APP_TRISATEST_ANALYTICS_ID" ]; then
-    echo "REACT_APP_TRISATEST_ANALYTICS_ID environment variable required"
-    exit 1
-fi
+for reqvar in ${REQUIRED_ENV[@]}; do
+    if [ -z "${!reqvar+x}" ]; then
+        echo "$reqvar environment variable is required"
+        exit 1
+    fi
+done
 
 if [ -z "$GIT_REVISION" ]; then
     export GIT_REVISION=$(git rev-parse --short HEAD)
@@ -94,14 +101,15 @@ if [ -z "$REACT_APP_VERSION_NUMBER" ]; then
 fi
 
 # Build the primary backend images
-docker build -t trisa/gds:$TAG -f $DIR/gds/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
-docker build -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
-docker build -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
-docker build -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
-docker build -t trisa/trtlsim:$TAG -f $DIR/trtlsim/Dockerfile .
+docker buildx build --platform $PLATFORM -t trisa/gds:$TAG -f $DIR/gds/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
+docker buildx build --platform $PLATFORM -t trisa/gds-bff:$TAG -f $DIR/bff/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
+docker buildx build --platform $PLATFORM -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
+docker buildx build --platform $PLATFORM -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
+docker buildx build --platform $PLATFORM -t trisa/trtlsim:$TAG -f $DIR/trtlsim/Dockerfile .
 
 # Build the UI image for vaspdirectory.net
-docker build \
+docker buildx build \
+    --platform $PLATFORM \
     -t trisa/gds-user-ui:$TAG -f $DIR/gds-user-ui/Dockerfile \
     --build-arg REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/ \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
@@ -115,19 +123,60 @@ docker build \
     --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net \
     $REPO
 
+# Build the UI image for vaspdirectory.dev
+docker buildx build \
+    --platform $PLATFORM \
+    -t trisa/gds-staging-user-ui:$TAG -f $DIR/gds-user-ui/Dockerfile \
+    --build-arg REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.dev/v1/ \
+    --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_STAGING_VASPDIRECTORY_ANALYTICS_ID} \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
+    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
+    --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
+    --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_STAGING_AUTH0_CLIENT_ID} \
+    --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.dev/auth/callback \
+    --build-arg REACT_APP_AUTH0_SCOPE="openid profile email" \
+    --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev \
+    --build-arg REACT_APP_USE_DASH_LOCALE=true \
+    $REPO
+
 # Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
-docker build \
+docker buildx build \
+    --platform $PLATFORM \
     -t trisa/gds-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_VASPDIRECTORY_CLIENT_ID} \
     $REPO
 
-docker build \
+docker buildx build \
+    --platform $PLATFORM \
     -t trisa/gds-testnet-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_TRISATEST_CLIENT_ID} \
+    $REPO
+
+# Build the Admin UI images for admin.trisatest.dev and admin.vaspdirectory.dev
+docker buildx build \
+    --platform $PLATFORM \
+    -t trisa/gds-staging-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.dev/v2 \
+    --build-arg REACT_APP_GDS_IS_TESTNET=false \
+    --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
+    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
+    $REPO
+
+docker buildx build \
+    --platform $PLATFORM \
+    -t trisa/gds-staging-testnet-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.dev/v2 \
+    --build-arg REACT_APP_GDS_IS_TESTNET=true \
+    --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_TRISATEST_CLIENT_ID} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
+    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
     $REPO
 
 # Retag the images to push to gcr.io
@@ -139,6 +188,9 @@ docker tag trisa/trtlsim:$TAG gcr.io/trisa-gds/trtlsim:$TAG
 docker tag trisa/gds-user-ui:$TAG gcr.io/trisa-gds/gds-user-ui:$TAG
 docker tag trisa/gds-admin-ui:$TAG gcr.io/trisa-gds/gds-admin-ui:$TAG
 docker tag trisa/gds-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-testnet-admin-ui:$TAG
+docker tag trisa/gds-staging-user-ui:$TAG gcr.io/trisa-gds/gds-staging-user-ui:$TAG
+docker tag trisa/gds-staging-admin-ui:$TAG gcr.io/trisa-gds/gds-staging-admin-ui:$TAG
+docker tag trisa/gds-staging-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-staging-testnet-admin-ui:$TAG
 
 # Push to DockerHub
 docker push trisa/gds:$TAG
@@ -149,6 +201,9 @@ docker push trisa/trtlsim:$TAG
 docker push trisa/gds-user-ui:$TAG
 docker push trisa/gds-admin-ui:$TAG
 docker push trisa/gds-testnet-admin-ui:$TAG
+docker push trisa/gds-staging-user-ui:$TAG
+docker push trisa/gds-staging-admin-ui:$TAG
+docker push trisa/gds-staging-testnet-admin-ui:$TAG
 
 # Push to GCR
 docker push gcr.io/trisa-gds/gds:$TAG
@@ -159,3 +214,6 @@ docker push gcr.io/trisa-gds/trtlsim:$TAG
 docker push gcr.io/trisa-gds/gds-user-ui:$TAG
 docker push gcr.io/trisa-gds/gds-admin-ui:$TAG
 docker push gcr.io/trisa-gds/gds-testnet-admin-ui:$TAG
+docker push gcr.io/trisa-gds/gds-staging-user-ui:$TAG
+docker push gcr.io/trisa-gds/gds-staging-admin-ui:$TAG
+docker push gcr.io/trisa-gds/gds-staging-testnet-admin-ui:$TAG

@@ -25,7 +25,7 @@ const getSection = (
     case 2:
       return {
         title: t`Section 2: Legal Person`,
-        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the ${(
+        description: t`Please enter the information that identifies your organization as a Legal Person. This form represents the ${(
           <Link href="https://intervasp.org/" isExternal color="link">
             IVMS 101
           </Link>
@@ -34,7 +34,7 @@ const getSection = (
     case 3:
       return {
         title: t`Section 3: Contacts`,
-        description: t`Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed.`
+        description: t`Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed.`
       };
     case 4:
       return {
@@ -44,12 +44,12 @@ const getSection = (
     case 5:
       return {
         title: t`Section 5: TRIXO Questionnaire`,
-        description: t`Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, you will be contacted to verify details. Once verified, your TestNet certificate will be issued.`
+        description: t`Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, emails will be sent to the provided contacts for verification. Once verified, your TestNet certificate will be issued.`
       };
     case 6:
       return {
         title: t`Section 6: Review & Submit`,
-        description: t`Please enter the information that identify your organization as a Legal Person. This form represents the ${(
+        description: t`Please enter the information that identifies your organization as a Legal Person. This form represents the ${(
           <Link href="https://intervasp.org/" isExternal color="link">
             IVMS 101
           </Link>

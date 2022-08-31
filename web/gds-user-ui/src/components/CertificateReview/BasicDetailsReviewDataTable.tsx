@@ -4,23 +4,11 @@ import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-det
 import React, { useEffect } from 'react';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
-
-function BasicDetailsReviewbasicDetailTable() {
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [basicDetail, setBasicDetail] = React.useState<any>({});
-
-  useEffect(() => {
-    const getStepperbasicDetail = loadDefaultValueFromLocalStorage();
-    const stepbasicDetail = {
-      website: getStepperbasicDetail.website,
-      established_on: getStepperbasicDetail.established_on,
-      vasp_categories: getStepperbasicDetail.vasp_categories,
-      business_category: getStepperbasicDetail.business_category
-    };
-
-    setBasicDetail(stepbasicDetail);
-  }, [steps]);
-
+import useCertificateStepper from 'hooks/useCertificateStepper';
+interface BasicReviewProps {
+  data?: any;
+}
+function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
   return (
     <Stack fontSize={18}>
       <Table
@@ -46,9 +34,9 @@ function BasicDetailsReviewbasicDetailTable() {
               <Trans id="Website">Website</Trans>
             </Td>
             <Td borderBottom={'none'} whiteSpace="break-spaces" lineHeight={1.5}>
-              {basicDetail.website ? (
-                <Link href={basicDetail.website} isExternal>
-                  {basicDetail.website}
+              {data.website ? (
+                <Link href={data.website} isExternal>
+                  {data.website}
                 </Link>
               ) : (
                 'N/A'
@@ -60,7 +48,7 @@ function BasicDetailsReviewbasicDetailTable() {
             <Td pl={'1rem !important'}>
               <Trans id="Business Category">Business Category</Trans>
             </Td>
-            <Td>{(BUSINESS_CATEGORY as any)[basicDetail.business_category] || 'N/A'}</Td>
+            <Td>{(BUSINESS_CATEGORY as any)[data.business_category] || 'N/A'}</Td>
             <Td></Td>
           </Tr>
           <Tr borderStyle={'hidden'}>
@@ -69,7 +57,7 @@ function BasicDetailsReviewbasicDetailTable() {
                 Date of Incorporation / Establishment
               </Trans>
             </Td>
-            <Td>{basicDetail.established_on || 'N/A'}</Td>
+            <Td>{data.established_on || 'N/A'}</Td>
             <Td></Td>
           </Tr>
           <Tr borderStyle={'hidden'}>
@@ -77,10 +65,10 @@ function BasicDetailsReviewbasicDetailTable() {
               <Trans id="VASP Category">VASP Category</Trans>
             </Td>
             <Td>
-              {basicDetail?.vasp_categories && basicDetail?.vasp_categories.length
-                ? basicDetail?.vasp_categories?.map((categ: any) => {
+              {data?.vasp_categories && data?.vasp_categories.length
+                ? data?.vasp_categories?.map((categ: any) => {
                     return (
-                      <Tag key={categ} color={'white'} bg={'blue.400'} mr={2} mb={1}>
+                      <Tag key={categ} color={'white'} bg={'blue'} mr={2} mb={1}>
                         {getBusinessCategiryLabel(categ)}
                       </Tag>
                     );
@@ -95,4 +83,4 @@ function BasicDetailsReviewbasicDetailTable() {
   );
 }
 
-export default BasicDetailsReviewbasicDetailTable;
+export default BasicDetailsReviewDataTable;

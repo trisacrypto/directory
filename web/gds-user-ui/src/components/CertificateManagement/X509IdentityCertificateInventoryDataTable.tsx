@@ -9,6 +9,7 @@ import {
   Th,
   Tbody
 } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 import FormLayout from 'layouts/FormLayout';
 import X509TableRows from './X509TableRows';
 
@@ -18,18 +19,34 @@ function X509IdentityCertificateInventoryDataTable() {
       <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
         <TableCaption placement="top" textAlign="start" p={0} m={0}>
           <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
-            <Heading fontSize={'1.2rem'}>X.509 Identity Certificates</Heading>
-            <Button borderRadius={5}>Request New Identity Certificate</Button>
+            <Heading fontSize={'1.2rem'}>
+              <Trans id="X.509 Identity Certificates">X.509 Identity Certificates</Trans>
+            </Heading>
+            <Button borderRadius={5}>
+              <Trans id="Request New Identity Certificate">Request New Identity Certificate</Trans>
+            </Button>
           </Stack>
         </TableCaption>
         <Thead>
           <Tr>
-            <Th>No</Th>
-            <Th>Signature ID</Th>
-            <Th>Issue Date</Th>
-            <Th>Expiration Date</Th>
-            <Th>Status</Th>
-            <Th textAlign="center">Action</Th>
+            <Th>
+              <Trans id="No">No</Trans>
+            </Th>
+            <Th>
+              <Trans id="Signature ID">Signature ID</Trans>
+            </Th>
+            <Th>
+              <Trans id="Issue Date">Issue Date</Trans>
+            </Th>
+            <Th>
+              <Trans id="Expiration Date">Expiration Date</Trans>
+            </Th>
+            <Th>
+              <Trans id="Status">Status</Trans>
+            </Th>
+            <Th textAlign="center">
+              <Trans id="Action">Action</Trans>
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

@@ -1,5 +1,5 @@
 import { setCurrentStep } from 'application/store/stepper.slice';
-import { getRegistrationDefaultValue } from 'modules/dashboard/certificate/lib';
+import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 import isEmpty from 'lodash/isEmpty';
 export type TStep = {
   status: string;
@@ -48,8 +48,8 @@ export const loadDefaultValueFromLocalStorage = () => {
     return JSON.parse(defaultValue);
   }
 
-  localStorage.setItem('certificateForm', JSON.stringify(getRegistrationDefaultValue()));
-  return getRegistrationDefaultValue();
+  localStorage.setItem('certificateForm', JSON.stringify(getRegistrationDefaultValues()));
+  return getRegistrationDefaultValues();
 };
 
 export const setCertificateFormValueToLocalStorage = (values: any) => {

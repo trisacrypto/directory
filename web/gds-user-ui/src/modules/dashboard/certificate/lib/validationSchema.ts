@@ -1,7 +1,7 @@
 import { t } from '@lingui/macro';
 import * as yup from 'yup';
 import { setupI18n } from '@lingui/core';
-
+import { format2ShortDate } from 'utils/utils';
 const _i18n = setupI18n();
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
@@ -22,6 +22,7 @@ export const validationSchema = [
       .required(_i18n._(t`Invalid date`))
       .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
         if (value) {
+          // console.log('value', value);
           const getYear = value.getFullYear();
           if (getYear.toString().length !== 4) {
             return false;
@@ -111,8 +112,9 @@ export const validationSchema = [
           //       return ctx && ctx.parent && ctx.parent.address_line[1];
           //     }),
           country: yup.string().required(),
-          postal_code: yup.string().required(),
-          state: yup.string().required(),
+          town_name: yup.string().required(),
+          post_code: yup.string().required(),
+          country_sub_division: yup.string().required(),
           address_type: yup.string().required()
         })
       ),
@@ -177,8 +179,7 @@ export const validationSchema = [
     })
   }),
   yup.object().shape({
-    trisa_endpoint: yup.string().trim(),
-    trisa_endpoint_testnet: yup.object().shape({
+    testnet: yup.object().shape({
       endpoint: yup.string().matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
       common_name: yup
         .string()
@@ -189,14 +190,14 @@ export const validationSchema = [
           )
         )
     }),
-    trisa_endpoint_mainnet: yup.object().shape({
+    mainnet: yup.object().shape({
       endpoint: yup
         .string()
         .test(
           'uniqueMainetEndpoint',
           _i18n._(t`TestNet and MainNet endpoints should not be the same`),
           (value, ctx: any): any => {
-            return ctx.from[1].value.trisa_endpoint_testnet.endpoint !== value;
+            return ctx.from[1].value.testnet.endpoint !== value;
           }
         )
         .matches(trisaEndpointPattern, _i18n._(t`TRISA endpoint is not valid`)),
@@ -223,28 +224,39 @@ export const validationSchema = [
       financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
       has_required_regulatory_program: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
       conducts_customer_kyc: yup.boolean().default(false),
-      kyc_threshold: yup.number(),
+      kyc_threshold: yup.number().default(0),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(
-          yup.object().shape({
-            name: yup.string()
-          })
-        )
+        .of(yup.string())
         .transform((value, originalValue) => {
           if (originalValue) {
-            return originalValue.filter((item: any) => item.name.length > 0);
+            return originalValue.filter((item: any) => item.length > 0);
           }
           return value;
 
           // remove empty items
         }),
-      compliance_threshold: yup.number(),
+      compliance_threshold: yup.number().default(0),
       compliance_threshold_currency: yup.string(),
       must_safeguard_pii: yup.boolean().default(false),
       safeguards_pii: yup.boolean().default(false)
     })
-  })
+  }),
+  yup
+    .object()
+    .shape({
+      state: yup.object().shape({
+        current: yup.number(),
+        steps: yup.array().of(
+          yup.object().shape({
+            status: yup.string().oneOf(['complete', 'incomplete', 'pending']),
+            key: yup.number().required()
+          })
+        ),
+        reach_submit_step: yup.boolean().default(false)
+      })
+    })
+    .notRequired()
 ];

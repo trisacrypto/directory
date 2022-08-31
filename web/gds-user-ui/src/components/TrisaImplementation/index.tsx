@@ -17,7 +17,7 @@ const TrisaImplementation: React.FC = () => {
   return (
     <Stack spacing={7} pt={8}>
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id="Section 4: TRISA Implementation">Section 4: TRISA Implementation</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
@@ -34,12 +34,12 @@ const TrisaImplementation: React.FC = () => {
       </FormLayout>
       <TrisaImplementationForm
         type="TestNet"
-        name="trisa_endpoint_testnet"
+        name="testnet"
         headerText={t`TRISA Endpoint: TestNet`}
       />
       <TrisaImplementationForm
         type="MainNet"
-        name="trisa_endpoint_mainnet"
+        name="mainnet"
         headerText={t`TRISA Endpoint: MainNet`}
       />
     </Stack>

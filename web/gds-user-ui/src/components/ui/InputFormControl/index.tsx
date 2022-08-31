@@ -18,6 +18,7 @@ interface _FormControlProps extends Omit<FormControlProps, 'label'> {
   controlId: string;
   label?: React.ReactNode;
   inputProps?: InputProps;
+  shouldResetValue?: boolean;
   name?: string;
   error?: string;
   type?: React.HTMLInputTypeAttribute;
@@ -40,6 +41,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
       inputProps,
       name,
       isInvalid,
+      shouldResetValue,
       type = 'text',
       hasBtn,
       inputRef,

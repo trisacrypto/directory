@@ -1,6 +1,9 @@
-import { Stack, Spinner, Flex, Box } from '@chakra-ui/react';
+import { Stack, Spinner, Flex, Box, Text, VStack } from '@chakra-ui/react';
 
-const Loader: React.FC = () => {
+interface LoaderProps {
+  text?: string;
+}
+const Loader: React.FC<LoaderProps> = ({ text, ...rest }) => {
   return (
     <Flex
       height={'100vh'}
@@ -8,9 +11,15 @@ const Loader: React.FC = () => {
       alignItems={'center'}
       textAlign={'center'}
       justifyContent={'center'}>
-      <Spinner color="blue.500" size="xl" />
+      <VStack spacing={4}>
+        <Spinner color="blue.500" size="xl" {...rest} />
+        <Text>{text}</Text>
+      </VStack>
     </Flex>
   );
+};
+Loader.defaultProps = {
+  text: 'Loading...'
 };
 
 export default Loader;
