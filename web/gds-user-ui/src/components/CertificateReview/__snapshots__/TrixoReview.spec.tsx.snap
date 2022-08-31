@@ -121,8 +121,8 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
               role="row"
             >
               <td
-                class="css-1eku6qd"
-                colspan="2"
+                class="css-1fa72hq"
+                colspan="3"
                 role="gridcell"
               >
                 CDD & Travel Rule Policies
@@ -311,7 +311,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
             >
               <td
                 class="css-1eku6qd"
-                colspan="2"
+                colspan="3"
                 role="gridcell"
               >
                 Data Protection Policies

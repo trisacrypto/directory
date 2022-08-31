@@ -38,6 +38,27 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
               role="row"
             >
               <td
+                class="css-16ezt52"
+                role="gridcell"
+              >
+                Organization Name
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              >
+                N/A
+              </td>
+              <td
+                class="css-xumdn4"
+                role="gridcell"
+              />
+            </tr>
+            <tr
+              class="css-0"
+              role="row"
+            >
+              <td
                 class="css-1ljq7gd"
                 role="gridcell"
               >
