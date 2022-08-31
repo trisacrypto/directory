@@ -143,3 +143,49 @@ func TestIterVerifiedContacts(t *testing.T) {
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 }
+
+func TestGetSentEmailCount(t *testing.T) {
+	contacts := &pb.Contacts{
+		Technical: &pb.Contact{
+			Email: "technical@example.com",
+		},
+		Administrative: &pb.Contact{
+			Email: "administrative@example.com",
+		},
+		Billing: &pb.Contact{
+			Email: "billing@example.com",
+		},
+		Legal: &pb.Contact{
+			Email: "legal@example.com",
+		},
+	}
+
+	//  log should initially be empty
+	emailLog, err := models.GetEmailLog(contacts.Administrative)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 0)
+
+	// Append an entry to an empty log
+	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
+	require.NoError(t, err)
+
+	// Append an entry to an empty log
+	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
+	require.NoError(t, err)
+
+	// get email log for contact
+	emailLog, err = models.GetEmailLog(contacts.Administrative)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 2)
+	require.Equal(t, "verify_contact", emailLog[0].Reason)
+	require.Equal(t, "verification", emailLog[0].Subject)
+
+	// should return 2 emails sent for contact
+	sent, err := models.GetSentEmailCount(contacts.Administrative, "verify_contact", 30)
+	require.NoError(t, err)
+	require.Equal(t, 2, sent)
+
+	// TODO: Test that the returned count is zero when the log is empty
+	// TODO: Test that emails older than the time window are not counted
+	// TODO: Test that emails that don't match the reason are not counted
+}
