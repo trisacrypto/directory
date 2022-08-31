@@ -5,7 +5,8 @@ import {
   FormHelperText,
   FormLabel,
   Switch,
-  SwitchProps
+  SwitchProps,
+  useColorModeValue
 } from '@chakra-ui/react';
 import React from 'react';
 
@@ -22,7 +23,13 @@ const SwitchFormControl = React.forwardRef<any, _FormControlProps>(
   ({ inputProps, controlId, label, formHelperText, isInvalid, name, error, ...rest }, ref) => {
     return (
       <FormControl display="flex" alignItems="center" gap={2} isInvalid={!!error} {...rest}>
-        <Switch id={controlId} {...inputProps} name={name} ref={ref} />
+        <Switch
+          id={controlId}
+          {...inputProps}
+          name={name}
+          ref={ref}
+          sx={{ 'span.chakra-switch__track:is([data-checked])': { backgroundColor: '#55ACD8' } }}
+        />
         <FormLabel htmlFor={controlId} mb={0}>
           {label}
         </FormLabel>

@@ -1,10 +1,11 @@
-import { Box, Text, Button as CkButton } from '@chakra-ui/react';
+import { Box, Button as CkButton } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 
 export default function Button(props: any) {
   return (
     <Box w="80%" pt={7}>
       <CkButton w="full" colorScheme="red" variant="outline">
-        Start trial
+        <Trans id="Start trial">Start trial</Trans>
       </CkButton>
     </Box>
   );

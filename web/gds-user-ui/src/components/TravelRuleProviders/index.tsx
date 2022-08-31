@@ -1,10 +1,13 @@
 import { Link, ListItem, UnorderedList } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 import Card from 'components/Card/Card';
 
 const TravelRuleProviders: React.FC = () => {
   return (
     <Card maxW="100%">
-      <Card.CardHeader>3rd Party Travel Rule Providers</Card.CardHeader>
+      <Card.CardHeader>
+        <Trans id="3rd Party Travel Rule Providers">3rd Party Travel Rule Providers</Trans>
+      </Card.CardHeader>
       <Card.CardBody>
         <UnorderedList>
           <ListItem color="#1F4CED">
@@ -21,13 +24,13 @@ const TravelRuleProviders: React.FC = () => {
             <Link href="https://notabene.id/" isExternal>
               NotaBene{' '}
             </Link>
-            (not interoperable)
+            <Trans id="(not interoperable)">(not interoperable)</Trans>
           </ListItem>
           <ListItem color="#1F4CED">
             <Link href="https://openvasp.org/" isExternal>
               OpenVASP{' '}
             </Link>
-            (not interoperable)
+            <Trans id="(not interoperable)">(not interoperable)</Trans>
           </ListItem>
         </UnorderedList>
       </Card.CardBody>

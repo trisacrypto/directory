@@ -1,5 +1,5 @@
 // default value should be initialized from localstorage and assigned to each property
-export const getRegistrationDefaultValue = () => {
+export const getRegistrationDefaultValues = () => {
   return {
     entity: {
       country_of_registration: '',
@@ -15,7 +15,7 @@ export const getRegistrationDefaultValue = () => {
       },
       geographic_addresses: [
         {
-          address_type: '',
+          address_type: 'ADDRESS_TYPE_CODE_BIZZ',
           address_line: [],
           country: ''
         }
@@ -41,16 +41,16 @@ export const getRegistrationDefaultValue = () => {
       billing: {},
       legal: {}
     },
-    trisa_endpoint_testnet: {
-      trisa_endpoint: '',
+    testnet: {
+      endpoint: '',
       common_name: ''
     },
-    trisa_endpoint_mainnet: {
-      trisa_endpoint: '',
+    mainnet: {
+      endpoint: '',
       common_name: ''
     },
     website: '',
-    business_category: '',
+    business_category: 'UNKNOWN_ENTITY',
     vasp_categories: [],
     established_on: '',
     organization_name: '',
@@ -61,10 +61,10 @@ export const getRegistrationDefaultValue = () => {
       financial_transfers_permitted: 'no',
       has_required_regulatory_program: 'no',
       conducts_customer_kyc: false,
-      kyc_threshold: 0,
+      kyc_threshold: 10,
       kyc_threshold_currency: 'USD',
       must_comply_travel_rule: false,
-      applicable_regulations: [{ name: 'FATF Recommendation 16' }],
+      applicable_regulations: ['FATF Recommendation 16'],
       compliance_threshold: 3000,
       compliance_threshold_currency: 'USD',
       must_safeguard_pii: false,

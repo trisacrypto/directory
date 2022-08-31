@@ -1,47 +1,51 @@
-import { Box, Text, Stack, Button, HStack } from '@chakra-ui/react';
+import {
+  Box,
+  Text,
+  Stack,
+  Button,
+  HStack,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription
+} from '@chakra-ui/react';
 
-import { NavLink } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 
-import { Trans } from '@lingui/react';
+import AttentionAlert, { AttentionResponseType } from './AttentionAlert';
+import { t } from '@lingui/macro';
 
 export type NeedsAttentionProps = {
   text: string;
   buttonText: string;
   onClick?: (ev?: any) => void;
+  loading?: boolean;
+  error?: any;
+  data?: Array<AttentionResponseType>;
 };
 
-const NeedsAttention = ({ text, buttonText, onClick }: NeedsAttentionProps) => {
+const NeedsAttention = ({ text, buttonText, onClick, data }: NeedsAttentionProps) => {
   return (
-    <Stack
-      minHeight={67}
-      bg={'#D8EAF6'}
-      p={5}
-      border="1px solid #eee"
-      fontSize={18}
-      display={'flex'}
-      borderRadius={'10px'}>
-      <HStack justifyContent={'space-between'}>
-        <Text fontWeight={'bold'}>
-          <Trans id="Needs Attention">Needs Attention</Trans>
-        </Text>
-        <Text>
-          <Trans id="Complete Testnet Registration">Complete Testnet Registration</Trans>
-        </Text>
-
-        <Box>
-          <Button
+    <Sentry.ErrorBoundary
+      fallback={
+        <Text
+          color={'red'}
+          textAlign={'center'}
+          pt={20}>{t`An error has occurred to load attention data`}</Text>
+      }>
+      <Stack minHeight={67}>
+        {data?.map((item: AttentionResponseType, key: any) => (
+          <AttentionAlert
+            key={key}
+            action={item.action}
+            severity={item.severity}
+            message={item.message}
             onClick={onClick}
-            width={142}
-            as={'a'}
-            borderRadius={0}
-            background="#55ACD8"
-            color="#fff"
-            _hover={{ background: 'blue.200' }}>
-            {buttonText}
-          </Button>
-        </Box>
-      </HStack>
-    </Stack>
+            buttonText={buttonText}
+          />
+        ))}
+      </Stack>
+    </Sentry.ErrorBoundary>
   );
 };
 

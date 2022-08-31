@@ -11,19 +11,25 @@ import {
   Heading,
   Link,
   Icon,
-  Text
+  Text,
+  Collapse,
+  List,
+  ListItem
 } from '@chakra-ui/react';
 import trisaLogo from '../../assets/trisa.svg';
-import NavItem, { getLinkStyle } from './NavItem';
+import NavItem, { StyledNavItem } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
+import { useState } from 'react';
+import { Trans } from '@lingui/react';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
 }
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
+  const [open, setOpen] = useState(false);
   return (
     <Box
       transition="3s ease"
@@ -32,77 +38,105 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 275 }}
       pos="fixed"
-      px={2}
+      // px={2}
       h="full"
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
         <Stack width="100%" direction={['row']}>
           <Image src={trisaLogo} alt="GDS UI" />
           <Heading size="sm" color="#FFFFFF" lineHeight={1.35}>
-            Global Directory Service
+            <Trans id="Global Directory Service">Global Directory Service</Trans>
           </Heading>
         </Stack>
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
-        {MenuItems.filter((m) => m.activated).map((menu) => (
-          <NavItem key={menu.title} icon={menu.icon} href={menu.path || '/#'} path={menu.path}>
-            {menu.title}
-          </NavItem>
-        ))}
-
+        <List w="100%">
+          {MenuItems.filter((m) => m.activated).map((menu) => (
+            <>
+              <NavItem
+                key={menu.title}
+                icon={menu.icon}
+                href={menu.path || '/#'}
+                path={menu.path}
+                hasChildren={!!menu.children?.length}
+                onOpen={() => setOpen(!open)}
+                isCollapse={open}>
+                {menu.title}
+              </NavItem>
+              {menu.children?.length && (
+                <Collapse in={open} style={{ width: '100%' }}>
+                  {menu.children &&
+                    menu.children
+                      .filter((m) => m.activated)
+                      .map((child) => (
+                        <NavItem
+                          key={child.title}
+                          icon={child.icon}
+                          href={child.path || '/#'}
+                          path={child.path}
+                          isCollapse={false}
+                          isSubMenu={true}>
+                          {child.title}
+                        </NavItem>
+                      ))}
+                </Collapse>
+              )}
+            </>
+          ))}
+        </List>
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
-        <Link
-          w={'100%'}
-          display="flex"
-          alignItems="center"
-          color="#8391a2"
-          role="group"
-          href="mailto:support@trisa.io"
-          isExternal
-          {...getLinkStyle()}>
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: 'white'
-            }}
-            as={MdContactSupport}
-          />
-          <Text
-            _groupHover={{
-              color: 'white'
-            }}>
-            Support
-          </Text>
-        </Link>
-        <Link
-          href="https://trisa-workspace.slack.com/"
-          w={'100%'}
-          display="flex"
-          alignItems="center"
-          color="#8391a2"
-          role="group"
-          isExternal
-          {...getLinkStyle()}>
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: 'white'
-            }}
-            as={IoLogoSlack}
-          />
-          <Text
-            _groupHover={{
-              color: 'white'
-            }}>
-            Slack
-          </Text>
-        </Link>
-        {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
+        <List w="100%">
+          <StyledNavItem
+            w="100%"
+            display="flex"
+            alignItems="center"
+            color="#8391a2"
+            role="group"
+            href="mailto:support@trisa.io"
+            as={Link}>
+            <Icon
+              mr="4"
+              fontSize="16"
+              _groupHover={{
+                color: 'white'
+              }}
+              as={MdContactSupport}
+            />
+            <Text
+              _groupHover={{
+                color: 'white'
+              }}>
+              <Trans id="Support">Support</Trans>
+            </Text>
+          </StyledNavItem>
+          <StyledNavItem
+            href="https://trisa-workspace.slack.com/"
+            w={'100%'}
+            display="flex"
+            alignItems="center"
+            color="#8391a2"
+            role="group"
+            as={Link}>
+            <Icon
+              mr="4"
+              fontSize="16"
+              _groupHover={{
+                color: 'white'
+              }}
+              as={IoLogoSlack}
+            />
+            <Text
+              _groupHover={{
+                color: 'white'
+              }}>
+              Slack
+            </Text>
+          </StyledNavItem>
+          {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
           Slack
         </NavItem> */}
+        </List>
       </VStack>
     </Box>
   );

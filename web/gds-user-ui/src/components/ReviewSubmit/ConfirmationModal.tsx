@@ -3,6 +3,11 @@ import {
   Box,
   chakra,
   Heading,
+  Alert,
+  AlertIcon,
+  Tag,
+  AlertTitle,
+  AlertDescription,
   Input,
   Text,
   Flex,
@@ -18,7 +23,8 @@ import {
 } from '@chakra-ui/react';
 import ModalAlert from 'components/ReviewSubmit/ModalAlert';
 import AlertContent from './AlertContent';
-
+import { upperCaseFirstLetter } from 'utils/utils';
+import { Trans } from '@lingui/react';
 const ConfirmationModal = (props: any) => {
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { hasCopied, onCopy } = useClipboard(props.pkcs12password);
@@ -45,20 +51,29 @@ const ConfirmationModal = (props: any) => {
             <ModalOverlay />
             <ModalContent width={'100%'}>
               <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                TRISA Registration Request Submitted!
+                <Trans id="TRISA Registration Request Submitted!">
+                  TRISA Registration Request Submitted!
+                </Trans>
               </ModalHeader>
 
               <ModalBody pb={6}>
                 <Text pb={5} fontSize={'sm'}>
-                  Your registration request has been successfully received by the Directory Service.
-                  Verification emails have been sent to all contacts listed. Once your contact
-                  information has been verified, the registration form will be sent to the TRISA
-                  review board to verify your membership in the TRISA network.
+                  <Trans id="Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network.">
+                    Your registration request has been successfully received by the Directory
+                    Service. Verification emails have been sent to all contacts listed. Once your
+                    contact information has been verified, the registration form will be sent to the
+                    TRISA review board to verify your membership in the TRISA network.{' '}
+                  </Trans>
                 </Text>
                 <Text pb={2} fontSize={'sm'}>
-                  When you are verified you will be issued PKCS12 encrypted identity certificates
+                  <Trans
+                    id=" When you are verified you will be issued PKCS12 encrypted identity certificates
                   for use in mTLS authentication between TRISA members. The password to decrypt
-                  those certificates is shown below:
+                  those certificates is shown below:">
+                    When you are verified you will be issued PKCS12 encrypted identity certificates
+                    for use in mTLS authentication between TRISA members. The password to decrypt
+                    those certificates is shown below:
+                  </Trans>
                 </Text>
                 <Text>
                   <Flex mb={2} fontSize={'sm'}>
@@ -68,44 +83,64 @@ const ConfirmationModal = (props: any) => {
                       bg={!hasCopied ? 'yellow.100' : 'green.200'}
                     />
                     <Button onClick={onCopy} ml={2}>
-                      {hasCopied ? 'Copied' : 'Copy'}
+                      {hasCopied ? (
+                        <Trans id="Copied">Copied</Trans>
+                      ) : (
+                        <Trans id="Copy">Copy</Trans>
+                      )}
                     </Button>
                   </Flex>
                 </Text>
                 <Text py={2} color={'orange.500'} fontSize={'sm'}>
-                  This is the only time the PKCS12 password is shown during the registration
-                  process.
+                  <Trans id="This is the only time the PKCS12 password is shown during the registration process.">
+                    This is the only time the PKCS12 password is shown during the registration
+                    process.
+                  </Trans>
                   <br />
-                  Please copy and paste this password and store somewhere safe!
+                  <Trans id="Please copy and paste this password and store somewhere safe!">
+                    Please copy and paste this password and store somewhere safe!
+                  </Trans>
                 </Text>
                 <Box py={2} fontSize={'sm'}>
                   <chakra.tr>
                     <chakra.td>
-                      <Text fontWeight={'semibold'}>ID :</Text>
+                      <Text fontWeight={'semibold'}>
+                        <Trans id="ID:">ID:</Trans>
+                      </Text>
                     </chakra.td>
                     <chakra.td>
-                      <Text pl={2}>{props.id}</Text>
+                      <Text ml={5}>{props.id}</Text>
                     </chakra.td>
                   </chakra.tr>
                   <chakra.tr>
                     <chakra.td>
-                      <Text fontWeight={'semibold'}>Verification Status : </Text>
+                      <Text fontWeight={'semibold'}>
+                        <Trans id="Verification Status:">Verification Status:</Trans>
+                      </Text>
                     </chakra.td>
                     <chakra.td>
-                      <Text pl={2}>{props.status}</Text>
+                      <Tag ml={5} bg={'green'} color={'white'}>
+                        {props.status}
+                      </Tag>
                     </chakra.td>
                   </chakra.tr>
                 </Box>
-                <Text>
-                  <Text as={'span'} fontWeight={'semibold'}>
-                    Message from server:
-                  </Text>{' '}
-                  {props.message}
-                </Text>
+                <Box mt={5}>
+                  <Alert status="info">
+                    <Box>
+                      <AlertTitle>
+                        <Trans id="Message from server:">Message from server:</Trans>
+                      </AlertTitle>
+                      <AlertDescription>{upperCaseFirstLetter(props.message)}</AlertDescription>
+                    </Box>
+                  </Alert>
+                </Box>
               </ModalBody>
 
               <ModalFooter>
-                <Button onClick={handleOnClose}>Understood</Button>
+                <Button onClick={handleOnClose}>
+                  <Trans id="Understood">Understood</Trans>
+                </Button>
               </ModalFooter>
             </ModalContent>
           </Modal>

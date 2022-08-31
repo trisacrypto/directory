@@ -71,24 +71,17 @@ export const auth0Hash = (hash?: any) => {
   });
 };
 
-export const auth0CheckSession = (options: any) => {
+export const auth0CheckSession = () => {
   return new Promise((resolve, reject) => {
-    authWeb.checkSession(
-      {
-        ...options,
-        scope: 'openid profile email'
-      },
-      (err: any, authResult: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(authResult);
-        }
+    authWeb.checkSession({}, (err: any, authResult: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(authResult);
       }
-    );
+    });
   });
 };
-
 export const auth0GetUser = (accessToken: any) => {
   return new Promise((resolve, reject) => {
     authWeb.client.userInfo(accessToken, (err: any, user: any) => {
@@ -96,6 +89,23 @@ export const auth0GetUser = (accessToken: any) => {
         reject(err);
       } else {
         resolve(user);
+      }
+    });
+  });
+};
+
+// check session and get user info
+export const refreshAndFetchUser = () => {
+  return new Promise((resolve, reject) => {
+    authWeb.checkSession({}, async (err: any, authResult: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        const user = await auth0GetUser(authResult.accessToken);
+        resolve({
+          ...authResult,
+          user
+        });
       }
     });
   });

@@ -8,7 +8,7 @@ type TError = {
 const SuccessMessage: React.FC<TError> = ({ message, handleClose }) => {
   return (
     <Box my={4}>
-      <Alert status="success" borderRadius={4}>
+      <Alert status="success" borderRadius={4} data-testid="success__alert">
         <AlertDescription>{message}</AlertDescription>
         {/* <CloseButton position="absolute" right="8px" top="8px" onClick={handleClose} /> */}
       </Alert>

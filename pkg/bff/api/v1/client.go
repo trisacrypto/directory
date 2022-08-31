@@ -209,6 +209,22 @@ func (s *APIv1) SubmitRegistration(ctx context.Context, network string) (out *Re
 	return out, nil
 }
 
+// RegistrationStatus returns the status of the VASP registrations for the organization.
+func (s *APIv1) RegistrationStatus(ctx context.Context) (out *RegistrationStatus, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/registration", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &RegistrationStatus{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Overview returns a high-level summary of the organization account and networks.
 func (s *APIv1) Overview(ctx context.Context) (out *OverviewReply, err error) {
 	// Make the HTTP request
@@ -297,6 +313,29 @@ func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out
 	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}
+	return out, nil
+}
+
+// Attention returns the set of current attention messages for the organization.
+func (s *APIv1) Attention(ctx context.Context) (out *AttentionReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/attention", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &AttentionReply{}
+	var rep *http.Response
+	if rep, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	// Make sure no data is returned if the status code is 204 (no content)
+	if rep.StatusCode == http.StatusNoContent {
+		return nil, nil
+	}
+
 	return out, nil
 }
 
@@ -392,7 +431,7 @@ func (s *APIv1) Do(req *http.Request, data interface{}, checkStatus bool) (rep *
 
 	// Deserialize the JSON data from the body
 	// TODO: what if this is protocol buffer JSON?
-	if data != nil && rep.StatusCode >= 200 && rep.StatusCode < 300 {
+	if data != nil && rep.StatusCode >= 200 && rep.StatusCode < 300 && rep.StatusCode != http.StatusNoContent {
 		// Check the content type to ensure data deserialization is possible
 		if ct := rep.Header.Get("Content-Type"); ct != contentType {
 			return rep, fmt.Errorf("unexpected content type: %q", ct)

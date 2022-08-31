@@ -4,8 +4,9 @@ import registrationAuthority from './registration-authority.json';
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
-const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
+import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
+const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
 
@@ -136,16 +137,89 @@ export const getRefreshToken = () => {
         if (err) {
           reject(err);
         } else {
-          resolve(authResult.accessToken);
+          resolve(authResult);
         }
       }
     );
   });
 };
-
-export const captureExceptionError = (message: string) => {
-  Sentry.captureException(message);
+export const handleError = (error: any, customMessage?: string) => {
+  Sentry.captureMessage(customMessage || error);
+  Sentry.captureException(error);
+  // if (error.response.status === 401 || error.response.status === 403) {
+  //   clearCookies();
+  //   switch (error.response.status) {
+  //     case '401':
+  //       window.location.href = `/auth/login?q=token_expired`;
+  //       break;
+  //     case '403':
+  //       window.location.href = `/auth/login?q=unauthorized`;
+  //       break;
+  //     default:
+  //       window.location.href = `/auth/login?error_description=${error.response.data.error}`;
+  //   }
+  // }
 };
-export const captureMessageError = (message: string) => {
-  Sentry.captureMessage(message);
+
+// uppercased first letter
+export const upperCaseFirstLetter = (str: any) => {
+  return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+};
+
+// load default value for registration
+export const loadStepperDefaultValue = () => {
+  const fetchDefaultValue = async () => {
+    const response = await getRegistrationDefaultValue();
+    return response.stepper;
+  };
+  const defaultValue = fetchDefaultValue();
+  return {
+    ...defaultValue,
+    hasReachSubmitStep: false
+  };
+};
+
+// isObject function
+export const isObject = (value: any) => {
+  return value && typeof value === 'object' && value.constructor === Object;
+};
+//
+// compare two object deeply key by key
+export const compareObject = (obj1: any, obj2: any) => {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (const key of keys1) {
+    const val1 = obj1[key];
+    const val2 = obj2[key];
+    const areObjects = isObject(val1) && isObject(val2);
+    if ((areObjects && !compareObject(val1, val2)) || (!areObjects && val1 !== val2)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// compare default certificate object
+export const hasDefaultCertificateProperties = (obj: any) => {
+  const defaultKeys = ['contacts', 'entity', 'mainnet', 'testnet', 'trixo'];
+  const keys = Object.keys(obj);
+  const hasDefaultKeys = defaultKeys.every((key) => keys.includes(key));
+  return hasDefaultKeys;
+};
+
+// format to short date
+export const format2ShortDate = (date: any) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  // convert month with 2 digits
+  const month2Digits = month < 10 ? `0${month}` : month;
+  return `${year}-${month2Digits}-${day}`;
 };

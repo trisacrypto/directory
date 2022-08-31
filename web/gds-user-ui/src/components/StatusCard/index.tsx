@@ -1,12 +1,14 @@
 import React from 'react';
 import { Stack, Box, Text, Heading, HStack, Flex, chakra } from '@chakra-ui/react';
 import { IoEllipse } from 'react-icons/io5';
+import { Trans } from '@lingui/react';
 interface StatusCardProps {
   isOnline: string;
 }
 
 const StatusCard = ({ isOnline }: StatusCardProps) => {
-  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTH');
+  const status = !!(typeof isOnline === 'string' && isOnline.toUpperCase() === 'HEALTHY');
+
   return (
     <Box
       bg={'white'}
@@ -21,7 +23,7 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
       px={5}>
       <Stack textAlign={'center'}>
         <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
-          Network Status
+          <Trans id="Network Status">Network Status</Trans>
         </chakra.h1>
         <Stack
           fontSize={40}

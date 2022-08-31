@@ -2,19 +2,24 @@ import { Box, Button, Stack, Text } from '@chakra-ui/react';
 import Card from 'components/Card/Card';
 import { BsCheckCircleFill } from 'react-icons/bs';
 import TrisaLogo from 'components/Icon/TrisaLogo';
+import { Trans } from '@lingui/react';
 
 const TrisaVerifiedLogo: React.FC = () => {
   return (
     <Card maxW="100%">
-      <Card.CardHeader>TRISA Verified Logo</Card.CardHeader>
+      <Card.CardHeader>
+        <Trans id="TRISA Verified Logo">TRISA Verified Logo</Trans>
+      </Card.CardHeader>
       <Card.CardBody>
         <Stack direction={['column', 'row']} spacing={5}>
           <Box maxW={['100%', '50%']}>
             <Text>
-              TRISA verified members may download and display a “TRISA Verified VASP” logo on their
-              website. The logo is unique to your VASP and non-reproducible. Members may download
-              their logo after verification is complete and their certificate has been issued. The
-              logo is in .svg fotmat
+              <Trans id="TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat">
+                TRISA verified members may download and display a “TRISA Verified VASP” logo on
+                their website. The logo is unique to your VASP and non-reproducible. Members may
+                download their logo after verification is complete and their certificate has been
+                issued. The logo is in .svg fotmat
+              </Trans>
             </Text>
           </Box>
           <Box display="flex" justifyContent="center" width="100%">
@@ -28,7 +33,7 @@ const TrisaVerifiedLogo: React.FC = () => {
                 paddingX="43px">
                 <TrisaLogo />
                 <Text fontWeight="bold" position="absolute" right="21px" top="72px">
-                  Verified <br />
+                  <Trans id="Verified">Verified</Trans> <br />
                   <span>
                     VASP{' '}
                     <BsCheckCircleFill
@@ -40,7 +45,9 @@ const TrisaVerifiedLogo: React.FC = () => {
                 </Text>
               </Box>
               <Box>
-                <Button disabled>Download</Button>
+                <Button disabled>
+                  <Trans id="Download">Download</Trans>
+                </Button>
               </Box>
             </Stack>
           </Box>

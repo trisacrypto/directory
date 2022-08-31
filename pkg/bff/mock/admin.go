@@ -15,6 +15,7 @@ import (
 
 const (
 	StatusEP           = "Status"
+	RetrieveVASPEP     = "RetrieveVASP"
 	ListCertificatesEP = "ListCertificates"
 )
 
@@ -69,6 +70,14 @@ func (a *Admin) UseFixture(endpoint, path string) (err error) {
 	switch endpoint {
 	case StatusEP:
 		out := &apiv2.StatusReply{}
+		if err = json.Unmarshal(data, out); err != nil {
+			return fmt.Errorf("could not unmarshal fixture data: %s", err)
+		}
+		a.handle(endpoint, func(c *gin.Context) {
+			c.JSON(http.StatusOK, out)
+		})
+	case RetrieveVASPEP:
+		out := &apiv2.RetrieveVASPReply{}
 		if err = json.Unmarshal(data, out); err != nil {
 			return fmt.Errorf("could not unmarshal fixture data: %s", err)
 		}
@@ -143,6 +152,7 @@ func (a *Admin) setupHandlers() {
 	a.Calls = make(map[string]int)
 
 	a.initHandler(StatusEP, http.MethodGet, "/v2/status")
+	a.initHandler(RetrieveVASPEP, http.MethodGet, "/v2/vasps/:vaspID", a.authorize)
 	a.initHandler(ListCertificatesEP, http.MethodGet, "/v2/vasps/:vaspID/certificates", a.authorize)
 }
 

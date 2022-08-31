@@ -30,6 +30,28 @@ message Organization {
     string modified = 15;
 }
 
+// FormState contains the current state of an organization's registration form to
+// enable a consistent user experience across multiple contexts.
+message FormState {
+    // The current 1-indexed step of the form
+    int32 current = 1;
+
+    // If set, the form is completely filled out and ready to be submitted
+    bool ready_to_submit = 2;
+
+    // The state of each step in the form
+    repeated FormStep steps = 3;
+
+    // RFC 3339 timestamp -- if set, the user has started filling out the form
+    string started = 4;
+}
+
+// FormStep contains the state of a single step in an organization's registration form.
+message FormStep {
+    int32 key = 1;
+    string status = 2;
+}
+
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.
 message DirectoryRecord {
     string id = 1;
@@ -47,6 +69,7 @@ message RegistrationForm {
     trisa.gds.models.v1beta1.BusinessCategory business_category = 2;
     repeated string vasp_categories = 3;
     string established_on = 4;
+    string organization_name = 5;
 
     // IVMS 101 Legal Person record
     ivms101.LegalPerson entity = 11;
@@ -60,6 +83,9 @@ message RegistrationForm {
     // Network-specific information and submission details
     NetworkDetails testnet = 14;
     NetworkDetails mainnet = 15;
+
+    // Current progress of the form for the frontend
+    FormState state = 20;
 }
 
 // NetworkDetails contains directory-service specific submission information such as the
@@ -99,4 +125,25 @@ message AnnouncementMonth {
     // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
+}
+
+// AttentionSeverity is used to indicate the importance of an attention message
+enum AttentionSeverity {
+    SUCCESS = 0;
+    INFO = 1;
+    WARNING = 2;
+    ALERT = 3;
+}
+
+// AttentionAction is used to indicate the action that should be taken by the user in
+// response to an attention message.
+enum AttentionAction {
+    NO_ACTION = 0;
+    START_REGISTRATION = 1;
+    COMPLETE_REGISTRATION = 2;
+    SUBMIT_TESTNET = 3;
+    SUBMIT_MAINNET = 4;
+    VERIFY_EMAILS = 5;
+    RENEW_CERTIFICATE = 6;
+    CONTACT_SUPPORT = 7;
 }

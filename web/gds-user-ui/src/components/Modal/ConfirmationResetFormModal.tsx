@@ -16,9 +16,15 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
+import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
+import { useNavigate } from 'react-router-dom';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
+import { useForm } from 'react-hook-form';
+
+interface ConfirmationModalProps {}
 const ConfirmationResetForm = (props: any) => {
+  const navigate = useNavigate();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -31,12 +37,14 @@ const ConfirmationResetForm = (props: any) => {
     setIsLoading(true);
     // props.onReset(loadDefaultValueFromLocalStorage);
     resetForm();
+    props.onReset(getRegistrationDefaultValues());
     props.onChangeResetState(true);
     props.onChangeState(false);
     setIsLoading(false);
     props.onClose();
     onAlertClose();
-    // props.onRefeshState();
+    // props.onRefreshState();
+    navigate('/dashboard/certificate/registration');
   };
   return (
     <>
@@ -71,7 +79,11 @@ const ConfirmationResetForm = (props: any) => {
                   }}>
                   <Trans id="Reset">Reset</Trans>
                 </Button>
-                <Button onClick={handleOnClose} bgColor="#555151" color={'#fff'}>
+                <Button
+                  onClick={handleOnClose}
+                  bgColor="#555151"
+                  color={'#fff'}
+                  _hover={{ boxShadow: '#555151', bgColor: '#555151D4' }}>
                   <Trans id="Cancel">Cancel</Trans>
                 </Button>
               </ModalFooter>

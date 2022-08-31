@@ -1,35 +1,18 @@
 import React from 'react';
-import HandleAuthCallback from 'modules/auth/callback';
+import CallbackPage from 'modules/auth/callback';
 import Overview from 'modules/dashboard/overview';
 import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
 import CertificateRegistrationPage from 'modules/dashboard/certificate/registration';
-import { Routes, Route, Link, Outlet } from 'react-router-dom';
 import Home from 'modules/home';
 import Start from 'modules/start';
-import VerifyPage from 'modules/verify';
 import SuccessPage from 'modules/auth/register/success';
 import Login from 'modules/auth/login';
 import Register from 'modules/auth/register';
 const CertificateRegistration = React.lazy(
   () => import('modules/dashboard/certificate/registration')
 );
-
-// const Home = React.lazy(() => import('modules/home'));
-// const StartPage = React.lazy(() => import('modules/start'));
-// const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
-// const VerifyPage = React.lazy(() => import('modules/verify'));
-// const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
-// const LoginPage = React.lazy(() => import('modules/auth/login'));
-// const RegisterPage = React.lazy(() => import('modules/auth/register'));
-// const Home = React.lazy(() => import('modules/home'));
-// const StartPage = React.lazy(() => import('modules/start'));
-// const CertificatePage = React.lazy(() => import('modules/dashboard/certificate/registration'));
-// const VerifyPage = React.lazy(() => import('modules/verify'));
-// const SuccessAuth = React.lazy(() => import('modules/auth/register/success'));
-// const LoginPage = React.lazy(() => import('modules/auth/login'));
-// const RegisterPage = React.lazy(() => import('modules/auth/register'));
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
@@ -55,22 +38,10 @@ const appRoutes = [
     component: Start,
     layout: 'landing'
   },
-  // {
-  //   path: '/start',
-  //   name: 'Start',
-  //   component: Start,
-  //   layout: 'landing'
-  // },
   {
     path: '/certificate/registration',
     name: 'Certificate Registration',
     component: CertificateRegistration,
-    layout: 'landing'
-  },
-  {
-    path: '/verify',
-    name: 'Verify',
-    component: VerifyPage,
     layout: 'landing'
   },
   {
@@ -121,7 +92,7 @@ const appRoutes = [
   {
     path: '/auth/callback',
     name: 'Callback',
-    component: HandleAuthCallback,
+    component: CallbackPage,
     layout: 'landing'
   },
 
@@ -146,6 +117,12 @@ const appRoutes = [
     component: CertificateManagement,
     layout: 'dashboard',
     route: '/dashboard/certificate-management'
+  },
+  {
+    path: '/dashboard/logout',
+    name: 'Logout',
+    component: Logout,
+    layout: 'dashboard'
   },
 
   //  -------ERROR ROUTES-------

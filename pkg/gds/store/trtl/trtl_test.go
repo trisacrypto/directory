@@ -76,11 +76,11 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	require.NoError(err)
 	s.conf = &conf
 
-	trtl, err := trtl.New(*s.conf)
+	s.trtl, err = trtl.New(*s.conf)
 	require.NoError(err)
 
 	s.grpc = bufconn.New(bufSize, "")
-	go trtl.Run(s.grpc.Listener)
+	go s.trtl.Run(s.grpc.Listener)
 }
 
 func (s *trtlStoreTestSuite) TearDownSuite() {
@@ -224,6 +224,14 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(key, second.Id, "should be the second VASP")
+
+	// Consume the rest of the iterator
+	for iter.Next() {
+		v, err := iter.VASP()
+		require.NoError(err)
+		require.NotNil(v)
+	}
+	require.NoError(iter.Error())
 	iter.Release()
 
 	// Test iterating over all the VASPs
@@ -366,6 +374,14 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+
+	// Consume the rest of the iterator
+	for iter.Next() {
+		cert, err := iter.Cert()
+		require.NoError(err)
+		require.NotNil(cert)
+	}
+	require.NoError(iter.Error())
 	iter.Release()
 
 	// Create enough Certs to exceed the page size
@@ -500,6 +516,14 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	require.NoError(err)
 	require.NotNil(second)
 	require.NotEqual(first.Id, second.Id)
+
+	// Consume the rest of the iterator
+	for iter.Next() {
+		certreq, err := iter.CertReq()
+		require.NoError(err)
+		require.NotNil(certreq)
+	}
+	require.NoError(iter.Error())
 	iter.Release()
 
 	// Create enough CertReqs to exceed the page size

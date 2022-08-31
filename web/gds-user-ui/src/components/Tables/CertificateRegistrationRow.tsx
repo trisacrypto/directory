@@ -10,6 +10,7 @@ import {
   useColorModeValue
 } from '@chakra-ui/react';
 import { Tr, Td } from '@chakra-ui/table';
+import { t, Trans } from '@lingui/macro';
 
 import { BsThreeDots } from 'react-icons/bs';
 
@@ -88,7 +89,7 @@ const CertificateRegistrationRow = (props: CertificateRegistrationRowProps) => {
             py={1}
             background={getBackgroundByStatusCode(status)}
             data-testid="status">
-            <Text fontSize={'sm'}> {status || 'Incomplete'}</Text>
+            <Text fontSize={'sm'}> {status || t`Incomplete`}</Text>
           </Box>
         </Text>
       </Td>
@@ -97,7 +98,9 @@ const CertificateRegistrationRow = (props: CertificateRegistrationRowProps) => {
         <Menu>
           <MenuButton as={IconButton} icon={<BsThreeDots />} borderRadius={50} bg={'transparent'} />
           <MenuList>
-            <MenuItem>Edit</MenuItem>
+            <MenuItem>
+              <Trans id="Edit">Edit</Trans>
+            </MenuItem>
           </MenuList>
         </Menu>
       </Td>
