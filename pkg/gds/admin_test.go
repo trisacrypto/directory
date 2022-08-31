@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	"github.com/trisacrypto/directory/pkg/gds/fixtures"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
@@ -450,16 +451,18 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Construct the expected response
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
-	deltaID := s.fixtures[vasps]["delta"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
+	delta, err := s.fixtures.GetVASP("delta")
+	require.NoError(err)
 	expected := &admin.AutocompleteReply{
 		Names: map[string]string{
-			"trisa.charliebank.io":         charlieID,
+			"trisa.charliebank.io":         charlie.Id,
 			"https://trisa.charliebank.io": "https://trisa.charliebank.io",
-			"CharlieBank":                  charlieID,
-			"trisa.delta.io":               deltaID,
+			"CharlieBank":                  charlie.Id,
+			"trisa.delta.io":               delta.Id,
 			"https://trisa.delta.io":       "https://trisa.delta.io",
-			"Delta Assets":                 deltaID,
+			"Delta Assets":                 delta.Id,
 		},
 	}
 	require.Equal(expected, actual)
@@ -478,9 +481,14 @@ func (s *gdsTestSuite) TestListVASPs() {
 		})
 	}
 
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
+	delta, err := s.fixtures.GetVASP("delta")
+	require.NoError(err)
+
 	snippets := []admin.VASPSnippet{
 		{
-			ID:                  s.fixtures[vasps]["charliebank"].(*pb.VASP).Id,
+			ID:                  charlie.Id,
 			Name:                "CharlieBank",
 			CommonName:          "trisa.charliebank.io",
 			RegisteredDirectory: "trisatest.net",
@@ -492,7 +500,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 			},
 		},
 		{
-			ID:                  s.fixtures[vasps]["delta"].(*pb.VASP).Id,
+			ID:                  delta.Id,
 			Name:                "Delta Assets",
 			CommonName:          "trisa.delta.io",
 			RegisteredDirectory: "trisatest.net",
@@ -597,6 +605,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 // Test the RetrieveVASP endpoint.
 func (s *gdsTestSuite) TestRetrieveVASP() {
 	s.LoadFullFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -609,7 +618,8 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	rep := s.doRequest(a.RetrieveVASP, c, w, nil)
 	require.Equal(http.StatusNotFound, rep.StatusCode)
 
-	hotel := s.fixtures[vasps]["hotel"].(*pb.VASP)
+	hotel, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err)
 
 	// Retrieve a VASP that exists
 	request.path = "/v2/vasps/" + hotel.Id
@@ -669,12 +679,8 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 		},
 	}
 
-	actualVASP, err := remarshalProto(vasps, actual.VASP)
-	require.NoError(err, "could not remarshal actual VASP")
-
-	// RetrieveVASP removes the extra data and modifies the serial numbers before
-	// returning the VASP
-	s.CompareFixture(vasps, hotel.Id, actualVASP, true, true)
+	actualVASP, err := fixtures.RemarshalProto(wire.NamespaceVASPs, actual.VASP)
+	require.NoError(err, "could not remarshal retrieved VASP")
 
 	// Check the verified contacts
 	require.Len(actual.VerifiedContacts, 2)
@@ -696,6 +702,13 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 		require.Equal(expectedSerial, actualSerial)
 	}
 
+	// Compare to the reference VASP after removing the serial numbers and extra data
+	// Note: This modifies the original fixtures so LoadReferenceFixtures() must be
+	// deferred in order to restore them before the next test.
+	matches, err := s.fixtures.CompareFixture(wire.NamespaceVASPs, hotel.Id, actualVASP, true, true)
+	require.NoError(err, "could not compare retrieved VASP to fixture")
+	require.True(matches, "retrieved VASP does not match fixture")
+
 	// Compare the rest of the non-vasp results
 	actual.VASP = nil
 	actual.VerifiedContacts = nil
@@ -703,6 +716,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 }
 
 func (s *gdsTestSuite) TestUpdateVASP() {
+	require := s.Require()
 	s.LoadSmallFixtures()
 	defer s.ResetFixtures()
 
@@ -725,7 +739,8 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
-	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 	request.path = "/v2/vasps/" + charlieID
 	request.params["vaspID"] = charlieID
@@ -760,16 +775,18 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 func (s *gdsTestSuite) TestDeleteVASP() {
 	s.LoadFullFixtures()
 	defer s.ResetFixtures()
-	defer s.loadReferenceFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	deltaID := s.fixtures[vasps]["delta"].(*pb.VASP).Id
-	julietID := s.fixtures[vasps]["juliet"].(*pb.VASP).Id
-	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
-
-	golf := s.fixtures[vasps]["golfbucks"].(*pb.VASP)
+	delta, err := s.fixtures.GetVASP("delta")
+	require.NoError(err, "could not get delta VASP")
+	juliet, err := s.fixtures.GetVASP("juliet")
+	require.NoError(err, "could not get juliet VASP")
+	xray, err := s.fixtures.GetCertReq("xray")
+	require.NoError(err, "could not get xray cert request")
+	golf, err := s.fixtures.GetVASP("golfbucks")
+	require.NoError(err, "could not get golfbucks VASP")
 
 	// Attempt to delete a VASP that doesn't exist
 	request := &httpRequest{
@@ -787,11 +804,11 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// VASP is in an invalid state for deletion
-	request.path = "/v2/vasps/" + deltaID
-	request.params["vaspID"] = deltaID
+	request.path = "/v2/vasps/" + delta.Id
+	request.params["vaspID"] = delta.Id
 	msg := "cannot delete VASP in its current state"
 	for status := pb.VerificationState_REVIEWED; status < pb.VerificationState_ERRORED; status++ {
-		s.SetVerificationStatus(deltaID, status)
+		s.SetVerificationStatus(delta.Id, status)
 		c, w = s.makeRequest(request)
 		rep = s.doRequest(a.DeleteVASP, c, w, nil)
 		s.APIError(http.StatusBadRequest, msg, rep)
@@ -810,21 +827,23 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 		require.Error(err)
 
 		// Recreate the VASP
+		// Note: This modifies the reference fixtures so LoadReferenceFixtures() must
+		// be deferred in order to restore them before the next test.
 		golf.Id = ""
 		id, err = s.svc.GetStore().CreateVASP(golf)
 		require.NoError(err)
 	}
 
 	// Make sure we can also delete a VASP in the ERRORED state
-	s.SetVerificationStatus(julietID, pb.VerificationState_ERRORED)
-	request.path = "/v2/vasps/" + julietID
-	request.params["vaspID"] = julietID
+	s.SetVerificationStatus(juliet.Id, pb.VerificationState_ERRORED)
+	request.path = "/v2/vasps/" + juliet.Id
+	request.params["vaspID"] = juliet.Id
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteVASP, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	_, err := s.svc.GetStore().RetrieveVASP(julietID)
+	_, err = s.svc.GetStore().RetrieveVASP(juliet.Id)
 	require.Error(err)
-	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
+	_, err = s.svc.GetStore().RetrieveCertReq(xray.Id)
 	require.Error(err)
 }
 
@@ -837,17 +856,22 @@ func (s *gdsTestSuite) TestListCertificates() {
 	a := s.svc.GetAdmin()
 
 	// CharlieBank has no certificates
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank VASP")
 
 	// HotelCorp has a few certificates
-	hotelID := s.fixtures[vasps]["hotel"].(*pb.VASP).Id
-	uniform := s.fixtures[certs]["uniform"].(*models.Certificate)
+	hotel, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err, "could not get hotel VASP")
+	uniform, err := s.fixtures.GetCert("uniform")
+	require.NoError(err, "could not get uniform certificate")
 	uniformDetails, err := wire.Rewire(uniform.Details)
 	require.NoError(err)
-	victor := s.fixtures[certs]["victor"].(*models.Certificate)
+	victor, err := s.fixtures.GetCert("victor")
+	require.NoError(err, "could not get victor certificate")
 	victorDetails, err := wire.Rewire(victor.Details)
 	require.NoError(err)
-	zulu := s.fixtures[certs]["zulu"].(*models.Certificate)
+	zulu, err := s.fixtures.GetCert("zulu")
+	require.NoError(err, "could not get zulu certificate")
 	zuluDetails, err := wire.Rewire(zulu.Details)
 	require.NoError(err)
 	certificates := []admin.Certificate{
@@ -891,16 +915,16 @@ func (s *gdsTestSuite) TestListCertificates() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// No certificates exist for the VASP
-	request.path = "/v2/vasps/" + charlieID + "/certificates"
-	request.params["vaspID"] = charlieID
+	request.path = "/v2/vasps/" + charlie.Id + "/certificates"
+	request.params["vaspID"] = charlie.Id
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListCertificates, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Empty(actual.Certificates)
 
 	// The VASP contains a few certificates
-	request.path = "/v2/vasps/" + hotelID + "/certificates"
-	request.params["vaspID"] = hotelID
+	request.path = "/v2/vasps/" + hotel.Id + "/certificates"
+	request.params["vaspID"] = hotel.Id
 	actual = &admin.ListCertificatesReply{}
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ListCertificates, c, w, actual)
@@ -914,12 +938,13 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	s.LoadSmallFixtures()
 	defer s.ResetFixtures()
 	defer emails.PurgeMockEmails()
-	defer s.loadReferenceFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 
 	// Attempt to update a VASP that doesn't exist
@@ -987,6 +1012,8 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.Equal(http.StatusBadRequest, rep.StatusCode)
 
 	// Successfully replacing a contact name
+	// Note: This modifies the reference fixtures so LoadReferenceFixtures() must be
+	// deferred in order to restore them before the next test.
 	contact = charlieVASP.Contacts.Administrative
 	contact.Name = "Clark Kent"
 	contactRequest, err = wire.Rewire(contact)
@@ -1060,37 +1087,38 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.False(verified)
 
 	// Should send verification emails to the two contacts
-	messages := []*emailMeta{
+	messages := []*emails.EmailMeta{
 		{
-			contact:   vasp.Contacts.Administrative,
-			to:        "clark.kent@charliebank.com",
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: adminSent,
+			Contact:   vasp.Contacts.Administrative,
+			To:        "clark.kent@charliebank.com",
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: adminSent,
 		},
 		{
-			contact:   vasp.Contacts.Technical,
-			to:        "lois.lane@charliebank.com",
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: technicalSent,
+			Contact:   vasp.Contacts.Technical,
+			To:        "lois.lane@charliebank.com",
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: technicalSent,
 		},
 	}
-	s.CheckEmails(messages)
+	emails.CheckEmails(s.T(), messages)
 }
 
 // Test the DeleteContact endpoint
 func (s *gdsTestSuite) TestDeleteContact() {
 	s.LoadSmallFixtures()
 	defer s.ResetFixtures()
-	defer s.loadReferenceFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieVASP := s.fixtures[vasps]["charliebank"].(*pb.VASP)
+	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not retrieve VASP record")
 	charlieID := charlieVASP.Id
 
 	// Attempt to delete a VASP that doesn't exist
@@ -1154,12 +1182,13 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not retrieve VASP record")
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodPost,
-		path:   "/v2/vasps/" + charlieID + "/notes",
+		path:   "/v2/vasps/" + charlie.Id + "/notes",
 		in: &admin.ModifyReviewNoteRequest{
 			NoteID: "invalid slug",
 		},
@@ -1184,12 +1213,12 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 
 	// Successfully creating a review note
 	request.in = &admin.ModifyReviewNoteRequest{
-		VASP:   charlieID,
+		VASP:   charlie.Id,
 		NoteID: "89bceb0e-41aa-11ec-9d29-acde48001122",
 		Text:   "foo",
 	}
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": charlie.Id,
 	}
 	actual := &admin.ReviewNote{}
 	created := time.Now()
@@ -1206,7 +1235,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(actual.Editor)
 	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1231,7 +1260,8 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1247,7 +1277,7 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 
 	// Successfully listing review notes
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": charlie.Id,
 	}
 	actual := &admin.ListReviewNotesReply{}
 	c, w = s.makeRequest(request)
@@ -1270,19 +1300,20 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodPut,
-		path:   "/v2/vasps/" + charlieID + "/notes/invalid",
+		path:   "/v2/vasps/" + charlie.Id + "/notes/invalid",
 		in: &admin.ModifyReviewNoteRequest{
-			VASP:   charlieID,
+			VASP:   charlie.Id,
 			NoteID: "invalid slug",
 		},
 		params: map[string]string{
-			"vaspID": charlieID,
+			"vaspID": charlie.Id,
 			"noteID": "invalid slug",
 		},
 		claims: &tokens.Claims{
@@ -1308,12 +1339,12 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 
 	// Successfully updating a review note
 	request.in = &admin.ModifyReviewNoteRequest{
-		VASP:   charlieID,
+		VASP:   charlie.Id,
 		NoteID: noteID,
 		Text:   "bar",
 	}
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": charlie.Id,
 		"noteID": noteID,
 	}
 	actual := &admin.ReviewNote{}
@@ -1331,7 +1362,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1353,15 +1384,16 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
 	// Supplying an invalid note ID
 	request := &httpRequest{
 		method: http.MethodDelete,
-		path:   "/v2/vasps/" + charlieID + "/notes/invalid",
+		path:   "/v2/vasps/" + charlie.Id + "/notes/invalid",
 		params: map[string]string{
-			"vaspID": charlieID,
+			"vaspID": charlie.Id,
 			"noteID": "invalid slug",
 		},
 	}
@@ -1380,7 +1412,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 
 	// Successfully deleting a review note
 	request.params = map[string]string{
-		"vaspID": charlieID,
+		"vaspID": charlie.Id,
 		"noteID": noteID,
 	}
 	c, w = s.makeRequest(request)
@@ -1388,7 +1420,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Record on the database should be deleted
-	v, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1402,8 +1434,10 @@ func (s *gdsTestSuite) TestReviewToken() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	echo := s.fixtures[vasps]["echo"].(*pb.VASP)
-	juliet := s.fixtures[vasps]["juliet"].(*pb.VASP)
+	echo, err := s.fixtures.GetVASP("echo")
+	require.NoError(err)
+	juliet, err := s.fixtures.GetVASP("juliet")
+	require.NoError(err)
 
 	require.NotEqual(pb.VerificationState_PENDING_REVIEW, echo.VerificationStatus, "echo must not be in PENDING_REVIEW for this test to pass")
 	require.Equal(pb.VerificationState_PENDING_REVIEW, juliet.VerificationStatus, "juliet must be in PENDING_REVIEW for this test to pass")
@@ -1452,7 +1486,8 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
+	julietVASP, err := s.fixtures.GetVASP("juliet")
+	require.NoError(err)
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1505,22 +1540,24 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	var err error
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
-	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
-	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
+	julietVASP, err := s.fixtures.GetVASP("juliet")
+	require.NoError(err)
+	xray, err := s.fixtures.GetCertReq("xray")
+	require.NoError(err)
 
 	// VASP does not have an admin verification token
 	request := &httpRequest{
 		method: http.MethodPost,
 		path:   "/v2/vasps/invalid/review",
 		in: &admin.ReviewRequest{
-			ID:                     charlieID,
+			ID:                     charlie.Id,
 			AdminVerificationToken: "supersecrettoken",
 			Accept:                 true,
 		},
 		params: map[string]string{
-			"vaspID": charlieID,
+			"vaspID": charlie.Id,
 		},
 		claims: &tokens.Claims{
 			Email: "admin@example.com",
@@ -1577,7 +1614,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require.Equal(request.claims.Email, log[3].Source)
 
 	// Certificate request should be changed to READY_TO_SUBMIT
-	cert, err := s.svc.GetStore().RetrieveCertReq(xrayID)
+	cert, err := s.svc.GetStore().RetrieveCertReq(xray.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
@@ -1598,22 +1635,25 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieID := s.fixtures[vasps]["charliebank"].(*pb.VASP).Id
-	julietVASP := s.fixtures[vasps]["juliet"].(*pb.VASP)
-	xrayID := s.fixtures[certreqs]["xray"].(*models.CertificateRequest).Id
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
+	julietVASP, err := s.fixtures.GetVASP("juliet")
+	require.NoError(err)
+	xray, err := s.fixtures.GetCertReq("xray")
+	require.NoError(err)
 
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
 		method: http.MethodPost,
 		path:   "/v2/vasps/invalid/review",
 		in: &admin.ReviewRequest{
-			ID:                     charlieID,
+			ID:                     charlie.Id,
 			AdminVerificationToken: "supersecrettoken",
 			Accept:                 false,
 			RejectReason:           "some reason",
 		},
 		params: map[string]string{
-			"vaspID": charlieID,
+			"vaspID": charlie.Id,
 		},
 		claims: &tokens.Claims{
 			Email: "admin@example.com",
@@ -1688,7 +1728,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(ids, 0)
 
 	// Certificate request should be deleted
-	_, err = s.svc.GetStore().RetrieveCertReq(xrayID)
+	_, err = s.svc.GetStore().RetrieveCertReq(xray.Id)
 	require.Error(err)
 
 	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
@@ -1696,25 +1736,25 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(emailLog, 1)
 
 	// Rejection emails should be sent to the verified contacts
-	messages := []*emailMeta{
+	messages := []*emails.EmailMeta{
 		{
-			contact:   v.Contacts.Administrative,
-			to:        v.Contacts.Administrative.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.RejectRegistrationRE,
-			reason:    string(admin.ResendRejection),
-			timestamp: sent,
+			Contact:   v.Contacts.Administrative,
+			To:        v.Contacts.Administrative.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.RejectRegistrationRE,
+			Reason:    string(admin.ResendRejection),
+			Timestamp: sent,
 		},
 		{
-			contact:   v.Contacts.Legal,
-			to:        v.Contacts.Legal.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.RejectRegistrationRE,
-			reason:    string(admin.ResendRejection),
-			timestamp: sent,
+			Contact:   v.Contacts.Legal,
+			To:        v.Contacts.Legal.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.RejectRegistrationRE,
+			Reason:    string(admin.ResendRejection),
+			Timestamp: sent,
 		},
 	}
-	s.CheckEmails(messages)
+	emails.CheckEmails(s.T(), messages)
 }
 
 // Test the Resend endpoint.
@@ -1726,8 +1766,10 @@ func (s *gdsTestSuite) TestResend() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vaspErrored := s.fixtures[vasps]["golfbucks"].(*pb.VASP).Id
-	vaspRejected := s.fixtures[vasps]["lima"].(*pb.VASP).Id
+	vaspErrored, err := s.fixtures.GetVASP("golfbucks")
+	require.NoError(err)
+	vaspRejected, err := s.fixtures.GetVASP("lima")
+	require.NoError(err)
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1747,12 +1789,12 @@ func (s *gdsTestSuite) TestResend() {
 
 	// ResendVerifyContact email
 	request.in = &admin.ResendRequest{
-		ID:     vaspErrored,
+		ID:     vaspErrored.Id,
 		Action: admin.ResendVerifyContact,
 		Reason: "verify",
 	}
 	request.params = map[string]string{
-		"vaspID": vaspErrored,
+		"vaspID": vaspErrored.Id,
 	}
 	actual := &admin.ResendReply{}
 	c, w = s.makeRequest(request)
@@ -1764,12 +1806,12 @@ func (s *gdsTestSuite) TestResend() {
 
 	// ResendReview email
 	request.in = &admin.ResendRequest{
-		ID:     vaspErrored,
+		ID:     vaspErrored.Id,
 		Action: admin.ResendReview,
 		Reason: "review",
 	}
 	request.params = map[string]string{
-		"vaspID": vaspErrored,
+		"vaspID": vaspErrored.Id,
 	}
 	actual = &admin.ResendReply{}
 	c, w = s.makeRequest(request)
@@ -1781,12 +1823,12 @@ func (s *gdsTestSuite) TestResend() {
 
 	// ResendRejection email
 	request.in = &admin.ResendRequest{
-		ID:     vaspRejected,
+		ID:     vaspRejected.Id,
 		Action: admin.ResendRejection,
 		Reason: "reject",
 	}
 	request.params = map[string]string{
-		"vaspID": vaspRejected,
+		"vaspID": vaspRejected.Id,
 	}
 	actual = &admin.ResendReply{}
 	c, w = s.makeRequest(request)
@@ -1797,44 +1839,44 @@ func (s *gdsTestSuite) TestResend() {
 	require.Contains(actual.Message, "rejection emails resent")
 
 	// Verify that all emails were sent
-	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored)
+	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored.Id)
 	require.NoError(err)
-	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected)
+	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected.Id)
 	require.NoError(err)
 
-	messages := []*emailMeta{
+	messages := []*emails.EmailMeta{
 		{
-			contact:   errored.Contacts.Billing,
-			to:        errored.Contacts.Billing.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.VerifyContactRE,
-			reason:    "verify_contact",
-			timestamp: firstSend,
+			Contact:   errored.Contacts.Billing,
+			To:        errored.Contacts.Billing.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: firstSend,
 		},
 		{
-			to:        s.svc.GetConf().Email.AdminEmail,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.ReviewRequestRE,
-			timestamp: secondSend,
+			To:        s.svc.GetConf().Email.AdminEmail,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.ReviewRequestRE,
+			Timestamp: secondSend,
 		},
 		{
-			contact:   rejected.Contacts.Administrative,
-			to:        rejected.Contacts.Administrative.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.RejectRegistrationRE,
-			reason:    "rejection",
-			timestamp: thirdSend,
+			Contact:   rejected.Contacts.Administrative,
+			To:        rejected.Contacts.Administrative.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.RejectRegistrationRE,
+			Reason:    "rejection",
+			Timestamp: thirdSend,
 		},
 		{
-			contact:   rejected.Contacts.Legal,
-			to:        rejected.Contacts.Legal.Email,
-			from:      s.svc.GetConf().Email.ServiceEmail,
-			subject:   emails.RejectRegistrationRE,
-			reason:    "rejection",
-			timestamp: thirdSend,
+			Contact:   rejected.Contacts.Legal,
+			To:        rejected.Contacts.Legal.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.RejectRegistrationRE,
+			Reason:    "rejection",
+			Timestamp: thirdSend,
 		},
 	}
-	s.CheckEmails(messages)
+	emails.CheckEmails(s.T(), messages)
 }
 
 // Test the ReviewTimeline endpoint.
