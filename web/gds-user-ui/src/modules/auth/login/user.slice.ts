@@ -1,16 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { loadStepperFromLocalStorage } from 'utils/localStorageHelper';
-import { setCookie, getCookie, removeCookie } from 'utils/cookies';
-import * as Sentry from '@sentry/browser';
+import { setCookie, clearCookies } from 'utils/cookies';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
-import { persistor } from 'application/store';
-import localForage from 'localforage';
-import { auth0SignIn, auth0SignUp, auth0SignWithSocial, auth0Hash } from 'utils/auth0.helper';
-import storage from 'redux-persist/lib/storage';
-import { handleError } from 'utils/utils';
-
-const userSignupWithSocial = (socialName: string) => {};
+import {
+  auth0SignIn,
+  auth0SignUp,
+  auth0SignWithSocial,
+  auth0Hash,
+  auth0CheckSession
+} from 'utils/auth0.helper';
+import { handleError, getRefreshToken } from 'utils/utils';
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -57,13 +56,32 @@ export const getAuth0User: any = createAsyncThunk(
   'users/getuser',
   async (hasToken: boolean, thunkAPI) => {
     try {
+      // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo.idTokenPayload);
-
+      // console.log('[getUserInfo]', getUserInfo);
+      setCookie('access_token', getUserInfo?.accessToken);
+      setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        setCookie('access_token', hasToken);
-        setCookie('user_locale', getUserInfo?.idTokenPayload.locale);
         const getUser = await logUserInBff();
+        // check if user response contains refresh_token flag
+        if (getUser?.data?.refresh_token) {
+          // refresh token
+          const newUserPayload: any = await auth0CheckSession();
+          // get user info data
+          // console.log('[newUserPayload]', newUserPayload);
+          setCookie('access_token', newUserPayload?.accessToken);
+          setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
+          const userInfo: TUser = {
+            isLoggedIn: true,
+            user: {
+              name: newUserPayload?.idTokenPayload?.name,
+              pictureUrl: newUserPayload?.idTokenPayload?.picture,
+              email: newUserPayload?.idTokenPayload?.email
+            }
+          };
+          return userInfo;
+        }
+        // return;
         if (getUser.status === 204) {
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -117,17 +135,17 @@ const userSlice: any = createSlice({
   },
   extraReducers: {
     [getAuth0User.fulfilled]: (state, { payload }) => {
-      console.log('[getAuth0User.fulfilled]', payload);
+      // console.log('[getAuth0User.fulfilled]', payload);
       state.isFetching = false;
       state.isLoggedIn = true;
       state.user = payload.user;
     },
     [getAuth0User.pending]: (state) => {
-      console.log('[getAuth0User.pending]', state);
+      // console.log('[getAuth0User.pending]', state);
       state.isFetching = true;
     },
     [getAuth0User.rejected]: (state, { payload }) => {
-      console.log('[getAuth0User.rejected]', payload);
+      // console.log('[getAuth0User.rejected]', payload);
       state.isFetching = false;
       state.isError = true;
       state.errorMessage = payload?.error ? payload.error : payload;

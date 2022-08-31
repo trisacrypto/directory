@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSteps, getLastStep, resetStepper } from '../application/store/selectors/stepper';
-import Store from '../application/store';
+import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
 import {
@@ -14,11 +14,13 @@ import {
   setHasReachSubmitStep,
   setInitialValue,
   setTestnetSubmitted,
-  setMainnetSubmitted
+  setMainnetSubmitted,
+  setCertificateValue
 } from 'application/store/stepper.slice';
 import {
   setRegistrationDefaultValue,
-  postRegistrationValue
+  postRegistrationValue,
+  getRegistrationDefaultValue
 } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
@@ -33,6 +35,8 @@ interface TState {
   formValues?: any;
   values?: any;
   registrationValues?: any;
+  setRegistrationState?: any;
+  isDirty?: boolean;
 }
 
 // 'TODO:' this hook should be improve
@@ -56,15 +60,28 @@ const useCertificateStepper = () => {
     return formatState;
   };
 
-  const nextStep = (state?: TState) => {
-    const formValues = state?.values;
-    const registrationValues = state?.registrationValues;
+  // save form data to trtl if field is dirty
 
-    const _mergedData = {
-      ...registrationValues,
-      ...formValues
+  const saveFormValue = (formValue: any, setState?: any) => {
+    // form value
+
+    const getRegistrationData = () => {
+      return {
+        ...formValue,
+        state: {
+          ...currentState()
+        }
+      };
     };
-    console.log('[_mergedData]', _mergedData);
+    // save the form value if fields changed
+    if (setState) {
+      setState(getRegistrationData());
+    }
+  };
+
+  const nextStep = (state?: TState) => {
+    const { values: formValues, registrationValues, setRegistrationState, isDirty } = state || {};
+
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
@@ -72,29 +89,6 @@ const useCertificateStepper = () => {
     // if we got an error that means require element are not completed
     if (state?.errors) {
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
-    }
-    // allow manually setting the step status
-    if (state?.status) {
-      const found = findStepKey(steps, currentStep);
-      if (found.length === 1) {
-        dispatch(setStepStatus(state));
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-        const foundNext = findStepKey(steps, currentStep + 1);
-        if (foundNext.length === 0) {
-          if (currentStep === lastStep) {
-            return;
-          }
-          dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
-        }
-      } else {
-        if (currentStep === lastStep && state.isFormCompleted) {
-          // that mean we move to submit step
-
-          dispatch(setSubmitStep({ submitStep: true }));
-        }
-        dispatch(addStep({ key: currentStep, status: state.status }));
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-      }
     }
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
@@ -116,14 +110,14 @@ const useCertificateStepper = () => {
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
     }
-    postRegistrationValue({
-      ..._mergedData,
-      state: {
-        ...currentState()
-      }
-    });
+    // save the form value if fields changed
+    if (isDirty) {
+      dispatch(setCertificateValue({ value: { ...formValues } }));
+      saveFormValue(formValues, setRegistrationState);
+    }
   };
   const previousStep = (state?: TState) => {
+    const { values: formValues, registrationValues, isDirty } = state || {};
     // if form value is set then save it to the dedicated step
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
@@ -165,6 +159,11 @@ const useCertificateStepper = () => {
     dispatch(setMainnetSubmitted({ mainnetSubmitted: true }));
   };
 
+  // save the registration value to the store
+  const setRegistrationValue = (value: any) => {
+    dispatch(setCertificateValue({ value }));
+  };
+
   const setInitialState = (value: any) => {
     const state: TPayload = {
       currentStep: value.currentStep,
@@ -172,12 +171,24 @@ const useCertificateStepper = () => {
       lastStep: 6,
       hasReachSubmitStep: value.hasReachSubmitStep,
       testnetSubmitted: value.testnetSubmitted,
-      mainnetSubmitted: value.mainnetSubmitted
+      mainnetSubmitted: value.mainnetSubmitted,
+      data: value.data
     };
     dispatch(setInitialValue(state));
   };
 
-  // update state dispatch by using useeffect
+  // update state from form values
+  const updateStateFromFormValues = (values: any) => {
+    const state: TPayload = {
+      currentStep: values.current,
+      steps: values.steps,
+      lastStep: 6,
+      hasReachSubmitStep: values.ready_to_submit,
+      testnetSubmitted: false,
+      mainnetSubmitted: false
+    };
+    dispatch(setInitialValue(state));
+  };
 
   return {
     nextStep,
@@ -188,7 +199,9 @@ const useCertificateStepper = () => {
     setInitialState,
     currentState,
     testnetSubmissionState,
-    mainnetSubmissionState
+    mainnetSubmissionState,
+    updateStateFromFormValues,
+    setRegistrationValue
   };
 };
 

@@ -1,7 +1,7 @@
 import { t } from '@lingui/macro';
 import * as yup from 'yup';
 import { setupI18n } from '@lingui/core';
-
+import { format2ShortDate } from 'utils/utils';
 const _i18n = setupI18n();
 
 const trisaEndpointPattern = /^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
@@ -22,6 +22,7 @@ export const validationSchema = [
       .required(_i18n._(t`Invalid date`))
       .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
         if (value) {
+          // console.log('value', value);
           const getYear = value.getFullYear();
           if (getYear.toString().length !== 4) {
             return false;
@@ -223,15 +224,12 @@ export const validationSchema = [
       financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
       has_required_regulatory_program: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
       conducts_customer_kyc: yup.boolean().default(false),
-      kyc_threshold: yup.number(),
+      kyc_threshold: yup.number().default(0),
       kyc_threshold_currency: yup.string(),
       must_comply_travel_rule: yup.boolean(),
       applicable_regulations: yup
         .array()
-        .of(
-           yup.string()
-        
-        )
+        .of(yup.string())
         .transform((value, originalValue) => {
           if (originalValue) {
             return originalValue.filter((item: any) => item.length > 0);
@@ -240,7 +238,7 @@ export const validationSchema = [
 
           // remove empty items
         }),
-      compliance_threshold: yup.number(),
+      compliance_threshold: yup.number().default(0),
       compliance_threshold_currency: yup.string(),
       must_safeguard_pii: yup.boolean().default(false),
       safeguards_pii: yup.boolean().default(false)

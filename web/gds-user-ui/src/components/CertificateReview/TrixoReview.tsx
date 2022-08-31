@@ -1,62 +1,26 @@
-import React, { useEffect } from 'react';
-import {
-  Stack,
-  Box,
-  Text,
-  Heading,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  Button,
-  Tag,
-  TagLabel,
-  useColorModeValue
-} from '@chakra-ui/react';
-import { colors } from 'utils/theme';
-import { useSelector, RootStateOrAny } from 'react-redux';
-import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
-import useCertificateStepper from 'hooks/useCertificateStepper';
-import { COUNTRIES } from 'constants/countries';
-import { currencyFormatter } from 'utils/utils';
-import { Trans } from '@lingui/react';
+import React, { useEffect, Suspense } from 'react';
+import { useColorModeValue } from '@chakra-ui/react';
+
 import { t } from '@lingui/macro';
-import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-interface TrixoReviewProps {
-  data?: any;
-}
 import TrixoReviewDataTable from './TrixoReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
-interface TrixoReviewProps {}
-
-const TrixoReview: React.FC<TrixoReviewProps> = (props) => {
-  const { jumpToStep } = useCertificateStepper();
-  const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const [trixo, setTrixo] = React.useState<any>({});
-  const textColor = useColorModeValue('gray.800', '#F7F8FC');
-  const getColorScheme = (status: string | boolean) => {
-    if (status === 'yes' || status === true) {
-      return 'green';
-    } else {
-      return 'orange';
-    }
+import { useFormContext } from 'react-hook-form';
+import Store from 'application/store';
+import { getCurrentState } from 'application/store/selectors/stepper';
+import { RootStateOrAny, useSelector } from 'react-redux';
+const TrixoReview: React.FC = () => {
+  const currentStateValue = useSelector(getCurrentState);
+  const trixo = {
+    ...currentStateValue.data.trixo
   };
-  useEffect(() => {
-    const fetchData = async () => {
-      const getStepperData = await getRegistrationDefaultValue();
-      const stepData = {
-        ...getStepperData.trixo
-      };
-      setTrixo(stepData);
-    };
-    fetchData();
-  }, [steps]);
 
   return (
     <CertificateReviewLayout>
-      <CertificateReviewHeader title="Section 5: TRIXO Questionnaire" step={5} />
-      <TrixoReviewDataTable data={trixo} />
+      <CertificateReviewHeader title={t`Section 5: TRIXO Questionnaire`} step={5} />
+      <Suspense fallback={'Loading trixo data'}>
+        <TrixoReviewDataTable data={trixo} />
+      </Suspense>
     </CertificateReviewLayout>
   );
 };

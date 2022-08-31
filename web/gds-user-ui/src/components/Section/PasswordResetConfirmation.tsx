@@ -1,6 +1,5 @@
-import { Flex, Box, Stack, Link, Heading, Text, useColorModeValue } from '@chakra-ui/react';
-
-import { colors } from '../../utils/theme';
+import { Flex, Stack, Heading, Text, useColorModeValue } from '@chakra-ui/react';
+import { Trans } from '@lingui/react';
 
 export default function PasswordResetConfirmation(props: any) {
   return (
@@ -13,11 +12,16 @@ export default function PasswordResetConfirmation(props: any) {
       <Stack spacing={12} mx={'auto'} maxW={'lg'} py={12} px={6}>
         <Stack align={'center'}>
           <Heading fontSize={'xl'}>
-            Thank you. We have sent instructions to reset your password to
+            <Trans id="Thank you. We have sent instructions to reset your password to">
+              Thank you. We have sent instructions to reset your password to
+            </Trans>
             <Text as={'span'} fontWeight={'bold'}>
               {props.email}
             </Text>
-            . The link to reset your password expires in 24 hours.
+            .{' '}
+            <Trans id="The link to reset your password expires in 24 hours.">
+              The link to reset your password expires in 24 hours.
+            </Trans>
           </Heading>
         </Stack>
       </Stack>

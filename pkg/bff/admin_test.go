@@ -157,13 +157,13 @@ func (s *bffTestSuite) TestAttention() {
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Start registration message should be returned when there is no registration form
 	claims.OrgID = org.Id
@@ -441,13 +441,13 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[400] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[404] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Should return an empty response when there are no directory records
 	claims.OrgID = org.Id

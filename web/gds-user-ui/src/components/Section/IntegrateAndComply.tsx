@@ -18,6 +18,7 @@ import { Trans } from '@lingui/react';
 import { Line } from './Line';
 import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
+import { t } from '@lingui/macro';
 
 export default function IntegrateAndComply() {
   return (
@@ -85,7 +86,7 @@ export default function IntegrateAndComply() {
                   gridColumnGap={{ md: 20, lg: 54 }}
                   gridRowGap={{ md: 6 }}
                   position="relative">
-                  <Line title="Option 1. Set Up Your Own TRISA Node">
+                  <Line title={t`Option 1. Set Up Your Own TRISA Node`}>
                     <Trans
                       id="Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set
                     up and maintain their own TRISA server to exhange encrypted Travel Rule
@@ -104,7 +105,7 @@ export default function IntegrateAndComply() {
                       testing purposes.
                     </Trans>
                   </Line>
-                  <Line title="Option 2. Use a 3rd-party Solution">
+                  <Line title={t`Option 2. Use a 3rd-party Solution`}>
                     <Trans
                       id="TRISA is designed to be interoperable. There are several Travel Rule solutions
                     providers available on the market. If you are a customer, work with them to
@@ -114,7 +115,7 @@ export default function IntegrateAndComply() {
                       integrate TRISA into your Travel Rule compliance workflow.
                     </Trans>
                   </Line>
-                  <Line title="How to set up your own node?" fontStyle="italic">
+                  <Line title={t`How to set up your own node?`} fontStyle="italic">
                     <Trans
                       id="Talk to a member of your technical team to determine the requirements and
                     resources to integrate TRISA with your system. Have members of your technical
@@ -126,7 +127,7 @@ export default function IntegrateAndComply() {
                       can help your VASP set up your TRISA server and maintain it.
                     </Trans>
                   </Line>
-                  <Line title="3rd Party Travel Rule Providers">
+                  <Line title={t`3rd Party Travel Rule Providers`}>
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
                         <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
@@ -143,7 +144,7 @@ export default function IntegrateAndComply() {
                 </Stack>
                 <Stack direction={['column', 'row']} mt={5} spacing={10}>
                   <Stack bg={'gray.100'} py={5} w="100%">
-                    <Line title="Open Source Resources" fontWeight={'bold'}>
+                    <Line title={t`Open Source Resources`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
                           <Link href="https://github.com/trisacrypto/trisa" isExternal>
@@ -163,7 +164,7 @@ export default function IntegrateAndComply() {
                           </Link>
                         </ListItem>
                         <ListItem>
-                          <Link href=" https://vaspbot.net/" isExternal>
+                          <Link href="https://vaspbot.net/" isExternal>
                             <Trans id="Meet Alice VASP, Bob VASP, and “Evil” VASP">
                               Meet Alice VASP, Bob VASP, and “Evil” VASP
                             </Trans>
@@ -173,7 +174,7 @@ export default function IntegrateAndComply() {
                     </Line>
                   </Stack>
                   <Stack bg={'gray.100'} py={5} w="100%">
-                    <Line title="Need to Learn More?" fontWeight={'bold'}>
+                    <Line title={t`Need to Learn More?`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
                           <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
@@ -192,7 +193,7 @@ export default function IntegrateAndComply() {
               </Box>
               <Stack direction={['column']} pt={5} justifyContent="center">
                 <Button as={RouterLink} to={'/auth/register'} alignSelf="center" minWidth={'300px'}>
-                  Create account
+                  <Trans id="Create account">Create account</Trans>
                 </Button>
                 <Text textAlign="center">
                   <Trans id="Already have an account?">Already have an account?</Trans>{' '}

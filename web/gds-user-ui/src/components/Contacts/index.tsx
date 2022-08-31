@@ -16,16 +16,16 @@ const Contacts: React.FC = () => {
   return (
     <Stack spacing={13} mt="2rem">
       <HStack>
-        <Heading size="md">
+        <Heading size="md" pr={3} ml={2}>
           <Trans id="Section 3: Contacts">Section 3: Contacts</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed.">
+          <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed.">
             Please supply contact information for representatives of your organization. All contacts
-            will receive an email verification token and the contact email must be verified before
+            will receive an email verification token and the contact emails must be verified before
             the registration can proceed.
           </Trans>
         </Text>

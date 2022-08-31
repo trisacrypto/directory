@@ -41,12 +41,6 @@ const Overview: React.FC = () => {
           setAnnouncements(getAnnouncements.data.announcements);
         }
       } catch (e: any) {
-        if (e.response.status === 401) {
-          navigate('/auth/login?from=/dashboard/overview&q=unauthorized');
-        }
-        if (e.response.status === 403) {
-          navigate('/auth/login?from=/dashboard/overview&q=token_expired');
-        }
         handleError(e);
       } finally {
         setIsLoading(false);

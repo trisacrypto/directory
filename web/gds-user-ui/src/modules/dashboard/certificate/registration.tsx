@@ -25,16 +25,14 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError } from 'utils/utils';
+import { hasStepError, handleError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
 import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-
+import Store from 'application/store';
 import {
-  getRegistrationDefaultValue,
   postRegistrationValue,
-  setRegistrationDefaultValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
 
@@ -50,6 +48,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
+import MinusLoader from 'components/Loader/MinusLoader';
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -57,7 +56,12 @@ const Certificate: React.FC = () => {
   const textColor = useColorModeValue('black', '#EDF2F7');
   const backgroundColor = useColorModeValue('white', '#171923');
 
-  const { nextStep, previousStep, setInitialState, currentState } = useCertificateStepper();
+  const {
+    nextStep,
+    previousStep,
+    setInitialState,
+    setRegistrationValue: setRegistrationStore
+  } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
   const currentStateValue = useSelector(getCurrentState);
@@ -76,7 +80,6 @@ const Certificate: React.FC = () => {
   const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
-    console.log('[Certificate] getCurrentStepValidationSchema', current);
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
@@ -87,7 +90,10 @@ const Certificate: React.FC = () => {
     mode: 'onChange'
   });
 
-  const { formState, reset } = methods;
+  const {
+    formState: { isDirty },
+    reset
+  } = methods;
 
   function getFieldValue(name: string) {
     return _.get(methods.getValues(), name);
@@ -111,27 +117,24 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
-
+  const currentState = () => {
+    // log store state
+    const updatedState = Store.getState().stepper;
+    const formatState = {
+      current: updatedState.currentStep,
+      steps: updatedState.steps,
+      ready_to_submit: updatedState.hasReachSubmitStep
+    };
+    return formatState;
+  };
   function hasErroredField() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
   }
 
-  function handleNextStepClick() {
-    if (currentStep === lastStep) {
-      if (hasStepError(steps)) {
-        toast({
-          position: 'top',
-          title: t`Please fill in all required fields before proceeding`,
-          status: 'error',
-          isClosable: true,
-          containerStyle: {
-            width: '800px',
-            maxWidth: '100%'
-          }
-        });
-      }
-    }
+  // if fields if filled
+
+  async function handleNextStepClick() {
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
@@ -147,13 +150,36 @@ const Certificate: React.FC = () => {
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
-        registrationValues: registrationData
+        registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
+        setRegistrationState: setRegistrationData
       });
+      if (isDirty) {
+        console.log('[isDirty]', getCurrentFormValue());
+        await postRegistrationValue({
+          ...methods.getValues(),
+          state: {
+            ...currentState()
+          }
+        });
+      }
     }
   }
-  const handlePreviousStep = () => {
-    postRegistrationValue(methods.getValues());
-    previousStep();
+  const handlePreviousStep = async () => {
+    previousStep({
+      isDirty: methods.formState.isDirty,
+      registrationValues: registrationData,
+      values: methods.getValues()
+    });
+    if (isDirty) {
+      console.log('[isDirty at previous action]', getCurrentFormValue());
+      await postRegistrationValue({
+        ...methods.getValues(),
+        state: {
+          ...currentState()
+        }
+      });
+    }
   };
 
   const isDefaultValue = () => {
@@ -171,17 +197,15 @@ const Certificate: React.FC = () => {
     setIsResetForm(value);
   };
 
-  const resetForm = useCallback(() => {
-    const defaultValue =
-      Object.keys(registrationData).length > 0 ? registrationData : getRegistrationDefaultValues();
-
-    reset(defaultValue);
-  }, [reset, registrationData]);
+  const resetForm = () => {
+    reset(getRegistrationDefaultValues());
+  };
 
   useEffect(() => {
     resetForm();
     setIsResetForm(false);
-  }, [isResetForm, resetForm, registrationData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResetForm, registrationData]);
 
   // handle reset modal
   useEffect(() => {
@@ -191,28 +215,35 @@ const Certificate: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResetModalOpen]);
 
-  // useEffect(() => {
-
-  //   setIsResetForm(false);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [registrationData, isResetForm]);
+  // set registration data value
+  useEffect(() => {
+    if (registrationData) {
+      reset(registrationData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationData]);
 
   // load default value from trtl
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const data = await getRegistrationAndStepperData();
+
         setRegistrationData(data.registrationData);
-        console.log('[registrationData]', data.registrationData);
-        console.log('[registrationData from state]', data.stepperData);
+
         setInitialState(data.stepperData);
+        setRegistrationStore(data.registrationData);
       } catch (error) {
-        console.log('[getRegistrationData]', error);
+        handleError(error, 'failed when trying to fetch [getRegistrationAndStepperData]');
       } finally {
-        setIsLoadingDefaultValue(false);
+        setIsLoading(false);
       }
     };
-    fetchData();
+    setTimeout(() => {
+      fetchData();
+    }, 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -255,36 +286,46 @@ const Certificate: React.FC = () => {
               </Card.Body>
             </Card>
           </Stack>
+          {isLoading ? (
+            <MinusLoader />
+          ) : (
+            <>
+              <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+                <VStack spacing={3}>
+                  <Box width={'100%'}>
+                    <TestNetCertificateProgressBar onSetRegistrationState={setRegistrationData} />
+                    {!isProdEnv ? <DevTool control={methods.control} /> : null}
+                  </Box>
+                  <Stack
+                    width="100%"
+                    direction={'row'}
+                    spacing={8}
+                    justifyContent={'center'}
+                    py={6}>
+                    {!hasReachSubmitStep && (
+                      <>
+                        {/* {!isFormSubmitted() && ( */}
+                        <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                          {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
+                        </Button>
+                        {/* )} */}
+                        <Button type="submit" variant="secondary">
+                          {currentStep === lastStep ? t`Next` : t`Save & Next`}
+                        </Button>
+                        {/* add review button when reach to final step */}
 
-          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <VStack spacing={3}>
-              <Box width={'100%'}>
-                <TestNetCertificateProgressBar />
-                {!isProdEnv ? <DevTool control={methods.control} /> : null}
-              </Box>
-              <Stack width="100%" direction={'row'} spacing={8} justifyContent={'center'} py={6}>
-                {!hasReachSubmitStep && (
-                  <>
-                    {/* {!isFormSubmitted() && ( */}
-                    <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                      <Trans id="Save & Previous">Save & Previous</Trans>
-                    </Button>
-                    {/* )} */}
-                    <Button type="submit" variant="secondary">
-                      {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                    </Button>
-                    {/* add review button when reach to final step */}
-
-                    {/* {!isFormSubmitted() && ( */}
-                    <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                      <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                    </Button>
-                    {/* )} */}
-                  </>
-                )}
-              </Stack>
-            </VStack>
-          </chakra.form>
+                        {!isFormSubmitted() && (
+                          <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                            <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </Stack>
+                </VStack>
+              </chakra.form>
+            </>
+          )}
         </FormProvider>
 
         {isResetModalOpen && (
@@ -292,7 +333,7 @@ const Certificate: React.FC = () => {
             isOpen={isOpen}
             onClose={onClose}
             onChangeState={onChangeModalState}
-            onRefeshState={forceUpdate}
+            onRefreshState={forceUpdate}
             onReset={reset}
             onChangeResetState={onChangeResetForm}
           />

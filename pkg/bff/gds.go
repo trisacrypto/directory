@@ -19,10 +19,19 @@ import (
 )
 
 const (
-	testnet       = "testnet"
-	mainnet       = "mainnet"
-	trisatest     = "trisatest.net"
-	vaspdirectory = "vaspdirectory.net"
+	testnet = "testnet"
+	mainnet = "mainnet"
+)
+
+var (
+	trisatest = map[string]struct{}{
+		"trisatest.net": {},
+		"trisatest.dev": {},
+	}
+	vaspdirectory = map[string]struct{}{
+		"vaspdirectory.net": {},
+		"vaspdirectory.dev": {},
+	}
 )
 
 // Lookup makes a request on behalf of the user to both the TestNet and MainNet GDS
@@ -149,7 +158,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	// Ensure the registered_directory is one we understand
 	params.Directory = strings.ToLower(params.Directory)
-	if params.Directory != trisatest && params.Directory != vaspdirectory {
+	if !validRegisteredDirectory(params.Directory) {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
 		return
 	}
@@ -165,10 +174,10 @@ func (s *Server) VerifyContact(c *gin.Context) {
 		rep *gds.VerifyContactReply
 	)
 
-	switch params.Directory {
-	case trisatest:
+	switch registeredDirectoryType(params.Directory) {
+	case testnet:
 		rep, err = s.testnetGDS.VerifyContact(ctx, req)
-	case vaspdirectory:
+	case mainnet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
@@ -405,4 +414,31 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+// Checks if the user supplied registered directory is one of the known directories that
+// maps to either the testnet or to the mainnet (by domain).
+func validRegisteredDirectory(r string) bool {
+	if _, ok := trisatest[r]; ok {
+		return true
+	}
+
+	if _, ok := vaspdirectory[r]; ok {
+		return true
+	}
+
+	return false
+}
+
+// Returns either testnet or mainnet depending on the user supplied registered directory.
+func registeredDirectoryType(r string) string {
+	if _, ok := trisatest[r]; ok {
+		return testnet
+	}
+
+	if _, ok := vaspdirectory[r]; ok {
+		return mainnet
+	}
+
+	return ""
 }

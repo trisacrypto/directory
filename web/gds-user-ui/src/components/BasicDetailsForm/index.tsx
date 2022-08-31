@@ -50,7 +50,7 @@ const BasicDetailsForm: React.FC = () => {
           label={t`Date of Incorporation / Establishment`}
           formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
-          inputProps={{ placeholder: '21/01/2021', type: 'date' }}
+          inputProps={{ placeholder: '21/01/2021', type: 'date', pattern: 'd{4}-d{2}-d{2}' }}
           {...register('established_on')}
         />
 

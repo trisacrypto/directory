@@ -2,6 +2,7 @@ import React from 'react';
 import { NavItem } from './NavItem';
 import { HStack, Flex } from '@chakra-ui/react';
 import Logo from '../../ui/Logo';
+import { t } from '@lingui/macro';
 export const NavBar = ({ ...props }): React.ReactElement => {
   return (
     <Flex
@@ -16,10 +17,10 @@ export const NavBar = ({ ...props }): React.ReactElement => {
         <Logo />
 
         <HStack justify="center" alignItems="flex-start">
-          <NavItem to="home" pageName="Home" />
-          <NavItem to="about" pageName="about us" />
-          <NavItem to="documentation" pageName="Documentation" />
-          <NavItem to="login" pageName="Log in" />
+          <NavItem to="home" pageName={t`Home`} />
+          <NavItem to="about" pageName={t`about us`} />
+          <NavItem to="documentation" pageName={t`Documentation`} />
+          <NavItem to="login" pageName={t`Log in`} />
         </HStack>
       </Flex>
     </Flex>

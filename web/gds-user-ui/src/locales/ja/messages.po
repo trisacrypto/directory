@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2022-05-19 08:36+0000\n"
+"POT-Creation-Date: 2022-08-22 14:33+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,34 +13,48 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/ReviewSubmit/index.tsx:192
-#~ msgid ""
-#~ " for MainNet registration so your MainNet certificate will be issued upon review by\n"
-#~ "                  the validation team"
-#~ msgstr ""
+#: src/components/ReviewSubmit/index.tsx:89
+msgid " Failure to click either confirmation will result in an incomplete registration"
+msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:180
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:69
+msgid ""
+" When you are verified you will be issued PKCS12 encrypted identity certificates\n"
+"                  for use in mTLS authentication between TRISA members. The password to decrypt\n"
+"                  those certificates is shown below:"
+msgstr ""
+
+#: src/components/Section/GettingStarted.tsx:17
+msgid ""
+" create your TRISA account with your VASP email address. Add collaborators in your\n"
+"            organization."
+msgstr ""
+
+#: src/components/ReviewSubmit/index.tsx:195
 msgid " for MainNet registration so your MainNet certificate will be issued upon review by the validation team"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:116
-#~ msgid ""
-#~ " for TestNet registration so your TestNet certificate will be issued upon review by\n"
-#~ "                  the validation team"
-#~ msgstr ""
+#: src/components/CertificateManagement/index.tsx:60
+msgid "(1)X.509 Identity Certificates"
+msgstr ""
 
-#: src/components/CertificateSection/index.tsx:85
-#: src/components/SectionStatus/SavedSectionStatus.tsx:19
+#: src/components/CertificateManagement/index.tsx:72
+msgid "(2)Sealing Certificates"
+msgstr ""
+
+#: src/components/CertificateSection/index.tsx:96
+#: src/components/SectionStatus/SavedSectionStatus.tsx:20
 msgid "(Saved)"
+msgstr ""
+
+#: src/components/TravelRuleProviders/index.tsx:27
+#: src/components/TravelRuleProviders/index.tsx:33
+msgid "(not interoperable)"
 msgstr ""
 
 #: src/components/SectionStatus/NotSavedSectionSection.tsx:20
 msgid "(not saved)"
 msgstr ""
-
-#: src/components/Section/CreateAccount.tsx:136
-#~ msgid "* At least 8 characters in length * Contain at least 3 of the following 4 types of characters: * lower case letters (a-z) * upper case letters (A-Z) * numbers (i.e. 0-9) * special characters (e.g. !@#$%^&*)"
-#~ msgstr ""
 
 #: src/modules/auth/register/register.validation.ts:21
 msgid ""
@@ -53,23 +67,36 @@ msgid ""
 "* special characters (e.g. !@#$%^&*)"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:101
+#: src/components/Section/VaspVerification.tsx:102
 msgid "1 Basic Details"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:112
+#: src/components/Section/VaspVerification.tsx:113
 msgid "2 Legal Person"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:127
+#: src/components/NetworkAnnouncements/index.tsx:46
+msgid "2022-03-14"
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:40
+msgid "2022-04-01"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:128
 msgid "3 Contacts"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:137
+#: src/components/Section/IntegrateAndComply.tsx:130
+#: src/components/TravelRuleProviders/index.tsx:9
+msgid "3rd Party Travel Rule Providers"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:138
 msgid "4 TRISA Implementation"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:146
+#: src/components/Section/VaspVerification.tsx:147
 msgid "5 TRIXO Questionnaire"
 msgstr ""
 
@@ -77,72 +104,67 @@ msgstr ""
 msgid "A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted"
 msgstr ""
 
-#: src/components/Footer/LandingFooter.tsx:50
+#: src/components/Footer/LandingFooter.tsx:20
 msgid "A component of"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:105
-#: src/components/ReviewSubmit/index.tsx:174
+#: src/components/ReviewSubmit/index.tsx:120
+#: src/components/ReviewSubmit/index.tsx:189
 msgid "A physical verification check in the form of a phone call"
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:71
-#: src/components/Header/LandingHeader.tsx:122
+#: src/components/Header/LandingHeader.tsx:83
+#: src/components/Header/LandingHeader.tsx:123
 #: src/components/Section/AboutUs.tsx:29
 msgid "About TRISA"
 msgstr ""
 
-#: src/modules/auth/register/success.tsx:16
-#~ msgid "Account Registratin Complete"
-#~ msgstr ""
-
-#: src/modules/auth/register/success.tsx:16
-msgid "Account Registration Complete"
-msgstr ""
-
-#: src/components/CertificateRegistration/index.tsx:97
+#: src/components/CertificateManagement/MainnetCertificates.tsx:55
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:48
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:80
+#: src/components/CollaboratorsSection/index.tsx:165
 msgid "Action"
 msgstr ""
 
-#: src/components/Addresses/index.tsx:62
+#: src/components/Addresses/AddressList.tsx:30
 msgid "Add Address"
 msgstr ""
 
-#: src/components/OtherJuridictions/index.tsx:61
+#: src/components/CollaboratorsSection/index.tsx:175
+msgid "Add Contact"
+msgstr ""
+
+#: src/components/OtherJuridictions/index.tsx:60
 msgid "Add Jurisdiction"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:52
+#: src/components/NameIdentifiers/index.tsx:51
 msgid "Add Legal Name"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:55
+#: src/components/NameIdentifiers/index.tsx:54
 msgid "Add Local Name"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:58
+#: src/components/NameIdentifiers/index.tsx:57
 msgid "Add Phonetic Names"
 msgstr ""
 
-#: src/components/Regulations/index.tsx:35
+#: src/components/Regulations/index.tsx:38
 msgid "Add Regulation"
 msgstr ""
 
-#: src/components/Addresses/index.tsx:43
-msgid "Address"
+#: src/components/CollaboratorsSection/index.tsx:156
+msgid "Added"
 msgstr ""
 
-#: src/components/AddressForm/index.tsx:97
-#~ msgid "Address Type"
-#~ msgstr ""
+#: src/components/Addresses/Address.tsx:17
+msgid "Address"
+msgstr ""
 
 #: src/components/AddressForm/index.tsx:117
 msgid "Address Type (required)"
 msgstr ""
-
-#: src/components/AddressForm/index.tsx:41
-#~ msgid "Address line 1 e.g. building name/number, street name"
-#~ msgstr ""
 
 #: src/components/AddressForm/index.tsx:40
 msgid "Address line 1 e.g. building name/number, street name (required)"
@@ -152,19 +174,11 @@ msgstr ""
 msgid "Address line 2 e.g. apartment or suite number"
 msgstr ""
 
-#: src/components/AddressForm/index.tsx:57
-#~ msgid "Address line 3 e.g. city, province, postal code"
-#~ msgstr ""
-
-#: src/components/Addresses/index.tsx:28
-#: src/components/CertificateReview/LegalPersonReview.tsx:167
-#: src/components/MemberDetails/index.tsx:245
+#: src/components/Addresses/index.tsx:11
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:121
+#: src/components/MemberDetails/index.tsx:244
 msgid "Addresses"
 msgstr ""
-
-#: src/components/MemberDetails/index.tsx:245
-#~ msgid "Addressess"
-#~ msgstr ""
 
 #: src/components/Contacts/index.tsx:45
 msgid "Administrative Contact (optional)"
@@ -178,52 +192,86 @@ msgstr ""
 msgid "Alien Registration Number"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:60
+#: src/components/Head/LandingHead.tsx:56
 msgid "All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP."
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:152
+#: src/components/Section/CreateAccount.tsx:119
+#: src/components/Section/IntegrateAndComply.tsx:199
+#: src/components/Section/VaspVerification.tsx:222
 msgid "Already have an account?"
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:21
+msgid "An error has occurred to load annoucements"
+msgstr ""
+
+#: src/components/NeedsAttention/index.tsx:34
+msgid "An error has occurred to load attention data"
+msgstr ""
+
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:22
+msgid "An error has occurred to load legal person data"
+msgstr ""
+
+#: src/components/Metrics/index.tsx:17
+msgid "An error has occurred to load {type} metric"
 msgstr ""
 
 #: src/components/NameIdentification/index.tsx:133
 msgid "An identifier issued by an appropriate issuing authority"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:226
-#: src/components/TrixoQuestionnaireForm/index.tsx:177
+#: src/components/Footer/Version.tsx:36
+msgid "App version {appVersion}"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:175
+#: src/components/TrixoQuestionnaireForm/index.tsx:232
 msgid "Applicable Regulations"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:37
+#: src/components/Head/LandingHead.tsx:33
 msgid "Apply to Become a TRISA-certified Virtual Asset Service Provider."
 msgstr ""
 
-#: src/components/Addresses/index.tsx:31
+#: src/components/PasswordStrength/index.tsx:79
+msgid "At least 9 characters in length"
+msgstr ""
+
+#: src/components/Addresses/index.tsx:14
 msgid "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:190
-#: src/components/MemberDetails/index.tsx:581
-#: src/components/TrixoQuestionnaireForm/index.tsx:123
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:135
+#: src/components/MemberDetails/index.tsx:580
+#: src/components/TrixoQuestionnaireForm/index.tsx:137
 msgid "At what threshold and currency does your organization conduct KYC?"
+msgstr ""
+
+#: src/components/Footer/Version.tsx:42
+msgid "BFF & GDS version {bffAndGdsVersion}"
 msgstr ""
 
 #: src/components/NotFound/index.tsx:24
 msgid "Back Home"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:239
+#: src/components/ReviewSubmit/index.tsx:255
 msgid "Back to Review Page"
 msgstr ""
 
-#: src/components/MemberDetails/index.tsx:91
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:134
+#: src/components/MemberDetails/index.tsx:90
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:147
 msgid "Basic Details"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:36
+#: src/components/Head/LandingHead.tsx:32
 msgid "Become Travel Rule compliant."
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:44
+msgid "Beware the Ides of March"
 msgstr ""
 
 #: src/components/Contacts/index.tsx:50
@@ -238,140 +286,200 @@ msgstr ""
 msgid "Business"
 msgstr ""
 
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:114
+msgid "Business Address"
+msgstr ""
+
 #: src/components/BasicDetailsForm/index.tsx:64
-#: src/components/CertificateReview/BasicDetailsReview.tsx:89
-#: src/components/MemberDetails/index.tsx:126
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:49
+#: src/components/MemberDetails/index.tsx:125
 msgid "Business Category"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:22
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:9
 msgid "Business Details"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:109
-#: src/components/Section/VaspVerification.tsx:124
-#: src/components/Section/VaspVerification.tsx:134
+#: src/components/Section/VaspVerification.tsx:110
+#: src/components/Section/VaspVerification.tsx:125
+#: src/components/Section/VaspVerification.tsx:135
 msgid "Business or Compliance Office"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:141
-#: src/components/TrixoQuestionnaireForm/index.tsx:84
+#: src/components/ReviewSubmit/AlertContent.tsx:9
+msgid "By answering yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password."
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:86
+#: src/components/TrixoQuestionnaireForm/index.tsx:98
 msgid "CDD & Travel Rule Policies"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:47
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:34
 msgid "CDD and data protection policies"
 msgstr ""
 
-#: src/components/Modal/ConfirmationResetFormModal.tsx:75
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:64
+#: src/components/Modal/ConfirmationResetFormModal.tsx:87
 msgid "Cancel"
 msgstr ""
 
-#: src/components/TrisaImplementationForm/index.tsx:81
+#: src/components/TrisaImplementationForm/index.tsx:82
 msgid "Certificate Common Name"
 msgstr ""
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:109
+#: src/components/DetailsCard/index.tsx:62
+#: src/utils/menu.tsx:39
+msgid "Certificate Details"
+msgstr ""
+
+#: src/components/CertificateManagement/index.tsx:38
+#: src/utils/menu.tsx:27
+msgid "Certificate Management"
+msgstr ""
+
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:118
 msgid "Certificate Progress"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:163
+#: src/modules/dashboard/certificate/registration.tsx:224
+#: src/utils/menu.tsx:33
 msgid "Certificate Registration"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:63
+#: src/components/CertificateRegistration/index.tsx:10
 msgid "Certificate Registration Process"
+msgstr ""
+
+#: src/components/CertificateManagement/SealingCertificateTableRows.tsx:12
+#: src/components/CertificateManagement/X509TableRows.tsx:14
+msgid "Change Permissions"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:134
+msgid "CipherTrace Providers"
 msgstr ""
 
 #: src/components/AddressForm/index.tsx:56
 msgid "City / Town / Municipality"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:236
+#: src/modules/dashboard/certificate/registration.tsx:280
 msgid "Clear & Reset Form"
 msgstr ""
 
-#: src/components/Modal/ConfirmationResetFormModal.tsx:49
+#: src/components/Modal/ConfirmationResetFormModal.tsx:57
 msgid "Clear & Reset Registration Form"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:93
-#: src/components/ReviewSubmit/index.tsx:162
+#: src/components/ReviewSubmit/index.tsx:108
+#: src/components/ReviewSubmit/index.tsx:177
 msgid "Click below to submit your"
 msgstr ""
 
-#: src/components/Modal/ConfirmationResetFormModal.tsx:54
+#: src/components/ReviewSubmit/AlertContent.tsx:14
+msgid "Click “No” if you have not copied the PKCS12 password yet and would like to view and copy the password."
+msgstr ""
+
+#: src/components/Modal/ConfirmationResetFormModal.tsx:62
 msgid "Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process"
 msgstr ""
 
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:61
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:82
-#: src/components/Section/SearchDirectory.tsx:171
-#: src/components/Section/SearchDirectory.tsx:239
+#: src/components/ReviewSubmit/AlertContent.tsx:19
+msgid "Click “Yes” if you have copied the PKCS12 password and have securely saved it."
+msgstr ""
+
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:63
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:83
+#: src/components/Section/SearchDirectory.tsx:186
+#: src/components/Section/SearchDirectory.tsx:254
 msgid "Common Name"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:188
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:208
+#: src/components/Section/SearchDirectory.tsx:91
+msgid "Common name or VASP ID"
+msgstr ""
+
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:189
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:209
 msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:50
+#: src/components/CertificateManagement/index.tsx:40
+msgid "Complete Certficate Registration"
+msgstr ""
+
+#: src/components/Head/LandingHead.tsx:46
 msgid "Complete TRISA’s VASP Verfication Process"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:20
+#: src/components/Section/GettingStarted.tsx:34
+msgid ""
+"Complete the multi-part TRISA verification form and due diligence process. Once\n"
+"            approved, gain access to the Testnet."
+msgstr ""
+
+#: src/components/Section/MembershipGuide.tsx:22
 msgid "Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:155
+#: src/components/Section/VaspVerification.tsx:156
 msgid "Compliance Officer"
 msgstr ""
-
-#: src/components/Contacts/index.tsx:36
-#~ msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization."
-#~ msgstr ""
 
 #: src/components/Contacts/index.tsx:36
 msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted."
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:35
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:22
 msgid "Compliance, Technical, Admininstrative, Billing"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:67
+#: src/components/Section/IntegrateAndComply.tsx:51
 msgid "Comply with the Travel Rule"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:114
+#: src/components/TrixoQuestionnaireForm/index.tsx:128
 msgid "Conducts KYC before virtual asset transfers"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:128
+#: src/components/Section/UserEmailConfirmation.tsx:27
+msgid "Contact Verified"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:129
 msgid "Contact information for representatives of your organization. Contacts include Technical, Legal/Compliance, Administrative, and Billing persons."
 msgstr ""
 
-#: src/components/CertificateReview/ContactsReview.tsx:69
-#~ msgid "Contact-block"
-#~ msgstr ""
-
-#: src/components/CertificateRegistration/index.tsx:34
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:178
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:21
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:167
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:201
 msgid "Contacts"
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:101
+#: src/components/PasswordStrength/index.tsx:84
+msgid "Contain at least 3 of the following 4 types of characters"
+msgstr ""
+
+#: src/components/CertificateManagement/index.tsx:40
+msgid "Continue"
+msgstr ""
+
+#: src/components/Section/CreateAccount.tsx:75
+#: src/components/Section/Login.tsx:39
 msgid "Continue with Google"
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:91
-#: src/components/Section/Login.tsx:85
-#~ msgid "Continue with google"
-#~ msgstr ""
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:87
+msgid "Copied"
+msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:195
-#: src/components/Section/SearchDirectory.tsx:264
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:89
+msgid "Copy"
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:210
+#: src/components/Section/SearchDirectory.tsx:279
 msgid "Country"
 msgstr ""
 
@@ -379,7 +487,7 @@ msgstr ""
 msgid "Country (required)"
 msgstr ""
 
-#: src/components/MemberDetails/index.tsx:322
+#: src/components/MemberDetails/index.tsx:321
 #: src/components/NameIdentification/index.tsx:177
 msgid "Country of Issue"
 msgstr ""
@@ -388,39 +496,50 @@ msgstr ""
 msgid "Country of Issue is reserved for National Identifiers of Natural Persons"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:195
-#: src/components/CertificateReview/LegalPersonReview.tsx:245
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:148
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:193
 #: src/components/CountryOfRegistration/index.tsx:19
-#: src/components/MemberDetails/index.tsx:272
-#: src/components/MemberDetails/index.tsx:332
+#: src/components/MemberDetails/index.tsx:271
+#: src/components/MemberDetails/index.tsx:331
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:147
 msgid "Country of Registration"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:46
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:47
 msgid "Country of registration is required"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:15
+#: src/components/DetailsCard/index.tsx:52
+msgid "Country:"
+msgstr ""
+
+#: src/components/Section/MembershipGuide.tsx:16
 msgid "Create Account"
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:149
+#: src/components/Section/GettingStarted.tsx:14
+#: src/components/Section/IntegrateAndComply.tsx:196
+#: src/components/Section/VaspVerification.tsx:218
+msgid "Create account"
+msgstr ""
+
+#: src/components/Section/CreateAccount.tsx:116
 msgid "Create an Account"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:14
+#: src/components/Section/MembershipGuide.tsx:15
 msgid "Create your TRISA account with your VASP email address. Add collaborators in your organization."
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:80
+#: src/components/Section/CreateAccount.tsx:53
 msgid "Create your TRISA account."
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:64
+#: src/components/Section/MembershipGuide.tsx:65
 msgid "Create your account today."
 msgstr ""
 
-#: src/components/Footer/LandingFooter.tsx:59
+#: src/components/Footer/LandingFooter.tsx:29
 msgid "Created and maintained by"
 msgstr ""
 
@@ -428,63 +547,80 @@ msgstr ""
 msgid "Customer Number"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:256
-#: src/components/TrixoQuestionnaireForm/index.tsx:230
+#: src/components/Navbar/Landing/MobileNav.tsx:70
+msgid "Dashboard"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:217
+#: src/components/TrixoQuestionnaireForm/index.tsx:244
 msgid "Data Protection Policies"
 msgstr ""
 
 #: src/components/BasicDetailsForm/index.tsx:50
-#: src/components/CertificateReview/BasicDetailsReview.tsx:96
-#: src/components/MemberDetails/index.tsx:118
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:56
+#: src/components/MemberDetails/index.tsx:117
 msgid "Date of Incorporation / Establishment"
 msgstr ""
 
-#: src/components/CertificateReview/BasicDetailsReview.tsx:96
-#~ msgid "Date of Incorporation/ Establishment"
-#~ msgstr ""
+#: src/components/CertificateManagement/SealingCertificateTableRows.tsx:15
+#: src/components/CertificateManagement/X509TableRows.tsx:17
+msgid "Deactivate"
+msgstr ""
 
-#: src/components/Addresses/index.tsx:52
+#: src/components/ui/DeleteButton.tsx:15
+msgid "Delete"
+msgstr ""
+
+#: src/components/Addresses/Address.tsx:26
 msgid "Delete the address line"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:91
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:74
 msgid "Description"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:102
-#: src/components/Section/SearchDirectory.tsx:85
+#: src/components/Tables/MembersRow.tsx:81
+msgid "Details"
+msgstr ""
+
+#: src/components/Head/LandingHead.tsx:98
+#: src/components/Section/SearchDirectory.tsx:80
 msgid "Directory Lookup"
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:74
-#: src/components/Header/LandingHeader.tsx:125
+#: src/components/Header/LandingHeader.tsx:86
+#: src/components/Header/LandingHeader.tsx:126
+#: src/components/Navbar/Landing/MobileNav.tsx:73
+#: src/components/Navbar/Landing/Nav.tsx:22
+#: src/components/OpenSourceResources/index.tsx:20
+#: src/components/Section/IntegrateAndComply.tsx:156
 msgid "Documentation"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:170
-#: src/components/TrixoQuestionnaireForm/index.tsx:108
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:115
+#: src/components/TrixoQuestionnaireForm/index.tsx:122
 msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:149
-#: src/components/TrixoQuestionnaireForm/index.tsx:100
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:94
+#: src/components/TrixoQuestionnaireForm/index.tsx:114
 msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:100
-#~ msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?\""
-#~ msgstr ""
-
-#: src/components/CertificateReview/TrixoReview.tsx:283
-#: src/components/TrixoQuestionnaireForm/index.tsx:246
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:242
+#: src/components/TrixoQuestionnaireForm/index.tsx:260
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
+msgstr ""
+
+#: src/components/TrisaVerifiedLogo/index.tsx:49
+msgid "Download"
 msgstr ""
 
 #: src/constants/national-identification.ts:12
 msgid "Driver's License Number"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:35
+#: src/components/CertificateSection/index.tsx:42
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 msgstr ""
 
@@ -492,72 +628,88 @@ msgstr ""
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance. Please specify the TestNet endpoint and the MainNet endpoint. The TestNet endpoint and the MainNet endpoint must be different."
 msgstr ""
 
-#: src/components/CertificateReview/BasicDetailsReview.tsx:50
-#: src/components/CertificateReview/ContactsReview.tsx:48
-#: src/components/CertificateReview/LegalPersonReview.tsx:62
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:44
-#: src/components/CertificateReview/TrixoReview.tsx:67
+#: src/components/CertificateManagement/SealingCertificateTableRows.tsx:9
+#: src/components/CertificateManagement/X509TableRows.tsx:11
+#: src/components/CertificateReview/CertificateReviewHeader.tsx:26
+#: src/components/Tables/CertificateRegistrationRow.tsx:102
 msgid "Edit"
 msgstr ""
 
 #: src/components/ContactForm/index.tsx:60
-#: src/components/Section/CreateAccount.tsx:120
-#: src/components/Section/Login.tsx:102
-#: src/components/Section/PasswordReset.tsx:67
+#: src/components/Section/CreateAccount.tsx:88
+#: src/components/Section/LoginForm.tsx:44
+#: src/components/Section/PasswordResetForm.tsx:26
 msgid "Email Address"
 msgstr ""
 
 #: src/contexts/LanguageContext.tsx:21
 #: src/modules/auth/register/register.validation.ts:15
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:146
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:155
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:162
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:148
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:157
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:164
 msgid "Email is not valid"
 msgstr ""
 
 #: src/modules/auth/register/register.validation.ts:16
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:156
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:158
 msgid "Email is required"
 msgstr ""
 
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:55
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:75
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:57
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:77
 msgid "Endpoint"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:74
+#: src/components/Section/SearchDirectory.tsx:69
 msgid "Enter the VASP Common Name or VASP ID. Not a TRISA Member?"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:32
-msgid "Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetics names where appropriate."
+#: src/components/NameIdentifiers/index.tsx:31
+msgid "Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetic names where appropriate."
 msgstr ""
 
-#: src/components/Section/PasswordReset.tsx:51
+#: src/components/Section/PasswordReset.tsx:77
 msgid "Enter your email address"
 msgstr ""
 
-#: src/components/CertificateReview/index.tsx:60
+#: src/components/CertificateReview/index.tsx:54
 msgid "Error Submitting Certificate"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:74
-msgid "Failure to click either confirmation will result in an incomplete registration"
+#: src/components/CertificateManagement/MainnetCertificates.tsx:49
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:42
+msgid "Expiration Date"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:166
+#: src/components/DetailsCard/index.tsx:84
+msgid "Expiry Date:"
+msgstr ""
+
+#: src/components/CertificateReview/ReviewsSummary.tsx:41
+msgid "Export Data"
+msgstr ""
+
+#: src/components/FileUpload/index.tsx:70
+msgid "Files is required"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:167
 msgid "Final Confirmation"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:53
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:40
 msgid "Final review and form submission"
 msgstr ""
 
-#: src/components/OrganizationProfile/TrisaDetail.tsx:52
-#~ msgid "First Listed"
-#~ msgstr ""
+#: src/components/OrganizationProfile/TrisaDetail.tsx:41
+msgid "First Listed"
+msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:169
+#: src/components/Section/PasswordReset.tsx:72
+msgid "Follow the instructions below to reset your TRISA password"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:170
 msgid "For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification."
 msgstr ""
 
@@ -569,7 +721,7 @@ msgstr ""
 msgid "Foreign Investment Identity Number"
 msgstr ""
 
-#: src/components/Section/Login.tsx:139
+#: src/components/Section/LoginForm.tsx:74
 msgid "Forgot password?"
 msgstr ""
 
@@ -585,23 +737,66 @@ msgstr ""
 msgid "Geographic"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:180
+#: src/modules/dashboard/certificate/registration.tsx:239
 msgid "Getting Started Help Guide"
+msgstr ""
+
+#: src/components/Footer/Version.tsx:39
+msgid "Git Revision"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:99
+msgid "GitHub repository"
+msgstr ""
+
+#: src/components/Sidebar/SidebarContent.tsx:48
+msgid "Global Directory Service"
+msgstr ""
+
+#: src/components/Sidebar/MobileNav.tsx:85
+msgid "Guest"
+msgstr ""
+
+#: src/components/Navbar/Landing/MobileNav.tsx:71
+#: src/components/Navbar/Landing/Nav.tsx:20
+msgid "Home"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:118
+msgid "How to set up your own node?"
+msgstr ""
+
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:47
+msgid "I acknowledge that requesting a new X.509 Identity Certificate will invalidate and revoke my organization’s current X.509 Identity Certificate."
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:45
+msgid "I have a bad feeling about tomorrow."
+msgstr ""
+
+#: src/components/OrganizationProfile/TrisaDetail.tsx:38
+msgid "ID"
+msgstr ""
+
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:108
+msgid "ID:"
 msgstr ""
 
 #: src/components/LegalPerson/index.tsx:34
 msgid "IVMS 101 data structure"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:227
-#: src/components/MemberDetails/index.tsx:304
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:175
+#: src/components/MemberDetails/index.tsx:303
 #: src/components/NameIdentification/index.tsx:130
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:122
 msgid "Identification Number"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:233
-#: src/components/MemberDetails/index.tsx:312
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:181
+#: src/components/MemberDetails/index.tsx:311
 #: src/components/NameIdentification/index.tsx:159
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:130
 msgid "Identification Type"
 msgstr ""
 
@@ -609,43 +804,53 @@ msgstr ""
 msgid "Identity Card Number"
 msgstr ""
 
+#: src/components/Metrics/index.tsx:22
+msgid "Identity Certificates"
+msgstr ""
+
 #: src/components/ContactForm/index.tsx:34
 msgid "If supplied, use full phone number with country code"
 msgstr ""
 
-#: src/components/ContactForm/index.tsx:56
-#~ msgid "If supplied, use full phone number with country code."
-#~ msgstr ""
+#: src/components/ReviewSubmit/AlertContent.tsx:28
+msgid "If you lose the PKCS12 password, you will have to the start the registration process from the beginning."
+msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:125
-#: src/components/ReviewSubmit/index.tsx:200
-#~ msgid ""
-#~ "If you would like to edit your registration form before submitting, please return\n"
-#~ "                  to the"
-#~ msgstr ""
-
-#: src/components/ReviewSubmit/index.tsx:118
-#: src/components/ReviewSubmit/index.tsx:186
+#: src/components/ReviewSubmit/index.tsx:133
+#: src/components/ReviewSubmit/index.tsx:201
 msgid "If you would like to edit your registration form before submitting, please return to the"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:102
+#: src/components/FileUpload/index.tsx:99
+msgid "Import File"
+msgstr ""
+
+#: src/components/Tables/CertificateRegistrationRow.tsx:92
+msgid "Incomplete"
+msgstr ""
+
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:108
+msgid "Incorporation Date"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:103
 msgid "Information about the VASP such as website, incorporation date, business and VASP category."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:113
+#: src/components/Section/VaspVerification.tsx:114
 msgid "Information that identifies your organization as a Legal Person. This section represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:147
+#: src/components/Section/VaspVerification.tsx:148
 msgid "Information to ensure that required compliance information exchanges are conducted correctly and safely. This includes information about jurisdiction and national regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection policies."
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:25
+#: src/components/Section/GettingStarted.tsx:50
+#: src/components/Section/MembershipGuide.tsx:28
 msgid "Integrate and Comply"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:60
+#: src/components/Section/IntegrateAndComply.tsx:44
 msgid "Integrate with TRISA."
 msgstr ""
 
@@ -661,44 +866,65 @@ msgstr ""
 msgid "Invalid date / year must be 4 digit"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:119
-#: src/components/TrixoQuestionnaireForm/index.tsx:77
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:64
+#: src/components/TrixoQuestionnaireForm/index.tsx:91
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:264
-#: src/components/TrixoQuestionnaireForm/index.tsx:234
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:225
+#: src/components/TrixoQuestionnaireForm/index.tsx:248
 msgid "Is your organization required by law to safeguard PII?"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:206
-#: src/components/TrixoQuestionnaireForm/index.tsx:164
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:155
+#: src/components/TrixoQuestionnaireForm/index.tsx:178
 msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
+msgstr ""
+
+#: src/components/CertificateManagement/MainnetCertificates.tsx:46
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:39
+msgid "Issue Date"
+msgstr ""
+
+#: src/components/DetailsCard/index.tsx:76
+msgid "Issue Date:"
 msgstr ""
 
 #: src/components/Section/JoinUs.tsx:109
 msgid "Join Today"
 msgstr ""
 
-#: src/components/Section/Login.tsx:150
-#: src/components/Section/SearchDirectory.tsx:78
+#: src/components/Section/Login.tsx:50
+#: src/components/Section/PasswordResetFail.tsx:36
+#: src/components/Section/SearchDirectory.tsx:73
 msgid "Join the TRISA network today."
 msgstr ""
 
-#: src/components/OrganizationProfile/TrisaDetail.tsx:64
-#~ msgid "Last Updated"
-#~ msgstr ""
+#: src/components/NetworkAnnouncements/index.tsx:33
+msgid "Join us on Thursday Apr 28 for the TRISA Working Group."
+msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:186
+#: src/components/UserDetails/index.tsx:33
+msgid "Last Login:"
+msgstr ""
+
+#: src/components/OrganizationProfile/TrisaDetail.tsx:47
+msgid "Last Updated"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:181
+#: src/components/Section/VaspVerification.tsx:187
 msgid "Learn How TRISA Works"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:21
-#: src/components/Section/MembershipGuide.tsx:27
+#: src/components/Section/GettingStarted.tsx:42
+#: src/components/Section/GettingStarted.tsx:61
+#: src/components/Section/MembershipGuide.tsx:23
+#: src/components/Section/MembershipGuide.tsx:30
 msgid "Learn More"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:59
+#: src/components/Section/MembershipGuide.tsx:60
 msgid "Learn about the three-step process to become a member and verified VASP."
 msgstr ""
 
@@ -714,15 +940,15 @@ msgstr ""
 msgid "Legal Entity Identifier (LEI)"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:28
-#: src/components/MemberDetails/index.tsx:153
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:156
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:15
+#: src/components/MemberDetails/index.tsx:152
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:175
 msgid "Legal Person"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:54
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:71
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:88
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:55
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:72
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:89
 msgid "Legal name is required"
 msgstr ""
 
@@ -730,157 +956,250 @@ msgstr ""
 msgid "Legal/ Compliance Contact (required)"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:38
+#: src/components/NameIdentifiers/index.tsx:37
 msgid "Local Name Identifiers"
 msgstr ""
 
-#: src/components/Section/Login.tsx:134
+#: src/components/Section/LoginForm.tsx:70
+#: src/components/Section/UserEmailConfirmation.tsx:41
 msgid "Log In"
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:156
+#: src/components/Navbar/Landing/MobileNav.tsx:74
+#: src/components/Navbar/Landing/Nav.tsx:23
+msgid "Log in"
+msgstr ""
+
+#: src/modules/auth/register/success.tsx:49
+msgid "Log in to TRISA’s Global Directory Service"
+msgstr ""
+
+#: src/components/Section/CreateAccount.tsx:121
+#: src/components/Section/IntegrateAndComply.tsx:203
+#: src/components/Section/VaspVerification.tsx:226
 msgid "Log in."
 msgstr ""
 
-#: src/components/Section/Login.tsx:65
+#: src/components/Section/Login.tsx:19
 msgid "Log into your TRISA account."
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:90
-#: src/components/Header/LandingHeader.tsx:128
+#: src/components/Header/LandingHeader.tsx:91
+#: src/components/Header/LandingHeader.tsx:129
 msgid "Login"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:152
+#: src/components/Section/SearchDirectory.tsx:167
 msgid "MAINNET DIRECTORY RECORD"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:159
+#: src/components/ReviewSubmit/index.tsx:174
 msgid "MAINNET SUBMISSION"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:92
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:70
-#: src/components/ReviewSubmit/index.tsx:164
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:56
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:72
+#: src/components/ReviewSubmit/index.tsx:179
 msgid "MainNet"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:103
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:67
 msgid "MainNet Certificate Common Name"
 msgstr ""
 
-#: src/modules/dashboard/overview/index.tsx:117
+#: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:37
+#: src/components/CertificateManagement/index.tsx:96
+msgid "MainNet Certificates"
+msgstr ""
+
+#: src/modules/dashboard/overview/index.tsx:105
 msgid "MainNet Network Metrics"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:97
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:61
 msgid "MainNet TRISA Endpoint"
+msgstr ""
+
+#: src/components/FileUpload/index.tsx:75
+msgid "Max file size 10mb"
+msgstr ""
+
+#: src/components/OpenSourceResources/index.tsx:32
+msgid "Meet Alice VASP, Bob VASP and Evil VASP"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:168
+msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
+msgstr ""
+
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:132
+msgid "Message from server:"
 msgstr ""
 
 #: src/constants/name-identifiers.ts:7
 msgid "Misc"
 msgstr ""
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:114
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:123
 msgid "Missing required element"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:170
+#: src/components/TrixoQuestionnaireForm/index.tsx:184
 msgid "Must comply with Travel Rule"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:239
+#: src/components/TrixoQuestionnaireForm/index.tsx:253
 msgid "Must safeguard PII"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:88
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:235
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:253
+msgid "NO"
+msgstr ""
+
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:71
+#: src/components/CollaboratorsSection/index.tsx:150
 #: src/components/NameIdentifier/index.tsx:100
 msgid "Name"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:61
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:78
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:95
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:62
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:79
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:96
 msgid "Name Identifier Type is required"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:88
-#: src/components/MemberDetails/index.tsx:173
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:46
+#: src/components/MemberDetails/index.tsx:172
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:77
 msgid "Name Identifiers"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:30
+#: src/components/NameIdentifiers/index.tsx:29
 msgid "Name identifiers"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:167
-#~ msgid "Name is required"
-#~ msgstr ""
-
-#: src/components/CertificateReview/TrixoReview.tsx:95
-#: src/components/TrixoQuestionnaireForm/index.tsx:51
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:40
+#: src/components/TrixoQuestionnaireForm/index.tsx:65
 msgid "Name of Primary Regulator"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:29
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:16
 msgid "Name, Addresss, Country, National Identifier"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:218
-#: src/components/MemberDetails/index.tsx:299
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:166
+#: src/components/MemberDetails/index.tsx:298
 #: src/components/NameIdentification/index.tsx:118
 msgid "National Identification"
 msgstr ""
 
-#: src/components/OtherJuridictions/index.tsx:40
+#: src/components/OtherJuridictions/index.tsx:39
 msgid "National Jurisdiction"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:180
+#: src/components/Section/IntegrateAndComply.tsx:177
+#: src/components/Section/VaspVerification.tsx:181
 msgid "Need to Learn More?"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:226
+#: src/components/NetworkAnnouncements/caroussels.tsx:115
+msgid "Network Announcement"
+msgstr ""
+
+#: src/components/NetworkStatus/index.tsx:15
+#: src/components/StatusCard/index.tsx:26
+msgid "Network Status"
+msgstr ""
+
+#: src/components/Metrics/index.tsx:23
+msgid "New Members"
+msgstr ""
+
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:31
+msgid "New X.509 Identity Certificate Request"
+msgstr ""
+
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:61
 msgid "Next"
 msgstr ""
 
+#: src/components/CertificateManagement/MainnetCertificates.tsx:40
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:33
+#: src/components/ReviewSubmit/ModalAlert.tsx:34
 #: src/constants/trixo.ts:7
 msgid "No"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:190
+#: src/modules/dashboard/certificate/registration.tsx:249
 msgid "No information is sent until you complete Section 6 - Review & Submit"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:76
+#: src/components/CertificateSection/index.tsx:87
 msgid "Not Saved"
 msgstr ""
 
-#: src/components/Section/Login.tsx:147
+#: src/components/Section/Login.tsx:48
+#: src/components/Section/PasswordResetFail.tsx:34
 msgid "Not a TRISA Member?"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:66
-msgid "Note"
+#: src/components/ReviewSubmit/AlertContent.tsx:26
+#: src/components/ReviewSubmit/index.tsx:82
+msgid "Note:"
 msgstr ""
 
 #: src/components/Section/JoinUs.tsx:38
 msgid "Open Source"
 msgstr ""
 
+#: src/components/OpenSourceResources/index.tsx:9
+#: src/components/Section/IntegrateAndComply.tsx:147
+msgid "Open Source Resources"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:89
+msgid "Option 1. Set Up Your Own TRISA Node"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:108
+msgid "Option 2. Use a 3rd-party Solution"
+msgstr ""
+
+#: src/components/CollaboratorsSection/index.tsx:142
+msgid "Organization Collaborators"
+msgstr ""
+
 #: src/components/BasicDetailsForm/index.tsx:27
-#: src/components/Section/SearchDirectory.tsx:165
-#: src/components/Section/SearchDirectory.tsx:233
+#: src/components/Section/SearchDirectory.tsx:180
+#: src/components/Section/SearchDirectory.tsx:248
 msgid "Organization Name"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:38
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:85
+msgid "Organization Type"
+msgstr ""
+
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:39
 msgid "Organization name is required"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:101
-#: src/components/TrixoQuestionnaireForm/index.tsx:57
+#: src/components/DetailsCard/index.tsx:68
+msgid "Organization:"
+msgstr ""
+
+#: src/components/DetailsCard/index.tsx:30
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:72
+msgid "Organizational Details"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:46
+#: src/components/TrixoQuestionnaireForm/index.tsx:71
 msgid "Other Jurisdictions"
+msgstr ""
+
+#: src/utils/menu.tsx:21
+msgid "Overview"
 msgstr ""
 
 #: src/components/NotFound/index.tsx:14
@@ -891,7 +1210,7 @@ msgstr ""
 msgid "Partially"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:70
+#: src/components/Section/IntegrateAndComply.tsx:54
 msgid "Participate in verified VASP-to-VASP Travel Rule exchanges."
 msgstr ""
 
@@ -899,8 +1218,8 @@ msgstr ""
 msgid "Passport Number"
 msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:130
-#: src/components/Section/Login.tsx:112
+#: src/components/Section/CreateAccount.tsx:97
+#: src/components/Section/LoginForm.tsx:55
 msgid "Password"
 msgstr ""
 
@@ -908,33 +1227,48 @@ msgstr ""
 msgid "Peer-to-Peer"
 msgstr ""
 
+#: src/components/CollaboratorsSection/index.tsx:153
+msgid "Permission"
+msgstr ""
+
+#: src/components/UserDetails/index.tsx:30
+msgid "Permission:"
+msgstr ""
+
 #: src/components/ContactForm/index.tsx:84
 msgid "Phone Number"
 msgstr ""
 
-#: src/components/ContactForm/index.tsx:55
-#~ msgid "Phone Number (optional)"
-#~ msgstr ""
-
-#: src/components/NameIdentifiers/index.tsx:45
+#: src/components/NameIdentifiers/index.tsx:44
 msgid "Phonetic Name Identifiers"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:60
+#: src/components/TrixoQuestionnaireForm/index.tsx:74
 msgid "Please add any other regulatory jurisdictions your organization complies with."
 msgstr ""
 
+#: src/components/MissingRequire/index.tsx:14
+msgid "Please complete all details"
+msgstr ""
+
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:100
+msgid "Please copy and paste this password and store somewhere safe!"
+msgstr ""
+
 #: src/components/LegalPerson/index.tsx:28
-msgid "Please enter the information that identify your organization as a Legal Person. This form represents the"
+msgid "Please enter the information that identifies your organization as a Legal Person. This form represents the"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:25
-#: src/components/CertificateSection/index.tsx:45
-msgid "Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
+#: src/components/CertificateSection/index.tsx:28
+#: src/components/CertificateSection/index.tsx:52
+msgid "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
 msgstr ""
 
-#: src/components/CertificateReview/ReviewsSummary.tsx:19
-#: src/components/CertificateSection/index.tsx:40
+#: src/components/CertificateSection/index.tsx:47
+msgid "Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, emails will be sent to the provided contacts for verification. Once verified, your TestNet certificate will be issued."
+msgstr ""
+
+#: src/components/CertificateReview/ReviewsSummary.tsx:47
 msgid "Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, you will be contacted to verify details. Once verified, your TestNet certificate will be issued."
 msgstr ""
 
@@ -942,7 +1276,7 @@ msgstr ""
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:180
+#: src/components/TrixoQuestionnaireForm/index.tsx:235
 msgid "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.\"FATF Recommendation 16\""
 msgstr ""
 
@@ -950,9 +1284,9 @@ msgstr ""
 msgid "Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:30
+#: src/components/CertificateSection/index.tsx:37
 #: src/components/Contacts/index.tsx:26
-msgid "Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact email must be verified before the registration can proceed."
+msgid "Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed."
 msgstr ""
 
 #: src/components/ContactForm/index.tsx:64
@@ -967,8 +1301,12 @@ msgstr ""
 msgid "Preferred name for email communication."
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:89
-#: src/components/TrixoQuestionnaireForm/index.tsx:41
+#: src/modules/dashboard/certificate/registration.tsx:270
+msgid "Previous"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:34
+#: src/components/TrixoQuestionnaireForm/index.tsx:55
 msgid "Primary National Jurisdiction"
 msgstr ""
 
@@ -976,8 +1314,17 @@ msgstr ""
 msgid "Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email."
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:251
-#: src/components/MemberDetails/index.tsx:338
+#: src/components/UserDetails/index.tsx:24
+msgid "Profile Created:"
+msgstr ""
+
+#: src/components/OpenSourceResources/index.tsx:27
+#: src/components/Section/IntegrateAndComply.tsx:163
+msgid "Reference implementation"
+msgstr ""
+
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:199
+#: src/components/MemberDetails/index.tsx:337
 msgid "Reg Authority"
 msgstr ""
 
@@ -985,8 +1332,8 @@ msgstr ""
 msgid "Region / Province / State (required)"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:183
-#: src/components/Section/SearchDirectory.tsx:251
+#: src/components/Section/SearchDirectory.tsx:198
+#: src/components/Section/SearchDirectory.tsx:266
 msgid "Registered Directory"
 msgstr ""
 
@@ -998,24 +1345,35 @@ msgstr ""
 msgid "Registration Authority Identifier"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:127
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:129
 msgid "Registration Authority cannot be left empty"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:56
+#: src/components/ReviewSubmit/index.tsx:72
 msgid "Registration Submission"
 msgstr ""
 
-#: src/components/OtherJuridictions/index.tsx:48
+#: src/components/OtherJuridictions/index.tsx:47
 msgid "Regulator Name"
 msgstr ""
 
 #: src/components/NameIdentifier/index.tsx:119
-#: src/components/Regulations/index.tsx:30
+#: src/components/OtherJuridictions/index.tsx:54
+#: src/components/Regulations/index.tsx:32
 msgid "Remove line"
 msgstr ""
 
-#: src/components/Modal/ConfirmationResetFormModal.tsx:72
+#: src/components/CertificateManagement/MainnetCertificates.tsx:31
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:26
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:24
+msgid "Request New Identity Certificate"
+msgstr ""
+
+#: src/components/ConfirmIdentityCertificateRequest/index.tsx:37
+msgid "Requesting a new X.509 Identity Certificate will invalidate and revoke your current X.509 Identity Certificate."
+msgstr ""
+
+#: src/components/Modal/ConfirmationResetFormModal.tsx:80
 msgid "Reset"
 msgstr ""
 
@@ -1023,77 +1381,91 @@ msgstr ""
 msgid "Residential"
 msgstr ""
 
-#: src/components/CertificateReview/ReviewsSummary.tsx:14
+#: src/modules/auth/register/success.tsx:73
+msgid "Return to vaspdirectory.net"
+msgstr ""
+
+#: src/components/CertificateReview/ReviewsSummary.tsx:37
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:279
 msgid "Review"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:52
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:244
-msgid "Review & Submit"
-msgstr ""
-
-#: src/components/ReviewSubmit/index.tsx:123
-#: src/components/ReviewSubmit/index.tsx:191
+#: src/components/ReviewSubmit/index.tsx:138
+#: src/components/ReviewSubmit/index.tsx:206
 msgid "Review page"
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:252
+#: src/components/CollaboratorsSection/index.tsx:159
+msgid "Role"
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:38
+msgid "Routine Maintenance Scheduled"
+msgstr ""
+
+#: src/components/TrixoQuestionnaireForm/index.tsx:266
 msgid "Safeguards PII"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:226
+#: src/modules/dashboard/certificate/registration.tsx:274
+#: src/modules/dashboard/certificate/registration.tsx:274
 msgid "Save & Next"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:215
+#: src/modules/dashboard/certificate/registration.tsx:270
 msgid "Save & Previous"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:71
+#: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:59
+#: src/components/CertificateManagement/index.tsx:113
+msgid "Sealing Certificate Inventory"
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:66
 msgid "Search the Directory Service"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:85
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:68
 msgid "Section"
 msgstr ""
 
-#: src/components/BasicDetail/index.tsx:28
-#: src/components/CertificateReview/BasicDetailsReview.tsx:40
-#: src/components/CertificateSection/index.tsx:20
-#: src/components/CertificateSection/index.tsx:54
+#: src/components/BasicDetail/index.tsx:66
+#: src/components/CertificateReview/BasicDetailsReview.tsx:31
+#: src/components/CertificateSection/index.tsx:23
+#: src/components/CertificateSection/index.tsx:65
 msgid "Section 1: Basic Details"
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:52
-#: src/components/CertificateSection/index.tsx:24
+#: src/components/CertificateReview/LegalPersonReview.tsx:23
+#: src/components/CertificateSection/index.tsx:27
 #: src/components/LegalPerson/index.tsx:22
 msgid "Section 2: Legal Person"
 msgstr ""
 
-#: src/components/CertificateReview/ContactsReview.tsx:38
-#: src/components/CertificateSection/index.tsx:29
+#: src/components/CertificateReview/ContactsReview.tsx:27
+#: src/components/CertificateSection/index.tsx:36
 #: src/components/Contacts/index.tsx:20
 msgid "Section 3: Contacts"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:34
-#: src/components/CertificateSection/index.tsx:34
+#: src/components/CertificateReview/TrisaImplementationReview.tsx:45
+#: src/components/CertificateSection/index.tsx:41
 #: src/components/TrisaImplementation/index.tsx:21
 msgid "Section 4: TRISA Implementation"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:56
-#: src/components/CertificateSection/index.tsx:39
+#: src/components/CertificateReview/TrixoReview.tsx:26
+#: src/components/CertificateSection/index.tsx:46
 #: src/components/TrixoQuestionnaire/index.tsx:20
 msgid "Section 5: TRIXO Questionnaire"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:44
-#: src/components/CertificateSection/index.tsx:49
+#: src/components/CertificateSection/index.tsx:51
+#: src/components/CertificateSection/index.tsx:60
 msgid "Section 6: Review & Submit"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:93
+#: src/components/Section/VaspVerification.tsx:94
 msgid "Sections & Details"
 msgstr ""
 
@@ -1113,7 +1485,13 @@ msgstr ""
 msgid "Select business category"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:26
+#: src/components/Section/GettingStarted.tsx:53
+msgid ""
+"Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete\n"
+"            testing and move to production."
+msgstr ""
+
+#: src/components/Section/MembershipGuide.tsx:29
 msgid "Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production."
 msgstr ""
 
@@ -1121,66 +1499,116 @@ msgstr ""
 msgid "Short"
 msgstr ""
 
+#: src/components/Sidebar/MobileNav.tsx:103
+msgid "Sign out"
+msgstr ""
+
+#: src/components/CertificateManagement/MainnetCertificates.tsx:43
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:36
+msgid "Signature ID"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:90
+msgid ""
+"Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
+"                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
+"                    compliance data. TRISA maintains an"
+msgstr ""
+
+#: src/components/YourImplementation/index.tsx:11
+msgid "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set up and maintain their own TRISA server to exhange encrypted Travel Rule compliance data. At the same time, TRISA is designed to be interoperable. There are several Travel Rule solutions providers available on the market. If you are a customer, work with your Travel Ruie provider to integrate TRISA into your Travel Rule compliance workflow."
+msgstr ""
+
 #: src/constants/national-identification.ts:9
 msgid "Social Security Number"
+msgstr ""
+
+#: src/modules/auth/login/user.slice.ts:96
+#: src/modules/auth/login/user.slice.ts:96
+msgid "Something went wrong. Please try again later."
 msgstr ""
 
 #: src/components/NotFound/index.tsx:18
 msgid "Sorry, the page you are looking for doesn't exist or has been moved"
 msgstr ""
 
+#: src/components/Section/PasswordResetFail.tsx:21
+msgid "Sorry. We could not find a user account with the email address"
+msgstr ""
+
 #: src/components/TechnicalResources/index.tsx:19
-#: src/modules/dashboard/overview/index.tsx:90
+#: src/modules/dashboard/overview/index.tsx:87
 msgid "Start Certificate Registration"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:88
+#: src/components/Head/LandingHead.tsx:84
 msgid "Start Registration"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:230
-msgid "Start Registration Process"
+#: src/components/ui/Button.tsx:8
+msgid "Start trial"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:94
+#: src/components/CertificateManagement/MainnetCertificates.tsx:52
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:45
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:77
+#: src/components/CollaboratorsSection/index.tsx:162
 msgid "Status"
 msgstr ""
 
-#: src/components/Section/PasswordReset.tsx:84
+#: src/components/UserDetails/index.tsx:27
+msgid "Status:"
+msgstr ""
+
+#: src/components/Section/GettingStarted.tsx:11
+#: src/components/Section/GettingStarted.tsx:47
+msgid "Step 1"
+msgstr ""
+
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:39
+#: src/components/Section/PasswordResetForm.tsx:48
 #: src/hoc/withRHF.tsx:117
 msgid "Submit"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:218
+#: src/components/ReviewSubmit/index.tsx:233
 msgid "Submit MainNet Registration"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:151
+#: src/components/ReviewSubmit/index.tsx:166
 msgid "Submit TestNet Registration"
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:94
+#: src/components/CertificateSection/index.tsx:105
 msgid "Submitted"
 msgstr ""
 
-#: src/modules/auth/register/success.tsx:16
-#~ msgid "Success Registration"
-#~ msgstr ""
+#: src/components/Sidebar/SidebarContent.tsx:110
+msgid "Support"
+msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:144
+#: src/components/Section/IntegrateAndComply.tsx:139
+msgid "Synga Bridge"
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:159
 msgid "TESTNET DIRECTORY RECORD"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:90
+#: src/components/ReviewSubmit/index.tsx:105
 msgid "TESTNET SUBMISSION"
 msgstr ""
 
-#: src/components/TrisaImplementationForm/index.tsx:68
-msgid "TRISA Endpoint"
+#: src/components/CertificateManagement/index.tsx:52
+msgid "TRISA Certificates"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:113
-msgid "TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate."
+#: src/components/OrganizationProfile/TrisaDetail.tsx:20
+msgid "TRISA Details"
+msgstr ""
+
+#: src/components/TrisaImplementationForm/index.tsx:69
+msgid "TRISA Endpoint"
 msgstr ""
 
 #: src/components/TrisaImplementation/index.tsx:43
@@ -1191,39 +1619,71 @@ msgstr ""
 msgid "TRISA Endpoint: TestNet"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:29
+#: src/components/OpenSourceResources/index.tsx:15
+msgid "TRISA Githubs repo"
+msgstr ""
+
+#: src/components/Head/LandingHead.tsx:25
 msgid "TRISA Global Directory Service"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:40
+#: src/components/DetailsCard/index.tsx:92
+msgid "TRISA Identity Signature:"
+msgstr ""
+
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:27
 msgid "TRISA Implementation"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:189
-#: src/components/Section/SearchDirectory.tsx:257
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:20
+msgid "TRISA Implementations"
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:204
+#: src/components/Section/SearchDirectory.tsx:272
 msgid "TRISA Member ID"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:177
-#: src/components/Section/SearchDirectory.tsx:245
+#: src/components/DetailsCard/index.tsx:36
+msgid "TRISA Member ID:"
+msgstr ""
+
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:55
+msgid "TRISA Organization Profile"
+msgstr ""
+
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:54
+msgid "TRISA Registration Request Submitted!"
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:192
+#: src/components/Section/SearchDirectory.tsx:260
 msgid "TRISA Service Endpoint"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:206
-#: src/components/Section/SearchDirectory.tsx:275
+#: src/components/Section/SearchDirectory.tsx:221
+#: src/components/Section/SearchDirectory.tsx:290
 msgid "TRISA Verification"
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:41
+#: src/components/DetailsCard/index.tsx:44
+msgid "TRISA Verification:"
+msgstr ""
+
+#: src/components/TrisaVerifiedLogo/index.tsx:11
+msgid "TRISA Verified Logo"
+msgstr ""
+
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:28
 msgid "TRISA endpoint for communication"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:182
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:202
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:183
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:203
 msgid "TRISA endpoint is not valid"
 msgstr ""
 
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:200
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:227
 msgid "TRISA implementation"
 msgstr ""
 
@@ -1239,11 +1699,22 @@ msgstr ""
 msgid "TRISA is designed to be interoperable with other Travel Rule solutions."
 msgstr ""
 
+#: src/components/Section/IntegrateAndComply.tsx:109
+msgid ""
+"TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
+"                    providers available on the market. If you are a customer, work with them to\n"
+"                    integrate TRISA into your Travel Rule compliance workflow."
+msgstr ""
+
 #: src/components/Section/JoinUs.tsx:40
 msgid "TRISA is open source and available to implement by any VASP."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:70
+#: src/components/CertificateManagement/index.tsx:55
+msgid "TRISA issues two types of certificates:"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:71
 msgid "TRISA members must complete a comprehensive multi-part verification form and due diligence process. Once verified, TRISA will issue TestNet and MainNet certificates for secure Travel Rule compliance."
 msgstr ""
 
@@ -1252,24 +1723,36 @@ msgid "TRISA specific identity number (UUID), only supplied if you're updating a
 msgstr ""
 
 #: src/components/Section/JoinUs.tsx:22
-#~ msgid "TRISA uses public-key cryptography for encrpyting data in flight and at rest."
-#~ msgstr ""
-
-#: src/components/Section/JoinUs.tsx:22
 msgid "TRISA uses public-key cryptography for encrypting data in flight and at rest."
+msgstr ""
+
+#: src/components/TrisaVerifiedLogo/index.tsx:17
+msgid "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:151
+msgid "TRISA’s Github repo"
 msgstr ""
 
 #: src/components/Section/AboutUs.tsx:56
 msgid "TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely exchange Travel Rule compliance data with each other."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:79
+#: src/components/Section/VaspVerification.tsx:80
 msgid "TRISA’s verification form includes five sections and may require information from several parties in your organization."
 msgstr ""
 
-#: src/components/CertificateRegistration/index.tsx:46
-#: src/components/TestnetProgress/CertificateStepLabel.tsx:222
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:33
+#: src/components/TestnetProgress/CertificateStepLabel.tsx:253
 msgid "TRIXO Questionnaire"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:119
+msgid ""
+"Talk to a member of your technical team to determine the requirements and\n"
+"                    resources to integrate TRISA with your system. Have members of your technical\n"
+"                    team integrate your systems with TRISA. Or work with a solutions provider that\n"
+"                    can help your VASP set up your TRISA server and maintain it."
 msgstr ""
 
 #: src/constants/national-identification.ts:5
@@ -1280,68 +1763,109 @@ msgstr ""
 msgid "Technical Contact (required)"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:144
+#: src/components/Section/VaspVerification.tsx:145
 msgid "Technical Officer"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:138
+#: src/utils/menu.tsx:47
+msgid "Technical Resources"
+msgstr ""
+
+#: src/components/Section/VaspVerification.tsx:139
 msgid "Technical information about your endpoint for certificate issuance. Each VASP is required to establish a TRISA endpoint for inter-VASP communication."
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:70
-#: src/components/OrganizationProfile/TrisaImplementation.tsx:50
-#: src/components/ReviewSubmit/index.tsx:95
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:36
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:52
+#: src/components/ReviewSubmit/index.tsx:110
 msgid "TestNet"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:81
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:47
 msgid "TestNet Certificate Common Name"
 msgstr ""
 
-#: src/modules/dashboard/overview/index.tsx:127
+#: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:40
+#: src/components/CertificateManagement/index.tsx:99
+msgid "TestNet Certificates"
+msgstr ""
+
+#: src/modules/dashboard/overview/index.tsx:115
 msgid "TestNet Network Metrics"
 msgstr ""
 
-#: src/components/CertificateReview/TrisaImplementationReview.tsx:75
+#: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:41
 msgid "TestNet TRISA Endpoint"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:197
+#: src/modules/dashboard/certificate/lib/validationSchema.ts:198
 msgid "TestNet and MainNet endpoints should not be the same"
 msgstr ""
 
-#: src/modules/auth/reset/index.tsx:25
+#: src/components/Section/UserEmailVerification.tsx:17
+#: src/modules/auth/register/success.tsx:30
+msgid "Thank you for creating your TRISA account."
+msgstr ""
+
+#: src/modules/auth/register/success.tsx:36
+msgid "Thank you for creating your TRISA account. You must verify your email address. An email with verification instructions has been sent to your email address. Please complete the email verification process in 24 hours. The email verification link will expire in 24 hours."
+msgstr ""
+
+#: src/components/Section/PasswordResetConfirmation.tsx:15
+msgid "Thank you. We have sent instructions to reset your password to"
+msgstr ""
+
+#: src/components/Section/PasswordReset.tsx:44
 msgid "Thank you. We have sent instructions to reset your password to {0}. The link to reset your password expires in 24 hours."
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:116
+msgid ""
+"The Common Name typically matches the Endpoint, without the port number\n"
+"                            at the end (e.g. trisa.myvasp.com) and is used to identify the subject\n"
+"                            in the X.509 certificate."
+msgstr ""
+
+#: src/components/NetworkAnnouncements/index.tsx:39
+msgid "The GDS will be undergoing routine maintenance on Apr 7."
 msgstr ""
 
 #: src/components/Section/AboutUs.tsx:36
 msgid "The Travel Rule Information Sharing Architecture (TRISA)"
 msgstr ""
 
-#: src/components/TrisaImplementationForm/index.tsx:73
+#: src/components/TrisaImplementationForm/index.tsx:74
 msgid "The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC."
 msgstr ""
 
-#: src/components/TrisaImplementationForm/index.tsx:59
+#: src/components/TrisaImplementationForm/index.tsx:60
 msgid "The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases."
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:221
+#: src/components/Section/PasswordResetConfirmation.tsx:22
+msgid "The link to reset your password expires in 24 hours."
+msgstr ""
+
+#: src/components/TrixoQuestionnaireForm/index.tsx:223
 msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 msgstr ""
 
-#: src/components/CertificateReview/LegalPersonReview.tsx:93
-#: src/components/MemberDetails/index.tsx:178
-#: src/components/NameIdentifiers/index.tsx:39
-#: src/components/NameIdentifiers/index.tsx:46
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:51
+#: src/components/MemberDetails/index.tsx:177
+#: src/components/NameIdentifiers/index.tsx:38
+#: src/components/NameIdentifiers/index.tsx:45
 msgid "The name and type of name by which the legal person is known."
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:52
+#: src/components/TrixoQuestionnaireForm/index.tsx:66
 msgid "The name of primary regulator or supervisory authority for your national jurisdiction"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:172
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:95
+msgid "This is the only time the PKCS12 password is shown during the registration process."
+msgstr ""
+
+#: src/modules/dashboard/certificate/registration.tsx:232
 msgid "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 msgstr ""
 
@@ -1349,20 +1873,20 @@ msgstr ""
 msgid "This questionnaire is designed to help TRISA members understand the regulatory regime of your organization. The information provided will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
 msgstr ""
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:154
+#: src/components/TrixoQuestionnaireForm/index.tsx:168
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr ""
 
-#: src/modules/dashboard/certificate/registration.tsx:184
+#: src/modules/dashboard/certificate/registration.tsx:243
 msgid "To assist in completing the registration form, the form is divided into multiple sections"
-msgstr ""
-
-#: src/modules/auth/callback/index.tsx:76
-msgid "Token not valid"
 msgstr ""
 
 #: src/constants/name-identifiers.ts:6
 msgid "Trading"
+msgstr ""
+
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:142
+msgid "Understood"
 msgstr ""
 
 #: src/constants/address.ts:4
@@ -1370,32 +1894,70 @@ msgstr ""
 msgid "Unspecified"
 msgstr ""
 
+#: src/components/NetworkAnnouncements/index.tsx:32
+msgid "Upcoming TRISA Working Group Call"
+msgstr ""
+
+#: src/components/Section/IntegrateAndComply.tsx:67
+msgid "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
+msgstr ""
+
+#: src/components/UserDetails/index.tsx:18
+msgid "User Details"
+msgstr ""
+
+#: src/components/CollaboratorsSection/index.tsx:147
+msgid "User ID"
+msgstr ""
+
+#: src/components/UserDetails/index.tsx:21
+msgid "User ID:"
+msgstr ""
+
 #: src/components/BasicDetailsForm/index.tsx:80
-#: src/components/CertificateReview/BasicDetailsReview.tsx:105
-#: src/components/MemberDetails/index.tsx:132
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:65
+#: src/components/MemberDetails/index.tsx:131
+#: src/components/OrganizationProfile/OrganizationalDetail.tsx:91
 msgid "VASP Category"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:211
-#: src/components/Section/SearchDirectory.tsx:280
+#: src/components/Section/IntegrateAndComply.tsx:75
+msgid "VASPs have two options to integrate with TRISA."
+msgstr ""
+
+#: src/components/Section/SearchDirectory.tsx:226
+#: src/components/Section/SearchDirectory.tsx:295
 msgid "VERIFIED ON"
 msgstr ""
 
-#: src/components/OrganizationProfile/TrisaDetail.tsx:58
-#~ msgid "Verified On"
-#~ msgstr ""
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:118
+msgid "Verification Status:"
+msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:81
-#~ msgid "We recommend that a senior compliance officer initialally creates the account for the VASP. Additional accounts can be created later."
-#~ msgstr ""
+#: src/components/TrisaVerifiedLogo/index.tsx:36
+msgid "Verified"
+msgstr ""
 
-#: src/components/Section/CreateAccount.tsx:82
+#: src/components/OrganizationProfile/TrisaDetail.tsx:44
+msgid "Verified On"
+msgstr ""
+
+#: src/components/Metrics/index.tsx:21
+#: src/components/StatCard/index.tsx:35
+msgid "Verified VASPs"
+msgstr ""
+
+#: src/modules/auth/register/success.tsx:61
+msgid "Visit Getting Started with TRISA"
+msgstr ""
+
+#: src/components/Section/CreateAccount.tsx:55
 msgid "We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later."
 msgstr ""
 
 #: src/components/BasicDetailsForm/index.tsx:38
-#: src/components/CertificateReview/BasicDetailsReview.tsx:74
-#: src/components/MemberDetails/index.tsx:112
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:34
+#: src/components/MemberDetails/index.tsx:111
 msgid "Website"
 msgstr ""
 
@@ -1403,40 +1965,37 @@ msgstr ""
 msgid "Website is a required field"
 msgstr ""
 
-#: src/modules/dashboard/certificate/lib/validationSchema.ts:18
-#~ msgid "Website is required"
-#~ msgstr ""
-
-#: src/components/CertificateRegistration/index.tsx:23
+#: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:10
 msgid "Website, incorporation Date, VASP Category"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:54
+#: src/components/Section/MembershipGuide.tsx:55
 msgid "Welcome to TRISA’s network of Certified VASPs."
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:191
+#: src/components/Section/IntegrateAndComply.tsx:186
+#: src/components/Section/VaspVerification.tsx:192
 msgid "What is IVMS101?"
 msgstr ""
 
-#: src/components/CertificateReview/TrixoReview.tsx:239
-#: src/components/TrixoQuestionnaireForm/index.tsx:190
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:194
+#: src/components/TrixoQuestionnaireForm/index.tsx:192
 msgid "What is the minimum threshold for Travel Rule compliance?"
 msgstr ""
 
-#: src/components/Section/SearchDirectory.tsx:114
+#: src/components/Section/SearchDirectory.tsx:128
 msgid "What’s a Common name or VASP ID?"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:96
+#: src/components/Section/VaspVerification.tsx:97
 msgid "Who to Ask"
 msgstr ""
 
-#: src/components/Section/VaspVerification.tsx:108
-#: src/components/Section/VaspVerification.tsx:123
-#: src/components/Section/VaspVerification.tsx:133
-#: src/components/Section/VaspVerification.tsx:143
-#: src/components/Section/VaspVerification.tsx:154
+#: src/components/Section/VaspVerification.tsx:109
+#: src/components/Section/VaspVerification.tsx:124
+#: src/components/Section/VaspVerification.tsx:134
+#: src/components/Section/VaspVerification.tsx:144
+#: src/components/Section/VaspVerification.tsx:155
 msgid "Who to ask"
 msgstr ""
 
@@ -1444,41 +2003,69 @@ msgstr ""
 msgid "Why Join TRISA"
 msgstr ""
 
+#: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:29
+#: src/components/CertificateManagement/index.tsx:88
+msgid "X.509 Identity Certificate Inventory"
+msgstr ""
+
+#: src/components/CertificateManagement/MainnetCertificates.tsx:28
+#: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:23
+msgid "X.509 Identity Certificates"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:235
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:253
+msgid "YES"
+msgstr ""
+
+#: src/components/ReviewSubmit/ModalAlert.tsx:37
 #: src/constants/trixo.ts:5
 msgid "Yes"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:62
-msgid "You must submit your registration for TestNet and MainNet separately"
+#: src/components/OrganizationProfile/TrisaImplementation.tsx:23
+msgid "You must request a new X.509 Identity Certificate to change your Endpoint and Common Name."
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:68
-#~ msgid ""
-#~ "You will receive two separate emails with confirmation links for each registration.\n"
-#~ "              You must click on each confirmation link to complete the registration process"
-#~ msgstr ""
-
-#: src/components/ReviewSubmit/index.tsx:68
-msgid "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process"
+#: src/components/ReviewSubmit/index.tsx:78
+msgid "You must submit your registration for TestNet and MainNet separately."
 msgstr ""
 
-#: src/modules/auth/register/success.tsx:9
-msgid "Your account has been created successfully. Please check your email to verify your account."
+#: src/components/Section/UserEmailVerification.tsx:22
+msgid "You must verify your email address. An email with verification instructions has been sent to your email address. Please complete the email verification process in 24 hours. The email verification link will expire in 24 hours."
 msgstr ""
 
-#: src/modules/auth/callback/index.tsx:48
+#: src/components/ReviewSubmit/index.tsx:84
+msgid "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process."
+msgstr ""
+
+#: src/components/YourImplementation/index.tsx:8
+msgid "Your TRISA Implementation"
+msgstr ""
+
+#: src/modules/auth/login/user.slice.ts:100
+#: src/modules/auth/login/user.slice.ts:100
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr ""
 
-#: src/components/CertificateSection/index.tsx:50
+#: src/components/CertificateSection/index.tsx:61
 msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
 msgstr ""
 
-#: src/components/TrisaImplementationForm/index.tsx:43
+#: src/components/ReviewSubmit/ConfirmationModal.tsx:61
+msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
+msgstr ""
+
+#: src/components/Navbar/Landing/MobileNav.tsx:72
+#: src/components/Navbar/Landing/Nav.tsx:21
+msgid "about us"
+msgstr ""
+
+#: src/components/TrisaImplementationForm/index.tsx:44
 msgid "common name should match the TRISA endpoint without the port"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:19
+#: src/components/Section/MembershipGuide.tsx:21
 msgid "complete VASP verification"
 msgstr ""
 
@@ -1486,23 +2073,19 @@ msgstr ""
 msgid "compliance. TRISA helps Virtual Asset Service Providers (VASPs) comply with the Travel Rule for cross-border cryptocurrency transactions. TRISA is designed to be interoperable."
 msgstr ""
 
-#: src/components/CertificateReview/ContactsReview.tsx:70
-#~ msgid "contact-block"
-#~ msgstr ""
+#: src/components/Section/GettingStarted.tsx:25
+msgid "create account"
+msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:13
+#: src/components/Section/MembershipGuide.tsx:14
 msgid "create your account"
 msgstr ""
 
-#: src/components/BasicDetailsForm/index.tsx:54
-#~ msgid "established_on"
-#~ msgstr ""
-
-#: src/components/Footer/LandingFooter.tsx:54
+#: src/components/Footer/LandingFooter.tsx:24
 msgid "for Cryptocurrency Travel Rule compliance."
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:111
+#: src/components/ReviewSubmit/index.tsx:126
 msgid "for TestNet registration so your TestNet certificate will be issued upon review by the validation team"
 msgstr ""
 
@@ -1510,7 +2093,7 @@ msgstr ""
 msgid "for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
 msgstr ""
 
-#: src/components/Footer/LandingFooter.tsx:64
+#: src/components/Footer/LandingFooter.tsx:34
 msgid "in partnership with"
 msgstr ""
 
@@ -1518,47 +2101,57 @@ msgstr ""
 msgid "is a global, open source, secure, and peer-to-peer protocol for"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:109
+#: src/components/ReviewSubmit/index.tsx:124
 msgid "is not required"
 msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:178
+#: src/components/ReviewSubmit/index.tsx:193
 msgid "is required"
 msgstr ""
 
-#: src/components/NameIdentifiers/index.tsx:31
+#: src/components/NameIdentifiers/index.tsx:30
 msgid "legal"
 msgstr ""
 
-#: src/components/BasicDetailsForm/index.tsx:29
-#~ msgid "organization_name"
-#~ msgstr ""
+#: src/components/PasswordStrength/index.tsx:103
+msgid "lower case letters (a-z)"
+msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:99
-#: src/components/ReviewSubmit/index.tsx:175
-#~ msgid ""
-#~ "registration. Upon submission, you will receive an email with a confirmation link.\n"
-#~ "                  You must click the confirmation link to complete the registration process. Failure\n"
-#~ "                  to click the confirmation link will result in an incomplete registration"
-#~ msgstr ""
+#: src/components/PasswordStrength/index.tsx:134
+msgid "numbers (i.e. 0-9)"
+msgstr ""
 
-#: src/components/ReviewSubmit/index.tsx:97
-#: src/components/ReviewSubmit/index.tsx:166
+#: src/components/Footer/LandingFooter.tsx:39
+msgid "on behalf of"
+msgstr ""
+
+#: src/components/ReviewSubmit/index.tsx:112
+#: src/components/ReviewSubmit/index.tsx:181
 msgid "registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration"
 msgstr ""
 
-#: src/components/Footer/LandingFooter.tsx:52
+#: src/components/PasswordStrength/index.tsx:148
+msgid "special characters (e.g. !@#$%^&*)"
+msgstr ""
+
+#: src/components/Footer/LandingFooter.tsx:22
 msgid "the TRISA architecture"
 msgstr ""
 
-#: src/components/BasicDetailsForm/index.tsx:44
-#~ msgid "website"
-#~ msgstr ""
+#: src/components/PasswordStrength/index.tsx:120
+msgid "upper case letters (A-Z)"
+msgstr ""
 
-#: src/components/BasicDetailsForm/index.tsx:51
-#~ msgid "{0}"
-#~ msgstr ""
+#: src/components/Section/IntegrateAndComply.tsx:101
+msgid ""
+"with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
+"                    testing purposes."
+msgstr ""
 
-#: src/components/CertificateReview/ContactsReview.tsx:70
+#: src/components/CertificateReview/index.tsx:55
+msgid "{0}"
+msgstr ""
+
+#: src/components/CertificateReview/ContactsReviewDataTable.tsx:31
 msgid "{0} Contact"
 msgstr ""
