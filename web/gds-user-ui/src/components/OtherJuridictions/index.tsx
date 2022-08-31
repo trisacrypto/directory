@@ -23,7 +23,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
   return (
     <>
       {fields.map((field, index) => (
-        <HStack key={field.id}>
+        <HStack key={field.id} w="100%">
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
             <GridItem>
               <Controller
@@ -50,7 +50,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
               />
             </GridItem>
           </Grid>
-          <Box marginTop="23px" alignSelf={{ base: 'flex-end', md: 'initial' }}>
+          <Box marginTop="24px !important" alignSelf={{ base: 'flex-end', md: 'initial' }}>
             <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
           </Box>
         </HStack>

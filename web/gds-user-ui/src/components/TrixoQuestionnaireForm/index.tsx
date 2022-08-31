@@ -75,7 +75,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
         formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
         {...register('trixo.primary_regulator')}
       />
-      <VStack align="start">
+      <VStack align="start" w="100%">
         <Heading size="md">
           <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
         </Heading>
