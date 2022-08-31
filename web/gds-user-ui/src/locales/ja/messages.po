@@ -13,7 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:103
+=======
+#: src/components/ReviewSubmit/index.tsx:90
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid " Failure to click either confirmation will result in an incomplete registration"
 msgstr ""
 
@@ -221,7 +225,11 @@ msgid "Address line 2 e.g. apartment or suite number"
 msgstr "住所2行目 例：アパート番号またはスイート番号"
 
 #: src/components/Addresses/index.tsx:11
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:116
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:120
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:244
 msgid "Addresses"
 msgstr "住所"
@@ -256,7 +264,11 @@ msgstr ""
 msgid "An error has occurred to load attention data"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:19
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:21
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "An error has occurred to load legal person data"
 msgstr ""
 
@@ -272,8 +284,13 @@ msgstr "適切な発行機関によって発行された識別子。"
 msgid "App version {appVersion}"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:185
 #: src/components/TrixoQuestionnaireForm/index.tsx:243
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:181
+#: src/components/TrixoQuestionnaireForm/index.tsx:241
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Applicable Regulations"
 msgstr "適用される法規制"
 
@@ -289,10 +306,17 @@ msgstr ""
 msgid "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 msgstr "少なくとも1つの地理的な住所が必要です。組織の主要な地理的住所を入力する。組織は、複数の管轄区域で事業を展開している場合、追加の住所を入力することができます。"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:144
 #: src/components/MemberDetails/index.tsx:589
 #: src/components/TrixoQuestionnaireForm/index.tsx:148
 msgid "At what threshold and currency does your organization conduct KYC checks?"
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:140
+#: src/components/MemberDetails/index.tsx:580
+#: src/components/TrixoQuestionnaireForm/index.tsx:146
+msgid "At what threshold and currency does your organization conduct KYC?"
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgstr ""
 
 #: src/components/CertificateReview/TrixoReview.tsx:190
@@ -309,7 +333,11 @@ msgstr ""
 msgid "Back Home"
 msgstr "ホームへ戻る"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:298
+=======
+#: src/components/ReviewSubmit/index.tsx:253
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Back to Review Page"
 msgstr "レビューページに戻る"
 
@@ -362,6 +390,10 @@ msgstr "事業所またはコンプライアンス室"
 msgid "By answering yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password."
 msgstr ""
 
+<<<<<<< HEAD
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:91
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:107
 msgid "CDD & Travel Rule Policies"
 msgstr "CDDとトラベルルールのポリシー"
@@ -393,7 +425,11 @@ msgstr ""
 msgid "Certificate Progress"
 msgstr "サーティフィケイトの進捗状況。"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:273
+=======
+#: src/modules/dashboard/certificate/registration.tsx:255
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/utils/menu.tsx:33
 msgid "Certificate Registration"
 msgstr "証明書の登録"
@@ -415,7 +451,11 @@ msgstr ""
 msgid "City / Town / Municipality"
 msgstr "市区町村名"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:343
+=======
+#: src/modules/dashboard/certificate/registration.tsx:319
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Clear & Reset Form"
 msgstr "クリアとリセットフォーム"
 
@@ -455,6 +495,7 @@ msgstr "一般名"
 msgid "Common name or VASP ID"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementationForm/index.tsx:43
 msgid "Common name should match the TRISA endpoint without the port."
 msgstr ""
@@ -467,7 +508,20 @@ msgstr ""
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
 msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
+#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it"
+#~ msgstr ""
+
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
+msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgstr ""
+
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
+#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
+#~ msgstr ""
 
 #: src/components/CertificateManagement/index.tsx:40
 msgid "Complete Certficate Registration"
@@ -519,7 +573,11 @@ msgstr ""
 msgid "Comply with the Travel Rule"
 msgstr "トラベルルールを遵守する"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:139
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:137
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Conducts KYC before virtual asset transfers"
 msgstr "仮想資産譲渡前にKYCを実施"
 
@@ -576,8 +634,13 @@ msgstr "発行国について"
 msgid "Country of Issue is reserved for National Identifiers of Natural Persons"
 msgstr "発行国は自然人の国民IDのために予約されています"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:143
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:188
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:147
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:192
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/CountryOfRegistration/index.tsx:19
 #: src/components/MemberDetails/index.tsx:271
 #: src/components/MemberDetails/index.tsx:331
@@ -635,8 +698,13 @@ msgstr "お客様番号"
 msgid "Dashboard"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:227
 #: src/components/TrixoQuestionnaireForm/index.tsx:255
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:223
+#: src/components/TrixoQuestionnaireForm/index.tsx:253
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Data Protection Policies"
 msgstr "データ保護ポリシー"
 
@@ -689,7 +757,12 @@ msgstr "ディレクトリ参照"
 msgid "Documentation"
 msgstr "ドキュメンテーション"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:133
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:120
+#: src/components/TrixoQuestionnaireForm/index.tsx:131
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 msgstr "あなたの組織は、顧客に仮想資産の送受信を許可する前に、KYC/CDDを実施していますか?"
 
@@ -717,6 +790,7 @@ msgid ""
 "Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:100
 msgid ""
 "Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due\n"
@@ -724,6 +798,15 @@ msgid ""
 msgstr ""
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:272
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:99
+#: src/components/TrixoQuestionnaireForm/index.tsx:123
+msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
+#: src/components/TrixoQuestionnaireForm/index.tsx:269
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
 msgstr "あなたの組織は、トラベルルールに基づき他のVASPから受け取ったPIIを含め、PIIを安全に保護していますか?"
 
@@ -746,7 +829,11 @@ msgstr "運転免許証番号"
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 msgstr "各VASPは、VASP間通信のためにTRISAエンドポイントを設定する必要があります。証明書発行のためのエンドポイントの詳細をご指定ください"
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:61
+=======
+#: src/components/TrisaImplementation/index.tsx:35
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance. Please specify the TestNet endpoint and the MainNet endpoint. The TestNet endpoint and the MainNet endpoint must be different."
 msgstr "各VASPは、VASP間通信のためにTRISAエンドポイントを設定する必要があります。証明書発行のためのエンドポイントの詳細をご指定ください。TestNetエンドポイントとMainNetエンドポイントをご指定ください。TestNetエンドポイントとMainNetエンドポイントは異なる必要があります"
 
@@ -815,10 +902,13 @@ msgstr ""
 msgid "Export Data"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:74
 #~ msgid "Failure to click either confirmation will result in an incomplete registration"
 #~ msgstr "どちらかの確認をクリックしないと、登録が完了しません"
 
+=======
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/FileUpload/index.tsx:69
 msgid "Files is required"
 msgstr ""
@@ -867,7 +957,11 @@ msgstr "GLEIF登録機関"
 msgid "Geographic"
 msgstr "地理的"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:288
+=======
+#: src/modules/dashboard/certificate/registration.tsx:270
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Getting Started Help Guide"
 msgstr "スタートアップヘルプガイド"
 
@@ -916,14 +1010,22 @@ msgstr ""
 msgid "IVMS 101 data structure"
 msgstr "IVMS101のデータ構造"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:170
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:174
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:303
 #: src/components/NameIdentification/index.tsx:130
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:122
 msgid "Identification Number"
 msgstr "識別番号"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:176
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:180
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:311
 #: src/components/NameIdentification/index.tsx:159
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:130
@@ -961,7 +1063,11 @@ msgstr ""
 msgid "If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/FileUpload/index.tsx:97
+=======
+#: src/components/FileUpload/index.tsx:98
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Import File"
 msgstr ""
 
@@ -998,6 +1104,7 @@ msgstr "TRISAとの連携"
 msgid "Interoperable"
 msgstr "インターオペラブル"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/validationSchema.ts:22
 #~ msgid "Invalid date"
 #~ msgstr "日付が無効"
@@ -1011,6 +1118,17 @@ msgid "Invalid date."
 msgstr ""
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:68
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:18
+msgid "Invalid date"
+msgstr ""
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:19
+msgid "Invalid date / year must be 4 digit"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:69
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:100
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 msgstr "あなたの組織は、運営する法域において仮想資産の送受信を行うことが許されていますか？"
@@ -1026,12 +1144,22 @@ msgid ""
 "                Information (PII)?"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:259
 msgid "Is your organization required by law to safeguard Personally Identifiable Information (PII)?"
 msgstr ""
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:165
 #: src/components/TrixoQuestionnaireForm/index.tsx:189
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:231
+#: src/components/TrixoQuestionnaireForm/index.tsx:257
+msgid "Is your organization required by law to safeguard PII?"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:161
+#: src/components/TrixoQuestionnaireForm/index.tsx:187
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
 msgstr "あなたの組織は、ライセンス/承認/登録されている管轄区域において、旅行規則の基準の適用に準拠する必要がありますか?"
 
@@ -1202,16 +1330,29 @@ msgstr "その他"
 msgid "Missing required element"
 msgstr "必要な要素がない"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:195
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:193
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Must comply with Travel Rule"
 msgstr "トラベルルールを遵守すること"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:265
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:262
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Must safeguard PII"
 msgstr "個人情報を保護する必要があります"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:241
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:259
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "NO"
 msgstr ""
 
@@ -1227,7 +1368,11 @@ msgstr "名前"
 msgid "Name Identifier Type is required"
 msgstr "Name Identifier Typeは必須です"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:43
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:45
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:172
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:77
 msgid "Name Identifiers"
@@ -1237,7 +1382,11 @@ msgstr "名前識別情報"
 msgid "Name identifiers"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:44
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:45
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:74
 msgid "Name of Primary Regulator"
 msgstr ""
@@ -1250,7 +1399,11 @@ msgstr ""
 msgid "Name, Addresss, Country, National Identifier"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:161
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:165
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:298
 #: src/components/NameIdentification/index.tsx:118
 msgid "National Identification"
@@ -1283,19 +1436,31 @@ msgid "New X.509 Identity Certificate Request"
 msgstr ""
 
 #: src/components/ConfirmIdentityCertificateRequest/index.tsx:61
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:331
+=======
+#: src/modules/dashboard/certificate/registration.tsx:313
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Next"
 msgstr "次"
 
 #: src/components/CertificateManagement/MainnetCertificates.tsx:40
 #: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:33
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:15
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:16
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/ReviewSubmit/ModalAlert.tsx:34
 #: src/constants/trixo.ts:7
 msgid "No"
 msgstr "いいえ"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:298
+=======
+#: src/modules/dashboard/certificate/registration.tsx:280
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "No information is sent until you complete Section 6 - Review & Submit"
 msgstr "セクション6「レビュー＆送信」を完了するまで、情報は送信されません。"
 
@@ -1317,7 +1482,11 @@ msgstr "TRISA会員でない方"
 #~ msgstr "ノート"
 
 #: src/components/ReviewSubmit/AlertContent.tsx:26
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:96
+=======
+#: src/components/ReviewSubmit/index.tsx:83
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Note:"
 msgstr ""
 
@@ -1353,7 +1522,11 @@ msgstr "団体名"
 msgid "Organization Type"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:40
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:34
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Organization name is required"
 msgstr "組織名は必須項目です"
 
@@ -1366,7 +1539,11 @@ msgstr ""
 msgid "Organizational Details"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:50
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:51
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:80
 msgid "Other Jurisdictions"
 msgstr "他の管轄地域"
@@ -1465,7 +1642,11 @@ msgstr "入力された情報を確認し、必要に応じて編集し、送信
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 msgstr "貴社が提供する仮想資産サービスの種類を表すために必要な数のカテゴリーを選択してください。"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:246
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:244
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.\"FATF Recommendation 16\""
 msgstr "トラベルルール規格に準拠するため、適用される規則を特定してください。e.g.\"FATF Recommendation 16\""
 
@@ -1495,11 +1676,19 @@ msgstr "郵便番号 / 郵便番号 / ZIPコード"
 msgid "Preferred name for email communication."
 msgstr "電子メールでのコミュニケーションに適した名前。"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:327
 msgid "Previous"
 msgstr ""
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:38
+=======
+#: src/modules/dashboard/certificate/registration.tsx:309
+msgid "Previous"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:39
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:64
 msgid "Primary National Jurisdiction"
 msgstr "国内主要管轄地域"
@@ -1517,7 +1706,11 @@ msgstr ""
 msgid "Reference implementation"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:194
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:198
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:337
 msgid "Reg Authority"
 msgstr "レグオーソリティ"
@@ -1543,7 +1736,11 @@ msgstr "登録局識別子"
 msgid "Registration Authority cannot be left empty"
 msgstr "登録局を空にすることはできません"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:86
+=======
+#: src/components/ReviewSubmit/index.tsx:73
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Registration Submission"
 msgstr "登録申請"
 
@@ -1601,15 +1798,27 @@ msgstr ""
 msgid "Routine Maintenance Scheduled"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:278
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:275
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Safeguards PII"
 msgstr "個人情報の保護について"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:331
+=======
+#: src/modules/dashboard/certificate/registration.tsx:313
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Save & Next"
 msgstr "保存して次に進む"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:327
+=======
+#: src/modules/dashboard/certificate/registration.tsx:309
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Save & Previous"
 msgstr "保存と前へ"
 
@@ -1627,7 +1836,11 @@ msgid "Section"
 msgstr "セクション"
 
 #: src/components/BasicDetail/index.tsx:73
+<<<<<<< HEAD
 #: src/components/CertificateReview/BasicDetailsReview.tsx:27
+=======
+#: src/components/CertificateReview/BasicDetailsReview.tsx:26
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/CertificateSection/index.tsx:23
 #: src/components/CertificateSection/index.tsx:65
 msgid "Section 1: Basic Details"
@@ -1647,7 +1860,11 @@ msgstr "セクション 3: 連絡先"
 
 #: src/components/CertificateReview/TrisaImplementationReview.tsx:39
 #: src/components/CertificateSection/index.tsx:41
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:55
+=======
+#: src/components/TrisaImplementation/index.tsx:29
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Section 4: TRISA Implementation"
 msgstr "第4節 TRISAの実施"
 
@@ -1768,7 +1985,11 @@ msgid "Step 1"
 msgstr ""
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:39
+<<<<<<< HEAD
 #: src/components/NeedsAttention/AttentionAlert.tsx:112
+=======
+#: src/components/NeedsAttention/AttentionAlert.tsx:111
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/Section/PasswordResetForm.tsx:48
 #: src/hoc/withRHF.tsx:117
 msgid "Submit"
@@ -1806,6 +2027,13 @@ msgstr "テストネット発信"
 msgid "TRISA Certificates"
 msgstr ""
 
+<<<<<<< HEAD
+=======
+#: src/components/OrganizationProfile/TrisaDetail.tsx:20
+msgid "TRISA Details"
+msgstr ""
+
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrisaImplementationForm/index.tsx:68
 msgid "TRISA Endpoint"
 msgstr " TRISAエンドポイント"
@@ -1814,11 +2042,19 @@ msgstr " TRISAエンドポイント"
 #~ msgid "TRISA Endpoint is a server address (e.g. trisa.myvasp.com:443) at which the VASP can be reached via secure channels. The Common Name typically matches the Endpoint, without the port number at the end (e.g. trisa.myvasp.com) and is used to identify the subject in the X.509 certificate."
 #~ msgstr " TRISA Endpointは、VASPが安全なチャネルを介して到達できるサーバ・アドレス（例：trisa.myvasp.com:443）である。コモンネームは通常、エンドポイントに一致し、末尾のポート番号を除いたもの（例：trisa.myvasp.com）で、X.509証明書でサブジェクトを識別するために使用されます。"
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:77
+=======
+#: src/components/TrisaImplementation/index.tsx:51
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TRISA Endpoint: MainNet"
 msgstr " TRISA Endpoint:メインネット"
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:72
+=======
+#: src/components/TrisaImplementation/index.tsx:46
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TRISA Endpoint: TestNet"
 msgstr " TRISAエンドポイントTestNet"
 
@@ -1881,8 +2117,13 @@ msgstr ""
 msgid "TRISA endpoint for communication"
 msgstr "通信用TRISAエンドポイント"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:22
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:48
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:14
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:34
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TRISA endpoint is not valid"
 msgstr " TRISAエンドポイントが無効です。"
 
@@ -2005,7 +2246,11 @@ msgstr " TestNet ネットワークメトリクス"
 msgid "TestNet TRISA Endpoint"
 msgstr " TestNet TRISAエンドポイント"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:39
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TestNet and MainNet endpoints should not be the same"
 msgstr " TestNetとMainNetのエンドポイントは同じであってはなりません。"
 
@@ -2041,10 +2286,13 @@ msgstr ""
 msgid "The TRISA Global Directory Service (GDS) is temporarily undergoing maintenance. Please try again later."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/Section/AboutUs.tsx:37
 msgid "The Travel Rule Information Sharing Architecture (TRISA)"
 msgstr "旅行規則情報共有アーキテクチャ（TRISA)"
 
+=======
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrisaImplementationForm/index.tsx:73
 msgid "The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC."
 msgstr "パートナーVASPがgRPCを介して接続するためのTRISAエンドポイントのアドレスとポート"
@@ -2057,11 +2305,19 @@ msgstr " mTLS証明書のコモンネーム。これはほとんどの場合、�
 msgid "The link to reset your password expires in 24 hours."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:234
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:232
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 msgstr "組織がTravel Rule情報を収集/送信するために必要な最低基準値"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:48
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:50
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:177
 #: src/components/NameIdentifiers/index.tsx:38
 #: src/components/NameIdentifiers/index.tsx:45
@@ -2076,7 +2332,11 @@ msgstr "あなたの国の管轄区域の主要な規制当局または監督当
 msgid "This is the only time the PKCS12 password is shown during the registration process."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:281
+=======
+#: src/modules/dashboard/certificate/registration.tsx:263
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 msgstr "この複数セクションからなる書式は、登録および証明書発行のプロセスにおける重要なステップです。提供された情報は、あなたが代表する法人を確認するために使用され、必要に応じて、コンプライアンスに関する決定を容易にするために、検証済みのTRISA会員が利用できるようになります。ガイダンスが必要な場合は"
 
@@ -2084,11 +2344,19 @@ msgstr "この複数セクションからなる書式は、登録および証明
 msgid "This questionnaire is designed to help TRISA members understand the regulatory regime of your organization. The information provided will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
 msgstr "このアンケートは、TRISA会員が貴組織の規制体制を理解するために作成されたものです。提供された情報は、要求されるコンプライアンス情報交換が正しく安全に行われるようにするために役立ちます。認証されたすべてのTRISA会員は、この情報にアクセスすることができます。"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:179
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:177
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "顧客に仮想資産の送受信を許可する前にKYCを実施するための基準値"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:292
+=======
+#: src/modules/dashboard/certificate/registration.tsx:274
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "To assist in completing the registration form, the form is divided into multiple sections"
 msgstr "登録フォームの記入を支援するために、フォームを複数のセクションに分割しています"
 
@@ -2181,7 +2449,11 @@ msgstr " VASP のアカウントは、上級コンプライアンス・オフィ
 msgid "Website"
 msgstr "ウェブサイト"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:17
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:13
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Website is a required field"
 msgstr "ウェブサイトは必須項目です。"
 
@@ -2202,8 +2474,13 @@ msgstr ""
 msgid "What is IVMS101?"
 msgstr " IVMS101とは何ですか？"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:204
 #: src/components/TrixoQuestionnaireForm/index.tsx:203
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:200
+#: src/components/TrixoQuestionnaireForm/index.tsx:201
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "What is the minimum threshold for Travel Rule compliance?"
 msgstr " Travel Ruleに準拠するための最低基準値は？"
 
@@ -2237,12 +2514,21 @@ msgstr ""
 msgid "X.509 Identity Certificates"
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
 msgid "YES"
 msgstr ""
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:15
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:241
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:259
+msgid "YES"
+msgstr ""
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:16
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/ReviewSubmit/ModalAlert.tsx:37
 #: src/constants/trixo.ts:5
 msgid "Yes"
@@ -2258,11 +2544,15 @@ msgstr ""
 msgid "You must request a new X.509 Identity Certificate to change your Endpoint and Common Name."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:62
 #~ msgid "You must submit your registration for TestNet and MainNet separately"
 #~ msgstr " TestNetとMainNetの登録は別々に行う必要があります"
 
 #: src/components/ReviewSubmit/index.tsx:92
+=======
+#: src/components/ReviewSubmit/index.tsx:79
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "You must submit your registration for TestNet and MainNet separately."
 msgstr ""
 
@@ -2270,11 +2560,15 @@ msgstr ""
 msgid "You must verify your email address. An email with verification instructions has been sent to your email address. Please complete the email verification process in 24 hours. The email verification link will expire in 24 hours."
 msgstr ""
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:68
 #~ msgid "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process"
 #~ msgstr "各登録に対して、確認用リンクが記載されたメールが2通届きます。それぞれの確認リンクをクリックして登録作業を完了してください。"
 
 #: src/components/ReviewSubmit/index.tsx:98
+=======
+#: src/components/ReviewSubmit/index.tsx:85
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process."
 msgstr ""
 
@@ -2313,8 +2607,13 @@ msgid "about us"
 msgstr ""
 
 #: src/components/TrisaImplementationForm/index.tsx:43
+<<<<<<< HEAD
 #~ msgid "common name should match the TRISA endpoint without the port"
 #~ msgstr "コモンネームは、ポートなしでTRISAエンドポイントと一致する必要があります。"
+=======
+msgid "common name should match the TRISA endpoint without the port"
+msgstr ""
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 
 #: src/components/Section/MembershipGuide.tsx:21
 msgid "complete VASP verification"
@@ -2408,8 +2707,11 @@ msgid ""
 msgstr ""
 
 #: src/components/CertificateReview/index.tsx:53
+<<<<<<< HEAD
 #: src/components/OrganizationProfile/TrisaDetail.tsx:26
 #: src/components/OrganizationProfile/TrisaDetail.tsx:29
+=======
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "{0}"
 msgstr ""
 

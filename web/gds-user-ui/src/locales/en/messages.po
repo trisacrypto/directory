@@ -13,7 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:103
+=======
+#: src/components/ReviewSubmit/index.tsx:90
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid " Failure to click either confirmation will result in an incomplete registration"
 msgstr " Failure to click either confirmation will result in an incomplete registration"
 
@@ -187,7 +191,11 @@ msgid "Address line 2 e.g. apartment or suite number"
 msgstr "Address line 2 e.g. apartment or suite number"
 
 #: src/components/Addresses/index.tsx:11
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:116
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:120
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:244
 msgid "Addresses"
 msgstr "Addresses"
@@ -222,7 +230,11 @@ msgstr "An error has occurred to load announcements"
 msgid "An error has occurred to load attention data"
 msgstr "An error has occurred to load attention data"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:19
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:21
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "An error has occurred to load legal person data"
 msgstr "An error has occurred to load legal person data"
 
@@ -238,8 +250,13 @@ msgstr "An identifier issued by an appropriate issuing authority"
 msgid "App version {appVersion}"
 msgstr "App version {appVersion}"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:185
 #: src/components/TrixoQuestionnaireForm/index.tsx:243
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:181
+#: src/components/TrixoQuestionnaireForm/index.tsx:241
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Applicable Regulations"
 msgstr "Applicable Regulations"
 
@@ -255,11 +272,19 @@ msgstr "At least 9 characters in length"
 msgid "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 msgstr "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:144
 #: src/components/MemberDetails/index.tsx:589
 #: src/components/TrixoQuestionnaireForm/index.tsx:148
 msgid "At what threshold and currency does your organization conduct KYC checks?"
 msgstr "At what threshold and currency does your organization conduct KYC checks?"
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:140
+#: src/components/MemberDetails/index.tsx:580
+#: src/components/TrixoQuestionnaireForm/index.tsx:146
+msgid "At what threshold and currency does your organization conduct KYC?"
+msgstr "At what threshold and currency does your organization conduct KYC?"
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 
 #: src/components/Footer/Version.tsx:42
 msgid "BFF & GDS version {bffAndGdsVersion}"
@@ -269,7 +294,11 @@ msgstr "BFF & GDS version {bffAndGdsVersion}"
 msgid "Back Home"
 msgstr "Back Home"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:298
+=======
+#: src/components/ReviewSubmit/index.tsx:253
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Back to Review Page"
 msgstr "Back to Review Page"
 
@@ -322,6 +351,10 @@ msgstr "Business or Compliance Office"
 msgid "By answering yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password."
 msgstr "By answering yes, I understand that this is the only time the PKCS12 Password is displayed and I have copied and securely saved the password."
 
+<<<<<<< HEAD
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:91
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:107
 msgid "CDD & Travel Rule Policies"
 msgstr "CDD & Travel Rule Policies"
@@ -353,7 +386,11 @@ msgstr "Certificate Management"
 msgid "Certificate Progress"
 msgstr "Certificate Progress"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:273
+=======
+#: src/modules/dashboard/certificate/registration.tsx:255
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/utils/menu.tsx:33
 msgid "Certificate Registration"
 msgstr "Certificate Registration"
@@ -375,7 +412,11 @@ msgstr "CipherTrace Traveler"
 msgid "City / Town / Municipality"
 msgstr "City / Town / Municipality"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:343
+=======
+#: src/modules/dashboard/certificate/registration.tsx:319
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Clear & Reset Form"
 msgstr "Clear & Reset Form"
 
@@ -411,6 +452,7 @@ msgstr "Common Name"
 msgid "Common name or VASP ID"
 msgstr "Common name or VASP ID"
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementationForm/index.tsx:43
 msgid "Common name should match the TRISA endpoint without the port."
 msgstr "Common name should match the TRISA endpoint without the port."
@@ -419,6 +461,20 @@ msgstr "Common name should match the TRISA endpoint without the port."
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
 msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
 msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
+#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it"
+#~ msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it"
+
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
+msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
+msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
+
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
+#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
+#~ msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 
 #: src/components/CertificateManagement/index.tsx:40
 msgid "Complete Certficate Registration"
@@ -456,7 +512,11 @@ msgstr "Compliance, Technical, Admininstrative, Billing"
 msgid "Comply with the Travel Rule"
 msgstr "Comply with the Travel Rule"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:139
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:137
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Conducts KYC before virtual asset transfers"
 msgstr "Conducts KYC before virtual asset transfers"
 
@@ -513,8 +573,13 @@ msgstr "Country of Issue"
 msgid "Country of Issue is reserved for National Identifiers of Natural Persons"
 msgstr "Country of Issue is reserved for National Identifiers of Natural Persons"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:143
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:188
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:147
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:192
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/CountryOfRegistration/index.tsx:19
 #: src/components/MemberDetails/index.tsx:271
 #: src/components/MemberDetails/index.tsx:331
@@ -572,8 +637,13 @@ msgstr "Customer Number"
 msgid "Dashboard"
 msgstr "Dashboard"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:227
 #: src/components/TrixoQuestionnaireForm/index.tsx:255
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:223
+#: src/components/TrixoQuestionnaireForm/index.tsx:253
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Data Protection Policies"
 msgstr "Data Protection Policies"
 
@@ -626,6 +696,7 @@ msgstr "Directory Lookup"
 msgid "Documentation"
 msgstr "Documentation"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:133
 msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 msgstr "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
@@ -665,6 +736,20 @@ msgstr ""
 "                    Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:272
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:120
+#: src/components/TrixoQuestionnaireForm/index.tsx:131
+msgid "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
+msgstr "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:99
+#: src/components/TrixoQuestionnaireForm/index.tsx:123
+msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+msgstr "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
+#: src/components/TrixoQuestionnaireForm/index.tsx:269
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
 msgstr "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
 
@@ -690,7 +775,11 @@ msgstr "Driver's License Number"
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 msgstr "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance."
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:61
+=======
+#: src/components/TrisaImplementation/index.tsx:35
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance. Please specify the TestNet endpoint and the MainNet endpoint. The TestNet endpoint and the MainNet endpoint must be different."
 msgstr "Each VASP is required to establish a TRISA endpoint for inter-VASP communication. Please specify the details of your endpoint for certificate issuance. Please specify the TestNet endpoint and the MainNet endpoint. The TestNet endpoint and the MainNet endpoint must be different."
 
@@ -803,7 +892,11 @@ msgstr "GLEIF Registration Authorities"
 msgid "Geographic"
 msgstr "Geographic"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:288
+=======
+#: src/modules/dashboard/certificate/registration.tsx:270
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Getting Started Help Guide"
 msgstr "Getting Started Help Guide"
 
@@ -852,14 +945,22 @@ msgstr "ID:"
 msgid "IVMS 101 data structure"
 msgstr "IVMS 101 data structure"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:170
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:174
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:303
 #: src/components/NameIdentification/index.tsx:130
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:122
 msgid "Identification Number"
 msgstr "Identification Number"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:176
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:180
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:311
 #: src/components/NameIdentification/index.tsx:159
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:130
@@ -887,6 +988,7 @@ msgstr "If you lose the PKCS12 password, you will have to the start the registra
 msgid "If you would like to edit your registration form before submitting, please return to the"
 msgstr "If you would like to edit your registration form before submitting, please return to the"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/MainNetWarningBox.tsx:9
 #: src/components/ReviewSubmit/index.tsx:241
 msgid "If you would like to register for MainNet, please provide a MainNet Endpoint and Common Name."
@@ -898,6 +1000,9 @@ msgid "If you would like to register for TestNet, please provide a TestNet Endpo
 msgstr "If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name."
 
 #: src/components/FileUpload/index.tsx:97
+=======
+#: src/components/FileUpload/index.tsx:98
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Import File"
 msgstr "Import File"
 
@@ -934,15 +1039,28 @@ msgstr "Integrate with TRISA."
 msgid "Interoperable"
 msgstr "Interoperable"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:35
 msgid "Invalid date."
 msgstr "Invalid date."
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:68
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:18
+msgid "Invalid date"
+msgstr "Invalid date"
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:19
+msgid "Invalid date / year must be 4 digit"
+msgstr "Invalid date / year must be 4 digit"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:69
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:100
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 msgstr "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:235
 msgid ""
 "Is your organization required by law to safeguard Personally Identifiable\n"
@@ -957,6 +1075,15 @@ msgstr "Is your organization required by law to safeguard Personally Identifiabl
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:165
 #: src/components/TrixoQuestionnaireForm/index.tsx:189
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:231
+#: src/components/TrixoQuestionnaireForm/index.tsx:257
+msgid "Is your organization required by law to safeguard PII?"
+msgstr "Is your organization required by law to safeguard PII?"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:161
+#: src/components/TrixoQuestionnaireForm/index.tsx:187
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
 msgstr "Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?"
 
@@ -1127,6 +1254,7 @@ msgstr "Misc"
 msgid "Missing required element"
 msgstr "Missing required element"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:195
 msgid "Must comply with Travel Rule"
 msgstr "Must comply with Travel Rule"
@@ -1137,6 +1265,18 @@ msgstr "Must safeguard PII"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:193
+msgid "Must comply with Travel Rule"
+msgstr "Must comply with Travel Rule"
+
+#: src/components/TrixoQuestionnaireForm/index.tsx:262
+msgid "Must safeguard PII"
+msgstr "Must safeguard PII"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:241
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:259
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "NO"
 msgstr "NO"
 
@@ -1152,7 +1292,11 @@ msgstr "Name"
 msgid "Name Identifier Type is required"
 msgstr "Name Identifier Type is required"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:43
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:45
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:172
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:77
 msgid "Name Identifiers"
@@ -1162,7 +1306,11 @@ msgstr "Name Identifiers"
 msgid "Name identifiers"
 msgstr "Name identifiers"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:44
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:45
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:74
 msgid "Name of Primary Regulator"
 msgstr "Name of Primary Regulator"
@@ -1171,7 +1319,11 @@ msgstr "Name of Primary Regulator"
 msgid "Name, Addresss, Country, National Identifier"
 msgstr "Name, Addresss, Country, National Identifier"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:161
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:165
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:298
 #: src/components/NameIdentification/index.tsx:118
 msgid "National Identification"
@@ -1204,19 +1356,31 @@ msgid "New X.509 Identity Certificate Request"
 msgstr "New X.509 Identity Certificate Request"
 
 #: src/components/ConfirmIdentityCertificateRequest/index.tsx:61
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:331
+=======
+#: src/modules/dashboard/certificate/registration.tsx:313
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Next"
 msgstr "Next"
 
 #: src/components/CertificateManagement/MainnetCertificates.tsx:40
 #: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:33
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:15
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:16
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/ReviewSubmit/ModalAlert.tsx:34
 #: src/constants/trixo.ts:7
 msgid "No"
 msgstr "No"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:298
+=======
+#: src/modules/dashboard/certificate/registration.tsx:280
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "No information is sent until you complete Section 6 - Review & Submit"
 msgstr "No information is sent until you complete Section 6 - Review & Submit"
 
@@ -1234,7 +1398,11 @@ msgid "Not a TRISA Member?"
 msgstr "Not a TRISA Member?"
 
 #: src/components/ReviewSubmit/AlertContent.tsx:26
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:96
+=======
+#: src/components/ReviewSubmit/index.tsx:83
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Note:"
 msgstr "Note:"
 
@@ -1270,7 +1438,11 @@ msgstr "Organization Name"
 msgid "Organization Type"
 msgstr "Organization Type"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:40
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:34
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Organization name is required"
 msgstr "Organization name is required"
 
@@ -1283,7 +1455,11 @@ msgstr "Organization:"
 msgid "Organizational Details"
 msgstr "Organizational Details"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:50
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:51
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:80
 msgid "Other Jurisdictions"
 msgstr "Other Jurisdictions"
@@ -1373,7 +1549,11 @@ msgstr "Please review the information provided, edit as needed, and submit to co
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 msgstr "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:246
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:244
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.\"FATF Recommendation 16\""
 msgstr "Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g.\"FATF Recommendation 16\""
 
@@ -1398,11 +1578,19 @@ msgstr "Postal Code / Postcode / ZIP Code"
 msgid "Preferred name for email communication."
 msgstr "Preferred name for email communication."
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:327
 msgid "Previous"
 msgstr "Previous"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:38
+=======
+#: src/modules/dashboard/certificate/registration.tsx:309
+msgid "Previous"
+msgstr "Previous"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:39
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrixoQuestionnaireForm/index.tsx:64
 msgid "Primary National Jurisdiction"
 msgstr "Primary National Jurisdiction"
@@ -1420,7 +1608,11 @@ msgstr "Profile Created:"
 msgid "Reference implementation"
 msgstr "Reference implementation"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:194
+=======
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:198
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:337
 msgid "Reg Authority"
 msgstr "Reg Authority"
@@ -1446,7 +1638,11 @@ msgstr "Registration Authority Identifier"
 msgid "Registration Authority cannot be left empty"
 msgstr "Registration Authority cannot be left empty"
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:86
+=======
+#: src/components/ReviewSubmit/index.tsx:73
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Registration Submission"
 msgstr "Registration Submission"
 
@@ -1504,6 +1700,7 @@ msgstr "Role"
 msgid "Routine Maintenance Scheduled"
 msgstr "Routine Maintenance Scheduled"
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:278
 msgid "Safeguards PII"
 msgstr "Safeguards PII"
@@ -1513,6 +1710,17 @@ msgid "Save & Next"
 msgstr "Save & Next"
 
 #: src/modules/dashboard/certificate/registration.tsx:327
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:275
+msgid "Safeguards PII"
+msgstr "Safeguards PII"
+
+#: src/modules/dashboard/certificate/registration.tsx:313
+msgid "Save & Next"
+msgstr "Save & Next"
+
+#: src/modules/dashboard/certificate/registration.tsx:309
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Save & Previous"
 msgstr "Save & Previous"
 
@@ -1530,7 +1738,11 @@ msgid "Section"
 msgstr "Section"
 
 #: src/components/BasicDetail/index.tsx:73
+<<<<<<< HEAD
 #: src/components/CertificateReview/BasicDetailsReview.tsx:27
+=======
+#: src/components/CertificateReview/BasicDetailsReview.tsx:26
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/CertificateSection/index.tsx:23
 #: src/components/CertificateSection/index.tsx:65
 msgid "Section 1: Basic Details"
@@ -1550,7 +1762,11 @@ msgstr "Section 3: Contacts"
 
 #: src/components/CertificateReview/TrisaImplementationReview.tsx:39
 #: src/components/CertificateSection/index.tsx:41
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:55
+=======
+#: src/components/TrisaImplementation/index.tsx:29
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Section 4: TRISA Implementation"
 msgstr "Section 4: TRISA Implementation"
 
@@ -1672,7 +1888,11 @@ msgid "Step 1"
 msgstr "Step 1"
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:39
+<<<<<<< HEAD
 #: src/components/NeedsAttention/AttentionAlert.tsx:112
+=======
+#: src/components/NeedsAttention/AttentionAlert.tsx:111
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/Section/PasswordResetForm.tsx:48
 #: src/hoc/withRHF.tsx:117
 msgid "Submit"
@@ -1710,15 +1930,30 @@ msgstr "TESTNET SUBMISSION"
 msgid "TRISA Certificates"
 msgstr "TRISA Certificates"
 
+<<<<<<< HEAD
+=======
+#: src/components/OrganizationProfile/TrisaDetail.tsx:20
+msgid "TRISA Details"
+msgstr "TRISA Details"
+
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/TrisaImplementationForm/index.tsx:68
 msgid "TRISA Endpoint"
 msgstr "TRISA Endpoint"
 
+<<<<<<< HEAD
 #: src/components/TrisaImplementation/index.tsx:77
 msgid "TRISA Endpoint: MainNet"
 msgstr "TRISA Endpoint: MainNet"
 
 #: src/components/TrisaImplementation/index.tsx:72
+=======
+#: src/components/TrisaImplementation/index.tsx:51
+msgid "TRISA Endpoint: MainNet"
+msgstr "TRISA Endpoint: MainNet"
+
+#: src/components/TrisaImplementation/index.tsx:46
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TRISA Endpoint: TestNet"
 msgstr "TRISA Endpoint: TestNet"
 
@@ -1781,8 +2016,13 @@ msgstr "TRISA Verified Logo"
 msgid "TRISA endpoint for communication"
 msgstr "TRISA endpoint for communication"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:22
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:48
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:14
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:34
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TRISA endpoint is not valid"
 msgstr "TRISA endpoint is not valid"
 
@@ -1912,7 +2152,11 @@ msgstr "TestNet Network Metrics"
 msgid "TestNet TRISA Endpoint"
 msgstr "TestNet TRISA Endpoint"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:39
+=======
+#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "TestNet and MainNet endpoints should not be the same"
 msgstr "TestNet and MainNet endpoints should not be the same"
 
@@ -1967,11 +2211,19 @@ msgstr "The common name for the mTLS certificate. This should match the TRISA en
 msgid "The link to reset your password expires in 24 hours."
 msgstr "The link to reset your password expires in 24 hours."
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:234
 msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 msgstr "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 
 #: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:48
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:232
+msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
+msgstr "The minimum threshold above which your organization is required to collect/send Travel Rule information."
+
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:50
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/MemberDetails/index.tsx:177
 #: src/components/NameIdentifiers/index.tsx:38
 #: src/components/NameIdentifiers/index.tsx:45
@@ -1986,7 +2238,11 @@ msgstr "The name of primary regulator or supervisory authority for your national
 msgid "This is the only time the PKCS12 password is shown during the registration process."
 msgstr "This is the only time the PKCS12 password is shown during the registration process."
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/registration.tsx:281
+=======
+#: src/modules/dashboard/certificate/registration.tsx:263
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 msgstr "This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the"
 
@@ -1994,11 +2250,19 @@ msgstr "This multi-section form is an important step in the registration and cer
 msgid "This questionnaire is designed to help TRISA members understand the regulatory regime of your organization. The information provided will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
 msgstr "This questionnaire is designed to help TRISA members understand the regulatory regime of your organization. The information provided will help ensure that required compliance information exchanges are conducted correctly and safely. All verified TRISA members will have access to this information."
 
+<<<<<<< HEAD
 #: src/components/TrixoQuestionnaireForm/index.tsx:179
 msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 msgstr "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
 
 #: src/modules/dashboard/certificate/registration.tsx:292
+=======
+#: src/components/TrixoQuestionnaireForm/index.tsx:177
+msgid "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
+msgstr "Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers"
+
+#: src/modules/dashboard/certificate/registration.tsx:274
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "To assist in completing the registration form, the form is divided into multiple sections"
 msgstr "To assist in completing the registration form, the form is divided into multiple sections"
 
@@ -2087,7 +2351,11 @@ msgstr "We recommend that a senior compliance officer initially creates the acco
 msgid "Website"
 msgstr "Website"
 
+<<<<<<< HEAD
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:17
+=======
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:13
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "Website is a required field"
 msgstr "Website is a required field"
 
@@ -2108,8 +2376,13 @@ msgstr "We’ll be back soon."
 msgid "What is IVMS101?"
 msgstr "What is IVMS101?"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:204
 #: src/components/TrixoQuestionnaireForm/index.tsx:203
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:200
+#: src/components/TrixoQuestionnaireForm/index.tsx:201
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "What is the minimum threshold for Travel Rule compliance?"
 msgstr "What is the minimum threshold for Travel Rule compliance?"
 
@@ -2143,12 +2416,21 @@ msgstr "X.509 Identity Certificate Inventory"
 msgid "X.509 Identity Certificates"
 msgstr "X.509 Identity Certificates"
 
+<<<<<<< HEAD
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
 msgid "YES"
 msgstr "YES"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:15
+=======
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:241
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:259
+msgid "YES"
+msgstr "YES"
+
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:16
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/ReviewSubmit/ModalAlert.tsx:37
 #: src/constants/trixo.ts:5
 msgid "Yes"
@@ -2166,7 +2448,11 @@ msgstr ""
 msgid "You must request a new X.509 Identity Certificate to change your Endpoint and Common Name."
 msgstr "You must request a new X.509 Identity Certificate to change your Endpoint and Common Name."
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:92
+=======
+#: src/components/ReviewSubmit/index.tsx:79
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "You must submit your registration for TestNet and MainNet separately."
 msgstr "You must submit your registration for TestNet and MainNet separately."
 
@@ -2174,7 +2460,11 @@ msgstr "You must submit your registration for TestNet and MainNet separately."
 msgid "You must verify your email address. An email with verification instructions has been sent to your email address. Please complete the email verification process in 24 hours. The email verification link will expire in 24 hours."
 msgstr "You must verify your email address. An email with verification instructions has been sent to your email address. Please complete the email verification process in 24 hours. The email verification link will expire in 24 hours."
 
+<<<<<<< HEAD
 #: src/components/ReviewSubmit/index.tsx:98
+=======
+#: src/components/ReviewSubmit/index.tsx:85
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process."
 msgstr "You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process."
 
@@ -2208,6 +2498,13 @@ msgstr "Your registration request has been successfully received by the Director
 msgid "about us"
 msgstr "about us"
 
+<<<<<<< HEAD
+=======
+#: src/components/TrisaImplementationForm/index.tsx:43
+msgid "common name should match the TRISA endpoint without the port"
+msgstr "common name should match the TRISA endpoint without the port"
+
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 #: src/components/Section/MembershipGuide.tsx:21
 msgid "complete VASP verification"
 msgstr "complete VASP verification"
@@ -2298,8 +2595,11 @@ msgstr ""
 "                    testing purposes."
 
 #: src/components/CertificateReview/index.tsx:53
+<<<<<<< HEAD
 #: src/components/OrganizationProfile/TrisaDetail.tsx:26
 #: src/components/OrganizationProfile/TrisaDetail.tsx:29
+=======
+>>>>>>> 768d972 (sc-8420 Endpoint/Common name field corrections (#752))
 msgid "{0}"
 msgstr "{0}"
 
