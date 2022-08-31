@@ -38,9 +38,10 @@ const (
 
 // Map containing all the supported Sectigo profiles and their required parameters.
 var Profiles = map[string][]string{
-	ProfileCipherTraceEE:                   nameParams[:],
-	ProfileIDCipherTraceEE:                 nameParams[:],
-	ProfileCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...), ProfileIDCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...),
+	ProfileCipherTraceEE:                     nameParams[:],
+	ProfileIDCipherTraceEE:                   nameParams[:],
+	ProfileCipherTraceEndEntityCertificate:   append(nameParams[:], subjectParams[:]...),
+	ProfileIDCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...),
 }
 
 var subjectParams = [4]string{
