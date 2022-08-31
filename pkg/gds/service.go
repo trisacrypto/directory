@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -104,7 +105,7 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Create the certificate manager
-	if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email, s.conf.DirectoryID); err != nil {
+	if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email); err != nil {
 		return nil, err
 	}
 
@@ -138,6 +139,7 @@ type Service struct {
 	certman *certman.CertificateManager
 	email   *emails.EmailManager
 	secret  *secrets.SecretManager
+	wg      sync.WaitGroup
 	echan   chan error
 }
 
@@ -162,9 +164,11 @@ func (s *Service) Serve() (err error) {
 
 		// These services should not run in maintenance mode
 		// Start the certificate manager go routine process
-		s.certman.Run(nil)
+		s.wg = sync.WaitGroup{}
+		s.certman.Run(&s.wg)
 
 		// Start the backup manager go routine process
+		// TODO: Refactor to use the wait group and shutdown gracefully
 		go s.BackupManager(nil)
 	}
 
@@ -207,6 +211,12 @@ func (s *Service) Shutdown() (err error) {
 		if err = s.members.Shutdown(); err != nil {
 			log.Error().Err(err).Msg("could not shutdown TRISAMembers service")
 		}
+
+		// Stop the certificate manager
+		s.certman.Stop()
+
+		// Wait for all go routines to finish
+		s.wg.Wait()
 
 		// Close the database correctly
 		if err = s.db.Close(); err != nil {

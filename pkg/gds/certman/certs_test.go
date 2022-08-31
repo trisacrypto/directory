@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -71,7 +72,7 @@ func (s *certTestSuite) TearDownSuite() {
 // Test that the certificate manger correctly moves certificates across the request
 // pipeline.
 func (s *certTestSuite) TestCertManager() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -87,7 +88,7 @@ func (s *certTestSuite) TestCertManager() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Let the certificate manager submit the certificate request
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP state should be changed to ISSUING_CERTIFICATE
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -121,7 +122,7 @@ func (s *certTestSuite) TestCertManager() {
 
 	// Let the certificate manager process the Sectigo response
 	sent := time.Now()
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// Secret manager should contain the certificate
 	secret, err := sm.GetLatestVersion(ctx, "cert")
@@ -206,7 +207,7 @@ func (s *certTestSuite) TestCertManager() {
 }
 
 func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
-	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -248,7 +249,7 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 }
 
 func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
-	_ = s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -284,7 +285,7 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 func (s *certTestSuite) TestCertManagerReissuance() {
 	require := s.Require()
 
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 
@@ -347,14 +348,14 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	require.Len(reqIDs, previousNumberOfReqs+1, "should not have created a new certificate request")
 
 	// Call the cert request loop once to submit the certificate request and start it's processing.
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 	v, err = s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// On the second call to the cert request loop the certificate should be downloaded and
 	// attached to the VASP. The VASP should be in the VERIFIED state.
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 	v, err = s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
@@ -439,7 +440,7 @@ func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
 
 // Test that the certificate manager rejects requests when the VASP state is invalid.
 func (s *certTestSuite) TestCertManagerBadState() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -458,7 +459,7 @@ func (s *certTestSuite) TestCertManagerBadState() {
 	require.Equal(pb.VerificationState_PENDING_REVIEW, v.VerificationStatus)
 
 	// Run the cert manager for a loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before submission
 	certReq, err := s.db.RetrieveCertReq(quebecCertReq.Id)
@@ -470,7 +471,7 @@ func (s *certTestSuite) TestCertManagerBadState() {
 	require.NoError(s.db.UpdateVASP(echoVASP))
 
 	// Run the cert manager for a loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before submission
 	certReq, err = s.db.RetrieveCertReq(quebecCertReq.Id)
@@ -484,14 +485,14 @@ func (s *certTestSuite) TestCertManagerBadState() {
 	require.NoError(s.db.UpdateCertReq(quebecCertReq))
 
 	// Move the certificate to processing
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// Set VASP to rejected
 	echoVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(echoVASP))
 
 	// Run the cert manager for a loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before download
 	certReq, err = s.db.RetrieveCertReq(quebecCertReq.Id)
@@ -502,7 +503,7 @@ func (s *certTestSuite) TestCertManagerBadState() {
 
 // Test that the certificate manager is able to process an end entity profile.
 func (s *certTestSuite) TestCertManagerEndEntityProfile() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -528,8 +529,8 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	s.certman.HandleCertificateRequests(certDir)
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
+	s.certman.HandleCertificateRequests()
 
 	// VASP should contain the new certificate
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -545,7 +546,7 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 
 // Test that the certificate manager is able to process a CipherTraceEE profile.
 func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -565,8 +566,8 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
 	// Run the certificate manager through two iterations to fully process the request.
-	s.certman.HandleCertificateRequests(certDir)
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
+	s.certman.HandleCertificateRequests()
 
 	// VASP should contain the new certificate
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -582,7 +583,7 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 
 // Test that certificate submission fails if the user available balance is 0.
 func (s *certTestSuite) TestSubmitNoBalance() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -596,7 +597,7 @@ func (s *certTestSuite) TestSubmitNoBalance() {
 	require.NoError(err, "could not get quebec VASP")
 
 	// Run the CertManager for a tick
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -619,7 +620,7 @@ func (s *certTestSuite) TestSubmitNoBalance() {
 
 // Test that the certificate submission fails if there is no available password.
 func (s *certTestSuite) TestSubmitNoPassword() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -629,7 +630,7 @@ func (s *certTestSuite) TestSubmitNoPassword() {
 	require.NoError(err, "could not get quebec VASP")
 
 	// Run the CertManager for a tick
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -652,7 +653,7 @@ func (s *certTestSuite) TestSubmitNoPassword() {
 
 // Test that the certificate submission fails if the batch request fails.
 func (s *certTestSuite) TestSubmitBatchError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEndEntityCertificate, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
@@ -677,7 +678,7 @@ func (s *certTestSuite) TestSubmitBatchError() {
 	require.NoError(s.db.UpdateCertReq(quebecCertReq))
 
 	// Run the CertManager for a tick
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.db.RetrieveVASP(echoVASP.Id)
@@ -700,7 +701,7 @@ func (s *certTestSuite) TestSubmitBatchError() {
 
 // Test that the certificate processing fails if the batch status request fails.
 func (s *certTestSuite) TestProcessBatchDetailError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -713,7 +714,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 	require.NoError(err, "certman loop unsuccessful")
 
 	v, err := s.db.RetrieveVASP(foxtrot.Id)
@@ -732,7 +733,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	v, err = s.db.RetrieveVASP(foxtrot.Id)
 	require.NoError(err)
@@ -741,7 +742,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 
 // Test that the certificate processing fails if there is still an active batch.
 func (s *certTestSuite) TestProcessActiveBatch() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -760,7 +761,7 @@ func (s *certTestSuite) TestProcessActiveBatch() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
 	v, err := s.db.RetrieveVASP(foxtrot.Id)
@@ -781,7 +782,7 @@ func (s *certTestSuite) TestProcessActiveBatch() {
 
 // Test that the certificate processing fails if the batch request is rejected.
 func (s *certTestSuite) TestProcessRejected() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -806,7 +807,7 @@ func (s *certTestSuite) TestProcessRejected() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.db.RetrieveVASP(foxtrot.Id)
@@ -827,7 +828,7 @@ func (s *certTestSuite) TestProcessRejected() {
 
 // Test that the certificate processing fails if the batch request errors.
 func (s *certTestSuite) TestProcessBatchError() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -852,7 +853,7 @@ func (s *certTestSuite) TestProcessBatchError() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.db.RetrieveVASP(foxtrot.Id)
@@ -874,7 +875,7 @@ func (s *certTestSuite) TestProcessBatchError() {
 // Test that the certificate processing fails if the batch processing info request
 // returns an unhandled sectigo state.
 func (s *certTestSuite) TestProcessBatchNoSuccess() {
-	certDir := s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	require := s.Require()
 
@@ -892,7 +893,7 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 	})
 
 	// Run cert manager for one loop
-	s.certman.HandleCertificateRequests(certDir)
+	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
 	v, err := s.db.RetrieveVASP(foxtrot.Id)
@@ -917,7 +918,7 @@ func (s *certTestSuite) TestCertManagerRequestLoop() {
 	s.runCertManager(s.conf.CertMan.RequestInterval)
 }
 
-func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureType) (certPath string) {
+func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureType) {
 	require := s.Require()
 
 	// Load fixtures into the library
@@ -928,7 +929,7 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 
 	// Create the certificate manager configuration
 	var err error
-	certPath, err = ioutil.TempDir("testdata", "certs-*")
+	certPath, err := ioutil.TempDir("testdata", "certs-*")
 	require.NoError(err, "could not create cert storage")
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
@@ -950,9 +951,8 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 
 	// Initialize the certificate manager
 	require.NoError(os.MkdirAll(s.conf.CertMan.Storage, 0755))
-	s.certman, err = certman.New(s.conf.CertMan, s.db, s.secret, email, s.conf.DirectoryID)
+	s.certman, err = certman.New(s.conf.CertMan, s.db, s.secret, email)
 	require.NoError(err, "could not create certificate manager")
-	return certPath
 }
 
 func (s *certTestSuite) teardownCertManager() {
@@ -967,13 +967,13 @@ func (s *certTestSuite) teardownCertManager() {
 // sends the stop signal, and waits for it to finish.
 func (s *certTestSuite) runCertManager(requestInterval time.Duration) {
 	// Start the certificate manager
-	stop := make(chan struct{})
-	wg := s.certman.Run(stop)
+	wg := sync.WaitGroup{}
+	s.certman.Run(&wg)
 
 	// Wait for the interval to elapse
 	time.Sleep(requestInterval)
 
 	// Make sure that the certificate manager is stopped before we proceed
-	close(stop)
+	s.certman.Stop()
 	wg.Wait()
 }

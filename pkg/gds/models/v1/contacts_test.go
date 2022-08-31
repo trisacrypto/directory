@@ -184,4 +184,8 @@ func TestGetSentEmailCount(t *testing.T) {
 	sent, err := models.GetSentEmailCount(contacts.Administrative, "verify_contact", 30)
 	require.NoError(t, err)
 	require.Equal(t, 2, sent)
+
+	// TODO: Test that the returned count is zero when the log is empty
+	// TODO: Test that emails older than the time window are not counted
+	// TODO: Test that emails that don't match the reason are not counted
 }

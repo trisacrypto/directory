@@ -99,6 +99,11 @@ func TestVASPExtra(t *testing.T) {
 	// Deleting certificate request IDs from an empty slice should not error
 	require.NoError(t, DeleteCertReqID(vasp, "b5841869-105f-411c-8722-4045aad72717"))
 
+	// Attempt to fetch the latest certificate request ID, should return empty string
+	id, err := GetLatestCertReqID(vasp)
+	require.NoError(t, err)
+	require.Empty(t, id)
+
 	// Attempt to append certificate request IDs
 	certReqs := []string{
 		"b5841869-105f-411c-8722-4045aad72717",
@@ -125,6 +130,11 @@ func TestVASPExtra(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, ids, 1)
 	require.Equal(t, certReqs[1], ids[0])
+
+	// Latest certificate request ID should be the remaining one
+	latest, err := GetLatestCertReqID(vasp)
+	require.NoError(t, err)
+	require.Equal(t, certReqs[1], latest)
 
 	// Deleting the certificate request ID again should not error
 	require.NoError(t, DeleteCertReqID(vasp, certReqs[0]))

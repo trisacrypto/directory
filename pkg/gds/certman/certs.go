@@ -16,7 +16,6 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -29,17 +28,12 @@ import (
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
-func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager, directoryID string) (cm *CertificateManager, err error) {
+func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (cm *CertificateManager, err error) {
 	cm = &CertificateManager{
-		conf:        conf,
-		db:          db,
-		secret:      secret,
-		email:       email,
-		directoryID: directoryID,
-	}
-
-	if cm.directoryID == "" {
-		return nil, errors.New("directory ID is required for cert manager")
+		conf:   conf,
+		db:     db,
+		secret: secret,
+		email:  email,
 	}
 
 	if cm.email == nil {
@@ -60,7 +54,7 @@ func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManage
 		return nil, err
 	}
 
-	if _, err = cm.getCertStorage(); err != nil {
+	if cm.certDir, err = cm.getCertStorage(); err != nil {
 		return nil, err
 	}
 
@@ -71,27 +65,45 @@ func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManage
 // status of certificate requests and moves them through the request pipeline. This is
 // separated from the parent GDS to allow for isolated testing.
 type CertificateManager struct {
-	conf        config.CertManConfig
-	db          store.Store
-	secret      *secrets.SecretManager
-	certs       *sectigo.Sectigo
-	email       *emails.EmailManager
-	directoryID string
+	conf    config.CertManConfig
+	db      store.Store
+	secret  *secrets.SecretManager
+	certs   *sectigo.Sectigo
+	email   *emails.EmailManager
+	certDir string
+	stop    chan struct{}
 }
 
-// Run starts the CertManager go routine with the given channel and returns a wait
-// group, allowing the caller to control synchronization from the outside.
-func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
-	if stop == nil {
-		stop = make(chan struct{})
+// Run starts the CertManager as a go routine under the provided waitgroup. For
+// graceful shutdown, the caller must invoke the Stop method to signal the CertManager
+// routine to stop and block on the waitgroup if provided.
+func (c *CertificateManager) Run(wg *sync.WaitGroup) error {
+	if c.stop != nil {
+		return errors.New("certificate manager is already running")
 	}
-	wg = &sync.WaitGroup{}
-	wg.Add(1)
+
+	if wg != nil {
+		wg.Add(1)
+	}
+
+	c.stop = make(chan struct{})
 	go func() {
-		defer wg.Done()
-		c.CertManager(stop)
+		c.CertManager()
+		c.stop = nil
+		if wg != nil {
+			wg.Done()
+		}
 	}()
-	return wg
+	return nil
+}
+
+// Stop signals the CertManager routine to shutdown.
+// Note: This does not wait for the CertManager to stop and the caller should block on
+// the waitgroup passed to the Run method in order to implement a graceful shutdown.
+func (c *CertificateManager) Stop() {
+	if c.stop != nil {
+		close(c.stop)
+	}
 }
 
 // CertManager is a go routine that periodically checks on the status of certificate
@@ -104,27 +116,26 @@ func (c *CertificateManager) Run(stop chan struct{}) (wg *sync.WaitGroup) {
 //
 // TODO: move completed certificate requests to archive so that the CertManger routine
 // isn't continuously handling a growing number of requests over time.
-func (c *CertificateManager) CertManager(stop <-chan struct{}) {
-	// Check certificate download directory
-	certDir, err := c.getCertStorage()
-	if err != nil {
-		log.Fatal().Err(err).Msg("cert-manager cannot access certificate storage")
-	}
-
-	// Ticker is created in the go routine to prevent backpressure if the cert manager
-	// process takes longer than the specified ticker interval.
+func (c *CertificateManager) CertManager() {
+	// Tickers are created in the go routine to prevent backpressure if the individual
+	// handler routines take longer than the ticker intervals.
+	// Note: These routines block in order to facilitate a graceful shutdown of the
+	// main routine. Therefore, the ticker intervals should be configured so that the
+	// time between ticker intervals is greater than the time it takes to complete the
+	// longest running routine, to prevent routines from taking precedence over each
+	// other.
 	requestsTicker := time.NewTicker(c.conf.RequestInterval)
-	reissuanceTicker := time.NewTicker(c.conf.ReissuenceInterval)
-	log.Info().Dur("RequestInterval", c.conf.RequestInterval).Dur("ReissuenceInterval", c.conf.ReissuenceInterval).Str("store", certDir).Msg("cert-manager process started")
+	reissuanceTicker := time.NewTicker(c.conf.ReissuanceInterval)
+	log.Info().Dur("RequestInterval", c.conf.RequestInterval).Dur("ReissuanceInterval", c.conf.ReissuanceInterval).Str("store", c.certDir).Msg("cert-manager process started")
 
 	for {
 		// Wait for next tick or a stop signal
 		select {
-		case <-stop:
+		case <-c.stop:
 			log.Info().Msg("certificate manager received stop signal")
 			return
 		case <-requestsTicker.C:
-			c.HandleCertificateRequests(certDir)
+			c.HandleCertificateRequests()
 		case <-reissuanceTicker.C:
 			c.HandleCertificateReissuance()
 		}
@@ -136,7 +147,7 @@ func (c *CertificateManager) CertManager(stop <-chan struct{}) {
 // the database and handles each sequentially, progressing them by modifying the status
 // fields in the database. Note that this method logs errors instead of returning them
 // to the caller.
-func (c *CertificateManager) HandleCertificateRequests(certDir string) {
+func (c *CertificateManager) HandleCertificateRequests() {
 	// Retrieve all certificate requests from the database
 	var (
 		nrequests int
@@ -261,7 +272,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 
 	// Step 3: submit the certificate
 	var rep *sectigo.BatchResponse
-	batchName := fmt.Sprintf("%s-certreq-%s)", c.directoryID, r.Id)
+	batchName := fmt.Sprintf("%s-certreq-%s)", c.conf.DirectoryID, r.Id)
 	if rep, err = c.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.
@@ -462,19 +473,12 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 	var (
 		err        error
 		path       string
-		certDir    string
 		payload    []byte
 		secretType string
 	)
 
-	// Get the cert storage directory to download certs to
-	if certDir, err = c.getCertStorage(); err != nil {
-		log.Error().Err(err).Msg("could not find cert storage directory")
-		return
-	}
-
 	// Download the certificates as a zip file to the cert storage directory
-	if path, err = c.certs.Download(int(r.BatchId), certDir); err != nil {
+	if path, err = c.certs.Download(int(r.BatchId), c.certDir); err != nil {
 		log.Error().Err(err).Int("batch", int(r.BatchId)).Msg("could not download certificates")
 		return
 	}
@@ -694,34 +698,36 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 	// Iterate through the VASPs in the database.
 	vasps := c.db.ListVASPs()
 	defer vasps.Release()
+vaspsLoop:
 	for vasps.Next() {
-		if vasps.Error() != nil {
-			log.Error().Err(err).Msg("could not iterate through database")
-		}
 		var vasp *pb.VASP
 		if vasp, err = vasps.VASP(); err != nil {
 			log.Error().Err(err).Msg("could not parse vasp record from database")
-			continue
+			continue vaspsLoop
 		}
 
-		// Skip the current vasp if it is not verified, if it is verified and the
-		// identity certificate is nil, log an error.
+		// Skip the current VASP if it is not verified.
 		if vasp.GetVerificationStatus() != pb.VerificationState_VERIFIED {
-			continue
-		} else if vasp.IdentityCertificate == nil {
+			continue vaspsLoop
+		}
+
+		// Make sure the VASP has an identity certificate to avoid a panic.
+		if vasp.IdentityCertificate == nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("vasp is verified but does not have an identity certificate")
-			continue
+			continue vaspsLoop
 		}
 
 		// Calculate the number of days before the VASP's certificate expires.
 		notAfter := vasp.IdentityCertificate.NotAfter
 		if expirationDate, err = time.Parse(time.RFC3339, notAfter); err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
+			continue vaspsLoop
 		}
 		reissuanceDate := expirationDate.Add(-time.Hour * 240) // Calculate the reissuance date, 10 days before expiration
 		timeBeforeExpiration := time.Until(expirationDate)
 
-		// TODO: handle the case were the certificate has expired, we should update the certificate record to the EXPIRED state
+		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
+		// NOTE: This computation returns fractional days rather than rounding up or down to the nearest day.
 		switch daysBeforeExpiration := timeBeforeExpiration.Hours() / 24; {
 		// Seven days before expiration, send a cert reissuance reminder to VASP.
 		// NOTE: the SendContactReissuanceReminder will not send emails more than
@@ -729,31 +735,32 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 		case daysBeforeExpiration <= 7:
 			if err = c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
+				continue vaspsLoop
 			}
 
 		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
 		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
 		case daysBeforeExpiration <= 10:
 			// Check if the reissuance process has already started for this VASP
-			started, err := c.reissuanceInProgress(vasp)
-			if err != nil {
+			if started, err := c.reissuanceInProgress(vasp); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not check vasp reissuance status")
-				continue
-			}
-
-			if started {
+				continue vaspsLoop
+			} else if started {
 				log.Info().Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
-				continue
+				continue vaspsLoop
 			}
 
 			// Start the reissuance process for this VASP by creating a new certificate request
 			if err = c.reissueIdentityCertificates(vasp); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not start reissuance process")
-				continue
+				continue vaspsLoop
 			}
-			if _, err = c.email.SendReissuanceAdminNotification(vasp, reissuanceDate); err != nil {
+			if _, err = c.email.SendReissuanceAdminNotification(vasp, 10, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance notification")
-				continue
+				// The VASP and certreq records have already been updated in
+				// reissueIdentityCertificates, so we can continue to the next VASP if
+				// we failed to send the email.
+				continue vaspsLoop
 			}
 
 		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
@@ -761,17 +768,18 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
 			}
-			if NoAdminEmailSent(vasp, 30, reissuanceDate) {
-				if _, err = c.email.SendExpiresAdminNotification(vasp, reissuanceDate); err != nil {
-					log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
-					continue
-				}
+			if _, err = c.email.SendExpiresAdminNotification(vasp, 30, reissuanceDate); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
 			}
 		}
 		// We need to update the vasp record in the database so that the email logs are preserved.
 		if err = c.db.UpdateVASP(vasp); err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
 		}
+	}
+
+	if err := vasps.Error(); err != nil {
+		log.Error().Err(err).Msg("could not iterate through database")
 	}
 }
 
@@ -861,19 +869,4 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 		return fmt.Errorf("error updating vasp %s in the certman store", vasp.Id)
 	}
 	return nil
-}
-
-// Helper function for HandleCertificateReissuance checks if a certificate reissuance reminder
-// has been sent to the TRISA admin within the given time window.
-func NoAdminEmailSent(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) bool {
-	// Make sure that the email hasn't already been sent previously.
-	emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow)
-	if err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
-		return false
-	}
-	if emailCount > 0 {
-		return false
-	}
-	return true
 }

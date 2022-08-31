@@ -78,7 +78,7 @@ func NewMock(conf config.Config, trtlConn *grpc.ClientConn) (s *Service, err err
 	}
 	svc.admin = admin
 
-	if svc.certman, err = certman.New(conf.CertMan, svc.db, svc.secret, svc.email, conf.DirectoryID); err != nil {
+	if svc.certman, err = certman.New(conf.CertMan, svc.db, svc.secret, svc.email); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +131,7 @@ func MockConfig() config.Config {
 		},
 		CertMan: config.CertManConfig{
 			RequestInterval:    24 * time.Hour,
-			ReissuenceInterval: 24 * time.Hour,
+			ReissuanceInterval: 24 * time.Hour,
 			Storage:            "testdata/certs",
 			Sectigo: sectigo.Config{
 				Username: "foo",

@@ -88,9 +88,10 @@ type EmailConfig struct {
 }
 
 type CertManConfig struct {
-	RequestInterval    time.Duration `split_words:"true" default:"24h"`
-	ReissuenceInterval time.Duration `split_words:"true" default:"24h"`
+	RequestInterval    time.Duration `split_words:"true" default:"10m"`
+	ReissuanceInterval time.Duration `split_words:"true" default:"24h"`
 	Storage            string        `split_words:"true" required:"false"`
+	DirectoryID        string        `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
 	Sectigo            sectigo.Config
 }
 

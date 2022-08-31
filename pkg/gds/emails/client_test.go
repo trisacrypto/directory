@@ -114,8 +114,9 @@ func TestClientSendEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 
+	// TODO: For reissuance related emails, test that emails are not sent twice
 	reissueDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
-	sent, err = email.SendExpiresAdminNotification(vasp, reissueDate)
+	sent, err = email.SendExpiresAdminNotification(vasp, 0, reissueDate)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 
@@ -128,7 +129,7 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, 1, sent)
 
 	reissuedDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
-	sent, err = email.SendReissuanceAdminNotification(vasp, reissuedDate)
+	sent, err = email.SendReissuanceAdminNotification(vasp, 0, reissuedDate)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 
