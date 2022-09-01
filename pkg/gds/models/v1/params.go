@@ -4,43 +4,26 @@ import (
 	"fmt"
 
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"golang.org/x/exp/slices"
 )
 
-// GetCertificateRequestParams returns a subset of the params map on the certificate
-// request containing only the required parameters for the given profile.
+// GetCertificateRequestParams returns the params that must be submitted to Sectigo to
+// create a certificate for the given profile. This method filters any extraneous
+// parameters that cannot be submitted to Sectigo that may be on the CertificateRequest
+// and ensures that the parameters are valid before returning the params. If the
+// CertificateRequest params are missing required parameters then defaults are populated
+// if they are available.
+
+// NOTE: This method may update the certificate request but it is up to the caller to
+// persist the changes back to the database.
 func GetCertificateRequestParams(request *CertificateRequest, profile string) (params map[string]string, err error) {
-	if request.Params == nil {
-		request.Params = make(map[string]string)
+	// Get the required parameters for the Sectigo profile
+	// NOTE: this needs to happen before the request params are modified
+	required, ok := sectigo.Profiles[profile]
+	if !ok {
+		return nil, fmt.Errorf("unknown profile: %s", profile)
 	}
 
-	var required map[string]struct{}
-	if required, err = GetProfileParams(profile); err != nil {
-		return nil, err
-	}
-
-	params = make(map[string]string)
-	for key := range required {
-		params[key] = request.Params[key]
-	}
-	return params, nil
-}
-
-// UpdateCertificateRequestParams updates the params map on the certificate request,
-// adding the key value pair and overwriting the key if it already exists.
-func UpdateCertificateRequestParams(request *CertificateRequest, key, val string) {
-	if request.Params == nil {
-		request.Params = make(map[string]string)
-	}
-	request.Params[key] = val
-}
-
-// ValidateCertificateRequestParams updates the certificate request params with default
-// values if they are missing and checks to make sure that all required values are
-// present. If a required value is missing or a default parameter cannot be computed
-// then an error is returned. This should only be called right before submitting the
-// certificate request to the CA because it modifies the params map on the request
-// record and could create a condition where a change is not captured in the request.
-func ValidateCertificateRequestParams(request *CertificateRequest, profile string) (err error) {
 	if request.Params == nil {
 		request.Params = make(map[string]string)
 	}
@@ -52,34 +35,57 @@ func ValidateCertificateRequestParams(request *CertificateRequest, profile strin
 		}
 	}
 
-	// Check that all required parameters are present
-	var required map[string]struct{}
-	if required, err = GetProfileParams(profile); err != nil {
-		return err
+	// Ensure only the required parameters are returned since the params may contain
+	// values for multiple profiles.
+	params = make(map[string]string)
+	for _, key := range required {
+		params[key] = request.Params[key]
 	}
-	for key := range required {
-		if request.Params[key] == "" {
+
+	// Validate the parameters to ensure they can be submitted to Sectigo
+	if err = ValidateCertificateRequestParams(params, profile); err != nil {
+		return nil, err
+	}
+
+	return params, nil
+}
+
+// UpdateCertificateRequestParams updates the params map on the certificate request,
+// adding the key value pair and overwriting the key if it already exists.
+// NOTE: it is up to the caller to persist the request back to the database.
+func UpdateCertificateRequestParams(request *CertificateRequest, key, val string) {
+	if request.Params == nil {
+		request.Params = make(map[string]string)
+	}
+	request.Params[key] = val
+}
+
+// ValidateCertificateRequestParams ensures that the parameters about to be sent to
+// Sectigo are valid; e.g. that they contain only the required parameters for the
+// profile and that all parameter values are populated.
+func ValidateCertificateRequestParams(params map[string]string, profile string) (err error) {
+	// Get the required parameters for the Sectigo profile
+	required, ok := sectigo.Profiles[profile]
+	if !ok {
+		return fmt.Errorf("unknown profile: %s", profile)
+	}
+
+	// Check that all required parameters are in the params and that the params are
+	// populated with a non-empty value.
+	for _, key := range required {
+		if val, ok := params[key]; !ok || val == "" {
 			return fmt.Errorf("missing required parameter: %s", key)
 		}
 	}
+
+	// Check that there are no parameters that are not in the required array
+	// NOTE: expects that the required strings are sorted!
+	for key := range params {
+		if _, found := slices.BinarySearch(required, key); !found {
+			return fmt.Errorf("params include extra profile parameter: %s", key)
+		}
+	}
+
+	// TODO: Check to ensure the common name is in the dNSNAmes
 	return nil
-}
-
-// GetProfileParams returns a new params map containing only the required parameters
-// for the given profile.
-func GetProfileParams(profile string) (params map[string]struct{}, err error) {
-	var (
-		required []string
-		ok       bool
-	)
-
-	if required, ok = sectigo.Profiles[profile]; !ok {
-		return nil, fmt.Errorf("unknown profile: %s", profile)
-	}
-
-	params = make(map[string]struct{})
-	for _, key := range required {
-		params[key] = struct{}{}
-	}
-	return params, nil
 }

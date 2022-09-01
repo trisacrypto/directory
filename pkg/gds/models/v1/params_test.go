@@ -15,31 +15,73 @@ func TestGetCertificateRequestParams(t *testing.T) {
 	params, err := models.GetCertificateRequestParams(request, "invalid")
 	require.EqualError(t, err, "unknown profile: invalid", "expected error when profile is unknown")
 	require.Nil(t, params, "expected nil params when profile is unknown")
-	require.Equal(t, map[string]string{}, request.Params, "expected request params map to be initialized")
+	require.Nil(t, request.Params, "expected request params not be modified when profile is unknown")
 
-	// If the profile is known but there are no request params then empty values should be returned
-	expected := map[string]string{
-		sectigo.ParamCommonName: "",
-		sectigo.ParamDNSNames:   "",
-		sectigo.ParamPassword:   "",
+	testCases := []struct {
+		profile  string
+		expected map[string]string
+	}{
+		{
+			sectigo.ProfileCipherTraceEE,
+			map[string]string{
+				"commonName":     "api.alice.vaspbot.net",
+				"dNSName":        "api.alice.vaspbot.net\napi.alice.vaspbot.dev",
+				"pkcs12Password": "supersecretsquirrel",
+			},
+		},
+		{
+			sectigo.ProfileCipherTraceEndEntityCertificate,
+			map[string]string{
+				"commonName":          "api.bob.vaspbot.net",
+				"dNSName":             "api.bob.vaspbot.net\napi.bob.vaspbot.dev",
+				"pkcs12Password":      "supersecreteagle",
+				"organizationName":    "Bob VASP, PTE",
+				"localityName":        "Scarborough",
+				"stateOrProvinceName": "North Yorkshire",
+				"countryName":         "UK",
+			},
+		},
 	}
-	params, err = models.GetCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.NoError(t, err, "GetCertificateRequestParams returned an error")
-	require.Equal(t, expected, params, "wrong params returned")
-	require.Equal(t, map[string]string{}, request.Params, "expected request params map to be unchanged")
 
-	// If there are different request params then only the required ones should be returned
-	request.Params["foo"] = "bar"
-	params, err = models.GetCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.NoError(t, err, "GetCertificateRequestParams returned an error")
-	require.Equal(t, expected, params, "wrong params returned")
+	for _, tc := range testCases {
+		// Without common name, dns names or pkcs12 password, the params will be invalid, but it
+		// should be populated with default values before validation.
+		request = &models.CertificateRequest{}
+		_, err := models.GetCertificateRequestParams(request, tc.profile)
+		require.ErrorContains(t, err, "missing required parameter", "expected invalid params when missing common name or pkcs12 password")
+		require.NotNil(t, request.Params, "expected params to be populated with default values")
+		require.Equal(t, sectigo.Defaults, request.Params, "expected defaults to be copied into the params")
 
-	// If there are some matching request params then only the required ones should be returned
-	request.Params[sectigo.ParamCommonName] = "alice.example.com"
-	expected[sectigo.ParamCommonName] = "alice.example.com"
-	params, err = models.GetCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.NoError(t, err, "GetCertificateRequestParams returned an error")
-	require.Equal(t, expected, params, "wrong params returned")
+		// Add common name, dns names, and pkcs12 password
+		models.UpdateCertificateRequestParams(request, sectigo.ParamCommonName, "example.com")
+		models.UpdateCertificateRequestParams(request, sectigo.ParamDNSNames, "example.com\nsub.example.com")
+		models.UpdateCertificateRequestParams(request, sectigo.ParamPassword, "supersecret")
+
+		// Params  should now be valid with default values
+		params, err := models.GetCertificateRequestParams(request, tc.profile)
+		require.NoError(t, err, "expected params to be valid with defaults, common name, and pkcs12 password")
+		require.NotEmpty(t, params, "expected params to be populated with default values")
+
+		// Check params and request.Params consistency
+		for _, key := range sectigo.Profiles[tc.profile] {
+			require.Contains(t, params, key)
+			require.Contains(t, request.Params, key)
+			require.NotEmpty(t, params[key])
+			require.Equal(t, params[key], request.Params[key])
+		}
+
+		// When the request has parameters already set, they should be returned
+		request = &models.CertificateRequest{Params: make(map[string]string)}
+
+		// Ensure the params are copied from expected so that the pointer isn't modified.
+		for key, val := range tc.expected {
+			request.Params[key] = val
+		}
+
+		params, err = models.GetCertificateRequestParams(request, tc.profile)
+		require.NoError(t, err, "should be able to get params when set on certificate request")
+		require.Equal(t, tc.expected, params, "expected original parameters to not be modified")
+	}
 }
 
 // Test updating params on a certificate request model.
@@ -60,50 +102,34 @@ func TestUpdateCertificateRequestParams(t *testing.T) {
 
 // Test validating parameters on a certificate request model.
 func TestValidateCertificateRequestParams(t *testing.T) {
+
 	// If an unknown profile is specified then an error should be returned
-	request := &models.CertificateRequest{}
-	expected := map[string]string{
-		sectigo.ParamOrganizationName:    "TRISA Member VASP",
-		sectigo.ParamLocalityName:        "Menlo Park",
-		sectigo.ParamStateOrProvinceName: "California",
-		sectigo.ParamCountryName:         "US",
-	}
-	err := models.ValidateCertificateRequestParams(request, "invalid")
+	params := make(map[string]string)
+	err := models.ValidateCertificateRequestParams(params, "invalid")
 	require.EqualError(t, err, "unknown profile: invalid", "expected error when profile is unknown")
-	require.Equal(t, expected, request.Params, "expected request params map to be initialized")
 
-	// If required params are missing then an error should be returned
-	err = models.ValidateCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.ErrorContains(t, err, "missing required parameter", "expected error when required parameter is missing")
-	require.Equal(t, expected, request.Params, "expected request params map to be unchanged")
+	// Ensure that all required params for each profile are required
+	for profile, required := range sectigo.Profiles {
+		params := make(map[string]string)
+		err = models.ValidateCertificateRequestParams(params, profile)
+		require.ErrorContains(t, err, "missing required parameter", "expected error when params is empty for profile %q", profile)
 
-	// Test defaults are filled in but the required params are still missing
-	err = models.ValidateCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.ErrorContains(t, err, "missing required parameter", "expected error when required parameter is missing")
-	require.Equal(t, expected, request.Params, "expected request params map to be populated with defaults")
+		// Keep adding required params one by one until the last parameter
+		for _, key := range required[:len(required)-1] {
+			params[key] = "notanemptyvalue"
+			err = models.ValidateCertificateRequestParams(params, profile)
+			require.ErrorContains(t, err, "missing required parameter", "expected error when params is missing keys for profile %q", profile)
+		}
 
-	// If required params are present then the vaildation should succeed
-	request.Params = map[string]string{
-		sectigo.ParamCommonName: "alice.example.com",
-		sectigo.ParamDNSNames:   "alice.example.com\nalice.us.example.com",
-		sectigo.ParamPassword:   "password",
+		// Params should be valid when they are completed
+		// TODO: if common name validation happens this will need to be updated.
+		params[required[len(required)-1]] = "lastnotanemptyvalue"
+		err = models.ValidateCertificateRequestParams(params, profile)
+		require.NoError(t, err, "complete params should return no error")
+
+		// Adding a non required parameter should cause validation to fail
+		params["notvalid"] = "notaparam"
+		err = models.ValidateCertificateRequestParams(params, profile)
+		require.ErrorContains(t, err, "extra profile parameter: notvalid", "expected invalid params when extra keys are included")
 	}
-	expected[sectigo.ParamCommonName] = "alice.example.com"
-	expected[sectigo.ParamDNSNames] = "alice.example.com\nalice.us.example.com"
-	expected[sectigo.ParamPassword] = "password"
-	err = models.ValidateCertificateRequestParams(request, sectigo.ProfileCipherTraceEE)
-	require.NoError(t, err, "ValidateCertificateRequestParams returned an error")
-	require.Equal(t, expected, request.Params, "expected request params map to be unchanged")
-
-	// Test existing values are not overwritten by the defaults
-	request.Params = map[string]string{
-		sectigo.ParamOrganizationName: "Alice VASP",
-		sectigo.ParamCommonName:       "alice.example.com",
-		sectigo.ParamDNSNames:         "alice.example.com\nalice.us.example.com",
-		sectigo.ParamPassword:         "password",
-	}
-	expected[sectigo.ParamOrganizationName] = "Alice VASP"
-	err = models.ValidateCertificateRequestParams(request, sectigo.ProfileCipherTraceEndEntityCertificate)
-	require.NoError(t, err, "ValidateCertificateRequestParams returned an error")
-	require.Equal(t, expected, request.Params, "expected request params map to be populated with defaults")
 }

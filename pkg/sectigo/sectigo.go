@@ -9,16 +9,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 )
+
+func init() {
+	// Ensure all profile params are sorted so binary search can be used for lookups
+	for _, params := range Profiles {
+		sort.Strings(params)
+	}
+}
 
 // Valid Sectigo Certificate Profile Names, IDs, and parameters.
 // TODO: do not hardcode this, but get programatically from Sectigo API
@@ -37,6 +44,7 @@ const (
 )
 
 // Map containing all the supported Sectigo profiles and their required parameters.
+// NOTE: these params are sorted by the init function to enable binary search.
 var Profiles = map[string][]string{
 	ProfileCipherTraceEE:                     nameParams[:],
 	ProfileIDCipherTraceEE:                   nameParams[:],
@@ -425,7 +433,7 @@ func (s *Sectigo) BatchStatus(batch int) (status string, err error) {
 	}
 
 	var data []byte
-	if data, err = ioutil.ReadAll(rep.Body); err != nil {
+	if data, err = io.ReadAll(rep.Body); err != nil {
 		return "", err
 	}
 

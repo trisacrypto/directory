@@ -8,7 +8,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -255,27 +254,29 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 	}
 
 	// Allow multiple DNS names to be specified in addition to the common name
+	// This will overwrite whatever is in the params ensuring the latest common name and
+	// dns names are submitted to Sectigo if there were intermediate changes to the req.
 	dnsNames := []string{r.CommonName}
 	dnsNames = append(dnsNames, r.DnsNames...)
 	models.UpdateCertificateRequestParams(r, sectigo.ParamDNSNames, strings.Join(dnsNames, "\n"))
 	models.UpdateCertificateRequestParams(r, sectigo.ParamCommonName, r.CommonName)
 	models.UpdateCertificateRequestParams(r, sectigo.ParamPassword, string(pkcs12Password))
 
-	// Validate the parameters, filling in any default values before submitting to Sectigo
-	profile := c.certs.Profile()
-	if err = models.ValidateCertificateRequestParams(r, profile); err != nil {
-		return fmt.Errorf("certificate request parameter validation failed for profile %s: %s", profile, err)
-	}
-
 	// Step 3: submit the certificate
 	var (
 		rep    *sectigo.BatchResponse
 		params map[string]string
 	)
-	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
-		return fmt.Errorf("could not retrieve certificate request parameters for profile %s: %s", profile, err)
-	}
+
+	// Construct the required parameters for the Sectigo request.
+	profile := c.certs.Profile()
 	batchName := fmt.Sprintf("%s-certreq-%s)", c.conf.DirectoryID, r.Id)
+
+	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
+		return fmt.Errorf("could not retrieve certificate request parameters for profile %q: %s", profile, err)
+	}
+
+	// Execute the certificate request to Sectigo.
 	if rep, err = c.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.
@@ -493,7 +494,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		log.Error().Err(err).Msg("could not create cert secret")
 		return
 	}
-	if payload, err = ioutil.ReadFile(path); err != nil {
+	if payload, err = os.ReadFile(path); err != nil {
 		log.Error().Err(err).Msg("could not read in cert payload")
 		return
 	}
@@ -681,7 +682,7 @@ func (c *CertificateManager) getCertStorage() (path string, err error) {
 	}
 
 	// Create a temporary directory
-	if path, err = ioutil.TempDir("", "gds_certs"); err != nil {
+	if path, err = os.MkdirTemp("", "gds_certs"); err != nil {
 		return "", err
 	}
 	log.Warn().Str("certs", path).Msg("using a temporary directory for cert downloads")
