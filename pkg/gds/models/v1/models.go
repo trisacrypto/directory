@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -379,14 +380,6 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	return cert, nil
 }
 
-// Defaults to use for the certificate request parameters if they can't be inferred.
-const (
-	crDefaultOrganization        = "TRISA Member VASP"
-	crDefaultLocality            = "Menlo Park"
-	crDefaultStateOrProvinceName = "California"
-	crDefaultCountry             = "US"
-)
-
 // NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
 func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
 	var (
@@ -409,14 +402,9 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 
 	// Populate the organization name, if available.
 	if organizationName, err = vasp.Name(); err == nil {
-		certRequest.Params["organizationName"] = organizationName
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamOrganizationName, organizationName)
 	} else {
-		log.Warn().
-			Err(err).
-			Str("vasp_id", vasp.Id).
-			Str("certreq_id", certRequest.Id).
-			Msg("organization name not found, populating new certificate request with default value")
-		certRequest.Params["organizationName"] = crDefaultOrganization
+		log.Warn().Err(err).Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("organization name not found")
 	}
 
 	// Populate the location information, if available.
@@ -427,17 +415,11 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		countryName = address.Country
 	}
 	if localityName != "" && stateOrProvinceName != "" && countryName != "" {
-		certRequest.Params["localityName"] = localityName
-		certRequest.Params["stateOrProvinceName"] = stateOrProvinceName
-		certRequest.Params["countryName"] = countryName
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamLocalityName, localityName)
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamStateOrProvinceName, stateOrProvinceName)
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamCountryName, countryName)
 	} else {
-		log.Debug().
-			Str("vasp_id", vasp.Id).
-			Str("certreq_id", certRequest.Id).
-			Msg("location information not found or incomplete, populating new certificate request with default values")
-		certRequest.Params["localityName"] = crDefaultLocality
-		certRequest.Params["stateOrProvinceName"] = crDefaultStateOrProvinceName
-		certRequest.Params["countryName"] = crDefaultCountry
+		log.Debug().Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("location information not found or incomplete")
 	}
 
 	return certRequest, nil
