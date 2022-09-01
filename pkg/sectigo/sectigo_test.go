@@ -2,10 +2,10 @@ package sectigo_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -46,6 +46,13 @@ func (s *SectigoTestSuite) AfterTest(suiteName, testName string) {
 		os.RemoveAll(path)
 	}
 	mock.Stop()
+}
+
+func (s *SectigoTestSuite) TestSortedParams() {
+	require := s.Require()
+	for key, params := range Profiles {
+		require.True(sort.StringsAreSorted(params), "the %s params are not sorted", key)
+	}
 }
 
 func (s *SectigoTestSuite) TestCredsCopy() {
@@ -148,10 +155,7 @@ func (s *SectigoTestSuite) processingInfo(t *testing.T) {
 }
 
 func (s *SectigoTestSuite) download(t *testing.T) {
-	dir, err := ioutil.TempDir("", "download-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
-
+	dir := t.TempDir()
 	rep, err := s.api.Download(42, dir)
 	require.NoError(t, err)
 	require.Equal(t, filepath.Join(dir, "certificate.zip"), rep)
