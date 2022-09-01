@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/sectigo/server"
 	"github.com/urfave/cli"
 )
 
@@ -215,6 +215,18 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "serve",
+			Usage:  "run the sectigo integration api server for testing",
+			Action: serve,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "a, addr",
+					Usage:  "specify the bind addr for the api server",
+					EnvVar: "SIAS_BIND_ADDR",
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
@@ -338,7 +350,7 @@ func uploadCSR(c *cli.Context) (err error) {
 
 	// Load the CSR data from the file
 	var csrData []byte
-	if csrData, err = ioutil.ReadFile(path); err != nil {
+	if csrData, err = os.ReadFile(path); err != nil {
 		return cli.NewExitError(fmt.Errorf("could not read %s: %s", path, err), 1)
 	}
 
@@ -510,6 +522,27 @@ func revokeCert(c *cli.Context) (err error) {
 	}
 
 	if err = api.RevokeCertificate(pid, int(reasonCode), sn); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	return nil
+}
+
+func serve(c *cli.Context) (err error) {
+	var conf server.Config
+	if conf, err = server.NewConfig(); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	if addr := c.String("addr"); addr != "" {
+		conf.BindAddr = addr
+	}
+
+	var srv *server.Server
+	if srv, err = server.New(conf); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	if err = srv.Serve(); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 	return nil
