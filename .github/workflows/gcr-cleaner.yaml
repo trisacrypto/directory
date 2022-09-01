@@ -1,0 +1,32 @@
+# .github/workflows/gcr-cleaner.yaml
+name: 'gcr-cleaner'
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+jobs:
+  gcr-cleaner:
+    runs-on: 'ubuntu-latest'
+    steps:
+      # configure based on registry
+      - uses: 'docker/login-action@v2'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # customized based on the gcr-cleaner flags
+      # -repo - list of repo to clean (required)
+      # -grace - relative duration in which to ignore references, refs newer than duration will not be deleted
+      # -keep - minimum number of images to keep, will not consider images inside the grace duration
+      # -dry_run - if set to true, will not delete anything and outputs what would have been deleted
+      # -recursive - if set to true, will recursively search all child repositories
+      - uses: 'docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli'
+        with:
+          args: >-
+              -repo=gcr.io/trisa-gds/
+              -grace=30d
+              -keep=10
+              -dry-run=True
+              -recursive=True
