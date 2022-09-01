@@ -16,10 +16,10 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/klauspost/compress v1.15.6 // indirect
 	github.com/mroth/weightedrand v0.4.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rotationalio/honu v0.3.0
+	github.com/rotationalio/whisper v1.1.1
 	github.com/rs/zerolog v1.27.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.9+incompatible
@@ -37,8 +37,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require github.com/rotationalio/whisper v1.1.1
 
 require (
 	cloud.google.com/go v0.102.1 // indirect
@@ -62,6 +60,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.15.6 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -105,7 +104,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/prometheus/common v0.35.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d // indirect
+	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/exp/typeparams v0.0.0-20220613132600-b0d781184e0d // indirect
 	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
 	honnef.co/go/tools v0.3.2 // indirect
