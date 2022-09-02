@@ -2,7 +2,6 @@ package certman_test
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -669,14 +668,30 @@ func (s *certTestSuite) TestSubmitBatchError() {
 	require.NoError(sm.CreateSecret(ctx, "password"))
 	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
 
+<<<<<<< HEAD
 	// Certificate request with a missing country name
+=======
+	// Create a valid certificate request with extended parameters
+>>>>>>> origin/main
 	quebecCertReq.Params = map[string]string{
 		"organizationName":    "TRISA Member VASP",
 		"localityName":        "Menlo Park",
 		"stateOrProvinceName": "California",
+<<<<<<< HEAD
 	}
 	require.NoError(s.db.UpdateCertReq(quebecCertReq))
 
+=======
+		"country":             "US",
+	}
+	require.NoError(s.db.UpdateCertReq(quebecCertReq))
+
+	// Ensure that Sectigo returns an error response when the batch is submitted.
+	mock.Handle(sectigo.CreateSingleCertBatchEP, func(c *gin.Context) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+	})
+
+>>>>>>> origin/main
 	// Run the CertManager for a tick
 	s.certman.HandleCertificateRequests()
 
@@ -688,7 +703,11 @@ func (s *certTestSuite) TestSubmitBatchError() {
 	// Cert request should still be in the READY_TO_SUBMIT state
 	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
 	require.NoError(err)
+<<<<<<< HEAD
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
+=======
+	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status, "certificate request is not in ready to submit state")
+>>>>>>> origin/main
 
 	// Audit log should be updated
 	log, err := models.GetAuditLog(v)
@@ -929,7 +948,11 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 
 	// Create the certificate manager configuration
 	var err error
+<<<<<<< HEAD
 	certPath, err := ioutil.TempDir("testdata", "certs-*")
+=======
+	certPath, err := os.MkdirTemp("testdata", "certs-*")
+>>>>>>> origin/main
 	require.NoError(err, "could not create cert storage")
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
