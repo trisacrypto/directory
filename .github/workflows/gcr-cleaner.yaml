@@ -1,5 +1,5 @@
 # .github/workflows/gcr-cleaner.yaml
-name: 'gcr-cleaner'
+name: GCR Cleanup
 on:
   push:
     branches:
