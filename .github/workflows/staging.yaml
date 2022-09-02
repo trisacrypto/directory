@@ -4,7 +4,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
 
 # Each container image is built in its own job. To add an image, simply copy and paste
 # one of the jobs and configure the build to point to the container's Dockerfile and

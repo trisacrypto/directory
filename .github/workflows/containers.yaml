@@ -4,7 +4,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
       - main
@@ -97,7 +97,6 @@ jobs:
           channel: gds-containers
           status: FAILED
           color: danger
-
 
   # GDS Backend for Front-End Service
   gds-bff:
