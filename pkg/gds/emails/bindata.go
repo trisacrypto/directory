@@ -4,6 +4,8 @@
 // deliver_certs.txt (1.274kB)
 // expires_admin_notification.html (1.11kB)
 // expires_admin_notification.txt (816B)
+// reissuance_admin_notification.html (852B)
+// reissuance_admin_notification.txt (567B)
 // reissuance_reminder.html (2.042kB)
 // reissuance_reminder.txt (1.705kB)
 // reissuance_started.html (1.28kB)
@@ -97,7 +99,7 @@ func deliver_certsHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "deliver_certs.html", size: 1591, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "deliver_certs.html", size: 1591, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xd0, 0x1e, 0x2, 0xe1, 0xbe, 0xdf, 0x98, 0xd1, 0x19, 0x6e, 0x46, 0xeb, 0xf2, 0x2c, 0xef, 0x58, 0x78, 0x47, 0x12, 0xc4, 0x43, 0x70, 0x47, 0x70, 0x57, 0xcd, 0x97, 0xca, 0xf, 0x37, 0xa0, 0xa0}}
 	return a, nil
 }
@@ -117,7 +119,7 @@ func deliver_certsTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "deliver_certs.txt", size: 1274, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "deliver_certs.txt", size: 1274, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x61, 0x39, 0xab, 0xc4, 0xc3, 0xc8, 0xb4, 0x7c, 0x13, 0xa, 0x1, 0x4c, 0xdb, 0xda, 0xec, 0x53, 0xb0, 0xb0, 0xc5, 0x15, 0x68, 0xce, 0xf1, 0xa3, 0x41, 0x22, 0x3d, 0x7, 0x33, 0x5, 0x1c, 0xcd}}
 	return a, nil
 }
@@ -137,7 +139,7 @@ func expires_admin_notificationHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "expires_admin_notification.html", size: 1110, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "expires_admin_notification.html", size: 1110, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x6e, 0xc9, 0xe4, 0xcd, 0x40, 0x52, 0x48, 0x1f, 0x36, 0xc5, 0xc8, 0x90, 0xb8, 0xd, 0x2d, 0xd6, 0x9, 0xe5, 0xea, 0xd3, 0x66, 0xc5, 0xdc, 0x1f, 0xcf, 0x94, 0x9c, 0x6e, 0x45, 0x32, 0x17, 0xb4}}
 	return a, nil
 }
@@ -157,8 +159,48 @@ func expires_admin_notificationTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "expires_admin_notification.txt", size: 816, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "expires_admin_notification.txt", size: 816, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x79, 0x27, 0x88, 0xda, 0x4, 0x2f, 0x83, 0x3, 0x99, 0xb0, 0x95, 0x27, 0x66, 0x77, 0x31, 0xcc, 0x28, 0x94, 0x88, 0x1a, 0x28, 0x83, 0xdc, 0x8e, 0xf3, 0x4c, 0xde, 0xec, 0xe6, 0x2c, 0xd, 0x83}}
+	return a, nil
+}
+
+var _reissuance_admin_notificationHtml = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\x92\x41\x8b\xdb\x30\x10\x85\xcf\xf5\xaf\x78\xec\x79\x59\xdf\x83\x2a\x48\x93\xa5\x35\x94\x3d\x38\xbb\x85\x1e\x65\x6b\x92\x08\x64\xc9\x8c\xe4\x6d\xc3\xe2\xff\x5e\x64\x27\x4e\xe2\x7a\x6f\x62\x46\xdf\xcc\xe3\xcd\x13\xad\xfc\x41\xd6\x7a\xbc\x96\xc5\x6e\x8d\xb5\x6e\x8c\x0b\x8f\x22\x6f\x65\x96\x89\x56\xae\xcf\xf5\x42\x93\x8b\x26\x9e\xb0\x21\x8e\x66\x6f\x6a\x15\x09\xaa\x8b\xbe\x51\x91\x34\x98\x4c\x08\x9d\x72\x35\x61\xef\x19\x1f\x1f\x78\xda\xf8\xa6\xf1\xee\x45\x35\x84\xbe\xc7\x51\x05\x54\x44\x0e\xb5\x6f\x5a\x4b\x89\xf1\x6e\xf8\x57\x0e\x28\x6d\xd3\xc0\xbe\x47\x75\x42\x3c\x12\xbe\x5b\x5f\x29\x8b\xad\x61\xaa\xa3\xe7\x13\x76\xc4\xef\xa6\xa6\xa7\x49\xd9\xa6\x63\x26\x17\x51\xdf\x0a\x72\x1a\x7a\x42\xc8\x45\x3e\x41\x53\x54\xc6\x86\xd5\x19\xec\xac\xcc\xbe\x08\x6b\xa4\x08\x91\xbd\x3b\xc8\x62\xbb\x12\xf9\xf9\x3d\x08\xfa\x55\x6c\xd1\xf7\x22\xb7\x46\x66\xc0\xed\xd7\x92\x0e\x26\x44\x62\xd2\x57\x61\x33\xf8\xfa\xe5\x2a\xfd\x32\xec\x6e\xed\x68\x0f\x92\x3f\xb3\x11\x77\xc6\x2d\xc9\x78\x76\xba\xf5\xc6\xc5\x19\x77\x29\x2f\xef\xdb\x11\x1b\x65\xf1\xd2\x35\x15\xf1\x8c\x1c\x7b\x63\x6b\x99\x7e\xfe\xdb\x1a\x56\xd1\x78\x37\x5f\x3a\x35\xce\x07\x5c\xf6\xed\x92\x8e\xff\xdc\xba\xbd\xfd\x88\x8a\x3c\x9d\x28\x5d\xf8\xb7\xef\x50\x2b\x87\x77\x43\x7f\x86\x50\xec\x3b\x6b\xc1\x54\x7b\x1e\xd2\x93\x4a\x37\xa9\xc5\x5b\xb1\x9a\xd2\x21\x14\x8e\x4c\xfb\xaf\x0f\x69\xcd\xd0\x2e\x29\xcd\x79\x2b\x7f\xa2\xef\x1f\xe4\x62\x59\xe4\x4a\x4e\x13\xbe\x51\x88\x28\xe9\xa0\x58\x87\x47\x51\x31\x72\x99\x8d\xdb\x3e\xcb\x26\x5e\x49\x35\x89\xff\x17\x00\x00\xff\xff\x1f\xf7\x46\x6a\x54\x03\x00\x00")
+
+func reissuance_admin_notificationHtmlBytes() ([]byte, error) {
+	return bindataRead(
+		_reissuance_admin_notificationHtml,
+		"reissuance_admin_notification.html",
+	)
+}
+
+func reissuance_admin_notificationHtml() (*asset, error) {
+	bytes, err := reissuance_admin_notificationHtmlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "reissuance_admin_notification.html", size: 852, mode: os.FileMode(0644), modTime: time.Unix(1660787245, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xb1, 0x70, 0xee, 0xc6, 0x33, 0xf4, 0x59, 0x88, 0xf0, 0x23, 0xd0, 0xeb, 0x55, 0x2d, 0x97, 0x41, 0xb9, 0xad, 0x3d, 0xcc, 0xc4, 0xd6, 0xb4, 0x6a, 0x49, 0xab, 0x63, 0x3f, 0xba, 0x32, 0x44, 0xe6}}
+	return a, nil
+}
+
+var _reissuance_admin_notificationTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\x51\x4b\xae\xdb\x30\x0c\xdc\xeb\x14\x3c\xc0\xc3\x3b\x80\x77\xaf\x71\xd1\x1a\x28\xb2\x70\x92\x02\x5d\xca\xd2\x24\x11\xa0\x4f\x40\xd1\x69\x8d\x40\x77\x2f\x2c\x3b\x4e\x81\xb6\x4b\x72\x38\x43\x72\xe6\x2b\xbc\x4f\x74\xec\xbb\xc3\x07\x7d\xd8\xe0\x62\x7e\x53\xea\x78\xc5\xda\xea\x2c\xa2\x38\x99\x68\x07\x16\x77\x76\x46\x0b\x48\x8f\x92\x82\x16\x58\x62\xb8\x9c\x47\x1d\x0d\xe8\x9c\x98\x1e\x0f\x7a\xdf\xa5\x10\x52\xdc\xeb\x00\x2a\x85\xae\x3a\xd3\x00\x44\x32\x29\xdc\x3c\x66\x4e\x8a\x75\xae\xaf\x54\xb4\xb3\x60\x29\x34\x4c\x24\x57\xd0\x17\x9f\x06\xed\xa9\x75\x0c\x23\x89\x27\x3a\x80\xef\xce\xe0\x5d\xa9\xdd\xc8\x8c\x28\x64\xfe\xbc\x24\x5a\xb2\xdb\x2c\xa2\xf0\x44\x16\xa2\x9d\xcf\x8d\x52\x5d\xdb\xd4\x55\xdf\xbb\x96\x4a\x51\x3d\x2e\x2e\x0b\x18\xf6\xa5\xdf\xac\xb7\x3c\x91\xd7\xe2\x52\xd4\xf2\x0a\xcd\xbf\x34\x7f\xff\xa6\x3e\x47\x7b\x4b\x2e\xca\x82\x3d\xab\x19\x39\x80\x9d\xf6\xb4\x1f\xc3\x00\x5e\xe0\xa5\xb5\x74\x2a\xf9\xd7\xcd\xb1\x16\x97\xe2\x4a\xdf\xea\xd5\x11\xd5\x6f\xde\x36\xff\x30\x4c\xa9\x1f\x69\x24\xa3\x23\xdd\x1d\x7e\x56\xef\xce\xa3\xf7\xc4\x30\x89\xab\xc9\xb2\x85\x58\x73\xa5\x53\xd7\x28\x35\x0b\xd5\xb2\xc7\xcc\x3b\xf5\xdf\xaa\xd6\x27\x64\xa1\x1e\x17\xcd\x36\xbf\xa9\x85\xf5\xbf\x28\xe8\x08\x1d\x7e\x07\x00\x00\xff\xff\x7a\xde\x29\xe5\x37\x02\x00\x00")
+
+func reissuance_admin_notificationTxtBytes() ([]byte, error) {
+	return bindataRead(
+		_reissuance_admin_notificationTxt,
+		"reissuance_admin_notification.txt",
+	)
+}
+
+func reissuance_admin_notificationTxt() (*asset, error) {
+	bytes, err := reissuance_admin_notificationTxtBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "reissuance_admin_notification.txt", size: 567, mode: os.FileMode(0644), modTime: time.Unix(1660756774, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x86, 0x8d, 0xef, 0xd0, 0x7b, 0xbb, 0x81, 0xe6, 0x53, 0xc0, 0xac, 0x0, 0xf1, 0xff, 0x11, 0x20, 0x11, 0x78, 0x5f, 0xe7, 0xcf, 0xbd, 0x66, 0xa4, 0x98, 0xe5, 0xcf, 0x55, 0x6f, 0x53, 0x11, 0x0}}
 	return a, nil
 }
 
@@ -177,7 +219,7 @@ func reissuance_reminderHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reissuance_reminder.html", size: 2042, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "reissuance_reminder.html", size: 2042, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x92, 0x71, 0x2a, 0x5e, 0xc3, 0x5a, 0x2f, 0xf4, 0xb8, 0x18, 0x15, 0xe3, 0x23, 0x40, 0x85, 0xef, 0xfe, 0x69, 0x3, 0xaf, 0xf1, 0xe4, 0x72, 0xa7, 0xb3, 0x7, 0x4, 0x31, 0xe6, 0xa8, 0xda, 0x8c}}
 	return a, nil
 }
@@ -196,8 +238,8 @@ func reissuance_reminderTxt() (*asset, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	info := bindataFileInfo{name: "reissuance_reminder.txt", size: 1705, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+  
+	info := bindataFileInfo{name: "reissuance_reminder.txt", size: 1705, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x91, 0x7f, 0x22, 0xec, 0x13, 0x88, 0xf8, 0xe9, 0x95, 0xd9, 0xb7, 0xc3, 0x49, 0xec, 0x9a, 0x9c, 0x68, 0xb0, 0xc3, 0xfb, 0xa1, 0x36, 0xe3, 0x11, 0x9a, 0x56, 0x43, 0x1f, 0x97, 0xdc, 0x10, 0xfd}}
 	return a, nil
 }
@@ -217,7 +259,7 @@ func reissuance_startedHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reissuance_started.html", size: 1280, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "reissuance_started.html", size: 1280, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x85, 0x1c, 0x4d, 0x46, 0x7e, 0xd3, 0xde, 0xfd, 0xfd, 0x91, 0xc9, 0xf2, 0xf5, 0x4e, 0x7e, 0x7b, 0x63, 0xd5, 0xb, 0xfb, 0x26, 0xdb, 0xb7, 0xcc, 0xa1, 0xf7, 0x72, 0xd, 0x62, 0x8c, 0x7d, 0x6d}}
 	return a, nil
 }
@@ -237,7 +279,7 @@ func reissuance_startedTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reissuance_started.txt", size: 981, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "reissuance_started.txt", size: 981, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8f, 0xfc, 0x71, 0xd2, 0x64, 0x22, 0xbc, 0x55, 0x7f, 0xb4, 0x9b, 0xaf, 0xfe, 0x3d, 0x12, 0xc3, 0xe8, 0xb1, 0x9c, 0x11, 0x1e, 0xdd, 0x3, 0x1e, 0x88, 0x9, 0xbd, 0x3f, 0x4e, 0xce, 0x9e, 0x25}}
 	return a, nil
 }
@@ -257,7 +299,7 @@ func reject_registrationHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reject_registration.html", size: 601, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "reject_registration.html", size: 601, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xd1, 0xb6, 0x61, 0xf7, 0x52, 0x2d, 0x42, 0xea, 0x17, 0x95, 0x46, 0xb5, 0x77, 0x3, 0xb8, 0x4c, 0x5d, 0xce, 0xdb, 0xd, 0x4, 0xe1, 0x0, 0x5, 0xd2, 0xc4, 0xcc, 0x16, 0xad, 0x58, 0xb6, 0x7d}}
 	return a, nil
 }
@@ -277,7 +319,7 @@ func reject_registrationTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "reject_registration.txt", size: 476, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "reject_registration.txt", size: 476, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0xda, 0xd2, 0xcb, 0x49, 0xf2, 0x7a, 0x83, 0x7b, 0x67, 0x37, 0xee, 0x2d, 0xd7, 0x4f, 0xbe, 0x1a, 0x66, 0xb0, 0xea, 0x7, 0xc6, 0x87, 0x8, 0xe5, 0xed, 0x39, 0x2c, 0x79, 0x46, 0x26, 0x6a}}
 	return a, nil
 }
@@ -297,7 +339,7 @@ func review_requestHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "review_request.html", size: 1225, mode: os.FileMode(0644), modTime: time.Unix(1653320966, 0)}
+	info := bindataFileInfo{name: "review_request.html", size: 1225, mode: os.FileMode(0644), modTime: time.Unix(1658412865, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x3a, 0xaf, 0xd0, 0xf, 0x60, 0x6c, 0x66, 0x89, 0xd8, 0x30, 0x12, 0x82, 0x14, 0xb6, 0xa2, 0x82, 0xa6, 0x1a, 0x2a, 0x94, 0xca, 0xa2, 0x2b, 0x7a, 0x3e, 0xe8, 0xa6, 0xa1, 0x7a, 0x1a, 0x6a, 0x81}}
 	return a, nil
 }
@@ -316,8 +358,8 @@ func review_requestTxt() (*asset, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	info := bindataFileInfo{name: "review_request.txt", size: 978, mode: os.FileMode(0644), modTime: time.Unix(1653320966, 0)}
+  
+	info := bindataFileInfo{name: "review_request.txt", size: 978, mode: os.FileMode(0644), modTime: time.Unix(1658412865, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8a, 0x58, 0xb6, 0xd4, 0x10, 0xd8, 0x3d, 0xe1, 0xce, 0x64, 0x58, 0x97, 0x33, 0xa8, 0xef, 0x45, 0xf5, 0xa7, 0xc7, 0xd5, 0x9f, 0xe4, 0x56, 0xdb, 0xc2, 0xa5, 0xc5, 0xec, 0x21, 0xc1, 0xa3, 0xe5}}
 	return a, nil
 }
@@ -337,7 +379,7 @@ func verify_contactHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "verify_contact.html", size: 666, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "verify_contact.html", size: 666, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x5e, 0xc9, 0xed, 0x24, 0x65, 0xb2, 0x8b, 0xa7, 0xb1, 0xcb, 0x2b, 0x6c, 0xc9, 0xf9, 0x29, 0x6d, 0x9c, 0x7f, 0x76, 0xaf, 0x6d, 0xce, 0xe9, 0xf1, 0xbc, 0xbc, 0xe4, 0x4a, 0x6b, 0xe9, 0x1, 0xcf}}
 	return a, nil
 }
@@ -357,7 +399,7 @@ func verify_contactTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "verify_contact.txt", size: 536, mode: os.FileMode(0644), modTime: time.Unix(1658847751, 0)}
+	info := bindataFileInfo{name: "verify_contact.txt", size: 536, mode: os.FileMode(0644), modTime: time.Unix(1659383124, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xfc, 0x55, 0x37, 0x5e, 0x1, 0xc5, 0x79, 0xd0, 0x2b, 0xbd, 0x1e, 0x7f, 0x8e, 0xa3, 0x8a, 0x8c, 0xe9, 0x7d, 0x5c, 0xcf, 0xff, 0x2f, 0x17, 0xac, 0xf7, 0x18, 0xc8, 0xa3, 0xff, 0x18, 0x86, 0x8a}}
 	return a, nil
 }
@@ -453,20 +495,22 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"deliver_certs.html":              deliver_certsHtml,
-	"deliver_certs.txt":               deliver_certsTxt,
-	"expires_admin_notification.html": expires_admin_notificationHtml,
-	"expires_admin_notification.txt":  expires_admin_notificationTxt,
-	"reissuance_reminder.html":        reissuance_reminderHtml,
-	"reissuance_reminder.txt":         reissuance_reminderTxt,
-	"reissuance_started.html":         reissuance_startedHtml,
-	"reissuance_started.txt":          reissuance_startedTxt,
-	"reject_registration.html":        reject_registrationHtml,
-	"reject_registration.txt":         reject_registrationTxt,
-	"review_request.html":             review_requestHtml,
-	"review_request.txt":              review_requestTxt,
-	"verify_contact.html":             verify_contactHtml,
-	"verify_contact.txt":              verify_contactTxt,
+	"deliver_certs.html":                 deliver_certsHtml,
+	"deliver_certs.txt":                  deliver_certsTxt,
+	"expires_admin_notification.html":    expires_admin_notificationHtml,
+	"expires_admin_notification.txt":     expires_admin_notificationTxt,
+	"reissuance_admin_notification.html": reissuance_admin_notificationHtml,
+	"reissuance_admin_notification.txt":  reissuance_admin_notificationTxt,
+	"reissuance_reminder.html":           reissuance_reminderHtml,
+	"reissuance_reminder.txt":            reissuance_reminderTxt,
+	"reissuance_started.html":            reissuance_startedHtml,
+	"reissuance_started.txt":             reissuance_startedTxt,
+	"reject_registration.html":           reject_registrationHtml,
+	"reject_registration.txt":            reject_registrationTxt,
+	"review_request.html":                review_requestHtml,
+	"review_request.txt":                 review_requestTxt,
+	"verify_contact.html":                verify_contactHtml,
+	"verify_contact.txt":                 verify_contactTxt,
 }
 
 // AssetDebug is true if the assets were built with the debug flag enabled.
@@ -517,6 +561,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"deliver_certs.txt": {deliver_certsTxt, map[string]*bintree{}},
 	"expires_admin_notification.html": {expires_admin_notificationHtml, map[string]*bintree{}},
 	"expires_admin_notification.txt": {expires_admin_notificationTxt, map[string]*bintree{}},
+	"reissuance_admin_notification.html": {reissuance_admin_notificationHtml, map[string]*bintree{}},
+	"reissuance_admin_notification.txt": {reissuance_admin_notificationTxt, map[string]*bintree{}},
 	"reissuance_reminder.html": {reissuance_reminderHtml, map[string]*bintree{}},
 	"reissuance_reminder.txt": {reissuance_reminderTxt, map[string]*bintree{}},
 	"reissuance_started.html": {reissuance_startedHtml, map[string]*bintree{}},
