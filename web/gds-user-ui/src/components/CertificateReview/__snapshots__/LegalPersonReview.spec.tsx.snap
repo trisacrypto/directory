@@ -59,14 +59,14 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                <tbody
-                  class="css-0"
+                <table
+                  class="chakra-table css-5605sr"
+                  role="table"
                 >
-                  <tr
+                  <tbody
                     class="css-0"
-                    role="row"
                   />
-                </tbody>
+                </table>
               </td>
             </tr>
             <tr
