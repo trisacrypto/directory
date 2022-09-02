@@ -46,7 +46,8 @@ import {
   getCurrentState,
   getLastStep,
   getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus
+  getMainNetSubmittedStatus,
+  getHasReachedReviewStep
 } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 const Certificate: React.FC = () => {
@@ -60,6 +61,7 @@ const Certificate: React.FC = () => {
     nextStep,
     previousStep,
     setInitialState,
+    jumpToStep,
     setRegistrationValue: setRegistrationStore
   } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -69,6 +71,7 @@ const Certificate: React.FC = () => {
   const steps: number = useSelector(getSteps);
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
+  const hasReachedReviewStep: boolean = useSelector(getHasReachedReviewStep);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
@@ -186,6 +189,11 @@ const Certificate: React.FC = () => {
     return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
 
+  // has reach review step and not on the review step
+  const hasReachReviewStep = () => {
+    return hasReachedReviewStep && currentStep <= lastStep - 1;
+  };
+
   const handleResetForm = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
@@ -199,6 +207,11 @@ const Certificate: React.FC = () => {
 
   const resetForm = () => {
     reset(getRegistrationDefaultValues());
+  };
+
+  // jump to review page
+  const jumpToReview = () => {
+    jumpToStep(lastStep);
   };
 
   useEffect(() => {
@@ -313,6 +326,12 @@ const Certificate: React.FC = () => {
                           {currentStep === lastStep ? t`Next` : t`Save & Next`}
                         </Button>
                         {/* add review button when reach to final step */}
+
+                        {hasReachReviewStep() && (
+                          <Button variant="secondary" onClick={jumpToReview}>
+                            {t`Review & Submit`}
+                          </Button>
+                        )}
 
                         {!isFormSubmitted() && (
                           <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>

@@ -113,8 +113,8 @@ msgstr "---"
 msgid "A physical verification check in the form of a phone call"
 msgstr "---"
 
-#: src/components/Header/LandingHeader.tsx:83
-#: src/components/Header/LandingHeader.tsx:123
+#: src/components/Header/LandingHeader.tsx:85
+#: src/components/Header/LandingHeader.tsx:133
 #: src/components/Section/AboutUs.tsx:29
 msgid "About TRISA"
 msgstr "---"
@@ -175,7 +175,7 @@ msgid "Address line 2 e.g. apartment or suite number"
 msgstr "---"
 
 #: src/components/Addresses/index.tsx:11
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:120
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:116
 #: src/components/MemberDetails/index.tsx:244
 msgid "Addresses"
 msgstr "---"
@@ -210,7 +210,7 @@ msgstr "---"
 msgid "An error has occurred to load attention data"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:21
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:19
 msgid "An error has occurred to load legal person data"
 msgstr "---"
 
@@ -290,8 +290,8 @@ msgstr "---"
 msgid "Business Address"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:64
-#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:49
+#: src/components/BasicDetailsForm/index.tsx:72
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:56
 #: src/components/MemberDetails/index.tsx:125
 msgid "Business Category"
 msgstr "---"
@@ -504,8 +504,8 @@ msgstr "---"
 msgid "Country of Issue is reserved for National Identifiers of Natural Persons"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:147
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:192
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:143
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:188
 #: src/components/CountryOfRegistration/index.tsx:19
 #: src/components/MemberDetails/index.tsx:271
 #: src/components/MemberDetails/index.tsx:331
@@ -564,8 +564,8 @@ msgstr "---"
 msgid "Data Protection Policies"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:50
-#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:56
+#: src/components/BasicDetailsForm/index.tsx:52
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:63
 #: src/components/MemberDetails/index.tsx:117
 msgid "Date of Incorporation / Establishment"
 msgstr "---"
@@ -596,8 +596,8 @@ msgstr "---"
 msgid "Directory Lookup"
 msgstr "---"
 
-#: src/components/Header/LandingHeader.tsx:86
-#: src/components/Header/LandingHeader.tsx:126
+#: src/components/Header/LandingHeader.tsx:88
+#: src/components/Header/LandingHeader.tsx:136
 #: src/components/Navbar/Landing/MobileNav.tsx:73
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
@@ -794,14 +794,14 @@ msgstr "---"
 msgid "IVMS 101 data structure"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:174
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:170
 #: src/components/MemberDetails/index.tsx:303
 #: src/components/NameIdentification/index.tsx:130
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:122
 msgid "Identification Number"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:180
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:176
 #: src/components/MemberDetails/index.tsx:311
 #: src/components/NameIdentification/index.tsx:159
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:130
@@ -992,8 +992,8 @@ msgstr "---"
 msgid "Log into your TRISA account."
 msgstr "---"
 
-#: src/components/Header/LandingHeader.tsx:91
-#: src/components/Header/LandingHeader.tsx:129
+#: src/components/Header/LandingHeader.tsx:94
+#: src/components/Header/LandingHeader.tsx:140
 msgid "Login"
 msgstr "---"
 
@@ -1077,7 +1077,7 @@ msgstr "---"
 msgid "Name Identifier Type is required"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:45
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:43
 #: src/components/MemberDetails/index.tsx:172
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:77
 msgid "Name Identifiers"
@@ -1096,7 +1096,7 @@ msgstr "---"
 msgid "Name, Addresss, Country, National Identifier"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:165
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:161
 #: src/components/MemberDetails/index.tsx:298
 #: src/components/NameIdentification/index.tsx:118
 msgid "National Identification"
@@ -1180,7 +1180,8 @@ msgstr "---"
 msgid "Organization Collaborators"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:27
+#: src/components/BasicDetailsForm/index.tsx:29
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:34
 #: src/components/Section/SearchDirectory.tsx:180
 #: src/components/Section/SearchDirectory.tsx:248
 msgid "Organization Name"
@@ -1282,7 +1283,7 @@ msgstr "---"
 msgid "Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, you will be contacted to verify details. Once verified, your TestNet certificate will be issued."
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:89
+#: src/components/BasicDetailsForm/index.tsx:97
 msgid "Please select as many categories needed to represent the types of virtual asset services your organization provides."
 msgstr "---"
 
@@ -1333,7 +1334,7 @@ msgstr "---"
 msgid "Reference implementation"
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:198
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:194
 #: src/components/MemberDetails/index.tsx:337
 msgid "Reg Authority"
 msgstr "---"
@@ -1439,7 +1440,7 @@ msgid "Section"
 msgstr "---"
 
 #: src/components/BasicDetail/index.tsx:73
-#: src/components/CertificateReview/BasicDetailsReview.tsx:26
+#: src/components/CertificateReview/BasicDetailsReview.tsx:27
 #: src/components/CertificateSection/index.tsx:23
 #: src/components/CertificateSection/index.tsx:65
 msgid "Section 1: Basic Details"
@@ -1482,7 +1483,7 @@ msgstr "---"
 msgid "Secure"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:81
+#: src/components/BasicDetailsForm/index.tsx:89
 msgid "Select VASP category"
 msgstr "---"
 
@@ -1490,7 +1491,7 @@ msgstr "---"
 msgid "Select a country"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:65
+#: src/components/BasicDetailsForm/index.tsx:73
 msgid "Select business category"
 msgstr "---"
 
@@ -1575,7 +1576,7 @@ msgid "Step 1"
 msgstr "---"
 
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:39
-#: src/components/NeedsAttention/AttentionAlert.tsx:111
+#: src/components/NeedsAttention/AttentionAlert.tsx:112
 #: src/components/Section/PasswordResetForm.tsx:48
 #: src/hoc/withRHF.tsx:117
 msgid "Submit"
@@ -1860,7 +1861,7 @@ msgstr "---"
 msgid "The minimum threshold above which your organization is required to collect/send Travel Rule information."
 msgstr "---"
 
-#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:50
+#: src/components/CertificateReview/LegalPersonReviewDataTable.tsx:48
 #: src/components/MemberDetails/index.tsx:177
 #: src/components/NameIdentifiers/index.tsx:38
 #: src/components/NameIdentifiers/index.tsx:45
@@ -1924,8 +1925,8 @@ msgstr "---"
 msgid "User ID:"
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:80
-#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:65
+#: src/components/BasicDetailsForm/index.tsx:88
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:72
 #: src/components/MemberDetails/index.tsx:131
 #: src/components/OrganizationProfile/OrganizationalDetail.tsx:91
 msgid "VASP Category"
@@ -1965,8 +1966,8 @@ msgstr "---"
 msgid "We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later."
 msgstr "---"
 
-#: src/components/BasicDetailsForm/index.tsx:38
-#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:34
+#: src/components/BasicDetailsForm/index.tsx:40
+#: src/components/CertificateReview/BasicDetailsReviewDataTable.tsx:41
 #: src/components/MemberDetails/index.tsx:111
 msgid "Website"
 msgstr "---"
@@ -2058,6 +2059,11 @@ msgstr "---"
 #: src/modules/auth/login/user.slice.ts:100
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr "---"
+
+#: src/components/Header/LandingHeader.tsx:100
+#: src/components/Header/LandingHeader.tsx:144
+msgid "Your dashboard"
+msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61
 msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."

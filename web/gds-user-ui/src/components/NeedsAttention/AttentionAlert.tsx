@@ -1,4 +1,4 @@
-import { Text, Button, HStack, Alert, AlertIcon } from '@chakra-ui/react';
+import { Text, Button, HStack, Alert, AlertIcon, Box } from '@chakra-ui/react';
 
 import { NavLink } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
@@ -36,6 +36,7 @@ const AttentionAlert = ({
   onClick,
   buttonText
 }: AttentionAlertProps) => {
+  console.log('action', action);
   if (severity === AttentionSeverity.INFO.toUpperCase()) {
     switch (action as AttentionAction) {
       case AttentionAction.START_REGISTRATION:
@@ -89,27 +90,29 @@ const AttentionAlert = ({
             </Alert>{' '}
           </>
         );
-      case AttentionAction.SUBMIT_TESTNET || AttentionAction.SUBMIT_MAINNET:
+      case (AttentionAction.SUBMIT_TESTNET, AttentionAction.SUBMIT_MAINNET):
         return (
           <>
             <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
               <AlertIcon />
               <HStack justifyContent={'space-between'}>
-                <Text> {message}</Text>
-                <Button
-                  onClick={onClick}
-                  width={142}
-                  border={'1px solid white'}
-                  px={8}
-                  as={'a'}
-                  borderRadius={0}
-                  background="transparent"
-                  color="#fff"
-                  cursor="pointer"
-                  _active={{ background: '#000' }}
-                  _hover={{ background: '#111', color: 'white' }}>
-                  {t`Submit`}
-                </Button>
+                <Text minW={'70%'}> {t`${message}`}</Text>
+                <Box>
+                  <Button
+                    onClick={onClick}
+                    width={142}
+                    border={'1px solid white'}
+                    px={8}
+                    as={'a'}
+                    borderRadius={0}
+                    background="transparent"
+                    color="#fff"
+                    cursor="pointer"
+                    _active={{ background: '#000' }}
+                    _hover={{ background: '#111', color: 'white' }}>
+                    {t`Submit`}
+                  </Button>
+                </Box>
               </HStack>
             </Alert>{' '}
           </>

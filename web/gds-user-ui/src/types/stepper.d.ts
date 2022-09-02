@@ -8,6 +8,7 @@ type TPayload = {
   currentStep: number | string;
   steps: TStep[];
   lastStep: number | null;
+  hasReachReviewStep?: boolean;
   hasReachSubmitStep?: boolean;
   testnetSubmitted?: boolean;
   mainnetSubmitted?: boolean;
