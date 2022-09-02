@@ -25,7 +25,7 @@ const stepperSlice: any = createSlice({
   initialState: initialValue,
   reducers: {
     setCurrentStep: (state: any, { payload }: any) => {
-      if (payload.currentStep === 5) {
+      if (payload.currentStep === 6) {
         state.hasReachReviewStep = true;
       }
       state.currentStep = payload.currentStep;
