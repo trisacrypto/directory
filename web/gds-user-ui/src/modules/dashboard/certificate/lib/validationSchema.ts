@@ -19,20 +19,7 @@ export const validationSchema = [
       .date()
       .nullable()
       .transform((curr, orig) => (orig === '' ? null : curr))
-      .required(_i18n._(t`Invalid date`))
-      .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
-        if (value) {
-          // console.log('value', value);
-          const getYear = value.getFullYear();
-          if (getYear.toString().length !== 4) {
-            return false;
-          } else {
-            return true;
-          }
-        }
-        return false;
-      })
-      .required(),
+      .required(_i18n._(t`Invalid date`)),
     organization_name: yup
       .string()
       .trim()

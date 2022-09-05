@@ -8,6 +8,7 @@ import (
 
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/fixtures"
 )
 
 // Test that the backup manager does not create backups if disabled.
@@ -42,7 +43,7 @@ func (s *gdsTestSuite) TestBackupManagerDisabled() {
 
 // Test that the backup manager periodically creates backups.
 func (s *gdsTestSuite) TestBackupManager() {
-	if s.stype == storeTrtl {
+	if s.fixtures.StoreType() == fixtures.StoreTrtl {
 		s.T().Skip("backup manager not supported for trtl store")
 	}
 

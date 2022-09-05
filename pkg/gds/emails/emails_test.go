@@ -96,6 +96,12 @@ func TestEmailBuilders(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceStartedRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "reissuance-started.mim")
+
+	randata := emails.ReissuanceAdminNotificationData{VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	mail, err = emails.ReissuanceAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, randata)
+	require.NoError(t, err)
+	require.Equal(t, emails.ReissuanceAdminNotificationRE, mail.Subject, "incorrect subject")
+	generateMIME(t, mail, "reissuance-admin-notification.mim")
 }
 
 func TestVerifyContactURL(t *testing.T) {
@@ -439,4 +445,39 @@ func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
 	require.Equal(expected, emails.MockEmails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-started.mim")
+}
+
+func (suite *EmailTestSuite) TestSendReissuanceAdminNotificationEmail() {
+	// Load the test suite config
+	require := suite.Require()
+	sender, err := mail.ParseAddress(suite.conf.ServiceEmail)
+	require.NoError(err)
+	recipient, err := mail.ParseAddress(suite.conf.AdminEmail)
+	require.NoError(err)
+
+	// Init the mocked SendGrid client
+	email, err := emails.New(suite.conf)
+	require.NoError(err)
+
+	// Create the reissuance admin notification email.
+	data := emails.ReissuanceAdminNotificationData{
+		VID:                 "42",
+		CommonName:          "test.example.com",
+		SerialNumber:        "1234abcdef56789",
+		Endpoint:            "test.example.com:443",
+		RegisteredDirectory: "trisatest.net",
+		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
+		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
+		BaseURL:             "http://localhost:8080/vasps",
+	}
+	msg, err := emails.ReissuanceAdminNotificationEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
+
+	require.NoError(err)
+	require.NoError(email.Send(msg))
+	require.Len(emails.MockEmails, 1)
+	expected, err := json.Marshal(msg)
+	require.NoError(err)
+	require.Equal(expected, emails.MockEmails[0])
+
+	generateMIME(suite.T(), msg, "reissuance-admin-notification.mim")
 }
