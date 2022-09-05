@@ -3,6 +3,7 @@ package bff_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -244,6 +245,13 @@ func (s *bffTestSuite) SetClientCredentials(claims *authtest.Claims) error {
 func (s *bffTestSuite) SetClientCSRFProtection() error {
 	s.client.(*api.APIv1).SetCSRFProtect(true)
 	return nil
+}
+
+// Custom assertion to ensure a formatted error contains the correct status code and
+// message.
+func (s *bffTestSuite) requireError(err error, status int, message string, msgAndArgs ...interface{}) {
+	require := s.Require()
+	require.EqualError(err, fmt.Sprintf("[%d] %s", status, message), msgAndArgs...)
 }
 
 // Helper function to load test fixtures from disk. If v is a proto.Message it is loaded
