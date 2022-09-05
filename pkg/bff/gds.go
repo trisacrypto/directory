@@ -19,11 +19,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	testnet = "testnet"
-	mainnet = "mainnet"
-)
-
 var (
 	trisatest = map[string]struct{}{
 		"trisatest.net": {},
@@ -176,9 +171,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	)
 
 	switch registeredDirectoryType(params.Directory) {
-	case testnet:
+	case config.TestNet:
 		rep, err = s.testnetGDS.VerifyContact(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
@@ -434,11 +429,11 @@ func validRegisteredDirectory(r string) bool {
 // Returns either testnet or mainnet depending on the user supplied registered directory.
 func registeredDirectoryType(r string) string {
 	if _, ok := trisatest[r]; ok {
-		return testnet
+		return config.TestNet
 	}
 
 	if _, ok := vaspdirectory[r]; ok {
-		return mainnet
+		return config.MainNet
 	}
 
 	return ""
