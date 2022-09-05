@@ -35,20 +35,80 @@ type Profile struct {
 	ID      string
 	Name    string
 	Balance int
-	Params  []string
+	Params  []ProfileParam
 }
 
-var subjectParams = [4]string{
-	"organizationName",
-	"localityName",
-	"stateOrProvinceName",
-	"countryName",
+type ProfileParam struct {
+	Name     string
+	Validate validationFunc
 }
 
-var nameParams = [3]string{
-	"commonName",
-	"dNSName",
-	"pkcs12Password",
+var subjectParams = [4]ProfileParam{
+	{
+		Name:     sectigo.ParamOrganizationName,
+		Validate: hasValue,
+	},
+	{
+		Name:     sectigo.ParamLocalityName,
+		Validate: hasValue,
+	},
+	{
+		Name:     sectigo.ParamStateOrProvinceName,
+		Validate: hasValue,
+	},
+	{
+		Name:     sectigo.ParamCountryName,
+		Validate: hasValue,
+	},
+}
+
+var nameParams = [3]ProfileParam{
+	{
+		Name:     sectigo.ParamCommonName,
+		Validate: hasValue,
+	},
+	{
+		Name:     sectigo.ParamDNSNames,
+		Validate: newlineSeparated,
+	},
+	{
+		Name:     sectigo.ParamPassword,
+		Validate: hasValue,
+	},
+}
+
+// Validation functions are meant to be extremely ligthweight and only exist to verify
+// that the profile parameters have been marshalled to strings correctly without making
+// too many assumptions about how Sectigo validates the parameters.
+type validationFunc func(string) bool
+
+// Validate that the parameter is not empty
+func hasValue(text string) bool {
+	return text != ""
+}
+
+// Validate that the parameter is a newline separated list of attributes
+func newlineSeparated(text string) bool {
+	const token = "\n"
+	if !hasValue(text) {
+		return false
+	}
+
+	if !strings.Contains(text, token) {
+		return true
+	}
+
+	values := strings.Split(text, token)
+	if len(values) < 1 {
+		return false
+	}
+
+	for _, v := range values {
+		if !hasValue(v) {
+			return false
+		}
+	}
+	return true
 }
 
 // All the profiles that the mock knows about.
@@ -316,9 +376,11 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 
 		found := false
 		for _, p := range profile.Params {
-			if p == k {
+			if p.Name == k {
+				if !p.Validate(v) {
+					c.JSON(http.StatusBadRequest, fmt.Errorf("profile parameter validation failed for name: %s, value: %s", k, v))
+				}
 				found = true
-				break
 			}
 		}
 		if !found {
@@ -328,8 +390,8 @@ func (s *Server) createSingleCertBatch(c *gin.Context) {
 	}
 
 	for _, p := range profile.Params {
-		if _, ok := in.ProfileParams[p]; !ok {
-			c.JSON(http.StatusBadRequest, fmt.Errorf("missing profile parameter %s", p))
+		if _, ok := in.ProfileParams[p.Name]; !ok {
+			c.JSON(http.StatusBadRequest, fmt.Errorf("missing profile parameter %s", p.Name))
 			return
 		}
 	}
@@ -527,7 +589,7 @@ func (s *Server) profileParameters(c *gin.Context) {
 	params := make([]*sectigo.ProfileParamsResponse, 0)
 	for _, param := range profile.Params {
 		params = append(params, &sectigo.ProfileParamsResponse{
-			Name:     param,
+			Name:     param.Name,
 			Required: true,
 		})
 	}

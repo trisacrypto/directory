@@ -14,16 +14,8 @@ type Config struct {
 
 func (c Config) Validate() error {
 	// Check valid certificate profiles
-	validProfile := false
-	for _, profile := range AllProfiles {
-		if profile == c.Profile {
-			validProfile = true
-			break
-		}
-	}
-
-	if !validProfile {
-		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(AllProfiles[:], ", "))
+	if _, ok := Profiles[c.Profile]; !ok {
+		return fmt.Errorf("%q is not a valid Sectigo profile name, specify one of %s", c.Profile, strings.Join(AllProfiles(), ", "))
 	}
 	return nil
 }
