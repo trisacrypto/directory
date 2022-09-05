@@ -60,7 +60,6 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
   } = useForm<FormValues>();
   const onSubmit = (e: any) => {
     e.preventDefault();
-    console.log('submitted');
     const file = e.target.files[0];
     onReadFileUploaded(file);
   };

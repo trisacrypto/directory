@@ -34,7 +34,11 @@ const TrixoQuestionnaireForm: React.FC = () => {
     if (!getMustComplyRegulations) {
       setValue(`trixo.compliance_threshold`, 0);
     }
-    if (!getHasRequiredRegulatoryProgram || getHasRequiredRegulatoryProgram === 'no') {
+    if (
+      !getHasRequiredRegulatoryProgram ||
+      getHasRequiredRegulatoryProgram === 'no' ||
+      getHasRequiredRegulatoryProgram === 'partial'
+    ) {
       setValue(`trixo.kyc_threshold`, 0);
     }
     // if applicable regulations is empty, set default value

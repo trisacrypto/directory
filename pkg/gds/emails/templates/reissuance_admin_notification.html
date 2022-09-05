@@ -1,0 +1,22 @@
+<p>Hello TRISA Admins,</p>
+
+<p>A TRISA Identity Certificate automated reissuance for {{ .CommonName }} has been completed on {{ .ReissueDate }} by the Global Directory Service.</p>
+
+<p>Current certificate and directory entry details:</p>
+
+<ul>
+	<li><strong>ID:</strong> {{ .VID }}</li>
+  <li><strong>Registered Directory:</strong> {{ .RegisteredDirectory }}</li>
+	<li><strong>Common Name:</strong> {{ .CommonName }}</li>
+  <li><strong>Endpoint:</strong> {{ .Endpoint }}</li>
+	<li><strong>Serial Number:</strong> {{ .SerialNumber }}</li>
+	<li><strong>Expiration:</strong> {{ .ExpirationDate }}</li>
+  <li><strong>Reissuance:</strong> {{ .ReissueDate }}</li>
+</ul>
+
+<p>You can view the full record on the TRISA Admin UI:</p>
+
+<p><a href="{{ .AdminReviewURL }}">{{ .AdminReviewURL }}</a></p>
+
+<p>Best Regards,<br />
+TRISA Global Directory Service Team</p>

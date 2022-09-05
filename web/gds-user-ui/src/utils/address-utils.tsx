@@ -28,6 +28,7 @@ export const renderLines = (address: any) => (
     {address.address_line.map(
       (addressLine: any, index: number) => addressLine && <div key={index}>{addressLine} </div>
     )}
+    <div>{`${address.town_name}, ${address.country_sub_division} ${address.post_code}`}</div>
     <div>{address?.country}</div>
   </div>
 );
