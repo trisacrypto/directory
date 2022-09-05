@@ -135,7 +135,7 @@ func main() {
 }
 
 func connectDB(c *cli.Context) (err error) {
-	// Surpress the zerolog output from the store
+	// Suppress the zerolog output from the store
 	logger.Discard()
 
 	// Load the configuration from the environment

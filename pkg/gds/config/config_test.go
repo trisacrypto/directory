@@ -50,7 +50,8 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
 	"GDS_EMAIL_TESTING":                        "true",
 	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
-	"GDS_CERTMAN_INTERVAL":                     "60s",
+	"GDS_CERTMAN_REQUEST_INTERVAL":             "60s",
+	"GDS_CERTMAN_REISSUANCE_INTERVAL":          "90s",
 	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
 	"GDS_BACKUP_ENABLED":                       "true",
 	"GDS_BACKUP_INTERVAL":                      "36h",
@@ -112,10 +113,10 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Database.Insecure)
 	require.Equal(t, testEnv["GDS_DATABASE_CERT_PATH"], conf.Database.CertPath)
 	require.Equal(t, testEnv["GDS_DATABASE_POOL_PATH"], conf.Database.PoolPath)
-	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.Sectigo.Username)
-	require.Equal(t, testEnv["SECTIGO_PASSWORD"], conf.Sectigo.Password)
-	require.Equal(t, testEnv["SECTIGO_PROFILE"], conf.Sectigo.Profile)
-	require.True(t, conf.Sectigo.Testing)
+	require.Equal(t, testEnv["SECTIGO_USERNAME"], conf.CertMan.Sectigo.Username)
+	require.Equal(t, testEnv["SECTIGO_PASSWORD"], conf.CertMan.Sectigo.Password)
+	require.Equal(t, testEnv["SECTIGO_PROFILE"], conf.CertMan.Sectigo.Profile)
+	require.True(t, conf.CertMan.Sectigo.Testing)
 	require.Equal(t, testEnv["GDS_SERVICE_EMAIL"], conf.Email.ServiceEmail)
 	require.Equal(t, testEnv["GDS_ADMIN_EMAIL"], conf.Email.AdminEmail)
 	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
@@ -124,8 +125,10 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_EMAIL_STORAGE"], conf.Email.Storage)
 	require.True(t, conf.Email.Testing)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.Email.DirectoryID)
-	require.Equal(t, 1*time.Minute, conf.CertMan.Interval)
+	require.Equal(t, 1*time.Minute, conf.CertMan.RequestInterval)
+	require.Equal(t, 90*time.Second, conf.CertMan.ReissuanceInterval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
+	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.CertMan.DirectoryID)
 	require.Equal(t, true, conf.Backup.Enabled)
 	require.Equal(t, 36*time.Hour, conf.Backup.Interval)
 	require.Equal(t, testEnv["GDS_BACKUP_STORAGE"], conf.Backup.Storage)

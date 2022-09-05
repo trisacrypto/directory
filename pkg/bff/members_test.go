@@ -3,6 +3,7 @@ package bff_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"path/filepath"
 	"time"
 
@@ -111,12 +112,12 @@ func (s *bffTestSuite) TestOverview() {
 
 	// Endpoint must be authenticated
 	_, err := s.client.Overview(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.Overview(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -276,12 +277,12 @@ func (s *bffTestSuite) TestMemberDetails() {
 	// Endpoint must be authenticated
 	req := &api.MemberDetailsParams{}
 	_, err := s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -289,28 +290,28 @@ func (s *bffTestSuite) TestMemberDetails() {
 
 	// Test that both ID and directory must be set
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
 
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
 
 	req.ID = ""
 	req.Directory = "trisatest.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
 
 	// Test with unrecognized directory
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	req.Directory = "unrecognized.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] unknown registered directory", "expected error when directory is unrecognized")
+	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected error when directory is unrecognized")
 
 	// Test error is returned when VASP does not exist in the requested directory
 	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.NotFound, "member not found"))
 	req.Directory = "trisatest.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[404] member not found", "expected error when VASP does not exist")
+	s.requireError(err, http.StatusNotFound, "member not found", "expected error when VASP does not exist")
 
 	// Test successful response from testnet
 	actualPerson := &ivms101.LegalPerson{}

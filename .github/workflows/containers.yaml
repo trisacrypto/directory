@@ -78,6 +78,27 @@ jobs:
           build-args: |
             GIT_REVISION=${{ steps.vars.outputs.revision }}
 
+      - name: Slack Notify GDS Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify GDS Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
+
   # GDS Backend for Front-End Service
   gds-bff:
     name: GDS BFF
@@ -141,6 +162,26 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_REVISION=${{ steps.vars.outputs.revision }}
+
+      - name: Slack Notify BFF Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify BFF Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
 
   # GDS User UI: vaspdirectory.net
   gds-user-ui:
@@ -217,6 +258,26 @@ jobs:
             REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_SENTRY_DSN }}
 
+      - name: Slack Notify User UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify User UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
   # GDS Admin UI: admin.vaspdirectory.net
   gds-admin-ui:
     name: GDS Admin UI
@@ -280,6 +341,26 @@ jobs:
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_VASPDIRECTORY_CLIENT_ID }}
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
 
+      - name: Slack Notify Admin UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Admin UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
   # GDS TestNet Admin UI: admin.trisatest.net
   gds-testnet-admin-ui:
     name: GDS TestNet Admin UI
@@ -342,6 +423,26 @@ jobs:
             REACT_APP_GDS_IS_TESTNET=true
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_TRISATEST_CLIENT_ID }}
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
+
+      - name: Slack Notify TestNet Admin UI Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify TestNet Admin UI Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
 
   # Trtl - Globally Replicated Key-Value Store
   trtl:
@@ -407,6 +508,26 @@ jobs:
           build-args: |
             GIT_REVISION=${{ steps.vars.outputs.revision }}
 
+      - name: Slack Notify Trtl Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Trtl Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger
+
   # Initialization container for trtl statefulsets
   trtl-init:
     name: TRTL Initialization Container
@@ -462,3 +583,23 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Slack Notify Trtl Init Build Success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: SUCCESS
+          color: good
+
+      - name: Slack Notify Trtl Init Build Fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1.1.2
+        with:
+          channel: gds-github
+          status: FAILED
+          color: danger

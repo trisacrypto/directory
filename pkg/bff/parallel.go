@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,8 +34,8 @@ func (s *Server) ParallelAdminRequests(ctx context.Context, rpc AdminRPC, flatte
 	}
 
 	// execute both requests
-	go closure(s.testnetAdmin, 0, testnet)
-	go closure(s.mainnetAdmin, 1, mainnet)
+	go closure(s.testnetAdmin, 0, config.TestNet)
+	go closure(s.mainnetAdmin, 1, config.MainNet)
 	wg.Wait()
 
 	// flatten rpc and error if requested
@@ -73,8 +74,8 @@ func (s *Server) ParallelGDSRequests(ctx context.Context, rpc RPC, flatten bool)
 	}
 
 	// execute both requests
-	go closure(s.testnetGDS, 0, testnet)
-	go closure(s.mainnetGDS, 1, mainnet)
+	go closure(s.testnetGDS, 0, config.TestNet)
+	go closure(s.mainnetGDS, 1, config.MainNet)
 	wg.Wait()
 
 	// flatten rpc and error if requested
