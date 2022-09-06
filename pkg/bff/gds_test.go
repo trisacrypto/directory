@@ -3,6 +3,7 @@ package bff_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
@@ -21,7 +22,7 @@ func (s *bffTestSuite) TestLookup() {
 
 	// Test Bad Request (no parameters)
 	_, err := s.client.Lookup(context.TODO(), params)
-	require.EqualError(err, "[400] must provide either uuid or common_name in query params", "expected a 400 error with no params")
+	s.requireError(err, http.StatusBadRequest, "must provide either uuid or common_name in query params", "expected a 400 error with no params")
 
 	// Provide some params
 	params.CommonName = "api.alice.vaspbot.net"
@@ -30,13 +31,13 @@ func (s *bffTestSuite) TestLookup() {
 	require.NoError(s.testnet.gds.UseError(mock.LookupRPC, codes.NotFound, "testnet not found"))
 	require.NoError(s.mainnet.gds.UseError(mock.LookupRPC, codes.NotFound, "mainnet not found"))
 	_, err = s.client.Lookup(context.TODO(), params)
-	require.EqualError(err, "[404] no results returned for query", "expected a 404 error when both GDSes return not found")
+	s.requireError(err, http.StatusNotFound, "no results returned for query", "expected a 404 error when both GDSes return not found")
 
 	// Test InternalError when both GDSes return Unavailable
 	require.NoError(s.testnet.gds.UseError(mock.LookupRPC, codes.Unavailable, "testnet cannot connect"))
 	require.NoError(s.mainnet.gds.UseError(mock.LookupRPC, codes.Unavailable, "mainnet cannot connect"))
 	_, err = s.client.Lookup(context.TODO(), params)
-	require.EqualError(err, "[500] unable to execute Lookup request", "expected a 500 error when both GDSes return unavailable")
+	s.requireError(err, http.StatusInternalServerError, "unable to execute Lookup request", "expected a 500 error when both GDSes return unavailable")
 
 	// Test one result from TestNet
 	require.NoError(s.testnet.gds.UseFixture(mock.LookupRPC, "testdata/testnet/lookup_reply.json"))
@@ -76,26 +77,26 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 
 	// Endpoint must be authenticated
 	_, err := s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint must have the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions from claims")
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must not panic if it does not
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
-	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
@@ -150,29 +151,29 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 
 	// Endpoint requires CSRF protection
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[403] csrf verification failed for request", "expected error when request is not CSRF protected")
+	s.requireError(err, http.StatusForbidden, "csrf verification failed for request", "expected error when request is not CSRF protected")
 
 	// Endpoint must be authenticated
 	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the update:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must panic if it does not
 	claims.Permissions = []string{"update:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	err = s.client.SaveRegistrationForm(context.TODO(), form)
-	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database that does not contain a registration form
 	org, err := s.db.Organizations().Create(context.TODO())
@@ -260,29 +261,29 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 
 		// Endpoint should require CSRF protection
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[403] csrf verification failed for request", "expected error when request is not CSRF protected")
+		s.requireError(err, http.StatusForbidden, "csrf verification failed for request", "expected error when request is not CSRF protected")
 
 		// Endpoint must be authenticated
 		require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+		s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 		// Endpoint requires the update:vasp permission
 		require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+		s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 		// Claims must have an organization ID and the server must panic if it does not
 		claims.Permissions = []string{"update:vasp"}
 		require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+		s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 		// Create valid claims but no record in the database - should not panic and should return an error
 		claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 		require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+		s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 		// From this point on submit valid claims and test responses from GDS
 		// NOTE: for registration form validation see TestSubmitRegistrationNotReady
@@ -293,7 +294,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		mgds.UseError(mock.RegisterRPC, codes.InvalidArgument, "the TRISA endpoint is not valid")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
-		require.EqualError(err, "[400] the TRISA endpoint is not valid")
+		s.requireError(err, http.StatusBadRequest, "the TRISA endpoint is not valid")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
@@ -301,7 +302,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		mgds.UseError(mock.RegisterRPC, codes.AlreadyExists, "this VASP is already registered")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
-		require.EqualError(err, "[400] this VASP is already registered")
+		s.requireError(err, http.StatusBadRequest, "this VASP is already registered")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
@@ -309,7 +310,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		mgds.UseError(mock.RegisterRPC, codes.Aborted, "a conflict occurred")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
-		require.EqualError(err, "[409] a conflict occurred")
+		s.requireError(err, http.StatusConflict, "a conflict occurred")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
@@ -317,7 +318,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		mgds.UseError(mock.RegisterRPC, codes.DeadlineExceeded, "deadline exceeded")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
-		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
+		s.requireError(err, http.StatusInternalServerError, fmt.Sprintf("could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
@@ -325,7 +326,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		mgds.UseError(mock.RegisterRPC, codes.FailedPrecondition, "couldn't access database")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
-		require.EqualError(err, fmt.Sprintf("[500] could not register with %s", network))
+		s.requireError(err, http.StatusInternalServerError, fmt.Sprintf("could not register with %s", network))
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
@@ -351,7 +352,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 
 		// Test that a post to an incorrect network returns an error.
 		_, err = s.client.SubmitRegistration(context.TODO(), "notanetwork")
-		require.EqualError(err, "[404] network should be either testnet or mainnet")
+		s.requireError(err, http.StatusNotFound, "network should be either testnet or mainnet")
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 	}
@@ -408,12 +409,12 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	// Expect 400 error for both mainnet and testnet
 	for _, network := range []string{"testnet", "mainnet"} {
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, "[400] registration form is not ready to submit", "expected error when registration form is not ready to submit")
+		s.requireError(err, http.StatusBadRequest, "registration form is not ready to submit", "expected error when registration form is not ready to submit")
 	}
 
 	// While we're here, also test that we receive a 404 for a bad network
 	_, err = s.client.SubmitRegistration(context.TODO(), "notanetwork")
-	require.EqualError(err, "[404] network should be either testnet or mainnet", "expected error when submitting registration to incorrect network name")
+	s.requireError(err, http.StatusNotFound, "network should be either testnet or mainnet", "expected error when submitting registration to incorrect network name")
 }
 
 func (s *bffTestSuite) TestCannotResubmitRegistration() {
@@ -458,7 +459,7 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	// Expect 400 error for both mainnet and testnet
 	for _, network := range []string{"testnet", "mainnet"} {
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
-		require.EqualError(err, fmt.Sprintf("[409] registration form has already been submitted to the %s", network), "expected error when registration form has already been submitted")
+		s.requireError(err, http.StatusConflict, fmt.Sprintf("registration form has already been submitted to the %s", network), "expected error when registration form has already been submitted")
 	}
 }
 
@@ -468,22 +469,22 @@ func (s *bffTestSuite) TestVerifyEmail() {
 
 	// Test Bad Request (no parameters)
 	_, err := s.client.VerifyContact(context.TODO(), params)
-	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
 
 	// Test Bad Request (only vaspID specified)
 	params.ID = uuid.NewString()
 	_, err = s.client.VerifyContact(context.TODO(), params)
-	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
 
 	// Test Bad Request (only vaspID and token specified)
 	params.Token = "abcdefghijklmnopqrstuvwxyz"
 	_, err = s.client.VerifyContact(context.TODO(), params)
-	require.EqualError(err, "[400] must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID, token, and registered_directory in query parameters", "expected a 400 error with no params")
 
 	// Test Bad Request (only unknown registered_directory specified)
 	params.Directory = "equitylo.rd"
 	_, err = s.client.VerifyContact(context.TODO(), params)
-	require.EqualError(err, "[400] unknown registered directory")
+	s.requireError(err, http.StatusBadRequest, "unknown registered directory")
 
 	// Assert that to this point no GDS method has been called
 	require.Empty(s.testnet.gds.Calls[mock.VerifyContactRPC], "expected no testnet calls")
@@ -511,7 +512,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		mgds.UseError(mock.VerifyContactRPC, codes.InvalidArgument, "incorrect vasp id")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
-		require.EqualError(err, "[400] incorrect vasp id")
+		s.requireError(err, http.StatusBadRequest, "incorrect vasp id")
 		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
 		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
@@ -519,7 +520,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		mgds.UseError(mock.VerifyContactRPC, codes.NotFound, "could not lookup contact with token")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
-		require.EqualError(err, "[404] could not lookup contact with token")
+		s.requireError(err, http.StatusNotFound, "could not lookup contact with token")
 		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
 		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
@@ -527,7 +528,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		mgds.UseError(mock.VerifyContactRPC, codes.Aborted, "could not update verification status")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
-		require.EqualError(err, "[409] could not update verification status")
+		s.requireError(err, http.StatusConflict, "could not update verification status")
 		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
 		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
@@ -535,7 +536,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "something went wrong")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
-		require.EqualError(err, "[500] something went wrong")
+		s.requireError(err, http.StatusInternalServerError, "something went wrong")
 		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
 		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
@@ -543,7 +544,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "boom hiss")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
-		require.EqualError(err, "[500] boom hiss")
+		s.requireError(err, http.StatusInternalServerError, "boom hiss")
 		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
 		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 

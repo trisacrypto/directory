@@ -62,6 +62,8 @@ message VASPMember {
     repeated string vasp_categories = 9;
     string verified_on = 10;
     trisa.gds.models.v1beta1.VerificationState status = 11;
+    string first_listed = 12;
+    string last_updated = 13;
 }
 
 // SummaryRequest allows the caller to specify parameters for the returned summary.
