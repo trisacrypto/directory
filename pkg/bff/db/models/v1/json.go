@@ -11,7 +11,7 @@ var (
 		AllowPartial:    true,
 		UseProtoNames:   true,
 		UseEnumNumbers:  false,
-		EmitUnpopulated: false,
+		EmitUnpopulated: true,
 	}
 	pbdecoder = protojson.UnmarshalOptions{
 		AllowPartial:   true,
