@@ -3,7 +3,9 @@ package bff_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
@@ -30,6 +32,9 @@ func (s *bffTestSuite) TestGetSummaries() {
 			RegisteredDirectory: "testnet",
 			CommonName:          "alice.vaspbot.net",
 			Status:              pb.VerificationState_VERIFIED,
+			FirstListed:         time.Now().AddDate(0, 0, -2).Format(time.RFC3339),
+			VerifiedOn:          time.Now().AddDate(0, 0, -1).Format(time.RFC3339),
+			LastUpdated:         time.Now().Format(time.RFC3339),
 		},
 	}
 	testnetSummary := func(ctx context.Context, in *members.SummaryRequest) (*members.SummaryReply, error) {
@@ -45,6 +50,9 @@ func (s *bffTestSuite) TestGetSummaries() {
 			RegisteredDirectory: "mainnet",
 			CommonName:          "alice.vaspbot.net",
 			Status:              pb.VerificationState_SUBMITTED,
+			FirstListed:         time.Now().AddDate(0, 0, -3).Format(time.RFC3339),
+			VerifiedOn:          time.Now().AddDate(0, 0, -2).Format(time.RFC3339),
+			LastUpdated:         time.Now().Format(time.RFC3339),
 		},
 	}
 	mainnetSummary := func(ctx context.Context, in *members.SummaryRequest) (*members.SummaryReply, error) {
@@ -104,12 +112,12 @@ func (s *bffTestSuite) TestOverview() {
 
 	// Endpoint must be authenticated
 	_, err := s.client.Overview(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.Overview(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -171,6 +179,9 @@ func (s *bffTestSuite) TestOverview() {
 	require.Equal(expected, reply, "overview reply did not match")
 
 	// Test with both valid responses, one endpoint returns VASP details
+	firstListed := time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
+	verifiedOn := time.Now().AddDate(0, 0, -2).Format(time.RFC3339)
+	lastUpdated := time.Now().Format(time.RFC3339)
 	claims.VASPs["mainnet"] = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with VASP ID")
 	s.mainnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
@@ -184,9 +195,12 @@ func (s *bffTestSuite) TestOverview() {
 			CertificatesIssued: 23,
 			NewMembers:         5,
 			MemberInfo: &members.VASPMember{
-				Id:      claims.VASPs["mainnet"],
-				Status:  pb.VerificationState_SUBMITTED,
-				Country: "US",
+				Id:          claims.VASPs["mainnet"],
+				Status:      pb.VerificationState_SUBMITTED,
+				Country:     "US",
+				FirstListed: firstListed,
+				VerifiedOn:  verifiedOn,
+				LastUpdated: lastUpdated,
 			},
 		}, nil
 	}
@@ -198,6 +212,9 @@ func (s *bffTestSuite) TestOverview() {
 		ID:          claims.VASPs["mainnet"],
 		Status:      pb.VerificationState_SUBMITTED.String(),
 		CountryCode: "US",
+		FirstListed: firstListed,
+		VerifiedOn:  verifiedOn,
+		LastUpdated: lastUpdated,
 	}
 	expected.Error.MainNet = ""
 	reply, err = s.client.Overview(context.TODO())
@@ -213,9 +230,12 @@ func (s *bffTestSuite) TestOverview() {
 			CertificatesIssued: 6,
 			NewMembers:         3,
 			MemberInfo: &members.VASPMember{
-				Id:      claims.VASPs["testnet"],
-				Status:  pb.VerificationState_VERIFIED,
-				Country: "FR",
+				Id:          claims.VASPs["testnet"],
+				Status:      pb.VerificationState_VERIFIED,
+				Country:     "FR",
+				FirstListed: firstListed,
+				VerifiedOn:  verifiedOn,
+				LastUpdated: lastUpdated,
 			},
 		}, nil
 	}
@@ -223,6 +243,9 @@ func (s *bffTestSuite) TestOverview() {
 		ID:          claims.VASPs["testnet"],
 		Status:      pb.VerificationState_VERIFIED.String(),
 		CountryCode: "FR",
+		FirstListed: firstListed,
+		VerifiedOn:  verifiedOn,
+		LastUpdated: lastUpdated,
 	}
 	reply, err = s.client.Overview(context.TODO())
 	require.NoError(err, "could not get overview")
@@ -254,12 +277,12 @@ func (s *bffTestSuite) TestMemberDetails() {
 	// Endpoint must be authenticated
 	req := &api.MemberDetailsParams{}
 	_, err := s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -267,28 +290,28 @@ func (s *bffTestSuite) TestMemberDetails() {
 
 	// Test that both ID and directory must be set
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
 
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
 
 	req.ID = ""
 	req.Directory = "trisatest.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
+	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
 
 	// Test with unrecognized directory
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
 	req.Directory = "unrecognized.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[400] unknown registered directory", "expected error when directory is unrecognized")
+	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected error when directory is unrecognized")
 
 	// Test error is returned when VASP does not exist in the requested directory
 	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.NotFound, "member not found"))
 	req.Directory = "trisatest.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
-	require.EqualError(err, "[404] member not found", "expected error when VASP does not exist")
+	s.requireError(err, http.StatusNotFound, "member not found", "expected error when VASP does not exist")
 
 	// Test successful response from testnet
 	actualPerson := &ivms101.LegalPerson{}

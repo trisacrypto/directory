@@ -10,17 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-)
-
-const (
-	testnet = "testnet"
-	mainnet = "mainnet"
 )
 
 var (
@@ -175,9 +171,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	)
 
 	switch registeredDirectoryType(params.Directory) {
-	case testnet:
+	case config.TestNet:
 		rep, err = s.testnetGDS.VerifyContact(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
@@ -285,7 +281,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Get the network from the URL
 	var err error
 	network := strings.ToLower(c.Param("network"))
-	if network != testnet && network != mainnet {
+	if network != config.TestNet && network != config.MainNet {
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
 		return
 	}
@@ -299,14 +295,14 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Do not allow a registration form to be submitted twice
 	switch network {
-	case testnet:
+	case config.TestNet:
 		if org.Testnet != nil && org.Testnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 			return
 		}
-	case mainnet:
+	case config.MainNet:
 		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
@@ -339,11 +335,11 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	defer cancel()
 
 	switch network {
-	case testnet:
+	case config.TestNet:
 		req.TrisaEndpoint = org.Registration.Testnet.Endpoint
 		req.CommonName = org.Registration.Testnet.CommonName
 		rep, err = s.testnetGDS.Register(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		req.TrisaEndpoint = org.Registration.Mainnet.Endpoint
 		req.CommonName = org.Registration.Mainnet.CommonName
 		rep, err = s.mainnetGDS.Register(ctx, req)
@@ -401,9 +397,9 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	switch network {
-	case testnet:
+	case config.TestNet:
 		org.Testnet = directoryRecord
-	case mainnet:
+	case config.MainNet:
 		org.Mainnet = directoryRecord
 	}
 
@@ -433,11 +429,11 @@ func validRegisteredDirectory(r string) bool {
 // Returns either testnet or mainnet depending on the user supplied registered directory.
 func registeredDirectoryType(r string) string {
 	if _, ok := trisatest[r]; ok {
-		return testnet
+		return config.TestNet
 	}
 
 	if _, ok := vaspdirectory[r]; ok {
-		return mainnet
+		return config.MainNet
 	}
 
 	return ""

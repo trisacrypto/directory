@@ -18,6 +18,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	TestNet = "testnet"
+	MainNet = "mainnet"
+)
+
 // Config uses envconfig to load the required settings from the environment, parse and
 // validate them in preparation for running the GDS BFF API service.
 type Config struct {
