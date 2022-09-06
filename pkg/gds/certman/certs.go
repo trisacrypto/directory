@@ -253,25 +253,30 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 		return fmt.Errorf("could not retrieve pkcs12password: %s", err)
 	}
 
-	profile := c.certs.Profile()
-	var params map[string]string
-	if profile == sectigo.ProfileCipherTraceEndEntityCertificate || profile == sectigo.ProfileIDCipherTraceEndEntityCertificate {
-		params = r.Params
-		if params == nil {
-			log.Error().Str("vasp", vasp.Id).Str("certreq", r.Id).Msg("certificate request params are nil")
-			return errors.New("no params are available on the certificate request")
-		}
-	} else {
-		params = make(map[string]string)
-	}
-
-	params["commonName"] = r.CommonName
-	params["dNSName"] = r.CommonName
-	params["pkcs12Password"] = string(pkcs12Password)
+	// Allow multiple DNS names to be specified in addition to the common name
+	// This will overwrite whatever is in the params ensuring the latest common name and
+	// dns names are submitted to Sectigo if there were intermediate changes to the req.
+	dnsNames := []string{r.CommonName}
+	dnsNames = append(dnsNames, r.DnsNames...)
+	models.UpdateCertificateRequestParams(r, sectigo.ParamDNSNames, strings.Join(dnsNames, "\n"))
+	models.UpdateCertificateRequestParams(r, sectigo.ParamCommonName, r.CommonName)
+	models.UpdateCertificateRequestParams(r, sectigo.ParamPassword, string(pkcs12Password))
 
 	// Step 3: submit the certificate
-	var rep *sectigo.BatchResponse
+	var (
+		rep    *sectigo.BatchResponse
+		params map[string]string
+	)
+
+	// Construct the required parameters for the Sectigo request.
+	profile := c.certs.Profile()
 	batchName := fmt.Sprintf("%s-certreq-%s)", c.conf.DirectoryID, r.Id)
+
+	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
+		return fmt.Errorf("could not retrieve certificate request parameters for profile %q: %s", profile, err)
+	}
+
+	// Execute the certificate request to Sectigo.
 	if rep, err = c.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.

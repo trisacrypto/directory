@@ -38,12 +38,12 @@ func (s *bffTestSuite) TestCertificates() {
 
 	// Endpoint must be authenticated
 	_, err := s.client.Certificates(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.Certificates(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -146,24 +146,24 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Endpoint must be authenticated
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Start registration message should be returned when there is no registration form
 	claims.OrgID = org.Id
@@ -243,7 +243,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	s.testnet.admin.UseError(mock.RetrieveVASPEP, http.StatusNotFound, "could not find VASP in database")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[500] 404 Not Found", "expected error when VASP does not exist in testnet")
+	s.requireError(err, http.StatusInternalServerError, "404 Not Found", "expected error when VASP does not exist in testnet")
 
 	// Test an error is returned when VASP does not exist in mainnet
 	claims.VASPs["testnet"] = ""
@@ -251,7 +251,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	s.mainnet.admin.UseError(mock.RetrieveVASPEP, http.StatusNotFound, "could not find VASP in database")
 	_, err = s.client.Attention(context.TODO())
-	require.EqualError(err, "[500] 404 Not Found", "expected error when VASP does not exist in mainnet")
+	s.requireError(err, http.StatusInternalServerError, "404 Not Found", "expected error when VASP does not exist in mainnet")
 
 	// Verify emails message should be returned when the VASP has been submitted but
 	// emails are not yet verified
@@ -430,24 +430,24 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 
 	// Endpoint must be authenticated
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
 	claims.Permissions = []string{"read:vasp"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[401] missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	_, err = s.client.RegistrationStatus(context.TODO())
-	require.EqualError(err, "[401] no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Should return an empty response when there are no directory records
 	claims.OrgID = org.Id
