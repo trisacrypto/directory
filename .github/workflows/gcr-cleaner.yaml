@@ -1,11 +1,11 @@
 # .github/workflows/gcr-cleaner.yaml
 name: GCR Cleanup
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+  # runs daily or on manual invocation
+  schedule:
+    - cron: '0 0 */1 * *'
+  workflow_dispatch:
+
 jobs:
   gcr-cleaner:
     runs-on: 'ubuntu-latest'
@@ -35,7 +35,8 @@ jobs:
         with:
           args: >-
               -repo=gcr.io/trisa-gds/
-              -grace=30d
-              -keep=10
+              -repo=docker.io/trisa/
+              -grace=90d
+              -keep=16
               -dry-run=True
               -recursive=True
