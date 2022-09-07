@@ -56,7 +56,6 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
     ref
   ) => {
     const inputColorMode = useColorModeValue('#E3EBEF', undefined);
-    console.log(rest);
 
     const handleMouseScroll = (e: React.WheelEvent<HTMLInputElement>) => {
       // Disable Mouse scrolling

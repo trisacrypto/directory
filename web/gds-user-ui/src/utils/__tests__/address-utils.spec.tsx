@@ -139,6 +139,9 @@ describe('Address Utils', () => {
              
           </div>
           <div>
+            undefined, undefined undefined
+          </div>
+          <div>
             US
           </div>
         </div>

@@ -60,6 +60,9 @@ message CertificateRequest {
     // Generic parameters used for making requests to certificate issuing services
     map<string, string> params = 13;
 
+    // Optional list of alternate dns names in addition to the common name
+    repeated string dns_names = 14;
+
     // Logging information timestamps
     string created = 15;
     string modified = 16;
@@ -116,6 +119,9 @@ message GDSExtraData {
 
     // Certificate IDs associated with this VASP
     repeated string certificates = 5;
+
+    // Log which records emails sent to the TRISA admins regarding this VASP
+    repeated EmailLogEntry email_log = 6;
 }
 
 // AuditLogEntry contains information about an event relevant to a VASP

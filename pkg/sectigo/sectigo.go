@@ -9,29 +9,75 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 )
 
-// Valid Sectigo Certificate Profile Names and IDs
+func init() {
+	// Ensure all profile params are sorted so binary search can be used for lookups
+	for _, params := range Profiles {
+		sort.Strings(params)
+	}
+}
+
+// Valid Sectigo Certificate Profile Names, IDs, and parameters.
 // TODO: do not hardcode this, but get programatically from Sectigo API
 const (
 	ProfileCipherTraceEE                     = "CipherTrace EE"
 	ProfileIDCipherTraceEE                   = "17"
 	ProfileCipherTraceEndEntityCertificate   = "CipherTrace End Entity Certificate"
 	ProfileIDCipherTraceEndEntityCertificate = "85"
+	ParamOrganizationName                    = "organizationName"
+	ParamLocalityName                        = "localityName"
+	ParamStateOrProvinceName                 = "stateOrProvinceName"
+	ParamCountryName                         = "countryName"
+	ParamCommonName                          = "commonName"
+	ParamDNSNames                            = "dNSName"
+	ParamPassword                            = "pkcs12Password"
 )
 
-var AllProfiles = [4]string{
-	ProfileCipherTraceEE, ProfileIDCipherTraceEE,
-	ProfileCipherTraceEndEntityCertificate, ProfileIDCipherTraceEndEntityCertificate,
+// Map containing all the supported Sectigo profiles and their required parameters.
+// NOTE: these params are sorted by the init function to enable binary search.
+var Profiles = map[string][]string{
+	ProfileCipherTraceEE:                     nameParams[:],
+	ProfileIDCipherTraceEE:                   nameParams[:],
+	ProfileCipherTraceEndEntityCertificate:   append(nameParams[:], subjectParams[:]...),
+	ProfileIDCipherTraceEndEntityCertificate: append(nameParams[:], subjectParams[:]...),
+}
+
+var subjectParams = [4]string{
+	ParamOrganizationName,
+	ParamLocalityName,
+	ParamStateOrProvinceName,
+	ParamCountryName,
+}
+
+var nameParams = [3]string{
+	ParamCommonName,
+	ParamDNSNames,
+	ParamPassword,
+}
+
+var Defaults = map[string]string{
+	ParamOrganizationName:    "TRISA Member VASP",
+	ParamLocalityName:        "Menlo Park",
+	ParamStateOrProvinceName: "California",
+	ParamCountryName:         "US",
+}
+
+func AllProfiles() []string {
+	var profiles []string
+	for k := range Profiles {
+		profiles = append(profiles, k)
+	}
+	return profiles
 }
 
 // Sectigo provides authenticated http requests to the Sectigo IoT Manager 20.7 REST API.
@@ -387,7 +433,7 @@ func (s *Sectigo) BatchStatus(batch int) (status string, err error) {
 	}
 
 	var data []byte
-	if data, err = ioutil.ReadAll(rep.Body); err != nil {
+	if data, err = io.ReadAll(rep.Body); err != nil {
 		return "", err
 	}
 
