@@ -223,3 +223,9 @@ export const format2ShortDate = (date: any) => {
   const month2Digits = month < 10 ? `0${month}` : month;
   return `${year}-${month2Digits}-${day}`;
 };
+
+export const splitAndDisplay = (str: string, delimiter?: string, limit?: number) => {
+  const words = delimiter ? str.split(`${delimiter}`) : str.split(' ');
+  const limitWords = limit ? words.slice(0, limit) : words;
+  return limitWords.join(' ');
+};
