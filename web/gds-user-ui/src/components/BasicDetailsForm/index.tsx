@@ -1,4 +1,4 @@
-import { VStack, Text, FormErrorMessage } from '@chakra-ui/react';
+import { VStack } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
@@ -7,6 +7,8 @@ import { t } from '@lingui/macro';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { useEffect } from 'react';
 import FormLayout from 'layouts/FormLayout';
+import formatDate from 'utils/formate-date';
+
 const BasicDetailsForm: React.FC = () => {
   const options = getBusinessCategoryOptions();
   const {
@@ -50,7 +52,13 @@ const BasicDetailsForm: React.FC = () => {
           label={t`Date of Incorporation / Establishment`}
           formHelperText={errors.established_on?.message}
           isInvalid={!!errors.established_on}
-          inputProps={{ placeholder: '21/01/2021', type: 'date', pattern: 'd{4}-d{2}-d{2}' }}
+          inputProps={{
+            placeholder: '21/01/2021',
+            type: 'date',
+            pattern: 'd{4}-d{2}-d{2}',
+            min: '1800-01-01',
+            max: formatDate()
+          }}
           {...register('established_on')}
         />
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
@@ -27,9 +28,9 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
 		switch network {
-		case testnet:
+		case config.TestNet:
 			vaspID = testnetID
-		case mainnet:
+		case config.MainNet:
 			vaspID = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -134,11 +135,13 @@ func (s *Server) Certificates(c *gin.Context) {
 }
 
 const (
+	testnetName          = "TestNet"
+	mainnetName          = "MainNet"
 	supportEmail         = "support@rotational.io"
 	StartRegistration    = "Start the registration and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
 	CompleteRegistration = "Complete the registration process and verification process for your organization to receive an X.509 Identity Certificate and become a trusted member of the TRISA network."
-	SubmitTestnet        = "Review and submit your TestNet registration."
-	SubmitMainnet        = "Review and submit your MainNet registration."
+	SubmitTestnet        = "Review and submit your " + testnetName + " registration."
+	SubmitMainnet        = "Review and submit your " + mainnetName + " registration."
 	VerifyEmails         = "Your organization's %s registration has been submitted and verification emails have been sent to the contacts specified in the form. Contacts and email addresses must be verified as the first step in the approval process. Please request that contacts verify their email addresses promptly so that the TRISA Validation Team can proceed with the validation process. Please contact TRISA support at " + supportEmail + " if contacts have not received the verification email and link."
 	RegistrationPending  = "Your organization's %s registration has been received and is pending approval. The TRISA Validation Team will notify you about the outcome."
 	RegistrationRejected = "Your organization's %s registration has been rejected by the TRISA Validation Team. This means your organization is not a verified member of the TRISA network and cannot communicate with other members. Please contact TRISA support at " + supportEmail + " for additional details and next steps."
@@ -156,9 +159,9 @@ func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (tes
 	rpc := func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (rep interface{}, err error) {
 		var vaspID string
 		switch network {
-		case testnet:
+		case config.TestNet:
 			vaspID = testnetID
-		case mainnet:
+		case config.MainNet:
 			vaspID = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -351,7 +354,7 @@ func (s *Server) Attention(c *gin.Context) {
 
 	// Get attention messages relating to certificates
 	var testnetMsg *api.AttentionMessage
-	if testnetMsg, err = registrationMessage(testnetVASP, "TestNet"); err != nil {
+	if testnetMsg, err = registrationMessage(testnetVASP, testnetName); err != nil {
 		log.Error().Err(err).Msg("could not get testnet certificate attention message")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
@@ -361,7 +364,7 @@ func (s *Server) Attention(c *gin.Context) {
 	}
 
 	var mainnetMsg *api.AttentionMessage
-	if mainnetMsg, err = registrationMessage(mainnetVASP, "MainNet"); err != nil {
+	if mainnetMsg, err = registrationMessage(mainnetVASP, mainnetName); err != nil {
 		log.Error().Err(err).Msg("could not get mainnet certificate attention message")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return

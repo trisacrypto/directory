@@ -138,6 +138,9 @@ type MemberDetails struct {
 	ID          string                 `json:"id"`
 	Status      string                 `json:"status"`
 	CountryCode string                 `json:"country_code"`
+	FirstListed string                 `json:"first_listed"`
+	VerifiedOn  string                 `json:"verified_on"`
+	LastUpdated string                 `json:"last_updated"`
 	Certificate map[string]interface{} `json:"certificate"`
 }
 

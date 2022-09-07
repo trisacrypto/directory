@@ -14,7 +14,6 @@ const UserProfile: React.FC = () => {
   });
 
   const handleUpdate = () => {
-    console.log('handle update action');
   };
   return (
     <DashboardLayout>
