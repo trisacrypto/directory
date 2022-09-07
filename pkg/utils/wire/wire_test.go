@@ -36,7 +36,7 @@ func TestWire(t *testing.T) {
 
 	// Make sure that the VASP is valid
 	require.Equal(t, "838b1f57-1646-488d-a231-d71d88681cfa", vasp.Id)
-	require.NoError(t, vasp.Validate(false))
+	require.NoError(t, models.ValidateVASP(vasp, false))
 
 	// Test unmarshal certificates
 	in, err = ioutil.ReadFile("testdata/certs/34d3f5f8-f9f8-4f8f-8f8f-f9f8f9f8f8f8.json")

@@ -2,7 +2,9 @@ package authtest
 
 import (
 	"net/url"
+	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -59,5 +61,23 @@ func NewOpenIDConfiguration(u *url.URL) *OpenIDConfiguration {
 		TokenEndpointAuthMethods:      []string{"client_secret_basic", "client_secret_post"},
 		ClaimsSupported:               []string{"aud", "email", "exp", "iat", "iss", "sub"},
 		RequestURIPArameterSupported:  false,
+	}
+}
+
+// NewUsers creates some default users for testing.
+func NewUsers() map[string]*management.User {
+	id := string(UserID)
+	email := string(Email)
+	createdAt := time.Now()
+	updatedAt := time.Now()
+	lastLogin := time.Now()
+	return map[string]*management.User{
+		id: {
+			ID:        &id,
+			Email:     &email,
+			CreatedAt: &createdAt,
+			UpdatedAt: &updatedAt,
+			LastLogin: &lastLogin,
+		},
 	}
 }

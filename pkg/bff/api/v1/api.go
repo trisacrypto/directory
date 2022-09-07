@@ -105,6 +105,7 @@ type RegisterReply struct {
 	Status              string                 `json:"status"`
 	Message             string                 `json:"message"`
 	PKCS12Password      string                 `json:"pkcs12password"`
+	RefreshToken        bool                   `json:"refresh_token,omitempty"`
 }
 
 // RegistrationStatus is returned on registration status requests. This will contain
