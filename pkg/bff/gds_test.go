@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
@@ -372,6 +373,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registerd directory ")
 	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
 	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
+
+	// User metadata should be updated with the directory IDs
+	appdata := &auth.AppMetadata{}
+	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
+	fmt.Println(appdata)
+	require.Equal("6041571e-09b4-47e7-870a-723f8032cd6c", appdata.VASPs.TestNet, "incorrect testnet directory id in user metadata")
+	require.Equal("5bafb054-5868-439e-9b3c-75db91810714", appdata.VASPs.MainNet, "incorrect mainnet directory id in user metadata")
 }
 
 func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
