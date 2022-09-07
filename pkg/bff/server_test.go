@@ -3,7 +3,7 @@ package bff_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -210,7 +210,7 @@ func (s *bffTestSuite) SetupTrtl() {
 	require := s.Require()
 
 	// Create a temporary directory for the testing database
-	s.dbPath, err = ioutil.TempDir("", "trtldb-*")
+	s.dbPath, err = os.MkdirTemp("", "trtldb-*")
 	require.NoError(err, "could not create a temporary directory for trtl")
 
 	conf := trtlmock.Config()
@@ -247,6 +247,13 @@ func (s *bffTestSuite) SetClientCSRFProtection() error {
 	return nil
 }
 
+// Custom assertion to ensure a formatted error contains the correct status code and
+// message.
+func (s *bffTestSuite) requireError(err error, status int, message string, msgAndArgs ...interface{}) {
+	require := s.Require()
+	require.EqualError(err, fmt.Sprintf("[%d] %s", status, message), msgAndArgs...)
+}
+
 // Helper function to load test fixtures from disk. If v is a proto.Message it is loaded
 // using protojson, otherwise it is loaded using encoding/json.
 func loadFixture(path string, v interface{}) (err error) {
@@ -260,7 +267,7 @@ func loadFixture(path string, v interface{}) (err error) {
 
 func loadPBFixture(path string, v proto.Message) (err error) {
 	var data []byte
-	if data, err = ioutil.ReadFile(path); err != nil {
+	if data, err = os.ReadFile(path); err != nil {
 		return err
 	}
 

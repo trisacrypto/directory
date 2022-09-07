@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -126,6 +127,76 @@ func AppendAuditLog(vasp *pb.VASP, entry *AuditLogEntry) (err error) {
 	return nil
 }
 
+// GetAdminEmailLog from the extra data on the VASP record.
+func GetAdminEmailLog(vasp *pb.VASP) (_ []*EmailLogEntry, err error) {
+	// If the extra data is nil, return nil (no email log).
+	if vasp.Extra == nil {
+		return nil, nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return nil, err
+	}
+	return extra.GetEmailLog(), nil
+}
+
+// Create and add a new entry to the EmailLog on the extra data on the VASP record.
+func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err error) {
+	// VASP must be non-nil.
+	if vasp == nil {
+		return errors.New("cannot append to nil VASP")
+	}
+
+	// Unmarshal previous extra data.
+	extra := &GDSExtraData{}
+	if vasp.Extra != nil {
+		if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+			return fmt.Errorf("could not deserialize previous extra: %s", err)
+		}
+	} else {
+		extra.EmailLog = make([]*EmailLogEntry, 0, 1)
+	}
+
+	// Append entry to the previous log.
+	entry := &EmailLogEntry{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Reason:    reason,
+		Subject:   subject,
+	}
+	extra.EmailLog = append(extra.EmailLog, entry)
+
+	// Serialize the extra data back to the VASP.
+	if vasp.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
+}
+
+// TODO: cleanup the duplicated code between this function and contacts.GetSentEmailCount
+func GetSentAdminEmailCount(vasp *pb.VASP, reason string, timeWindowDays int) (sent int, err error) {
+	var adminEmailLog []*EmailLogEntry
+	if adminEmailLog, err = GetAdminEmailLog(vasp); err != nil {
+		return 0, err
+	}
+
+	for _, value := range adminEmailLog {
+		var timestamp time.Time
+		if timestamp, err = time.Parse(time.RFC3339, value.Timestamp); err != nil {
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+
+		matchedReason := reason == value.Reason
+		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
+
+		if matchedReason && withinTimeWindow {
+			sent++
+		}
+	}
+	return sent, nil
+}
+
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.
 func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 	// If the extra data is nil, return nil (no certificate requests).
@@ -139,6 +210,29 @@ func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 		return nil, err
 	}
 	return extra.GetCertificateRequests(), nil
+}
+
+// GetLatestCertReqID returns the latest CertificateRequest ID for the VASP record.
+// TODO: This relies on the assumption that IDs can only be appended to the list.
+func GetLatestCertReqID(vasp *pb.VASP) (_ string, err error) {
+	// If the extra data is nil, return nil (no certificate requests).
+	if vasp.Extra == nil {
+		return "", nil
+	}
+
+	// Unmarshal the extra data field on the VASP.
+	extra := &GDSExtraData{}
+	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
+		return "", err
+	}
+
+	// Return nil if there are no certificate requests.
+	if len(extra.CertificateRequests) == 0 {
+		return "", nil
+	}
+
+	// Get the latest certificate request ID
+	return extra.CertificateRequests[len(extra.CertificateRequests)-1], nil
 }
 
 // AppendCertReqID adds the certificate request ID to the VASP if its not already added.
@@ -287,14 +381,6 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	return cert, nil
 }
 
-// Defaults to use for the certificate request parameters if they can't be inferred.
-const (
-	crDefaultOrganization        = "TRISA Member VASP"
-	crDefaultLocality            = "Menlo Park"
-	crDefaultStateOrProvinceName = "California"
-	crDefaultCountry             = "US"
-)
-
 // NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
 func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
 	var (
@@ -317,14 +403,9 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 
 	// Populate the organization name, if available.
 	if organizationName, err = vasp.Name(); err == nil {
-		certRequest.Params["organizationName"] = organizationName
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamOrganizationName, organizationName)
 	} else {
-		log.Warn().
-			Err(err).
-			Str("vasp_id", vasp.Id).
-			Str("certreq_id", certRequest.Id).
-			Msg("organization name not found, populating new certificate request with default value")
-		certRequest.Params["organizationName"] = crDefaultOrganization
+		log.Warn().Err(err).Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("organization name not found")
 	}
 
 	// Populate the location information, if available.
@@ -335,17 +416,11 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		countryName = address.Country
 	}
 	if localityName != "" && stateOrProvinceName != "" && countryName != "" {
-		certRequest.Params["localityName"] = localityName
-		certRequest.Params["stateOrProvinceName"] = stateOrProvinceName
-		certRequest.Params["countryName"] = countryName
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamLocalityName, localityName)
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamStateOrProvinceName, stateOrProvinceName)
+		UpdateCertificateRequestParams(certRequest, sectigo.ParamCountryName, countryName)
 	} else {
-		log.Debug().
-			Str("vasp_id", vasp.Id).
-			Str("certreq_id", certRequest.Id).
-			Msg("location information not found or incomplete, populating new certificate request with default values")
-		certRequest.Params["localityName"] = crDefaultLocality
-		certRequest.Params["stateOrProvinceName"] = crDefaultStateOrProvinceName
-		certRequest.Params["countryName"] = crDefaultCountry
+		log.Debug().Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("location information not found or incomplete")
 	}
 
 	return certRequest, nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
@@ -32,12 +33,12 @@ func (s *bffTestSuite) TestAnnouncements() {
 
 	// Endpoint must be authenticated
 	_, err := s.client.Announcements(context.TODO())
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	_, err = s.client.Announcements(context.TODO())
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
 	claims.Permissions = []string{"read:vasp"}
@@ -110,17 +111,17 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	// Endpoint requires CSRF protection
 	err := s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[403] csrf verification failed for request", "expected error when request is not CSRF protected")
+	s.requireError(err, http.StatusForbidden, "csrf verification failed for request", "expected error when request is not CSRF protected")
 	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
 
 	// Endpoint must be authenticated
 	err = s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[401] this endpoint requires authentication", "expected error when user is not authenticated")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
 	err = s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[401] user does not have permission to perform this operation", "expected error when user is not authorized")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
 	claims.Permissions = []string{"create:announcements"}
@@ -156,18 +157,18 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	// Post should not have post_date set
 	post.PostDate = "2022-07-04"
 	err = s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[400] cannot set the post_date or author fields on the post", "expected post date required empty")
+	s.requireError(err, http.StatusBadRequest, "cannot set the post_date or author fields on the post", "expected post date required empty")
 
 	// Post should not have author set
 	post.PostDate = ""
 	post.Author = "James Jillian"
 	err = s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[400] cannot set the post_date or author fields on the post", "expected post date required empty")
+	s.requireError(err, http.StatusBadRequest, "cannot set the post_date or author fields on the post", "expected post date required empty")
 
 	// Require email in claims to make announcement
 	post.Author = ""
 	claims.Email = ""
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials without email")
 	err = s.client.MakeAnnouncement(context.TODO(), post)
-	require.EqualError(err, "[400] user claims are not correctly configured", "expected post date required empty")
+	s.requireError(err, http.StatusBadRequest, "user claims are not correctly configured", "expected post date required empty")
 }

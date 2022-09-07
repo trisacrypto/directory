@@ -212,7 +212,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 <p
                   class="chakra-text css-0"
                 >
-                  $NaN
+                  $0.00
                    
                 </p>
               </td>
@@ -261,7 +261,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 Applicable Regulations
               </td>
               <td
-                class="css-xumdn4"
+                class="css-134pck8"
                 role="gridcell"
               />
               <td
