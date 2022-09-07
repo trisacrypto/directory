@@ -17,7 +17,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/gds/store"
-	"github.com/trisacrypto/trisa/pkg/ivms101"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
@@ -153,13 +152,9 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Validate partial VASP record to ensure that it can be registered.
-	if err = vasp.Validate(true); err != nil {
-		// TODO: Ignore ErrCompleteNationalIdentifierLegalPerson until validation See #34
-		if !errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson) {
-			log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
-			return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
-		}
-		log.Warn().Err(err).Msg("ignoring validation error")
+	if err = models.ValidateVASP(vasp, true); err != nil {
+		log.Warn().Err(err).Msg("invalid or incomplete VASP registration")
+		return nil, status.Errorf(codes.InvalidArgument, "validation error: %s", err)
 	}
 
 	// Set any zero valued contacts to nil to ensure empty records aren't created.
