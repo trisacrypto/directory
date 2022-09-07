@@ -22,7 +22,7 @@ type BFFClient interface {
 
 	// Authenticated Endpoints
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
-	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
+	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 	Overview(context.Context) (*OverviewReply, error)
