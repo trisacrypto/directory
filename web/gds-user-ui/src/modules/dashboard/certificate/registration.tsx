@@ -19,13 +19,12 @@ import Card from 'components/ui/Card';
 import TestNetCertificateProgressBar from 'components/TestnetProgress/TestNetCertificateProgressBar.component';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { FormProvider, useForm } from 'react-hook-form';
-import Loader from 'components/Loader';
 import { userSelector } from 'modules/auth/login/user.slice';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { DevTool } from '@hookform/devtools';
 import { RootStateOrAny, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { hasStepError, handleError } from 'utils/utils';
+import { handleError } from 'utils/utils';
 import HomeButton from 'components/ui/HomeButton';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 import { fieldNamesPerSteps, validationSchema } from './lib';
@@ -86,7 +85,6 @@ const Certificate: React.FC = () => {
     return validationSchema[current - 1];
   }
   const resolver = yupResolver(getCurrentStepValidationSchema());
-  // console.log('[registrationData from state]', registrationData);
   const methods = useForm({
     defaultValues: registrationData,
     resolver,
@@ -158,7 +156,6 @@ const Certificate: React.FC = () => {
         setRegistrationState: setRegistrationData
       });
       if (isDirty) {
-        console.log('[isDirty]', getCurrentFormValue());
         await postRegistrationValue({
           ...methods.getValues(),
           state: {
