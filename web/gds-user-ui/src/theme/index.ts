@@ -32,4 +32,7 @@ const theme = extendTheme({
   }
 });
 
+// remove default theme boxShadow
+theme.shadows.outline = 'none';
+
 export default theme;
