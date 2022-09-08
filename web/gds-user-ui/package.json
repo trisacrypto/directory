@@ -74,7 +74,7 @@
     "cy:open": "cypress open",
     "start": "react-scripts start",
     "build": "yarn compile && react-scripts build",
-    "test": "react-scripts test --coverage --watchAll=false -u",
+    "test": "react-scripts test --coverage --watchAll=false -u --passWithNoTests",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public",

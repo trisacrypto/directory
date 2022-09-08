@@ -1,4 +1,4 @@
-import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
+import { Heading, HStack, Stack, Text, useToast } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
@@ -14,13 +14,39 @@ const TrisaImplementation: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
-  const { watch, trigger } = useFormContext();
+  const {
+    watch,
+    trigger,
+    register,
+    formState: { errors }
+  } = useFormContext();
+  const toast = useToast();
+
   const testnetEndpoint = watch('testnet.endpoint');
-  const mainnetEndpoint = watch('mainnet.endpoint');
+
+  useEffect(() => {
+    register('tempField', {
+      shouldUnregister: true
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     trigger(['testnet.endpoint', 'mainnet.endpoint']);
   }, [testnetEndpoint, trigger]);
+
+  useEffect(() => {
+    if (errors?.tempField?.message) {
+      toast({
+        position: 'top-right',
+        title: errors?.tempField?.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errors?.tempField?.message]);
 
   return (
     <Stack spacing={7} pt={8}>

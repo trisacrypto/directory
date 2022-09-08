@@ -11,7 +11,6 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
-  console.log('[TrixoReviewDataTable data]', data?.kyc_threshold);
   const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
     return conductsCustomerKYC ? t`Yes` : t`No`;
   };

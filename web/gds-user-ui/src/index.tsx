@@ -9,6 +9,7 @@ import { Provider } from 'react-redux';
 import initSentry from 'application/config/sentry';
 import theme from 'theme';
 import { PersistGate } from 'redux-persist/integration/react';
+import { LanguageProvider } from 'contexts/LanguageContext';
 initSentry();
 
 ReactDOM.render(
@@ -16,7 +17,9 @@ ReactDOM.render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ChakraProvider theme={theme}>
-          <App />
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
         </ChakraProvider>
       </PersistGate>
     </Provider>
