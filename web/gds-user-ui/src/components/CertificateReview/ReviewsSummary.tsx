@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Stack, HStack, Heading, Text, Box, Button } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Stack, HStack, Heading, Text, Box, Button, useColorModeValue } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import FormLayout from 'layouts/FormLayout';
 import BasicDetailsReview from './BasicDetailsReview';
@@ -7,6 +7,7 @@ import ContactsReview from './ContactsReview';
 import LegalPersonReview from './LegalPersonReview';
 import TrisaImplementationReview from './TrisaImplementationReview';
 import TrixoReview from './TrixoReview';
+import { CgExport } from 'react-icons/cg';
 
 import {
   getRegistrationDefaultValue,
@@ -37,7 +38,15 @@ const ReviewsSummary: React.FC = () => {
           <Trans id="Review">Review</Trans>
         </Heading>
         <Box>
-          <Button bg={'black'} onClick={handleExport} isLoading={isLoadingExport}>
+          <Button
+            bg={useColorModeValue('black', 'white')}
+            _hover={{
+              bg: useColorModeValue('black', 'white')
+            }}
+            color={useColorModeValue('white', 'black')}
+            onClick={handleExport}
+            isLoading={isLoadingExport}
+            leftIcon={<CgExport />}>
             <Trans id="Export Data">Export Data</Trans>
           </Button>
         </Box>
