@@ -87,7 +87,9 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td colSpan={3} fontWeight="bold" background="#E5EDF1" pl={'1rem !important'}>
-              <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
+              <Trans id="Customer Due Diligence (CDD) & Travel Rule Policies">
+                Customer Due Diligence (CDD) & Travel Rule Policies
+              </Trans>
             </Td>
           </Tr>
           <Tr>
@@ -95,10 +97,13 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td>
-              <Trans id="Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?">
-                Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and
-                Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes
-                where it is licensed/approved/registered?
+              <Trans
+                id="Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due
+                    Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?">
+                Does your organization have a programme that sets minimum Anti-Money Laundering
+                (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer
+                Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the
+                jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
               </Trans>
             </Td>
             <Td>
@@ -116,8 +121,8 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td>
-              <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
-                Does your organization conduct KYC/CDD before permitting its customers to
+              <Trans id="Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+                Does your organization conduct Know your KYC/CDD before permitting its customers to
                 send/receive virtual asset transfers?
               </Trans>
             </Td>
@@ -136,8 +141,8 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td>
-              <Trans id="At what threshold and currency does your organization conduct KYC?">
-                At what threshold and currency does your organization conduct KYC?
+              <Trans id="At what threshold and currency does your organization conduct KYC checks?">
+                At what threshold and currency does your organization conduct KYC checks?
               </Trans>
             </Td>
             <Td pl={0}>
@@ -227,8 +232,11 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td>
-              <Trans id="Is your organization required by law to safeguard PII?">
-                Is your organization required by law to safeguard PII?
+              <Trans
+                id="Is your organization required by law to safeguard Personally Identifiable
+                Information (PII)?">
+                Is your organization required by law to safeguard Personally Identifiable
+                Information (PII)?
               </Trans>
             </Td>
             <Td>
@@ -244,9 +252,13 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
           </Tr>
           <Tr>
             <Td>
-              <Trans id="Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?">
-                Does your organization secure and protect PII, including PII received from other
-                VASPs under the Travel Rule?
+              <Trans
+                id="Does your organization secure and protect Personally Identifiable
+                Information (PII), including Personally Identifiable
+                Information (PII) received from other VASPs under the Travel Rule?">
+                Does your organization secure and protect Personally Identifiable Information (PII),
+                including Personally Identifiable Information (PII) received from other VASPs under
+                the Travel Rule?
               </Trans>
             </Td>
             <Td>
