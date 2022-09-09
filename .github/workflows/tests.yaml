@@ -12,12 +12,6 @@ jobs:
   lint:
     name: Go Lint
     runs-on: ubuntu-latest
-    env:
-      GOPATH: ${{ github.workspace }}/go
-      GOBIN: ${{ github.workspace }}/go/bin
-    defaults:
-      run:
-        working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -28,14 +22,6 @@ jobs:
         run: |
           echo ${{ secrets.DEPLOY_PASSWORD }} | sudo -S rm -rf ${GITHUB_WORKSPACE}
           mkdir ${GITHUB_WORKSPACE}
-
-      - name: Cache Speedup
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Checkout Code
         uses: actions/checkout@v3
