@@ -24,6 +24,11 @@ jobs:
         with:
           go-version: 1.18
 
+      - name: Cleanup Working Directory #https://github.com/actions/checkout/issues/211
+        run: |
+          echo ${{ secrets.DEPLOY_PASSWORD }} | sudo -S rm -rf ${GITHUB_WORKSPACE}
+          mkdir ${GITHUB_WORKSPACE}
+
       - name: Cache Speedup
         uses: actions/cache@v3
         with:
