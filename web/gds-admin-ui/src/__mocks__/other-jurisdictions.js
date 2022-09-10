@@ -5,7 +5,7 @@ function generateOtherJurisdictions(number = 2) {
 
     for (let i = 1; i <= number; i++) {
         jurisdictions.push({
-            country: faker.address.countryCode(),
+            country: 'US',
             license_number: "",
             regulator_name: `${faker.name.firstName()} ${faker.name.lastName()}`
         })
