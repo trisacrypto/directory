@@ -35,10 +35,10 @@ const LegalPerson: React.FC = () => {
           </Link>{' '}
           <Trans
             id={
-              'for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.'
+              'for legal persons and is strongly suggested for use as KYC or CDD (Know your Counterparty) information exchanged in TRISA transfers.'
             }>
-            for legal persons and is strongly suggested for use as KYC or CDD information exchanged
-            in TRISA transfers.
+            for legal persons and is strongly suggested for use as KYC or CDD (Know your
+            Counterparty) information exchanged in TRISA transfers.
           </Trans>
         </Text>
       </FormLayout>

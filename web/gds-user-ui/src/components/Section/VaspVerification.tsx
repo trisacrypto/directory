@@ -117,8 +117,8 @@ export default function VaspVerification() {
                   <Link color="link" href="https://intervasp.org/" isExternal>
                     IVMS 101
                   </Link>{' '}
-                  data structure for legal persons and is strongly suggested for use as KYC
-                  information exchanged in TRISA transfers.
+                  data structure for legal persons and is strongly suggested for use as KYC (Know
+                  your Counterparty) information exchanged in TRISA transfers.
                 </Trans>
               </Line>
               <Line colSpan={2} dataContent={t`Who to ask`}>
