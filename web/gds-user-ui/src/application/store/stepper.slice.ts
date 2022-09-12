@@ -91,6 +91,7 @@ const stepperSlice: any = createSlice({
       state.hasReachSubmitStep = false;
       state.testnetSubmitted = false;
       state.mainnetSubmitted = false;
+      state.hasReachReviewStep = false;
       state.data = {};
     },
     // set testnet submission
