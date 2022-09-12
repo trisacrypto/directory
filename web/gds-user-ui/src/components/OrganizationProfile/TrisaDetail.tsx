@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heading, Stack, Table, Tbody, Tr, Td, Thead, Tag } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
-import { splitAndDisplay } from 'utils/utils';
+import { splitAndDisplay, format2ShortDate } from 'utils/utils';
 import { t } from '@lingui/macro';
 type TrisaDetailProps = {
   data: any;
@@ -11,20 +11,22 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
     switch (data?.status) {
       case 'NO_VERIFICATION':
         return (
-          <Tag bg={'orange'} color={'white'}>
+          <Tag bg={'orange'} color={'white'} size={'sm'}>
             {t`${splitAndDisplay(data?.status, '_')}`}
           </Tag>
         );
       case 'VERIFIED':
         return (
-          <Tag colorScheme="green">
-            <Trans id="Verified">Verified</Trans>
+          <Tag colorScheme="green" size={'sm'}>
+            <Trans id="Verified">VERIFIED</Trans>
           </Tag>
         );
       case 'REJECTED' || 'ERRORED':
-        return <Tag colorScheme="red">{data?.status?.toLowerCase()}</Tag>;
+        return <Tag colorScheme="red" size={'sm'}>{t`${splitAndDisplay(data?.status, '_')}`}</Tag>;
       default:
-        return <Tag colorScheme="yellow">{splitAndDisplay(data?.status, '_')}</Tag>;
+        return (
+          <Tag colorScheme="yellow" size={'sm'}>{t`${splitAndDisplay(data?.status, '_')}`}</Tag>
+        );
     }
   };
   return (
@@ -88,8 +90,8 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
               <Tr>
                 <Td>{data?.id || 'N/A'}</Td>
                 <Td>{data?.first_listed || 'N/A'}</Td>
-                <Td>{data?.verified_on || 'N/A'}</Td>
-                <Td>{data?.last_updated || 'N/A'}</Td>
+                <Td>{data?.verified_on ? format2ShortDate(data?.verified_on) : 'N/A'}</Td>
+                <Td>{data?.last_updated ? format2ShortDate(data?.last_updated) : 'N/A'}</Td>
                 <Td>{data?.status ? statusCheck() : 'N/A'}</Td>
               </Tr>
             </Tbody>

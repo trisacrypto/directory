@@ -146,19 +146,6 @@ export const getRefreshToken = () => {
 export const handleError = (error: any, customMessage?: string) => {
   Sentry.captureMessage(customMessage || error);
   Sentry.captureException(error);
-  // if (error.response.status === 401 || error.response.status === 403) {
-  //   clearCookies();
-  //   switch (error.response.status) {
-  //     case '401':
-  //       window.location.href = `/auth/login?q=token_expired`;
-  //       break;
-  //     case '403':
-  //       window.location.href = `/auth/login?q=unauthorized`;
-  //       break;
-  //     default:
-  //       window.location.href = `/auth/login?error_description=${error.response.data.error}`;
-  //   }
-  // }
 };
 
 // uppercased first letter
