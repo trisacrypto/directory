@@ -80,6 +80,6 @@ if [[ $# -eq 1 ]]; then
 fi
 
 echo "your k8s cluster context is $KUBECTX"
-GOOS=linux GOARCH=amd64 go build -o $PWD/reissuer $DIR
+GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$(git rev-parse --short HEAD)'" -o $PWD/reissuer $DIR
 kubectl -n $NAMESPACE cp $PWD/reissuer gds-0:/usr/local/bin/reissuer
 rm $PWD/reissuer
