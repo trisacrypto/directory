@@ -1,6 +1,6 @@
-import { Link, Text } from '@chakra-ui/react';
+import { Link, Text, TextProps } from '@chakra-ui/react';
 import { Link as RouteLink } from 'react-router-dom';
-interface MenuItemProps {
+interface MenuItemProps extends TextProps {
   children: React.ReactNode;
   isLast?: boolean;
   to?: string;
