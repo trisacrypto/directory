@@ -155,4 +155,4 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
   );
 };
 
-export default LandingHeader;
+export default React.memo(LandingHeader);
