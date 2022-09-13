@@ -187,7 +187,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.Equal(expected, reply.Messages[0], "expected start registration message")
 
 	// Start registration message should still be returned if the registration form has not been started
-	org.Registration.State = records.NewFormState()
+	org.Registration = records.NewRegisterForm()
 	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
