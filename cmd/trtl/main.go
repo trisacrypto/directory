@@ -648,7 +648,7 @@ func dbDelete(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
 	}
 
-	// Execute the Put request
+	// Execute the Delete request
 	var resp *pb.DeleteReply
 	if resp, err = dbClient.Delete(ctx, req); err != nil {
 		return cli.Exit(err, 1)
