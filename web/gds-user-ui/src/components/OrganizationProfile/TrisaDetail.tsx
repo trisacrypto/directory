@@ -89,7 +89,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
               }}>
               <Tr>
                 <Td>{data?.id || 'N/A'}</Td>
-                <Td>{data?.first_listed || 'N/A'}</Td>
+                <Td>{data?.first_listed ? format2ShortDate(data?.first_listed) : 'N/A'}</Td>
                 <Td>{data?.verified_on ? format2ShortDate(data?.verified_on) : 'N/A'}</Td>
                 <Td>{data?.last_updated ? format2ShortDate(data?.last_updated) : 'N/A'}</Td>
                 <Td>{data?.status ? statusCheck() : 'N/A'}</Td>
