@@ -13,6 +13,9 @@ axiosInstance.defaults.withCredentials = true;
 // intercept request and check if token has expired or not
 axiosInstance.interceptors.response.use(
   (response) => {
+    if (response.status === 200) {
+    }
+
     return response;
   },
   async (error) => {

@@ -55,6 +55,7 @@ const useCustomAuth0 = () => {
       });
     });
   };
+  // refresh token
 
   const auth0Hash = (hash?: any) => {
     return new Promise((resolve, reject) => {
