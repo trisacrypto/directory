@@ -4,8 +4,9 @@ import { GoogleIcon } from 'components/Icon';
 
 import { Trans } from '@lingui/react';
 import ChakraRouterLink from 'components/ChakraRouterLink';
-import LoginForm from './LoginForm';
+import LoginForm from 'components/Form/LoginForm';
 import AuthLayout from 'layouts/AuthLayout';
+import { components } from 'react-select';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
@@ -13,7 +14,12 @@ interface LoginProps {
   isError?: any;
 }
 
-const Login: React.FC<LoginProps> = (props) => (
+const Login: React.FC<LoginProps> = ({
+  handleSignWithSocial,
+  handleSignWithEmail,
+  isLoading,
+  isError
+}) => (
   <AuthLayout>
     <Text fontWeight="bold" color={useColorModeValue('gray.600', 'white')}>
       <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
@@ -25,7 +31,7 @@ const Login: React.FC<LoginProps> = (props) => (
         w="100%"
         size="lg"
         borderRadius="none"
-        onClick={(event: any) => props.handleSignWithSocial(event, 'google')}
+        onClick={(event: any) => handleSignWithSocial(event, 'google')}
         color={'gray.600'}
         _hover={{
           background: useColorModeValue('gray.200', 'black'),
@@ -43,7 +49,7 @@ const Login: React.FC<LoginProps> = (props) => (
     <Text align="center">or</Text>
 
     <Box bg={useColorModeValue('white', 'transparent')}>
-      <LoginForm handleSignWithEmail={props.handleSignWithEmail} isLoading={props.isLoading} />
+      <LoginForm handleSignWithEmail={handleSignWithEmail} isLoading={isLoading} />
       <Text textAlign="center" fontSize="1rem">
         <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
         <ChakraRouterLink to="/auth/register" color={'#1F4CED'}>

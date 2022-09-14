@@ -28,7 +28,6 @@ const StartPage: React.FC = () => {
         connection: 'Username-Password-Authentication'
       });
       if (response) {
-        setIsloading(false);
         if (!response.emailVerified) {
           navigate('/auth/success');
         }
@@ -45,6 +44,8 @@ const StartPage: React.FC = () => {
       }
       // catch this error in sentry
       console.error('error', err);
+    } finally {
+      setIsloading(false);
     }
   };
   return (

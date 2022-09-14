@@ -34,11 +34,11 @@ const VerifyPage: React.FC = () => {
           if (!response.error) {
             setResult(response);
             // redirect to dashboard if user is logged in
-            if (isLoggedIn()) {
+            if (isLoggedIn) {
               setTimeout(() => {
                 setIsRedirected(true);
                 navigate('/dashboard');
-              }, 2000);
+              }, 1000);
             }
           } else {
             console.error('Something went wrong');

@@ -144,8 +144,12 @@ export const getRefreshToken = () => {
   });
 };
 export const handleError = (error: any, customMessage?: string) => {
-  Sentry.captureMessage(customMessage || error);
-  Sentry.captureException(error);
+  if (error) {
+    Sentry.captureException(error);
+  }
+  if (customMessage) {
+    Sentry.captureMessage(customMessage || error);
+  }
 };
 
 // uppercased first letter

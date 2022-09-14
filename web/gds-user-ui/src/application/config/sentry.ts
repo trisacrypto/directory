@@ -1,18 +1,20 @@
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
-import { getAppVersionNumber } from ".";
+import { getAppVersionNumber } from '.';
 
 const defaultTracingOrigins = ['localhost', /^\//];
-
+const isProdEnv = process.env.NODE_ENV !== 'development';
 const initSentry = () => {
-  if (process.env.REACT_APP_SENTRY_DSN) {
+  if (process.env.REACT_APP_SENTRY_DSN && isProdEnv) {
     let tracingOrigins = defaultTracingOrigins;
     if (process.env.REACT_APP_TRISA_BASE_URL) {
       const origin = new URL(process.env.REACT_APP_TRISA_BASE_URL);
       tracingOrigins = [origin.host];
     }
 
-    const environment = process.env.REACT_APP_SENTRY_ENVIRONMENT ? process.env.REACT_APP_SENTRY_ENVIRONMENT : process.env.NODE_ENV;
+    const environment = process.env.REACT_APP_SENTRY_ENVIRONMENT
+      ? process.env.REACT_APP_SENTRY_ENVIRONMENT
+      : process.env.NODE_ENV;
 
     Sentry.init({
       dsn: process.env.REACT_APP_SENTRY_DSN,

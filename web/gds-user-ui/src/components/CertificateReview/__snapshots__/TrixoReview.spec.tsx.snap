@@ -125,7 +125,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 colspan="3"
                 role="gridcell"
               >
-                CDD & Travel Rule Policies
+                Customer Due Diligence (CDD) & Travel Rule Policies
               </td>
             </tr>
             <tr
@@ -145,7 +145,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
+                Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
               </td>
               <td
                 class="css-xumdn4"
@@ -174,7 +174,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?
+                Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?
               </td>
               <td
                 class="css-xumdn4"
@@ -203,7 +203,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                At what threshold and currency does your organization conduct KYC?
+                At what threshold and currency does your organization conduct KYC checks?
               </td>
               <td
                 class="css-i257lr"
@@ -334,7 +334,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Is your organization required by law to safeguard PII?
+                Is your organization required by law to safeguard Personally Identifiable Information (PII)?
               </td>
               <td
                 class="css-xumdn4"
@@ -363,7 +363,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 class="css-xumdn4"
                 role="gridcell"
               >
-                Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?
+                Does your organization secure and protect Personally Identifiable Information (PII), including Personally Identifiable Information (PII) received from other VASPs under the Travel Rule?
               </td>
               <td
                 class="css-xumdn4"

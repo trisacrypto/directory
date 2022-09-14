@@ -7,7 +7,7 @@ import Head from 'components/Head/LandingHead';
 import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
-
+import useCustomToast from 'hooks/useCustomToast';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
@@ -15,41 +15,27 @@ const StartPage: React.FC = () => {
 
   const { loginUser } = useAuth();
   const { q, error_description } = useSearchParams();
-  const toast = useToast();
+  const toast = useCustomToast();
   useEffect(() => {
     // rend tost if q is not empty
+    let message = '';
     if (q) {
       if (q === 'unauthorized') {
-        toast({
-          description:
-            'Your account does not have permission to access the Administrator interface. Contact the administrator of your organization for assistance',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
+        message =
+          'Your account does not have permission to access the Administrator interface. Contact the administrator of your organization for assistance';
       }
-      if (q === 'token_expired') {
-        toast({
-          description:
-            'Your session has expired. Please sign in again to continue using the Administrator interface',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
+      if (q === 'token_expired' || q === 'invalid_token') {
+        message =
+          'Your session has expired. Please sign in again to continue using the Administrator interface';
       }
     }
     if (error_description) {
-      toast({
-        description: error_description,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right'
-      });
+      message = error_description;
     }
-  }, [q, error_description]);
+    toast({
+      description: message
+    });
+  }, [q, error_description, toast]);
 
   // clean cookies
 
