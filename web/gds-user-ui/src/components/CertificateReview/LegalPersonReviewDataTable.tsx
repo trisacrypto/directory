@@ -56,13 +56,13 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                       return (
                         <Tr key={index}>
                           <Td paddingLeft={'0 !important'} border="none" p="1px !important">
-                            {nameIdentifier.legal_person_name || 'N/A'}
+                            {nameIdentifier?.legal_person_name || 'N/A'}
                           </Td>
-                          {nameIdentifier.legal_person_name_identifier_type ? (
+                          {nameIdentifier?.legal_person_name_identifier_type ? (
                             <Td paddingLeft={0} border="none" p="1px !important">
                               (
                               {getNameIdentiferTypeLabel(
-                                nameIdentifier.legal_person_name_identifier_type
+                                nameIdentifier?.legal_person_name_identifier_type
                               )}
                               )
                             </Td>
@@ -75,12 +75,12 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                         return (
                           <Tr key={index}>
                             <Td paddingLeft={0} pt={0} border="none" p="1px !important">
-                              {nameIdentifier.legal_person_name}
+                              {nameIdentifier?.legal_person_name}
                             </Td>
                             <Td paddingLeft={0} pt={0} border="none" p="1px !important">
                               (
                               {getNameIdentiferTypeLabel(
-                                nameIdentifier.legal_person_name_identifier_type
+                                nameIdentifier?.legal_person_name_identifier_type
                               )}
                               )
                             </Td>
@@ -93,12 +93,12 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                         return (
                           <Tr key={index}>
                             <Td paddingLeft={0} pt={0} border="none" p="1px !important">
-                              {nameIdentifier.legal_person_name}
+                              {nameIdentifier?.legal_person_name}
                             </Td>
                             <Td paddingLeft={0} pt={0} border="none" p="1px !important">
                               (
                               {getNameIdentiferTypeLabel(
-                                nameIdentifier.legal_person_name_identifier_type
+                                nameIdentifier?.legal_person_name_identifier_type
                               )}
                               )
                             </Td>

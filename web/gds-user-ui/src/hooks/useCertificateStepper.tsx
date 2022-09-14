@@ -109,7 +109,7 @@ const useCertificateStepper = () => {
           description: t`You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form.
           Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.`,
           status: 'error',
-          duration: 5000,
+          duration: null,
           isClosable: true
         });
       }
