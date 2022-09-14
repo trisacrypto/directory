@@ -38,12 +38,7 @@ const appRoutes = [
     component: Start,
     layout: 'landing'
   },
-  {
-    path: '/certificate/registration',
-    name: 'Certificate Registration',
-    component: CertificateRegistration,
-    layout: 'landing'
-  },
+
   {
     path: '/comply',
     name: 'Comply and Integrate',
