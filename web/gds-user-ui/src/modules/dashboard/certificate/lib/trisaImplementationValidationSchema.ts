@@ -26,7 +26,7 @@ export const trisaImplementationValidationSchema = yup.object().shape({
       .notRequired()
       .matches(commonNameRegex, {
         message: _i18n._(
-          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods`
+          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
         )
       })
   }),
@@ -52,7 +52,7 @@ export const trisaImplementationValidationSchema = yup.object().shape({
       .notRequired()
       .matches(commonNameRegex, {
         message: _i18n._(
-          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods`
+          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
         )
       })
   }),

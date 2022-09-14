@@ -40,7 +40,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     const warningMessage =
       trisaEndpointUri === commonName
         ? undefined
-        : t`common name should match the TRISA endpoint without the port`;
+        : t`Common name should match the TRISA endpoint without the port.`;
     setCommonNameWarning(warningMessage);
   }, [commonName, trisaEndpoint]);
 
