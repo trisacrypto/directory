@@ -2,10 +2,12 @@ package models_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestIterContacts(t *testing.T) {
@@ -160,7 +162,15 @@ func TestGetSentEmailCount(t *testing.T) {
 		},
 	}
 
-	//  log should initially be empty
+	// Error should be returned if the reason is empty
+	_, err := models.GetSentEmailCount(contacts.Administrative, "", 30)
+	require.EqualError(t, err, "cannot match on empty reason string")
+
+	// Error should be returned if the time window is invalid
+	_, err = models.GetSentEmailCount(contacts.Administrative, "test", -1)
+	require.EqualError(t, err, "time window must be a positive number of days")
+
+	// Log should initially be empty
 	emailLog, err := models.GetEmailLog(contacts.Administrative)
 	require.NoError(t, err)
 	require.Len(t, emailLog, 0)
@@ -173,19 +183,92 @@ func TestGetSentEmailCount(t *testing.T) {
 	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
 	require.NoError(t, err)
 
-	// get email log for contact
+	// Get email log for contact
 	emailLog, err = models.GetEmailLog(contacts.Administrative)
 	require.NoError(t, err)
 	require.Len(t, emailLog, 2)
 	require.Equal(t, "verify_contact", emailLog[0].Reason)
 	require.Equal(t, "verification", emailLog[0].Subject)
 
-	// should return 2 emails sent for contact
+	// Should return 2 emails sent for contact
 	sent, err := models.GetSentEmailCount(contacts.Administrative, "verify_contact", 30)
 	require.NoError(t, err)
 	require.Equal(t, 2, sent)
 
-	// TODO: Test that the returned count is zero when the log is empty
-	// TODO: Test that emails older than the time window are not counted
-	// TODO: Test that emails that don't match the reason are not counted
+	// Should return 0 emails when the log is empty
+	sent, err = models.GetSentEmailCount(contacts.Technical, "verify_contact", 30)
+	require.NoError(t, err)
+	require.Equal(t, 0, sent)
+
+	// Construct an email log with entries at different times
+	log := []*models.EmailLogEntry{
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 31).Format(time.RFC3339),
+			Reason:    "verify_contact",
+			Subject:   "verification",
+		},
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 29).Format(time.RFC3339),
+			Reason:    "verify_contact",
+			Subject:   "verification",
+		},
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 28).Format(time.RFC3339),
+			Reason:    "verify_contact",
+			Subject:   "verification",
+		},
+	}
+	require.NoError(t, SetEmailLog(contacts.Billing, log))
+
+	// Should only return a count of emails within the time window
+	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 32)
+	require.NoError(t, err)
+	require.Equal(t, 3, sent, "expected 3 emails sent within the last 32 days")
+
+	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 30)
+	require.NoError(t, err)
+	require.Equal(t, 2, sent, "expected 2 emails sent within the last 30 days")
+
+	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 27)
+	require.NoError(t, err)
+	require.Equal(t, 0, sent, "expected 0 emails sent within the last 27 days")
+
+	// Construct an email log with entries of different reasons
+	log = []*models.EmailLogEntry{
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 31).Format(time.RFC3339),
+			Reason:    "verify_contact",
+			Subject:   "verification",
+		},
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 29).Format(time.RFC3339),
+			Reason:    "rejection",
+			Subject:   "rejected registration",
+		},
+		{
+			Timestamp: time.Now().Add(-time.Hour * 24 * 28).Format(time.RFC3339),
+			Reason:    "verify_contact",
+			Subject:   "verification",
+		},
+	}
+	require.NoError(t, SetEmailLog(contacts.Legal, log))
+
+	// Should only return a count of emails that match the reason and are within the time window
+	sent, err = models.GetSentEmailCount(contacts.Legal, "verify_contact", 32)
+	require.NoError(t, err)
+	require.Equal(t, 2, sent, "expected 2 emails sent within the last 32 days")
+
+	sent, err = models.GetSentEmailCount(contacts.Legal, "rejection", 30)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent, "expected 1 emails sent within the last 30 days")
+}
+
+// Helper function to serialize an email log onto a contact's extra data.
+func SetEmailLog(contact *pb.Contact, log []*models.EmailLogEntry) (err error) {
+	extra := &models.GDSContactExtraData{}
+	extra.EmailLog = log
+	if contact.Extra, err = anypb.New(extra); err != nil {
+		return err
+	}
+	return nil
 }

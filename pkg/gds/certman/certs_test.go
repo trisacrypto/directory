@@ -223,6 +223,9 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
+	// Run the loop again to ensure that emails are not resent to contacts
+	s.certman.HandleCertificateReissuance()
+
 	v, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 
@@ -262,6 +265,9 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	// the seven day cert reissuance reminder to echoVASP.
 	s.updateVaspIdentityCert(charlieVASP, 6)
 	callTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
 	v, err := s.db.RetrieveVASP(charlieVASP.Id)

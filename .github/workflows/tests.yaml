@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
       - name: Install Staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
+        run: go install honnef.co/go/tools/cmd/staticcheck@v0.3.3
 
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Lint Go Code
         run: staticcheck ./...
@@ -38,12 +38,20 @@ jobs:
         working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
+      - name: Cache Speedup
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
@@ -60,7 +68,7 @@ jobs:
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: trisacrypto/trisa
           ref: main
@@ -73,18 +81,21 @@ jobs:
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
 
       - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.0.0
+        uses: codecov/codecov-action@v3
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory/coverage.txt
+          files: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory/coverage.txt
+          flags: unittests
+          fail_ci_if_error: false
+          verbose: true
 
   gds_admin_test:
     name: GDS Admin UI Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Node
         uses: actions/setup-node@v2
@@ -105,10 +116,13 @@ jobs:
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.0.0
+        uses: codecov/codecov-action@v3
         with:
           # Make sure to add to GitHub secrets!
           token: ${{secrets.CODECOV_TOKEN}}
+          flags: unittests
+          fail_ci_if_error: false
+          verbose: true
 
   gds_user_ui_test:
     name: GDS User UI Tests
@@ -116,7 +130,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Node
         uses: actions/setup-node@v2
@@ -137,16 +151,19 @@ jobs:
         run: yarn test
 
       - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.0.0
+        uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
+          flags: unittests
+          fail_ci_if_error: false
+          verbose: true
 
   lingui_gds_ui:
     name: Lingui Extract && Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Node
         uses: actions/setup-node@v2
@@ -182,8 +199,16 @@ jobs:
         with:
           go-version: 1.18
 
+      - name: Cache Speedup
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
@@ -200,7 +225,7 @@ jobs:
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: trisacrypto/trisa
           ref: main

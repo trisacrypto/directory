@@ -106,6 +106,7 @@ docker buildx build --platform $PLATFORM -t trisa/gds-bff:$TAG -f $DIR/bff/Docke
 docker buildx build --platform $PLATFORM -t trisa/trtl:$TAG -f $DIR/trtl/Dockerfile --build-arg GIT_REVISION=${GIT_REVISION} $REPO
 docker buildx build --platform $PLATFORM -t trisa/trtl-init:$TAG -f $DIR/trtl-init/Dockerfile $DIR/trtl-init
 docker buildx build --platform $PLATFORM -t trisa/trtlsim:$TAG -f $DIR/trtlsim/Dockerfile .
+docker buildx build --platform $PLATFORM -t trisa/maintenance:$TAG -f $DIR/maintenance/Dockerfile .
 
 # Build the UI image for vaspdirectory.net
 docker buildx build \
@@ -191,6 +192,7 @@ docker tag trisa/gds-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-testnet-admin-ui
 docker tag trisa/gds-staging-user-ui:$TAG gcr.io/trisa-gds/gds-staging-user-ui:$TAG
 docker tag trisa/gds-staging-admin-ui:$TAG gcr.io/trisa-gds/gds-staging-admin-ui:$TAG
 docker tag trisa/gds-staging-testnet-admin-ui:$TAG gcr.io/trisa-gds/gds-staging-testnet-admin-ui:$TAG
+docker tag trisa/maintenance:$TAG gcr.io/trisa-gds/maintenance:$TAG
 
 # Push to DockerHub
 docker push trisa/gds:$TAG
@@ -204,6 +206,7 @@ docker push trisa/gds-testnet-admin-ui:$TAG
 docker push trisa/gds-staging-user-ui:$TAG
 docker push trisa/gds-staging-admin-ui:$TAG
 docker push trisa/gds-staging-testnet-admin-ui:$TAG
+docker push trisa/maintenance:$TAG
 
 # Push to GCR
 docker push gcr.io/trisa-gds/gds:$TAG
@@ -217,3 +220,4 @@ docker push gcr.io/trisa-gds/gds-testnet-admin-ui:$TAG
 docker push gcr.io/trisa-gds/gds-staging-user-ui:$TAG
 docker push gcr.io/trisa-gds/gds-staging-admin-ui:$TAG
 docker push gcr.io/trisa-gds/gds-staging-testnet-admin-ui:$TAG
+docker push gcr.io/trisa-gds/maintenance:$TAG
