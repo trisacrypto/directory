@@ -4,8 +4,9 @@ import { GoogleIcon } from 'components/Icon';
 
 import { Trans } from '@lingui/react';
 import ChakraRouterLink from 'components/ChakraRouterLink';
-import LoginForm from './LoginForm';
+import LoginForm from 'components/Form/LoginForm';
 import AuthLayout from 'layouts/AuthLayout';
+import { components } from 'react-select';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
