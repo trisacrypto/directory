@@ -120,12 +120,12 @@ const Overview: React.FC = () => {
                   <TabPanel p={0}>
                     <Metrics data={result?.mainnet} type="Testnet" />
 
-                    <TrisaDetail data={result?.testnet?.member_details} />
+                    <TrisaDetail data={result?.testnet?.member_details} type={'TestNet'} />
                   </TabPanel>
                   <TabPanel p={0}>
                     <Metrics data={result?.testnet} type="Mainnet" />
 
-                    <TrisaDetail data={result?.mainnet?.member_details} />
+                    <TrisaDetail data={result?.mainnet?.member_details} type={'MainNet'} />
                   </TabPanel>
                 </TabPanels>
               </Tabs>

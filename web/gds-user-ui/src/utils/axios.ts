@@ -11,11 +11,9 @@ const axiosInstance = axios.create({
 
 axiosInstance.defaults.withCredentials = true;
 // intercept request and check if token has expired or not
+
 axiosInstance.interceptors.response.use(
   (response) => {
-    if (response.status === 200) {
-    }
-
     return response;
   },
   async (error) => {
@@ -45,6 +43,7 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         }
       } else {
+        console.log('[axios.interceptors.response] status', error?.response?.status);
         clearCookies();
         switch (error.response.status) {
           case '401':
