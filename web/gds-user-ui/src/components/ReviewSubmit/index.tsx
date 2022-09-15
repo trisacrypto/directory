@@ -8,9 +8,7 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link,
-  HStack,
-  StackProps
+  Link
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
@@ -25,11 +23,11 @@ import {
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
 import { useFormContext } from 'react-hook-form';
-import { WarningIcon } from '@chakra-ui/icons';
 import {
   trisaImplementationMainnetFieldName,
   trisaImplementationTestnetFieldName
 } from 'modules/dashboard/certificate/lib';
+import WarningBox from 'components/WarningBox';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -37,13 +35,6 @@ interface ReviewSubmitProps {
   isMainNetSent?: boolean;
   result?: any;
 }
-
-const WarningBox = ({ children, ...props }: StackProps) => (
-  <HStack bg="#fff9e9" px={4} py={5} rounded="lg" fontWeight={400} {...props}>
-    <WarningIcon alignSelf="start" color="#ffc12d" fontSize={{ base: 'xl', xl: '2xl' }} mt="5px" />
-    <Box>{children}</Box>
-  </HStack>
-);
 
 const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   onSubmitHandler,
@@ -247,8 +238,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 {isMainnetNetworkIncomplete ? (
                   <WarningBox>
                     <Text>
-                      <Trans id="If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name.">
-                        If you would like to register for TestNet, please provide a TestNet Endpoint
+                      <Trans id="If you would like to register for MainNet, please provide a MainNet Endpoint and Common Name.">
+                        If you would like to register for MainNet, please provide a MainNet Endpoint
                         and Common Name.
                       </Trans>
                     </Text>

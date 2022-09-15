@@ -184,12 +184,12 @@ export default function MemberDetails() {
                         return (
                           <Stack direction="row" key={index}>
                             <Stack width="50%">
-                              <Text as="div">{nameIdentifier.legal_person_name || 'N/A'}</Text>
+                              <Text as="div">{nameIdentifier?.legal_person_name || 'N/A'}</Text>
                             </Stack>
                             <Stack>
                               <Text as="div">
                                 {getNameIdentiferTypeLabel(
-                                  nameIdentifier.legal_person_name_identifier_type
+                                  nameIdentifier?.legal_person_name_identifier_type
                                 )}
                               </Text>
                             </Stack>
@@ -203,12 +203,12 @@ export default function MemberDetails() {
                         return (
                           <Stack direction="row" key={index}>
                             <Stack width="50%">
-                              <Text as="div">{nameIdentifier.legal_person_name || 'N/A'}</Text>
+                              <Text as="div">{nameIdentifier?.legal_person_name || 'N/A'}</Text>
                             </Stack>
                             <Stack>
                               <Text as="div">
                                 {getNameIdentiferTypeLabel(
-                                  nameIdentifier.legal_person_name_identifier_type
+                                  nameIdentifier?.legal_person_name_identifier_type
                                 )}
                               </Text>
                             </Stack>
