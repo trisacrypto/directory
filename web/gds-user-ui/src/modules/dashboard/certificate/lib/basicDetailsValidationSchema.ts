@@ -1,12 +1,13 @@
 import { setupI18n } from '@lingui/core';
 import { t } from '@lingui/macro';
-import { format2ShortDate } from 'utils/utils';
+import dayjs from 'dayjs';
 
 import * as yup from 'yup';
 
+const DATE_FORMAT = 'DD/MM/YYYY';
+
 const _i18n = setupI18n();
-const minDate = new Date('01/01/1800');
-const maxDate = new Date();
+const minDate = '1970-01-01'; // it fix this issue https://github.com/jquense/yup/issues/325
 
 export const basicDetailsValidationSchema = yup.object().shape({
   website: yup
@@ -16,34 +17,22 @@ export const basicDetailsValidationSchema = yup.object().shape({
     .required(_i18n._(t`Website is a required field`)),
   established_on: yup
     .date()
+    .transform((value, originalValue, schema) => {
+      if (schema.isType(value)) {
+        return value;
+      }
+
+      return dayjs(originalValue).format(DATE_FORMAT);
+    })
     .min(
       minDate,
-      t`Date of incorporation / establishment must be later than ${new Intl.DateTimeFormat([
-        'ban',
-        'id'
-      ]).format(minDate)}`
+      t`Date of incorporation / establishment must be later than ${dayjs(minDate).format(
+        DATE_FORMAT
+      )}.`
     )
-    .max(
-      new Date(),
-      t`Date of incorporation / establishment must be at earlier than ${new Intl.DateTimeFormat([
-        'ban',
-        'id'
-      ]).format(maxDate)}`
-    )
+    .max(new Date(), t`Date of incorporation / establishment must be earlier than current date.`)
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
-    .required(_i18n._(t`Invalid date`))
-    .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
-      if (value) {
-        const getYear = value.getFullYear();
-        if (getYear.toString().length !== 4) {
-          return false;
-        } else {
-          return true;
-        }
-      }
-      return false;
-    })
+    .typeError(t`Invalid date.`)
     .required(),
   organization_name: yup
     .string()
