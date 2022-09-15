@@ -46,10 +46,10 @@ axiosInstance.interceptors.response.use(
         console.log('[axios.interceptors.response] status', error?.response?.status);
         clearCookies();
         switch (error.response.status) {
-          case '401':
+          case 401:
             window.location.href = `/auth/login?q=token_expired`;
             break;
-          case '403':
+          case 403:
             window.location.href = `/auth/login?q=unauthorized`;
             break;
           default:
