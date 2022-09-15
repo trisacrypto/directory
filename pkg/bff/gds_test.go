@@ -383,7 +383,6 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	// User metadata should be updated with the directory IDs
 	appdata := &auth.AppMetadata{}
 	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
-	fmt.Println(appdata)
 	require.Equal("6041571e-09b4-47e7-870a-723f8032cd6c", appdata.VASPs.TestNet, "incorrect testnet directory id in user metadata")
 	require.Equal("5bafb054-5868-439e-9b3c-75db91810714", appdata.VASPs.MainNet, "incorrect mainnet directory id in user metadata")
 }
