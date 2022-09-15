@@ -32,15 +32,19 @@ const StartPage: React.FC = () => {
     if (error_description) {
       message = error_description;
     }
-    toast({
-      description: message
-    });
-  }, [q, error_description, toast]);
+    if (message) {
+      toast({
+        description: message
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, error_description]);
 
   // clean cookies
 
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
+
     if (type === 'google') {
       auth0SignWithSocial('google-oauth2');
     }

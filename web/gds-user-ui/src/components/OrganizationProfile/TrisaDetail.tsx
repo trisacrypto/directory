@@ -5,20 +5,21 @@ import { splitAndDisplay, format2ShortDate } from 'utils/utils';
 import { t } from '@lingui/macro';
 type TrisaDetailProps = {
   data: any;
+  type?: string;
 };
-const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
+const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
   const statusCheck = () => {
     switch (data?.status) {
       case 'NO_VERIFICATION':
         return (
           <Tag bg={'orange'} color={'white'} size={'sm'}>
-            {t`${splitAndDisplay(data?.status, '_')}`}
+            <Trans id="Not Verified">Not Verified</Trans>
           </Tag>
         );
       case 'VERIFIED':
         return (
           <Tag colorScheme="green" size={'sm'}>
-            <Trans id="Verified">VERIFIED</Trans>
+            <Trans id="Verified">Verified</Trans>
           </Tag>
         );
       case 'REJECTED' || 'ERRORED':
@@ -42,7 +43,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data }) => {
       px={7}>
       <Stack width={'100%'}>
         <Heading as={'h1'} fontSize={19} pb={7} pt={4}>
-          <Trans id="TRISA Details">TRISA Details</Trans>
+          {t`Your TRISA ${type} Details`}
         </Heading>
         <Stack fontSize={18}>
           <Table
