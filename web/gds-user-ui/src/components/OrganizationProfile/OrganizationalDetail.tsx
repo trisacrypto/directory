@@ -21,7 +21,8 @@ import {
   Tr,
   Td,
   HStack,
-  Tag
+  Tag,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
@@ -49,22 +50,11 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
 
   return (
     <Stack py={5} w="full">
-      <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
-        <Stack mb={5}>
-          <Heading fontSize={20}>
-            <Trans id="TRISA Organization Profile">TRISA Organization Profile</Trans>
-          </Heading>
-        </Stack>
-      </Stack>
+      <Heading fontSize={20} bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')} py={3} pl={6}>
+        <Trans id="TRISA Organization Profile">TRISA Organization Profile</Trans>
+      </Heading>
       <SimpleGrid minChildWidth="120px" spacing="40px">
-        <Stack
-          border={'1px solid #eee'}
-          p={4}
-          my={5}
-          px={7}
-          // bg={'white'}
-          id={'org'}
-          ref={orgRef}>
+        <Stack border={'1px solid #eee'} p={4} my={5} px={7} id={'org'} ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
               <Trans id="Organizational Details">Organizational Details</Trans>
@@ -151,15 +141,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
             </SimpleGrid>
           </Box>
         </Stack>
-        <Stack
-          border={'1px solid #eee'}
-          p={4}
-          px={5}
-          my={5}
-          bg={'white'}
-          // minHeight={divHeight}
-          // boxSize={'content-box'}
-          id={'cnt'}>
+        <Stack border={'1px solid #eee'} p={4} px={5} my={5} id={'cnt'}>
           <Box>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
               <Trans id="Contacts">Contacts</Trans>

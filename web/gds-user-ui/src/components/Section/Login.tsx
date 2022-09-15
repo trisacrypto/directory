@@ -27,7 +27,7 @@ const Login: React.FC<LoginProps> = ({
     <Box>
       <Button
         data-testid="signin-with-google"
-        bg={'gray.100'}
+        bg={useColorModeValue('gray.100', 'gray.700')}
         w="100%"
         size="lg"
         borderRadius="none"

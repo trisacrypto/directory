@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
 import {
   Box,
@@ -19,7 +20,8 @@ import {
   ModalFooter,
   ModalBody,
   useDisclosure,
-  Button
+  Button,
+  useColorModeValue
 } from '@chakra-ui/react';
 import ModalAlert from 'components/ReviewSubmit/ModalAlert';
 import AlertContent from './AlertContent';
@@ -80,7 +82,11 @@ const ConfirmationModal = (props: any) => {
                     <Input
                       value={props.pkcs12password}
                       isReadOnly
-                      bg={!hasCopied ? 'yellow.100' : 'green.200'}
+                      bg={
+                        !hasCopied
+                          ? useColorModeValue('yellow.100', 'yellow.600')
+                          : useColorModeValue('green.200', 'green.600')
+                      }
                     />
                     <Button onClick={onCopy} ml={2}>
                       {hasCopied ? (

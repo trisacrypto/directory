@@ -17,7 +17,7 @@ const MembershipGuideCard = ({
   link
 }: MembershipGuideCardProps) => (
   <Box textAlign="center" width="100%" maxWidth={300} minHeight="100%">
-    <Stack gap={'1rem'} backgroundColor="#E5EDF1" p="1rem" height="100%">
+    <Stack gap={'1rem'} p="1rem" height="100%">
       <VStack>
         <Text textAlign="center" fontSize="xl" data-testid="step" textTransform="capitalize">
           Step {stepNumber}
