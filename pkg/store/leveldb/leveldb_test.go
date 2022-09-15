@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -235,7 +236,7 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 }
 
 func (s *leveldbTestSuite) TestCertificateRequestStore() {
-	// Load the VASP record from testdata
+	// Load the certreq record from testdata
 	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
@@ -327,3 +328,74 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 	iter.Release()
 	s.Equal(10, niters)
 }
+
+func (s *leveldbTestSuite) TestAnnouncementStore() {
+	// Load the announcement month record from testdata
+	data, err := ioutil.ReadFile("../testdata/announcements.json")
+	s.NoError(err)
+
+	month := &bff.AnnouncementMonth{}
+	err = protojson.Unmarshal(data, month)
+	s.NoError(err)
+
+	// Verify the announcement month is loaded correctly
+	s.NotEmpty(month.Date)
+	s.NotEmpty(month.Announcements)
+	s.Empty(month.Created)
+	s.Empty(month.Modified)
+
+	// Create the announcement month
+	s.NoError(s.db.UpdateAnnouncementMonth(month))
+
+	// Attempt to Retrieve the announcement month
+	m, err := s.db.RetrieveAnnouncementMonth(month.Date)
+	s.NoError(err)
+	s.Equal(month.Date, m.Date)
+	s.NotEmpty(m.Created)
+	s.Equal(m.Modified, m.Created)
+	s.Len(m.Announcements, len(month.Announcements))
+
+	// Attempt to save an announcement month without a date on it
+	month.Date = ""
+	err = s.db.UpdateAnnouncementMonth(month)
+	s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the announcement month
+	m.Announcements[0].Title = "Happy New Year!"
+	err = s.db.UpdateAnnouncementMonth(m)
+	s.NoError(err)
+
+	m, err = s.db.RetrieveAnnouncementMonth(m.Date)
+	s.NoError(err)
+	s.Equal("Happy New Year!", m.Announcements[0].Title)
+	s.NotEmpty(m.Modified)
+	s.NotEqual(m.Modified, m.Created)
+
+	// Add another announcement month
+	month = &bff.AnnouncementMonth{
+		Date: "2022-02",
+		Announcements: []*bff.Announcement{
+			{
+				Title:    "Happy Groundhog Day",
+				Body:     "The groundhog saw his shadow, so we have six more weeks of winter.",
+				PostDate: "2022-02-02",
+				Author:   "phil@punxsutawney.com",
+			},
+		},
+	}
+	s.NoError(s.db.UpdateAnnouncementMonth(month))
+
+	// Test that we can still retrieve both months
+	january, err := s.db.RetrieveAnnouncementMonth("2022-01")
+	s.NoError(err)
+	s.Equal("Happy New Year!", january.Announcements[0].Title)
+
+	february, err := s.db.RetrieveAnnouncementMonth("2022-02")
+	s.NoError(err)
+	s.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+}
+
+// TODO: Add organization store tests

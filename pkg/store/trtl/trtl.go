@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
@@ -610,6 +611,201 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 	request := &pb.DeleteRequest{
 		Key:       []byte(id),
 		Namespace: wire.NamespaceCertReqs,
+	}
+	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
+// AnnouncementStore Implementation
+//===========================================================================
+
+// RetrieveAnnouncementMonth returns the announcement month "crate" for the given month
+// timestamp in the format YYYY-MM.
+func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth, err error) {
+	if date == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	m = &bff.AnnouncementMonth{Date: date}
+	if key, err = m.Key(); err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.GetRequest{
+		Key:       key,
+		Namespace: wire.NamespaceAnnouncements,
+	}
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	if err = proto.Unmarshal(reply.Value, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// UpdateAnnouncementMonth creates a new announcement month "crate" if it doesn't
+// already exist or replaces the existing record.
+func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	if key, err = m.Key(); err != nil {
+		return err
+	}
+
+	// Update the modified timestamp
+	m.Modified = time.Now().Format(time.RFC3339)
+	if m.Created == "" {
+		m.Created = m.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(m); err != nil {
+		return err
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.PutRequest{
+		Key:       key,
+		Value:     data,
+		Namespace: wire.NamespaceAnnouncements,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
+// OrganizationStore Implementation
+//===========================================================================
+
+// CreateOrganization creates a new organization record in the store, assigning a
+// unique ID and setting the created and modified timestamps.
+func (s *Store) CreateOrganization() (o *bff.Organization, err error) {
+	// Create an empty organization
+	ts := time.Now().Format(time.RFC3339Nano)
+	uu := uuid.New()
+	o = &bff.Organization{
+		Id:       uu.String(),
+		Created:  ts,
+		Modified: ts,
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(o); err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.PutRequest{
+		Key:       uu[:],
+		Value:     data,
+		Namespace: wire.NamespaceOrganizations,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return nil, err
+	}
+	return o, nil
+}
+
+// RetrieveOrganization retrieves an organization record from the store by UUID.
+func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err error) {
+	if id == uuid.Nil {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.GetRequest{
+		Key:       id[:],
+		Namespace: wire.NamespaceOrganizations,
+	}
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	o = new(bff.Organization)
+	if err = proto.Unmarshal(reply.Value, o); err != nil {
+		return nil, err
+	}
+	return o, nil
+}
+
+// UpdateOrganization updates an organization record in the store by replacing the
+// existing record.
+func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
+	if o.Id == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	// Update the modified timestamp
+	o.Modified = time.Now().Format(time.RFC3339Nano)
+	if o.Created == "" {
+		o.Created = o.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(o); err != nil {
+		return err
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.PutRequest{
+		Key:       o.Key(),
+		Value:     data,
+		Namespace: wire.NamespaceOrganizations,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+// DeleteOrganization deletes an organization record from the store by UUID.
+func (s *Store) DeleteOrganization(id uuid.UUID) (err error) {
+	if id == uuid.Nil {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.DeleteRequest{
+		Key:       id[:],
+		Namespace: wire.NamespaceOrganizations,
 	}
 	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
 		if err == nil {

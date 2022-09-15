@@ -573,6 +573,8 @@ func createVASPs(db *store.Store, num, startIndex int) error {
 	return nil
 }
 
+// TODO: Add Announcements and Organization tests
+
 func deleteVASPs(db *store.Store) error {
 	n := 0
 	iter := db.ListVASPs()
