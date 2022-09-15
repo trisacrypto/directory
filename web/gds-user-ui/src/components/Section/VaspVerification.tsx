@@ -14,7 +14,8 @@ import {
   ListItem,
   Button,
   GridItem,
-  useMediaQuery
+  useMediaQuery,
+  useColorModeValue
 } from '@chakra-ui/react';
 
 import { colors } from '../../utils/theme';
@@ -39,10 +40,11 @@ const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest 
   const [isMobile] = useMediaQuery('(max-width: 768px)');
   return (
     <GridItem colSpan={colSpan}>
-      <chakra.dt fontSize="lg" fontWeight="medium" lineHeight="6" mt={2} {...rest}>
+      <Text as="dt" fontSize="lg" fontWeight="medium" lineHeight="6" mt={2} {...rest}>
         {title}
-      </chakra.dt>
-      <chakra.dd
+      </Text>
+      <Text
+        as="dd"
         mt={2}
         data-content={dataContent}
         mb={{ base: 4, sm: 0 }}
@@ -57,7 +59,7 @@ const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest 
           }
         })}>
         {children}
-      </chakra.dd>
+      </Text>
     </GridItem>
   );
 };
@@ -75,8 +77,8 @@ export default function VaspVerification() {
               </Trans>
             </Text>
           </Box>
-          <Box bg={'#E5EDF1'} p={6}>
-            <Text fontSize={'1rem'} color={'black'}>
+          <Box bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')} p={6}>
+            <Text fontSize={'1rem'}>
               <Trans id="TRISA’s verification form includes five sections and may require information from several parties in your organization.">
                 TRISA’s verification form includes five sections and may require information from
                 several parties in your organization.
@@ -87,7 +89,6 @@ export default function VaspVerification() {
             <Box
               display={{ md: 'grid' }}
               gridTemplateColumns={{ md: 'repeat(5,1fr)' }}
-              color={'black'}
               gap={'10px'}
               alignItems="center">
               <>
@@ -162,11 +163,15 @@ export default function VaspVerification() {
               color={'black'}
               gridColumnGap={10}
               gridRowGap={10}>
-              <GridItem colSpan={3} bg={'#E5EDF1'} mt={5} p={6}>
-                <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
+              <GridItem
+                colSpan={3}
+                bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+                mt={5}
+                p={6}>
+                <Text as="dt" fontSize="lg" fontWeight="bold" lineHeight="6">
                   <Trans id="Final Confirmation">Final Confirmation</Trans>
-                </chakra.dt>
-                <chakra.dd mt={2} fontSize="1rem">
+                </Text>
+                <Text as="dd" mt={2} fontSize="1rem">
                   <Trans id="For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification.">
                     For MainNet certificate requests, a member of TRISA’s verification team will
                     review your submission and conduct a final due diligence phone call for physical
@@ -174,13 +179,17 @@ export default function VaspVerification() {
                     certificates. Requests for TestNet certificates do not require physical
                     verification.
                   </Trans>
-                </chakra.dd>
+                </Text>
               </GridItem>
-              <GridItem colSpan={2} bg={'#E5EDF1'} mt={5} p={6}>
-                <chakra.dt fontSize="lg" fontWeight="bold" lineHeight="6">
+              <GridItem
+                colSpan={2}
+                bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+                mt={5}
+                p={6}>
+                <Text as="dt" fontSize="lg" fontWeight="bold" lineHeight="6">
                   <Trans id="Need to Learn More?">Need to Learn More?</Trans>
-                </chakra.dt>
-                <chakra.dd mt={2}>
+                </Text>
+                <Text as="dd" mt={2}>
                   <UnorderedList color={'#1F4CED'}>
                     <ListItem fontSize="1rem">
                       <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
@@ -193,7 +202,7 @@ export default function VaspVerification() {
                       </Link>
                     </ListItem>
                   </UnorderedList>
-                </chakra.dd>
+                </Text>
               </GridItem>
             </Box>
           </Box>

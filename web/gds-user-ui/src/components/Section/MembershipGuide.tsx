@@ -56,12 +56,12 @@ const MembershipGuide = () => {
                   Welcome to TRISA’s network of Certified VASPs.
                 </Trans>
               </Heading>
-              <Text as="p" mt={2}>
+              <Text as="p" mt={2} color="inherit">
                 <Trans id="Learn about the three-step process to become a member and verified VASP.">
                   Learn about the three-step process to become a member and verified VASP.
                 </Trans>
               </Text>
-              <Text as="p" mt={2}>
+              <Text as="p" mt={2} color="inherit">
                 <Trans id="Create your account today.">Create your account today.</Trans>
               </Text>
             </VStack>

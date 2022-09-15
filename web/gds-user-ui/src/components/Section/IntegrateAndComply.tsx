@@ -10,7 +10,8 @@ import {
   Button,
   Heading,
   Container,
-  useBreakpointValue
+  useBreakpointValue,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { colors } from 'utils/theme';
@@ -59,7 +60,7 @@ export default function IntegrateAndComply() {
         </Stack>
       </Flex>
       <Container maxW={'5xl'}>
-        <Flex bg={'white'} color={'black'} fontFamily={'Open Sans'}>
+        <Flex color={'black'} fontFamily={'Open Sans'}>
           <Stack>
             <Stack flex={1} justify={{ lg: 'center' }} py={{ base: 4, md: 14 }}>
               <Box pl={5} my={{ base: 4 }} color="black">
@@ -70,8 +71,8 @@ export default function IntegrateAndComply() {
                   </Trans>
                 </Text>
               </Box>
-              <Box bg={'gray.100'} p={5}>
-                <Text fontSize="lg" color={'black'}>
+              <Box bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')} p={5}>
+                <Text fontSize="lg">
                   <Trans id="VASPs have two options to integrate with TRISA.">
                     VASPs have two options to integrate with TRISA.
                   </Trans>
@@ -82,7 +83,6 @@ export default function IntegrateAndComply() {
                   spacing={{ base: 20, md: 0 }}
                   display={{ md: 'grid' }}
                   gridTemplateColumns={{ md: 'repeat(2,1fr)' }}
-                  color={'black'}
                   gridColumnGap={{ md: 20, lg: 54 }}
                   gridRowGap={{ md: 6 }}
                   position="relative">
@@ -143,7 +143,7 @@ export default function IntegrateAndComply() {
                   </Line>
                 </Stack>
                 <Stack direction={['column', 'row']} mt={5} spacing={10}>
-                  <Stack bg={'gray.100'} py={5} w="100%">
+                  <Stack bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')} py={5} w="100%">
                     <Line title={t`Open Source Resources`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
@@ -173,7 +173,7 @@ export default function IntegrateAndComply() {
                       </UnorderedList>
                     </Line>
                   </Stack>
-                  <Stack bg={'gray.100'} py={5} w="100%">
+                  <Stack bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')} py={5} w="100%">
                     <Line title={t`Need to Learn More?`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>

@@ -112,7 +112,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             py={14}
             width="100%"
             spacing={10}>
-            <Stack bg={'white'}>
+            <Stack border="2px solid white">
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
                   <Trans id="TESTNET SUBMISSION">TESTNET SUBMISSION</Trans>
@@ -197,7 +197,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 </Button>
               </Stack>
             </Stack>
-            <Stack bg={'white'}>
+            <Stack border="2px solid white">
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
                   <Trans id="MAINNET SUBMISSION">MAINNET SUBMISSION</Trans>

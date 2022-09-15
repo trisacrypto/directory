@@ -94,7 +94,7 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
       boxShadow="0px 10px 15px -3px rgba(0,0,0,0.1)"
       borderColor={'#C1C9D2'}
       borderRadius={8}
-      borderWidth={1}
+      borderWidth={2}
       // bg={'white'}
       p={5}
       fontFamily={'Open Sans'}

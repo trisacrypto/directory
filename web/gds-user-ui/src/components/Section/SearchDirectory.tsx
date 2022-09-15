@@ -76,7 +76,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
           </Box>
 
           <Stack direction={['column', 'row']} w={'100%'} pb={10}>
-            <Text fontSize={'lg'} color={'black'} fontWeight={'semibold'} pt={1}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} pt={1}>
               <Trans id="Directory Lookup">Directory Lookup</Trans>
             </Text>
             <Box width={{ md: '70%', sm: '90%' }}>
