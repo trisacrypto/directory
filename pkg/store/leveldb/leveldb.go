@@ -60,8 +60,6 @@ var (
 	preVASPs         = []byte("vasps::")
 	preCerts         = []byte("certs::")
 	preCertReqs      = []byte("certreqs::")
-	preAnnouncements = []byte("announcements::")
-	preOrganizations = []byte("organizations::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
