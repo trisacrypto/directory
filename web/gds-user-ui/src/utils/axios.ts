@@ -14,9 +14,6 @@ axiosInstance.defaults.withCredentials = true;
 
 axiosInstance.interceptors.response.use(
   (response) => {
-    if (response.status === 200) {
-    }
-
     return response;
   },
   async (error) => {

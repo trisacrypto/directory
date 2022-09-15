@@ -36,7 +36,6 @@ const AttentionAlert = ({
   onClick,
   buttonText
 }: AttentionAlertProps) => {
-  console.log('action', action);
   if (severity === AttentionSeverity.INFO.toUpperCase()) {
     switch (action as AttentionAction) {
       case AttentionAction.START_REGISTRATION:
