@@ -15,7 +15,6 @@ import (
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -167,10 +166,6 @@ func (s *Server) Overview(c *gin.Context) {
 				FirstListed: mainnet.MemberInfo.FirstListed,
 				VerifiedOn:  mainnet.MemberInfo.VerifiedOn,
 				LastUpdated: mainnet.MemberInfo.LastUpdated,
-			}
-		} else {
-			out.MainNet.MemberDetails = api.MemberDetails{
-				Status: pb.VerificationState_NO_VERIFICATION.String(),
 			}
 		}
 	}
