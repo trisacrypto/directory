@@ -131,7 +131,7 @@ export default function IntegrateAndComply() {
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
                         <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
-                          <Trans id="CipherTrace Providers">CipherTrace Providers</Trans>
+                          <Trans id="CipherTrace Traveler">CipherTrace Traveler</Trans>
                         </Link>
                       </ListItem>
                       <ListItem>
