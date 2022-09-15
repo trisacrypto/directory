@@ -207,7 +207,15 @@ const Certificate: React.FC = () => {
   };
 
   // jump to review page
-  const jumpToReview = () => {
+  const jumpToReview = async () => {
+    if (isDirty) {
+      await postRegistrationValue({
+        ...methods.getValues(),
+        state: {
+          ...currentState()
+        }
+      });
+    }
     jumpToStep(lastStep);
   };
 
