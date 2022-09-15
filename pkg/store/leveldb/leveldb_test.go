@@ -355,6 +355,14 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	s.Equal(m.Modified, m.Created)
 	s.Len(m.Announcements, len(month.Announcements))
 
+	// Attempt to Retrieve a non-existent announcement month
+	_, err = s.db.RetrieveAnnouncementMonth("")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = s.db.RetrieveAnnouncementMonth("2022-01-01")
+	s.Error(err)
+	_, err = s.db.RetrieveAnnouncementMonth("2021-01")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
 	// Attempt to save an announcement month without a date on it
 	month.Date = ""
 	err = s.db.UpdateAnnouncementMonth(month)
@@ -398,4 +406,50 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	s.Equal("Happy Groundhog Day", february.Announcements[0].Title)
 }
 
-// TODO: Add organization store tests
+func (s *leveldbTestSuite) TestOrganizationStore() {
+	// Create a new organization in the database
+	org, err := s.db.CreateOrganization()
+	s.NoError(err)
+
+	// Verify that the created record has an ID and timestamps
+	s.NotEmpty(org.Id)
+	s.NotEmpty(org.Created)
+	s.Equal(org.Modified, org.Created)
+
+	// Retrieve the organization by UUID
+	uu, err := bff.ParseOrgID(org.Id)
+	s.NoError(err)
+	o, err := s.db.RetrieveOrganization(uu)
+	s.NoError(err)
+	s.True(proto.Equal(org, o), "retrieved organization does not match created organization")
+
+	// Attempt to retrieve a non-existent organization
+	_, err = s.db.RetrieveOrganization(uuid.Nil)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = s.db.RetrieveOrganization(uuid.New())
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the organization
+	org.Name = "Alice Corp"
+	err = s.db.UpdateOrganization(org)
+	s.NoError(err)
+
+	o, err = s.db.RetrieveOrganization(uu)
+	s.NoError(err)
+	s.Equal("Alice Corp", o.Name)
+	s.NotEmpty(o.Modified)
+	s.NotEqual(o.Modified, o.Created)
+
+	// Attempt to update an organization with no Id on it
+	org.Id = ""
+	s.ErrorIs(s.db.UpdateOrganization(org), storeerrors.ErrIncompleteRecord)
+
+	// Delete the organization
+	err = s.db.DeleteOrganization(uu)
+	s.NoError(err)
+	_, err = s.db.RetrieveOrganization(uu)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+}

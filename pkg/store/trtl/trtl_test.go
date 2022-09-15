@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	store "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -541,6 +542,149 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	reqs, err = db.ListCertReqs().All()
 	require.NoError(err)
 	require.Len(reqs, 110)
+}
+
+func (s *trtlStoreTestSuite) TestAnnouncementStore() {
+	require := s.Require()
+
+	// Load the announcement month record from testdata
+	data, err := ioutil.ReadFile("../testdata/announcements.json")
+	require.NoError(err)
+
+	month := &bff.AnnouncementMonth{}
+	err = protojson.Unmarshal(data, month)
+	require.NoError(err)
+
+	// Verify the announcement month is loaded correctly
+	require.NotEmpty(month.Date)
+	require.NotEmpty(month.Announcements)
+	require.Empty(month.Created)
+	require.Empty(month.Modified)
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect(context.Background()))
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	// Create the announcement month
+	require.NoError(db.UpdateAnnouncementMonth(month))
+
+	// Attempt to Retrieve the announcement month
+	m, err := db.RetrieveAnnouncementMonth(month.Date)
+	require.NoError(err)
+	require.Equal(month.Date, m.Date)
+	require.NotEmpty(m.Created)
+	require.Equal(m.Modified, m.Created)
+	require.Len(m.Announcements, len(month.Announcements))
+
+	// Attempt to Retrieve a non-existent announcement month
+	_, err = db.RetrieveAnnouncementMonth("")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = db.RetrieveAnnouncementMonth("2022-01-01")
+	require.Error(err)
+	_, err = db.RetrieveAnnouncementMonth("2021-01")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Attempt to save an announcement month without a date on it
+	month.Date = ""
+	err = db.UpdateAnnouncementMonth(month)
+	require.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the announcement month
+	m.Announcements[0].Title = "Happy New Year!"
+	err = db.UpdateAnnouncementMonth(m)
+	require.NoError(err)
+
+	m, err = db.RetrieveAnnouncementMonth(m.Date)
+	require.NoError(err)
+	require.Equal("Happy New Year!", m.Announcements[0].Title)
+	require.NotEmpty(m.Modified)
+	require.NotEqual(m.Modified, m.Created)
+
+	// Add another announcement month
+	month = &bff.AnnouncementMonth{
+		Date: "2022-02",
+		Announcements: []*bff.Announcement{
+			{
+				Title:    "Happy Groundhog Day",
+				Body:     "The groundhog saw his shadow, so we have six more weeks of winter.",
+				PostDate: "2022-02-02",
+				Author:   "phil@punxsutawney.com",
+			},
+		},
+	}
+	require.NoError(db.UpdateAnnouncementMonth(month))
+
+	// Test that we can still retrieve both months
+	january, err := db.RetrieveAnnouncementMonth("2022-01")
+	require.NoError(err)
+	require.Equal("Happy New Year!", january.Announcements[0].Title)
+
+	february, err := db.RetrieveAnnouncementMonth("2022-02")
+	require.NoError(err)
+	require.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+}
+
+func (s *trtlStoreTestSuite) TestOrganizationStore() {
+	require := s.Require()
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect(context.Background()))
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	// Create a new organization in the database
+	org, err := db.CreateOrganization()
+	require.NoError(err)
+
+	// Verify that the created record has an ID and timestamps
+	require.NotEmpty(org.Id)
+	require.NotEmpty(org.Created)
+	require.Equal(org.Modified, org.Created)
+
+	// Retrieve the organization by UUID
+	uu, err := bff.ParseOrgID(org.Id)
+	require.NoError(err)
+	o, err := db.RetrieveOrganization(uu)
+	require.NoError(err)
+	require.True(proto.Equal(org, o), "retrieved organization does not match created organization")
+
+	// Attempt to retrieve a non-existent organization
+	_, err = db.RetrieveOrganization(uuid.Nil)
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = db.RetrieveOrganization(uuid.New())
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the organization
+	org.Name = "Alice Corp"
+	err = db.UpdateOrganization(org)
+	require.NoError(err)
+
+	o, err = db.RetrieveOrganization(uu)
+	require.NoError(err)
+	require.Equal("Alice Corp", o.Name)
+	require.NotEmpty(o.Modified)
+	require.NotEqual(o.Modified, o.Created)
+
+	// Attempt to update an organization with no Id on it
+	org.Id = ""
+	require.ErrorIs(db.UpdateOrganization(org), storeerrors.ErrEntityNotFound)
+
+	// Delete the organization
+	err = db.DeleteOrganization(uu)
+	require.NoError(err)
+	_, err = db.RetrieveOrganization(uu)
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
 func createVASPs(db *store.Store, num, startIndex int) error {

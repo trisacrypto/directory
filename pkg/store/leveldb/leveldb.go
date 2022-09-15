@@ -645,6 +645,12 @@ func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
 		return storeerrors.ErrIncompleteRecord
 	}
 
+	// Update the modified timestamp
+	o.Modified = time.Now().Format(time.RFC3339Nano)
+	if o.Created == "" {
+		o.Created = o.Modified
+	}
+
 	var data []byte
 	if data, err = proto.Marshal(o); err != nil {
 		return err

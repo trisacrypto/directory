@@ -663,6 +663,10 @@ func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth
 // UpdateAnnouncementMonth creates a new announcement month "crate" if it doesn't
 // already exist or replaces the existing record.
 func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
+	if m.Date == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
 	// Get the key by creating an intermediate announcement month to ensure that
 	// validation and key creation always happens the same way.
 	var key []byte
@@ -671,7 +675,7 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 	}
 
 	// Update the modified timestamp
-	m.Modified = time.Now().Format(time.RFC3339)
+	m.Modified = time.Now().Format(time.RFC3339Nano)
 	if m.Created == "" {
 		m.Created = m.Modified
 	}
