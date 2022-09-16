@@ -130,9 +130,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
         <VStack>
           <Text>
-            <Trans id="Does your organization conduct Counterparty/Customer Due Diligence (KYC/CDD) before permitting its customers to send/receive virtual asset transfers?">
-              Does your organization conduct Counterparty/Customer Due Diligence (KYC/CDD) before
-              permitting its customers to send/receive virtual asset transfers?
+            <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+              Does your organization conduct KYC/CDD before permitting its customers to send/receive
+              virtual asset transfers?
             </Trans>
           </Text>
           <SwitchFormControl

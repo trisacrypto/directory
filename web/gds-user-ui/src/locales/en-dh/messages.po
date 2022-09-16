@@ -681,6 +681,13 @@ msgid ""
 "Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 msgstr "---"
 
+#: src/components/TrixoQuestionnaireForm/index.tsx:123
+msgid ""
+"Does your organization have a programme that sets minimum Anti-Money\n"
+"Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
+"Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+msgstr ""
+
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:100
 msgid ""
 "Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due\n"

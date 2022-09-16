@@ -563,6 +563,10 @@ msgstr "Créé et maintenu par"
 msgid "Customer Due Diligence (CDD) & Travel Rule Policies"
 msgstr "Les politiques de Customer Due Diligence(CDD) et de Travel Rule"
 
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:90
+msgid "Customer Due Diligence (CDD) & Travel Rule Policies"
+msgstr ""
+
 #: src/components/CustomerNumber/index.tsx:17
 msgid "Customer Number"
 msgstr "Numéro de client"
@@ -581,6 +585,14 @@ msgstr "Politiques de protection des données"
 #: src/components/MemberDetails/index.tsx:117
 msgid "Date of Incorporation / Establishment"
 msgstr "Date de la constitution en société / de l'établissement"
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:33
+msgid "Date of incorporation / establishment must be earlier than current date."
+msgstr ""
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:29
+msgid "Date of incorporation / establishment must be later than {0}."
+msgstr ""
 
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:33
 msgid "Date of incorporation / establishment must be earlier than current date."
@@ -654,6 +666,13 @@ msgstr ""
 "Votre organisation dispose-t-elle d'un programme qui fixe des normes minimales\n"
 "en matière de LBC, de CFT, de KYC/CDD et de sanctions conformément aux exigences des\n"
 "régimes réglementaires de la ou des juridictions où elle est autorisée/approuvée/enregistrée ?"
+
+#: src/components/TrixoQuestionnaireForm/index.tsx:123
+msgid ""
+"Does your organization have a programme that sets minimum Anti-Money\n"
+"Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
+"Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
+msgstr ""
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:100
 msgid ""

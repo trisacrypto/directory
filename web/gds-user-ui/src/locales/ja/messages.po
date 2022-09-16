@@ -627,6 +627,10 @@ msgstr "作成・管理"
 msgid "Customer Due Diligence (CDD) & Travel Rule Policies"
 msgstr ""
 
+#: src/components/CertificateReview/TrixoReviewDataTable.tsx:90
+msgid "Customer Due Diligence (CDD) & Travel Rule Policies"
+msgstr ""
+
 #: src/components/CustomerNumber/index.tsx:17
 msgid "Customer Number"
 msgstr "お客様番号"
@@ -645,6 +649,14 @@ msgstr "データ保護ポリシー"
 #: src/components/MemberDetails/index.tsx:117
 msgid "Date of Incorporation / Establishment"
 msgstr "会社設立日 / 設立日\""
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:33
+msgid "Date of incorporation / establishment must be earlier than current date."
+msgstr ""
+
+#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:29
+msgid "Date of incorporation / establishment must be later than {0}."
+msgstr ""
 
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:33
 msgid "Date of incorporation / establishment must be earlier than current date."
