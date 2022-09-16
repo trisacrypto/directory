@@ -130,9 +130,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
         <VStack>
           <Text>
-            <Trans id="Does your organization conduct Counterparty/Customer Due Diligence (KYC/CDD) before permitting its customers to send/receive virtual asset transfers?">
-              Does your organization conduct Counterparty/Customer Due Diligence (KYC/CDD) before
-              permitting its customers to send/receive virtual asset transfers?
+            <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+              Does your organization conduct KYC/CDD before permitting its customers to send/receive
+              virtual asset transfers?
             </Trans>
           </Text>
           <SwitchFormControl
@@ -145,9 +145,8 @@ const TrixoQuestionnaireForm: React.FC = () => {
       {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
         <VStack align="start" w="100%">
           <Text>
-            <Trans id="At what threshold and currency does your organization conduct KYC (Know your Counterparty)?">
-              At what threshold and currency does your organization conduct KYC (Know your
-              Counterparty)?
+            <Trans id="At what threshold and currency does your organization conduct KYC checks?">
+              At what threshold and currency does your organization conduct KYC checks?
             </Trans>
           </Text>
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
@@ -257,9 +256,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
         </Heading>
         <VStack align="start" w="100%">
           <Text>
-            <Trans id="Is your organization required by law to safeguard PII (Personally Identifiable Information)?">
-              Is your organization required by law to safeguard PII (Personally Identifiable
-              Information)?
+            <Trans id="Is your organization required by law to safeguard Personally Identifiable Information (PII)?">
+              Is your organization required by law to safeguard Personally Identifiable Information
+              (PII)?
             </Trans>
           </Text>
           <SwitchFormControl
