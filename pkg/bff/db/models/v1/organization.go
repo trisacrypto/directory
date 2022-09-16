@@ -4,6 +4,9 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
+	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 var (
@@ -36,18 +39,50 @@ func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 func NewRegisterForm() *RegistrationForm {
 	// Make sure default values are populated for the frontend
 	return &RegistrationForm{
-		State: NewFormState(),
-	}
-}
-
-// NewFormState returns a new form state with default values.
-func NewFormState() *FormState {
-	return &FormState{
-		Current: 1,
-		Steps: []*FormStep{
-			{
-				Key:    1,
-				Status: "progress",
+		Entity: &ivms101.LegalPerson{
+			Name: &ivms101.LegalPersonName{
+				NameIdentifiers: []*ivms101.LegalPersonNameId{
+					{
+						LegalPersonNameIdentifierType: ivms101.LegalPersonNameTypeCode_LEGAL_PERSON_NAME_TYPE_CODE_LEGL,
+					},
+				},
+			},
+			GeographicAddresses: []*ivms101.Address{
+				{
+					AddressType: ivms101.AddressTypeCode_ADDRESS_TYPE_CODE_BIZZ,
+				},
+			},
+			NationalIdentification: &ivms101.NationalIdentification{
+				NationalIdentifierType: ivms101.NationalIdentifierTypeCode_NATIONAL_IDENTIFIER_TYPE_CODE_LEIX,
+				RegistrationAuthority:  "RA777777",
+			},
+		},
+		Contacts: &models.Contacts{
+			Technical:      &models.Contact{},
+			Administrative: &models.Contact{},
+			Legal:          &models.Contact{},
+			Billing:        &models.Contact{},
+		},
+		Trixo: &models.TRIXOQuestionnaire{
+			FinancialTransfersPermitted:  "no",
+			HasRequiredRegulatoryProgram: "no",
+			KycThreshold:                 10,
+			KycThresholdCurrency:         "USD",
+			ApplicableRegulations: []string{
+				"FATF Recommendation 16",
+			},
+			ComplianceThreshold:         3000,
+			ComplianceThresholdCurrency: "USD",
+		},
+		Testnet: &NetworkDetails{},
+		Mainnet: &NetworkDetails{},
+		State: &FormState{
+			Current: 1,
+			Steps: []*FormStep{
+				{
+					Key:    1,
+					Status: "progress",
+				},
 			},
 		},
 	}
@@ -64,11 +99,11 @@ func (r *RegistrationForm) ReadyToSubmit(network string) bool {
 	}
 
 	switch network {
-	case "testnet":
+	case config.TestNet:
 		if r.Testnet == nil {
 			return false
 		}
-	case "mainnet":
+	case config.MainNet:
 		if r.Mainnet == nil {
 			return false
 		}

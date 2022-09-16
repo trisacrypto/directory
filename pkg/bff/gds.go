@@ -7,20 +7,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-)
-
-const (
-	testnet = "testnet"
-	mainnet = "mainnet"
 )
 
 var (
@@ -175,9 +173,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	)
 
 	switch registeredDirectoryType(params.Directory) {
-	case testnet:
+	case config.TestNet:
 		rep, err = s.testnetGDS.VerifyContact(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
@@ -259,7 +257,9 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// Mark the form as started
+	// Mark the form as started, the BFF relies on this state so the frontend should
+	// capture the updated form returned from this endpoint to avoid overwriting the
+	// state metadata.
 	// NOTE: If an empty form was passed in, the form will not be marked as started.
 	if form.State != nil && form.State.Started == "" {
 		form.State.Started = time.Now().Format(time.RFC3339)
@@ -273,8 +273,13 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// If successful respond with 204: No Content so that the front-end can continue.
-	c.Status(http.StatusNoContent)
+	if org.Registration.State == nil || org.Registration.State.Started == "" {
+		// If an empty form was passed in, return a 204 No Content response
+		c.Status(http.StatusNoContent)
+	} else {
+		// Otherwise, return the form in a 200 OK response
+		c.JSON(http.StatusOK, org.Registration)
+	}
 }
 
 // SubmitRegistration makes a request on behalf of the user to either the TestNet or the
@@ -285,7 +290,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Get the network from the URL
 	var err error
 	network := strings.ToLower(c.Param("network"))
-	if network != testnet && network != mainnet {
+	if network != config.TestNet && network != config.MainNet {
 		c.JSON(http.StatusNotFound, api.ErrorResponse("network should be either testnet or mainnet"))
 		return
 	}
@@ -297,16 +302,32 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user from the context
+	var user *management.User
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("submit registration requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user info"))
+		return
+	}
+
+	// Load the app metadata for the user for updating
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
+		return
+	}
+
 	// Do not allow a registration form to be submitted twice
 	switch network {
-	case testnet:
+	case config.TestNet:
 		if org.Testnet != nil && org.Testnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 			return
 		}
-	case mainnet:
+	case config.MainNet:
 		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
 			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
@@ -339,11 +360,11 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	defer cancel()
 
 	switch network {
-	case testnet:
+	case config.TestNet:
 		req.TrisaEndpoint = org.Registration.Testnet.Endpoint
 		req.CommonName = org.Registration.Testnet.CommonName
 		rep, err = s.testnetGDS.Register(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		req.TrisaEndpoint = org.Registration.Mainnet.Endpoint
 		req.CommonName = org.Registration.Mainnet.CommonName
 		rep, err = s.mainnetGDS.Register(ctx, req)
@@ -375,6 +396,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		Status:              rep.Status.String(),
 		Message:             rep.Message,
 		PKCS12Password:      rep.Pkcs12Password,
+		RefreshToken:        true,
 	}
 
 	if rep.Error != nil && rep.Error.Code != 0 {
@@ -401,16 +423,23 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	switch network {
-	case testnet:
+	case config.TestNet:
 		org.Testnet = directoryRecord
-	case mainnet:
+		appdata.VASPs.TestNet = rep.Id
+	case config.MainNet:
 		org.Mainnet = directoryRecord
+		appdata.VASPs.MainNet = rep.Id
 	}
 
 	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return
+	}
+
+	// Commit the user metadata updates to auth0
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -433,11 +462,11 @@ func validRegisteredDirectory(r string) bool {
 // Returns either testnet or mainnet depending on the user supplied registered directory.
 func registeredDirectoryType(r string) string {
 	if _, ok := trisatest[r]; ok {
-		return testnet
+		return config.TestNet
 	}
 
 	if _, ok := vaspdirectory[r]; ok {
-		return mainnet
+		return config.MainNet
 	}
 
 	return ""

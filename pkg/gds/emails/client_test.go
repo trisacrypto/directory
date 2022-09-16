@@ -13,7 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -115,9 +115,12 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, 1, sent)
 
 	reissueDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
-	sent, err = email.SendExpiresAdminNotification(vasp, reissueDate)
+	sent, err = email.SendExpiresAdminNotification(vasp, 0, reissueDate)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
+	sent, err = email.SendExpiresAdminNotification(vasp, 1, reissueDate)
+	require.NoError(t, err)
+	require.Equal(t, 0, sent, "should not have sent duplicate expiration email to the admin")
 
 	sent, err = email.SendReissuanceReminder(vasp, reissueDate)
 	require.NoError(t, err)
@@ -126,6 +129,23 @@ func TestClientSendEmails(t *testing.T) {
 	sent, err = email.SendReissuanceStarted(vasp, "https://whisper.dev/supersecret")
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
+
+	reissuedDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
+	sent, err = email.SendReissuanceAdminNotification(vasp, 0, reissuedDate)
+	require.NoError(t, err)
+	require.Equal(t, 1, sent)
+	sent, err = email.SendReissuanceAdminNotification(vasp, 1, reissuedDate)
+	require.NoError(t, err)
+	require.Equal(t, 0, sent, "should not have sent duplicate reissuance email to the admin")
+
+	// TRISA Admin should get an expiration notification email and a reissuance started email
+	log, err := models.GetAdminEmailLog(vasp)
+	require.NoError(t, err)
+	require.Len(t, log, 2)
+	require.Equal(t, string(admin.ReissuanceReminder), log[0].Reason)
+	require.Equal(t, emails.ExpiresAdminNotificationRE, log[0].Subject)
+	require.Equal(t, string(admin.ReissuanceStarted), log[1].Reason)
+	require.Equal(t, emails.ReissuanceAdminNotificationRE, log[1].Subject)
 
 	// Technical is verified and first so should get Rejection and DeliverCerts emails
 	// It should also receive the reissuance started email after the reminder.

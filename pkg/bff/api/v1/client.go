@@ -171,17 +171,26 @@ func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.Registra
 }
 
 // Save registration form data to the server in preparation for submitting it.
-func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (err error) {
+func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (out *models.RegistrationForm, err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodPut, "/v1/register", form, nil); err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.Do(req, nil, true); err != nil {
-		return err
+	// Execute the request and get a response
+	var rep *http.Response
+	out = &models.RegistrationForm{}
+	if rep, err = s.Do(req, out, true); err != nil {
+		return nil, err
 	}
-	return nil
+
+	// Make sure we are not returning data if a 204 No Content was received
+	if rep.StatusCode == http.StatusNoContent {
+		return nil, nil
+	}
+
+	return out, nil
 }
 
 //  Submit the registration form to the specified network (testnet or mainnet).

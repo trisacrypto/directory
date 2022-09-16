@@ -17,7 +17,7 @@ import (
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/store"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"

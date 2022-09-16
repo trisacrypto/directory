@@ -26,6 +26,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"gopkg.in/square/go-jose.v2"
@@ -78,10 +79,11 @@ func Close() {
 
 // Server wraps an httptest.Server to provide a default handler for auth0 requests.
 type Server struct {
-	srv  *httptest.Server
-	mux  *http.ServeMux
-	URL  *url.URL
-	keys *rsa.PrivateKey
+	srv   *httptest.Server
+	mux   *http.ServeMux
+	URL   *url.URL
+	keys  *rsa.PrivateKey
+	users map[string]*management.User
 }
 
 // New starts and returns a new Auth0 server using TLS. The caller should call close
@@ -94,10 +96,14 @@ func New() (s *Server, err error) {
 		return nil, err
 	}
 
+	// Create some default users without any associated app metadata
+	s.users = NewUsers()
+
 	// Setup routes for the mux
 	s.mux = http.NewServeMux()
 	s.mux.HandleFunc("/.well-known/openid-configuration", s.OpenIDConfiguration)
 	s.mux.HandleFunc("/.well-known/jwks.json", s.JWKS)
+	s.mux.HandleFunc("/api/v2/users/"+UserID, s.Users)
 
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
@@ -144,8 +150,8 @@ func (s *Server) NewToken(permissions ...string) (tks string, err error) {
 		Email: Email,
 		OrgID: OrgID,
 		VASPs: map[string]string{
-			"testnet": TestNetVASP,
-			"mainnet": MainNetVASP,
+			config.TestNet: TestNetVASP,
+			config.MainNet: MainNetVASP,
 		},
 		Scope:       Scope,
 		Permissions: permissions,
@@ -204,4 +210,52 @@ func (s *Server) JWKS(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(webkeys)
+}
+
+func (s *Server) Users(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.GetUser(w, r)
+	case http.MethodPatch:
+		s.PatchUserAppMetadata(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
+	// Return the user object from the map
+	// TODO: Parse the user id from the request
+	if user, ok := s.users[UserID]; ok {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (s *Server) PatchUserAppMetadata(w http.ResponseWriter, r *http.Request) {
+	// Get the user object from the request
+	user := &management.User{}
+	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Replace the user app metadata
+	s.users[UserID].AppMetadata = user.AppMetadata
+
+	// Return the user object in the response
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+// Expose the test user's app metadata to the tests.
+func (s *Server) GetUserAppMetadata() map[string]interface{} {
+	return s.users[UserID].AppMetadata
+}
+
+// Update the test user with unstructured app metadata.
+func (s *Server) UseAppMetadata(appdata map[string]interface{}) {
+	s.users[UserID].AppMetadata = appdata
 }

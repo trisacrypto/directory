@@ -11,8 +11,8 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
-	"github.com/trisacrypto/directory/pkg/gds/store"
+	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -357,6 +357,8 @@ func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
 		VaspCategories:      vasp.VaspCategories,
 		VerifiedOn:          vasp.VerifiedOn,
 		Status:              vasp.VerificationStatus,
+		FirstListed:         vasp.FirstListed,
+		LastUpdated:         vasp.LastUpdated,
 	}
 
 	// Try to add the name information

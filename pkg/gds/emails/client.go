@@ -10,13 +10,14 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-multierror"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -332,7 +333,15 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 // SendExpiresAdminNotification sends the admins a notice that an identity certificate
 // will be expiring soon. This allows the admins to determine if a new review of the
 // TRISA member is necessary before the reissuance process begins.
-func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
+func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow int, reissueDate time.Time) (sent int, err error) {
+	// Make sure the email has not already been sent recently
+	if emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
+		return 0, err
+	} else if emailCount > 0 {
+		return 0, nil
+	}
+
 	// Create the template context
 	ctx := ExpiresAdminNotificationData{
 		VID:                 vasp.Id,
@@ -361,8 +370,110 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, reissueDate t
 	if err = m.Send(msg); err != nil {
 		return 0, err
 	}
+	sent++
 
-	return 1, nil
+	if err = models.AppendAdminEmailLog(vasp, string(admin.ReissuanceReminder), msg.Subject); err != nil {
+		return 0, err
+	}
+
+	return sent, nil
+}
+
+// Helper function for HandleCertificateReissuance that sends reissuance reminder emails
+// a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
+// critical alert is raised.
+func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
+	ReissuanceData := ReissuanceReminderData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: m.conf.ServiceEmail,
+		Reissuance:          reissuanceDate,
+	}
+
+	if vasp.IdentityCertificate != nil {
+		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		if ReissuanceData.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+			return fmt.Errorf("could not parse vasp certificate expiration date for %s", vasp.Id)
+		}
+	}
+
+	// Iterate through the VASP's verified contacts and send the reissuance reminder email.
+	contactsToNotify, err := getContactsToNotify(vasp.Contacts)
+	if err != nil {
+		return err
+	}
+	if len(contactsToNotify) == 0 {
+		log.WithLevel(zerolog.FatalLevel).Str("vasp_id", vasp.Id).Msg("cert-manager could not find a verified contact for vasp")
+		return nil
+	}
+
+	for _, contact := range contactsToNotify {
+		// Make sure that the reminder email hasn't already been sent to this contact.
+		reissuanceReminder := string(admin.ReissuanceReminder)
+		emailCount, err := models.GetSentEmailCount(contact, reissuanceReminder, timeWindow)
+		if err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
+			continue
+		}
+		if emailCount > 0 {
+			continue
+		}
+
+		// Create the reissuance reminder email.
+		ReissuanceData.Name = contact.Name
+		msg, err := ReissuanceReminderEmail(
+			m.serviceEmail.Name, m.serviceEmail.Address,
+			contact.Name, contact.Email,
+			ReissuanceData,
+		)
+		if err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
+			continue
+		}
+
+		if err = m.Send(msg); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
+			continue
+		}
+		if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
+		}
+	}
+	return nil
+}
+
+// Helper function for SendContactReissuanceReminder that builds the list of verified contacts
+// to send reissuance reminder emails to based on the following logic:
+// 		1. Send to the Technical contact if verified, else
+// 		2. Send to the Administrative contact if verified, else
+// 		3. Send to all other verified contacts
+func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
+	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
+		return nil, err
+	} else if verified {
+		return []*pb.Contact{contacts.Technical}, nil
+	}
+
+	if verified, err := models.ContactIsVerified(contacts.Administrative); err != nil {
+		return nil, err
+	} else if verified {
+		return []*pb.Contact{contacts.Administrative}, nil
+	}
+
+	if verified, err := models.ContactIsVerified(contacts.Legal); err != nil {
+		return nil, err
+	} else if verified {
+		contactsToNotify = append(contactsToNotify, contacts.Legal)
+	}
+
+	if verified, err := models.ContactIsVerified(contacts.Billing); err != nil {
+		return nil, err
+	} else if verified {
+		contactsToNotify = append(contactsToNotify, contacts.Billing)
+	}
+
+	return contactsToNotify, nil
 }
 
 // SendReissuanceReminder sends a reminder to all verified contacts that their identity
@@ -484,4 +595,58 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 	}
 
 	return sent, errs.ErrorOrNil()
+}
+
+// SendReissuanceAdminNotification sends the admins a notice that an identity certificate
+// has been reissued. This allows the admins to know that the reissuance has been done automatically
+func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow int, reissueDate time.Time) (sent int, err error) {
+	// Make sure the email has not already been sent recently
+	if emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceStarted), timeWindow); err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance notification", vasp.Id))
+		return 0, err
+	} else if emailCount > 0 {
+		return 0, nil
+	}
+
+	// Create the template context
+	ctx := ReissuanceAdminNotificationData{
+		VID:                 vasp.Id,
+		CommonName:          vasp.CommonName,
+		Endpoint:            vasp.TrisaEndpoint,
+		RegisteredDirectory: m.conf.DirectoryID,
+		Reissuance:          reissueDate,
+		BaseURL:             m.conf.AdminReviewBaseURL,
+	}
+
+	if vasp.IdentityCertificate != nil {
+		// TODO: ensure the timestamp format is correct
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		ctx.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing timestamp: %v", err)
+		}
+	} else if vasp.IdentityCertificate == nil {
+		return 0, fmt.Errorf("no identity certificate for vasp %s", vasp.Id)
+	}
+
+	// Create reissuance admin notifications email.
+	msg, err := ReissuanceAdminNotificationEmail(
+		m.serviceEmail.Name, m.serviceEmail.Address,
+		m.adminsEmail.Name, m.adminsEmail.Address,
+		ctx,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	if err = m.Send(msg); err != nil {
+		return 0, err
+	}
+	sent++
+
+	if err = models.AppendAdminEmailLog(vasp, string(admin.ReissuanceStarted), msg.Subject); err != nil {
+		return sent, err
+	}
+
+	return sent, nil
 }

@@ -11,10 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -28,9 +28,9 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 	rpc := func(ctx context.Context, client GlobalDirectoryClient, network string) (rep proto.Message, err error) {
 		req := &members.SummaryRequest{}
 		switch network {
-		case testnet:
+		case config.TestNet:
 			req.MemberId = testnetID
-		case mainnet:
+		case config.MainNet:
 			req.MemberId = mainnetID
 		default:
 			return nil, fmt.Errorf("unknown network: %s", network)
@@ -137,6 +137,9 @@ func (s *Server) Overview(c *gin.Context) {
 				ID:          testnet.MemberInfo.Id,
 				Status:      testnet.MemberInfo.Status.String(),
 				CountryCode: testnet.MemberInfo.Country,
+				FirstListed: testnet.MemberInfo.FirstListed,
+				VerifiedOn:  testnet.MemberInfo.VerifiedOn,
+				LastUpdated: testnet.MemberInfo.LastUpdated,
 			}
 		}
 	}
@@ -160,10 +163,9 @@ func (s *Server) Overview(c *gin.Context) {
 				ID:          mainnet.MemberInfo.Id,
 				Status:      mainnet.MemberInfo.Status.String(),
 				CountryCode: mainnet.MemberInfo.Country,
-			}
-		} else {
-			out.MainNet.MemberDetails = api.MemberDetails{
-				Status: pb.VerificationState_NO_VERIFICATION.String(),
+				FirstListed: mainnet.MemberInfo.FirstListed,
+				VerifiedOn:  mainnet.MemberInfo.VerifiedOn,
+				LastUpdated: mainnet.MemberInfo.LastUpdated,
 			}
 		}
 	}
@@ -209,9 +211,9 @@ func (s *Server) MemberDetails(c *gin.Context) {
 	)
 
 	switch registeredDirectoryType(params.Directory) {
-	case testnet:
+	case config.TestNet:
 		rep, err = s.testnetGDS.Details(ctx, req)
-	case mainnet:
+	case config.MainNet:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
 		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")

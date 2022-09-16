@@ -275,7 +275,9 @@ func TestLoadRegistrationForm(t *testing.T) {
 
 func TestSaveRegistrationForm(t *testing.T) {
 	// Load a fixture from testdata
-	fixture := &models.RegistrationForm{}
+	fixture := &models.RegistrationForm{
+		Website: "https://example.com",
+	}
 	err := loadFixture("testdata/registration.pb.json", fixture)
 	require.NoError(t, err, "could not load registration fixture")
 
@@ -283,7 +285,9 @@ func TestSaveRegistrationForm(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPut, r.Method)
 		require.Equal(t, "/v1/register", r.URL.Path)
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
 	}))
 	defer ts.Close()
 
@@ -291,8 +295,28 @@ func TestSaveRegistrationForm(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	err = client.SaveRegistrationForm(context.TODO(), fixture)
+	// Should return the form fixture
+	out, err := client.SaveRegistrationForm(context.TODO(), fixture)
 	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	ts.Close()
+
+	// Create a Test Server that returns 204 No Content
+	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPut, r.Method)
+		require.Equal(t, "/v1/register", r.URL.Path)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err = api.New(ts.URL)
+	require.NoError(t, err)
+
+	// Should return no content
+	out, err = client.SaveRegistrationForm(context.TODO(), fixture)
+	require.NoError(t, err)
+	require.Nil(t, out)
 }
 
 func TestSubmitRegistration(t *testing.T) {
