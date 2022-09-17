@@ -9,8 +9,9 @@ const CallbackPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(true);
 
   const query = useHashQuery();
-  const { access_token: accessToken, error: callbackError } = query as any;
+  const { access_token: accessToken, error: callbackError, error_description } = query as any;
   const { isFetching, isLoggedIn, isError, errorMessage } = useSelector(userSelector);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -20,12 +21,12 @@ const CallbackPage: React.FC = () => {
 
   useEffect(() => {
     if (callbackError || isError) {
-      navigate(`/auth/login?error_description=${query.error_description || errorMessage}`);
+      navigate(`/auth/login?error_description=${error_description || errorMessage}`);
     }
     if (isLoggedIn) {
       navigate('/dashboard/overview');
     }
-  }, [isError, isLoggedIn, callbackError, errorMessage, navigate, query.error_description]);
+  }, [isError, isLoggedIn, callbackError, errorMessage, navigate, error_description]);
 
   useEffect(() => {
     if (!isFetching) {

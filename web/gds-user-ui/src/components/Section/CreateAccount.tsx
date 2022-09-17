@@ -13,7 +13,7 @@ import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import ChakraRouterLink from 'components/ChakraRouterLink';
 import AuthLayout from 'layouts/AuthLayout';
-
+import SignupForm from 'components/Form/SignupForm';
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
   handleSignUpWithEmail: (data: any) => void;
@@ -34,18 +34,6 @@ const validationSchema = yup.object().shape({
 
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch
-  } = useForm<IFormInputs>({
-    resolver: yupResolver(validationSchema)
-  });
-  const [show, setShow] = React.useState(false);
-  const handleClick = () => setShow(!show);
-  const watchPassword = watch('password');
-
   return (
     <AuthLayout>
       <Text color={useColorModeValue('gray.600', 'white')}>
@@ -78,51 +66,10 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
       </Box>
       <Text textAlign="center">Or</Text>
       <Box bg={useColorModeValue('white', 'transparent')}>
-        <form onSubmit={handleSubmit(props.handleSignUpWithEmail)} noValidate>
-          <Stack spacing={4}>
-            <InputFormControl
-              controlId="username"
-              {...register('username')}
-              size="lg"
-              data-testid="username-field"
-              placeholder={t`Email Address`}
-              isInvalid={!!getValueByPathname(errors, 'username')}
-              formHelperText={getValueByPathname(errors, 'username')?.message}
-            />
-
-            <InputFormControl
-              controlId="password"
-              {...register('password')}
-              data-testid="password-field"
-              placeholder={t`Password`}
-              hasBtn
-              size="lg"
-              handleFn={handleClick}
-              setBtnName={show ? 'Hide' : 'Show'}
-              isInvalid={!!getValueByPathname(errors, 'password')}
-              type={show ? 'text' : 'password'}
-              formHelperText={watchPassword ? <PasswordStrength data={watchPassword} /> : null}
-            />
-            <Button
-              display="block"
-              alignSelf="center"
-              bg={'blue'}
-              color={'white'}
-              type="submit"
-              isLoading={props.isLoading}
-              _hover={{
-                bg: '#10aaed'
-              }}>
-              <Trans id="Create an Account">Create an Account</Trans>
-            </Button>
-            <Text textAlign="center">
-              <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-              <ChakraRouterLink to={'/auth/login'} color="link" _hover={{ textDecor: 'underline' }}>
-                <Trans id="Log in.">Log in.</Trans>
-              </ChakraRouterLink>
-            </Text>
-          </Stack>
-        </form>
+        <SignupForm
+          handleSignUpWithEmail={props.handleSignUpWithEmail}
+          isLoading={props.isLoading}
+        />
       </Box>
     </AuthLayout>
   );

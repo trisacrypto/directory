@@ -93,8 +93,7 @@ const FileUploader = ({ onReadFileUploaded }: FileUploaderProps) => {
                 bg: useColorModeValue('black', 'white')
               }}
               color={useColorModeValue('white', 'black')}
-              leftIcon={<Icon as={FiFile} />}
-              minWidth={150}>
+              leftIcon={<Icon as={FiFile} />}>
               <Trans id="Import File">Import File</Trans>
             </Button>
           </FileUpload>

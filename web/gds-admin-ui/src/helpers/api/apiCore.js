@@ -89,19 +89,15 @@ instance.interceptors.response.use(
             case 404:
                 message = error || 'Sorry! the data you are looking for could not be found';
                 break;
-            case 400:
-                message = error
-                break;
             case 500:
                 message = error ?? 'Something went wrong';
                 break;
             default: {
                 message =
-                    error.response && error.response.data ? error.response.data['message'] : error.message || error;
+                    error.response && error.response.data ? error.response.data['error'] : error.message || error;
             }
         }
         return Promise.reject(message);
-        // }
     }
 );
 

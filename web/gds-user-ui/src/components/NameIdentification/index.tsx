@@ -48,7 +48,7 @@ const RegistrationAuthorityFormHelperText = ({ option }: { option: string }) => 
       {registrationAuthority?.website && (
         <Text color={'#1a202c'} fontSize="sm" mt={3}>
           Website:{' '}
-          <Link color={'blue.400'} isExternal>
+          <Link color={'blue'} isExternal href={registrationAuthority?.website}>
             {registrationAuthority?.website}
           </Link>
         </Text>

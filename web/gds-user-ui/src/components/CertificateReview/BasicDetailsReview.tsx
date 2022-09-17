@@ -15,6 +15,7 @@ const BasicDetailsReview = () => {
   const currentStateValue = useSelector(getCurrentState);
 
   const basicDetail = {
+    organization_name: currentStateValue.data.organization_name,
     website: currentStateValue.data.website,
     established_on: currentStateValue.data.established_on,
     vasp_categories: currentStateValue.data.vasp_categories,

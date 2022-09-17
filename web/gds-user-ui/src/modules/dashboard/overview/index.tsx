@@ -118,10 +118,14 @@ const Overview: React.FC = () => {
                 </TabList>
                 <TabPanels>
                   <TabPanel p={0}>
-                    <Metrics data={result?.mainnet} type="Testnet" />
+                    <Metrics data={result?.mainnet} type="Mainnet" />
+
+                    <TrisaDetail data={result?.mainnet?.member_details} type={'MainNet'} />
                   </TabPanel>
                   <TabPanel p={0}>
-                    <Metrics data={result?.testnet} type="Mainnet" />
+                    <Metrics data={result?.testnet} type="Testnet" />
+
+                    <TrisaDetail data={result?.testnet?.member_details} type={'TestNet'} />
                   </TabPanel>
                 </TabPanels>
               </Tabs>
@@ -129,7 +133,6 @@ const Overview: React.FC = () => {
           </Box>
           {/* </Sentry.ErrorBoundary> */}
           <OrganizationalDetail data={stepperData} />
-          <TrisaDetail data={trisaData} />
           <TrisaImplementation data={trisaData} />
         </>
       )}

@@ -115,6 +115,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             w={'100%'}
             display="flex"
             alignItems="center"
+            isExternal
             color="#8391a2"
             role="group"
             as={Link}>

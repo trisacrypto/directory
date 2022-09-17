@@ -48,4 +48,4 @@ const Footer = (): React.ReactElement => {
   );
 };
 
-export default Footer;
+export default React.memo(Footer);

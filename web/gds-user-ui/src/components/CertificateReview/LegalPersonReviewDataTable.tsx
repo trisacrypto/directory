@@ -4,11 +4,9 @@ import { addressType } from 'constants/address';
 import { COUNTRIES } from 'constants/countries';
 import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
-import React, { useEffect, Suspense } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
+import React from 'react';
 import { renderAddress } from 'utils/address-utils';
 import { t } from '@lingui/macro';
-import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import * as Sentry from '@sentry/react';
 interface LegalReviewProps {
   data?: any;
@@ -52,66 +50,64 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                 </Trans>
               </Td>
               <Td>
-                <Tbody>
-                  <Tr>
+                <Table>
+                  <Tbody>
                     {data.name?.name_identifiers?.map((nameIdentifier: any, index: number) => {
                       return (
-                        <React.Fragment key={index}>
-                          <Td paddingLeft={'0 !important'} border="none">
-                            {nameIdentifier.legal_person_name || 'N/A'}
+                        <Tr key={index}>
+                          <Td paddingLeft={'0 !important'} border="none" p="1px !important">
+                            {nameIdentifier?.legal_person_name || 'N/A'}
                           </Td>
-                          {nameIdentifier.legal_person_name_identifier_type ? (
-                            <Td paddingLeft={0} border="none">
+                          {nameIdentifier?.legal_person_name_identifier_type ? (
+                            <Td paddingLeft={0} border="none" p="1px !important">
                               (
                               {getNameIdentiferTypeLabel(
-                                nameIdentifier.legal_person_name_identifier_type
+                                nameIdentifier?.legal_person_name_identifier_type
                               )}
                               )
                             </Td>
                           ) : null}
-                        </React.Fragment>
+                        </Tr>
                       );
                     })}
-                  </Tr>
-                </Tbody>
-                <>
-                  {data.name?.local_name_identifiers?.map((nameIdentifier: any, index: number) => {
-                    return (
-                      <React.Fragment key={index}>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          {nameIdentifier.legal_person_name}
-                        </Td>
-                        <Td paddingLeft={0} pt={0} border="none">
-                          (
-                          {getNameIdentiferTypeLabel(
-                            nameIdentifier.legal_person_name_identifier_type
-                          )}
-                          )
-                        </Td>
-                      </React.Fragment>
-                    );
-                  })}
-                </>
-                <>
-                  {data.name?.phonetic_name_identifiers?.map(
-                    (nameIdentifier: any, index: number) => {
-                      return (
-                        <React.Fragment key={index}>
-                          <Td paddingLeft={0} pt={0} border="none">
-                            {nameIdentifier.legal_person_name}
-                          </Td>
-                          <Td paddingLeft={0} pt={0} border="none">
-                            (
-                            {getNameIdentiferTypeLabel(
-                              nameIdentifier.legal_person_name_identifier_type
-                            )}
-                            )
-                          </Td>
-                        </React.Fragment>
-                      );
-                    }
-                  )}
-                </>
+                    {data.name?.local_name_identifiers?.map(
+                      (nameIdentifier: any, index: number) => {
+                        return (
+                          <Tr key={index}>
+                            <Td paddingLeft={0} pt={0} border="none" p="1px !important">
+                              {nameIdentifier?.legal_person_name}
+                            </Td>
+                            <Td paddingLeft={0} pt={0} border="none" p="1px !important">
+                              (
+                              {getNameIdentiferTypeLabel(
+                                nameIdentifier?.legal_person_name_identifier_type
+                              )}
+                              )
+                            </Td>
+                          </Tr>
+                        );
+                      }
+                    )}
+                    {data.name?.phonetic_name_identifiers?.map(
+                      (nameIdentifier: any, index: number) => {
+                        return (
+                          <Tr key={index}>
+                            <Td paddingLeft={0} pt={0} border="none" p="1px !important">
+                              {nameIdentifier?.legal_person_name}
+                            </Td>
+                            <Td paddingLeft={0} pt={0} border="none" p="1px !important">
+                              (
+                              {getNameIdentiferTypeLabel(
+                                nameIdentifier?.legal_person_name_identifier_type
+                              )}
+                              )
+                            </Td>
+                          </Tr>
+                        );
+                      }
+                    )}
+                  </Tbody>
+                </Table>
               </Td>
             </Tr>
 

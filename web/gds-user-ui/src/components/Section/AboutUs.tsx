@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Container,
   SimpleGrid,
@@ -14,7 +15,7 @@ import trisaNetworkSvg from 'assets/trisa_network.svg';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
 
-export default function AboutTrisaSection() {
+const AboutTrisaSection: React.FC = () => {
   return (
     <Flex>
       <Container maxW={'5xl'} py={12} fontFamily={colors.font} id={'about'}>
@@ -71,4 +72,5 @@ export default function AboutTrisaSection() {
       </Container>
     </Flex>
   );
-}
+};
+export default React.memo(AboutTrisaSection);

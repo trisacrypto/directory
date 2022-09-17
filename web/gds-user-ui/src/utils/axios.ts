@@ -11,6 +11,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.defaults.withCredentials = true;
 // intercept request and check if token has expired or not
+
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -42,12 +43,13 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         }
       } else {
+        console.log('[axios.interceptors.response] status', error?.response?.status);
         clearCookies();
         switch (error.response.status) {
-          case '401':
+          case 401:
             window.location.href = `/auth/login?q=token_expired`;
             break;
-          case '403':
+          case 403:
             window.location.href = `/auth/login?q=unauthorized`;
             break;
           default:
