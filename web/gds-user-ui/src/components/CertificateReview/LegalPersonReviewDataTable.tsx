@@ -1,4 +1,4 @@
-import { Stack, Table, Tbody, Tr, Td, Tag, Text } from '@chakra-ui/react';
+import { Stack, Table, Tbody, Tr, Td, Tag, Text, useColorModeValue } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { addressType } from 'constants/address';
 import { COUNTRIES } from 'constants/countries';
@@ -39,7 +39,11 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               }
             }}>
             <Tr>
-              <Td fontSize={'1rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
+              <Td
+                fontSize={'1rem'}
+                fontWeight="bold"
+                colSpan={3}
+                background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}>
                 <Trans id="Name Identifiers">Name Identifiers</Trans>
               </Td>
             </Tr>
@@ -156,7 +160,12 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               <Td></Td>
             </Tr>
             <Tr>
-              <Td fontSize={'1rem'} pt={'2rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
+              <Td
+                fontSize={'1rem'}
+                pt={'2rem'}
+                fontWeight="bold"
+                colSpan={3}
+                background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}>
                 <Text mb={1}>
                   <Trans id="National Identification">National Identification</Trans>
                 </Text>

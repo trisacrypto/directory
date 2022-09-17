@@ -14,7 +14,6 @@ import {
   useDisclosure,
   DrawerCloseButton,
   Button,
-  useColorMode,
   VStack
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
@@ -28,14 +27,12 @@ import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 import { MdModeNight, MdOutlineWbSunny } from 'react-icons/md';
 import useAuth from 'hooks/useAuth';
-
+import ToggleColorMode from 'components/ToggleColorMode';
 const LandingHeader = (props: FlexProps): JSX.Element => {
-  const [show, setShow] = React.useState(false);
+  const [show] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [locale] = useLanguageProvider();
-  const { colorMode, toggleColorMode } = useColorMode();
-  const isLight = colorMode === 'light';
   const { isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated();
 
@@ -70,6 +67,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
+              <ToggleColorMode />
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>

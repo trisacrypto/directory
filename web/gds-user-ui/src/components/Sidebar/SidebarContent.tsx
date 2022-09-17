@@ -104,6 +104,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
               as={MdContactSupport}
             />
             <Text
+              color="#8391a2"
               _groupHover={{
                 color: 'white'
               }}>
@@ -122,21 +123,20 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             <Icon
               mr="4"
               fontSize="16"
+              color="#8391a2"
               _groupHover={{
                 color: 'white'
               }}
               as={IoLogoSlack}
             />
             <Text
+              color="#8391a2"
               _groupHover={{
                 color: 'white'
               }}>
               Slack
             </Text>
           </StyledNavItem>
-          {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
-          Slack
-        </NavItem> */}
         </List>
       </VStack>
     </Box>

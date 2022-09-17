@@ -9,21 +9,18 @@ interface StatCardProps {
 const StatCard = ({ title, number }: StatCardProps) => {
   return (
     <Box
-      bg={'white'}
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
       textAlign={'center'}
-      // minWidth={250}
-      // height={170}
       fontSize={18}
       p={5}
       mt={10}
       px={5}>
       <Stack>
-        <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
+        <Text as="h1" textAlign={'center'} fontSize={20} fontWeight={'bold'}>
           {title}
-        </chakra.h1>
+        </Text>
         <Text fontSize={40} pt={3} fontWeight={'bold'}>
           {number}
         </Text>

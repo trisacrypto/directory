@@ -62,10 +62,8 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           p={4}
           my={5}
           px={7}
-          bg={'white'}
-          // minHeight={divHeight}
+          // bg={'white'}
           id={'org'}
-          // boxSize={'border-box'}
           ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>

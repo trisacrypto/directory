@@ -11,7 +11,6 @@ function CertificateReviewLayout({ children }: CertificateReviewLayoutProps) {
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
-      bg={'white'}
       fontSize={18}
       p={5}
       px={5}>

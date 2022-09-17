@@ -9,7 +9,7 @@ interface NetworkStatusProps {
 const NetworkStatus = (props: NetworkStatusProps) => {
   const { isOnline } = props;
   return (
-    <Stack minHeight={82} bg={'white'} p={5} border="1px solid #C4C4C4">
+    <Stack minHeight={82} p={5} border="1px solid #C4C4C4">
       <Stack direction={'row'} justifyContent="space-between" alignItems="center">
         <Text fontWeight={'bold'}>
           <Trans id="Network Status">Network Status</Trans>

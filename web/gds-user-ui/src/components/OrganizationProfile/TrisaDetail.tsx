@@ -34,7 +34,6 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
     <Stack
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      bg={'white'}
       color={'#252733'}
       fontSize={18}
       p={4}

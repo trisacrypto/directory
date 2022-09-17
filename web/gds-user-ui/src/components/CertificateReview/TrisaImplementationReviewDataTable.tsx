@@ -1,4 +1,4 @@
-import { Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
+import { Stack, Table, Tbody, Tr, Td, Text, useColorModeValue } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import React, { useEffect } from 'react';
 import { useSelector, RootStateOrAny } from 'react-redux';
@@ -32,7 +32,11 @@ function TrisaImplementationReviewDataTable({ mainnet, testnet }: TrisaImplement
             }
           }}>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td
+              colSpan={2}
+              background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+              fontWeight="bold"
+              pl={'1rem !important'}>
               <Trans id="TestNet">TestNet</Trans>
             </Td>
           </Tr>
@@ -52,7 +56,11 @@ function TrisaImplementationReviewDataTable({ mainnet, testnet }: TrisaImplement
             <Td colSpan={2}></Td>
           </Tr>
           <Tr>
-            <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td
+              colSpan={2}
+              background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+              fontWeight="bold"
+              pl={'1rem !important'}>
               <Trans id="MainNet">MainNet</Trans>
             </Td>
           </Tr>

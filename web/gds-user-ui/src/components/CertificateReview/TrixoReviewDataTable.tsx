@@ -1,10 +1,17 @@
-import { Stack, Table, Tbody, Tr, Td, Tag, TagLabel, Text } from '@chakra-ui/react';
+import {
+  Stack,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Tag,
+  TagLabel,
+  Text,
+  useColorModeValue
+} from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { COUNTRIES } from 'constants/countries';
-import React, { useEffect, Suspense } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
 import getColorScheme from 'utils/getColorScheme';
-import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { currencyFormatter } from 'utils/utils';
 import { t } from '@lingui/macro';
 interface TrixoReviewProps {
@@ -86,7 +93,11 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={3} fontWeight="bold" background="#E5EDF1" pl={'1rem !important'}>
+            <Td
+              colSpan={3}
+              fontWeight="bold"
+              background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+              pl={'1rem !important'}>
               <Trans id="Customer Due Diligence (CDD) & Travel Rule Policies">
                 Customer Due Diligence (CDD) & Travel Rule Policies
               </Trans>
@@ -223,7 +234,11 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
             <Td></Td>
           </Tr>
           <Tr>
-            <Td colSpan={3} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+            <Td
+              colSpan={3}
+              background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+              fontWeight="bold"
+              pl={'1rem !important'}>
               <Trans id="Data Protection Policies">Data Protection Policies</Trans>
             </Td>
           </Tr>
