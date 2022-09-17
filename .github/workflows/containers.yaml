@@ -84,7 +84,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -94,7 +94,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -169,7 +169,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -179,7 +179,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -264,7 +264,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -274,7 +274,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -347,7 +347,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -357,7 +357,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -430,7 +430,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -440,7 +440,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -514,7 +514,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -524,7 +524,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -590,7 +590,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -600,7 +600,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
 
@@ -666,7 +666,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: SUCCESS
           color: good
 
@@ -676,6 +676,6 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1.1.2
         with:
-          channel: gds-github
+          channel: gds-containers
           status: FAILED
           color: danger
