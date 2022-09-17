@@ -2,16 +2,13 @@ import { extendTheme } from '@chakra-ui/react';
 import colors from './colors';
 import fontSizes from './fontSizes';
 import breakpoints from './breakpoints';
-import Button from './components/Button';
-import Input from './components/Input';
-import Select from './components/Select';
-import Heading from './components/Heading';
+import * as overridenComponents from './components';
 import { mode, StyleFunctionProps } from '@chakra-ui/theme-tools';
 
 const config = {
   cssVarPrefix: 'ck',
   initialColorMode: 'light',
-  useSystemColorMode: false
+  useSystemColorMode: true
 };
 
 const theme = extendTheme({
@@ -20,10 +17,7 @@ const theme = extendTheme({
   breakpoints,
   config,
   components: {
-    Button,
-    Input,
-    Select,
-    Heading
+    ...overridenComponents
   },
   styles: {
     global: (props: StyleFunctionProps) => ({

@@ -9,8 +9,9 @@ type SidebarProps = {
 const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  // bg={useColorModeValue('gray.100', 'gray.900')}
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
+    <Box minH="100vh">
       <SidebarContent
         onClose={() => onClose}
         display={{ base: 'none', md: 'block' }}
@@ -29,13 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </DrawerContent>
       </Drawer>
       <MobileNav onOpen={onOpen} />
-      <Box
-        ml={{ base: 0, md: 274 }}
-        pt={10}
-        px="10"
-        height="100%"
-        background="#F7F8FC"
-        overflow="scroll">
+      <Box ml={{ base: 0, md: 274 }} pt={10} px="10" height="100%" overflow="scroll">
         {children}
       </Box>
     </Box>

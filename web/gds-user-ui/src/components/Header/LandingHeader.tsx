@@ -25,7 +25,7 @@ import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 import useAuth from 'hooks/useAuth';
-
+import ToggleColorMode from 'components/ToggleColorMode';
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
@@ -65,6 +65,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
+              <ToggleColorMode />
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>
