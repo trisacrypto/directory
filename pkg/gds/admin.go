@@ -24,10 +24,10 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -1090,7 +1090,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Validate that the VASP record is still correct after the changes.
 	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
 	// ensure that certificate requests are not saved when the VASP record is not valid.
-	if err = vasp.Validate(true); err != nil {
+	if err = models.ValidateVASP(vasp, true); err != nil {
 		log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
 		return
@@ -1502,7 +1502,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	}
 
 	// New VASP record must be valid
-	if err = vasp.Validate(true); err != nil {
+	if err = models.ValidateVASP(vasp, true); err != nil {
 		log.Warn().Err(err).Msg("invalid VASP record after update")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
 		return
@@ -1567,7 +1567,7 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 	}
 
 	// New VASP record must be valid
-	if err = vasp.Validate(true); err != nil {
+	if err = models.ValidateVASP(vasp, true); err != nil {
 		log.Warn().Err(err).Msg("invalid VASP record after update")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
 		return

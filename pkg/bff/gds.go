@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
@@ -255,7 +257,9 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// Mark the form as started
+	// Mark the form as started, the BFF relies on this state so the frontend should
+	// capture the updated form returned from this endpoint to avoid overwriting the
+	// state metadata.
 	// NOTE: If an empty form was passed in, the form will not be marked as started.
 	if form.State != nil && form.State.Started == "" {
 		form.State.Started = time.Now().Format(time.RFC3339)
@@ -269,8 +273,13 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
-	// If successful respond with 204: No Content so that the front-end can continue.
-	c.Status(http.StatusNoContent)
+	if org.Registration.State == nil || org.Registration.State.Started == "" {
+		// If an empty form was passed in, return a 204 No Content response
+		c.Status(http.StatusNoContent)
+	} else {
+		// Otherwise, return the form in a 200 OK response
+		c.JSON(http.StatusOK, org.Registration)
+	}
 }
 
 // SubmitRegistration makes a request on behalf of the user to either the TestNet or the
@@ -290,6 +299,22 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// NOTE: this method will handle the error logging and response.
 	var org *records.Organization
 	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Fetch the user from the context
+	var user *management.User
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("submit registration requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user info"))
+		return
+	}
+
+	// Load the app metadata for the user for updating
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
 
@@ -371,6 +396,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		Status:              rep.Status.String(),
 		Message:             rep.Message,
 		PKCS12Password:      rep.Pkcs12Password,
+		RefreshToken:        true,
 	}
 
 	if rep.Error != nil && rep.Error.Code != 0 {
@@ -399,14 +425,21 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	switch network {
 	case config.TestNet:
 		org.Testnet = directoryRecord
+		appdata.VASPs.TestNet = rep.Id
 	case config.MainNet:
 		org.Mainnet = directoryRecord
+		appdata.VASPs.MainNet = rep.Id
 	}
 
 	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return
+	}
+
+	// Commit the user metadata updates to auth0
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
 	}
 
 	c.JSON(http.StatusOK, out)

@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,25 +12,28 @@ import (
 
 // Test that the registration form marshals and unmarshals correctly to and from JSON
 func TestMarshalRegistrationForm(t *testing.T) {
-	// Empty form should be marshaled correctly and contain default values
-	form := &models.RegistrationForm{}
+	// Load the JSON fixture
+	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
+	require.NoError(t, err, "error reading default registration form fixture")
+
+	// Default form should be marshaled correctly
+	form := models.NewRegisterForm()
 	data, err := json.Marshal(form)
-	require.NoError(t, err, "error marshaling empty registration form to JSON")
-	require.Greater(t, len(string(data)), 2, "missing fields should be populated in marshaled JSON")
+	require.NoError(t, err, "error marshaling registration form to JSON")
+	require.JSONEq(t, string(fixtureData), string(data), "default registration form does not match fixture")
 
-	// Empty form should be unmarshaled correctly
-	require.NoError(t, json.Unmarshal(data, form), "error unmarshaling empty registration form from JSON")
-	require.True(t, proto.Equal(&models.RegistrationForm{}, form), "empty registration form should be unmarshaled correctly")
+	// Default form should be unmarshaled correctly
+	result := &models.RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
 
-	// Form with data should be marshaled correctly
-	form = &models.RegistrationForm{
-		Website: "https://alice.example.com",
-	}
+	// Modified form should be marshaled correctly
+	form.Contacts.Administrative.Email = "admin@example.com"
 	data, err = json.Marshal(form)
 	require.NoError(t, err, "error marshaling registration form to JSON")
 
-	// Form with data should be unmarshaled correctly
-	result := &models.RegistrationForm{}
+	// Modified form should be unmarshaled correctly
+	result = &models.RegistrationForm{}
 	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
 	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
 }

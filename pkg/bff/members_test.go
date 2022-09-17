@@ -178,12 +178,10 @@ func (s *bffTestSuite) TestOverview() {
 	require.NoError(err, "could not get overview")
 	require.Equal(expected, reply, "overview reply did not match")
 
-	// Test with both valid responses, one endpoint returns VASP details
+	// Test with valid responses from both endpoints
 	firstListed := time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
 	verifiedOn := time.Now().AddDate(0, 0, -2).Format(time.RFC3339)
 	lastUpdated := time.Now().Format(time.RFC3339)
-	claims.VASPs["mainnet"] = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
-	require.NoError(s.SetClientCredentials(claims), "could not create token with VASP ID")
 	s.mainnet.gds.OnStatus = func(ctx context.Context, in *gds.HealthCheck) (*gds.ServiceState, error) {
 		return &gds.ServiceState{
 			Status: gds.ServiceState_HEALTHY,
@@ -208,6 +206,14 @@ func (s *bffTestSuite) TestOverview() {
 	expected.MainNet.Vasps = 20
 	expected.MainNet.CertificatesIssued = 23
 	expected.MainNet.NewMembers = 5
+	expected.Error.MainNet = ""
+	reply, err = s.client.Overview(context.TODO())
+	require.NoError(err, "could not get overview")
+	require.Equal(expected, reply, "overview reply did not match")
+
+	// Test that one of the endpoints returns VASP details if the ID is in the claims
+	claims.VASPs["mainnet"] = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with VASP ID")
 	expected.MainNet.MemberDetails = api.MemberDetails{
 		ID:          claims.VASPs["mainnet"],
 		Status:      pb.VerificationState_SUBMITTED.String(),
@@ -216,7 +222,6 @@ func (s *bffTestSuite) TestOverview() {
 		VerifiedOn:  verifiedOn,
 		LastUpdated: lastUpdated,
 	}
-	expected.Error.MainNet = ""
 	reply, err = s.client.Overview(context.TODO())
 	require.NoError(err, "could not get overview")
 	require.Equal(expected, reply, "overview reply did not match")

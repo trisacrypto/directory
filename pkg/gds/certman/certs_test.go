@@ -16,12 +16,12 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/fixtures"
-	"github.com/trisacrypto/directory/pkg/gds/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
-	"github.com/trisacrypto/directory/pkg/gds/store"
-	trtlstore "github.com/trisacrypto/directory/pkg/gds/store/trtl"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
+	"github.com/trisacrypto/directory/pkg/store"
+	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -223,6 +223,9 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
+	// Run the loop again to ensure that emails are not resent to contacts
+	s.certman.HandleCertificateReissuance()
+
 	v, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 
@@ -262,6 +265,9 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	// the seven day cert reissuance reminder to echoVASP.
 	s.updateVaspIdentityCert(charlieVASP, 6)
 	callTime := time.Now()
+	s.certman.HandleCertificateReissuance()
+
+	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
 	v, err := s.db.RetrieveVASP(charlieVASP.Id)

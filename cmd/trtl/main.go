@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/rotationalio/honu"
 	opts "github.com/rotationalio/honu/options"
@@ -114,8 +115,8 @@ func main() {
 			Action:    dbGet,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:    "b64encode",
-					Aliases: []string{"b"},
+					Name:    "b64",
+					Aliases: []string{"b", "b64decode"},
 					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
 				&cli.BoolFlag{
@@ -139,9 +140,10 @@ func main() {
 			Action:   dbPut,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
-					Name:    "key",
-					Aliases: []string{"k"},
-					Usage:   "specify the key as a string",
+					Name:     "key",
+					Aliases:  []string{"k"},
+					Usage:    "specify the key as a string",
+					Required: true,
 				},
 				&cli.StringFlag{
 					Name:    "namespace",
@@ -157,6 +159,11 @@ func main() {
 					Name:    "meta",
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
+				},
+				&cli.BoolFlag{
+					Name:    "b64",
+					Aliases: []string{"b", "b64decode"},
+					Usage:   "specify the key and value as base64 encoded data which must be decoded",
 				},
 			},
 		},
@@ -181,6 +188,11 @@ func main() {
 					Name:    "meta",
 					Aliases: []string{"m"},
 					Usage:   "return the metadata along with the value",
+				},
+				&cli.BoolFlag{
+					Name:    "b64",
+					Aliases: []string{"b", "b64decode"},
+					Usage:   "specify the keys as base64 encoded values which must be decoded",
 				},
 			},
 		},
@@ -207,8 +219,8 @@ func main() {
 					Usage:   "specify a key to seek to before iterating (optional)",
 				},
 				&cli.BoolFlag{
-					Name:    "b64encode",
-					Aliases: []string{"b"},
+					Name:    "b64",
+					Aliases: []string{"b", "b64decode"},
 					Usage:   "specify the prefix/seek key as base64 encoded values which must be decoded",
 				},
 			},
@@ -355,6 +367,14 @@ func main() {
 					Usage:   "show changes that would occur, does not modify database",
 				},
 			},
+		},
+		{
+			Name:      "uuid-key",
+			Aliases:   []string{"uuid"},
+			Usage:     "convert a uuid into base64 encoded bytes",
+			ArgsUsage: "uuid [uuid ...]",
+			Category:  "utils",
+			Action:    uuidKey,
 		},
 		{
 			Name:      "profile",
@@ -532,7 +552,7 @@ func initPeersClient(c *cli.Context) (err error) {
 
 // dbGet prints values from the trtl database given a set of keys.
 func dbGet(c *cli.Context) (err error) {
-	b64decode := c.Bool("b64decode")
+	b64decode := c.Bool("b64")
 	ctx, cancel := profile.Context()
 	defer cancel()
 
@@ -566,28 +586,42 @@ func dbGet(c *cli.Context) (err error) {
 
 // dbPut puts a value to to a key in the trtl database
 func dbPut(c *cli.Context) (err error) {
+	b64decode := c.Bool("b64")
+
 	// Create the request context
 	ctx, cancel := profile.Context()
 	defer cancel()
 
-	// Execute the Put request
-	var resp *pb.PutReply
 	req := &pb.PutRequest{
-		Key:       []byte(c.String("key")),
-		Value:     []byte(c.String("value")),
 		Namespace: c.String("namespace"),
 		Options: &pb.Options{
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
+
+	// Parse the key and the value into the request
+	key := c.String("key")
+	value := c.String("value")
+	if req.Key, err = wire.DecodeKey(key, b64decode); err != nil {
+		return cli.Exit(fmt.Errorf("could not encode key: %s", err), 1)
+	}
+
+	if req.Value, err = wire.DecodeKey(value, b64decode); err != nil {
+		return cli.Exit(fmt.Errorf("could not encode value: %s", err), 1)
+	}
+
+	// Execute the Put request
+	var resp *pb.PutReply
 	if resp, err = dbClient.Put(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
+
 	if resp.Success {
 		fmt.Printf("successfully put value %s to key %s\n", req.Value, req.Key)
 	} else {
 		fmt.Printf("could not put value %s to key %s\n", req.Value, req.Key)
 	}
+
 	if resp.Meta != nil {
 		// Print the response
 		if err = printJSON(resp); err != nil {
@@ -603,23 +637,29 @@ func dbDelete(c *cli.Context) (err error) {
 	ctx, cancel := profile.Context()
 	defer cancel()
 
-	// Execute the Put request
-	var resp *pb.DeleteReply
 	req := &pb.DeleteRequest{
-		Key:       []byte(c.String("key")),
 		Namespace: c.String("namespace"),
 		Options: &pb.Options{
 			ReturnMeta: c.Bool("meta"),
 		},
 	}
+
+	if req.Key, err = wire.DecodeKey(c.String("key"), c.Bool("b64")); err != nil {
+		return cli.Exit(fmt.Errorf("could not decode key: %s", err), 1)
+	}
+
+	// Execute the Delete request
+	var resp *pb.DeleteReply
 	if resp, err = dbClient.Delete(ctx, req); err != nil {
 		return cli.Exit(err, 1)
 	}
+
 	if resp.Success {
 		fmt.Printf("successfully deleted key %s\n", req.Key)
 	} else {
 		fmt.Printf("could not delete key %s\n", req.Key)
 	}
+
 	if resp.Meta != nil {
 		// Print the protocol buffer response as JSON
 		if err = printJSON(resp); err != nil {
@@ -644,7 +684,7 @@ func dbList(c *cli.Context) (err error) {
 		},
 	}
 
-	b64decode := c.Bool("b64decode")
+	b64decode := c.Bool("b64")
 	if prefix := c.String("prefix"); prefix != "" {
 		if req.Prefix, err = wire.DecodeKey(prefix, b64decode); err != nil {
 			return cli.Exit(fmt.Errorf("could not decode prefix: %s", err), 1)
@@ -776,6 +816,21 @@ func gossip(c *cli.Context) (err error) {
 
 func gossipMigrate(c *cli.Context) (err error) {
 	return errors.New("honu object migration required")
+}
+
+//===========================================================================
+// Utility Functions
+//===========================================================================
+
+func uuidKey(c *cli.Context) (err error) {
+	for _, uuids := range c.Args().Slice() {
+		var uu uuid.UUID
+		if uu, err = uuid.Parse(uuids); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Println(wire.EncodeKey(uu[:], true))
+	}
+	return nil
 }
 
 //===========================================================================

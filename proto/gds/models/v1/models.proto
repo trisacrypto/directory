@@ -1,7 +1,7 @@
 syntax="proto3";
 
 package gds.models.v1;
-option go_package = "github.com/trisacrypto/directory/pkg/gds/models/v1;models";
+option go_package = "github.com/trisacrypto/directory/pkg/models/v1;models";
 
 import "trisa/gds/models/v1beta1/ca.proto";
 import "trisa/gds/models/v1beta1/models.proto";

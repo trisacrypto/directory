@@ -8,17 +8,14 @@ import {
   Link,
   Container,
   Stack,
-  VStack,
   Drawer,
   DrawerOverlay,
   DrawerContent,
-  DrawerHeader,
   useDisclosure,
   DrawerCloseButton,
-  Text,
   Button,
-  IconButton,
-  useColorMode
+  useColorMode,
+  VStack
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -31,6 +28,7 @@ import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 import { MdModeNight, MdOutlineWbSunny } from 'react-icons/md';
 import useAuth from 'hooks/useAuth';
+
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show, setShow] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
@@ -72,12 +70,6 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               alignItems={'center'}
               display={{ base: 'none', sm: 'flex' }}
               direction={['column', 'row']}>
-              {/* <IconButton
-                aria-label={`swith to ${isLight ? 'light' : 'dark'}`}
-                icon={isLight ? <MdOutlineWbSunny /> : <MdModeNight />}
-                variant="outline"
-                onClick={toggleColorMode}
-              /> */}
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>

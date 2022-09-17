@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
-	ldbstore "github.com/trisacrypto/directory/pkg/gds/store/leveldb"
+	ldbstore "github.com/trisacrypto/directory/pkg/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
 )

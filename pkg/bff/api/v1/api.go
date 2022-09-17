@@ -22,7 +22,7 @@ type BFFClient interface {
 
 	// Authenticated Endpoints
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
-	SaveRegistrationForm(context.Context, *models.RegistrationForm) error
+	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 	Overview(context.Context) (*OverviewReply, error)
@@ -105,6 +105,7 @@ type RegisterReply struct {
 	Status              string                 `json:"status"`
 	Message             string                 `json:"message"`
 	PKCS12Password      string                 `json:"pkcs12password"`
+	RefreshToken        bool                   `json:"refresh_token,omitempty"`
 }
 
 // RegistrationStatus is returned on registration status requests. This will contain
