@@ -28,6 +28,10 @@ import (
 )
 
 func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (cm *CertificateManager, err error) {
+	if !conf.Enabled {
+		return nil, errors.New("certificate manager is not enabled")
+	}
+
 	cm = &CertificateManager{
 		conf:   conf,
 		db:     db,
@@ -77,6 +81,10 @@ type CertificateManager struct {
 // graceful shutdown, the caller must invoke the Stop method to signal the CertManager
 // routine to stop and block on the waitgroup if provided.
 func (c *CertificateManager) Run(wg *sync.WaitGroup) error {
+	if !c.conf.Enabled {
+		return errors.New("certificate manager is not enabled")
+	}
+
 	if c.stop != nil {
 		return errors.New("certificate manager is already running")
 	}
