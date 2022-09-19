@@ -113,8 +113,8 @@ msgstr ""
 msgid "A physical verification check in the form of a phone call"
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:85
-#: src/components/Header/LandingHeader.tsx:133
+#: src/components/Header/LandingHeader.tsx:72
+#: src/components/Header/LandingHeader.tsx:109
 #: src/components/Section/AboutUs.tsx:30
 msgid "About TRISA"
 msgstr ""
@@ -630,8 +630,8 @@ msgstr ""
 msgid "Directory Lookup"
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:88
-#: src/components/Header/LandingHeader.tsx:136
+#: src/components/Header/LandingHeader.tsx:75
+#: src/components/Header/LandingHeader.tsx:112
 #: src/components/Navbar/Landing/MobileNav.tsx:73
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
@@ -1004,6 +1004,10 @@ msgstr ""
 msgid "Issue Date:"
 msgstr ""
 
+#: src/components/Maintenance/index.tsx:28
+msgid "Join"
+msgstr ""
+
 #: src/components/Section/JoinUs.tsx:110
 msgid "Join Today"
 msgstr ""
@@ -1098,8 +1102,8 @@ msgstr ""
 msgid "Log into your TRISA account."
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:94
-#: src/components/Header/LandingHeader.tsx:140
+#: src/components/Header/LandingHeader.tsx:81
+#: src/components/Header/LandingHeader.tsx:115
 msgid "Login"
 msgstr ""
 
@@ -1876,6 +1880,10 @@ msgstr ""
 msgid "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
 msgstr ""
 
+#: src/components/Maintenance/index.tsx:34
+msgid "TRISA's Slack channel"
+msgstr ""
+
 #: src/components/Section/IntegrateAndComply.tsx:151
 msgid "TRISA’s Github repo"
 msgstr ""
@@ -1974,6 +1982,10 @@ msgstr ""
 
 #: src/components/NetworkAnnouncements/index.tsx:39
 msgid "The GDS will be undergoing routine maintenance on Apr 7."
+msgstr ""
+
+#: src/components/Maintenance/index.tsx:18
+msgid "The TRISA Global Directory Service (GDS) is temporarily undergoing maintenance. Please try again later."
 msgstr ""
 
 #: src/components/Section/AboutUs.tsx:37
@@ -2124,6 +2136,10 @@ msgstr ""
 msgid "Welcome to TRISA’s network of Certified VASPs."
 msgstr ""
 
+#: src/components/Maintenance/index.tsx:15
+msgid "We’ll be back soon."
+msgstr ""
+
 #: src/components/Section/IntegrateAndComply.tsx:186
 #: src/components/Section/VaspVerification.tsx:192
 msgid "What is IVMS101?"
@@ -2210,8 +2226,7 @@ msgstr ""
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr ""
 
-#: src/components/Header/LandingHeader.tsx:100
-#: src/components/Header/LandingHeader.tsx:144
+#: src/components/Header/LandingHeader.tsx:87
 msgid "Your dashboard"
 msgstr ""
 
@@ -2307,6 +2322,10 @@ msgstr ""
 
 #: src/components/Footer/LandingFooter.tsx:22
 msgid "the TRISA architecture"
+msgstr ""
+
+#: src/components/Maintenance/index.tsx:36
+msgid "to receive maintenance and outage notifications. If you have an immediate concern, please email support@rotational.io."
 msgstr ""
 
 #: src/components/PasswordStrength/index.tsx:120

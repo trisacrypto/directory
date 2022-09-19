@@ -20,10 +20,12 @@ const Maintenance: React.FC = () => {
             try again later.
           </Trans>
         </Text>
+        <Stack alignItems={'center'} mx={'auto'}>
+          <Image src={MaintenanceSVG} width={'50%'} pt={8} />
+        </Stack>
 
-        <Image src={MaintenanceSVG} width={'50%'} textAlign={'center'} mx={'auto'} pt={8} />
         <Text pt={'5px'}>
-          Join{' '}
+          <Trans id="Join">Join</Trans>{' '}
           <Link
             isExternal
             textDecoration={'underline'}
@@ -31,8 +33,10 @@ const Maintenance: React.FC = () => {
             href="https://trisa-workspace.slack.com/">
             <Trans id="TRISA's Slack channel">TRISA's Slack channel</Trans>
           </Link>{' '}
-          to receive maintenance and outage notifications. If you have an immediate concern, please
-          email support@rotational.io.
+          <Trans id="to receive maintenance and outage notifications. If you have an immediate concern, please email support@rotational.io.">
+            to receive maintenance and outage notifications. If you have an immediate concern,
+            please email support@rotational.io.
+          </Trans>
         </Text>
       </Stack>
     </Stack>

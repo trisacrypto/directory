@@ -4,9 +4,7 @@ import PrivateOutlet from 'application/routes/PrivateOutlet';
 import LandingOutlet from 'application/routes/LandingOutlet';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
-import VerifyPage from 'modules/verify';
 import appRoutes from 'application/routes/routes';
-import { isMaintenanceMode } from 'application/config';
 const AppRouter: React.FC = () => {
   const navigate = useNavigate();
   const getLandingRoutes = () => {
@@ -28,12 +26,6 @@ const AppRouter: React.FC = () => {
       }
     });
   };
-  // check if page is in maintenance mode at render time
-  useEffect(() => {
-    if (isMaintenanceMode()) {
-      navigate('/maintenance');
-    }
-  }, []);
 
   // get current route from pathname
   const currentRoute = window.location.pathname.split('/')[1];
