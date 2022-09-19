@@ -13,9 +13,7 @@ import {
   DrawerContent,
   useDisclosure,
   DrawerCloseButton,
-  Button,
-  useColorMode,
-  VStack
+  Button
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -26,16 +24,13 @@ import LanguagesDropdown from 'components/LanguagesDropdown';
 import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
-import { MdModeNight, MdOutlineWbSunny } from 'react-icons/md';
 import useAuth from 'hooks/useAuth';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
-  const [show, setShow] = React.useState(false);
+  const [show] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [locale] = useLanguageProvider();
-  const { colorMode, toggleColorMode } = useColorMode();
-  const isLight = colorMode === 'light';
   const { isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated();
 
@@ -109,34 +104,16 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                     }
                   }}
                 />
-                <DrawerBody mt="50px" px={0}>
-                  <VStack
-                    alignItems="start"
-                    sx={{
-                      p: {
-                        color: '#fff',
-                        paddingY: 2,
-                        m: '0 !important',
-                        w: '100%',
-                        pl: '25px'
-                      }
-                    }}>
-                    <MenuItem to="/#about">
-                      <Trans id="About TRISA">About TRISA</Trans>{' '}
-                    </MenuItem>
-                    <MenuItem to={`${TRISA_BASE_URL}/${locale}`}>
-                      <Trans id="Documentation">Documentation</Trans>
-                    </MenuItem>
-                    {!isLoggedIn ? (
-                      <MenuItem to="/auth/login">
-                        <Trans id="Login">Login</Trans>
-                      </MenuItem>
-                    ) : (
-                      <MenuItem to="/dashboard/overview">
-                        <Trans id="Your dashboard">Your dashboard</Trans>
-                      </MenuItem>
-                    )}{' '}
-                  </VStack>
+                <DrawerBody mt="50px" px={5}>
+                  <MenuItem to="/#about" color="white" pb={0}>
+                    <Trans id="About TRISA">About TRISA</Trans>
+                  </MenuItem>
+                  <MenuItem to={`${TRISA_BASE_URL}/${locale}`} color="white">
+                    <Trans id="Documentation">Documentation</Trans>
+                  </MenuItem>
+                  <MenuItem to="/auth/login" color="white">
+                    <Trans id="Login">Login</Trans>
+                  </MenuItem>
                 </DrawerBody>
               </DrawerContent>
             </Drawer>
