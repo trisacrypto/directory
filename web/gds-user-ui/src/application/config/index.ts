@@ -16,4 +16,7 @@ export const getBffAndGdsVersion = async () => {
   }
 };
 
+// isMaintenanceMode is used to check if the app is in maintenance mode
+export const isMaintenanceMode = () => process.env.REACT_APP_MAINTENANCE_MODE === 'true';
+
 export const isDashLocale = () => process.env.REACT_APP_USE_DASH_LOCALE?.toLowerCase() === 'true';
