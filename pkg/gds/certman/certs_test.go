@@ -962,8 +962,9 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 
 	// Initialize the certificate manager
 	require.NoError(os.MkdirAll(s.conf.CertMan.Storage, 0755))
-	s.certman, err = certman.New(s.conf.CertMan, s.db, s.secret, email)
+	service, err := certman.New(s.conf.CertMan, s.db, s.secret, email)
 	require.NoError(err, "could not create certificate manager")
+	s.certman = service.(*certman.CertificateManager)
 }
 
 func (s *certTestSuite) teardownCertManager() {

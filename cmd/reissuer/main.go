@@ -126,6 +126,27 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "revoke",
+			Usage:  "mark a VASP as rejected and delete certificate information",
+			Action: revokeCerts,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to revoke the certificates of",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -380,6 +401,89 @@ func makeCertificateProto(c *cli.Context) (err error) {
 	if err = ioutil.WriteFile(c.String("out"), data, 0600); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+func revokeCerts(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	// Check with the user if we should continue with the certificate revocation
+	fmt.Printf("revoking certs for %s\n", vasp.CommonName)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue with certificate revocation?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	// Mark any outstanding certificate requests as rejected.
+	var certreqs []string
+	if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not get certificate request ids: %s", err), 1)
+	}
+
+	for _, crid := range certreqs {
+		var certreq *models.CertificateRequest
+		if certreq, err = db.RetrieveCertReq(crid); err != nil {
+			fmt.Printf("error retrieving certreq %s: %s\n", crid, err)
+			continue
+		}
+
+		// Only update certreqs that are not completed.
+		if certreq.Status < models.CertificateRequestState_COMPLETED {
+			if err = models.UpdateCertificateRequestStatus(
+				certreq,
+				models.CertificateRequestState_CR_REJECTED,
+				"certificate request canceled by admin",
+				"support@rotational.io",
+			); err != nil {
+				fmt.Printf("could not mark certificate request %s as rejected: %s\n", crid, err)
+				continue
+			}
+
+			if err = db.UpdateCertReq(certreq); err != nil {
+				fmt.Printf("could not save certreq %s: %s\n", crid, err)
+			}
+
+			fmt.Printf("marked certificate request %s as rejected", crid)
+		}
+	}
+
+	// Print the serial number for revocation in Sectigo
+	if vasp.IdentityCertificate != nil {
+		fmt.Printf("please revoke certificates with serial number %X\n", vasp.IdentityCertificate.SerialNumber)
+	}
+
+	if len(vasp.SigningCertificates) > 0 {
+		for _, cert := range vasp.SigningCertificates {
+			fmt.Printf("please revoke certificates with serial number %X\n", cert.SerialNumber)
+		}
+	}
+
+	// TODO: what do we have to do with the certificates models?
+	vasp.IdentityCertificate = nil
+	vasp.SigningCertificates = nil
+
+	// Set the VASP state to rejected
+	if err = models.UpdateVerificationStatus(
+		vasp,
+		pb.VerificationState_REJECTED,
+		"certificates revoked due to cessation of operations",
+		"support@rotational.io",
+	); err != nil {
+		return cli.Exit(fmt.Errorf("could not update VASP status: %s", err), 1)
+	}
+
+	if err = db.UpdateVASP(vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
+	}
+
+	fmt.Println("VASP registration revoked")
 	return nil
 }
 

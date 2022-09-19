@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -84,7 +83,7 @@ func (s *gdsTestSuite) doRequest(handle gin.HandlerFunc, c *gin.Context, w *http
 	res = w.Result()
 	defer res.Body.Close()
 	if reply != nil {
-		bytes, err := ioutil.ReadAll(res.Body)
+		bytes, err := io.ReadAll(res.Body)
 		require.NoError(err)
 		err = json.Unmarshal(bytes, reply)
 		require.NoError(err)

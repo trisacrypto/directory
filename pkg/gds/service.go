@@ -136,7 +136,7 @@ type Service struct {
 	admin   *Admin
 	members *Members
 	conf    config.Config
-	certman *certman.CertificateManager
+	certman certman.Service
 	email   *emails.EmailManager
 	secret  *secrets.SecretManager
 	wg      sync.WaitGroup
