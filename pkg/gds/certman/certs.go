@@ -79,6 +79,9 @@ type CertificateManager struct {
 	stop    chan struct{}
 }
 
+// Compile time interface implementation check.
+var _ Service = &CertificateManager{}
+
 // Run starts the CertManager as a go routine under the provided waitgroup. For
 // graceful shutdown, the caller must invoke the Stop method to signal the CertManager
 // routine to stop and block on the waitgroup if provided.

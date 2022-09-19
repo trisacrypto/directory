@@ -11,6 +11,9 @@ import (
 // interact with certman without having to check if it's enabled.
 type Disabled struct{}
 
+// Compile time interface implementation check.
+var _ Service = &Disabled{}
+
 func (d *Disabled) Run(*sync.WaitGroup) error {
 	log.Warn().Msg("certman is disabled")
 	return nil
