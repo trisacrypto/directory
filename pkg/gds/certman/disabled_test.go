@@ -26,4 +26,5 @@ func TestDisabled(t *testing.T) {
 
 	require.NotPanics(t, service.CertManager, "cert manager should not panic")
 	require.NotPanics(t, service.HandleCertificateRequests, "handle certificate requests should not panic")
+	require.NotPanics(t, service.HandleCertificateReissuance, "handle certificate reissuance should not panic")
 }

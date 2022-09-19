@@ -30,3 +30,7 @@ func (d *Disabled) CertManager() {
 func (d *Disabled) HandleCertificateRequests() {
 	log.Trace().Msg("certman is disabled: cannot handle certificate requests")
 }
+
+func (d *Disabled) HandleCertificateReissuance() {
+	log.Trace().Msg("certman is disabled: cannot handle certificate reissuance")
+}

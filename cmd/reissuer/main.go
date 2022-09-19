@@ -406,7 +406,7 @@ func makeCertificateProto(c *cli.Context) (err error) {
 
 func revokeCerts(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
-	fmt.Printf("lookup up vasp with id %s\n", vaspID)
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
 	var vasp *pb.VASP
 	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
@@ -434,12 +434,12 @@ func revokeCerts(c *cli.Context) (err error) {
 			continue
 		}
 
-		// Only update certreqs taht are not completed.
+		// Only update certreqs that are not completed.
 		if certreq.Status < models.CertificateRequestState_COMPLETED {
 			if err = models.UpdateCertificateRequestStatus(
 				certreq,
 				models.CertificateRequestState_CR_REJECTED,
-				"",
+				"certificate request canceled by admin",
 				"support@rotational.io",
 			); err != nil {
 				fmt.Printf("could not mark certificate request %s as rejected: %s\n", crid, err)

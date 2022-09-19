@@ -9,4 +9,5 @@ type Service interface {
 	Stop()
 	CertManager()
 	HandleCertificateRequests()
+	HandleCertificateReissuance()
 }
