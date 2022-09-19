@@ -104,34 +104,6 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                     }
                   }}
                 />
-                {/* <DrawerBody mt="50px" px={0}>
-                  <VStack
-                    alignItems="start"
-                    sx={{
-                      p: {
-                        color: '#fff',
-                        paddingY: 2,
-                        m: '0 !important',
-                        w: '100%',
-                        pl: '25px'
-                      }
-                    }}>
-                    <MenuItem to="/#about">
-                      <Trans id="About TRISA">About TRISA</Trans>{' '}
-                    </MenuItem>
-                    <MenuItem to={`${TRISA_BASE_URL}/${locale}`}>
-                      <Trans id="Documentation">Documentation</Trans>
-                    </MenuItem>
-                    {!isLoggedIn ? (
-                      <MenuItem to="/auth/login">
-                        <Trans id="Login">Login</Trans>
-                      </MenuItem>
-                    ) : (
-                      <MenuItem to="/dashboard/overview">
-                        <Trans id="Your dashboard">Your dashboard</Trans>
-                      </MenuItem>
-                    )}{' '}
-                  </VStack> */}
                 <DrawerBody mt="50px" px={5}>
                   <MenuItem to="/#about" color="white" pb={0}>
                     <Trans id="About TRISA">About TRISA</Trans>
