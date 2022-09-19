@@ -21,7 +21,7 @@ const Maintenance: React.FC = () => {
           </Trans>
         </Text>
         <Stack alignItems={'center'} mx={'auto'}>
-          <Image src={MaintenanceSVG} width={'50%'} pt={8} />
+          <Image src={MaintenanceSVG} width={'50%'} pt={8} loading="eager" />
         </Stack>
 
         <Text pt={'5px'}>
