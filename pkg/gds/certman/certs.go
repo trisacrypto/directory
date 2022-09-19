@@ -27,12 +27,14 @@ import (
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
-func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (cm *CertificateManager, err error) {
+func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (_ Service, err error) {
+	// If not enabled return the certman disabled stub.
 	if !conf.Enabled {
-		return nil, errors.New("certificate manager is not enabled")
+		return &Disabled{}, nil
 	}
 
-	cm = &CertificateManager{
+	// If enabled, construct the certificate manager and return it
+	cm := &CertificateManager{
 		conf:   conf,
 		db:     db,
 		secret: secret,

@@ -130,6 +130,7 @@ func MockConfig() config.Config {
 			Testing:              true,
 		},
 		CertMan: config.CertManConfig{
+			Enabled:            true,
 			RequestInterval:    24 * time.Hour,
 			ReissuanceInterval: 24 * time.Hour,
 			Storage:            "testdata/certs",

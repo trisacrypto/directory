@@ -105,10 +105,8 @@ func New(conf config.Config) (s *Service, err error) {
 	}
 
 	// Create the certificate manager
-	if s.conf.CertMan.Enabled {
-		if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email); err != nil {
-			return nil, err
-		}
+	if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email); err != nil {
+		return nil, err
 	}
 
 	// Initialize the gRPC API services at the very end.
@@ -138,7 +136,7 @@ type Service struct {
 	admin   *Admin
 	members *Members
 	conf    config.Config
-	certman *certman.CertificateManager
+	certman certman.Service
 	email   *emails.EmailManager
 	secret  *secrets.SecretManager
 	wg      sync.WaitGroup
@@ -165,12 +163,9 @@ func (s *Service) Serve() (err error) {
 		}
 
 		// These services should not run in maintenance mode
-		s.wg = sync.WaitGroup{}
-
 		// Start the certificate manager go routine process
-		if s.conf.CertMan.Enabled {
-			s.certman.Run(&s.wg)
-		}
+		s.wg = sync.WaitGroup{}
+		s.certman.Run(&s.wg)
 
 		// Start the backup manager go routine process
 		// TODO: Refactor to use the wait group and shutdown gracefully
@@ -218,13 +213,10 @@ func (s *Service) Shutdown() (err error) {
 		}
 
 		// Stop the certificate manager
-		if s.conf.CertMan.Enabled {
-			s.certman.Stop()
+		s.certman.Stop()
 
-			// Wait for all go routines to finish
-			// TODO: will have to come out of this if block if other services need to be waited on
-			s.wg.Wait()
-		}
+		// Wait for all go routines to finish
+		s.wg.Wait()
 
 		// Close the database correctly
 		if err = s.db.Close(); err != nil {
