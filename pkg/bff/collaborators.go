@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 // AddCollaborator creates a new collaborator with the email address in the request.
@@ -17,8 +16,8 @@ import (
 func (s *Server) AddCollaborator(c *gin.Context) {
 	var (
 		err          error
-		request      *records.Collaborator
-		collaborator *records.Collaborator
+		request      *models.Collaborator
+		collaborator *models.Collaborator
 		org          *models.Organization
 	)
 
@@ -30,7 +29,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 
 	// Unmarshal the collaborator from the POST request
-	request = &records.Collaborator{}
+	request = &models.Collaborator{}
 	if err = c.ShouldBind(request); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
