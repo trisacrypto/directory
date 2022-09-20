@@ -52,6 +52,9 @@ axiosInstance.interceptors.response.use(
           case 403:
             window.location.href = `/auth/login?q=unauthorized`;
             break;
+          case 503:
+            window.location.href = `/maintenance`;
+            break;
           default:
             window.location.href = `/auth/login?error_description=${error.response.data.error}`;
         }
