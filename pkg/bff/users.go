@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 const (
@@ -46,6 +47,46 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Ensure the user resources are correctly populated.
+	// If the user is not associated with an organization, create it.
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, "could not parse user app metadata")
+		return
+	}
+
+	// Retrieve the user's organization from the database
+	var org *models.Organization
+	if appdata.OrgID == "" {
+		// Create the organization
+		org, err = s.db.Organizations().Create(c.Request.Context())
+		if err != nil {
+			log.Error().Err(err).Msg("could not create organization for new user")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
+		// Set the organization ID in the user app metadata
+		appdata.OrgID = org.Id
+	} else {
+		// Get the organization for the specified user
+		org, err = s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
+		if err != nil {
+			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
+		// Ensure the VASP record is correct for the user
+		if org.Testnet != nil && org.Testnet.Id != "" {
+			appdata.VASPs.TestNet = org.Testnet.Id
+		}
+		if org.Mainnet != nil && org.Mainnet.Id != "" {
+			appdata.VASPs.MainNet = org.Mainnet.Id
+		}
+	}
+
 	// Fetch user roles.
 	if roles, err = s.auth0.User.Roles(*user.ID); err != nil {
 		log.Error().Err(err).Msg("could not fetch roles associated with the user")
@@ -62,49 +103,18 @@ func (s *Server) Login(c *gin.Context) {
 			return
 		}
 
+		// Update the collaborators on the organization
+		if err = AddOrganizationCollaborator(org, *user.Email); err != nil {
+			log.Error().Err(err).Msg("could not add the user to the organization collaborators")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
 		// TODO: this will require the user to login again
 		if err = s.auth0.Role.AssignUsers(*collaborator.ID, []*management.User{user}); err != nil {
 			log.Error().Err(err).Msg("could not assign the default role to the user")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
 			return
-		}
-	}
-
-	// Ensure the user resources are correctly populated.
-	// If the user is not associated with an organization, create it.
-	appdata := &auth.AppMetadata{}
-	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
-		c.JSON(http.StatusInternalServerError, "could not parse user app metadata")
-		return
-	}
-
-	if appdata.OrgID == "" {
-		// Create the organization
-		org, err := s.db.Organizations().Create(c.Request.Context())
-		if err != nil {
-			log.Error().Err(err).Msg("could not create organization for new user")
-			c.JSON(http.StatusInternalServerError, "could not complete user login")
-			return
-		}
-
-		// Set the organization ID in the user app metadata
-		appdata.OrgID = org.Id
-	} else {
-		// Get the organization for the specified user
-		org, err := s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
-		if err != nil {
-			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
-			c.JSON(http.StatusInternalServerError, "could not complete user login")
-			return
-		}
-
-		// Ensure the VASP record is correct for the user
-		if org.Testnet != nil && org.Testnet.Id != "" {
-			appdata.VASPs.TestNet = org.Testnet.Id
-		}
-		if org.Mainnet != nil && org.Mainnet.Id != "" {
-			appdata.VASPs.MainNet = org.Mainnet.Id
 		}
 	}
 

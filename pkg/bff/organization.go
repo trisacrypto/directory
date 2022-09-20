@@ -2,7 +2,9 @@ package bff
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -46,4 +48,46 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	}
 
 	return org, nil
+}
+
+// AddOrganizationCollaborator adds a new collaborator record to an organization.
+func AddOrganizationCollaborator(org *models.Organization, email string) (err error) {
+	if email == "" {
+		return errors.New("email address is required to add an organization collaborator")
+	}
+
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*models.Collaborator)
+	}
+
+	// Don't overwrite an existing collaborator
+	if _, ok := org.Collaborators[email]; ok {
+		return fmt.Errorf("collaborator with email address %s already exists", email)
+	}
+
+	// Create a new collaborator record
+	org.Collaborators[email] = &models.Collaborator{
+		Email:     email,
+		CreatedAt: time.Now().Format(time.RFC3339Nano),
+	}
+	return nil
+}
+
+// GetOrganizationCollaborator returns the collaborator record for the given email address.
+func GetOrganizationCollaborator(org *models.Organization, email string) (collaborator *models.Collaborator, err error) {
+	if email == "" {
+		return nil, errors.New("email address is required to get an organization collaborator")
+	}
+
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*models.Collaborator)
+	}
+
+	// Lookup the collaborator record
+	var ok bool
+	if collaborator, ok = org.Collaborators[email]; !ok {
+		return nil, fmt.Errorf("collaborator with email address %s does not exist", email)
+	}
+
+	return collaborator, nil
 }

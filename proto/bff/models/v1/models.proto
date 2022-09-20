@@ -20,7 +20,8 @@ message Organization {
     DirectoryRecord testnet = 10;
     DirectoryRecord mainnet = 11;
 
-    reserved 12; // Reserved for collaborators
+    // Collaborators
+    map<string, Collaborator> collaborators = 20;
 
     // Registration Form
     RegistrationForm registration = 13;
@@ -28,6 +29,17 @@ message Organization {
     // Metadata as RFC3339Nano Timestamps
     string created = 14;
     string modified = 15;
+}
+
+// A Collaborator is a user that is associated with an organization. Collaborators are
+// uniquely identified by their email address and the Organization document they exist
+// on. Therefore, it is possible for a user to exist as a collaborator on multiple
+message Collaborator {
+    string email = 1;
+
+    // Metadata as RFC3339Nano Timestamps
+    string created_at = 2;
+    string verified_at = 3;
 }
 
 // FormState contains the current state of an organization's registration form to
