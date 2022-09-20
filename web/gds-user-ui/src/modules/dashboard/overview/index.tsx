@@ -55,21 +55,19 @@ const Overview: React.FC = () => {
       try {
         const registration = await getRegistrationDefaultValue();
         if (registration) {
+          const trisaDetailData = {
+            mainnet: registration.mainnet,
+            testnet: registration.testnet,
+            organization: result.organization
+          };
           setStepperData(registration);
+          setTrisaData(trisaDetailData);
         }
       } catch (e: any) {
         handleError(e, '[Overview] fetchRegistration failed');
       }
     };
     fetchRegistration();
-
-    const trisaDetailData = {
-      mainnet: stepperData.mainnet,
-      testnet: stepperData.testnet,
-      organization: result.organization
-    };
-
-    setTrisaData(trisaDetailData);
   }, [result]);
 
   return (
