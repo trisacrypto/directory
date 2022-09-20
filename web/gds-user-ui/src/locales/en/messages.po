@@ -125,8 +125,8 @@ msgstr "A component of"
 msgid "A physical verification check in the form of a phone call"
 msgstr "A physical verification check in the form of a phone call"
 
-#: src/components/Header/LandingHeader.tsx:85
-#: src/components/Header/LandingHeader.tsx:133
+#: src/components/Header/LandingHeader.tsx:72
+#: src/components/Header/LandingHeader.tsx:109
 #: src/components/Section/AboutUs.tsx:30
 msgid "About TRISA"
 msgstr "About TRISA"
@@ -644,8 +644,8 @@ msgstr "Details"
 msgid "Directory Lookup"
 msgstr "Directory Lookup"
 
-#: src/components/Header/LandingHeader.tsx:88
-#: src/components/Header/LandingHeader.tsx:136
+#: src/components/Header/LandingHeader.tsx:75
+#: src/components/Header/LandingHeader.tsx:112
 #: src/components/Navbar/Landing/MobileNav.tsx:73
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
@@ -1039,6 +1039,10 @@ msgstr "Issue Date"
 msgid "Issue Date:"
 msgstr "Issue Date:"
 
+#: src/components/Maintenance/index.tsx:28
+msgid "Join"
+msgstr "Join"
+
 #: src/components/Section/JoinUs.tsx:110
 msgid "Join Today"
 msgstr "Join Today"
@@ -1133,8 +1137,8 @@ msgstr "Log in."
 msgid "Log into your TRISA account."
 msgstr "Log into your TRISA account."
 
-#: src/components/Header/LandingHeader.tsx:94
-#: src/components/Header/LandingHeader.tsx:140
+#: src/components/Header/LandingHeader.tsx:81
+#: src/components/Header/LandingHeader.tsx:115
 msgid "Login"
 msgstr "Login"
 
@@ -1919,6 +1923,10 @@ msgstr "TRISA uses public-key cryptography for encrypting data in flight and at 
 msgid "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
 msgstr "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
 
+#: src/components/Maintenance/index.tsx:34
+msgid "TRISA's Slack channel"
+msgstr "TRISA's Slack channel"
+
 #: src/components/Section/IntegrateAndComply.tsx:151
 msgid "TRISA’s Github repo"
 msgstr "TRISA’s Github repo"
@@ -2025,6 +2033,10 @@ msgstr ""
 #: src/components/NetworkAnnouncements/index.tsx:39
 msgid "The GDS will be undergoing routine maintenance on Apr 7."
 msgstr "The GDS will be undergoing routine maintenance on Apr 7."
+
+#: src/components/Maintenance/index.tsx:18
+msgid "The TRISA Global Directory Service (GDS) is temporarily undergoing maintenance. Please try again later."
+msgstr "The TRISA Global Directory Service (GDS) is temporarily undergoing maintenance. Please try again later."
 
 #: src/components/Section/AboutUs.tsx:37
 msgid "The Travel Rule Information Sharing Architecture (TRISA)"
@@ -2174,6 +2186,10 @@ msgstr "Website, incorporation Date, VASP Category"
 msgid "Welcome to TRISA’s network of Certified VASPs."
 msgstr "Welcome to TRISA’s network of Certified VASPs."
 
+#: src/components/Maintenance/index.tsx:15
+msgid "We’ll be back soon."
+msgstr "We’ll be back soon."
+
 #: src/components/Section/IntegrateAndComply.tsx:186
 #: src/components/Section/VaspVerification.tsx:192
 msgid "What is IVMS101?"
@@ -2262,8 +2278,7 @@ msgstr "Your TRISA {type} Details"
 msgid "Your account has not been verified. Please check your email to verify your account."
 msgstr "Your account has not been verified. Please check your email to verify your account."
 
-#: src/components/Header/LandingHeader.tsx:100
-#: src/components/Header/LandingHeader.tsx:144
+#: src/components/Header/LandingHeader.tsx:87
 msgid "Your dashboard"
 msgstr "Your dashboard"
 
@@ -2360,6 +2375,10 @@ msgstr "special characters (e.g. !@#$%^&*)"
 #: src/components/Footer/LandingFooter.tsx:22
 msgid "the TRISA architecture"
 msgstr "the TRISA architecture"
+
+#: src/components/Maintenance/index.tsx:36
+msgid "to receive maintenance and outage notifications. If you have an immediate concern, please email support@rotational.io."
+msgstr "to receive maintenance and outage notifications. If you have an immediate concern, please email support@rotational.io."
 
 #: src/components/PasswordStrength/index.tsx:120
 msgid "upper case letters (A-Z)"
