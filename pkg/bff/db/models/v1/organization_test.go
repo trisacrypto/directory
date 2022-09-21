@@ -191,3 +191,11 @@ func TestReadyToSubmit(t *testing.T) {
 		}
 	}
 }
+
+func TestAddCollaborator(t *testing.T) {
+	t.Skip("Not implemented")
+}
+
+func TestGetColaborator(t *testing.T) {
+	t.Skip("Not implemented")
+}

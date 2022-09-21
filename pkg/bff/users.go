@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 )
 
 const (
@@ -46,30 +47,6 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	// Fetch user roles.
-	if roles, err = s.auth0.User.Roles(*user.ID); err != nil {
-		log.Error().Err(err).Msg("could not fetch roles associated with the user")
-		c.JSON(http.StatusInternalServerError, "could not complete user login")
-		return
-	}
-
-	if len(roles.Roles) == 0 {
-		// Assign the user the organization collaborator role
-		var collaborator *management.Role
-		if collaborator, err = s.FindRoleByName(DefaultRole); err != nil {
-			log.Error().Err(err).Msg("could not identify the default role to assign the user")
-			c.JSON(http.StatusInternalServerError, "could not complete user login")
-			return
-		}
-
-		// TODO: this will require the user to login again
-		if err = s.auth0.Role.AssignUsers(*collaborator.ID, []*management.User{user}); err != nil {
-			log.Error().Err(err).Msg("could not assign the default role to the user")
-			c.JSON(http.StatusInternalServerError, "could not complete user login")
-			return
-		}
-	}
-
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
 	appdata := &auth.AppMetadata{}
@@ -79,9 +56,11 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Retrieve the user's organization from the database
+	var org *models.Organization
 	if appdata.OrgID == "" {
 		// Create the organization
-		org, err := s.db.Organizations().Create(c.Request.Context())
+		org, err = s.db.Organizations().Create(c.Request.Context())
 		if err != nil {
 			log.Error().Err(err).Msg("could not create organization for new user")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
@@ -92,7 +71,7 @@ func (s *Server) Login(c *gin.Context) {
 		appdata.OrgID = org.Id
 	} else {
 		// Get the organization for the specified user
-		org, err := s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
+		org, err = s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
 		if err != nil {
 			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
@@ -105,6 +84,47 @@ func (s *Server) Login(c *gin.Context) {
 		}
 		if org.Mainnet != nil && org.Mainnet.Id != "" {
 			appdata.VASPs.MainNet = org.Mainnet.Id
+		}
+	}
+
+	// Fetch user roles.
+	if roles, err = s.auth0.User.Roles(*user.ID); err != nil {
+		log.Error().Err(err).Msg("could not fetch roles associated with the user")
+		c.JSON(http.StatusInternalServerError, "could not complete user login")
+		return
+	}
+
+	if len(roles.Roles) == 0 {
+		// Assign the user the organization collaborator role
+		var role *management.Role
+		if role, err = s.FindRoleByName(DefaultRole); err != nil {
+			log.Error().Err(err).Msg("could not identify the default role to assign the user")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
+		// Add the user as a collaborator in the organization record
+		collaborator := &models.Collaborator{
+			Email: *user.Email,
+		}
+		if err = org.AddCollaborator(collaborator); err != nil {
+			log.Error().Err(err).Msg("could not add the user to the organization collaborators")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
+		// Update the organization in the database
+		if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+			log.Error().Err(err).Msg("could not update the organization with the new collaborator")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
+		// TODO: this will require the user to login again
+		if err = s.auth0.Role.AssignUsers(*role.ID, []*management.User{user}); err != nil {
+			log.Error().Err(err).Msg("could not assign the default role to the user")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
 		}
 	}
 
