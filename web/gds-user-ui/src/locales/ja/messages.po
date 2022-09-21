@@ -1823,7 +1823,7 @@ msgid "TRISA Endpoint: TestNet"
 msgstr " TRISAエンドポイントTestNet"
 
 #: src/components/OpenSourceResources/index.tsx:15
-msgid "TRISA Githubs repo"
+msgid "TRISA GitHub repo"
 msgstr ""
 
 #: src/components/Head/LandingHead.tsx:25

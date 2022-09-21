@@ -1723,8 +1723,8 @@ msgid "TRISA Endpoint: TestNet"
 msgstr "TRISA Endpoint: TestNet"
 
 #: src/components/OpenSourceResources/index.tsx:15
-msgid "TRISA Githubs repo"
-msgstr "TRISA Githubs repo"
+msgid "TRISA GitHub repo"
+msgstr "TRISA GitHub repo"
 
 #: src/components/Head/LandingHead.tsx:25
 msgid "TRISA Global Directory Service"

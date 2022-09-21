@@ -1717,12 +1717,12 @@ msgid "TRISA Endpoint: TestNet"
 msgstr "Point de terminaison TRISA: TestNet"
 
 #: src/components/OpenSourceResources/index.tsx:15
-#~ msgid "TRISA Github repo"
-#~ msgstr ""
+msgid "TRISA GitHub repo"
+msgstr ""
 
 #: src/components/OpenSourceResources/index.tsx:15
-msgid "TRISA Githubs repo"
-msgstr ""
+#~ msgid "TRISA Github repo"
+#~ msgstr ""
 
 #: src/components/Head/LandingHead.tsx:25
 msgid "TRISA Global Directory Service"
