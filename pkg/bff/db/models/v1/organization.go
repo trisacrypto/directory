@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/trisacrypto/directory/pkg/bff/config"
@@ -20,6 +22,50 @@ func (org *Organization) Key() []byte {
 
 	key := uuid.MustParse(org.Id)
 	return key[:]
+}
+
+// Add a new collaborator to an organization record. The given collaborator record is
+// validated before being added to the organization.
+// Note: The caller is responsible for saving the updated organization record to the
+// database.
+func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
+	// TODO: More comprehensive validation of the collaborator record
+	if collab.Email == "" {
+		return errors.New("email address is required to add an organization collaborator")
+	}
+
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*Collaborator)
+	}
+
+	// Don't overwrite an existing collaborator
+	if _, ok := org.Collaborators[collab.Email]; ok {
+		return fmt.Errorf("collaborator with email address %s already exists", collab.Email)
+	}
+
+	// Make sure the record has a created timestamp
+	if collab.CreatedAt == "" {
+		collab.CreatedAt = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+
+	// Add the collaborator to the organization
+	org.Collaborators[collab.Email] = collab
+	return nil
+}
+
+// Return the collaborator record for the given email address.
+func (org *Organization) GetCollaborator(email string) (collaborator *Collaborator, err error) {
+	if email == "" {
+		return nil, errors.New("email address is required to get an organization collaborator")
+	}
+
+	// Lookup the collaborator record
+	var ok bool
+	if collaborator, ok = org.Collaborators[email]; !ok {
+		return nil, fmt.Errorf("collaborator with email address %s does not exist", email)
+	}
+
+	return collaborator, nil
 }
 
 func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
