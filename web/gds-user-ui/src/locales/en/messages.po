@@ -215,8 +215,8 @@ msgid "Already have an account?"
 msgstr "Already have an account?"
 
 #: src/components/NetworkAnnouncements/index.tsx:21
-msgid "An error has occurred to load annoucements"
-msgstr "An error has occurred to load annoucements"
+msgid "An error has occurred to load announcements"
+msgstr "An error has occurred to load announcements"
 
 #: src/components/NeedsAttention/index.tsx:34
 msgid "An error has occurred to load attention data"
@@ -255,21 +255,11 @@ msgstr "At least 9 characters in length"
 msgid "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 msgstr "At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions."
 
-#: src/components/TrixoQuestionnaireForm/index.tsx:146
-#~ msgid "At what threshold and currency does your organization conduct KYC (Know your Counterparty)?"
-#~ msgstr "At what threshold and currency does your organization conduct KYC (Know your Counterparty)?"
-
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:144
 #: src/components/MemberDetails/index.tsx:589
 #: src/components/TrixoQuestionnaireForm/index.tsx:148
 msgid "At what threshold and currency does your organization conduct KYC checks?"
 msgstr "At what threshold and currency does your organization conduct KYC checks?"
-
-#: src/components/CertificateReview/TrixoReviewDataTable.tsx:140
-#: src/components/MemberDetails/index.tsx:580
-#: src/components/TrixoQuestionnaireForm/index.tsx:146
-#~ msgid "At what threshold and currency does your organization conduct KYC?"
-#~ msgstr "At what threshold and currency does your organization conduct KYC?"
 
 #: src/components/Footer/Version.tsx:42
 msgid "BFF & GDS version {bffAndGdsVersion}"
@@ -378,10 +368,6 @@ msgid "Change Permissions"
 msgstr "Change Permissions"
 
 #: src/components/Section/IntegrateAndComply.tsx:134
-#~ msgid "CipherTrace Providers"
-#~ msgstr "CipherTrace Providers"
-
-#: src/components/Section/IntegrateAndComply.tsx:134
 msgid "CipherTrace Traveler"
 msgstr "CipherTrace Traveler"
 
@@ -429,23 +415,10 @@ msgstr "Common name or VASP ID"
 msgid "Common name should match the TRISA endpoint without the port."
 msgstr "Common name should match the TRISA endpoint without the port."
 
-#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
-#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it"
-#~ msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it"
-
-#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
-#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
-#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
-#~ msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
-
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
 msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
 msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
-
-#: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
-#~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
-#~ msgstr "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
 
 #: src/components/CertificateManagement/index.tsx:40
 msgid "Complete Certficate Registration"
@@ -658,34 +631,8 @@ msgid "Does your organization conduct KYC/CDD before permitting its customers to
 msgstr "Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:124
-#~ msgid ""
-#~ "Does your organization conduct Know your Counterparty/Customer Due\n"
-#~ "                Diligence (KYC/CDD) before permitting its customers to send/receive virtual asset transfers?"
-#~ msgstr ""
-#~ "Does your organization conduct Know your Counterparty/Customer Due\n"
-#~ "                Diligence (KYC/CDD) before permitting its customers to send/receive virtual asset transfers?"
-
-#: src/components/CertificateReview/TrixoReviewDataTable.tsx:124
 msgid "Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
 msgstr "Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
-
-#: src/components/TrixoQuestionnaireForm/index.tsx:123
-#~ msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-#~ msgstr "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-
-#: src/components/MemberDetails/index.tsx:543
-#~ msgid ""
-#~ "Does your organization have a programme that sets minimum Anti-Money\n"
-#~ "                      Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
-#~ "                      Counterparty/Customer Due Diligence (KYC/CDD) (Know your Counterparty/Customer\n"
-#~ "                      Due Diligence) and Sanctions standards per the requirements of the\n"
-#~ "                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-#~ msgstr ""
-#~ "Does your organization have a programme that sets minimum Anti-Money\n"
-#~ "                      Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
-#~ "                      Counterparty/Customer Due Diligence (KYC/CDD) (Know your Counterparty/Customer\n"
-#~ "                      Due Diligence) and Sanctions standards per the requirements of the\n"
-#~ "                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
 
 #: src/components/MemberDetails/index.tsx:543
 msgid ""
@@ -987,14 +934,6 @@ msgstr "Integrate with TRISA."
 msgid "Interoperable"
 msgstr "Interoperable"
 
-#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:18
-#~ msgid "Invalid date"
-#~ msgstr "Invalid date"
-
-#: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:19
-#~ msgid "Invalid date / year must be 4 digit"
-#~ msgstr "Invalid date / year must be 4 digit"
-
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:35
 msgid "Invalid date."
 msgstr "Invalid date."
@@ -1003,15 +942,6 @@ msgstr "Invalid date."
 #: src/components/TrixoQuestionnaireForm/index.tsx:100
 msgid "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
 msgstr "Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?"
-
-#: src/components/TrixoQuestionnaireForm/index.tsx:258
-#~ msgid "Is your organization required by law to safeguard PII (Personally Identifiable Information)?"
-#~ msgstr "Is your organization required by law to safeguard PII (Personally Identifiable Information)?"
-
-#: src/components/CertificateReview/TrixoReviewDataTable.tsx:231
-#: src/components/TrixoQuestionnaireForm/index.tsx:257
-#~ msgid "Is your organization required by law to safeguard PII?"
-#~ msgstr "Is your organization required by law to safeguard PII?"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:235
 msgid ""
@@ -1204,10 +1134,6 @@ msgstr "Must comply with Travel Rule"
 #: src/components/TrixoQuestionnaireForm/index.tsx:265
 msgid "Must safeguard PII"
 msgstr "Must safeguard PII"
-
-#: src/components/TrixoQuestionnaireForm/index.tsx:264
-#~ msgid "Must safeguard PII (Personally Identifiable Information)"
-#~ msgstr "Must safeguard PII (Personally Identifiable Information)"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
@@ -1428,11 +1354,6 @@ msgstr "Please enter the information that identifies your organization as a Lega
 msgid "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC (Know your Counterparty) or CDD (Customer Due Diligence) information exchanged in TRISA transfers."
 msgstr "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC (Know your Counterparty) or CDD (Customer Due Diligence) information exchanged in TRISA transfers."
 
-#: src/components/CertificateSection/index.tsx:28
-#: src/components/CertificateSection/index.tsx:52
-#~ msgid "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
-#~ msgstr "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
-
 #: src/components/ReviewSubmit/MainNetWarningBox.tsx:15
 #: src/components/ReviewSubmit/TestNetWarningBox.tsx:16
 #: src/components/ReviewSubmit/index.tsx:165
@@ -1586,10 +1507,6 @@ msgstr "Routine Maintenance Scheduled"
 #: src/components/TrixoQuestionnaireForm/index.tsx:278
 msgid "Safeguards PII"
 msgstr "Safeguards PII"
-
-#: src/components/TrixoQuestionnaireForm/index.tsx:277
-#~ msgid "Safeguards Personally Identifiable Information (PII)"
-#~ msgstr "Safeguards Personally Identifiable Information (PII)"
 
 #: src/modules/dashboard/certificate/registration.tsx:331
 msgid "Save & Next"
@@ -1792,10 +1709,6 @@ msgstr "TESTNET SUBMISSION"
 #: src/components/CertificateManagement/index.tsx:52
 msgid "TRISA Certificates"
 msgstr "TRISA Certificates"
-
-#: src/components/OrganizationProfile/TrisaDetail.tsx:20
-#~ msgid "TRISA Details"
-#~ msgstr "TRISA Details"
 
 #: src/components/TrisaImplementationForm/index.tsx:68
 msgid "TRISA Endpoint"
@@ -2295,10 +2208,6 @@ msgstr "Your registration request has been successfully received by the Director
 msgid "about us"
 msgstr "about us"
 
-#: src/components/TrisaImplementationForm/index.tsx:43
-#~ msgid "common name should match the TRISA endpoint without the port"
-#~ msgstr "common name should match the TRISA endpoint without the port"
-
 #: src/components/Section/MembershipGuide.tsx:21
 msgid "complete VASP verification"
 msgstr "complete VASP verification"
@@ -2326,10 +2235,6 @@ msgstr "for TestNet registration so your TestNet certificate will be issued upon
 #: src/components/LegalPerson/index.tsx:36
 msgid "for legal persons and is strongly suggested for use as KYC or CDD (Know your Counterparty) information exchanged in TRISA transfers."
 msgstr "for legal persons and is strongly suggested for use as KYC or CDD (Know your Counterparty) information exchanged in TRISA transfers."
-
-#: src/components/LegalPerson/index.tsx:36
-#~ msgid "for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
-#~ msgstr "for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
 
 #: src/components/Footer/LandingFooter.tsx:34
 msgid "in partnership with"
