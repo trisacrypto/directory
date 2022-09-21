@@ -19,6 +19,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	}
 
 	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
 	_, err := s.client.AddCollaborator(context.TODO(), &models.Collaborator{})
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 

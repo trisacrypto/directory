@@ -37,7 +37,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 
 	// Add the collaborator to the organization
-	if err = AddOrganizationCollaborator(org, request.Email); err != nil {
+	if err = org.AddCollaborator(request); err != nil {
 		log.Error().Err(err).Msg("could not add new collaborator to organization")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
@@ -53,7 +53,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 
 	// Return the updated collaborator
-	if collaborator, err = GetOrganizationCollaborator(org, request.Email); err != nil {
+	if collaborator, err = org.GetCollaborator(request.Email); err != nil {
 		log.Error().Err(err).Msg("could not retrieve collaborator from organization")
 		c.JSON(http.StatusInternalServerError, "could not add collaborator")
 		return

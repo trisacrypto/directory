@@ -21,7 +21,7 @@ message Organization {
     DirectoryRecord mainnet = 11;
 
     // Collaborators
-    map<string, Collaborator> collaborators = 20;
+    map<string, Collaborator> collaborators = 12;
 
     // Registration Form
     RegistrationForm registration = 13;
