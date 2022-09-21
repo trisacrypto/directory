@@ -4,12 +4,6 @@ import { waitFor, render, screen } from 'utils/test-utils';
 import LandingHeader from './LandingHeader';
 
 describe('<LandingHeader />', () => {
-  //   beforeAll(() => {
-  //     act(() => {
-  //       dynamicActivate('en');
-  //     });
-  //   });
-
   describe('Documentation menu', () => {
     it('should target the english website', async () => {
       await waitFor(() => {
@@ -26,7 +20,7 @@ describe('<LandingHeader />', () => {
       });
       render(<LandingHeader />, { locale: 'de' });
 
-      const documentation = screen.getByText(/documentation/i);
+      const documentation = screen.getByText(/Dokumentation/i);
       expect(documentation).toHaveAttribute('href', `${TRISA_BASE_URL}/de`);
     });
 
