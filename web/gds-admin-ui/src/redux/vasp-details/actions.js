@@ -144,6 +144,11 @@ export const updateContactResponseError = (error) => ({
     payload: { error }
 })
 
+export const clearContactErrorMessage = () => ({
+    type: UpdateContactActionTypes.CLEAR_ERROR_MESSAGE,
+    payload: {}
+})
+
 export const deleteContactResponse = (vaspId, contactType, setIsOpen) => ({
     type: DeleteContactActionTypes.DELETE_CONTACT,
     payload: { vaspId, contactType, setIsOpen }

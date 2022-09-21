@@ -75,7 +75,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
         formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
         {...register('trixo.primary_regulator')}
       />
-      <VStack align="start">
+      <VStack align="start" w="100%">
         <Heading size="md">
           <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
         </Heading>
@@ -120,7 +120,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
               options={financialTransfertsOptions}
               value={financialTransfertsOptions.find((option) => option.value === field.value)}
               onChange={(newValue: any) => field.onChange(newValue.value)}
-              label={t`Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?`}
+              label={t`Does your organization have a programme that sets minimum Anti-Money
+              Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
+              Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?`}
               controlId="has_required_regulatory_program"
             />
           )}
@@ -143,8 +145,8 @@ const TrixoQuestionnaireForm: React.FC = () => {
       {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
         <VStack align="start" w="100%">
           <Text>
-            <Trans id="At what threshold and currency does your organization conduct KYC?">
-              At what threshold and currency does your organization conduct KYC?
+            <Trans id="At what threshold and currency does your organization conduct KYC checks?">
+              At what threshold and currency does your organization conduct KYC checks?
             </Trans>
           </Text>
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
@@ -254,8 +256,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
         </Heading>
         <VStack align="start" w="100%">
           <Text>
-            <Trans id="Is your organization required by law to safeguard PII?">
-              Is your organization required by law to safeguard PII?
+            <Trans id="Is your organization required by law to safeguard Personally Identifiable Information (PII)?">
+              Is your organization required by law to safeguard Personally Identifiable Information
+              (PII)?
             </Trans>
           </Text>
           <SwitchFormControl

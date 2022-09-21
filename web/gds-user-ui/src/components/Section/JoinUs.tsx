@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Stack,
   Container,
@@ -52,7 +53,7 @@ const datas = [
     )
   }
 ];
-export default function JoinUsSection() {
+const JoinUsSection: React.FC = () => {
   return (
     <Flex bg={colors.system.gray} position={'relative'} width="100%" py={12}>
       <Container maxW={'5xl'} zIndex={10} position={'relative'} id={'join'}>
@@ -116,4 +117,5 @@ export default function JoinUsSection() {
       </Container>
     </Flex>
   );
-}
+};
+export default React.memo(JoinUsSection);

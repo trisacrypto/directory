@@ -1,7 +1,6 @@
 package gds_test
 
 import (
-	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -69,7 +68,7 @@ func (s *gdsTestSuite) TestBackupManager() {
 	// Backup should be created
 	backupDir := s.svc.GetConf().Backup.Storage
 	require.DirExists(backupDir)
-	files, err := ioutil.ReadDir(backupDir)
+	files, err := os.ReadDir(backupDir)
 	require.NoError(err)
 	require.Len(files, 1, "wrong number of backups created")
 }

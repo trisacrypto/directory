@@ -77,7 +77,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                   <Trans id="Name Identifiers">Name Identifiers</Trans>
                 </ListItem>
                 <ListItem>
-                  {data?.entity?.name?.name_identifiers?.[0].legal_person_name || 'N/A'}
+                  {data?.entity?.name?.name_identifiers?.[0]?.legal_person_name || 'N/A'}
                 </ListItem>
               </List>
               <List>

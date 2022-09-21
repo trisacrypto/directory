@@ -10,6 +10,7 @@ import Start from 'modules/start';
 import SuccessPage from 'modules/auth/register/success';
 import Login from 'modules/auth/login';
 import Register from 'modules/auth/register';
+import Maintenance from 'components/Maintenance';
 const CertificateRegistration = React.lazy(
   () => import('modules/dashboard/certificate/registration')
 );
@@ -38,12 +39,7 @@ const appRoutes = [
     component: Start,
     layout: 'landing'
   },
-  {
-    path: '/certificate/registration',
-    name: 'Certificate Registration',
-    component: CertificateRegistration,
-    layout: 'landing'
-  },
+
   {
     path: '/comply',
     name: 'Comply and Integrate',
@@ -54,6 +50,12 @@ const appRoutes = [
     path: '/guide',
     name: 'Membership Guide',
     component: MembershipGuide,
+    layout: 'landing'
+  },
+  {
+    path: '/maintenance',
+    name: 'Maintenance',
+    component: Maintenance,
     layout: 'landing'
   },
 

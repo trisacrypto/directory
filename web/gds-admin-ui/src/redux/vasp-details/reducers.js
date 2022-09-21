@@ -104,7 +104,14 @@ const vaspDetailsReducers = (state = INITIAL_STATE, action) => {
         case UpdateContactActionTypes.API_RESPONSE_ERROR:
             return {
                 ...state,
-                error: action.payload.error
+                contactError: action.payload.error,
+                loading: false
+            }
+        case UpdateContactActionTypes.CLEAR_ERROR_MESSAGE:
+            return {
+                ...state,
+                contactError: null,
+                loading: false
             }
         default:
             return state

@@ -66,7 +66,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
     reader.readAsText(file);
   };
   return (
-    <Stack spacing={7} mt="2rem" bg={bg}>
+    <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
         <Box display={'flex'}>
           <Heading size="md" pr={3} ml={2}>

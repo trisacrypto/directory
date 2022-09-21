@@ -88,6 +88,7 @@ type EmailConfig struct {
 }
 
 type CertManConfig struct {
+	Enabled            bool          `split_words:"true" default:"true"`
 	RequestInterval    time.Duration `split_words:"true" default:"10m"`
 	ReissuanceInterval time.Duration `split_words:"true" default:"24h"`
 	Storage            string        `split_words:"true" required:"false"`

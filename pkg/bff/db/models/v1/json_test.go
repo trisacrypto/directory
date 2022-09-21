@@ -2,7 +2,7 @@ package models_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +13,7 @@ import (
 // Test that the registration form marshals and unmarshals correctly to and from JSON
 func TestMarshalRegistrationForm(t *testing.T) {
 	// Load the JSON fixture
-	fixtureData, err := ioutil.ReadFile("testdata/default_registration_form.json")
+	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
 	require.NoError(t, err, "error reading default registration form fixture")
 
 	// Default form should be marshaled correctly

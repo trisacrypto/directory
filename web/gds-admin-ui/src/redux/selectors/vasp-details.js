@@ -9,3 +9,4 @@ export const getTrisaDetailsErrorState = createSelector(vaspDetailsState, state 
 export const getIvmsErrorState = createSelector(vaspDetailsState, state => state.ivmsError)
 
 export const getContacts = createSelector(getVaspDetails, state => state.vasp.contacts)
+export const getContactErrorState = createSelector(vaspDetailsState, state => state.contactError)

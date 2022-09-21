@@ -15,6 +15,7 @@ export const initialValue: TPayload = {
   lastStep: null,
   hasReachSubmitStep: false,
   testnetSubmitted: false,
+  hasReachReviewStep: false,
   mainnetSubmitted: false,
   data: {}
 };
@@ -24,6 +25,9 @@ const stepperSlice: any = createSlice({
   initialState: initialValue,
   reducers: {
     setCurrentStep: (state: any, { payload }: any) => {
+      if (payload.currentStep === 6) {
+        state.hasReachReviewStep = true;
+      }
       state.currentStep = payload.currentStep;
     },
     addStep: (state: any, { payload }: any) => {
@@ -69,6 +73,7 @@ const stepperSlice: any = createSlice({
       state.hasReachSubmitStep = payload.hasReachSubmitStep;
       state.testnetSubmitted = payload.testnetSubmitted;
       state.mainnetSubmitted = payload.mainnetSubmitted;
+      state.hasReachReviewStep = !!(payload.currentStep === 6); // default value
     },
     // get current state
     getCurrentState: (state: TPayload) => {
@@ -86,6 +91,7 @@ const stepperSlice: any = createSlice({
       state.hasReachSubmitStep = false;
       state.testnetSubmitted = false;
       state.mainnetSubmitted = false;
+      state.hasReachReviewStep = false;
       state.data = {};
     },
     // set testnet submission

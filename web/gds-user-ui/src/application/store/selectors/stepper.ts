@@ -22,3 +22,7 @@ export const getHasReachedSubmitStep = createSelector(
   rootState,
   (state) => state.hasReachSubmitStep
 );
+export const getHasReachedReviewStep = createSelector(
+  rootState,
+  (state) => state.hasReachReviewStep
+);

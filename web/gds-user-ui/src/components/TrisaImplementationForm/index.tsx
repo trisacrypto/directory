@@ -1,8 +1,8 @@
 import { WarningIcon } from '@chakra-ui/icons';
-import { Heading, Text } from '@chakra-ui/react';
+import { Heading, Text, useToast } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import FormLayout from 'layouts/FormLayout';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { getDomain } from 'utils/utils';
 import _ from 'lodash/fp';
@@ -28,19 +28,19 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
     register,
     formState: { errors },
     watch,
-    setError,
     getValues
   } = useFormContext();
   const commonName = watch(`${name}.common_name`);
   const trisaEndpoint = watch(`${name}.endpoint`);
   const [commonNameWarning, setCommonNameWarning] = React.useState<string | undefined>('');
+
   React.useEffect(() => {
     const trisaEndpointUri = trisaEndpoint?.split(':')[0];
 
     const warningMessage =
       trisaEndpointUri === commonName
         ? undefined
-        : t`common name should match the TRISA endpoint without the port`;
+        : t`Common name should match the TRISA endpoint without the port.`;
     setCommonNameWarning(warningMessage);
   }, [commonName, trisaEndpoint]);
 

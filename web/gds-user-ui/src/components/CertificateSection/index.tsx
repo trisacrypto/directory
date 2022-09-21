@@ -29,7 +29,7 @@ const getSection = (
           <Link href="https://intervasp.org/" isExternal color="link">
             IVMS 101
           </Link>
-        )} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
+        )} data structure for legal persons and is strongly suggested for use as KYC (Know your Counterparty) or CDD (Customer Due Diligence) information exchanged in TRISA transfers.`
       };
     case 3:
       return {
@@ -53,7 +53,7 @@ const getSection = (
           <Link href="https://intervasp.org/" isExternal color="link">
             IVMS 101
           </Link>
-        )} data structure for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers.`
+        )} data structure for legal persons and is strongly suggested for use as KYC (Know your Counterparty) or CDD (Customer Due Diligence) information exchanged in TRISA transfers.`
       };
     case 7:
       return {

@@ -45,7 +45,7 @@ func GinLogger(server string) gin.HandlerFunc {
 		switch {
 		case status >= 400 && status < 500:
 			logctx.Warn().Msg(msg)
-		case status > 500:
+		case status >= 500:
 			logctx.Error().Msg(msg)
 		default:
 			logctx.Info().Msg(msg)

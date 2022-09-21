@@ -108,7 +108,7 @@ function* updateContact({ payload: { contactType, vaspId, data, setIsOpen } }) {
             yield put(fetchVaspDetailsApiResponse(vaspId))
         }
     } catch (error) {
-        yield put(updateContactResponseError(error.message))
+        yield put(updateContactResponseError({ error, message: error?.message }))
     }
 }
 

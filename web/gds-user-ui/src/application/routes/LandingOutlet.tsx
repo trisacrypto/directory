@@ -5,10 +5,6 @@ const PublicOutlet = () => {
   const { isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated();
   const { pathname } = useLocation();
-  return isLoggedIn ? (
-    <Navigate to="/dashboard/overview" state={{ from: pathname }} replace />
-  ) : (
-    <Outlet />
-  );
+  return <Outlet />;
 };
 export default PublicOutlet;

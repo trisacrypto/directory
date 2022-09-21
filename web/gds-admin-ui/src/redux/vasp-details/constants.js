@@ -66,7 +66,8 @@ export const UpdateContactActionTypes = {
     UPDATE_CONTACT: '@@update_contact/UPDATE_CONTACT',
 
     API_RESPONSE_SUCCESS: '@@update_contact/API_RESPONSE_SUCCESS',
-    API_RESPONSE_ERROR: '@@update_contact/API_RESPONSE_ERROR'
+    API_RESPONSE_ERROR: '@@update_contact/API_RESPONSE_ERROR',
+    CLEAR_ERROR_MESSAGE: '@@update_contact/CLEAR_ERROR_MESSAGE'
 }
 
 export const DeleteContactActionTypes = {

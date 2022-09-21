@@ -8,8 +8,7 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link,
-  Tooltip
+  Link
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
@@ -23,13 +22,20 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
-import ChakraRouterLink from 'components/ChakraRouterLink';
+import { useFormContext } from 'react-hook-form';
+import {
+  trisaImplementationMainnetFieldName,
+  trisaImplementationTestnetFieldName
+} from 'modules/dashboard/certificate/lib';
+import WarningBox from 'components/WarningBox';
+
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
   isTestNetSent?: boolean;
   isMainNetSent?: boolean;
   result?: any;
 }
+
 const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   onSubmitHandler,
   isTestNetSent,
@@ -44,6 +50,13 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep } = useCertificateStepper();
   const navigate = useNavigate();
+  const { getValues } = useFormContext();
+
+  const isTestnetNetworkFieldsIncomplete =
+    getValues(trisaImplementationTestnetFieldName).filter(Boolean).length !== 2;
+  const isMainnetNetworkIncomplete =
+    getValues(trisaImplementationMainnetFieldName).filter(Boolean).length !== 2;
+
   useEffect(() => {
     if (isTestNetSubmitted) {
       setTestnet(true);
@@ -139,6 +152,23 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   </Link>
                   .
                 </Text>
+
+                {isTestnetNetworkFieldsIncomplete ? (
+                  <WarningBox>
+                    <Text>
+                      <Trans id="If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name.">
+                        If you would like to register for TestNet, please provide a TestNet Endpoint
+                        and Common Name.
+                      </Trans>
+                    </Text>
+                    <Text>
+                      <Trans id="Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.">
+                        Please note that TestNet and MainNet are separate networks that require
+                        different X.509 Identity Certificates.
+                      </Trans>
+                    </Text>
+                  </WarningBox>
+                ) : null}
               </Stack>
               <Stack
                 alignContent={'center'}
@@ -149,7 +179,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 <Button
                   bgColor="#ff7a59f0"
                   color="#fff"
-                  isDisabled={testnet}
+                  isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
                   data-testid="testnet-submit-btn"
                   size="lg"
                   py="2.5rem"
@@ -167,7 +197,6 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 </Button>
               </Stack>
             </Stack>
-
             <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
@@ -206,6 +235,22 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     <Trans id="Review page">Review page</Trans>
                   </Link>
                 </Text>
+                {isMainnetNetworkIncomplete ? (
+                  <WarningBox>
+                    <Text>
+                      <Trans id="If you would like to register for MainNet, please provide a MainNet Endpoint and Common Name.">
+                        If you would like to register for MainNet, please provide a MainNet Endpoint
+                        and Common Name.
+                      </Trans>
+                    </Text>
+                    <Text>
+                      <Trans id="Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.">
+                        Please note that TestNet and MainNet are separate networks that require
+                        different X.509 Identity Certificates.
+                      </Trans>
+                    </Text>
+                  </WarningBox>
+                ) : null}
               </Stack>
               <Stack
                 alignContent={'center'}
@@ -218,7 +263,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   color="#fff"
                   size="lg"
                   py="2.5rem"
-                  isDisabled={mainnet}
+                  isDisabled={mainnet || isMainnetNetworkIncomplete}
                   whiteSpace="normal"
                   boxShadow="lg"
                   data-testid="mainnet-submit-btn"

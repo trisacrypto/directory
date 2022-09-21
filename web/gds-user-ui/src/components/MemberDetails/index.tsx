@@ -184,12 +184,12 @@ export default function MemberDetails() {
                         return (
                           <Stack direction="row" key={index}>
                             <Stack width="50%">
-                              <Text as="div">{nameIdentifier.legal_person_name || 'N/A'}</Text>
+                              <Text as="div">{nameIdentifier?.legal_person_name || 'N/A'}</Text>
                             </Stack>
                             <Stack>
                               <Text as="div">
                                 {getNameIdentiferTypeLabel(
-                                  nameIdentifier.legal_person_name_identifier_type
+                                  nameIdentifier?.legal_person_name_identifier_type
                                 )}
                               </Text>
                             </Stack>
@@ -203,12 +203,12 @@ export default function MemberDetails() {
                         return (
                           <Stack direction="row" key={index}>
                             <Stack width="50%">
-                              <Text as="div">{nameIdentifier.legal_person_name || 'N/A'}</Text>
+                              <Text as="div">{nameIdentifier?.legal_person_name || 'N/A'}</Text>
                             </Stack>
                             <Stack>
                               <Text as="div">
                                 {getNameIdentiferTypeLabel(
-                                  nameIdentifier.legal_person_name_identifier_type
+                                  nameIdentifier?.legal_person_name_identifier_type
                                 )}
                               </Text>
                             </Stack>
@@ -540,9 +540,17 @@ export default function MemberDetails() {
               <Tbody>
                 <Tr>
                   <Td>
-                    Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and
-                    Sanctions standards per the requirements of the jurisdiction(s) regulatory
-                    regimes where it is licensed/approved/registered?
+                    <Trans
+                      id="Does your organization have a programme that sets minimum Anti-Money
+                      Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
+                      Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the
+                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?">
+                      Does your organization have a programme that sets minimum Anti-Money
+                      Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
+                      Counterparty/Customer Due Diligence (KYC/CDD) (Know your Counterparty/Customer
+                      Due Diligence) and Sanctions standards per the requirements of the
+                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
+                    </Trans>
                   </Td>
                   <Td>
                     <Tag
@@ -560,8 +568,9 @@ export default function MemberDetails() {
                 </Tr>
                 <Tr>
                   <Td>
-                    Does your organization conduct KYC/CDD before permitting its customers to
-                    send/receive virtual asset transfers?
+                    Does your organization conduct KYC/CDD (Know your Counterparty/Customer Due
+                    Diligence) before permitting its customers to send/receive virtual asset
+                    transfers?
                   </Td>
                   <Td>
                     <Tag
@@ -577,8 +586,8 @@ export default function MemberDetails() {
                 </Tr>
                 <Tr>
                   <Td>
-                    <Trans id="At what threshold and currency does your organization conduct KYC?">
-                      At what threshold and currency does your organization conduct KYC?
+                    <Trans id="At what threshold and currency does your organization conduct KYC checks?">
+                      At what threshold and currency does your organization conduct KYC checks?
                     </Trans>
                   </Td>
                   <Td>

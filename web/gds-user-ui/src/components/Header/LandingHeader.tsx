@@ -13,8 +13,7 @@ import {
   DrawerContent,
   useDisclosure,
   DrawerCloseButton,
-  Button,
-  useColorMode
+  Button
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -25,14 +24,15 @@ import LanguagesDropdown from 'components/LanguagesDropdown';
 import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
+import useAuth from 'hooks/useAuth';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
-  const [show, setShow] = React.useState(false);
+  const [show] = React.useState(false);
   const iconColor = useColorModeValue('black', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [locale] = useLanguageProvider();
-  const { colorMode, toggleColorMode } = useColorMode();
-  const isLight = colorMode === 'light';
+  const { isAuthenticated } = useAuth();
+  const isLoggedIn = isAuthenticated();
 
   return (
     <Flex
@@ -75,11 +75,19 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                 <Trans id="Documentation">Documentation</Trans>
               </MenuItem>
               <Stack>
-                <NavLink to={'/auth/login'}>
-                  <Button variant="secondary">
-                    <Trans id="Login">Login</Trans>
-                  </Button>
-                </NavLink>
+                {!isLoggedIn ? (
+                  <NavLink to={'/auth/login'}>
+                    <Button variant="secondary">
+                      <Trans id="Login">Login</Trans>
+                    </Button>
+                  </NavLink>
+                ) : (
+                  <NavLink to={'/dashboard/overview'}>
+                    <Button variant="secondary">
+                      <Trans id="Your dashboard">Your dashboard</Trans>
+                    </Button>
+                  </NavLink>
+                )}
               </Stack>
             </Stack>
 
@@ -116,4 +124,4 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
   );
 };
 
-export default LandingHeader;
+export default React.memo(LandingHeader);

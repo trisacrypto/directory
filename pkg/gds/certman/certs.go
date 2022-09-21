@@ -27,8 +27,14 @@ import (
 	"github.com/trisacrypto/trisa/pkg/trust"
 )
 
-func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (cm *CertificateManager, err error) {
-	cm = &CertificateManager{
+func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManager, email *emails.EmailManager) (_ Service, err error) {
+	// If not enabled return the certman disabled stub.
+	if !conf.Enabled {
+		return &Disabled{}, nil
+	}
+
+	// If enabled, construct the certificate manager and return it
+	cm := &CertificateManager{
 		conf:   conf,
 		db:     db,
 		secret: secret,
@@ -73,10 +79,17 @@ type CertificateManager struct {
 	stop    chan struct{}
 }
 
+// Compile time interface implementation check.
+var _ Service = &CertificateManager{}
+
 // Run starts the CertManager as a go routine under the provided waitgroup. For
 // graceful shutdown, the caller must invoke the Stop method to signal the CertManager
 // routine to stop and block on the waitgroup if provided.
 func (c *CertificateManager) Run(wg *sync.WaitGroup) error {
+	if !c.conf.Enabled {
+		return errors.New("certificate manager is not enabled")
+	}
+
 	if c.stop != nil {
 		return errors.New("certificate manager is already running")
 	}

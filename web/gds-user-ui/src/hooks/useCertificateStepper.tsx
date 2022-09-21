@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { getSteps, getLastStep, resetStepper } from '../application/store/selectors/stepper';
+import { useRef } from 'react';
+import { getSteps, getLastStep } from '../application/store/selectors/stepper';
 import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   addStep,
   setCurrentStep,
@@ -17,14 +17,14 @@ import {
   setMainnetSubmitted,
   setCertificateValue
 } from 'application/store/stepper.slice';
-import {
-  setRegistrationDefaultValue,
-  postRegistrationValue,
-  getRegistrationDefaultValue
-} from 'modules/dashboard/registration/utils';
+import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
+import { fieldNamesPerSteps } from 'modules/dashboard/certificate/lib';
+import _ from 'lodash';
+import { useToast } from '@chakra-ui/react';
+import { t } from '@lingui/macro';
 
 interface TState {
   status?: boolean;
@@ -46,6 +46,8 @@ const useCertificateStepper = () => {
   const currentStep: number = useSelector(getCurrentStep);
   const steps: TStep[] = useSelector(getSteps);
   const lastStep: number = useSelector(getLastStep);
+  const toast = useToast();
+  const trisaImplementationToastIdRef = useRef('trisa-implementation-form-error-message');
 
   // get store state after dispatch action
 
@@ -80,7 +82,7 @@ const useCertificateStepper = () => {
   };
 
   const nextStep = (state?: TState) => {
-    const { values: formValues, registrationValues, setRegistrationState, isDirty } = state || {};
+    const { values: formValues, setRegistrationState, isDirty } = state || {};
 
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
@@ -92,10 +94,24 @@ const useCertificateStepper = () => {
     }
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
+      const isTrisaImplementationFormEmpty = !fieldNamesPerSteps.trisaImplementation
+        .map((path) => _.get(formValues, path))
+        .join('');
+
       // that mean we move to submit step
-      if (!hasStepError(steps)) {
+      if (!hasStepError(steps) && !isTrisaImplementationFormEmpty) {
         dispatch(setSubmitStep({ submitStep: true }));
         dispatch(setCurrentStep({ currentStep: lastStep }));
+      } else if (!toast.isActive(trisaImplementationToastIdRef.current)) {
+        toast({
+          position: 'top-right',
+          title: t`Under TRISA Implementation, please provide an Endpoint or Common Name for TestNet and/or MainNet`,
+          description: t`You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form.
+          Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.`,
+          status: 'error',
+          duration: null,
+          isClosable: true
+        });
       }
     } else {
       const found = findStepKey(steps, currentStep + 1);
