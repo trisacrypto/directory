@@ -4,6 +4,9 @@
 // learn more: https://github.com/testing-library/jest-dom
 import 'jest-localstorage-mock';
 import '@testing-library/jest-dom';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 
 window.matchMedia = jest.fn().mockImplementation((query) => {
   return {
