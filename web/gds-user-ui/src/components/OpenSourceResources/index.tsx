@@ -12,7 +12,7 @@ const OpenSourceResources: React.FC = () => {
         <UnorderedList>
           <ListItem color="#1F4CED">
             <Link href="https://github.com/trisacrypto/trisa" isExternal>
-              <Trans id="TRISA Githubs repo">TRISA Github&apos;s repo</Trans>
+              <Trans id="TRISA GitHub repo">TRISA Github&apos;s repo</Trans>
             </Link>
           </ListItem>
           <ListItem color="#1F4CED">

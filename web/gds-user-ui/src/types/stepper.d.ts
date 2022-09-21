@@ -4,6 +4,8 @@ type TStep = {
   key?: number;
   data?: any;
 };
+type TStepStatus = 'progress' | 'success' | 'error';
+type TStatusKey = 'testnet' | 'mainnet';
 type TPayload = {
   currentStep: number | string;
   steps: TStep[];
@@ -12,5 +14,6 @@ type TPayload = {
   hasReachSubmitStep?: boolean;
   testnetSubmitted?: boolean;
   mainnetSubmitted?: boolean;
+  status?: Record<TStatusKey, StepStatus>;
   data?: any;
 };
