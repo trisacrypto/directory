@@ -1,6 +1,8 @@
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import DashboardLayout from 'layouts/DashboardLayout';
+import { Suspense } from 'react';
+import Loader from 'components/Loader';
 const PrivateOutlet = () => {
   const { isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated();
@@ -8,9 +10,13 @@ const PrivateOutlet = () => {
   const { pathname } = useLocation();
 
   return isLoggedIn ? (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
+    <Suspense fallback={<Loader />}>
+      <DashboardLayout>
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+        </Suspense>
+      </DashboardLayout>
+    </Suspense>
   ) : (
     <Navigate to="/" state={{ from: pathname }} replace />
   );

@@ -1,24 +1,24 @@
-import React from 'react';
+import { lazy } from 'react';
 import CallbackPage from 'modules/auth/callback';
-import Overview from 'modules/dashboard/overview';
 import NotFound from 'modules/notFound';
 import Logout from 'modules/auth/logout';
 import ResetPassword from 'modules/auth/reset';
-import CertificateRegistrationPage from 'modules/dashboard/certificate/registration';
 import Home from 'modules/home';
 import Start from 'modules/start';
 import SuccessPage from 'modules/auth/register/success';
 import Login from 'modules/auth/login';
 import Register from 'modules/auth/register';
 import Maintenance from 'components/Maintenance';
-const CertificateRegistration = React.lazy(
-  () => import('modules/dashboard/certificate/registration')
-);
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from '../../components/CertificateManagement';
 import VerifyPage from 'modules/verify';
+
+const Overview = lazy(() => import('modules/dashboard/overview'));
+const CertificateRegistrationPage = lazy(
+  () => import('modules/dashboard/certificate/registration')
+);
 
 const appRoutes = [
   // -------LANDING  ROUTES-------

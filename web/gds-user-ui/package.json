@@ -57,6 +57,7 @@
     "react-scripts": "5.0.0",
     "react-select": "^5.2.2",
     "react-slick": "^0.29.0",
+    "react-use": "^17.4.0",
     "redux-logger": "^3.0.6",
     "redux-persist": "^6.0.0",
     "reduxjs-toolkit-persist": "^7.2.1",
