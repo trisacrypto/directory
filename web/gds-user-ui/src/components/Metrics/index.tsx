@@ -4,6 +4,8 @@ import StatCard from 'components/StatCard';
 import StatusCard from 'components/StatusCard';
 import * as Sentry from '@sentry/react';
 import { t } from '@lingui/macro';
+import { useAsync } from 'react-use';
+import { getMetrics } from 'modules/dashboard/overview/service';
 interface MetricsProps {
   data: any;
   type: string;
