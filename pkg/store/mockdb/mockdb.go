@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
@@ -23,25 +25,31 @@ type MockState struct {
 	Keys  []string
 
 	// keep track of store interface calls
-	CloseInvoked           bool
-	CreateVASPInvoked      bool
-	RetrieveVASPInvoked    bool
-	UpdateVASPInvoked      bool
-	DeleteVASPInvoked      bool
-	ListVASPsInvoked       bool
-	SearchVASPsInvoked     bool
-	ListCertReqsInvoked    bool
-	CreateCertReqInvoked   bool
-	RetrieveCertReqInvoked bool
-	UpdateCertReqInvoked   bool
-	DeleteCertReqInvoked   bool
-	ListCertInvoked        bool
-	CreateCertInvoked      bool
-	RetrieveCertInvoked    bool
-	UpdateCertInvoked      bool
-	DeleteCertInvoked      bool
-	ReindexInvoked         bool
-	BackupInvoked          bool
+	CloseInvoked                     bool
+	CreateVASPInvoked                bool
+	RetrieveVASPInvoked              bool
+	UpdateVASPInvoked                bool
+	DeleteVASPInvoked                bool
+	ListVASPsInvoked                 bool
+	SearchVASPsInvoked               bool
+	ListCertReqsInvoked              bool
+	CreateCertReqInvoked             bool
+	RetrieveCertReqInvoked           bool
+	UpdateCertReqInvoked             bool
+	DeleteCertReqInvoked             bool
+	ListCertInvoked                  bool
+	CreateCertInvoked                bool
+	RetrieveCertInvoked              bool
+	UpdateCertInvoked                bool
+	DeleteCertInvoked                bool
+	RetrieveAnnouncementMonthInvoked bool
+	UpdateAnnouncementMonthInvoked   bool
+	CreateOrganizationInvoked        bool
+	RetrieveOrganizationInvoked      bool
+	UpdateOrganizationInvoked        bool
+	DeleteOrganizationInvoked        bool
+	ReindexInvoked                   bool
+	BackupInvoked                    bool
 }
 
 func GetState() *MockState {
@@ -57,25 +65,31 @@ func ResetState() {
 
 // MockDB fulfills the store interface for testing.
 type MockDB struct {
-	OnClose           func() error
-	OnCreateVASP      func(v *pb.VASP) (string, error)
-	OnRetrieveVASP    func(id string) (*pb.VASP, error)
-	OnUpdateVASP      func(v *pb.VASP) error
-	OnDeleteVASP      func(id string) error
-	OnListVASPs       func() iterator.DirectoryIterator
-	OnSearchVASPs     func(query map[string]interface{}) ([]*pb.VASP, error)
-	OnListCertReqs    func() iterator.CertificateRequestIterator
-	OnCreateCertReq   func(r *models.CertificateRequest) (string, error)
-	OnRetrieveCertReq func(id string) (*models.CertificateRequest, error)
-	OnUpdateCertReq   func(r *models.CertificateRequest) error
-	OnDeleteCertReq   func(id string) error
-	OnListCerts       func() iterator.CertificateIterator
-	OnCreateCert      func(c *models.Certificate) (string, error)
-	OnRetrieveCert    func(id string) (*models.Certificate, error)
-	OnUpdateCert      func(c *models.Certificate) error
-	OnDeleteCert      func(id string) error
-	OnReindex         func() error
-	OnBackup          func(string) error
+	OnClose                     func() error
+	OnCreateVASP                func(v *pb.VASP) (string, error)
+	OnRetrieveVASP              func(id string) (*pb.VASP, error)
+	OnUpdateVASP                func(v *pb.VASP) error
+	OnDeleteVASP                func(id string) error
+	OnListVASPs                 func() iterator.DirectoryIterator
+	OnSearchVASPs               func(query map[string]interface{}) ([]*pb.VASP, error)
+	OnListCertReqs              func() iterator.CertificateRequestIterator
+	OnCreateCertReq             func(r *models.CertificateRequest) (string, error)
+	OnRetrieveCertReq           func(id string) (*models.CertificateRequest, error)
+	OnUpdateCertReq             func(r *models.CertificateRequest) error
+	OnDeleteCertReq             func(id string) error
+	OnListCerts                 func() iterator.CertificateIterator
+	OnCreateCert                func(c *models.Certificate) (string, error)
+	OnRetrieveCert              func(id string) (*models.Certificate, error)
+	OnUpdateCert                func(c *models.Certificate) error
+	OnDeleteCert                func(id string) error
+	OnRetrieveAnnouncementMonth func(date string) (*bff.AnnouncementMonth, error)
+	OnUpdateAnnouncementMonth   func(o *bff.AnnouncementMonth) error
+	OnCreateOrganization        func() (*bff.Organization, error)
+	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
+	OnUpdateOrganization        func(o *bff.Organization) error
+	OnDeleteOrganization        func(id uuid.UUID) error
+	OnReindex                   func() error
+	OnBackup                    func(string) error
 }
 
 func GetStore() store.Store {
@@ -181,6 +195,36 @@ func (m *MockDB) UpdateCert(c *models.Certificate) error {
 func (m *MockDB) DeleteCert(id string) error {
 	state.DeleteCertInvoked = true
 	return m.OnDeleteCert(id)
+}
+
+func (m *MockDB) RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth, error) {
+	state.RetrieveAnnouncementMonthInvoked = true
+	return m.OnRetrieveAnnouncementMonth(date)
+}
+
+func (m *MockDB) UpdateAnnouncementMonth(o *bff.AnnouncementMonth) error {
+	state.UpdateAnnouncementMonthInvoked = true
+	return m.OnUpdateAnnouncementMonth(o)
+}
+
+func (m *MockDB) CreateOrganization() (*bff.Organization, error) {
+	state.CreateOrganizationInvoked = true
+	return m.OnCreateOrganization()
+}
+
+func (m *MockDB) RetrieveOrganization(id uuid.UUID) (*bff.Organization, error) {
+	state.RetrieveOrganizationInvoked = true
+	return m.OnRetrieveOrganization(id)
+}
+
+func (m *MockDB) UpdateOrganization(o *bff.Organization) error {
+	state.UpdateOrganizationInvoked = true
+	return m.OnUpdateOrganization(o)
+}
+
+func (m *MockDB) DeleteOrganization(id uuid.UUID) error {
+	state.DeleteOrganizationInvoked = true
+	return m.OnDeleteOrganization(id)
 }
 
 func (m *MockDB) Reindex() error {
