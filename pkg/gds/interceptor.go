@@ -31,6 +31,7 @@ func (s *Service) unaryInterceptor(ctx context.Context, in interface{}, info *gr
 			service = "members"
 		default:
 			log.WithLevel(zerolog.PanicLevel).Err(fmt.Errorf("unknown service type: %T", info.Server))
+			panicked = false
 			return nil, status.Error(codes.Unimplemented, "unknown service type for request")
 		}
 		sentry.CurrentHub().Scope().SetTag("service", service)
