@@ -249,7 +249,7 @@ msgid "Already have an account?"
 msgstr "すでにアカウントをお持ちの方?"
 
 #: src/components/NetworkAnnouncements/index.tsx:21
-msgid "An error has occurred to load annoucements"
+msgid "An error has occurred to load announcements"
 msgstr ""
 
 #: src/components/NeedsAttention/index.tsx:34

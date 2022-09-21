@@ -203,7 +203,7 @@ msgid "Already have an account?"
 msgstr "---"
 
 #: src/components/NetworkAnnouncements/index.tsx:21
-msgid "An error has occurred to load annoucements"
+msgid "An error has occurred to load announcements"
 msgstr "---"
 
 #: src/components/NeedsAttention/index.tsx:34
@@ -245,13 +245,13 @@ msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:146
 #~ msgid "At what threshold and currency does your organization conduct KYC (Know your Counterparty)?"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:144
 #: src/components/MemberDetails/index.tsx:589
 #: src/components/TrixoQuestionnaireForm/index.tsx:148
 msgid "At what threshold and currency does your organization conduct KYC checks?"
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:140
 #: src/components/MemberDetails/index.tsx:580
@@ -371,7 +371,7 @@ msgstr "---"
 
 #: src/components/Section/IntegrateAndComply.tsx:134
 msgid "CipherTrace Traveler"
-msgstr ""
+msgstr "---"
 
 #: src/components/AddressForm/index.tsx:56
 msgid "City / Town / Municipality"
@@ -415,7 +415,7 @@ msgstr "---"
 
 #: src/components/TrisaImplementationForm/index.tsx:43
 msgid "Common name should match the TRISA endpoint without the port."
-msgstr ""
+msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:40
 #~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it"
@@ -424,16 +424,16 @@ msgstr ""
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
 #~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:29
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:55
 msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods."
-msgstr ""
+msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/trisaImplementationValidationSchema.ts:20
 #~ msgid "Common name should not contain special characters, no spaces and must have a dot(.) in it, should have at least 2 characters after the periods"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/CertificateManagement/index.tsx:40
 msgid "Complete Certficate Registration"
@@ -575,7 +575,7 @@ msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:90
 msgid "Customer Due Diligence (CDD) & Travel Rule Policies"
-msgstr ""
+msgstr "---"
 
 #: src/components/CustomerNumber/index.tsx:17
 msgid "Customer Number"
@@ -598,11 +598,11 @@ msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:33
 msgid "Date of incorporation / establishment must be earlier than current date."
-msgstr ""
+msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:29
 msgid "Date of incorporation / establishment must be later than {0}."
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateManagement/SealingCertificateTableRows.tsx:15
 #: src/components/CertificateManagement/X509TableRows.tsx:17
@@ -647,11 +647,11 @@ msgstr "---"
 #~ msgid ""
 #~ "Does your organization conduct Know your Counterparty/Customer Due\n"
 #~ "                Diligence (KYC/CDD) before permitting its customers to send/receive virtual asset transfers?"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:124
 msgid "Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?"
-msgstr ""
+msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:123
 #~ msgid "Does your organization have a programme that sets minimum AML, CFT, KYC/CDD and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
@@ -664,7 +664,7 @@ msgstr ""
 #~ "                      Counterparty/Customer Due Diligence (KYC/CDD) (Know your Counterparty/Customer\n"
 #~ "                      Due Diligence) and Sanctions standards per the requirements of the\n"
 #~ "                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/MemberDetails/index.tsx:543
 msgid ""
@@ -672,20 +672,20 @@ msgid ""
 "                      Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
 "                      Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the\n"
 "                      jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-msgstr ""
+msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:123
 msgid ""
 "Does your organization have a programme that sets minimum Anti-Money\n"
 "Laundering (AML), Countering the Financing of Terrorism (CFT), Know your\n"
 "Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:100
 msgid ""
 "Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due\n"
 "                    Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?"
-msgstr ""
+msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:272
 msgid "Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?"
@@ -696,7 +696,7 @@ msgid ""
 "Does your organization secure and protect Personally Identifiable\n"
 "                Information (PII), including Personally Identifiable\n"
 "                Information (PII) received from other VASPs under the Travel Rule?"
-msgstr ""
+msgstr "---"
 
 #: src/components/TrisaVerifiedLogo/index.tsx:49
 msgid "Download"
@@ -910,12 +910,12 @@ msgstr "---"
 #: src/components/ReviewSubmit/MainNetWarningBox.tsx:9
 #: src/components/ReviewSubmit/index.tsx:241
 msgid "If you would like to register for MainNet, please provide a MainNet Endpoint and Common Name."
-msgstr ""
+msgstr "---"
 
 #: src/components/ReviewSubmit/TestNetWarningBox.tsx:10
 #: src/components/ReviewSubmit/index.tsx:159
 msgid "If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name."
-msgstr ""
+msgstr "---"
 
 #: src/components/FileUpload/index.tsx:97
 msgid "Import File"
@@ -964,7 +964,7 @@ msgstr "---"
 
 #: src/modules/dashboard/certificate/lib/basicDetailsValidationSchema.ts:35
 msgid "Invalid date."
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:68
 #: src/components/TrixoQuestionnaireForm/index.tsx:100
@@ -973,7 +973,7 @@ msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:258
 #~ msgid "Is your organization required by law to safeguard PII (Personally Identifiable Information)?"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:231
 #: src/components/TrixoQuestionnaireForm/index.tsx:257
@@ -984,11 +984,11 @@ msgstr "---"
 msgid ""
 "Is your organization required by law to safeguard Personally Identifiable\n"
 "                Information (PII)?"
-msgstr ""
+msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:259
 msgid "Is your organization required by law to safeguard Personally Identifiable Information (PII)?"
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:165
 #: src/components/TrixoQuestionnaireForm/index.tsx:189
@@ -1006,7 +1006,7 @@ msgstr "---"
 
 #: src/components/Maintenance/index.tsx:28
 msgid "Join"
-msgstr ""
+msgstr "---"
 
 #: src/components/Section/JoinUs.tsx:110
 msgid "Join Today"
@@ -1172,7 +1172,7 @@ msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:264
 #~ msgid "Must safeguard PII (Personally Identifiable Information)"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:248
 #: src/components/CertificateReview/TrixoReviewDataTable.tsx:270
@@ -1265,7 +1265,7 @@ msgstr "---"
 
 #: src/components/OrganizationProfile/TrisaDetail.tsx:16
 msgid "Not Verified"
-msgstr ""
+msgstr "---"
 
 #: src/components/Section/Login.tsx:54
 #: src/components/Section/PasswordResetFail.tsx:34
@@ -1391,7 +1391,7 @@ msgstr "---"
 #: src/components/CertificateSection/index.tsx:28
 #: src/components/CertificateSection/index.tsx:52
 msgid "Please enter the information that identifies your organization as a Legal Person. This form represents the {0} data structure for legal persons and is strongly suggested for use as KYC (Know your Counterparty) or CDD (Customer Due Diligence) information exchanged in TRISA transfers."
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateSection/index.tsx:28
 #: src/components/CertificateSection/index.tsx:52
@@ -1403,7 +1403,7 @@ msgstr ""
 #: src/components/ReviewSubmit/index.tsx:165
 #: src/components/ReviewSubmit/index.tsx:247
 msgid "Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates."
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateSection/index.tsx:47
 msgid "Please review the information provided, edit as needed, and submit to complete the registration form. After the information is reviewed, emails will be sent to the provided contacts for verification. Once verified, your TestNet certificate will be issued."
@@ -1533,7 +1533,7 @@ msgstr "---"
 
 #: src/modules/dashboard/certificate/registration.tsx:337
 msgid "Review & Submit"
-msgstr ""
+msgstr "---"
 
 #: src/components/ReviewSubmit/index.tsx:151
 #: src/components/ReviewSubmit/index.tsx:235
@@ -1554,7 +1554,7 @@ msgstr "---"
 
 #: src/components/TrixoQuestionnaireForm/index.tsx:277
 #~ msgid "Safeguards Personally Identifiable Information (PII)"
-#~ msgstr ""
+#~ msgstr "---"
 
 #: src/modules/dashboard/certificate/registration.tsx:331
 msgid "Save & Next"
@@ -1882,7 +1882,7 @@ msgstr "---"
 
 #: src/components/Maintenance/index.tsx:34
 msgid "TRISA's Slack channel"
-msgstr ""
+msgstr "---"
 
 #: src/components/Section/IntegrateAndComply.tsx:151
 msgid "TRISA’s Github repo"
@@ -1986,7 +1986,7 @@ msgstr "---"
 
 #: src/components/Maintenance/index.tsx:18
 msgid "The TRISA Global Directory Service (GDS) is temporarily undergoing maintenance. Please try again later."
-msgstr ""
+msgstr "---"
 
 #: src/components/Section/AboutUs.tsx:37
 msgid "The Travel Rule Information Sharing Architecture (TRISA)"
@@ -2045,7 +2045,7 @@ msgstr "---"
 
 #: src/hooks/useCertificateStepper.tsx:108
 msgid "Under TRISA Implementation, please provide an Endpoint or Common Name for TestNet and/or MainNet"
-msgstr ""
+msgstr "---"
 
 #: src/components/ReviewSubmit/ConfirmationModal.tsx:142
 msgid "Understood"
@@ -2138,7 +2138,7 @@ msgstr "---"
 
 #: src/components/Maintenance/index.tsx:15
 msgid "We’ll be back soon."
-msgstr ""
+msgstr "---"
 
 #: src/components/Section/IntegrateAndComply.tsx:186
 #: src/components/Section/VaspVerification.tsx:192
@@ -2195,7 +2195,7 @@ msgstr "---"
 msgid ""
 "You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form.\n"
 "Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates."
-msgstr ""
+msgstr "---"
 
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:23
 msgid "You must request a new X.509 Identity Certificate to change your Endpoint and Common Name."
@@ -2219,7 +2219,7 @@ msgstr "---"
 
 #: src/components/OrganizationProfile/TrisaDetail.tsx:46
 msgid "Your TRISA {type} Details"
-msgstr ""
+msgstr "---"
 
 #: src/modules/auth/login/user.slice.ts:101
 #: src/modules/auth/login/user.slice.ts:101
@@ -2228,7 +2228,7 @@ msgstr "---"
 
 #: src/components/Header/LandingHeader.tsx:87
 msgid "Your dashboard"
-msgstr ""
+msgstr "---"
 
 #: src/components/CertificateSection/index.tsx:61
 msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
@@ -2273,7 +2273,7 @@ msgstr "---"
 
 #: src/components/LegalPerson/index.tsx:36
 msgid "for legal persons and is strongly suggested for use as KYC or CDD (Know your Counterparty) information exchanged in TRISA transfers."
-msgstr ""
+msgstr "---"
 
 #: src/components/LegalPerson/index.tsx:36
 #~ msgid "for legal persons and is strongly suggested for use as KYC or CDD information exchanged in TRISA transfers."
@@ -2326,7 +2326,7 @@ msgstr "---"
 
 #: src/components/Maintenance/index.tsx:36
 msgid "to receive maintenance and outage notifications. If you have an immediate concern, please email support@rotational.io."
-msgstr ""
+msgstr "---"
 
 #: src/components/PasswordStrength/index.tsx:120
 msgid "upper case letters (A-Z)"
@@ -2350,4 +2350,4 @@ msgstr "---"
 
 #: src/components/NeedsAttention/AttentionAlert.tsx:98
 msgid "{message}"
-msgstr ""
+msgstr "---"

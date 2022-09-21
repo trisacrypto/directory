@@ -389,7 +389,7 @@ msgstr ""
 
 #: src/components/Modal/ConfirmationResetFormModal.tsx:62
 msgid "Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process"
-msgstr "Cliquez sur"Réinitialiser"pour effacer et réinitialiser le formulaire d'inscription. Toutes les données seront supprimées. Vous serez redirigé vers le début du formulaire et devrez recommencer le processus d'enregistrement"
+msgstr "Cliquez sur\"Réinitialiser\"pour effacer et réinitialiser le formulaire d'inscription. Toutes les données seront supprimées. Vous serez redirigé vers le début du formulaire et devrez recommencer le processus d'enregistrement"
 
 #: src/components/ReviewSubmit/AlertContent.tsx:19
 msgid "Click “Yes” if you have copied the PKCS12 password and have securely saved it."
@@ -416,8 +416,12 @@ msgid "Common name should not contain special characters, no spaces and must hav
 msgstr "Le nom commun ne doit pas contenir de caractères spéciaux, pas d'espaces et doit comporter un point (.)"
 
 #: src/components/CertificateManagement/index.tsx:40
-msgid "Complete Certificate Registration"
+msgid "Complete Certficate Registration"
 msgstr ""
+
+#: src/components/CertificateManagement/index.tsx:40
+#~ msgid "Complete Certificate Registration"
+#~ msgstr ""
 
 #: src/components/Head/LandingHead.tsx:46
 msgid "Complete TRISA’s VASP Verfication Process"
@@ -1060,7 +1064,7 @@ msgstr "Connectez-vous"
 
 #: src/components/Section/Login.tsx:25
 msgid "Log into your TRISA account."
-msgstr "Connectez-vous à votre compte TRISA".
+msgstr "Connectez-vous à votre compte TRISA\"."
 
 #: src/components/Header/LandingHeader.tsx:81
 #: src/components/Header/LandingHeader.tsx:115
@@ -1079,7 +1083,7 @@ msgstr "SOUMISSION AU RÉSEAU PRINCIPAL"
 #: src/components/OrganizationProfile/TrisaImplementation.tsx:72
 #: src/components/ReviewSubmit/index.tsx:208
 msgid "MainNet"
-msgid "MainNet"
+msgstr ""
 
 #: src/components/CertificateReview/TrisaImplementationReviewDataTable.tsx:67
 msgid "MainNet Certificate Common Name"
@@ -1713,7 +1717,11 @@ msgid "TRISA Endpoint: TestNet"
 msgstr "Point de terminaison TRISA: TestNet"
 
 #: src/components/OpenSourceResources/index.tsx:15
-msgid "TRISA Github repo"
+#~ msgid "TRISA Github repo"
+#~ msgstr ""
+
+#: src/components/OpenSourceResources/index.tsx:15
+msgid "TRISA Githubs repo"
 msgstr ""
 
 #: src/components/Head/LandingHead.tsx:25

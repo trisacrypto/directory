@@ -18,7 +18,7 @@ const NetworkAnnouncements = (props: NetworkAnnouncementProps) => {
       mt={10}>
       <Sentry.ErrorBoundary
         fallback={
-          <Text color={'red'} pt={20}>{t`An error has occurred to load annoucements`}</Text>
+          <Text color={'red'} pt={20}>{t`An error has occurred to load announcements`}</Text>
         }>
         <AnnouncementCarousel announcements={props.datas} />
       </Sentry.ErrorBoundary>
