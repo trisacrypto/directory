@@ -39,7 +39,8 @@ export const getDomain = (url: string | URL): string | null => {
     const _url = new URL(url);
     return _url?.hostname?.replace('www.', '');
   } catch (error) {
-    console.error('[error]', error);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    handleError(error);
     return null;
   }
 };
