@@ -57,16 +57,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         </Stack>
       </Stack>
       <SimpleGrid minChildWidth="120px" spacing="40px">
-        <Stack
-          border={'1px solid #eee'}
-          p={4}
-          my={5}
-          px={7}
-          bg={'white'}
-          // minHeight={divHeight}
-          id={'org'}
-          // boxSize={'border-box'}
-          ref={orgRef}>
+        <Stack border={'1px solid #eee'} p={4} my={5} px={7} bg={'white'} id={'org'} ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
               <Trans id="Organizational Details">Organizational Details</Trans>
@@ -91,7 +82,6 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                   <Trans id="VASP Category">VASP Category</Trans>
                 </ListItem>
                 <ListItem>
-                  {' '}
                   {data?.vasp_categories && data?.vasp_categories.length > 0
                     ? data?.vasp_categories?.map((categ: any, index: any) => {
                         return (
@@ -168,33 +158,31 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
             </Heading>
             <SimpleGrid minChildWidth="360px" spacing="40px">
               {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
-                <>
-                  <List key={index}>
-                    <ListItem fontWeight={'bold'}>
-                      {' '}
-                      {contact === 'legal'
-                        ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`
-                        : contact.charAt(0).toUpperCase() + contact.slice(1)}
-                    </ListItem>
-                    <ListItem>
-                      {hasValue(data.contacts?.[contact]) ? (
-                        <>
-                          {data.contacts?.[contact]?.name && (
-                            <Text>{data.contacts?.[contact]?.name}</Text>
-                          )}
-                          {data.contacts?.[contact]?.email && (
-                            <Text>{data.contacts?.[contact]?.email}</Text>
-                          )}
-                          {data.contacts?.[contact]?.phone && (
-                            <Text>{data.contacts?.[contact]?.phone}</Text>
-                          )}
-                        </>
-                      ) : (
-                        'N/A'
-                      )}
-                    </ListItem>
-                  </List>
-                </>
+                <List key={index}>
+                  <ListItem fontWeight={'bold'}>
+                    {' '}
+                    {contact === 'legal'
+                      ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`
+                      : contact.charAt(0).toUpperCase() + contact.slice(1)}
+                  </ListItem>
+                  <ListItem>
+                    {hasValue(data.contacts?.[contact]) ? (
+                      <>
+                        {data.contacts?.[contact]?.name && (
+                          <Text>{data.contacts?.[contact]?.name}</Text>
+                        )}
+                        {data.contacts?.[contact]?.email && (
+                          <Text>{data.contacts?.[contact]?.email}</Text>
+                        )}
+                        {data.contacts?.[contact]?.phone && (
+                          <Text>{data.contacts?.[contact]?.phone}</Text>
+                        )}
+                      </>
+                    ) : (
+                      'N/A'
+                    )}
+                  </ListItem>
+                </List>
               ))}
             </SimpleGrid>
           </Box>

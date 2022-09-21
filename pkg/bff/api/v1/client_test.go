@@ -239,6 +239,35 @@ func TestLogin(t *testing.T) {
 	require.Len(t, client.Jar.Cookies(u), 2, "expected two cookies set in the cookie jar")
 }
 
+func TestAddCollaborator(t *testing.T) {
+	fixture := &models.Collaborator{
+		Email:     "alice@example.com",
+		CreatedAt: time.Now().Format(time.RFC3339Nano),
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/collaborators", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	request := &models.Collaborator{
+		Email: "alice@example.com",
+	}
+	collab, err := client.AddCollaborator(context.TODO(), request)
+	require.NoError(t, err)
+	require.Equal(t, fixture.Email, collab.Email)
+}
+
 func TestLoadRegistrationForm(t *testing.T) {
 	// Load a fixture from testdata
 	fixture := &models.RegistrationForm{}

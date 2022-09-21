@@ -155,6 +155,21 @@ func (s *APIv1) Login(ctx context.Context) (err error) {
 	return nil
 }
 
+// Add a collaborator to an organization.
+func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/collaborators", request, nil); err != nil {
+		return nil, err
+	}
+
+	collaborator = &models.Collaborator{}
+	if _, err = s.Do(req, collaborator, true); err != nil {
+		return nil, err
+	}
+	return collaborator, nil
+}
+
 // Load registration form data from the server to populate the front-end form.
 func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.RegistrationForm, err error) {
 	// Make the HTTP request
