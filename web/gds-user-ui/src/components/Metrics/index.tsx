@@ -4,7 +4,6 @@ import StatCard from 'components/StatCard';
 import StatusCard from 'components/StatusCard';
 import * as Sentry from '@sentry/react';
 import { t } from '@lingui/macro';
-
 interface MetricsProps {
   data: any;
   type: string;
