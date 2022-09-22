@@ -39,7 +39,8 @@ message Collaborator {
 
     // Metadata as RFC3339Nano Timestamps
     string created_at = 2;
-    string verified_at = 3;
+    string modified_at = 3;
+    string verified_at = 4;
 }
 
 // FormState contains the current state of an organization's registration form to
