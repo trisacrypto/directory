@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import React from 'react'
 import Gravatar from 'react-gravatar'
 import { useDispatch } from 'react-redux'
@@ -7,6 +6,8 @@ import { generateMd5 } from 'utils'
 import EditReviewNote from './EditReviewNote'
 import PropTypes from 'prop-types';
 import { deleteReviewNoteApiResponse } from 'redux/vasp-details'
+import TimeAgo from "components/TimeAgo";
+
 
 function ReviewNote({ note, vaspId }) {
     const [isEditable, setIsEditable] = React.useState(false);
@@ -36,8 +37,8 @@ function ReviewNote({ note, vaspId }) {
                         <h5 className="m-0" data-testid="author">{note.author}</h5>
                         {
                             note?.modified ?
-                                <small className='text-muted d-block fst-italic mb-1'>edited {dayjs(note.updated).fromNow()}</small> :
-                                <small className='text-muted d-block fst-italic mb-1'>created {dayjs(note.created).fromNow()}</small>
+                                <small className='text-muted d-block fst-italic mb-1'>edited <TimeAgo time={note.updated} /></small> :
+                                <small className='text-muted d-block fst-italic mb-1'>created <TimeAgo time={note.created} /></small>
                         }
                     </div>
                     <div hidden={isEditable}>
