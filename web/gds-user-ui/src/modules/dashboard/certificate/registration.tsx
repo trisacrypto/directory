@@ -8,6 +8,10 @@ import {
   Link,
   Flex,
   useDisclosure,
+<<<<<<< HEAD
+=======
+  Button,
+>>>>>>> 0726c20 (remove unused imports and variables)
   Stack,
   useColorModeValue,
   chakra
@@ -35,6 +39,10 @@ import {
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
+<<<<<<< HEAD
+=======
+import { t } from '@lingui/macro';
+>>>>>>> 0726c20 (remove unused imports and variables)
 import { getCurrentStep, getLastStep } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 import StepButtons from 'components/StepsButtons';
