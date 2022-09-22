@@ -6,9 +6,6 @@ import jwt_decode from 'jwt-decode';
 const auth0Config = getAuth0Config();
 const authWeb = new auth0.WebAuth(auth0Config);
 
-const auth0Authorize = (options: any) => {
-  authWeb.authorize(options);
-};
 export const auth0SignIn = (options: auth0.CrossOriginLoginOptions) => {
   return new Promise((resolve, reject) => {
     authWeb.login(options, (err: any, authResult: any) => {

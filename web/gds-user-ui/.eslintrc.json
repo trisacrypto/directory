@@ -29,7 +29,7 @@
   },
   "rules": {
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": 2,
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
@@ -287,7 +287,7 @@
     "@typescript-eslint/ban-types": ["warn"],
     "react/react-in-jsx-scope": "off",
     "react/no-unescaped-entities": "off",
-     "no-shadow": "off",
-  "@typescript-eslint/no-shadow": ["error"]
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": ["error"]
   }
 }

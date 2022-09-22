@@ -1,4 +1,4 @@
-import React, { useState, FC, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 const usePersistedState = (defaultValue: any, localStorageKey: any) => {
   const [value, setValue] = useState(() => {
     const localStorageItem = localStorage.getItem(localStorageKey);
@@ -12,6 +12,7 @@ const usePersistedState = (defaultValue: any, localStorageKey: any) => {
 
   useEffect(() => {
     localStorage.setItem(localStorageKey, JSON.stringify(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   // Expose the value and the updater function.

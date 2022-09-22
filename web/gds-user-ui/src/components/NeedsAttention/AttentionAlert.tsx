@@ -1,8 +1,5 @@
 import { Text, Button, HStack, Alert, AlertIcon, Box } from '@chakra-ui/react';
 
-import { NavLink } from 'react-router-dom';
-import * as Sentry from '@sentry/react';
-import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { NeedsAttentionProps } from '.';
 const enum AttentionSeverity {
@@ -29,13 +26,7 @@ export type AttentionResponseType = {
 
 type AttentionAlertProps = Partial<AttentionResponseType & NeedsAttentionProps>;
 
-const AttentionAlert = ({
-  severity,
-  message,
-  action,
-  onClick,
-  buttonText
-}: AttentionAlertProps) => {
+const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertProps) => {
   if (severity === AttentionSeverity.INFO.toUpperCase()) {
     switch (action as AttentionAction) {
       case AttentionAction.START_REGISTRATION:

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Heading, Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 type TrisaImplementationProps = {

@@ -28,7 +28,6 @@ const AppRouter: React.FC = () => {
   };
 
   // get current route from pathname
-  const currentRoute = window.location.pathname.split('/')[1];
 
   const { isInitialized } = useAnalytics();
   return (

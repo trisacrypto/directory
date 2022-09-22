@@ -3,7 +3,6 @@ import {
   Button,
   FormControl,
   FormErrorMessage,
-  FormLabel,
   Icon,
   InputGroup,
   useColorModeValue
@@ -24,7 +23,7 @@ type FileUploaderProps = {
   onReadFileUploaded: (func: any) => void;
 };
 const FileUpload = (props: FileUploadProps) => {
-  const { register, accept, multiple, children, onFileSubmit, onReaderLoader } = props;
+  const { register, accept, multiple, children, onFileSubmit } = props;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { ref, ...rest } = register as { ref: (instance: HTMLInputElement | null) => void };
 

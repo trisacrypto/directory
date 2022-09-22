@@ -36,7 +36,7 @@ const SelectFormControl = React.forwardRef<any, _FormControlProps>(
   ) => {
     const bgColorMode = useColorModeValue('#E3EBEF', undefined);
     const chakraStyles: ChakraStylesConfig = {
-      control: (provided, state) => ({
+      control: (provided) => ({
         ...provided,
         background: bgColorMode,
         borderRadius: 0

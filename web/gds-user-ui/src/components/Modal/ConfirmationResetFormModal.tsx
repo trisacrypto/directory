@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
-  chakra,
-  Heading,
-  Input,
   Text,
   Flex,
-  useClipboard,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -20,12 +16,10 @@ import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib'
 import { useNavigate } from 'react-router-dom';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { Trans } from '@lingui/react';
-import { useForm } from 'react-hook-form';
 
-interface ConfirmationModalProps {}
 const ConfirmationResetForm = (props: any) => {
   const navigate = useNavigate();
-  const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
+  const { onClose: onAlertClose } = useDisclosure();
   const { resetForm } = useCertificateStepper();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const handleOnClose = () => {

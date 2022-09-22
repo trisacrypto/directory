@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';

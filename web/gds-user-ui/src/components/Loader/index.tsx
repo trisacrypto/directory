@@ -1,4 +1,4 @@
-import { Stack, Spinner, Flex, Box, Text, VStack } from '@chakra-ui/react';
+import { Spinner, Flex, Text, VStack } from '@chakra-ui/react';
 
 interface LoaderProps {
   text?: string;

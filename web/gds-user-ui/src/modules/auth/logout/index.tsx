@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { setCookie, getCookie, removeCookie } from 'utils/cookies';
-import { Heading, Stack, Spinner, Flex, Box } from '@chakra-ui/react';
+import { removeCookie } from 'utils/cookies';
+import { Stack, Flex } from '@chakra-ui/react';
 import Loader from 'components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { userSelector, logout } from 'modules/auth/login/user.slice';
+import { useDispatch } from 'react-redux';
+import { logout } from 'modules/auth/login/user.slice';
 const Logout: React.FC = () => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);

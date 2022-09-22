@@ -8,7 +8,7 @@ import { useAsync } from 'react-use';
 import { handleError } from 'utils/utils';
 
 function MetricsTabs() {
-  const { error, value, loading } = useAsync(getMetrics);
+  const { error, value } = useAsync(getMetrics);
 
   if (error) {
     handleError(error);

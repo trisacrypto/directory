@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Box, Text, Heading, HStack, Flex, chakra } from '@chakra-ui/react';
+import { Stack, Box, chakra } from '@chakra-ui/react';
 import { IoEllipse } from 'react-icons/io5';
 import { Trans } from '@lingui/react';
 interface StatusCardProps {

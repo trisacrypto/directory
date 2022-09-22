@@ -3,12 +3,6 @@
 
 import { IsoCountryCode } from 'types/type';
 
-// country code regex
-const CC_REGEX = /^[a-z]{2}$/i;
-
-// flag emoji use 2 regional indicator symbols, and each symbol is 2 chars
-const FLAG_LENGTH = 4;
-
 // offset between uppercase ascii and regional indicator symbols
 const OFFSET = 127397;
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import { AxiosError } from 'axios';
 import axiosInstance, { setAuthorization } from 'utils/axios';
 import { handleError } from 'utils/utils';
 const useFetchAttention = () => {

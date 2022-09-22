@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import queryString from 'query-string';
 
 function useHashQuery() {

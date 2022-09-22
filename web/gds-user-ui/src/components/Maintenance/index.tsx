@@ -1,16 +1,14 @@
-import { Box, Button, Image, Stack, Text, Link } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
-import { colors } from 'utils/theme';
-import Error404 from 'assets/404-Error.svg';
+import { Stack, Text, Link } from '@chakra-ui/react';
 import TrisaLogo from 'assets/trisa-logo-white.png';
 import MaintenanceSVG from 'assets/maintenance.svg';
 import { Trans } from '@lingui/react';
+import CkLazyLoadImage from 'components/LazyImage';
 
 const Maintenance: React.FC = () => {
   return (
     <Stack direction="row" justifyContent="center" alignItems="center" textAlign={'center'}>
       <Stack fontSize="xl" pt={'80px'} mx={{ lg: 365 }}>
-        <Image src={TrisaLogo} mx="auto" width={64} />
+        <CkLazyLoadImage src={TrisaLogo} mx="auto" width={64} />
         <Text fontSize="3xl">
           <Trans id="We’ll be back soon.">We’ll be back soon.</Trans>
         </Text>
@@ -21,7 +19,7 @@ const Maintenance: React.FC = () => {
           </Trans>
         </Text>
         <Stack alignItems={'center'} mx={'auto'}>
-          <Image src={MaintenanceSVG} width={'50%'} pt={8} loading="eager" />
+          <CkLazyLoadImage src={MaintenanceSVG} width={'50%'} pt={8} loading="eager" />
         </Stack>
 
         <Text pt={'5px'}>

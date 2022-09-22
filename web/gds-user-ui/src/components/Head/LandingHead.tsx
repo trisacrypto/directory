@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flex, Heading, Stack, Text, HStack, Button, VStack } from '@chakra-ui/react';
+import { Flex, Heading, Stack, Text, Button, VStack, Box } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 
 interface LandingHeaderProps {
@@ -12,7 +12,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
   return (
     <Flex
       bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
-      width="100%"
+      width="100vw"
       minHeight={286}
       justifyContent="center"
       direction="column"
@@ -20,7 +20,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
       fontSize={'xl'}>
       <Stack textAlign={'center'} spacing={{ base: 3 }}>
         {isHomePage && (
-          <>
+          <Box width={'80%'} mx="auto">
             <Heading color="#fff" fontWeight={700} fontSize={{ md: '4xl', sm: '3xl', lg: '5xl' }}>
               <Trans id="TRISA Global Directory Service">TRISA Global Directory Service</Trans>
             </Heading>
@@ -34,7 +34,7 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
                 Apply to Become a TRISA-certified Virtual Asset Service Provider.
               </Trans>
             </Text>
-          </>
+          </Box>
         )}
         {isStartPage && (
           <VStack spacing={4}>
