@@ -330,12 +330,6 @@ const Certificate: React.FC = () => {
                         </Button>
                         {/* add review button when reach to final step */}
 
-                        {hasReachReviewStep() && (
-                          <Button variant="secondary" onClick={jumpToReview}>
-                            {t`Review & Submit`}
-                          </Button>
-                        )}
-
                         {/* {!isFormSubmitted() && ( */}
                         <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
                           <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
