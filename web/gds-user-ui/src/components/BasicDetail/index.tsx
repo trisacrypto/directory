@@ -50,6 +50,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
+        console.log('[e]', e);
         toast({
           title: 'Invalid file',
           description: e.message || 'your json file is invalid',
