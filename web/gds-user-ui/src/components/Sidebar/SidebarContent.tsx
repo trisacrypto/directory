@@ -21,7 +21,7 @@ import NavItem, { StyledNavItem } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Trans } from '@lingui/react';
 
 interface SidebarProps extends BoxProps {
@@ -38,7 +38,6 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 275 }}
       pos="fixed"
-      // px={2}
       h="full"
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
@@ -52,8 +51,8 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>
         <List w="100%">
-          {MenuItems.filter((m) => m.activated).map((menu) => (
-            <>
+          {MenuItems.filter((m) => m.activated).map((menu, index) => (
+            <Fragment key={index}>
               <NavItem
                 key={menu.title}
                 icon={menu.icon}
@@ -82,7 +81,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
                       ))}
                 </Collapse>
               )}
-            </>
+            </Fragment>
           ))}
         </List>
         <Divider maxW="80%" my="16px !important" mx="auto !important" />
@@ -134,9 +133,6 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
               Slack
             </Text>
           </StyledNavItem>
-          {/* <NavItem icon={IoLogoSlack} href="https://trisa-workspace.slack.com/" w={'100%'}>
-          Slack
-        </NavItem> */}
         </List>
       </VStack>
     </Box>

@@ -16,6 +16,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/store/index"
@@ -520,6 +521,152 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
 	key := careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
+// AnnouncementStore Implementation
+//===========================================================================
+
+// RetrieveAnnouncementMonth returns the announcement month "crate" for the given month
+// timestamp in the format YYYY-MM.
+func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth, err error) {
+	if date == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	m = &bff.AnnouncementMonth{Date: date}
+	if key, err = m.Key(); err != nil {
+		return nil, err
+	}
+
+	var val []byte
+	if val, err = s.db.Get(key, nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	if err = proto.Unmarshal(val, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// UpdateAnnouncementMonth creates a new announcement month "crate" if it doesn't
+// already exist or replaces the existing record.
+func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
+	if m.Date == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	key, err := m.Key()
+	if err != nil {
+		return err
+	}
+
+	// Update the modified timestamp
+	m.Modified = time.Now().Format(time.RFC3339Nano)
+	if m.Created == "" {
+		m.Created = m.Modified
+	}
+
+	if data, err = proto.Marshal(m); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
+// OrganizationStore Implementation
+//===========================================================================
+
+// CreateOrganization creates a new organization record in the store, assigning a
+// unique ID and setting the created and modified timestamps.
+func (s *Store) CreateOrganization() (o *bff.Organization, err error) {
+	// Create an empty organization
+	ts := time.Now().Format(time.RFC3339Nano)
+	uu := uuid.New()
+	o = &bff.Organization{
+		Id:       uu.String(),
+		Created:  ts,
+		Modified: ts,
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(o); err != nil {
+		return nil, err
+	}
+
+	if err = s.db.Put(uu[:], data, nil); err != nil {
+		return nil, err
+	}
+	return o, nil
+}
+
+// RetrieveOrganization retrieves an organization record from the store by UUID.
+func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err error) {
+	if id == uuid.Nil {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	var val []byte
+	if val, err = s.db.Get(id[:], nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	o = new(bff.Organization)
+	if err = proto.Unmarshal(val, o); err != nil {
+		return nil, err
+	}
+	return o, nil
+}
+
+// UpdateOrganization updates an organization record in the store by replacing the
+// existing record.
+func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
+	if o.Id == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	// Update the modified timestamp
+	o.Modified = time.Now().Format(time.RFC3339Nano)
+	if o.Created == "" {
+		o.Created = o.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(o); err != nil {
+		return err
+	}
+
+	if err = s.db.Put([]byte(o.Key()), data, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOrganization deletes an organization record from the store by UUID.
+func (s *Store) DeleteOrganization(id uuid.UUID) (err error) {
+	if id == uuid.Nil {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	if err = s.db.Delete(id[:], nil); err != nil {
 		return err
 	}
 	return nil

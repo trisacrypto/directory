@@ -18,6 +18,7 @@ const CertificateRegistration = React.lazy(
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from '../../components/CertificateManagement';
+import VerifyPage from 'modules/verify';
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -95,6 +96,12 @@ const appRoutes = [
     path: '/auth/callback',
     name: 'Callback',
     component: CallbackPage,
+    layout: 'landing'
+  },
+  {
+    path: '/verify',
+    name: 'verify',
+    component: VerifyPage,
     layout: 'landing'
   },
 

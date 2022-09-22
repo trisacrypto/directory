@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -235,7 +236,7 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 }
 
 func (s *leveldbTestSuite) TestCertificateRequestStore() {
-	// Load the VASP record from testdata
+	// Load the certreq record from testdata
 	data, err := ioutil.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
@@ -326,4 +327,129 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 	s.NoError(iter.Error())
 	iter.Release()
 	s.Equal(10, niters)
+}
+
+func (s *leveldbTestSuite) TestAnnouncementStore() {
+	// Load the announcement month record from testdata
+	data, err := ioutil.ReadFile("../testdata/announcements.json")
+	s.NoError(err)
+
+	month := &bff.AnnouncementMonth{}
+	err = protojson.Unmarshal(data, month)
+	s.NoError(err)
+
+	// Verify the announcement month is loaded correctly
+	s.NotEmpty(month.Date)
+	s.NotEmpty(month.Announcements)
+	s.Empty(month.Created)
+	s.Empty(month.Modified)
+
+	// Create the announcement month
+	s.NoError(s.db.UpdateAnnouncementMonth(month))
+
+	// Attempt to Retrieve the announcement month
+	m, err := s.db.RetrieveAnnouncementMonth(month.Date)
+	s.NoError(err)
+	s.Equal(month.Date, m.Date)
+	s.NotEmpty(m.Created)
+	s.Equal(m.Modified, m.Created)
+	s.Len(m.Announcements, len(month.Announcements))
+
+	// Attempt to Retrieve a non-existent announcement month
+	_, err = s.db.RetrieveAnnouncementMonth("")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = s.db.RetrieveAnnouncementMonth("2022-01-01")
+	s.Error(err)
+	_, err = s.db.RetrieveAnnouncementMonth("2021-01")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Attempt to save an announcement month without a date on it
+	month.Date = ""
+	err = s.db.UpdateAnnouncementMonth(month)
+	s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the announcement month
+	m.Announcements[0].Title = "Happy New Year!"
+	err = s.db.UpdateAnnouncementMonth(m)
+	s.NoError(err)
+
+	m, err = s.db.RetrieveAnnouncementMonth(m.Date)
+	s.NoError(err)
+	s.Equal("Happy New Year!", m.Announcements[0].Title)
+	s.NotEmpty(m.Modified)
+	s.NotEqual(m.Modified, m.Created)
+
+	// Add another announcement month
+	month = &bff.AnnouncementMonth{
+		Date: "2022-02",
+		Announcements: []*bff.Announcement{
+			{
+				Title:    "Happy Groundhog Day",
+				Body:     "The groundhog saw his shadow, so we have six more weeks of winter.",
+				PostDate: "2022-02-02",
+				Author:   "phil@punxsutawney.com",
+			},
+		},
+	}
+	s.NoError(s.db.UpdateAnnouncementMonth(month))
+
+	// Test that we can still retrieve both months
+	january, err := s.db.RetrieveAnnouncementMonth("2022-01")
+	s.NoError(err)
+	s.Equal("Happy New Year!", january.Announcements[0].Title)
+
+	february, err := s.db.RetrieveAnnouncementMonth("2022-02")
+	s.NoError(err)
+	s.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+}
+
+func (s *leveldbTestSuite) TestOrganizationStore() {
+	// Create a new organization in the database
+	org, err := s.db.CreateOrganization()
+	s.NoError(err)
+
+	// Verify that the created record has an ID and timestamps
+	s.NotEmpty(org.Id)
+	s.NotEmpty(org.Created)
+	s.Equal(org.Modified, org.Created)
+
+	// Retrieve the organization by UUID
+	uu, err := bff.ParseOrgID(org.Id)
+	s.NoError(err)
+	o, err := s.db.RetrieveOrganization(uu)
+	s.NoError(err)
+	s.True(proto.Equal(org, o), "retrieved organization does not match created organization")
+
+	// Attempt to retrieve a non-existent organization
+	_, err = s.db.RetrieveOrganization(uuid.Nil)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = s.db.RetrieveOrganization(uuid.New())
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the organization
+	org.Name = "Alice Corp"
+	err = s.db.UpdateOrganization(org)
+	s.NoError(err)
+
+	o, err = s.db.RetrieveOrganization(uu)
+	s.NoError(err)
+	s.Equal("Alice Corp", o.Name)
+	s.NotEmpty(o.Modified)
+	s.NotEqual(o.Modified, o.Created)
+
+	// Attempt to update an organization with no Id on it
+	org.Id = ""
+	s.ErrorIs(s.db.UpdateOrganization(org), storeerrors.ErrIncompleteRecord)
+
+	// Delete the organization
+	err = s.db.DeleteOrganization(uu)
+	s.NoError(err)
+	_, err = s.db.RetrieveOrganization(uu)
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }

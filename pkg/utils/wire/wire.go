@@ -29,12 +29,14 @@ var (
 
 // Namespace constants for all managed objects in GDS
 const (
-	NamespaceVASPs    = "vasps"
-	NamespaceCerts    = "certs"
-	NamespaceCertReqs = "certreqs"
-	NamespaceReplicas = "peers"
-	NamespaceIndices  = "index"
-	NamespaceSequence = "sequence"
+	NamespaceVASPs         = "vasps"
+	NamespaceCerts         = "certs"
+	NamespaceCertReqs      = "certreqs"
+	NamespaceReplicas      = "peers"
+	NamespaceIndices       = "index"
+	NamespaceSequence      = "sequence"
+	NamespaceAnnouncements = "announcements"
+	NamespaceOrganizations = "organizations"
 )
 
 // Namespaces defines all possible namespaces that GDS manages

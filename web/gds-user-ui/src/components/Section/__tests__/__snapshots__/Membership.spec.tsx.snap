@@ -79,6 +79,21 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                       🇫🇷 FR
                     </option>
                     <option
+                      value="de"
+                    >
+                      🇩🇪 DE
+                    </option>
+                    <option
+                      value="zh"
+                    >
+                      🇨🇳 ZH
+                    </option>
+                    <option
+                      value="ja"
+                    >
+                      🇯🇵 JA
+                    </option>
+                    <option
                       value="en-dh"
                     >
                       - DH
