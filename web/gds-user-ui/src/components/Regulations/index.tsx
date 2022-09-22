@@ -1,5 +1,4 @@
-import { Button, Grid, GridItem, VStack, Text } from '@chakra-ui/react';
-import { t } from '@lingui/macro';
+import { Button, Grid, GridItem, VStack } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
@@ -10,7 +9,7 @@ type RegulationsProps = {
 };
 
 const Regulations: React.FC<RegulationsProps> = ({ name }) => {
-  const { control, register, getValues } = useFormContext();
+  const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     name,
     control

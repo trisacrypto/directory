@@ -1,17 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Tr,
-  Box,
-  Text,
-  Flex,
-  Th,
-  VStack,
-  Stack,
-  Icon,
-  HStack,
-  Heading,
-  useColorModeValue
-} from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { Box, Icon, Text } from '@chakra-ui/react';
 
 import { MdClose, MdDone } from 'react-icons/md';
 import { Trans } from '@lingui/react';
@@ -28,7 +16,6 @@ const PasswordStrength = (props: any) => {
       setIsContains9Characters(false);
     }
     // verify password contains at least one lowercase letter
-    const lowerCaseLetters = /[a-z]/g;
     if (data.match(/^(?=.*[a-z]).*$/)) {
       setIsContainsOneLowerCase(true);
     } else {

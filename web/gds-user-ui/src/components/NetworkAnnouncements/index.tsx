@@ -7,7 +7,7 @@ import { useAsync } from 'react-use';
 import { handleError } from 'utils/utils';
 
 const NetworkAnnouncements = () => {
-  const { value, loading, error } = useAsync(getAnnouncementsData);
+  const { value, error } = useAsync(getAnnouncementsData);
 
   if (error) {
     handleError(error);

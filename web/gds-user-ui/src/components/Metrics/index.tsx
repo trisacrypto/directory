@@ -1,11 +1,10 @@
 import React from 'react';
-import { Stack, Box, Text, Heading, HStack, Flex, SimpleGrid } from '@chakra-ui/react';
+import { Box, Text, Flex, SimpleGrid } from '@chakra-ui/react';
 import StatCard from 'components/StatCard';
 import StatusCard from 'components/StatusCard';
 import * as Sentry from '@sentry/react';
 import { t } from '@lingui/macro';
-import { useAsync } from 'react-use';
-import { getMetrics } from 'modules/dashboard/overview/service';
+
 interface MetricsProps {
   data: any;
   type: string;

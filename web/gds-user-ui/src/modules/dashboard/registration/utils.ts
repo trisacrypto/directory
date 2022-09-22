@@ -1,5 +1,4 @@
-import { getDefaultValue } from 'components/BasicDetailsForm/validation';
-import { getRegistrationDefaultValues, validationSchema } from 'modules/dashboard/certificate/lib';
+import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
 
 import {
   postRegistrationData,

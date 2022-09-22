@@ -3,7 +3,6 @@ import {
   BoxProps,
   Flex,
   useColorModeValue,
-  Image,
   CloseButton,
   Divider,
   VStack,
@@ -13,8 +12,7 @@ import {
   Icon,
   Text,
   Collapse,
-  List,
-  ListItem
+  List
 } from '@chakra-ui/react';
 import trisaLogo from '../../assets/trisa.svg';
 import NavItem, { StyledNavItem } from './NavItem';
@@ -23,6 +21,7 @@ import { MdContactSupport } from 'react-icons/md';
 import { IoLogoSlack } from 'react-icons/io';
 import { Fragment, useState } from 'react';
 import { Trans } from '@lingui/react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -42,7 +41,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
         <Stack width="100%" direction={['row']}>
-          <Image src={trisaLogo} alt="GDS UI" />
+          <LazyLoadImage src={trisaLogo} alt="GDS UI" />
           <Heading size="sm" color="#FFFFFF" lineHeight={1.35}>
             <Trans id="Global Directory Service">Global Directory Service</Trans>
           </Heading>

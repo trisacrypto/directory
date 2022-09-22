@@ -1,10 +1,7 @@
-import { Flex, Heading, Stack, VStack, Text, Box } from '@chakra-ui/react';
+import { Flex, Heading, Stack, VStack, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
-import Footer from 'components/Footer/LandingFooter';
-import LandingHeader from 'components/Header/LandingHeader';
 import MembershipGuideCard from 'components/MembershipGuideCard';
-import { NavBar } from 'components/Navbar/Landing/Nav';
 import React from 'react';
 import LandingLayout from 'layouts/LandingLayout';
 

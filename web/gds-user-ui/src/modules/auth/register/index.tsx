@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Heading, Stack } from '@chakra-ui/react';
 import Register from 'components/Section/CreateAccount';
 
 import LandingLayout from 'layouts/LandingLayout';

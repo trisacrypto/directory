@@ -1,5 +1,4 @@
-import { InfoIcon } from '@chakra-ui/icons';
-import { Box, Heading, HStack, Icon, Stack, Text } from '@chakra-ui/react';
+import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
 import { SectionStatus } from 'components/SectionStatus';

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 const getSearchParams = <T extends object>(): Partial<T> => {
   // server side rendering
   if (typeof window === 'undefined') {
@@ -8,7 +8,7 @@ const getSearchParams = <T extends object>(): Partial<T> => {
   const params = new URLSearchParams(window.location.search);
 
   return new Proxy(params, {
-    get(target, prop, receiver) {
+    get(target, prop) {
       return target.get(prop as string) || undefined;
     }
   }) as T;
@@ -16,10 +16,10 @@ const getSearchParams = <T extends object>(): Partial<T> => {
 
 const useSearchParams = <T extends object = any>(): Partial<T> => {
   const [searchParams, setSearchParams] = useState(getSearchParams());
-
+  const dep = typeof window === 'undefined' ? 'once' : window.location.search;
   useEffect(() => {
     setSearchParams(getSearchParams());
-  }, [typeof window === 'undefined' ? 'once' : window.location.search]);
+  }, [dep]);
 
   return searchParams;
 };
