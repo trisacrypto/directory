@@ -27,7 +27,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
@@ -84,9 +86,11 @@ type Store interface {
 	DirectoryStore
 	CertificateStore
 	CertificateRequestStore
+	AnnouncementStore
+	OrganizationStore
 }
 
-// DirectoryStore describes how the service interacts with VASP identity records.
+// DirectoryStore describes how services interact with VASP identity records.
 type DirectoryStore interface {
 	ListVASPs() iterator.DirectoryIterator
 	SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error)
@@ -96,7 +100,7 @@ type DirectoryStore interface {
 	DeleteVASP(id string) error
 }
 
-// CertificateRequestStore describes how the service interacts with Certificate requests.
+// CertificateRequestStore describes how services interact with Certificate requests.
 type CertificateRequestStore interface {
 	ListCertReqs() iterator.CertificateRequestIterator
 	CreateCertReq(r *models.CertificateRequest) (string, error)
@@ -105,13 +109,27 @@ type CertificateRequestStore interface {
 	DeleteCertReq(id string) error
 }
 
-// CertificateStore describes how the service interacts with Certificate records.
+// CertificateStore describes how services interact with Certificate records.
 type CertificateStore interface {
 	ListCerts() iterator.CertificateIterator
 	CreateCert(c *models.Certificate) (string, error)
 	RetrieveCert(id string) (*models.Certificate, error)
 	UpdateCert(c *models.Certificate) error
 	DeleteCert(id string) error
+}
+
+// AnnouncementStore describes how services interact with the Announcement records.
+type AnnouncementStore interface {
+	RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth, error)
+	UpdateAnnouncementMonth(m *bff.AnnouncementMonth) error
+}
+
+// OrganizationStore describes how services interact with the Organization records.
+type OrganizationStore interface {
+	CreateOrganization() (*bff.Organization, error)
+	RetrieveOrganization(id uuid.UUID) (*bff.Organization, error)
+	UpdateOrganization(o *bff.Organization) error
+	DeleteOrganization(id uuid.UUID) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

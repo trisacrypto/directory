@@ -21,16 +21,18 @@ import OvalLoader from 'components/OvalLoader';
 dayjs.extend(relativeTime)
 
 
-const NameColumn = ({ row }) => {
+export const NameColumn = ({ row }) => {
     const id = row?.original?.id || "";
 
     return (
         <React.Fragment>
             <p className="m-0 d-inline-block align-middle font-16">
                 <Link to={`/vasps/${id}`} className="text-body">
-                    {row.original.name}
-                    <span className="text-muted font-italic d-block">
-                        {row.original.common_name}
+                    <span data-testid="name">
+                        {row.original.name || 'N/A'}
+                    </span>
+                    <span className="text-muted font-italic d-block" data-testid="commonName">
+                        {row.original.common_name || 'N/A'}
                     </span>
                 </Link>
             </p>
@@ -38,35 +40,36 @@ const NameColumn = ({ row }) => {
     );
 };
 
-const CertificateExpirationColumn = ({ row }) => {
+export const CertificateExpirationColumn = ({ row }) => {
 
     return (
         <React.Fragment>
-            <p className="m-0 d-inline-block align-middle font-16">
-                {dayjs(row?.original?.certificate_expiration).format("MMM DD, YYYY h:mm:ss a")}
+            <p className="m-0 d-inline-block align-middle font-16" data-testid="certificate_expiration">
+                {row?.original?.certificate_expiration ? dayjs(row?.original?.certificate_expiration).format("MMM DD, YYYY h:mm:ss a") : 'N/A'}
             </p>
         </React.Fragment>
     );
 };
 
 
-const LastUpdatedColumn = ({ row }) => {
+export const LastUpdatedColumn = ({ row }) => {
 
     return <React.Fragment>
         <p className="m-0 d-inline-block align-middle font-16">
-            <span>
-                {dayjs(row?.original?.last_updated).fromNow()}
+            <span data-testid="last_updated">
+                {row?.original?.last_updated ? dayjs(row?.original?.last_updated).fromNow() : 'N/A'}
             </span>
         </p>
     </React.Fragment>
 }
 
-const StatusColumn = ({ row }) => {
+export const StatusColumn = ({ row }) => {
     return (
         <React.Fragment>
             <span
+                data-testid="verification_status"
                 className={classNames('badge', getStatusClassName(row.original.verification_status))}>
-                {StatusLabel[row.original.verification_status]}
+                {StatusLabel[row.original.verification_status] || 'N/A'}
             </span>
         </React.Fragment>
     );

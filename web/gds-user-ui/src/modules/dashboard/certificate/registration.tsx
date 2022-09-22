@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
@@ -49,6 +49,7 @@ import {
   getHasReachedReviewStep
 } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
+
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -75,11 +76,11 @@ const Certificate: React.FC = () => {
   const [registrationData, setRegistrationData] = useState<any>([]);
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
   );
   const { isLoggedIn } = useSelector(userSelector);
-  const toast = useToast();
   const current = currentStep === lastStep ? lastStep - 1 : currentStep;
   function getCurrentStepValidationSchema() {
     return validationSchema[current - 1];
@@ -105,15 +106,12 @@ const Certificate: React.FC = () => {
     return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
   // check if the form is submitted or not
-  const isFormSubmitted = () => {
-    if (isTestNetSubmitted && isMainNetSubmitted) {
-      return true;
-    }
-    if (isTestNetSubmitted || isMainNetSubmitted) {
-      return true;
-    }
-    return false;
-  };
+  // const isFormSubmitted = () => {
+  //   return (
+  //     testnetSubmissionStatus === SubmissionStatus.VERIFIED &&
+  //     mainnetSubmissionStatus === SubmissionStatus.VERIFIED
+  //   );
+  // };
   function getCurrentFormValue() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
@@ -332,11 +330,11 @@ const Certificate: React.FC = () => {
                         </Button>
                         {/* add review button when reach to final step */}
 
-                        {!isFormSubmitted() && (
-                          <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                            <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                          </Button>
-                        )}
+                        {/* {!isFormSubmitted() && ( */}
+                        <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+                          <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+                        </Button>
+                        {/* )} */}
                       </>
                     )}
                   </Stack>

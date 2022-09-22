@@ -17,6 +17,10 @@ export const initialValue: TPayload = {
   testnetSubmitted: false,
   hasReachReviewStep: false,
   mainnetSubmitted: false,
+  status: {
+    testnet: 'progress',
+    mainnet: 'progress'
+  },
   data: {}
 };
 
