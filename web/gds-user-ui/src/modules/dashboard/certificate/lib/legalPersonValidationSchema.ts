@@ -73,7 +73,14 @@ export const legalPersonValidationSchemam = yup.object().shape({
         town_name: yup.string().required(),
         post_code: yup.string().required(),
         country_sub_division: yup.string().required(),
-        address_type: yup.string().required()
+        address_type: yup.string().required(),
+        department: yup.string().notRequired(),
+        sub_department: yup.string().notRequired(),
+        building_number: yup.string().notRequired(),
+        street_name: yup.string().notRequired(),
+        post_box: yup.string().notRequired(),
+        floor: yup.string().notRequired(),
+        room: yup.string().notRequired()
       })
     ),
     national_identification: yup.object().shape({
@@ -96,6 +103,7 @@ export const legalPersonValidationSchemam = yup.object().shape({
             return true;
           }
         )
-    })
+    }),
+    customer_number: yup.string().notRequired()
   })
 });

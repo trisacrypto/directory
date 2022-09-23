@@ -34,11 +34,12 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
       const data = JSON.parse(ev.target.result);
       try {
         const validationData = await validationSchema[0].validate(data);
-        // console.log('[validationData]', validationData);
+        console.log('[validationData]', validationData);
         const updatedCertificate: any = await postRegistrationValue(validationData);
+        console.log('[updatedCertificate]', updatedCertificate);
         if (updatedCertificate.status === 204) {
           const getValue = await getRegistrationData();
-          // console.log('[getValue]', getValue);
+          console.log('[getValue]', getValue);
           const values = {
             ...getValue.data,
             established_on: getValue?.data?.established_on
@@ -50,6 +51,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
+        console.log('[e]', e);
         toast({
           title: 'Invalid file',
           description: e.message || 'your json file is invalid',
