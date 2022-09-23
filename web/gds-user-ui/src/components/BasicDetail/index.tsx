@@ -40,7 +40,6 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
       const data = JSON.parse(ev.target.result);
       try {
         const validationData = await validationSchema[0].validate(data);
-
         const updatedCertificate: any = await postRegistrationValue(validationData);
 
         if (updatedCertificate.status === 200) {
@@ -66,7 +65,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
             isClosable: true,
             position: 'top-right'
           });
-          handleError(e, 'Importing data failed');
+          handleError(e, `[Invalid file], it's missing some required fields : ${e.message}`);
         }
       } finally {
         setIsLoadingDefaultValue(false);
