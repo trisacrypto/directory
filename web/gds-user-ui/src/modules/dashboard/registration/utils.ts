@@ -12,7 +12,7 @@ export const postRegistrationValue = (data: any) => {
   return new Promise((resolve, reject) => {
     postRegistrationData(data)
       .then((res) => {
-        if (res.status === 204) {
+        if (res.status === 200) {
           resolve(res);
         } else {
           reject(res);

@@ -45,7 +45,6 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
         console.log('[updatedCertificate Status]', updatedCertificate.status);
         if (updatedCertificate.status === 200) {
           const getValue = await getRegistrationData();
-          console.log('[getValue]', getValue);
           const values = {
             ...getValue.data,
             established_on: getValue?.data?.established_on
