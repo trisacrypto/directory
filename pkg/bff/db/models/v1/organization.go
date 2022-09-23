@@ -37,7 +37,7 @@ func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	// Don't overwrite an existing collaborator
 	key := collab.Key()
 	if _, ok := org.Collaborators[key]; ok {
-		return fmt.Errorf("collaborator with key %s already exists", key)
+		return fmt.Errorf("collaborator %q already exists", key)
 	}
 
 	// Make sure the record has a created timestamp
@@ -66,7 +66,7 @@ func (org *Organization) ReplaceCollaborator(collab *Collaborator) (err error) {
 	// Make sure the collaborator already exists on the organization
 	key := collab.Key()
 	if _, ok := org.Collaborators[key]; !ok {
-		return fmt.Errorf("collaborator with key %s does not exist", key)
+		return fmt.Errorf("collaborator %q does not exist", key)
 	}
 
 	// Make sure the record has updated timestamps

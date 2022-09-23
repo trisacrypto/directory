@@ -80,7 +80,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
-	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("collaborator with key %s already exists", request.Email), "expected error when collaborator already exists")
+	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("collaborator %q already exists", request.Email), "expected error when collaborator already exists")
 }
 
 func (s *bffTestSuite) TestReplaceCollaborator() {
@@ -136,7 +136,7 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 		Email: "alice@example.com",
 	}
 	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
-	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("collaborator with key %s does not exist", request.Email), "expected error when collaborator does not exist")
+	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("collaborator %q does not exist", request.Email), "expected error when collaborator does not exist")
 
 	// Add a new collaborator to the organization
 	collab, err := s.client.AddCollaborator(context.TODO(), request)
