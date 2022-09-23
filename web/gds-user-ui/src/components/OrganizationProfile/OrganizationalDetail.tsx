@@ -50,7 +50,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>
                   <Trans id="Organization Type">Organization Type</Trans>
                 </ListItem>
-                <ListItem>{(BUSINESS_CATEGORY as any)[data.business_category] || 'N/A'}</ListItem>
+                <ListItem>{(BUSINESS_CATEGORY as any)[data?.business_category] || 'N/A'}</ListItem>
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
@@ -141,16 +141,16 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                       : contact.charAt(0).toUpperCase() + contact.slice(1)}
                   </ListItem>
                   <ListItem>
-                    {hasValue(data.contacts?.[contact]) ? (
+                    {hasValue(data?.contacts?.[contact]) ? (
                       <>
-                        {data.contacts?.[contact]?.name && (
-                          <Text>{data.contacts?.[contact]?.name}</Text>
+                        {data?.contacts?.[contact]?.name && (
+                          <Text>{data?.contacts?.[contact]?.name}</Text>
                         )}
-                        {data.contacts?.[contact]?.email && (
-                          <Text>{data.contacts?.[contact]?.email}</Text>
+                        {data?.contacts?.[contact]?.email && (
+                          <Text>{data?.contacts?.[contact]?.email}</Text>
                         )}
-                        {data.contacts?.[contact]?.phone && (
-                          <Text>{data.contacts?.[contact]?.phone}</Text>
+                        {data?.contacts?.[contact]?.phone && (
+                          <Text>{data?.contacts?.[contact]?.phone}</Text>
                         )}
                       </>
                     ) : (

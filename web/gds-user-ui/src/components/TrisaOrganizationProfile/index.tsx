@@ -19,7 +19,9 @@ function TrisaOrganizationProfile() {
   return (
     <div>
       <OrganizationalDetail data={value} />
-      <TrisaImplementation data={{ mainnet: value.mainnet, testnet: value.testnet }} />
+      <TrisaImplementation
+        data={{ mainnet: value?.mainnet || {}, testnet: value?.testnet || {} }}
+      />
     </div>
   );
 }
