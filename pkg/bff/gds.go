@@ -267,7 +267,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 
 	// Update the organizations form
 	org.Registration = form
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
 		return
@@ -431,7 +431,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		appdata.VASPs.MainNet = rep.Id
 	}
 
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return

@@ -8,9 +8,7 @@ import (
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	"github.com/trisacrypto/directory/pkg/bff/db"
 	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestAnnouncements() {
@@ -20,7 +18,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.db.Delete(context.TODO(), []byte(month), db.NamespaceAnnouncements)
+			err := s.db.DeleteAnnouncementMonth(month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()
@@ -64,13 +62,13 @@ func (s *bffTestSuite) TestAnnouncements() {
 		post.PostDate = pd.Format(records.PostDateLayout)
 		months[pd.Format(records.MonthLayout)] = struct{}{}
 
-		_, err = s.db.Announcements().Post(context.TODO(), post)
+		_, err = s.db.PostAnnouncement(post)
 		require.NoError(err, "could not post an announcement fixture")
 	}
 
 	// Create a post for yesterday to ensure there is at least one post returned
 	months[time.Now().AddDate(0, 0, -1).Format(records.MonthLayout)] = struct{}{}
-	_, err = s.db.Announcements().Post(context.TODO(), &records.Announcement{
+	_, err = s.db.PostAnnouncement(&records.Announcement{
 		Title:    "from the future",
 		Body:     "this was posted yesterday",
 		Author:   "future@example.com",
@@ -94,7 +92,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	defer func() {
 		for _, month := range months {
-			s.db.Delete(context.TODO(), []byte(month), db.NamespaceAnnouncements)
+			s.db.DeleteAnnouncementMonth(month)
 		}
 	}()
 
@@ -132,13 +130,8 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	require.NoError(err, "was not able to make an announcement")
 
 	// Check that the announcement exists in the database
-	monthData, err := s.db.Get(context.TODO(), []byte(months[0]), db.NamespaceAnnouncements)
+	month, err := s.db.RetrieveAnnouncementMonth(months[0])
 	require.NoError(err, "could not get announcements container")
-	require.NotEmpty(monthData, "expected month date to be populated")
-
-	month := &records.AnnouncementMonth{}
-	require.NoError(proto.Unmarshal(monthData, month), "could not unmarshal announcement month")
-
 	require.NotEmpty(month.Date, "expected month date to be set")
 	require.Len(month.Announcements, 1, "expected announcements to contain 1 item")
 	require.NotEmpty(month.Created, "expected created timestamp set")

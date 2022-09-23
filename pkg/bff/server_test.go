@@ -17,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
@@ -102,11 +103,9 @@ func (s *bffTestSuite) SetupSuite() {
 				},
 			},
 		},
-		Database: config.DatabaseConfig{
-			URL: "trtl://bufnet/",
-			MTLS: config.MTLSConfig{
-				Insecure: true,
-			},
+		Database: storeconfig.StoreConfig{
+			URL:      "trtl://bufnet/",
+			Insecure: true,
 		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
@@ -150,7 +149,7 @@ func (s *bffTestSuite) SetupSuite() {
 	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
 	// Direct connect the BFF server to the database
-	s.db, err = db.DirectConnect(s.trtlsock.Conn)
+	s.db, err = db.NewMock(s.trtlsock.Conn)
 	require.NoError(err, "could not direct connect db to the BFF server")
 	s.bff.SetDB(s.db)
 

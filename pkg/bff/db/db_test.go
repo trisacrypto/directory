@@ -1,10 +1,8 @@
 package db_test
 
 import (
-	"bytes"
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/bff/db"
@@ -52,8 +50,8 @@ func (s *dbTestSuite) SetupSuite() {
 	go s.trtl.Run(s.conn.Listener)
 
 	// Connect our database to the running Trtl server
-	s.db, err = db.DirectConnect(s.conn.Conn)
-	require.NoError(err, "could not connect the database to the trtl server")
+	s.db, err = db.NewMock(s.conn.Conn)
+	require.NoError(err, "could not connect to the trtl server")
 }
 
 func (s *dbTestSuite) TearDownSuite() {
@@ -67,40 +65,4 @@ func (s *dbTestSuite) TearDownSuite() {
 	require.NoError(err, "could not shutdown trtl in-memory process")
 
 	s.conn.Release()
-}
-
-func (s *dbTestSuite) TestBasicOperations() {
-	// Test Put, Get, and Delete against the database
-	var err error
-	require := s.Require()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	key := []byte("thisisthetestkey")
-	value := []byte("thisisthetestvaluehawtness")
-	namespace := "thisisthetestnamespace"
-
-	// Expect a not found error when the key is not there
-	_, err = s.db.Get(ctx, key, namespace)
-	require.ErrorIs(err, db.ErrNotFound, "expected not found error before Put")
-
-	// Should be able to successfully Put the key-value pair
-	err = s.db.Put(ctx, key, value, namespace)
-	require.NoError(err, "could not Put to the database")
-
-	retrieved, err := s.db.Get(ctx, key, namespace)
-	require.NoError(err, "could not fetch key just put to db")
-	require.True(bytes.Equal(value, retrieved), "retrieved value not identical to original")
-
-	// Should have been put to the correct namespace
-	_, err = s.db.Get(ctx, key, "thisisnotthetestnamespace")
-	require.ErrorIs(err, db.ErrNotFound, "expected not found error on wrong namespace")
-
-	// Should be able to Delete the key-value pair
-	err = s.db.Delete(ctx, key, namespace)
-	require.NoError(err, "could not Delete key from the database")
-
-	_, err = s.db.Get(ctx, key, namespace)
-	require.ErrorIs(err, db.ErrNotFound, "expected not found error after Delete")
 }

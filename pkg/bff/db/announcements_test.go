@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -18,20 +17,14 @@ func (s *dbTestSuite) TestAnnouncements() {
 	var err error
 	require := s.Require()
 
-	// Announcements should implement the Collection interface
-	require.Equal(NamespaceAnnouncements, s.db.Announcements().Namespace())
-
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
 	// Should not be able to request unbounded time
-	_, err = s.db.Announcements().Recent(ctx, 10000, time.Time{}, time.Time{})
+	_, err = s.db.RecentAnnouncements(10000, time.Time{}, time.Time{})
 	require.ErrorIs(err, ErrUnboundedRecent, "expected error when zero-valued time passed in as not before")
 	nbf, _ := time.Parse("2006-01-02", "2020-12-01")
 	stt, _ := time.Parse("2006-01-02", "2023-12-31")
 
 	// There should be nothing in the database at the start of the test.
-	recent, err := s.db.Announcements().Recent(ctx, 10000, nbf, stt)
+	recent, err := s.db.RecentAnnouncements(10000, nbf, stt)
 	require.NoError(err, "could not fetch recent announcements")
 	require.Len(recent.Announcements, 0, "expected no announcements returned")
 	require.Empty(recent.LastUpdated, "expected last updated to be zero-valued")
@@ -44,7 +37,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 	// Post each fixture one at a time and ensure that we can fetch them all
 	ids := make([]string, 0, 10)
 	for i, post := range fixture {
-		id, err := s.db.Announcements().Post(ctx, post)
+		id, err := s.db.PostAnnouncement(post)
 		require.NoError(err, "could not post announcement %d", i)
 		require.NotEmpty(id, "expected an ordered kid to be assigned")
 		ids = append(ids, id)
@@ -61,7 +54,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 	}
 
 	// Should be able to retrieve all recent announcements
-	recent, err = s.db.Announcements().Recent(ctx, 10000, nbf, stt)
+	recent, err = s.db.RecentAnnouncements(10000, nbf, stt)
 	require.NoError(err, "could not fetch recent announcements")
 	require.Len(recent.Announcements, 11, "expected 11 announcements returned")
 	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
@@ -74,7 +67,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 	}
 
 	// Should be able to limit the number of results returned
-	recent, err = s.db.Announcements().Recent(ctx, 5, nbf, stt)
+	recent, err = s.db.RecentAnnouncements(5, nbf, stt)
 	require.NoError(err, "could not fetch recent announcements")
 	require.Len(recent.Announcements, 5, "expected 5 announcements returned")
 	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
@@ -87,7 +80,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 
 	// Should be able to set the not before timestamp
 	nbf, _ = time.Parse("2006-01-02", "2022-03-18")
-	recent, err = s.db.Announcements().Recent(ctx, 10000, nbf, stt)
+	recent, err = s.db.RecentAnnouncements(10000, nbf, stt)
 	require.NoError(err, "could not fetch recent announcements")
 	require.Len(recent.Announcements, 5, "expected 5 announcements returned")
 	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
@@ -99,7 +92,7 @@ func (s *dbTestSuite) TestAnnouncements() {
 	}
 
 	// Should be able to set the not before timestamp AND max results
-	recent, err = s.db.Announcements().Recent(ctx, 2, nbf, stt)
+	recent, err = s.db.RecentAnnouncements(2, nbf, stt)
 	require.NoError(err, "could not fetch recent announcements")
 	require.Len(recent.Announcements, 2, "expected 2 announcements returned")
 	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")

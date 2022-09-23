@@ -89,10 +89,10 @@ func New(conf config.Config) (s *Server, err error) {
 				return nil, fmt.Errorf("could not connect to mainnet: %s", err)
 			}
 
-			if s.db, err = db.Connect(s.conf.Database); err != nil {
+			if s.db, err = db.New(s.conf.Database); err != nil {
 				return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 			}
-			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.MTLS.Insecure).Msg("connected to trtl database")
+			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
 		}
 
 		if s.auth0, err = auth.NewManagementClient(s.conf.Auth0); err != nil {

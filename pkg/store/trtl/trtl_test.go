@@ -628,6 +628,13 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	february, err := db.RetrieveAnnouncementMonth("2022-02")
 	require.NoError(err)
 	require.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+
+	// Delete an announcement month
+	require.NoError(db.DeleteAnnouncementMonth("2022-01"))
+
+	// Should not be able to retrieve the deleted announcement month
+	_, err = db.RetrieveAnnouncementMonth("2022-01")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
 func (s *trtlStoreTestSuite) TestOrganizationStore() {

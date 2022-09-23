@@ -21,7 +21,7 @@ func (s *Server) Announcements(c *gin.Context) {
 	nbf := time.Now().AddDate(0, subMonths, 0)
 	nbf = time.Date(nbf.Year(), nbf.Month(), 1, 0, 0, 0, 0, time.UTC)
 
-	out, err := s.db.Announcements().Recent(c.Request.Context(), maxAnnouncements, nbf, time.Now())
+	out, err := s.db.RecentAnnouncements(maxAnnouncements, nbf, time.Now())
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch recent announcements")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to fetch recent announcements"))
@@ -72,7 +72,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 	post.PostDate = time.Now().Format("2006-01-02")
 	post.Author = claims.Email
 
-	if id, err = s.db.Announcements().Post(c.Request.Context(), post); err != nil {
+	if id, err = s.db.PostAnnouncement(post); err != nil {
 		log.Error().Err(err).Msg("could not put announcement to trtl database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save announcement"))
 		return

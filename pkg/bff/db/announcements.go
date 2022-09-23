@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -9,47 +8,13 @@ import (
 	"github.com/segmentio/ksuid"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"google.golang.org/protobuf/proto"
+	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 )
 
-const (
-	NamespaceAnnouncements = "announcements"
-)
-
-// The Announcements type exposes methods for interacting with Network Announcements
-// in the database. Announcements are stored as compact, compressed JSON to minimize the
-// network requests and reduce storage requirements. This struct performs all necessary
-// serialization on the announcements before storing and retrieving the model object. The
-// announcement keys are ksuids - timestamp ordered unique IDs so that it is easy to scan
-// the trtl database to find the most recent announcements.
-//
-// Announcements implements the Collection interface
-type Announcements struct {
-	db        *DB
-	namespace string
-}
-
-// Ensure that Announcements implements the Collection interface.
-var _ Collection = &Announcements{}
-
-// Announcements constructs the collection type for interactions with network
-// announcement objects. This method is intended to be used with chaining, e.g. as
-// db.Announcements().Recent(), so to reduce the number of allocations a singleton
-// intermediate struct is used. Method calls to the collection are thread-safe.
-func (db *DB) Announcements() *Announcements {
-	db.makeAnnouncements.Do(func() {
-		db.announcements = &Announcements{
-			db:        db,
-			namespace: NamespaceAnnouncements,
-		}
-	})
-	return db.announcements
-}
-
-// Recent returns the set of results whose post date is after the not before timestamp,
-// limited to the maximum number of results. Last updated returns the timestamp that
-// any announcement was added or changed.
-func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore, start time.Time) (out *api.AnnouncementsReply, err error) {
+// RecentAnnouncements returns the set of results whose post date is after the not
+// before timestamp, limited to the maximum number of results. Last updated returns the
+// timestamp that any announcement was added or changed.
+func (store *DB) RecentAnnouncements(maxResults int, notBefore, start time.Time) (out *api.AnnouncementsReply, err error) {
 	// Do not allow unbounded requests in recent
 	if notBefore.IsZero() {
 		return nil, ErrUnboundedRecent
@@ -67,8 +32,8 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore, s
 
 	for !month.Before(notBefore) {
 		var crate *models.AnnouncementMonth
-		if crate, err = a.GetMonth(ctx, month.Format(models.MonthLayout)); err != nil {
-			if errors.Is(err, ErrNotFound) {
+		if crate, err = store.RetrieveAnnouncementMonth(month.Format(models.MonthLayout)); err != nil {
+			if errors.Is(err, storeerrors.ErrEntityNotFound) {
 				// Decrement month and continue; see notes below about month decrement
 				month = month.AddDate(0, -1, -5)
 				month = time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
@@ -110,18 +75,20 @@ func (a *Announcements) Recent(ctx context.Context, maxResults int, notBefore, s
 	return out, nil
 }
 
-// Post an announcement, putting it to the trtl database. This method does no
+// Post an announcement, putting it to the database. This method does no
 // verification of duplicate announcements or any content verification except for a
 // check that an empty announcement is not being put to the database. Announcements are
 // stored in announcement months, so the month for the announcement is extracted and the
 // announcement is inserted into the correct month, creating it if necessary.
-func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ string, err error) {
+func (store *DB) PostAnnouncement(in *models.Announcement) (_ string, err error) {
 	// Make sure we don't post empty announcements
 	if in.Title == "" && in.Body == "" && in.PostDate == "" && in.Author == "" {
 		return "", ErrEmptyAnnouncement
 	}
 
 	// Set the ID and timestamp metadata on the Post
+	// Announcement keys are ksuids - timestamp ordered unique IDs so that it is easy
+	// to scan the trtl database to find the most recent announcements.
 	in.Id = ksuid.New().String()
 	in.Created = time.Now().Format(time.RFC3339Nano)
 	in.Modified = in.Created
@@ -134,7 +101,7 @@ func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ st
 
 	// Get or Create the announcement month "crate"
 	var crate *models.AnnouncementMonth
-	if crate, err = a.GetOrCreateMonth(ctx, month); err != nil {
+	if crate, err = store.GetOrCreateMonth(month); err != nil {
 		return "", err
 	}
 
@@ -142,84 +109,44 @@ func (a *Announcements) Post(ctx context.Context, in *models.Announcement) (_ st
 	crate.Add(in)
 	crate.Modified = time.Now().Format(time.RFC3339Nano)
 
-	if err = a.SaveMonth(ctx, crate); err != nil {
+	if err = store.db.UpdateAnnouncementMonth(crate); err != nil {
 		return "", err
 	}
 	return in.Id, nil
 }
 
 // GetOrCreateMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) GetOrCreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
-	if month, err = a.GetMonth(ctx, date); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return a.CreateMonth(ctx, date)
+func (store *DB) GetOrCreateMonth(date string) (month *models.AnnouncementMonth, err error) {
+	if month, err = store.db.RetrieveAnnouncementMonth(date); err != nil {
+		if errors.Is(err, storeerrors.ErrEntityNotFound) {
+			return store.CreateMonth(date)
 		}
 		return nil, err
 	}
 	return month, nil
 }
 
-// GetMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) GetMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
-	// Get the key by creating an intermediate announcement month to ensure that
-	// validation and key creation always happens the same way.
-	var key, value []byte
-	month = &models.AnnouncementMonth{Date: date}
-	if key, err = month.Key(); err != nil {
-		return nil, err
-	}
-
-	if value, err = a.db.Get(ctx, key, a.namespace); err != nil {
-		return nil, err
-	}
-
-	if err = proto.Unmarshal(value, month); err != nil {
-		return nil, err
-	}
-	return month, nil
-}
-
 // CreateMonth from a month timestamp in the form YYYY-MM.
-func (a *Announcements) CreateMonth(ctx context.Context, date string) (month *models.AnnouncementMonth, err error) {
+func (store *DB) CreateMonth(date string) (month *models.AnnouncementMonth, err error) {
 	month = &models.AnnouncementMonth{
 		Date:          date,
 		Announcements: make([]*models.Announcement, 0, 1),
 	}
 
-	if err = a.SaveMonth(ctx, month); err != nil {
+	if err = store.db.UpdateAnnouncementMonth(month); err != nil {
 		return nil, err
 	}
 	return month, nil
 }
 
-// Save a month, storing it in the database
-func (a *Announcements) SaveMonth(ctx context.Context, month *models.AnnouncementMonth) (err error) {
-	// Compute the key for the month
-	var key []byte
-	if key, err = month.Key(); err != nil {
-		return err
-	}
-
-	// Update the modified timestamp and serialize
-	month.Modified = time.Now().Format(time.RFC3339Nano)
-	if month.Created == "" {
-		month.Created = month.Modified
-	}
-
-	var value []byte
-	if value, err = proto.Marshal(month); err != nil {
-		return err
-	}
-
-	if err = a.db.Put(ctx, key, value, a.namespace); err != nil {
-		return err
-	}
-	return nil
+// Retrieve an announcement month from the database by month timestamp in the form YYYY-MM.
+func (store *DB) RetrieveAnnouncementMonth(date string) (month *models.AnnouncementMonth, err error) {
+	return store.db.RetrieveAnnouncementMonth(date)
 }
 
-// Namespace implements the collection interface
-func (a *Announcements) Namespace() string {
-	return a.namespace
+// Delete an announcement month from the database by month timestamp in the form YYYY-MM.
+func (store *DB) DeleteAnnouncementMonth(date string) (err error) {
+	return store.db.DeleteAnnouncementMonth(date)
 }
 
 // Helper method to return the latest string timestamp from the two RFC3339 timestamps

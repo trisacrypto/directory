@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
-	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 )
 
 // OrganizationFromClaims is a helper method to retrieve the organization for a
@@ -33,8 +33,8 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	}
 
 	// Fetch the record from the database
-	if org, err = s.db.Organizations().Retrieve(c.Request.Context(), claims.OrgID); err != nil {
-		if errors.Is(err, db.ErrNotFound) {
+	if org, err = s.db.RetrieveOrganization(claims.OrgID); err != nil {
+		if errors.Is(err, storeerrors.ErrEntityNotFound) {
 			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
 			api.MustRefreshToken(c, "no organization found, try logging out and logging back in")
 			return nil, err

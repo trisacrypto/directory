@@ -11,51 +11,51 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_BFF_MAINTENANCE":                    "false",
-	"GDS_BFF_BIND_ADDR":                      "8080",
-	"GDS_BFF_MODE":                           "debug",
-	"GDS_BFF_LOG_LEVEL":                      "debug",
-	"GDS_BFF_CONSOLE_LOG":                    "true",
-	"GDS_BFF_ALLOW_ORIGINS":                  "https://vaspdirectory.net",
-	"GDS_BFF_COOKIE_DOMAIN":                  "vaspdirectory.net",
-	"GDS_BFF_AUTH0_DOMAIN":                   "example.auth0.com",
-	"GDS_BFF_AUTH0_ISSUER":                   "https://auth.example.com",
-	"GDS_BFF_AUTH0_AUDIENCE":                 "https://vaspdirectory.net",
-	"GDS_BFF_AUTH0_PROVIDER_CACHE":           "10m",
-	"GDS_BFF_AUTH0_CLIENT_ID":                "exampleid",
-	"GDS_BFF_AUTH0_CLIENT_SECRET":            "supersecretsquirrel",
-	"GDS_BFF_AUTH0_TESTING":                  "true",
-	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":         "localhost:8444",
-	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
-	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":     "true",
-	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":     "localhost:8443",
-	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":      "5s",
-	"GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE":  "true",
-	"GDS_BFF_TESTNET_MEMBERS_ENDPOINT":       "localhost:9443",
-	"GDS_BFF_TESTNET_MEMBERS_TIMEOUT":        "5s",
-	"GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH": "fixtures/members/creds/testnet/certs.pem",
-	"GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/testnet/pool.zip",
-	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":         "localhost:9444",
-	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":       "key1:/current.pem,key2:/rotated.pem",
-	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":     "true",
-	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":     "localhost:8444",
-	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":      "3s",
-	"GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE":  "true",
-	"GDS_BFF_MAINNET_MEMBERS_ENDPOINT":       "localhost:9444",
-	"GDS_BFF_MAINNET_MEMBERS_TIMEOUT":        "3s",
-	"GDS_BFF_MAINNET_MEMBERS_MTLS_CERT_PATH": "fixtures/members/creds/mainnet/certs.pem",
-	"GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH": "fixtures/members/creds/mainnet/pool.zip",
-	"GDS_BFF_DATABASE_URL":                   "trtl://trtl.test:4436",
-	"GDS_BFF_DATABASE_REINDEX_ON_BOOT":       "false",
-	"GDS_BFF_DATABASE_MTLS_INSECURE":         "true",
-	"GDS_BFF_DATABASE_MTLS_CERT_PATH":        "fixtures/creds/certs.pem",
-	"GDS_BFF_DATABASE_MTLS_POOL_PATH":        "fixtures/creds/pool.zip",
-	"GDS_BFF_SENTRY_DSN":                     "https://something.ingest.sentry.io",
-	"GDS_BFF_SENTRY_ENVIRONMENT":             "test",
-	"GDS_BFF_SENTRY_RELEASE":                 "1.4",
-	"GDS_BFF_SENTRY_DEBUG":                   "true",
-	"GDS_BFF_SENTRY_TRACK_PERFORMANCE":       "true",
-	"GDS_BFF_SENTRY_SAMPLE_RATE":             "0.2",
+	"GDS_BFF_MAINTENANCE":                   "false",
+	"GDS_BFF_BIND_ADDR":                     "8080",
+	"GDS_BFF_MODE":                          "debug",
+	"GDS_BFF_LOG_LEVEL":                     "debug",
+	"GDS_BFF_CONSOLE_LOG":                   "true",
+	"GDS_BFF_ALLOW_ORIGINS":                 "https://vaspdirectory.net",
+	"GDS_BFF_COOKIE_DOMAIN":                 "vaspdirectory.net",
+	"GDS_BFF_AUTH0_DOMAIN":                  "example.auth0.com",
+	"GDS_BFF_AUTH0_ISSUER":                  "https://auth.example.com",
+	"GDS_BFF_AUTH0_AUDIENCE":                "https://vaspdirectory.net",
+	"GDS_BFF_AUTH0_PROVIDER_CACHE":          "10m",
+	"GDS_BFF_AUTH0_CLIENT_ID":               "exampleid",
+	"GDS_BFF_AUTH0_CLIENT_SECRET":           "supersecretsquirrel",
+	"GDS_BFF_AUTH0_TESTING":                 "true",
+	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":        "localhost:8444",
+	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":      "key1:/current.pem,key2:/rotated.pem",
+	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":    "true",
+	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":    "localhost:8443",
+	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":     "5s",
+	"GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE": "true",
+	"GDS_BFF_TESTNET_MEMBERS_ENDPOINT":      "localhost:9443",
+	"GDS_BFF_TESTNET_MEMBERS_TIMEOUT":       "5s",
+	"GDS_BFF_TESTNET_MEMBERS_CERT_PATH":     "fixtures/members/creds/testnet/certs.pem",
+	"GDS_BFF_TESTNET_MEMBERS_POOL_PATH":     "fixtures/members/creds/testnet/pool.zip",
+	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":        "localhost:9444",
+	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":      "key1:/current.pem,key2:/rotated.pem",
+	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":    "true",
+	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":    "localhost:8444",
+	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":     "3s",
+	"GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE": "true",
+	"GDS_BFF_MAINNET_MEMBERS_ENDPOINT":      "localhost:9444",
+	"GDS_BFF_MAINNET_MEMBERS_TIMEOUT":       "3s",
+	"GDS_BFF_MAINNET_MEMBERS_CERT_PATH":     "fixtures/members/creds/mainnet/certs.pem",
+	"GDS_BFF_MAINNET_MEMBERS_POOL_PATH":     "fixtures/members/creds/mainnet/pool.zip",
+	"GDS_BFF_DATABASE_URL":                  "trtl://trtl.test:4436",
+	"GDS_BFF_DATABASE_REINDEX_ON_BOOT":      "false",
+	"GDS_BFF_DATABASE_INSECURE":             "true",
+	"GDS_BFF_DATABASE_CERT_PATH":            "fixtures/creds/certs.pem",
+	"GDS_BFF_DATABASE_POOL_PATH":            "fixtures/creds/pool.zip",
+	"GDS_BFF_SENTRY_DSN":                    "https://something.ingest.sentry.io",
+	"GDS_BFF_SENTRY_ENVIRONMENT":            "test",
+	"GDS_BFF_SENTRY_RELEASE":                "1.4",
+	"GDS_BFF_SENTRY_DEBUG":                  "true",
+	"GDS_BFF_SENTRY_TRACK_PERFORMANCE":      "true",
+	"GDS_BFF_SENTRY_SAMPLE_RATE":            "0.2",
 }
 
 func TestConfig(t *testing.T) {
@@ -117,9 +117,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_MEMBERS_MTLS_POOL_PATH"], conf.MainNet.Members.MTLS.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_URL"], conf.Database.URL)
 	require.Equal(t, false, conf.Database.ReindexOnBoot)
-	require.Equal(t, true, conf.Database.MTLS.Insecure)
-	require.Equal(t, testEnv["GDS_BFF_DATABASE_MTLS_CERT_PATH"], conf.Database.MTLS.CertPath)
-	require.Equal(t, testEnv["GDS_BFF_DATABASE_MTLS_POOL_PATH"], conf.Database.MTLS.PoolPath)
+	require.Equal(t, true, conf.Database.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_DATABASE_CERT_PATH"], conf.Database.CertPath)
+	require.Equal(t, testEnv["GDS_BFF_DATABASE_POOL_PATH"], conf.Database.PoolPath)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
@@ -148,7 +148,7 @@ func TestRequiredConfig(t *testing.T) {
 	// Insecure must be true if no mTLS certs are provided
 	os.Setenv("GDS_BFF_TESTNET_MEMBERS_MTLS_INSECURE", "true")
 	os.Setenv("GDS_BFF_MAINNET_MEMBERS_MTLS_INSECURE", "true")
-	os.Setenv("GDS_BFF_DATABASE_MTLS_INSECURE", "true")
+	os.Setenv("GDS_BFF_DATABASE_INSECURE", "true")
 
 	// Collect required environment variables and cleanup after
 	prevEnv := curEnv(required...)
@@ -265,35 +265,6 @@ func TestMembersConfigValidation(t *testing.T) {
 	conf.MTLS.CertPath = "fixtures/certs.pem"
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid members configuration: connecting over mTLS requires certs and cert pool")
-
-	conf.MTLS.PoolPath = "fixtures/pool.zip"
-	err = conf.Validate()
-	require.NoError(t, err, "expected valid configuration")
-}
-
-func TestDatabaseConfigValidation(t *testing.T) {
-	conf := config.DatabaseConfig{
-		URL:           "trtl://trtl.test.net:443",
-		ReindexOnBoot: false,
-		MTLS: config.MTLSConfig{
-			Insecure: false,
-			CertPath: "",
-			PoolPath: "",
-		},
-	}
-
-	conf.MTLS.Insecure = true
-	err := conf.Validate()
-	require.NoError(t, err)
-
-	// If Insecure is false, then the certs and cert pool are required.
-	conf.MTLS.Insecure = false
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid database configuration: connecting over mTLS requires certs and cert pool")
-
-	conf.MTLS.CertPath = "fixtures/certs.pem"
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid database configuration: connecting over mTLS requires certs and cert pool")
 
 	conf.MTLS.PoolPath = "fixtures/pool.zip"
 	err = conf.Validate()

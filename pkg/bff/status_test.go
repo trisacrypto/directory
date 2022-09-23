@@ -11,6 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
 )
@@ -209,11 +210,9 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 				},
 			},
 		},
-		Database: config.DatabaseConfig{
-			URL: "trtl:///",
-			MTLS: config.MTLSConfig{
-				Insecure: true,
-			},
+		Database: storeconfig.StoreConfig{
+			URL:      "trtl:///",
+			Insecure: true,
 		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")

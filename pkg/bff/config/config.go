@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
@@ -36,7 +37,7 @@ type Config struct {
 	Auth0        AuthConfig
 	TestNet      NetworkConfig
 	MainNet      NetworkConfig
-	Database     DatabaseConfig
+	Database     config.StoreConfig
 	Sentry       sentry.Config
 	processed    bool
 }
@@ -81,12 +82,6 @@ type MembersConfig struct {
 	Endpoint string        `split_words:"true" required:"true"`
 	Timeout  time.Duration `split_words:"true" default:"10s"`
 	MTLS     MTLSConfig
-}
-
-type DatabaseConfig struct {
-	URL           string `split_words:"true" required:"true"`
-	ReindexOnBoot bool   `split_words:"true" default:"false"`
-	MTLS          MTLSConfig
 }
 
 type MTLSConfig struct {
@@ -162,13 +157,6 @@ func (c NetworkConfig) Validate() error {
 func (c MembersConfig) Validate() error {
 	if err := c.MTLS.Validate(); err != nil {
 		return fmt.Errorf("invalid members configuration: %w", err)
-	}
-	return nil
-}
-
-func (c DatabaseConfig) Validate() error {
-	if err := c.MTLS.Validate(); err != nil {
-		return fmt.Errorf("invalid database configuration: %w", err)
 	}
 	return nil
 }

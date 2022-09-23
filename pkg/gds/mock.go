@@ -14,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/store"
+	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
 	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/grpc"
@@ -116,7 +117,7 @@ func MockConfig() config.Config {
 			Enabled:  true,
 			Insecure: true,
 		},
-		Database: config.DatabaseConfig{
+		Database: storeconfig.StoreConfig{
 			URL:           "leveldb:///testdata/testdb",
 			ReindexOnBoot: false,
 		},

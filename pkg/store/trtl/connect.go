@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/trisa/pkg/trust"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Connect(conf config.DatabaseConfig) (conn *grpc.ClientConn, err error) {
+func Connect(conf config.StoreConfig) (conn *grpc.ClientConn, err error) {
 	// Parse the URL to get the endpoint to the trtl server
 	dsn, err := url.Parse(conf.URL)
 	if err != nil {

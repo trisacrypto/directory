@@ -60,7 +60,7 @@ func (s *Server) Login(c *gin.Context) {
 	var org *models.Organization
 	if appdata.OrgID == "" {
 		// Create the organization
-		org, err = s.db.Organizations().Create(c.Request.Context())
+		org, err = s.db.CreateOrganization()
 		if err != nil {
 			log.Error().Err(err).Msg("could not create organization for new user")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
@@ -71,7 +71,7 @@ func (s *Server) Login(c *gin.Context) {
 		appdata.OrgID = org.Id
 	} else {
 		// Get the organization for the specified user
-		org, err = s.db.Organizations().Retrieve(c.Request.Context(), appdata.OrgID)
+		org, err = s.db.RetrieveOrganization(appdata.OrgID)
 		if err != nil {
 			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
@@ -114,7 +114,7 @@ func (s *Server) Login(c *gin.Context) {
 		}
 
 		// Update the organization in the database
-		if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+		if err = s.db.UpdateOrganization(org); err != nil {
 			log.Error().Err(err).Msg("could not update the organization with the new collaborator")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
 			return

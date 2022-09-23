@@ -44,6 +44,7 @@ type MockState struct {
 	DeleteCertInvoked                bool
 	RetrieveAnnouncementMonthInvoked bool
 	UpdateAnnouncementMonthInvoked   bool
+	DeleteAnnouncementMonthInvoked   bool
 	CreateOrganizationInvoked        bool
 	RetrieveOrganizationInvoked      bool
 	UpdateOrganizationInvoked        bool
@@ -84,6 +85,7 @@ type MockDB struct {
 	OnDeleteCert                func(id string) error
 	OnRetrieveAnnouncementMonth func(date string) (*bff.AnnouncementMonth, error)
 	OnUpdateAnnouncementMonth   func(o *bff.AnnouncementMonth) error
+	OnDeleteAnnouncementMonth   func(date string) error
 	OnCreateOrganization        func() (*bff.Organization, error)
 	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
 	OnUpdateOrganization        func(o *bff.Organization) error
@@ -205,6 +207,11 @@ func (m *MockDB) RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth,
 func (m *MockDB) UpdateAnnouncementMonth(o *bff.AnnouncementMonth) error {
 	state.UpdateAnnouncementMonthInvoked = true
 	return m.OnUpdateAnnouncementMonth(o)
+}
+
+func (m *MockDB) DeleteAnnouncementMonth(date string) error {
+	state.DeleteAnnouncementMonthInvoked = true
+	return m.OnDeleteAnnouncementMonth(date)
 }
 
 func (m *MockDB) CreateOrganization() (*bff.Organization, error) {

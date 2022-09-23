@@ -18,6 +18,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/store"
+	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
@@ -712,7 +713,7 @@ func load(c *cli.Context) (err error) {
 	}
 
 	var db store.Store
-	if db, err = store.Open(config.DatabaseConfig{URL: dsn}); err != nil {
+	if db, err = store.Open(storeconfig.StoreConfig{URL: dsn}); err != nil {
 		return cli.Exit(err, 1)
 	}
 	defer db.Close()

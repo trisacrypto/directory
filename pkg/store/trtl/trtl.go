@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/store/index"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
@@ -23,7 +23,7 @@ import (
 )
 
 // Open a connection to the Trtl database.
-func Open(conf config.DatabaseConfig) (store *Store, err error) {
+func Open(conf config.StoreConfig) (store *Store, err error) {
 	store = &Store{}
 	if store.conn, err = Connect(conf); err != nil {
 		return nil, err
@@ -693,6 +693,31 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 		Namespace: wire.NamespaceAnnouncements,
 	}
 	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+// DeleteAnnouncementMonth removes an announcement month "crate" from the store.
+func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	m := &bff.AnnouncementMonth{Date: date}
+	if key, err = m.Key(); err != nil {
+		return err
+	}
+
+	ctx, cancel := withContext(context.Background())
+	defer cancel()
+	request := &pb.DeleteRequest{
+		Key:       key,
+		Namespace: wire.NamespaceAnnouncements,
+	}
+	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
 		if err == nil {
 			err = storeerrors.ErrProtocol
 		}
