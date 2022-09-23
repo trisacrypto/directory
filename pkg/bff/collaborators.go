@@ -85,7 +85,7 @@ func (s *Server) ReplaceCollaborator(c *gin.Context) {
 	}
 
 	// Save the updated organization
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, "could not replace collaborator")
 		return
