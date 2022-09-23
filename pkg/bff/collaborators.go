@@ -16,28 +16,26 @@ import (
 func (s *Server) AddCollaborator(c *gin.Context) {
 	var (
 		err          error
-		request      *models.Collaborator
 		collaborator *models.Collaborator
 		org          *models.Organization
 	)
 
 	// Fetch the organization from the claims
+	// NOTE: This method handles the error logging and response
 	if org, err = s.OrganizationFromClaims(c); err != nil {
-		log.Error().Err(err).Msg("could not fetch organization from claims")
-		c.JSON(http.StatusInternalServerError, "could not add collaborator")
 		return
 	}
 
 	// Unmarshal the collaborator from the POST request
-	request = &models.Collaborator{}
-	if err = c.ShouldBind(request); err != nil {
+	collaborator = &models.Collaborator{}
+	if err = c.ShouldBind(collaborator); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Add the collaborator to the organization
-	if err = org.AddCollaborator(request); err != nil {
+	if err = org.AddCollaborator(collaborator); err != nil {
 		log.Error().Err(err).Msg("could not add new collaborator to organization")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
@@ -52,10 +50,44 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		return
 	}
 
-	// Return the updated collaborator
-	if collaborator, err = org.GetCollaborator(request.Email); err != nil {
-		log.Error().Err(err).Msg("could not retrieve collaborator from organization")
-		c.JSON(http.StatusInternalServerError, "could not add collaborator")
+	c.JSON(http.StatusOK, collaborator)
+}
+
+// ReplaceCollaborator completely replaces a collaborator on the user's organization
+// with the collaborator in the request. The collaborator object in the request must be
+// valid and the user must have the update:collaborators permission.
+func (s *Server) ReplaceCollaborator(c *gin.Context) {
+	var (
+		err          error
+		collaborator *models.Collaborator
+		org          *models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// NOTE: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Unmarshal the collaborator from the PUT request
+	collaborator = &models.Collaborator{}
+	if err = c.ShouldBind(collaborator); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Replace the collaborator on the organization
+	if err = org.ReplaceCollaborator(collaborator); err != nil {
+		log.Error().Err(err).Msg("could not replace collaborator on organization")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Save the updated organization
+	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+		log.Error().Err(err).Msg("could not save organization with new collaborator")
+		c.JSON(http.StatusInternalServerError, "could not replace collaborator")
 		return
 	}
 
