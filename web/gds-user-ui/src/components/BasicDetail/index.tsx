@@ -41,7 +41,8 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
       try {
         const validationData = await validationSchema[0].validate(data);
         const updatedCertificate: any = await postRegistrationValue(validationData);
-
+        console.log('[updatedCertificate]', updatedCertificate);
+        console.log('[updatedCertificate Status]', updatedCertificate.status);
         if (updatedCertificate.status === 200) {
           const getValue = await getRegistrationData();
           console.log('[getValue]', getValue);
