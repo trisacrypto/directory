@@ -31,13 +31,19 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
     setIsLoadingDefaultValue(true);
     const reader = new FileReader();
     reader.onload = async (ev: any) => {
+      // if file is empty
+      // if (!ev.target.result) {
+      //   setIsLoadingDefaultValue(false);
+      //   return;
+      // }
+
       const data = JSON.parse(ev.target.result);
       try {
         const validationData = await validationSchema[0].validate(data);
-        console.log('[validationData]', validationData);
+
         const updatedCertificate: any = await postRegistrationValue(validationData);
-        console.log('[updatedCertificate]', updatedCertificate);
-        if (updatedCertificate.status === 204) {
+
+        if (updatedCertificate.status === 200) {
           const getValue = await getRegistrationData();
           console.log('[getValue]', getValue);
           const values = {
@@ -51,20 +57,22 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           updateStateFromFormValues(values.state);
         }
       } catch (e: any) {
-        console.log('[e]', e);
-        toast({
-          title: 'Invalid file',
-          description: e.message || 'your json file is invalid',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
-        handleError(e, 'Importing data failed');
+        if (e.name === 'ValidationError') {
+          toast({
+            title: 'Invalid file',
+            description: e.message || 'your json file is invalid',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'top-right'
+          });
+          handleError(e, 'Importing data failed');
+        }
       } finally {
         setIsLoadingDefaultValue(false);
       }
     };
+
     reader.readAsText(file);
   };
   return (
