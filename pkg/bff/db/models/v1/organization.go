@@ -29,18 +29,15 @@ func (org *Organization) Key() []byte {
 // Note: The caller is responsible for saving the updated organization record to the
 // database.
 func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
-	// TODO: More comprehensive validation of the collaborator record
-	if collab.Email == "" {
-		return errors.New("email address is required to add an organization collaborator")
-	}
-
-	if org.Collaborators == nil {
-		org.Collaborators = make(map[string]*Collaborator)
+	// Make sure the collaborator is valid for storage
+	if err = collab.Validate(); err != nil {
+		return err
 	}
 
 	// Don't overwrite an existing collaborator
-	if _, ok := org.Collaborators[collab.Email]; ok {
-		return fmt.Errorf("collaborator with email address %s already exists", collab.Email)
+	key := collab.Key()
+	if _, ok := org.Collaborators[key]; ok {
+		return fmt.Errorf("collaborator %q already exists", key)
 	}
 
 	// Make sure the record has a created timestamp
@@ -49,23 +46,41 @@ func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	}
 
 	// Add the collaborator to the organization
-	org.Collaborators[collab.Email] = collab
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*Collaborator)
+	}
+	org.Collaborators[key] = collab
 	return nil
 }
 
-// Return the collaborator record for the given email address.
-func (org *Organization) GetCollaborator(email string) (collaborator *Collaborator, err error) {
-	if email == "" {
-		return nil, errors.New("email address is required to get an organization collaborator")
+// Replace a collaborator on an organization record. The given collaborator record is
+// validated before being replaced on the organization.
+// Note: The caller is responsible for saving the updated organization record to the
+// database.
+func (org *Organization) ReplaceCollaborator(collab *Collaborator) (err error) {
+	// Make sure the collaborator is valid for storage
+	if err = collab.Validate(); err != nil {
+		return err
 	}
 
-	// Lookup the collaborator record
-	var ok bool
-	if collaborator, ok = org.Collaborators[email]; !ok {
-		return nil, fmt.Errorf("collaborator with email address %s does not exist", email)
+	// Make sure the collaborator already exists on the organization
+	key := collab.Key()
+	if _, ok := org.Collaborators[key]; !ok {
+		return fmt.Errorf("collaborator %q does not exist", key)
 	}
 
-	return collaborator, nil
+	// Make sure the record has updated timestamps
+	collab.ModifiedAt = time.Now().UTC().Format(time.RFC3339Nano)
+	if collab.CreatedAt == "" {
+		collab.CreatedAt = collab.ModifiedAt
+	}
+
+	// Replace the collaborator on the organization
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*Collaborator)
+	}
+	org.Collaborators[key] = collab
+	return nil
 }
 
 func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
