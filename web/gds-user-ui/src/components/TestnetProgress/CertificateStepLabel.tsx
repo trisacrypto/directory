@@ -43,6 +43,7 @@ type TStepLabel = {
   hasError?: boolean; // status of the step
   icon: any; // icon of the step
 };
+
 const CertificateStepLabel: FC<StepLabelProps> = () => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
