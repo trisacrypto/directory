@@ -12,7 +12,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
-	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 func (s *bffTestSuite) TestAnnouncements() {
@@ -55,7 +54,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	// Add some announcements to the database for the past several months
 	now := time.Now()
 	for i := 0; i < 20; i++ {
-		post := &records.Announcement{
+		post := &models.Announcement{
 			Title:  fmt.Sprintf("test post %d", i+1),
 			Body:   fmt.Sprintf("this is a test post number %d", i+1),
 			Author: "test@example.com",
@@ -63,20 +62,20 @@ func (s *bffTestSuite) TestAnnouncements() {
 
 		// Create a random post date sometime in the past several months
 		pd := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).AddDate(0, -1*rand.Intn(5), -1*rand.Intn(32))
-		post.PostDate = pd.Format(records.PostDateLayout)
-		months[pd.Format(records.MonthLayout)] = struct{}{}
+		post.PostDate = pd.Format(models.PostDateLayout)
+		months[pd.Format(models.MonthLayout)] = struct{}{}
 
 		_, err = s.bff.PostAnnouncement(post)
 		require.NoError(err, "could not post an announcement fixture")
 	}
 
 	// Create a post for yesterday to ensure there is at least one post returned
-	months[time.Now().AddDate(0, 0, -1).Format(records.MonthLayout)] = struct{}{}
-	_, err = s.bff.PostAnnouncement(&records.Announcement{
+	months[time.Now().AddDate(0, 0, -1).Format(models.MonthLayout)] = struct{}{}
+	_, err = s.bff.PostAnnouncement(&models.Announcement{
 		Title:    "from the future",
 		Body:     "this was posted yesterday",
 		Author:   "future@example.com",
-		PostDate: time.Now().AddDate(0, 0, -1).Format(records.PostDateLayout),
+		PostDate: time.Now().AddDate(0, 0, -1).Format(models.PostDateLayout),
 	})
 	require.NoError(err, "could not post an announcement fixture")
 
@@ -106,7 +105,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 		Permissions: []string{"read:nothing"},
 	}
 
-	post := &records.Announcement{
+	post := &models.Announcement{
 		Title: "Hear ye, Hear ye",
 		Body:  "We are conducting tests of the make announcements endpoint.",
 	}
@@ -206,7 +205,7 @@ func (s *bffTestSuite) TestAnnouncementsHelpers() {
 	for i, post := range fixture {
 		pd, err := time.Parse("2006-01-02", post.PostDate)
 		require.NoError(err, "could not parse post date from fixture")
-		months[pd.Format(records.MonthLayout)] = struct{}{}
+		months[pd.Format(models.MonthLayout)] = struct{}{}
 
 		id, err := s.bff.PostAnnouncement(post)
 		require.NoError(err, "could not post announcement %d", i)
