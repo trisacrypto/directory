@@ -11,9 +11,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
@@ -333,7 +333,7 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 	var db store.Store
 	switch lib.stype {
 	case StoreLevelDB:
-		if db, err = store.Open(config.DatabaseConfig{
+		if db, err = store.Open(config.StoreConfig{
 			URL:           "leveldb:///" + lib.dbPath,
 			ReindexOnBoot: false,
 		}); err != nil {

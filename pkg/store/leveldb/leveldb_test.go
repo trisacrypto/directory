@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -404,6 +404,13 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	february, err := s.db.RetrieveAnnouncementMonth("2022-02")
 	s.NoError(err)
 	s.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+
+	// Delete an announcement month
+	s.NoError(s.db.DeleteAnnouncementMonth("2022-01"))
+
+	// Should not be able to retrieve the deleted announcement month
+	_, err = s.db.RetrieveAnnouncementMonth("2022-01")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
 func (s *leveldbTestSuite) TestOrganizationStore() {

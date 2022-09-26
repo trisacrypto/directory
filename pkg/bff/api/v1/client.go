@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 // New creates a new api.v1 API client that implements the BFF interface.

@@ -11,8 +11,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -130,11 +130,11 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(loadFixture(mainnetFixture, mainnetReply))
 
 	// Create an organization in the database with no registration form
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create initial claims fixture
@@ -180,7 +180,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Start registration message should still be returned if the registration form state is empty
 	org.Registration = &records.RegistrationForm{}
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
 	require.Len(reply.Messages, 1, "expected start registration message")
@@ -188,7 +188,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Start registration message should still be returned if the registration form has not been started
 	org.Registration = records.NewRegisterForm()
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
 	require.Len(reply.Messages, 1, "expected start registration message")
@@ -196,7 +196,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Complete registration message should be returned when the registration form has been started but not submitted
 	org.Registration.State.Started = time.Now().Format(time.RFC3339)
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.CompleteRegistration,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -211,7 +211,7 @@ func (s *bffTestSuite) TestAttention() {
 	org.Testnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.SubmitMainnet,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -227,7 +227,7 @@ func (s *bffTestSuite) TestAttention() {
 	org.Mainnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	submitTestnet := &api.AttentionMessage{
 		Message:  bff.SubmitTestnet,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -371,7 +371,7 @@ func (s *bffTestSuite) TestAttention() {
 	claims.VASPs["testnet"] = "alice0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	vasp = &pb.VASP{}
 	require.NoError(wire.Unwire(testnetReply.VASP, vasp))
 	expires := time.Now().AddDate(0, 0, 28)
@@ -414,11 +414,11 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	require := s.Require()
 
 	// Create an organization in the database with no directory records
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create initial claims fixture
@@ -460,7 +460,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	org.Testnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
@@ -471,7 +471,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	org.Mainnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
@@ -480,7 +480,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	// Should return both timestamps when both registrations have been submitted
 	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
 	org.Mainnet.Submitted = time.Now().Format(time.RFC3339)
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization in the database")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")

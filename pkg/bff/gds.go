@@ -13,7 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -267,7 +267,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 
 	// Update the organizations form
 	org.Registration = form
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
 		return
@@ -431,7 +431,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		appdata.VASPs.MainNet = rep.Id
 	}
 
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return

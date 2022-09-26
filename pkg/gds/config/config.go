@@ -10,6 +10,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
@@ -25,7 +26,7 @@ type Config struct {
 	GDS         GDSConfig
 	Admin       AdminConfig
 	Members     MembersConfig
-	Database    DatabaseConfig
+	Database    config.StoreConfig
 	Email       EmailConfig
 	CertMan     CertManConfig
 	Backup      BackupConfig
@@ -66,14 +67,6 @@ type MembersConfig struct {
 	Insecure bool   `split_words:"true" default:"false"`
 	Certs    string `split_words:"true"`
 	CertPool string `split_words:"true"`
-}
-
-type DatabaseConfig struct {
-	URL           string `split_words:"true" required:"true"`
-	ReindexOnBoot bool   `split_words:"true" default:"false"`
-	Insecure      bool   `split_words:"true" default:"false"`
-	CertPath      string `split_words:"true"`
-	PoolPath      string `split_words:"true"`
 }
 
 type EmailConfig struct {
@@ -224,16 +217,6 @@ func (c MembersConfig) Validate() error {
 		}
 	}
 
-	return nil
-}
-
-func (c DatabaseConfig) Validate() error {
-	// If the insecure flag isn't set then we must have certs when connecting to trtl.
-	if strings.HasPrefix(c.URL, "trtl://") && !c.Insecure {
-		if c.CertPath == "" || c.PoolPath == "" {
-			return errors.New("invalid configuration: connecting to trtl over mTLS requires certs and cert pool")
-		}
-	}
 	return nil
 }
 

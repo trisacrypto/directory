@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	store "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
@@ -628,6 +628,13 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	february, err := db.RetrieveAnnouncementMonth("2022-02")
 	require.NoError(err)
 	require.Equal("Happy Groundhog Day", february.Announcements[0].Title)
+
+	// Delete an announcement month
+	require.NoError(db.DeleteAnnouncementMonth("2022-01"))
+
+	// Should not be able to retrieve the deleted announcement month
+	_, err = db.RetrieveAnnouncementMonth("2022-01")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
 func (s *trtlStoreTestSuite) TestOrganizationStore() {
