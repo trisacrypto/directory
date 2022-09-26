@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"

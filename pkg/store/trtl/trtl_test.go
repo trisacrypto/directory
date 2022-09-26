@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	store "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"

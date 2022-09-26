@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/store/iterator"

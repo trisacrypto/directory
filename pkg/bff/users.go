@@ -7,10 +7,11 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 const (
@@ -70,8 +71,16 @@ func (s *Server) Login(c *gin.Context) {
 		// Set the organization ID in the user app metadata
 		appdata.OrgID = org.Id
 	} else {
+		// Organizations are stored by UUID in the database
+		var id uuid.UUID
+		if id, err = models.ParseOrgID(appdata.OrgID); err != nil {
+			log.Error().Err(err).Msg("could not parse organization ID")
+			c.JSON(http.StatusInternalServerError, "could not complete user login")
+			return
+		}
+
 		// Get the organization for the specified user
-		org, err = s.db.RetrieveOrganization(appdata.OrgID)
+		org, err = s.db.RetrieveOrganization(id)
 		if err != nil {
 			log.Error().Err(err).Str("orgid", appdata.OrgID).Msg("could not retrieve organization for user VASP verification")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")

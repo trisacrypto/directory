@@ -13,7 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"

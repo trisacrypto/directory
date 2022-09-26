@@ -21,8 +21,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"github.com/trisacrypto/directory/pkg/bff/db"
 	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
@@ -89,7 +89,7 @@ func New(conf config.Config) (s *Server, err error) {
 				return nil, fmt.Errorf("could not connect to mainnet: %s", err)
 			}
 
-			if s.db, err = db.New(s.conf.Database); err != nil {
+			if s.db, err = store.Open(s.conf.Database); err != nil {
 				return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 			}
 			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
@@ -163,7 +163,7 @@ type Server struct {
 	mainnetAdmin apiv2.DirectoryAdministrationClient
 	testnetGDS   GlobalDirectoryClient
 	mainnetGDS   GlobalDirectoryClient
-	db           *db.DB
+	db           store.Store
 	auth0        *management.Management
 	started      time.Time
 	healthy      bool
@@ -385,7 +385,7 @@ func (s *Server) SetGDSClients(testnet, mainnet *GDSClient) {
 }
 
 // SetDB allows tests to set a bufconn client to a mock trtl server.
-func (s *Server) SetDB(db *db.DB) {
+func (s *Server) SetDB(db store.Store) {
 	s.db = db
 }
 

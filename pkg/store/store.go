@@ -29,7 +29,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/store/iterator"

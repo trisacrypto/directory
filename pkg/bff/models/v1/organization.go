@@ -20,8 +20,12 @@ func (org *Organization) Key() []byte {
 		return uuid.Nil[:]
 	}
 
-	key := uuid.MustParse(org.Id)
+	key := org.UUID()
 	return key[:]
+}
+
+func (org *Organization) UUID() uuid.UUID {
+	return uuid.MustParse(org.Id)
 }
 
 // Add a new collaborator to an organization record. The given collaborator record is

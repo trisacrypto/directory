@@ -9,8 +9,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -105,7 +105,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	claims.OrgID = org.Id
@@ -181,7 +181,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create valid credentials for the remaining tests
@@ -194,7 +194,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
 	// Empty registration form should be saved in the database
-	org, err = s.db.RetrieveOrganization(org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from database")
 	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected empty registration form")
 
@@ -206,7 +206,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	reply.State.Started = ""
 	require.True(proto.Equal(form, reply), "expected returned registration form to match uploaded form")
 
-	org, err = s.db.RetrieveOrganization(org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
 	org.Registration.State.Started = ""
@@ -217,7 +217,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
-	org, err = s.db.RetrieveOrganization(org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
 }
@@ -233,7 +233,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Save the registration form fixture on the organization
@@ -365,7 +365,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	}
 
 	// Ensure that the directory record is stored on the database after registration
-	org, err = s.db.RetrieveOrganization(org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not update organization from the database")
 
 	require.NotNil(org.Testnet, "missing testnet directory record after registration")
@@ -397,7 +397,7 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet
@@ -440,7 +440,7 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet

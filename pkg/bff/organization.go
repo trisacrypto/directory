@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 )
 
@@ -32,8 +33,16 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 		return nil, errors.New("missing organization ID in claims")
 	}
 
+	// Organizations are stored by UUID in the database
+	var id uuid.UUID
+	if id, err = models.ParseOrgID(claims.OrgID); err != nil {
+		log.Error().Err(err).Msg("could not parse orgID from claims")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
+		return nil, err
+	}
+
 	// Fetch the record from the database
-	if org, err = s.db.RetrieveOrganization(claims.OrgID); err != nil {
+	if org, err = s.db.RetrieveOrganization(id); err != nil {
 		if errors.Is(err, storeerrors.ErrEntityNotFound) {
 			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
 			api.MustRefreshToken(c, "no organization found, try logging out and logging back in")

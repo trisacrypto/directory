@@ -11,8 +11,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -134,7 +134,7 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create initial claims fixture
@@ -418,7 +418,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.DeleteOrganization(org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create initial claims fixture

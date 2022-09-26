@@ -15,9 +15,10 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"github.com/trisacrypto/directory/pkg/bff/db"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	"github.com/trisacrypto/directory/pkg/store"
 	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
+	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
@@ -34,7 +35,7 @@ type bffTestSuite struct {
 	client   api.BFFClient
 	testnet  mockNetwork
 	mainnet  mockNetwork
-	db       *db.DB
+	db       store.Store
 	dbPath   string
 	trtl     *trtl.Server
 	trtlsock *bufconn.GRPCListener
@@ -149,7 +150,7 @@ func (s *bffTestSuite) SetupSuite() {
 	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
 	// Direct connect the BFF server to the database
-	s.db, err = db.NewMock(s.trtlsock.Conn)
+	s.db, err = trtlstore.NewMock(s.trtlsock.Conn)
 	require.NoError(err, "could not direct connect db to the BFF server")
 	s.bff.SetDB(s.db)
 

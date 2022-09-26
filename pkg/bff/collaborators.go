@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 // AddCollaborator creates a new collaborator with the email address in the request.
