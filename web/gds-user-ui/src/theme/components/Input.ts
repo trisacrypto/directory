@@ -2,18 +2,20 @@ import type { ComponentStyleConfig } from '@chakra-ui/theme';
 
 // You can also use the more specific type for
 // a single part component: ComponentSingleStyleConfig
-const Input: ComponentStyleConfig = {
+export const Input: ComponentStyleConfig = {
   // The styles all button have in common
-  baseStyle: {
+  baseStyle: ({ colorMode }) => ({
     field: {
-      fontFamily: 'Open Sans, Roboto, sans-serif'
+      fontFamily: 'Open Sans, Roboto, sans-serif',
+      color: colorMode === 'light' ? '#2E3749' : '#EDF2F7',
+      background: 'transparent'
     }
-  },
+  }),
   sizes: {
     lg: {
       field: {
-        borderRadius: 0,
-        backgroundColor: '#E5EDF1 !important'
+        borderRadius: 0
+        // backgroundColor: '#E5EDF1 !important'
       }
     }
   },
@@ -23,5 +25,3 @@ const Input: ComponentStyleConfig = {
     type: 'text'
   }
 };
-
-export default Input;

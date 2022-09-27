@@ -11,20 +11,17 @@ const StatusCard = ({ isOnline }: StatusCardProps) => {
 
   return (
     <Box
-      bg={'white'}
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
       color={'#252733'}
-      // minWidth={250}
-      // height={170}
       fontSize={18}
       p={5}
       mt={10}
       px={5}>
       <Stack textAlign={'center'}>
-        <chakra.h1 textAlign={'center'} fontSize={20} fontWeight={'bold'}>
+        <Text as={'h1'} textAlign={'center'} fontSize={20} fontWeight={'bold'}>
           <Trans id="Network Status">Network Status</Trans>
-        </chakra.h1>
+        </Text>
         <Stack
           fontSize={40}
           pt={5}

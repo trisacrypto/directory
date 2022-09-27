@@ -55,8 +55,6 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
     },
     ref
   ) => {
-    const inputColorMode = useColorModeValue('#E3EBEF', undefined);
-
     const handleMouseScroll = (e: React.WheelEvent<HTMLInputElement>) => {
       // Disable Mouse scrolling
       if (e.currentTarget.type === 'number') {
@@ -71,7 +69,6 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
           <Input
             name={name}
             id={controlId}
-            background={inputColorMode}
             borderRadius={0}
             type={type}
             ref={inputRef || ref}

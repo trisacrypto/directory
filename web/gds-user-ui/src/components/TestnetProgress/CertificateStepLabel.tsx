@@ -1,24 +1,12 @@
-import React, { FC, useEffect } from 'react';
-import {
-  HStack,
-  Box,
-  Icon,
-  Text,
-  Heading,
-  Stack,
-  Grid,
-  Button,
-  Tooltip,
-  Flex,
-  useColorModeValue
-} from '@chakra-ui/react';
+import { FC } from 'react';
+import { Box, Icon, Text, Heading, Stack, Tooltip, Flex } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
+import { useSelector, RootStateOrAny } from 'react-redux';
+import { TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
-import { IconType } from 'react-icons/lib';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -44,7 +32,6 @@ type TStepLabel = {
 const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
-  const textColor = useColorModeValue('#3C4257', '#F7F8FC');
 
   // this function need some clean up
   const getLabel = (step: number): TStepLabel | undefined => {
@@ -103,187 +90,177 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
   const isActiveStep = (step: number) => step === currentStep;
 
   return (
-    <>
-      <Stack
-        boxShadow="0px 10px 15px -3px rgba(0,0,0,0.1)"
-        borderColor={'#C1C9D2'}
-        borderRadius={8}
-        borderWidth={1}
-        bg={'white'}
-        p={5}
-        fontFamily={'Open Sans'}
-        width="100%">
-        <Box display={'flex'} justifyContent={'space-between'}>
-          <Heading fontSize={['md', '2xl']}>
-            <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
-          </Heading>
-        </Box>
-        <Flex gap={2}>
-          <Tooltip
-            label={getLabel(1)?.hasError && t`Missing required element`}
-            placement="top"
-            bg={'red'}>
-            <Stack spacing={1} width="100%">
-              <Box h="1" borderRadius={'50px'} bg={getLabel(1)?.color} width={'100%'} key={1} />
-              <Stack
-                direction={{ base: 'column', md: 'row' }}
-                alignItems={['center']}
-                spacing={{ base: 0, md: 1 }}>
-                <Box>
-                  <Icon
-                    as={getLabel(1)?.icon}
-                    sx={{
-                      path: {
-                        fill: getLabel(1)?.color
-                      }
-                    }}
-                  />
-                </Box>
-                <Text
-                  color={textColor}
-                  fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
-                  fontSize={'sm'}
-                  textAlign="center">
-                  1 <Trans id="Basic Details">Basic Details</Trans>
-                </Text>
-              </Stack>
-            </Stack>
-          </Tooltip>
-
+    <Box
+      boxShadow="0px 10px 15px -3px rgba(0,0,0,0.1)"
+      borderColor={'#C1C9D2'}
+      borderRadius={8}
+      borderWidth={2}
+      // bg={'white'}
+      p={5}
+      fontFamily={'Open Sans'}
+      width="100%">
+      <Heading fontSize={['md', '2xl']} mb={4}>
+        <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
+      </Heading>
+      <Stack direction="row" spacing={2}>
+        <Tooltip
+          label={getLabel(1)?.hasError && t`Missing required element`}
+          placement="top"
+          bg={'red'}>
           <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={'center'}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(2)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(2)?.color
-                    },
-                    verticalAlign: 'middle'
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
-                textAlign="center">
-                2 <Trans id="Legal Person">Legal Person</Trans>
-              </Text>
-            </Stack>
-          </Stack>
-
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(3)?.color} width={'100%'} borderRadius={'50px'} />
+            <Box h="1" borderRadius={'50px'} bg={getLabel(1)?.color} width={'100%'} key={1} />
             <Stack
               direction={{ base: 'column', md: 'row' }}
               alignItems={['center']}
               spacing={{ base: 0, md: 1 }}>
               <Box>
                 <Icon
-                  as={getLabel(3)?.icon}
+                  as={getLabel(1)?.icon}
                   sx={{
                     path: {
-                      fill: getLabel(3)?.color
+                      fill: getLabel(1)?.color
                     }
                   }}
                 />
               </Box>
               <Text
-                color={textColor}
+                fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                 fontSize={'sm'}
-                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
                 textAlign="center">
-                3 <Trans id="Contacts">Contacts</Trans>
+                1 <Trans id="Basic Details">Basic Details</Trans>
               </Text>
             </Stack>
           </Stack>
+        </Tooltip>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(4)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(4)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
-                textAlign="center">
-                4 <Trans id="TRISA implementation">TRISA implementation</Trans>
-              </Text>
-            </Stack>
+        <Stack spacing={1} width="100%">
+          <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            alignItems={'center'}
+            spacing={{ base: 0, md: 1 }}>
+            <Box>
+              <Icon
+                as={getLabel(2)?.icon}
+                sx={{
+                  path: {
+                    fill: getLabel(2)?.color
+                  },
+                  verticalAlign: 'middle'
+                }}
+              />
+            </Box>
+            <Text
+              fontSize={'sm'}
+              fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
+              textAlign="center">
+              2 <Trans id="Legal Person">Legal Person</Trans>
+            </Text>
           </Stack>
+        </Stack>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(5)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(5)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
-                textAlign="center">
-                5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
-              </Text>
-            </Stack>
+        <Stack spacing={1} width="100%">
+          <Box h="1" bg={getLabel(3)?.color} width={'100%'} borderRadius={'50px'} />
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            alignItems={['center']}
+            spacing={{ base: 0, md: 1 }}>
+            <Box>
+              <Icon
+                as={getLabel(3)?.icon}
+                sx={{
+                  path: {
+                    fill: getLabel(3)?.color
+                  }
+                }}
+              />
+            </Box>
+            <Text
+              fontSize={'sm'}
+              fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
+              textAlign="center">
+              3 <Trans id="Contacts">Contacts</Trans>
+            </Text>
           </Stack>
+        </Stack>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(6)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(6)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(6)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
-                textAlign="center">
-                6 <Trans id="Review">Review</Trans>
-              </Text>
-            </Stack>
+        <Stack spacing={1} width="100%">
+          <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            alignItems={['center']}
+            spacing={{ base: 0, md: 1 }}>
+            <Box>
+              <Icon
+                as={getLabel(4)?.icon}
+                sx={{
+                  path: {
+                    fill: getLabel(4)?.color
+                  }
+                }}
+              />
+            </Box>
+            <Text
+              fontSize={'sm'}
+              fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
+              textAlign="center">
+              4 <Trans id="TRISA implementation">TRISA implementation</Trans>
+            </Text>
           </Stack>
-        </Flex>
-        {/* </Grid> */}
+        </Stack>
+
+        <Stack spacing={1} width="100%">
+          <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            alignItems={['center']}
+            spacing={{ base: 0, md: 1 }}>
+            <Box>
+              <Icon
+                as={getLabel(5)?.icon}
+                sx={{
+                  path: {
+                    fill: getLabel(5)?.color
+                  }
+                }}
+              />
+            </Box>
+            <Text
+              fontSize={'sm'}
+              fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
+              textAlign="center">
+              5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
+            </Text>
+          </Stack>
+        </Stack>
+
+        <Stack spacing={1} width="100%">
+          <Box h="1" bg={getLabel(6)?.color} width={'100%'} borderRadius={'50px'} />
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            alignItems={['center']}
+            spacing={{ base: 0, md: 1 }}>
+            <Box>
+              <Icon
+                as={getLabel(6)?.icon}
+                sx={{
+                  path: {
+                    fill: getLabel(6)?.color
+                  }
+                }}
+              />
+            </Box>
+            <Text
+              fontSize={'sm'}
+              fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
+              textAlign="center">
+              6 <Trans id="Review">Review</Trans>
+            </Text>
+          </Stack>
+        </Stack>
       </Stack>
-    </>
+      {/* </Grid> */}
+    </Box>
   );
 };
 

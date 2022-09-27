@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import * as Sentry from '@sentry/react';
-import { Box, Heading, Text, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Text,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  useColorModeValue
+} from '@chakra-ui/react';
 import OverviewLoader from 'components/ContentLoader/Overview';
-import DashboardLayout from 'layouts/DashboardLayout';
 import NeedsAttention from 'components/NeedsAttention';
 import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import Metrics from 'components/Metrics';
@@ -97,7 +105,8 @@ const Overview: React.FC = () => {
               <Tabs my={'10'}>
                 <TabList>
                   <Tab
-                    bg={'#E5EDF1'}
+                    // eslint-disable-next-line react-hooks/rules-of-hooks
+                    bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
                     sx={{ width: '100%' }}
                     _focus={{ outline: 'none' }}
                     _selected={{ bg: '#60C4CA', color: 'white', fontWeight: 'semibold' }}>
@@ -106,7 +115,8 @@ const Overview: React.FC = () => {
                     </Text>
                   </Tab>
                   <Tab
-                    bg={'#E5EDF1'}
+                    // eslint-disable-next-line react-hooks/rules-of-hooks
+                    bg={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
                     fontWeight={'bold'}
                     sx={{ width: '100%' }}
                     _focus={{ outline: 'none' }}

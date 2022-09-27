@@ -48,7 +48,7 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
 
       <Box>
         <Button
-          bg={'gray.100'}
+          bg={useColorModeValue('gray.100', 'gray.700')}
           w="100%"
           onClick={(event: any) => props.handleSocialAuth(event, 'google')}
           size="lg"

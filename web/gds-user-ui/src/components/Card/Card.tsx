@@ -16,7 +16,6 @@ const Card: React.FC<BoxProps> & CardProps = (props) => {
       padding={{ base: 3, md: 9 }}
       fontFamily="Open Sans"
       data-testid="card"
-      bg="white"
       {...rest}>
       {children}
     </Box>

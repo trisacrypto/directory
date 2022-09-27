@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heading, Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
+import { Heading, Stack, Table, Tbody, Tr, Td, Text, useColorModeValue } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 type TrisaImplementationProps = {
   data: any;
@@ -9,7 +9,6 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
     <Stack
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      bg={'white'}
       color={'#252733'}
       fontSize={18}
       p={4}
@@ -48,7 +47,11 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
                 }
               }}>
               <Tr pt={'1rem !important'}>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="TestNet">TestNet</Trans>
                 </Td>
               </Tr>
@@ -68,7 +71,11 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
                 <Td colSpan={2}></Td>
               </Tr>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td
+                  colSpan={2}
+                  background={useColorModeValue('#E5EDF1', 'whiteAlpha.300')}
+                  fontWeight="bold"
+                  pl={'1rem !important'}>
                   <Trans id="MainNet">MainNet</Trans>
                 </Td>
               </Tr>
