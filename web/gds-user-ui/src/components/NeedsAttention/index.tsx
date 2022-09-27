@@ -1,19 +1,10 @@
-import {
-  Box,
-  Text,
-  Stack,
-  Button,
-  HStack,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription
-} from '@chakra-ui/react';
+import { Text, Stack } from '@chakra-ui/react';
 
 import * as Sentry from '@sentry/react';
 
 import AttentionAlert, { AttentionResponseType } from './AttentionAlert';
 import { t } from '@lingui/macro';
+import useFetchAttention from 'hooks/useFetchAttention';
 
 export type NeedsAttentionProps = {
   text: string;
@@ -24,7 +15,17 @@ export type NeedsAttentionProps = {
   data?: Array<AttentionResponseType>;
 };
 
-const NeedsAttention = ({ text, buttonText, onClick, data }: NeedsAttentionProps) => {
+const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
+  const { attentionResponse } = useFetchAttention();
+
+  if (
+    attentionResponse &&
+    attentionResponse.messages &&
+    !Object.keys(attentionResponse.messages).length
+  ) {
+    return null;
+  }
+
   return (
     <Sentry.ErrorBoundary
       fallback={
@@ -34,7 +35,7 @@ const NeedsAttention = ({ text, buttonText, onClick, data }: NeedsAttentionProps
           pt={20}>{t`An error has occurred to load attention data`}</Text>
       }>
       <Stack minHeight={67}>
-        {data?.map((item: AttentionResponseType, key: any) => (
+        {attentionResponse?.messages?.map((item: AttentionResponseType, key: any) => (
           <AttentionAlert
             key={key}
             action={item.action}

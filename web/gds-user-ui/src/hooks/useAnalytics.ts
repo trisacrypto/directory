@@ -1,5 +1,4 @@
-import React, { FC, useEffect } from 'react';
-import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import ReactGA from 'react-ga4';
 import { isProdEnv } from 'application/config';
 

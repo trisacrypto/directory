@@ -1,4 +1,4 @@
-import React, { useState, FC, useEffect } from 'react';
+import React from 'react';
 import { Button, HStack } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifier from '../NameIdentifier';

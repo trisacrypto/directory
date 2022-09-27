@@ -133,7 +133,6 @@ const useCertificateStepper = () => {
     }
   };
   const previousStep = (state?: TState) => {
-    const { values: formValues, registrationValues, isDirty } = state || {};
     // if form value is set then save it to the dedicated step
     if (state?.formValues) {
       dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));

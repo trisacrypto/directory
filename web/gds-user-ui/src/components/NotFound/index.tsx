@@ -1,15 +1,16 @@
-import { Box, Button, Image, Stack, Text } from '@chakra-ui/react';
+import { Box, Button, Stack, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { colors } from 'utils/theme';
 import Error404 from 'assets/404-Error.svg';
 import { Trans } from '@lingui/react';
+import CkLazyLoadImage from 'components/LazyImage';
 
 export default function NotFound() {
   const navigate = useNavigate();
   return (
     <Stack direction="row" justifyContent="center" alignItems="center" textAlign={'center'}>
       <Stack fontSize="2xl">
-        <Image src={Error404} width="350px" mx="auto" />
+        <CkLazyLoadImage src={Error404} width="350px" mx="auto" />
         <Text fontSize="4xl" fontWeight="bold">
           <Trans id="Page Not Found">Page Not Found</Trans>
         </Text>

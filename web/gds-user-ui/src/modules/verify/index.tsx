@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Heading, Stack, Spinner } from '@chakra-ui/react';
-import UserEmailVerification from 'components/Section/UserEmailVerification';
-import UserEmailConfirmation from 'components/Section/UserEmailConfirmation';
+import { Spinner } from '@chakra-ui/react';
 import LandingLayout from 'layouts/LandingLayout';
 import useQuery from 'hooks/useQuery';
 import verifyService from './verify.service';
 import AlertMessage from 'components/ui/AlertMessage';
 import useAuth from 'hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import Loader from 'components/Loader';
 import TransparentLoader from 'components/Loader/TransparentLoader';
 const VerifyPage: React.FC = () => {
   const query = useQuery();

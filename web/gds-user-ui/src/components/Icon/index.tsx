@@ -1,4 +1,4 @@
-import { Icon, createIcon, IconProps } from '@chakra-ui/icon';
+import { Icon } from '@chakra-ui/icon';
 import { FC } from 'react';
 
 const MenuIcon = ({ color }: any): any => (
@@ -18,7 +18,7 @@ const CloseIcon = ({ color }: any) => (
   </svg>
 );
 
-const PlugIcon = (props: IconProps) => {
+const PlugIcon = () => {
   return (
     <Icon width="20" height="20" viewBox="0 0 106 96" fill="none">
       <path
@@ -29,7 +29,7 @@ const PlugIcon = (props: IconProps) => {
   );
 };
 
-const CircleIcon = (props: IconProps) => {
+const CircleIcon = () => {
   return (
     <Icon width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path
@@ -40,7 +40,7 @@ const CircleIcon = (props: IconProps) => {
   );
 };
 
-const NetworkIcon = (props: IconProps) => {
+const NetworkIcon = () => {
   return (
     <Icon width="15" height="20" viewBox="0 0 92 86" fill="none">
       <path
@@ -78,7 +78,7 @@ const GoogleIcon = (props: { h?: number; w?: number }) => {
     </svg>
   );
 };
-const OpenSourceIcon: FC = (props: IconProps) => {
+const OpenSourceIcon: FC = () => {
   return (
     <Icon width="15" height="20" viewBox="0 0 98 85" fill="none">
       <g clipPath="url(#clip0_65_1708)">
@@ -96,7 +96,7 @@ const OpenSourceIcon: FC = (props: IconProps) => {
   );
 };
 
-const SecureIcon: FC = (props: IconProps) => {
+const SecureIcon: FC = () => {
   return (
     <Icon width="40" height="20" viewBox="0 0 120 110" fill="none">
       <path

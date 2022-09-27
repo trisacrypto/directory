@@ -1,8 +1,5 @@
-import { Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
+import { Stack, Table, Tbody, Tr, Td } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
-import React, { useEffect } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 
 interface TrisaImplementationReviewProps {
   mainnet?: any;

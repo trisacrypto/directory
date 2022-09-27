@@ -1,13 +1,12 @@
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { userSelector, login, logout, isLoggedInSelector } from 'modules/auth/login/user.slice';
-import { useEffect, useState } from 'react';
-import { getCookie, setCookie } from 'utils/cookies';
+import { getCookie } from 'utils/cookies';
 import useCustomAuth0 from './useCustomAuth0';
 const useAuth = () => {
   const dispatch = useDispatch();
   const user = useSelector(userSelector);
   const isLoggedIn = useSelector(isLoggedInSelector);
-  const { auth0GetUser, auth0CheckSession } = useCustomAuth0();
+  const { auth0GetUser } = useCustomAuth0();
 
   const loginUser = (u: TUser) => {
     dispatch(login(u));

@@ -8,7 +8,7 @@ export const NAME_IDENTIFIER_TYPE = {
 };
 
 export const getNameIdentiferTypeOptions = () => {
-  return Object.entries(NAME_IDENTIFIER_TYPE).map(([k, v], index) => ({
+  return Object.entries(NAME_IDENTIFIER_TYPE).map(([k, v]) => ({
     label: v,
     value: k
   }));

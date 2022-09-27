@@ -1,12 +1,5 @@
-import React, { useEffect } from 'react';
-import { useColorModeValue } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
-import { TStep } from 'utils/localStorageHelper';
-import useCertificateStepper from 'hooks/useCertificateStepper';
-import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { useFormContext } from 'react-hook-form';
 import BasicDetailsReviewDataTable from './BasicDetailsReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';

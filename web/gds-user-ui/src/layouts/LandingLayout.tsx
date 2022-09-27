@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, Stack, Flex } from '@chakra-ui/react';
+import { Stack } from '@chakra-ui/react';
 import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
 import useAuth from 'hooks/useAuth';

@@ -1,10 +1,6 @@
-import { Stack, Table, Tbody, Tr, Td, Tag, Link, Text } from '@chakra-ui/react';
+import { Stack, Table, Tbody, Tr, Td, Tag, Link } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
-import React, { useEffect } from 'react';
-import { RootStateOrAny, useSelector } from 'react-redux';
-import { loadDefaultValueFromLocalStorage, TStep } from 'utils/localStorageHelper';
-import useCertificateStepper from 'hooks/useCertificateStepper';
 interface BasicReviewProps {
   data?: any;
 }
