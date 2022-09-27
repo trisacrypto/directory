@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 // AddCollaborator creates a new collaborator with the email address in the request.
@@ -44,7 +44,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	// TODO: Send invite/verification email to the collaborator
 
 	// Save the updated organization
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, "could not add collaborator")
 		return
@@ -85,7 +85,7 @@ func (s *Server) ReplaceCollaborator(c *gin.Context) {
 	}
 
 	// Save the updated organization
-	if err = s.db.Organizations().Update(c.Request.Context(), org); err != nil {
+	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, "could not replace collaborator")
 		return

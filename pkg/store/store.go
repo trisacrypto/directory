@@ -29,9 +29,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"github.com/trisacrypto/directory/pkg/gds/config"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
 	"github.com/trisacrypto/directory/pkg/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/store/trtl"
@@ -42,7 +42,7 @@ import (
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
 // protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
 // protocol:////absolute/path/to/file).
-func Open(conf config.DatabaseConfig) (s Store, err error) {
+func Open(conf config.StoreConfig) (s Store, err error) {
 	var dsn *DSN
 	if dsn, err = ParseDSN(conf.URL); err != nil {
 		return nil, err
@@ -122,6 +122,7 @@ type CertificateStore interface {
 type AnnouncementStore interface {
 	RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth, error)
 	UpdateAnnouncementMonth(m *bff.AnnouncementMonth) error
+	DeleteAnnouncementMonth(date string) error
 }
 
 // OrganizationStore describes how services interact with the Organization records.

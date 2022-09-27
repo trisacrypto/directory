@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"google.golang.org/protobuf/proto"
 )
 

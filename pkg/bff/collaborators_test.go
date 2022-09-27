@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 func (s *bffTestSuite) TestAddCollaborator() {
@@ -43,11 +43,11 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create valid credentials with the organization ID
@@ -69,7 +69,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.Empty(collab.VerifiedAt, "expected collaborator to not have a verified at timestamp")
 
 	// Collaborator should be in the database
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
 	collab, ok := org.Collaborators[request.Email]
@@ -116,11 +116,11 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create valid credentials with the organization ID
@@ -151,7 +151,7 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 	require.Equal(collab.VerifiedAt, modified.VerifiedAt, "expected verified at timestamp to match original timestamp")
 
 	// Updated collaborator should be in the database
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
 	retrieved, ok := org.Collaborators[collab.Email]

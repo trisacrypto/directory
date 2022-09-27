@@ -1,7 +1,7 @@
 syntax="proto3";
 
 package bff.models.v1;
-option go_package = "github.com/trisacrypto/directory/pkg/bff/db/models/v1;models";
+option go_package = "github.com/trisacrypto/directory/pkg/bff/models/v1;models";
 
 import "ivms101/ivms101.proto";
 import "trisa/gds/models/v1beta1/models.proto";

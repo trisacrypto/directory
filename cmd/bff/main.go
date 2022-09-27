@@ -19,7 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/clive"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/urfave/cli/v2"
 )
 

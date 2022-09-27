@@ -16,7 +16,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	bff "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/store/index"
@@ -583,6 +583,23 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 	}
 
 	if err = s.db.Put(key, data, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteAnnouncementMonth removes an announcement month "crate" from the store.
+func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
+	// Get the key by creating an intermediate announcement month to ensure that
+	// validation and key creation always happens the same way.
+	m := &bff.AnnouncementMonth{Date: date}
+	key, err := m.Key()
+	if err != nil {
+		return err
+	}
+
+	// LevelDB will not return an error if the entity does not exist
+	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
 	return nil

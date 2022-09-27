@@ -9,8 +9,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
+	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -101,11 +101,11 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	claims.OrgID = org.Id
@@ -127,7 +127,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(err, "could not load registration form fixture")
 	require.False(proto.Equal(form, org.Registration), "expected fixture to not be empty")
 
-	err = s.db.Organizations().Update(context.TODO(), org)
+	err = s.db.UpdateOrganization(org)
 	require.NoError(err, "could not update organization in database")
 
 	form, err = s.client.LoadRegistrationForm(context.TODO())
@@ -177,11 +177,11 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database that does not contain a registration form
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Create valid credentials for the remaining tests
@@ -194,7 +194,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
 	// Empty registration form should be saved in the database
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from database")
 	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected empty registration form")
 
@@ -206,7 +206,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	reply.State.Started = ""
 	require.True(proto.Equal(form, reply), "expected returned registration form to match uploaded form")
 
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
 	org.Registration.State.Started = ""
@@ -217,7 +217,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
 }
@@ -229,17 +229,17 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	// Test setup: create an organization with a valid registration form that has not
 	// been submitted yet - at the end of the test both mainnet and testnet should be
 	// submitted and the response from the directory updated on the organization.
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Save the registration form fixture on the organization
 	org.Registration = &records.RegistrationForm{}
 	require.NoError(loadFixture("testdata/registration_form.pb.json", org.Registration), "could not load registration form from the fixtures")
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization with registration form")
 
 	// Test both the testnet and the mainnet registration
 	for _, network := range []string{"testnet", "mainnet"} {
@@ -365,7 +365,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	}
 
 	// Ensure that the directory record is stored on the database after registration
-	org, err = s.db.Organizations().Retrieve(context.TODO(), org.Id)
+	org, err = s.db.RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not update organization from the database")
 
 	require.NotNil(org.Testnet, "missing testnet directory record after registration")
@@ -393,11 +393,11 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	// Ensure that a bad argument error is returned if the registration form is not
 	// ready to submit. Create an organization that has a registration form without
 	// network details and valid claims to access the record.
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet
@@ -408,7 +408,7 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	require.False(org.Registration.ReadyToSubmit("both"), "registration should not be ready to submit")
 
 	// Save the registration form fixture on the organization
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization with registration form")
 
 	// Create authenticated user context
 	claims := &authtest.Claims{
@@ -436,11 +436,11 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	// Ensure that a conflict error is returned if the registration form has already
 	// been ready to submitted. Create an organization that has directory records for
 	// both networks and valid claims to access the record.
-	org, err := s.db.Organizations().Create(context.TODO())
+	org, err := s.db.CreateOrganization()
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.db.Organizations().Delete(context.TODO(), org.Id)
+		s.db.DeleteOrganization(org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet
@@ -458,7 +458,7 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	}
 
 	// Save the registration form fixture on the organization
-	require.NoError(s.db.Organizations().Update(context.TODO(), org), "could not update organization with registration form")
+	require.NoError(s.db.UpdateOrganization(org), "could not update organization with registration form")
 
 	// Create authenticated user context
 	claims := &authtest.Claims{

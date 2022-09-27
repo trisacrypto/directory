@@ -2,15 +2,16 @@ package bff_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
-	"github.com/trisacrypto/directory/pkg/bff/db"
-	records "github.com/trisacrypto/directory/pkg/bff/db/models/v1"
-	"google.golang.org/protobuf/proto"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 func (s *bffTestSuite) TestAnnouncements() {
@@ -20,7 +21,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.db.Delete(context.TODO(), []byte(month), db.NamespaceAnnouncements)
+			err := s.db.DeleteAnnouncementMonth(month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()
@@ -53,7 +54,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	// Add some announcements to the database for the past several months
 	now := time.Now()
 	for i := 0; i < 20; i++ {
-		post := &records.Announcement{
+		post := &models.Announcement{
 			Title:  fmt.Sprintf("test post %d", i+1),
 			Body:   fmt.Sprintf("this is a test post number %d", i+1),
 			Author: "test@example.com",
@@ -61,20 +62,20 @@ func (s *bffTestSuite) TestAnnouncements() {
 
 		// Create a random post date sometime in the past several months
 		pd := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).AddDate(0, -1*rand.Intn(5), -1*rand.Intn(32))
-		post.PostDate = pd.Format(records.PostDateLayout)
-		months[pd.Format(records.MonthLayout)] = struct{}{}
+		post.PostDate = pd.Format(models.PostDateLayout)
+		months[pd.Format(models.MonthLayout)] = struct{}{}
 
-		_, err = s.db.Announcements().Post(context.TODO(), post)
+		_, err = s.bff.PostAnnouncement(post)
 		require.NoError(err, "could not post an announcement fixture")
 	}
 
 	// Create a post for yesterday to ensure there is at least one post returned
-	months[time.Now().AddDate(0, 0, -1).Format(records.MonthLayout)] = struct{}{}
-	_, err = s.db.Announcements().Post(context.TODO(), &records.Announcement{
+	months[time.Now().AddDate(0, 0, -1).Format(models.MonthLayout)] = struct{}{}
+	_, err = s.bff.PostAnnouncement(&models.Announcement{
 		Title:    "from the future",
 		Body:     "this was posted yesterday",
 		Author:   "future@example.com",
-		PostDate: time.Now().AddDate(0, 0, -1).Format(records.PostDateLayout),
+		PostDate: time.Now().AddDate(0, 0, -1).Format(models.PostDateLayout),
 	})
 	require.NoError(err, "could not post an announcement fixture")
 
@@ -94,7 +95,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	defer func() {
 		for _, month := range months {
-			s.db.Delete(context.TODO(), []byte(month), db.NamespaceAnnouncements)
+			s.db.DeleteAnnouncementMonth(month)
 		}
 	}()
 
@@ -104,7 +105,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 		Permissions: []string{"read:nothing"},
 	}
 
-	post := &records.Announcement{
+	post := &models.Announcement{
 		Title: "Hear ye, Hear ye",
 		Body:  "We are conducting tests of the make announcements endpoint.",
 	}
@@ -132,13 +133,8 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	require.NoError(err, "was not able to make an announcement")
 
 	// Check that the announcement exists in the database
-	monthData, err := s.db.Get(context.TODO(), []byte(months[0]), db.NamespaceAnnouncements)
+	month, err := s.db.RetrieveAnnouncementMonth(months[0])
 	require.NoError(err, "could not get announcements container")
-	require.NotEmpty(monthData, "expected month date to be populated")
-
-	month := &records.AnnouncementMonth{}
-	require.NoError(proto.Unmarshal(monthData, month), "could not unmarshal announcement month")
-
 	require.NotEmpty(month.Date, "expected month date to be set")
 	require.Len(month.Announcements, 1, "expected announcements to contain 1 item")
 	require.NotEmpty(month.Created, "expected created timestamp set")
@@ -171,4 +167,123 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials without email")
 	err = s.client.MakeAnnouncement(context.TODO(), post)
 	s.requireError(err, http.StatusBadRequest, "user claims are not correctly configured", "expected post date required empty")
+}
+
+func (s *bffTestSuite) TestAnnouncementsHelpers() {
+	// Test creating and retrieving announcements using the helper methods
+	var err error
+	require := s.Require()
+
+	// Keep track of what announcement months are being created to clean up at the end
+	months := make(map[string]struct{})
+	defer func() {
+		for month := range months {
+			err := s.db.DeleteAnnouncementMonth(month)
+			require.NoError(err, "could not cleanup announcements")
+		}
+	}()
+
+	// Should not be able to request unbounded time
+	_, err = s.bff.RecentAnnouncements(10000, time.Time{}, time.Time{})
+	require.ErrorIs(err, bff.ErrUnboundedRecent, "expected error when zero-valued time passed in as not before")
+	nbf, _ := time.Parse("2006-01-02", "2020-12-01")
+	stt, _ := time.Parse("2006-01-02", "2023-12-31")
+
+	// There should be nothing in the database at the start of the test.
+	recent, err := s.bff.RecentAnnouncements(10000, nbf, stt)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 0, "expected no announcements returned")
+	require.Empty(recent.LastUpdated, "expected last updated to be zero-valued")
+
+	// Load announcements fixtures
+	fixture, err := loadAnnouncements()
+	require.NoError(err, "could not load announcement fixtures")
+	require.Len(fixture, 11, "fixtures have changed without test update")
+
+	// Post each fixture one at a time and ensure that we can fetch them all
+	ids := make([]string, 0, 10)
+	for i, post := range fixture {
+		pd, err := time.Parse("2006-01-02", post.PostDate)
+		require.NoError(err, "could not parse post date from fixture")
+		months[pd.Format(models.MonthLayout)] = struct{}{}
+
+		id, err := s.bff.PostAnnouncement(post)
+		require.NoError(err, "could not post announcement %d", i)
+		require.NotEmpty(id, "expected an ordered kid to be assigned")
+		ids = append(ids, id)
+	}
+
+	// Ensure all IDs assigned are unique
+	for i, id := range ids {
+		for j, jd := range ids {
+			if i == j {
+				continue
+			}
+			require.NotEqual(id, jd, "expected assigned IDs to be unique in database")
+		}
+	}
+
+	// Should be able to retrieve all recent announcements
+	recent, err = s.bff.RecentAnnouncements(10000, nbf, stt)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 11, "expected 11 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	// NOTE: Post titles must be ordered by post date
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 11-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to limit the number of results returned
+	recent, err = s.bff.RecentAnnouncements(5, nbf, stt)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 5, "expected 5 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 11-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to set the not before timestamp
+	nbf, _ = time.Parse("2006-01-02", "2022-03-18")
+	recent, err = s.bff.RecentAnnouncements(10000, nbf, stt)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 5, "expected 5 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 11-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+
+	// Should be able to set the not before timestamp AND max results
+	recent, err = s.bff.RecentAnnouncements(2, nbf, stt)
+	require.NoError(err, "could not fetch recent announcements")
+	require.Len(recent.Announcements, 2, "expected 2 announcements returned")
+	require.NotEmpty(recent.LastUpdated, "expected last updated to be set")
+
+	// The Posts should be returned in the expected order
+	for i, post := range recent.Announcements {
+		expected := fmt.Sprintf("Post %d", 11-i)
+		require.Equal(expected, post.Title, "posts seem to be out of order")
+	}
+}
+
+func loadAnnouncements() (fixture []*models.Announcement, err error) {
+	var f *os.File
+	if f, err = os.Open("testdata/announcements.json"); err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fixture = make([]*models.Announcement, 0, 10)
+	if err = json.NewDecoder(f).Decode(&fixture); err != nil {
+		return nil, err
+	}
+	return fixture, nil
 }
