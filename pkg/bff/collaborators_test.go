@@ -160,3 +160,72 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 	require.Equal(collab.CreatedAt, retrieved.CreatedAt, "expected created at timestamp to match original timestamp")
 	require.Equal(collab.VerifiedAt, retrieved.VerifiedAt, "expected verified at timestamp to match original timestamp")
 }
+
+func (s *bffTestSuite) TestDeleteCollaborator() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	err := s.client.DeleteCollaborator(context.TODO(), &models.Collaborator{})
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the update:collaborators permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	err = s.client.DeleteCollaborator(context.TODO(), &models.Collaborator{})
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID
+	claims.Permissions = []string{"update:collaborators"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	err = s.client.DeleteCollaborator(context.TODO(), &models.Collaborator{})
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic but should
+	// return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	err = s.client.DeleteCollaborator(context.TODO(), &models.Collaborator{})
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
+
+	// Create an organization in the database without any collaborators
+	org, err := s.db.CreateOrganization()
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.db.DeleteOrganization(org.UUID())
+	}()
+
+	// Create valid credentials with the organization ID
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+
+	// Should return an error if the collaborator email is missing from the request
+	err = s.client.DeleteCollaborator(context.TODO(), &models.Collaborator{})
+	s.requireError(err, http.StatusBadRequest, "invalid collaborator in request", "expected error when collaborator email is missing")
+
+	// Should not return an error if the collaborator does not exist
+	request := &models.Collaborator{
+		Email: "alice@example.com",
+	}
+	err = s.client.DeleteCollaborator(context.TODO(), request)
+	require.NoError(err, "expected no error when collaborator does not exist")
+
+	// Add a new collaborator to the organization
+	collab, err := s.client.AddCollaborator(context.TODO(), request)
+	require.NoError(err, "could not add collaborator to organization")
+
+	// Delete collaborator from the organization
+	err = s.client.DeleteCollaborator(context.TODO(), collab)
+	require.NoError(err, "could not delete collaborator from organization")
+
+	// Deleted collaborator should not be in the database
+	org, err = s.db.RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
+}

@@ -23,6 +23,7 @@ type BFFClient interface {
 	// Authenticated Endpoints
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ReplaceCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
+	DeleteCollaborator(context.Context, *models.Collaborator) error
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)

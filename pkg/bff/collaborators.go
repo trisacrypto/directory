@@ -93,3 +93,49 @@ func (s *Server) ReplaceCollaborator(c *gin.Context) {
 
 	c.JSON(http.StatusOK, collaborator)
 }
+
+// DeleteCollaborator deletes the collaborator in the request from the user's
+// organization. The user must have the update:collaborators permission.
+// Note: This does not return an error if the collaborator does not exist on the
+// organization and instead returns a 200 OK response.
+func (s *Server) DeleteCollaborator(c *gin.Context) {
+	var (
+		err          error
+		collaborator *models.Collaborator
+		org          *models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// NOTE: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Unmarshal the collaborator from the DELETE request
+	collaborator = &models.Collaborator{}
+	if err = c.ShouldBind(collaborator); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Make sure we can delete the collaborator by key
+	key := collaborator.Key()
+	if key == "" {
+		log.Warn().Err(err).Msg("missing key on collaborator")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("invalid collaborator in request"))
+		return
+	}
+
+	// Delete the collaborator from the organization
+	delete(org.Collaborators, key)
+
+	// Save the updated organization
+	if err = s.db.UpdateOrganization(org); err != nil {
+		log.Error().Err(err).Msg("could not save organization without collaborator")
+		c.JSON(http.StatusInternalServerError, "could not delete collaborator")
+		return
+	}
+
+	c.JSON(http.StatusOK, collaborator)
+}

@@ -185,6 +185,20 @@ func (s *APIv1) ReplaceCollaborator(ctx context.Context, request *models.Collabo
 	return collaborator, nil
 }
 
+// Delete a collaborator from an organization.
+func (s *APIv1) DeleteCollaborator(ctx context.Context, request *models.Collaborator) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, "/v1/collaborators", request, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Load registration form data from the server to populate the front-end form.
 func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.RegistrationForm, err error) {
 	// Make the HTTP request

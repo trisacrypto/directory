@@ -297,6 +297,26 @@ func TestReplaceCollaborator(t *testing.T) {
 	require.Equal(t, fixture.Email, collab.Email)
 }
 
+func TestDeleteCollaborator(t *testing.T) {
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v1/collaborators", r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	request := &models.Collaborator{
+		Email: "alice@example.com",
+	}
+	err = client.DeleteCollaborator(context.TODO(), request)
+	require.NoError(t, err)
+}
+
 func TestLoadRegistrationForm(t *testing.T) {
 	// Load a fixture from testdata
 	fixture := &models.RegistrationForm{}
