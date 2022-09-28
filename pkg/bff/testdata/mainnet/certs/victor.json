@@ -1,0 +1,55 @@
+{
+    "id": "FE4348E441E1D40FA41039E5780C75AD",
+    "vasp": "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+    "status": "EXPIRED",
+    "details": {
+        "chain": "",
+        "data": "",
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "not_after": "2021-10-09T17:31:45Z",
+        "not_before": "2021-10-08T02:54:28Z",
+        "public_key_algorithm": "RSA",
+        "revoked": false,
+        "serial_number": "FE4348E441E1D40FA41039E5780C75AD",
+        "signature": "",
+        "signature_algorithm": "SHA384-RSA",
+        "subject": {
+            "common_name": "victor",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "version": "3"
+    }
+}
