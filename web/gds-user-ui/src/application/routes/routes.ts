@@ -54,6 +54,12 @@ const appRoutes = [
     layout: 'landing'
   },
   {
+    path: '/certificate/registration',
+    name: 'Membership Guide',
+    component: MembershipGuide,
+    layout: 'landing'
+  },
+  {
     path: '/maintenance',
     name: 'Maintenance',
     component: Maintenance,
