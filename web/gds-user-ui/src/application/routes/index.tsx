@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import PrivateOutlet from 'application/routes/PrivateOutlet';
 import LandingOutlet from 'application/routes/LandingOutlet';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
@@ -7,6 +7,13 @@ import useAnalytics from 'hooks/useAnalytics';
 import appRoutes from 'application/routes/routes';
 
 const AppRouter: React.FC = () => {
+  const navigate = useNavigate();
+  const deps = window.location.pathname;
+  useEffect(() => {
+    if (window.location.pathname === '/certificate/registration') {
+      navigate('/guide');
+    }
+  }, [deps, navigate]);
   const getLandingRoutes = () => {
     return appRoutes.map((prop, key) => {
       if (prop.layout === 'landing' || prop.layout === 'dash-landing') {
