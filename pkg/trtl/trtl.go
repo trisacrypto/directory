@@ -45,9 +45,7 @@ var b64e = base64.RawURLEncoding.EncodeToString
 // request will use honu.Get() to get only the value.
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to look in that namespace only.
-func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetReply, error) {
-	var err error
-
+func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetReply, err error) {
 	// Start a timer to track latency
 	start := time.Now()
 
@@ -192,10 +190,10 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
 	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
 		if err == engine.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
+		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -547,7 +545,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		select {
 		case <-ctx.Done():
 			if err = ctx.Err(); err != nil && err != io.EOF {
-				log.Error().Err(err).Msg("cursor canceled by client with error")
+				log.Warn().Err(err).Msg("cursor canceled by client with error")
 				return status.Errorf(codes.Canceled, "cursor canceled by client: %s", err)
 			}
 			log.Info().
@@ -588,7 +586,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 		// Send the message on the stream
 		if err = stream.Send(msg); err != nil {
-			log.Error().Err(err).Msg("could not send cursor reply during iteration")
+			log.Warn().Err(err).Msg("could not send cursor reply during iteration")
 			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
 		}
 
