@@ -1,20 +1,19 @@
 /* eslint-disable prefer-reflect */
 
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { useToast } from '@chakra-ui/react';
 
 import { RootStateOrAny, useSelector } from 'react-redux';
 import ReviewSubmit from 'components/ReviewSubmit';
-import { registrationRequest } from 'modules/dashboard/certificate/service';
-import { loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { t } from '@lingui/macro';
-import ReviewsSummary from './ReviewsSummary';
-import { mapTrixoFormForBff } from 'utils/utils';
 import {
   submitMainnetRegistration,
   submitTestnetRegistration
 } from 'modules/dashboard/registration/service';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import Loader from 'components/Loader';
+
+const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 
 const CertificateReview = () => {
   const toast = useToast();
@@ -66,12 +65,14 @@ const CertificateReview = () => {
   }
 
   return (
-    <ReviewSubmit
-      onSubmitHandler={handleSubmitRegister}
-      isTestNetSent={isTestNetSent}
-      isMainNetSent={isMainNetSent}
-      result={result}
-    />
+    <Suspense fallback={<Loader />}>
+      <ReviewSubmit
+        onSubmitHandler={handleSubmitRegister}
+        isTestNetSent={isTestNetSent}
+        isMainNetSent={isMainNetSent}
+        result={result}
+      />
+    </Suspense>
   );
 };
 

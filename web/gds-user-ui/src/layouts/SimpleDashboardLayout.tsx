@@ -1,5 +1,4 @@
-import { Box, Container, Flex, useColorModeValue } from '@chakra-ui/react';
-import useAuth from 'hooks/useAuth';
+import { Container, Flex } from '@chakra-ui/react';
 import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 type SimpleDashboardLayout = {

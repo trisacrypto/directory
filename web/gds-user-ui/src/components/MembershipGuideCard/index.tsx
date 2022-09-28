@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, Stack, Button, HStack, VStack } from '@chakra-ui/react';
+import { Box, Text, Stack, Button, VStack } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 type MembershipGuideCardProps = {
   stepNumber: number;

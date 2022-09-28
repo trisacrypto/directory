@@ -1,8 +1,5 @@
 import { Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
-import React, { useEffect } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { hasValue } from 'utils/utils';
 interface ContactsProps {
   data?: any;

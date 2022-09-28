@@ -1,12 +1,12 @@
-import React, { Suspense, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import PrivateOutlet from 'application/routes/PrivateOutlet';
 import LandingOutlet from 'application/routes/LandingOutlet';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
 import appRoutes from 'application/routes/routes';
+
 const AppRouter: React.FC = () => {
-  const navigate = useNavigate();
   const getLandingRoutes = () => {
     return appRoutes.map((prop, key) => {
       if (prop.layout === 'landing' || prop.layout === 'dash-landing') {
@@ -28,7 +28,6 @@ const AppRouter: React.FC = () => {
   };
 
   // get current route from pathname
-  const currentRoute = window.location.pathname.split('/')[1];
 
   const { isInitialized } = useAnalytics();
   return (

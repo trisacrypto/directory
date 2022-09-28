@@ -6,13 +6,10 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  Button,
-  useDisclosure,
-  AlertDialogCloseButton
+  Button
 } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 
-interface ModalProps {}
 const ModalAlert = (props: any) => {
   const cancelRef: any = React.useRef();
 

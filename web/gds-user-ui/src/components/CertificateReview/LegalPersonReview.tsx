@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 // NOTE: need some clean up.
 import LegalPersonReviewDataTable from './LegalPersonReviewDataTable';

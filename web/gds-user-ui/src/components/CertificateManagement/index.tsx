@@ -11,27 +11,15 @@ import {
   TabList,
   Tab,
   TabPanels,
-  TabPanel,
-  Table,
-  TableCaption,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Button
+  TabPanel
 } from '@chakra-ui/react';
-import FormLayout from '../../layouts/FormLayout';
-import X509TableRows from './X509TableRows';
 import CertificateDataTable from './CertificateDataTable';
-import Statistics from './Statistics';
 import MainnetCertificates from './MainnetCertificates';
 import TestnetCertificates from './TestnetCertificates';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 
-type CertificateManagementProps = {};
-
-function CertificateManagement({}: CertificateManagementProps) {
+function CertificateManagement() {
   return (
     <DashboardLayout>
       <Heading marginBottom="30px">

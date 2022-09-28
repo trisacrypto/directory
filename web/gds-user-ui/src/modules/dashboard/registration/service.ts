@@ -1,5 +1,4 @@
 import axiosInstance, { setAuthorization } from 'utils/axios';
-import { getCookie } from 'utils/cookies';
 export const getRegistrationData = async () => {
   setAuthorization();
   const response = await axiosInstance.get(`/register`);

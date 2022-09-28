@@ -41,7 +41,6 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
       inputProps,
       name,
       isInvalid,
-      shouldResetValue,
       type = 'text',
       hasBtn,
       inputRef,

@@ -9,8 +9,7 @@ import {
   ListItem,
   Button,
   Heading,
-  Container,
-  useBreakpointValue
+  Container
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { colors } from 'utils/theme';

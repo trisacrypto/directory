@@ -1,4 +1,4 @@
-import { Box, Stack, Button, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Text, useColorModeValue } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
 
@@ -6,7 +6,6 @@ import { Trans } from '@lingui/react';
 import ChakraRouterLink from 'components/ChakraRouterLink';
 import LoginForm from 'components/Form/LoginForm';
 import AuthLayout from 'layouts/AuthLayout';
-import { components } from 'react-select';
 interface LoginProps {
   handleSignWithSocial: (event: React.FormEvent, type: string) => void;
   handleSignWithEmail: (data: any) => void;
@@ -14,12 +13,7 @@ interface LoginProps {
   isError?: any;
 }
 
-const Login: React.FC<LoginProps> = ({
-  handleSignWithSocial,
-  handleSignWithEmail,
-  isLoading,
-  isError
-}) => (
+const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail, isLoading }) => (
   <AuthLayout>
     <Text fontWeight="bold" color={useColorModeValue('gray.600', 'white')}>
       <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>

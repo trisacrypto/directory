@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Box, Alert, AlertIcon, AlertDescription, CloseButton } from '@chakra-ui/react';
 type TError = {
   message: string;

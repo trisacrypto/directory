@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { setCookie, clearCookies } from 'utils/cookies';
+import { setCookie } from 'utils/cookies';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
@@ -9,7 +9,7 @@ import {
   auth0Hash,
   auth0CheckSession
 } from 'utils/auth0.helper';
-import { handleError, getRefreshToken } from 'utils/utils';
+import { handleError } from 'utils/utils';
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {

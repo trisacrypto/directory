@@ -1,6 +1,5 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 
-import LandingLayout from 'layouts/LandingLayout';
 import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';
 import SearchDirectory from 'components/Section/SearchDirectory';

@@ -9,10 +9,7 @@ import TrisaImplementationReview from './TrisaImplementationReview';
 import TrixoReview from './TrixoReview';
 import { CgExport } from 'react-icons/cg';
 
-import {
-  getRegistrationDefaultValue,
-  downloadRegistrationData
-} from 'modules/dashboard/registration/utils';
+import { downloadRegistrationData } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
 
 const ReviewsSummary: React.FC = () => {

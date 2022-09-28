@@ -1,31 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Image,
-  Stack,
-  Text,
-  useColorModeValue,
-  VStack,
-  HStack,
-  Link
-} from '@chakra-ui/react';
+import React from 'react';
+import { Stack, Text, HStack, Link } from '@chakra-ui/react';
 import LandingLayout from 'layouts/LandingLayout';
-import { useNavigate, Link as RouteLink } from 'react-router-dom';
-import { colors } from 'utils/theme';
+import { Link as RouteLink } from 'react-router-dom';
 import SuccessSvg from 'assets/successSvg.svg';
-import Error404 from 'assets/404-Error.svg';
 import { Trans } from '@lingui/react';
 import { CircleChevronRight } from 'akar-icons';
-import { t } from '@lingui/macro';
+import CkLazyLoadImage from 'components/LazyImage';
 
 const VerifyPage: React.FC = () => {
-  const navigate = useNavigate();
   return (
     <LandingLayout>
       <Stack direction="row" spacing={8} mx={'auto'} maxW={'3xl'} width={'100%'}>
         <Stack pt={5}>
-          <Image src={SuccessSvg} width="100px" mx="auto" py={10} />
+          <CkLazyLoadImage src={SuccessSvg} width="100px" mx="auto" py={10} />
           <Text fontSize="xl" fontWeight="bold">
             <Trans id="Thank you for creating your TRISA account.">
               Thank you for creating your TRISA account.{' '}

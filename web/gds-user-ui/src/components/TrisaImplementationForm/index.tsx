@@ -1,11 +1,10 @@
 import { WarningIcon } from '@chakra-ui/icons';
-import { Heading, Text, useToast } from '@chakra-ui/react';
+import { Heading, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import FormLayout from 'layouts/FormLayout';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { getDomain } from 'utils/utils';
-import _ from 'lodash/fp';
 import { t } from '@lingui/macro';
 
 type TrisaImplementationFormProps = {

@@ -1,13 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import Sidebar from 'components/Sidebar';
-import { Box, Flex, Text, Spinner } from '@chakra-ui/react';
-import { getCookie } from 'utils/cookies';
+import { Box } from '@chakra-ui/react';
 import Loader from 'components/Loader';
-import useCustomAuth0 from 'hooks/useCustomAuth0';
-import { useNavigate } from 'react-router-dom';
-import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
-import { getRegistrationData } from 'modules/dashboard/registration/service';
+import { userSelector } from 'modules/auth/login/user.slice';
 import TransparentLoader from '../components/Loader/TransparentLoader';
 type DashboardLayoutProp = {
   children: React.ReactNode;
@@ -24,7 +20,7 @@ const AxiosErrorLoader = () => {
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
-  const { isFetching, isLoggedIn } = useSelector(userSelector);
+  const { isFetching } = useSelector(userSelector);
 
   return (
     <>
