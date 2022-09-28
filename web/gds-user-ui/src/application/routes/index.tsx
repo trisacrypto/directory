@@ -30,6 +30,7 @@ const AppRouter: React.FC = () => {
   // get current route from pathname
 
   const { isInitialized } = useAnalytics();
+
   return (
     <Suspense fallback="Loading">
       <GoogleAnalyticsWrapper isInitialized={isInitialized}>
