@@ -5,13 +5,14 @@ import LandingOutlet from 'application/routes/LandingOutlet';
 import GoogleAnalyticsWrapper from 'components/GaWrapper';
 import useAnalytics from 'hooks/useAnalytics';
 import appRoutes from 'application/routes/routes';
+import { APP_PATH } from 'utils/constants';
 
 const AppRouter: React.FC = () => {
   const navigate = useNavigate();
   const deps = window.location.pathname;
   useEffect(() => {
-    if (window.location.pathname === '/certificate/registration') {
-      navigate('/guide');
+    if (window.location.pathname === APP_PATH.CERTIFICATE_REGISTRATION) {
+      navigate(APP_PATH.GUIDE);
     }
   }, [deps, navigate]);
   const getLandingRoutes = () => {
