@@ -558,7 +558,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	// Populate the testnet response
 	if testnetErr != nil {
 		out.Error.TestNet = testnetErr.Error()
-	} else if testnet != nil {
+	} else {
 		for _, cert := range testnet {
 			entry := api.Certificate{
 				SerialNumber: cert.Id,
@@ -580,7 +580,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	// Populate the mainnet response
 	if mainnetErr != nil {
 		out.Error.MainNet = mainnetErr.Error()
-	} else if mainnet != nil {
+	} else {
 		for _, cert := range mainnet {
 			entry := api.Certificate{
 				SerialNumber: cert.Id,
