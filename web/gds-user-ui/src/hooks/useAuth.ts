@@ -45,19 +45,17 @@ const useAuth = () => {
 
   const isAuthenticated = () => {
     // if token is expired then logout
-    if (getExpiryTime) {
+    if (getExpiryTime && isLoggedIn && getToken) {
       const currentTime = new Date().getTime() / 1000;
       if (currentTime > getExpiryTime) {
         clearCookies();
         logoutUser();
         return false;
+      } else {
+        return isUserAuthenticated;
       }
     }
-    if (isLoggedIn && !getToken) {
-      logoutUser();
-      return false;
-    }
-    return isUserAuthenticated;
+    return false;
   };
 
   return {

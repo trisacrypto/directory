@@ -61,6 +61,7 @@ export const getAuth0User: any = createAsyncThunk(
       console.log('[getUserInfo]', getUserInfo);
       setCookie('access_token', getUserInfo?.accessToken);
       setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
+      setCookie('expires_in', getUserInfo?.idTokenPayload?.exp);
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
         // console.log('[getUser]', getUser);
