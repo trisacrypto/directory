@@ -1,7 +1,6 @@
 package bff_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -18,10 +17,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	"github.com/trisacrypto/directory/pkg/store"
 	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
-	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
-	"github.com/trisacrypto/directory/pkg/trtl"
-	trtlmock "github.com/trisacrypto/directory/pkg/trtl/mock"
-	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -31,19 +26,16 @@ import (
 // that expect to interact with two GDS services: TestNet and MainNet.
 type bffTestSuite struct {
 	suite.Suite
-	bff      *bff.Server
-	client   api.BFFClient
-	testnet  mockNetwork
-	mainnet  mockNetwork
-	db       store.Store
-	dbPath   string
-	trtl     *trtl.Server
-	trtlsock *bufconn.GRPCListener
-	auth     *authtest.Server
+	bff     *bff.Server
+	client  api.BFFClient
+	testnet mockNetwork
+	mainnet mockNetwork
+	db      *mock.Trtl
+	auth    *authtest.Server
 }
 
 type mockNetwork struct {
-	admin   *mock.Admin
+	db      *mock.Trtl
 	gds     *mock.GDS
 	members *mock.Members
 }
@@ -56,8 +48,9 @@ func (s *bffTestSuite) SetupSuite() {
 	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
 	logger.Discard()
 
-	// Setup a mock trtl server for the tests
-	s.SetupTrtl()
+	// Setup a mock trtl database for the bff
+	s.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create mock trtl database")
 
 	// Start the authtest server for authentication verification
 	s.auth, err = authtest.Serve()
@@ -111,12 +104,12 @@ func (s *bffTestSuite) SetupSuite() {
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
 
-	// Create the Admin mocks for testnet and mainnet
-	s.testnet.admin, err = mock.NewAdmin()
-	require.NoError(err, "could not create testnet admin mock")
+	// Create the database mocks for testnet and mainnet
+	s.testnet.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create testnet trtl database")
 
-	s.mainnet.admin, err = mock.NewAdmin()
-	require.NoError(err, "could not create mainnet admin mock")
+	s.mainnet.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create mainnet trtl database")
 
 	// Create the GDS mocks for testnet and mainnet
 	s.testnet.gds, err = mock.NewGDS(conf.TestNet.Directory)
@@ -146,13 +139,12 @@ func (s *bffTestSuite) SetupSuite() {
 	require.NoError(mainnetClient.ConnectMembers(conf.MainNet.Members, s.mainnet.members.DialOpts()...), "could not connect to mainnet members")
 
 	// Add the mock clients to the mock
-	s.bff.SetAdminClients(s.testnet.admin.Client(), s.mainnet.admin.Client())
 	s.bff.SetGDSClients(testnetClient, mainnetClient)
 
-	// Direct connect the BFF server to the database
-	s.db, err = trtlstore.NewMock(s.trtlsock.Conn)
-	require.NoError(err, "could not direct connect db to the BFF server")
-	s.bff.SetDB(s.db)
+	// Inject the database clients into the BFF
+	s.bff.SetDB(s.DB())
+	s.bff.SetTestNetDB(s.TestNetDB())
+	s.bff.SetMainNetDB(s.MainNetDB())
 
 	// Start the BFF server - the goal of the BFF tests is to have the server run for
 	// the entire duration of the tests. Implement reset methods to ensure the server
@@ -190,11 +182,10 @@ func (s *bffTestSuite) TearDownSuite() {
 	// Shutdown the authtest server
 	authtest.Close()
 
-	// Shutdown and cleanup trtl
-	s.trtl.Shutdown()
-	s.trtlsock.Release()
-	os.RemoveAll(s.dbPath)
-	s.dbPath = ""
+	// Shutdown and cleanup the trtls
+	s.db.Shutdown()
+	s.testnet.db.Shutdown()
+	s.mainnet.db.Shutdown()
 
 	// Cleanup logger
 	logger.ResetLogger()
@@ -202,31 +193,6 @@ func (s *bffTestSuite) TearDownSuite() {
 
 func TestBFF(t *testing.T) {
 	suite.Run(t, new(bffTestSuite))
-}
-
-// SetupTrtl starts a Trtl server on a bufconn for testing with the BFF
-func (s *bffTestSuite) SetupTrtl() {
-	var err error
-	require := s.Require()
-
-	// Create a temporary directory for the testing database
-	s.dbPath, err = os.MkdirTemp("", "trtldb-*")
-	require.NoError(err, "could not create a temporary directory for trtl")
-
-	conf := trtlmock.Config()
-	conf.Database.URL = "leveldb:///" + s.dbPath
-	conf, err = conf.Mark()
-	require.NoError(err, "could not validate mock config")
-
-	// Start the Trtl server
-	s.trtl, err = trtl.New(conf)
-	require.NoError(err, "could not start trtl server")
-
-	s.trtlsock = bufconn.New(1024*1024, "")
-	go s.trtl.Run(s.trtlsock.Listener)
-
-	// Connect to the running trtl server
-	require.NoError(s.trtlsock.Connect(context.Background()), "could not connect to trtl socket")
 }
 
 // Helper function to set the credentials on the test client from claims, reducing 3 or
@@ -245,6 +211,69 @@ func (s *bffTestSuite) SetClientCredentials(claims *authtest.Claims) error {
 func (s *bffTestSuite) SetClientCSRFProtection() error {
 	s.client.(*api.APIv1).SetCSRFProtect(true)
 	return nil
+}
+
+// DB returns the configured database client for the BFF
+func (s *bffTestSuite) DB() store.Store {
+	client, err := s.db.Client()
+	s.Require().NoError(err, "could not init BFF database client")
+	return client
+}
+
+// TestnetDB returns the configured database client for the testnet
+func (s *bffTestSuite) TestNetDB() store.Store {
+	client, err := s.testnet.db.Client()
+	s.Require().NoError(err, "could not init testnet database client")
+	return client
+}
+
+// MainnetDB returns the configured database client for the mainnet
+func (s *bffTestSuite) MainNetDB() store.Store {
+	client, err := s.mainnet.db.Client()
+	s.Require().NoError(err, "could not init mainnet database client")
+	return client
+}
+
+// Resets the BFF Trtl database to an initial state by deleting the current database
+// and opening a new one. Tests should defer this method if they modify the BFF
+// database.
+func (s *bffTestSuite) ResetDB() {
+	var err error
+	require := s.Require()
+	s.db.Shutdown()
+	s.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create new BFF trtl database")
+	client, err := s.db.Client()
+	require.NoError(err, "could not create new BFF trtl client")
+	s.bff.SetDB(client)
+}
+
+// Resets the testnet Trtl database to an initial state by deleting the current
+// database and opening a new one. Tests should defer this method if they modify the
+// testnet database.
+func (s *bffTestSuite) ResetTestNetDB() {
+	var err error
+	require := s.Require()
+	s.testnet.db.Shutdown()
+	s.testnet.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create new testnet trtl database")
+	client, err := s.testnet.db.Client()
+	require.NoError(err, "could not create new testnet trtl client")
+	s.bff.SetTestNetDB(client)
+}
+
+// Resets the mainnet Trtl database to an initial state by deleting the current
+// database and opening a new one. Tests should defer this method if they modify the
+// mainnet database.
+func (s *bffTestSuite) ResetMainNetDB() {
+	var err error
+	require := s.Require()
+	s.mainnet.db.Shutdown()
+	s.mainnet.db, err = mock.NewTrtl()
+	require.NoError(err, "could not create new mainnet trtl database")
+	client, err := s.mainnet.db.Client()
+	require.NoError(err, "could not create new mainnet trtl client")
+	s.bff.SetMainNetDB(client)
 }
 
 // Custom assertion to ensure a formatted error contains the correct status code and
