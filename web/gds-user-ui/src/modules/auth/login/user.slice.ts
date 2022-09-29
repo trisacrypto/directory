@@ -58,7 +58,7 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      // console.log('[getUserInfo]', getUserInfo);
+      console.log('[getUserInfo]', getUserInfo);
       setCookie('access_token', getUserInfo?.accessToken);
       setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
@@ -72,6 +72,8 @@ export const getAuth0User: any = createAsyncThunk(
           // console.log('[newUserPayload]', newUserPayload);
           setCookie('access_token', newUserPayload?.accessToken);
           setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
+          // set expired time
+          setCookie('expires_in', newUserPayload?.idTokenPayload?.exp);
           const userInfo: TUser = {
             isLoggedIn: true,
             user: {
