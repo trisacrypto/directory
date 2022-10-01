@@ -14,7 +14,7 @@ const TransparentLoader: React.FC<LoaderProps> = (props) => {
       top={0}
       right={0}
       bottom={0}
-      backgroundColor={'rgba(255, 255, 255, 0.7'}
+      backgroundColor={'rgba(255,255,255,0.7)'}
       zIndex={1}>
       <VStack spacing={4} m={'auto'} py={10}>
         <Spinner color="blue.500" size="xl" />
