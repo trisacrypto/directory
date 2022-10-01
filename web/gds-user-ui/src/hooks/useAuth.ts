@@ -47,7 +47,10 @@ const useAuth = () => {
     // if token is expired then logout
     if (getExpiryTime && isLoggedIn && getToken) {
       const currentTime = new Date().getTime() / 1000;
-      if (currentTime > getExpiryTime) {
+      console.log('[CURRENT TIME]', currentTime);
+      console.log('[EXPIRES TIME FROM COOKIES]', +getExpiryTime);
+      if (currentTime > +getExpiryTime) {
+        console.log('token expired');
         clearCookies();
         logoutUser();
         return false;

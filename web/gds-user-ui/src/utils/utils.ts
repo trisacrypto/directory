@@ -145,6 +145,14 @@ export const getRefreshToken = () => {
   });
 };
 export const handleError = (error: any, customMessage?: string) => {
+  // if error status code is 403 display transparent loader
+  if (error?.response?.status === 403) {
+    // get el axiosLoader id and set display to block
+    const el = document.getElementById('axiosLoader');
+    if (el) {
+      el.style.display = 'block';
+    }
+  }
   if (error) {
     Sentry.captureException(error);
   }

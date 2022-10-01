@@ -2,6 +2,7 @@ import { Spinner, Flex, Text, VStack } from '@chakra-ui/react';
 
 interface LoaderProps {
   title?: string;
+  opacity?: 'md' | 'full';
 }
 // This loader is for containers that are loading
 const TransparentLoader: React.FC<LoaderProps> = (props) => {
@@ -13,7 +14,7 @@ const TransparentLoader: React.FC<LoaderProps> = (props) => {
       top={0}
       right={0}
       bottom={0}
-      backgroundColor={'rgba(255,255,255,0.7)'}
+      backgroundColor={'rgba(255, 255, 255, 0.7'}
       zIndex={1}>
       <VStack spacing={4} m={'auto'} py={10}>
         <Spinner color="blue.500" size="xl" />

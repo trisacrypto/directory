@@ -59,9 +59,11 @@ export const getAuth0User: any = createAsyncThunk(
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
+      const updatedTime = new Date(getUserInfo?.idTokenPayload?.updated_at).getTime() / 1000;
+      const expiresTime = updatedTime + getUserInfo.expiresIn;
       setCookie('access_token', getUserInfo?.accessToken);
       setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
-      setCookie('expires_in', getUserInfo?.idTokenPayload?.exp);
+      setCookie('expires_in', expiresTime);
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
         // console.log('[getUser]', getUser);
@@ -74,7 +76,9 @@ export const getAuth0User: any = createAsyncThunk(
           setCookie('access_token', newUserPayload?.accessToken);
           setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
           // set expired time
-          setCookie('expires_in', newUserPayload?.idTokenPayload?.exp);
+          const updated = new Date(newUserPayload?.idTokenPayload?.updated_at).getTime() / 1000;
+          const expires = updated + getUserInfo.expiresIn;
+          setCookie('expires_in', expires);
           const userInfo: TUser = {
             isLoggedIn: true,
             user: {

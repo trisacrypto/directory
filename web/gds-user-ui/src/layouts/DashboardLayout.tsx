@@ -24,7 +24,7 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
   const { isFetching } = useSelector(userSelector);
   const [isLoading, setIsLoading] = useState(false);
 
-  const deps = window.location.pathname;
+  // const deps = window.location.pathname;
   useEffect(() => {
     // check if token is valid
     // if not, redirect to login page
@@ -34,7 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
         window.location.href = `/auth/login?q=token_expired`;
       }, 1000);
     }
-  }, [deps]);
+  }, []);
 
   return (
     <>
@@ -42,7 +42,11 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
         <Loader />
       ) : (
         <>
-          {isLoading && <TransparentLoader title="Your session has expired..." />}
+          {isLoading && (
+            <Box>
+              <TransparentLoader title="Your session has expired..." />
+            </Box>
+          )}
           <AxiosErrorLoader />
           <Sidebar {...props} />
         </>
