@@ -31,10 +31,15 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                   <div
                     class="css-1p293e5"
                   >
-                    <img
-                      alt="Trisa logo"
-                      src="trisa_logo.svg"
-                    />
+                    <a
+                      href="/"
+                    >
+                      <img
+                        alt="Trisa logo"
+                        class="css-1czmu1r"
+                        src="trisa_logo.svg"
+                      />
+                    </a>
                   </div>
                 </a>
               </a>

@@ -111,9 +111,21 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                   <MenuItem to={`${TRISA_BASE_URL}/${locale}`} color="white">
                     <Trans id="Documentation">Documentation</Trans>
                   </MenuItem>
-                  <MenuItem to="/auth/login" color="white">
-                    <Trans id="Login">Login</Trans>
-                  </MenuItem>
+                  <Stack>
+                    {!isLoggedIn ? (
+                      <NavLink to={'/auth/login'}>
+                        <Button variant="secondary">
+                          <Trans id="Login">Login</Trans>
+                        </Button>
+                      </NavLink>
+                    ) : (
+                      <NavLink to={'/dashboard/overview'}>
+                        <Button variant="secondary">
+                          <Trans id="Your dashboard">Your dashboard</Trans>
+                        </Button>
+                      </NavLink>
+                    )}
+                  </Stack>
                 </DrawerBody>
               </DrawerContent>
             </Drawer>

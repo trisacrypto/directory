@@ -112,6 +112,7 @@ const Certificate: React.FC = () => {
 
   async function handleNextStepClick() {
     if (hasErroredField()) {
+      console.log('has errored field');
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
       if (window.confirm('Some elements required for registration are missing; continue anyway?')) {
@@ -122,14 +123,6 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      nextStep({
-        isFormCompleted: isFormCompleted(),
-        formValues: getCurrentFormValue(),
-        values: methods.getValues(),
-        registrationValues: registrationData,
-        isDirty: methods.formState.isDirty,
-        setRegistrationState: setRegistrationData
-      });
       if (isDirty) {
         await postRegistrationValue({
           ...methods.getValues(),
@@ -138,6 +131,14 @@ const Certificate: React.FC = () => {
           }
         });
       }
+      nextStep({
+        isFormCompleted: isFormCompleted(),
+        formValues: getCurrentFormValue(),
+        values: methods.getValues(),
+        registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
+        setRegistrationState: setRegistrationData
+      });
     }
   }
   const handlePreviousStep = async () => {
