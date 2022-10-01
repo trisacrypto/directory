@@ -17,11 +17,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
-	"github.com/trisacrypto/directory/pkg/bff/admin"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	apiv2 "github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -73,11 +71,11 @@ func New(conf config.Config) (s *Server, err error) {
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
 	if !s.conf.Maintenance {
 		if s.conf.Mode != gin.TestMode {
-			if s.testnetAdmin, err = admin.New(conf.TestNet.Admin); err != nil {
+			if s.testnetDB, err = store.Open(conf.TestNet.Database); err != nil {
 				return nil, err
 			}
 
-			if s.mainnetAdmin, err = admin.New(conf.MainNet.Admin); err != nil {
+			if s.mainnetDB, err = store.Open(conf.MainNet.Database); err != nil {
 				return nil, err
 			}
 
@@ -156,19 +154,19 @@ func ConnectGDS(conf config.NetworkConfig) (_ GlobalDirectoryClient, err error) 
 
 type Server struct {
 	sync.RWMutex
-	conf         config.Config
-	srv          *http.Server
-	router       *gin.Engine
-	testnetAdmin apiv2.DirectoryAdministrationClient
-	mainnetAdmin apiv2.DirectoryAdministrationClient
-	testnetGDS   GlobalDirectoryClient
-	mainnetGDS   GlobalDirectoryClient
-	db           store.Store
-	auth0        *management.Management
-	started      time.Time
-	healthy      bool
-	url          string
-	echan        chan error
+	conf       config.Config
+	srv        *http.Server
+	router     *gin.Engine
+	testnetDB  store.Store
+	mainnetDB  store.Store
+	testnetGDS GlobalDirectoryClient
+	mainnetGDS GlobalDirectoryClient
+	db         store.Store
+	auth0      *management.Management
+	started    time.Time
+	healthy    bool
+	url        string
+	echan      chan error
 }
 
 // Serve API requests on the specified address.
@@ -372,10 +370,14 @@ func (s *Server) setupRoutes() (err error) {
 // Accessors - used primarily for testing
 //===========================================================================
 
-// SetAdminClients allows tests to set the admin clients to the mocked clients.
-func (s *Server) SetAdminClients(testnet, mainnet apiv2.DirectoryAdministrationClient) {
-	s.testnetAdmin = testnet
-	s.mainnetAdmin = mainnet
+// SetTestNetDB allows tests to set the testnet database client to a mock client
+func (s *Server) SetTestNetDB(testnet store.Store) {
+	s.testnetDB = testnet
+}
+
+// SetMainNetDB allows tests to set the mainnet database client to a mock client
+func (s *Server) SetMainNetDB(mainnet store.Store) {
+	s.mainnetDB = mainnet
 }
 
 // SetGDSClients allows tests to set a bufconn client to a mock GDS server.

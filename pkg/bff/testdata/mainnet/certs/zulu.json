@@ -1,0 +1,55 @@
+{
+    "id": "2C3B5861D89F2D32829B325AFB39293F",
+    "vasp": "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+    "status": "REVOKED",
+    "details": {
+        "chain": "",
+        "data": "",
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "not_after": "2021-08-11T13:53:13Z",
+        "not_before": "2021-08-04T00:28:34Z",
+        "public_key_algorithm": "RSA",
+        "revoked": true,
+        "serial_number": "2C3B5861D89F2D32829B325AFB39293F",
+        "signature": "",
+        "signature_algorithm": "SHA384-RSA",
+        "subject": {
+            "common_name": "zulu",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "version": "3"
+    }
+}

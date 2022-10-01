@@ -1,0 +1,144 @@
+{
+    "business_category": "BUSINESS_ENTITY",
+    "common_name": "alice",
+    "contacts": {
+        "administrative": {
+            "email": "clayton@example.com",
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "email_log": [],
+                "token": "administrative_token",
+                "verified": false
+            },
+            "name": "Clayton Jimenez",
+            "phone": "(660)632-0450x581"
+        },
+        "billing": {
+            "email": "lostmy@email.com",
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "email_log": [],
+                "token": "billing_token",
+                "verified": false
+            },
+            "name": "Didna Respont",
+            "person": null,
+            "phone": "123-432-6666"
+        },
+        "legal": {
+            "email": "lynn@example.org",
+            "extra": {
+                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+                "email_log": [],
+                "token": "legal_token",
+                "verified": false
+            },
+            "name": "Lynn Fisher",
+            "phone": "559.333.8139x0884"
+        },
+        "technical": null
+    },
+    "entity": {
+        "country_of_registration": "CA",
+        "customer_number": "",
+        "geographic_addresses": [
+            {
+                "address_line": [
+                    "1522 Virginia Roads Apt. 317"
+                ],
+                "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+                "building_name": "",
+                "building_number": "",
+                "country": "CA",
+                "country_sub_division": "",
+                "department": "",
+                "district_name": "",
+                "floor": "",
+                "post_box": "",
+                "post_code": "",
+                "room": "",
+                "street_name": "",
+                "sub_department": "",
+                "town_location_name": "",
+                "town_name": ""
+            }
+        ],
+        "name": {
+            "name_identifiers": [
+                {
+                    "legal_person_name": "Alice VASP, Inc.",
+                    "legal_person_name_identifier_type": 0
+                }
+            ]
+        },
+        "national_identification": {
+            "country_of_issue": "CA",
+            "national_identifier": "P7b0y_u-R51uZ8RLZRGh5wagzUi3w3Ng",
+            "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
+            "registration_authority": ""
+        }
+    },
+    "established_on": "1989-08-28",
+    "extra": {
+        "@type": "type.googleapis.com/gds.models.v1.GDSExtraData",
+        "admin_verification_token": "",
+        "audit_log": [
+            {
+                "current_state": "SUBMITTED",
+                "description": "register request received",
+                "previous_state": "NO_VERIFICATION",
+                "source": "automated",
+                "timestamp": "2021-08-31T12:36:27Z"
+            }
+        ],
+        "review_notes": {
+            "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927": {
+                "author": "admin@trisa.io",
+                "created": "2021-07-12T20:12:02Z",
+                "editor": "yvonne26@example.org",
+                "id": "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927",
+                "modified": "2021-09-08T04:13:00Z",
+                "text": "Voluptatem modi sed porro porro adipisci velit."
+            }
+        }
+    },
+    "first_listed": "2021-08-31T12:36:27Z",
+    "id": "alice1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1",
+    "identity_certificate": null,
+    "last_updated": "2021-08-31T12:36:27Z",
+    "registered_directory": "vaspdirectory.net",
+    "service_status": "UNKNOWN",
+    "signature": "",
+    "signing_certificates": [],
+    "trisa_endpoint": "alice:4435",
+    "trixo": {
+        "applicable_regulations": [
+            "FATF Recommendation 16"
+        ],
+        "compliance_threshold": 0,
+        "compliance_threshold_currency": "USD",
+        "conducts_customer_kyc": false,
+        "financial_transfers_permitted": "",
+        "has_required_regulatory_program": "",
+        "kyc_threshold": 0,
+        "kyc_threshold_currency": "USD",
+        "must_comply_travel_rule": false,
+        "must_safeguard_pii": false,
+        "other_jurisdictions": [],
+        "primary_national_jurisdiction": "CA",
+        "primary_regulator": "",
+        "safeguards_pii": false
+    },
+    "vasp_categories": [
+        "P2P",
+        "Kiosk",
+        "Custodian"
+    ],
+    "verification_status": "REJECTED",
+    "verified_on": "",
+    "version": {
+        "pid": "0",
+        "version": "4"
+    },
+    "website": "https://trisa.alice.example.com"
+}

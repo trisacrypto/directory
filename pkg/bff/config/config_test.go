@@ -25,8 +25,10 @@ var testEnv = map[string]string{
 	"GDS_BFF_AUTH0_CLIENT_ID":               "exampleid",
 	"GDS_BFF_AUTH0_CLIENT_SECRET":           "supersecretsquirrel",
 	"GDS_BFF_AUTH0_TESTING":                 "true",
-	"GDS_BFF_TESTNET_ADMIN_ENDPOINT":        "localhost:8444",
-	"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS":      "key1:/current.pem,key2:/rotated.pem",
+	"GDS_BFF_TESTNET_DATABASE_URL":          "trtl://trtl.testnet:4436",
+	"GDS_BFF_TESTNET_DATABASE_INSECURE":     "true",
+	"GDS_BFF_TESTNET_DATABASE_CERT_PATH":    "fixtures/creds/testnet/trtl/certs.pem",
+	"GDS_BFF_TESTNET_DATABASE_POOL_PATH":    "fixtures/creds/testnet/trtl/pool.zip",
 	"GDS_BFF_TESTNET_DIRECTORY_INSECURE":    "true",
 	"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT":    "localhost:8443",
 	"GDS_BFF_TESTNET_DIRECTORY_TIMEOUT":     "5s",
@@ -35,8 +37,10 @@ var testEnv = map[string]string{
 	"GDS_BFF_TESTNET_MEMBERS_TIMEOUT":       "5s",
 	"GDS_BFF_TESTNET_MEMBERS_CERT_PATH":     "fixtures/members/creds/testnet/certs.pem",
 	"GDS_BFF_TESTNET_MEMBERS_POOL_PATH":     "fixtures/members/creds/testnet/pool.zip",
-	"GDS_BFF_MAINNET_ADMIN_ENDPOINT":        "localhost:9444",
-	"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS":      "key1:/current.pem,key2:/rotated.pem",
+	"GDS_BFF_MAINNET_DATABASE_URL":          "trtl://trtl.mainnet:4436",
+	"GDS_BFF_MAINNET_DATABASE_INSECURE":     "true",
+	"GDS_BFF_MAINNET_DATABASE_CERT_PATH":    "fixtures/creds/mainnet/trtl/certs.pem",
+	"GDS_BFF_MAINNET_DATABASE_POOL_PATH":    "fixtures/creds/mainnet/trtl/pool.zip",
 	"GDS_BFF_MAINNET_DIRECTORY_INSECURE":    "true",
 	"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT":    "localhost:8444",
 	"GDS_BFF_MAINNET_DIRECTORY_TIMEOUT":     "3s",
@@ -76,11 +80,6 @@ func TestConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, conf.IsZero())
 
-	tokenKeys := map[string]string{
-		"key1": "/current.pem",
-		"key2": "/rotated.pem",
-	}
-
 	require.False(t, conf.Maintenance)
 	require.Equal(t, testEnv["GDS_BFF_BIND_ADDR"], conf.BindAddr)
 	require.Equal(t, testEnv["GDS_BFF_MODE"], conf.Mode)
@@ -95,8 +94,10 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_SECRET"], conf.Auth0.ClientSecret)
 	require.True(t, conf.Auth0.Testing)
 	require.Equal(t, 10*time.Minute, conf.Auth0.ProviderCache)
-	require.Equal(t, testEnv["GDS_BFF_TESTNET_ADMIN_ENDPOINT"], conf.TestNet.Admin.Endpoint)
-	require.Equal(t, tokenKeys, conf.TestNet.Admin.TokenKeys)
+	require.Equal(t, testEnv["GDS_BFF_TESTNET_DATABASE_URL"], conf.TestNet.Database.URL)
+	require.True(t, conf.TestNet.Database.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_TESTNET_DATABASE_CERT_PATH"], conf.TestNet.Database.CertPath)
+	require.Equal(t, testEnv["GDS_BFF_TESTNET_DATABASE_POOL_PATH"], conf.TestNet.Database.PoolPath)
 	require.True(t, conf.TestNet.Directory.Insecure)
 	require.True(t, conf.TestNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_DIRECTORY_ENDPOINT"], conf.TestNet.Directory.Endpoint)
@@ -105,8 +106,10 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 5*time.Second, conf.TestNet.Members.Timeout)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_MTLS_CERT_PATH"], conf.TestNet.Members.MTLS.CertPath)
 	require.Equal(t, testEnv["GDS_BFF_TESTNET_MEMBERS_MTLS_POOL_PATH"], conf.TestNet.Members.MTLS.PoolPath)
-	require.Equal(t, testEnv["GDS_BFF_MAINNET_ADMIN_ENDPOINT"], conf.MainNet.Admin.Endpoint)
-	require.Equal(t, tokenKeys, conf.MainNet.Admin.TokenKeys)
+	require.Equal(t, testEnv["GDS_BFF_MAINNET_DATABASE_URL"], conf.MainNet.Database.URL)
+	require.True(t, conf.MainNet.Database.Insecure)
+	require.Equal(t, testEnv["GDS_BFF_MAINNET_DATABASE_CERT_PATH"], conf.MainNet.Database.CertPath)
+	require.Equal(t, testEnv["GDS_BFF_MAINNET_DATABASE_POOL_PATH"], conf.MainNet.Database.PoolPath)
 	require.True(t, conf.MainNet.Directory.Insecure)
 	require.True(t, conf.MainNet.Members.MTLS.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_MAINNET_DIRECTORY_ENDPOINT"], conf.MainNet.Directory.Endpoint)
@@ -134,12 +137,10 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_BFF_AUTH0_AUDIENCE",
 		"GDS_BFF_AUTH0_CLIENT_ID",
 		"GDS_BFF_AUTH0_CLIENT_SECRET",
-		"GDS_BFF_TESTNET_ADMIN_ENDPOINT",
-		"GDS_BFF_TESTNET_ADMIN_TOKEN_KEYS",
+		"GDS_BFF_TESTNET_DATABASE_URL",
 		"GDS_BFF_TESTNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_TESTNET_MEMBERS_ENDPOINT",
-		"GDS_BFF_MAINNET_ADMIN_ENDPOINT",
-		"GDS_BFF_MAINNET_ADMIN_TOKEN_KEYS",
+		"GDS_BFF_MAINNET_DATABASE_URL",
 		"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_MAINNET_MEMBERS_ENDPOINT",
 		"GDS_BFF_DATABASE_URL",

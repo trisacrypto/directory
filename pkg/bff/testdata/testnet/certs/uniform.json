@@ -1,0 +1,55 @@
+{
+    "id": "DFD0460B63FA147F6E671CF45AF6369E",
+    "vasp": "d0082f55-d3ba-4726-a46d-85e3f5a2911f",
+    "status": "ISSUED",
+    "details": {
+        "chain": "",
+        "data": "",
+        "issuer": {
+            "common_name": "CipherTrace Issuing CA",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "not_after": "2021-08-16T13:12:41Z",
+        "not_before": "2021-08-03T21:59:31Z",
+        "public_key_algorithm": "RSA",
+        "revoked": false,
+        "serial_number": "DFD0460B63FA147F6E671CF45AF6369E",
+        "signature": "",
+        "signature_algorithm": "SHA384-RSA",
+        "subject": {
+            "common_name": "uniform",
+            "country": [
+                "US"
+            ],
+            "locality": [
+                "Menlo Park"
+            ],
+            "organization": [
+                "CipherTrace Inc"
+            ],
+            "organizational_unit": [],
+            "postal_code": [],
+            "province": [
+                "California"
+            ],
+            "serial_number": "",
+            "street_address": []
+        },
+        "version": "3"
+    }
+}
