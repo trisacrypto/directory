@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Sidebar from 'components/Sidebar';
-import { Box, Flex, Text, Spinner } from '@chakra-ui/react';
-import { getCookie } from 'utils/cookies';
+import { Box } from '@chakra-ui/react';
 import Loader from 'components/Loader';
-import useCustomAuth0 from 'hooks/useCustomAuth0';
-import { useNavigate } from 'react-router-dom';
-import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
-import { getRegistrationData } from 'modules/dashboard/registration/service';
+import { userSelector } from 'modules/auth/login/user.slice';
 import TransparentLoader from '../components/Loader/TransparentLoader';
+import { isTokenExpired } from 'utils/utils';
 type DashboardLayoutProp = {
   children: React.ReactNode;
 };
@@ -24,7 +21,20 @@ const AxiosErrorLoader = () => {
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
-  const { isFetching, isLoggedIn } = useSelector(userSelector);
+  const { isFetching } = useSelector(userSelector);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // const deps = window.location.pathname;
+  useEffect(() => {
+    // check if token is valid
+    // if not, redirect to login page
+    if (isTokenExpired()) {
+      setIsLoading(true);
+      setTimeout(() => {
+        window.location.href = `/auth/login?q=token_expired`;
+      }, 1000);
+    }
+  }, []);
 
   return (
     <>
@@ -32,6 +42,11 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
         <Loader />
       ) : (
         <>
+          {isLoading && (
+            <Box>
+              <TransparentLoader title="Your session has expired..." />
+            </Box>
+          )}
           <AxiosErrorLoader />
           <Sidebar {...props} />
         </>

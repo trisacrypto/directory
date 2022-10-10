@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Container,
   SimpleGrid,
-  Image,
   Flex,
   Text,
   Stack,
@@ -14,6 +13,7 @@ import {
 import trisaNetworkSvg from 'assets/trisa_network.svg';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
+import CkLazyLoadImage from 'components/LazyImage';
 
 const AboutTrisaSection: React.FC = () => {
   return (
@@ -65,9 +65,11 @@ const AboutTrisaSection: React.FC = () => {
                 <StackDivider borderColor={useColorModeValue('gray.100', 'gray.700')} />
               }></Stack>
           </Stack>
-          <Flex>
-            <Image alt={'trisa network'} src={trisaNetworkSvg} />
-          </Flex>
+          <CkLazyLoadImage
+            src={trisaNetworkSvg}
+            sx={{ width: '100%', height: '100%' }}
+            alt="about us"
+          />
         </SimpleGrid>
       </Container>
     </Flex>

@@ -5,8 +5,7 @@ import {
   FormHelperText,
   FormLabel,
   Switch,
-  SwitchProps,
-  useColorModeValue
+  SwitchProps
 } from '@chakra-ui/react';
 import React from 'react';
 

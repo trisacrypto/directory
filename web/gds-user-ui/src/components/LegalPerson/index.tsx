@@ -1,4 +1,4 @@
-import { Heading, HStack, Icon, Stack, Text, Link } from '@chakra-ui/react';
+import { Heading, HStack, Stack, Text, Link } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';

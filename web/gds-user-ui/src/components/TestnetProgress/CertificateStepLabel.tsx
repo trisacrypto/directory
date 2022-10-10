@@ -1,24 +1,21 @@
-import React, { FC, useEffect } from 'react';
+import { FC } from 'react';
 import {
-  HStack,
   Box,
   Icon,
   Text,
   Heading,
   Stack,
-  Grid,
-  Button,
   Tooltip,
   Flex,
   useColorModeValue
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
-import { useDispatch, useSelector, RootStateOrAny } from 'react-redux';
-import { addStep, setCurrentStep, setStepStatus, TStep } from 'application/store/stepper.slice';
+import { useSelector, RootStateOrAny } from 'react-redux';
+import { TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
-import { IconType } from 'react-icons/lib';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -41,7 +38,7 @@ type TStepLabel = {
   hasError?: boolean; // status of the step
   icon: any; // icon of the step
 };
-const CertificateStepLabel: FC<StepLabelProps> = (props) => {
+const CertificateStepLabel: FC<StepLabelProps> = () => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const textColor = useColorModeValue('#3C4257', '#F7F8FC');
@@ -281,7 +278,6 @@ const CertificateStepLabel: FC<StepLabelProps> = (props) => {
             </Stack>
           </Stack>
         </Flex>
-        {/* </Grid> */}
       </Stack>
     </>
   );

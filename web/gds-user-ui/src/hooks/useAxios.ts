@@ -27,6 +27,7 @@ const useAxios = (axiosParams: AxiosRequestConfig) => {
     (async () => {
       await fetchData(axiosParams);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { response, error, loading };

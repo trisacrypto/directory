@@ -21,7 +21,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.db.DeleteAnnouncementMonth(month)
+			err := s.DB().DeleteAnnouncementMonth(month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()
@@ -95,7 +95,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	defer func() {
 		for _, month := range months {
-			s.db.DeleteAnnouncementMonth(month)
+			s.DB().DeleteAnnouncementMonth(month)
 		}
 	}()
 
@@ -133,7 +133,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	require.NoError(err, "was not able to make an announcement")
 
 	// Check that the announcement exists in the database
-	month, err := s.db.RetrieveAnnouncementMonth(months[0])
+	month, err := s.DB().RetrieveAnnouncementMonth(months[0])
 	require.NoError(err, "could not get announcements container")
 	require.NotEmpty(month.Date, "expected month date to be set")
 	require.Len(month.Announcements, 1, "expected announcements to contain 1 item")
@@ -178,7 +178,7 @@ func (s *bffTestSuite) TestAnnouncementsHelpers() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.db.DeleteAnnouncementMonth(month)
+			err := s.DB().DeleteAnnouncementMonth(month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()

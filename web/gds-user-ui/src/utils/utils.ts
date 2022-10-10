@@ -5,7 +5,7 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-
+import { getCookie } from 'utils/cookies';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -145,6 +145,14 @@ export const getRefreshToken = () => {
   });
 };
 export const handleError = (error: any, customMessage?: string) => {
+  // if error status code is 403 display transparent loader
+  if (error?.response?.status === 403) {
+    // get el axiosLoader id and set display to block
+    const el = document.getElementById('axiosLoader');
+    if (el) {
+      el.style.display = 'block';
+    }
+  }
   if (error) {
     Sentry.captureException(error);
   }
@@ -220,4 +228,17 @@ export const splitAndDisplay = (str: string, delimiter?: string, limit?: number)
   const words = delimiter ? str.split(`${delimiter}`) : str.split(' ');
   const limitWords = limit ? words.slice(0, limit) : words;
   return limitWords.join(' ');
+};
+
+// ceckisTokenExpired function get from cookies
+export const isTokenExpired = () => {
+  // get expires token from cookies
+  const expiresIn = getCookie('expires_in');
+  if (expiresIn) {
+    // get current time
+    const currentTime = new Date().getTime() / 1000;
+    // check if token is expired
+    return currentTime > expiresIn;
+  }
+  return false;
 };

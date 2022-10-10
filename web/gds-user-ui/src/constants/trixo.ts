@@ -11,5 +11,5 @@ export const getFinancialTransfertsPermittedOptions = () =>
   Object.entries(FINANCIAL_TRANSFERTS_PERMITTED_OPTIONS).map(([k, v]) => ({ value: k, label: v }));
 
 export const getCurrenciesOptions = () => {
-  return Object.entries(currencies).map(([k, v]) => ({ value: k, label: k }));
+  return Object.entries(currencies).map(([k]) => ({ value: k, label: k }));
 };

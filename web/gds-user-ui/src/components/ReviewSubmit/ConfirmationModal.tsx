@@ -2,9 +2,7 @@ import React from 'react';
 import {
   Box,
   chakra,
-  Heading,
   Alert,
-  AlertIcon,
   Tag,
   AlertTitle,
   AlertDescription,

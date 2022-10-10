@@ -30,11 +30,6 @@ type Props = StyleProps &
     dataContent?: string;
   };
 
-interface ILineProps {
-  children?: React.ReactNode;
-  title?: string;
-}
-
 const Line: React.FC<Props> = ({ children, colSpan, title, dataContent, ...rest }: any) => {
   const [isMobile] = useMediaQuery('(max-width: 768px)');
   return (

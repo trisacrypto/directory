@@ -1,7 +1,5 @@
-import { IconButton, MenuButton, MenuItem, MenuList, Td } from '@chakra-ui/react';
 import React from 'react';
 import TableRow from '../TableRow';
-import { BsThreeDots } from 'react-icons/bs';
 import OptionsMenu, { TMenuItem } from '../OptionsMenu';
 import { t } from '@lingui/macro';
 

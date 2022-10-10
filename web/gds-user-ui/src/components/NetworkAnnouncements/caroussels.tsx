@@ -15,7 +15,7 @@ import Slider from 'react-slick';
 import { Trans } from '@lingui/react';
 
 interface AnnouncementProps {
-  announcements: any;
+  announcements: any[];
 }
 
 const AnnouncementCarousel: FC<AnnouncementProps> = ({ announcements }) => {

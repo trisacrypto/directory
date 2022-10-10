@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import {
   Box,
   Heading,
   VStack,
-  useToast,
   Text,
   Link,
   Flex,
   useDisclosure,
   Button,
-  HStack,
   Stack,
   useColorModeValue,
   chakra
@@ -39,15 +37,7 @@ const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import {
-  getCurrentStep,
-  getSteps,
-  getCurrentState,
-  getLastStep,
-  getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus,
-  getHasReachedReviewStep
-} from 'application/store/selectors/stepper';
+import { getCurrentStep, getLastStep } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 
 const Certificate: React.FC = () => {
@@ -61,20 +51,13 @@ const Certificate: React.FC = () => {
     nextStep,
     previousStep,
     setInitialState,
-    jumpToStep,
     setRegistrationValue: setRegistrationStore
   } = useCertificateStepper();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const currentStep: number = useSelector(getCurrentStep);
-  const currentStateValue = useSelector(getCurrentState);
   const lastStep: number = useSelector(getLastStep);
-  const steps: number = useSelector(getSteps);
-  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
-  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
-  const hasReachedReviewStep: boolean = useSelector(getHasReachedReviewStep);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
-  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const hasReachSubmitStep: boolean = useSelector(
@@ -105,13 +88,7 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
-  // check if the form is submitted or not
-  // const isFormSubmitted = () => {
-  //   return (
-  //     testnetSubmissionStatus === SubmissionStatus.VERIFIED &&
-  //     mainnetSubmissionStatus === SubmissionStatus.VERIFIED
-  //   );
-  // };
+
   function getCurrentFormValue() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
@@ -135,6 +112,7 @@ const Certificate: React.FC = () => {
 
   async function handleNextStepClick() {
     if (hasErroredField()) {
+      console.log('has errored field');
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
       if (window.confirm('Some elements required for registration are missing; continue anyway?')) {
@@ -145,14 +123,6 @@ const Certificate: React.FC = () => {
         });
       }
     } else {
-      nextStep({
-        isFormCompleted: isFormCompleted(),
-        formValues: getCurrentFormValue(),
-        values: methods.getValues(),
-        registrationValues: registrationData,
-        isDirty: methods.formState.isDirty,
-        setRegistrationState: setRegistrationData
-      });
       if (isDirty) {
         await postRegistrationValue({
           ...methods.getValues(),
@@ -161,6 +131,14 @@ const Certificate: React.FC = () => {
           }
         });
       }
+      nextStep({
+        isFormCompleted: isFormCompleted(),
+        formValues: getCurrentFormValue(),
+        values: methods.getValues(),
+        registrationValues: registrationData,
+        isDirty: methods.formState.isDirty,
+        setRegistrationState: setRegistrationData
+      });
     }
   }
   const handlePreviousStep = async () => {
@@ -184,11 +162,6 @@ const Certificate: React.FC = () => {
     return _.isEqual(registrationData, getRegistrationDefaultValues());
   };
 
-  // has reach review step and not on the review step
-  const hasReachReviewStep = () => {
-    return hasReachedReviewStep && currentStep <= lastStep - 1;
-  };
-
   const handleResetForm = () => {
     // open confirmation modal
     setIsResetModalOpen(true);
@@ -202,19 +175,6 @@ const Certificate: React.FC = () => {
 
   const resetForm = () => {
     reset(getRegistrationDefaultValues());
-  };
-
-  // jump to review page
-  const jumpToReview = async () => {
-    if (isDirty) {
-      await postRegistrationValue({
-        ...methods.getValues(),
-        state: {
-          ...currentState()
-        }
-      });
-    }
-    jumpToStep(lastStep);
   };
 
   useEffect(() => {

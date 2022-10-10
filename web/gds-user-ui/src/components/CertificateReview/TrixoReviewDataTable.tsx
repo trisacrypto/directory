@@ -1,10 +1,7 @@
 import { Stack, Table, Tbody, Tr, Td, Tag, TagLabel, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { COUNTRIES } from 'constants/countries';
-import React, { useEffect, Suspense } from 'react';
-import { useSelector, RootStateOrAny } from 'react-redux';
 import getColorScheme from 'utils/getColorScheme';
-import { TStep, loadDefaultValueFromLocalStorage } from 'utils/localStorageHelper';
 import { currencyFormatter } from 'utils/utils';
 import { t } from '@lingui/macro';
 interface TrixoReviewProps {

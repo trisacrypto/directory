@@ -1,17 +1,8 @@
 import React from 'react';
-import { Box, Stack, Button, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Text, useColorModeValue } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
-import { useForm } from 'react-hook-form';
-
-import { yupResolver } from '@hookform/resolvers/yup';
-import { getValueByPathname } from 'utils/utils';
-import InputFormControl from 'components/ui/InputFormControl';
-import PasswordStrength from 'components/PasswordStrength';
-import * as yup from 'yup';
 import { Trans } from '@lingui/react';
-import { t } from '@lingui/macro';
-import ChakraRouterLink from 'components/ChakraRouterLink';
 import AuthLayout from 'layouts/AuthLayout';
 import SignupForm from 'components/Form/SignupForm';
 interface CreateAccountProps {
@@ -22,15 +13,6 @@ interface CreateAccountProps {
   isPasswordError?: boolean;
   isUsernameError?: boolean;
 }
-interface IFormInputs {
-  username: string;
-  password: string;
-}
-
-const validationSchema = yup.object().shape({
-  username: yup.string().email('Email is not valid').required('Email is required'),
-  password: yup.string().required('Password is required')
-});
 
 // TO-DO : need some improvements
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {

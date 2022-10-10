@@ -3,18 +3,12 @@ import { useDispatch } from 'react-redux';
 import thunk, { ThunkAction } from 'redux-thunk';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore, PersistConfig } from 'redux-persist';
-// import storageSession from 'reduxjs-toolkit-persist/lib/storage/session';
-import localForage from 'localforage';
 import rootReducer, { RootState } from './rootReducer';
 
 const persistConfig: PersistConfig<any> = {
   key: 'root',
   storage
 };
-// const userPersistConfig = {
-//   key: 'user',
-//   storage: storageSession
-// };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

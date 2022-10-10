@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
+	"github.com/trisacrypto/directory/pkg/store"
 	"google.golang.org/protobuf/proto"
 )
 
-type AdminRPC func(ctx context.Context, client admin.DirectoryAdministrationClient, network string) (interface{}, error)
+type DatabaseRPC func(ctx context.Context, client store.Store, network string) (interface{}, error)
 
 // ParallelAdminRequests makes concurrent requests to both the testnet and the mainnet,
 // storing the results and errors in a slice of length 2 ([testnet, mainnet]). If the
 // flatten bool is true, then nil values are removed from the slice (though this will
 // make which network returned the result ambiguous).
-func (s *Server) ParallelAdminRequests(ctx context.Context, rpc AdminRPC, flatten bool) (results []interface{}, errs []error) {
+func (s *Server) ParallelDBRequests(ctx context.Context, rpc DatabaseRPC, flatten bool) (results []interface{}, errs []error) {
 	// Create the results and errors slices
 	results = make([]interface{}, 2)
 	errs = make([]error, 2)
@@ -28,14 +28,14 @@ func (s *Server) ParallelAdminRequests(ctx context.Context, rpc AdminRPC, flatte
 	wg.Add(2)
 
 	// Create a closure to execute the rpc
-	closure := func(client admin.DirectoryAdministrationClient, idx int, network string) {
+	closure := func(client store.Store, idx int, network string) {
 		defer wg.Done()
 		results[idx], errs[idx] = rpc(ctx, client, network)
 	}
 
 	// execute both requests
-	go closure(s.testnetAdmin, 0, config.TestNet)
-	go closure(s.mainnetAdmin, 1, config.MainNet)
+	go closure(s.testnetDB, 0, config.TestNet)
+	go closure(s.mainnetDB, 1, config.MainNet)
 	wg.Wait()
 
 	// flatten rpc and error if requested

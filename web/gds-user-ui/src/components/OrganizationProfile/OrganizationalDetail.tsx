@@ -1,33 +1,8 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import * as Sentry from '@sentry/react';
-import {
-  Box,
-  Heading,
-  VStack,
-  Flex,
-  Input,
-  Stack,
-  Text,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  SimpleGrid,
-  List,
-  ListItem,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  HStack,
-  Tag
-} from '@chakra-ui/react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { Box, Heading, Stack, Text, SimpleGrid, List, ListItem, Tag } from '@chakra-ui/react';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
-import { getNameIdentiferTypeLabel } from 'constants/name-identifiers';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
 import { COUNTRIES } from 'constants/countries';
-import { addressType } from 'constants/address';
 import { renderAddress } from 'utils/address-utils';
 import { hasValue } from 'utils/utils';
 import { Trans } from '@lingui/react';
@@ -38,8 +13,8 @@ type OrganizationalDetailProps = {
 const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => {
   const getOrgDivEl: any = document.getElementById('org') as HTMLDivElement;
   const getCntDivEl: any = document.getElementById('cnt') as HTMLDivElement;
-  const [divOrgHeight, setDivOrgHeight] = useState(getOrgDivEl);
-  const [divCntHeight, setDivCntHeight] = useState(getCntDivEl);
+  const [, setDivOrgHeight] = useState(getOrgDivEl);
+  const [, setDivCntHeight] = useState(getCntDivEl);
   const orgRef = useRef<HTMLDivElement>(null);
   const cntRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -75,7 +50,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                 <ListItem fontWeight={'bold'}>
                   <Trans id="Organization Type">Organization Type</Trans>
                 </ListItem>
-                <ListItem>{(BUSINESS_CATEGORY as any)[data.business_category] || 'N/A'}</ListItem>
+                <ListItem>{(BUSINESS_CATEGORY as any)[data?.business_category] || 'N/A'}</ListItem>
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
@@ -166,16 +141,16 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
                       : contact.charAt(0).toUpperCase() + contact.slice(1)}
                   </ListItem>
                   <ListItem>
-                    {hasValue(data.contacts?.[contact]) ? (
+                    {hasValue(data?.contacts?.[contact]) ? (
                       <>
-                        {data.contacts?.[contact]?.name && (
-                          <Text>{data.contacts?.[contact]?.name}</Text>
+                        {data?.contacts?.[contact]?.name && (
+                          <Text>{data?.contacts?.[contact]?.name}</Text>
                         )}
-                        {data.contacts?.[contact]?.email && (
-                          <Text>{data.contacts?.[contact]?.email}</Text>
+                        {data?.contacts?.[contact]?.email && (
+                          <Text>{data?.contacts?.[contact]?.email}</Text>
                         )}
-                        {data.contacts?.[contact]?.phone && (
-                          <Text>{data.contacts?.[contact]?.phone}</Text>
+                        {data?.contacts?.[contact]?.phone && (
+                          <Text>{data?.contacts?.[contact]?.phone}</Text>
                         )}
                       </>
                     ) : (

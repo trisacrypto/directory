@@ -1,7 +1,8 @@
-import { Stack, Spinner, Flex, Box, Text, VStack, position } from '@chakra-ui/react';
+import { Spinner, Flex, Text, VStack } from '@chakra-ui/react';
 
 interface LoaderProps {
   title?: string;
+  opacity?: 'md' | 'full';
 }
 // This loader is for containers that are loading
 const TransparentLoader: React.FC<LoaderProps> = (props) => {
