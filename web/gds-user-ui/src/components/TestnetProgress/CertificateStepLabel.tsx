@@ -5,18 +5,18 @@ import {
   Text,
   Heading,
   Stack,
-  Tooltip,
-  Flex,
+  // Flex,
   useColorModeValue,
   useDisclosure,
-  Link
+  Link,
+  SimpleGrid,
+  Tooltip
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
 import { TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { Trans } from '@lingui/react';
-import { t } from '@lingui/macro';
 import { useFormContext } from 'react-hook-form';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import InvalidFormPrompt from './InvalidFormPrompt';
@@ -145,12 +145,9 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
             <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
           </Heading>
         </Box>
-        <Flex gap={2}>
-          <Link display="block" width="100%" onClick={handleStepClick(1)}>
-            <Tooltip
-              label={getLabel(1)?.hasError && t`Missing required element`}
-              placement="top"
-              bg={'red'}>
+        <SimpleGrid columns={6} spacing={1}>
+          <Tooltip label={<Trans id="Basic Details">Basic Details</Trans>} gutter={0} hasArrow>
+            <Link display="block" width="100%" onClick={handleStepClick(1)}>
               <Stack spacing={1} width="100%">
                 <Box h="1" borderRadius={'50px'} bg={getLabel(1)?.color} width={'100%'} key={1} />
                 <Stack
@@ -165,48 +162,61 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                           fill: getLabel(1)?.color
                         }
                       }}
+                      verticalAlign={{ base: 'baseline', lg: 'middle' }}
                     />
                   </Box>
                   <Text
+                    noOfLines={2}
                     color={textColor}
                     fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                     fontSize={'sm'}
                     textAlign="center">
-                    1 <Trans id="Basic Details">Basic Details</Trans>
+                    <Text display={{ base: 'block', md: 'inline' }} mr={2}>
+                      1
+                    </Text>
+                    <Trans id="Basic Details">Basic Details</Trans>
                   </Text>
                 </Stack>
               </Stack>
-            </Tooltip>
-          </Link>
+            </Link>
+          </Tooltip>
 
-          <Link display="block" width="100%" onClick={handleStepClick(2)}>
-            <Stack spacing={1} width="100%">
-              <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
-              <Stack
-                direction={{ base: 'column', md: 'row' }}
-                alignItems={'center'}
-                spacing={{ base: 0, md: 1 }}>
-                <Box>
-                  <Icon
-                    as={getLabel(2)?.icon}
-                    sx={{
-                      path: {
-                        fill: getLabel(2)?.color
-                      },
-                      verticalAlign: 'middle'
-                    }}
-                  />
-                </Box>
-                <Text
-                  color={textColor}
-                  fontSize={'sm'}
-                  fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
-                  textAlign="center">
-                  2 <Trans id="Legal Person">Legal Person</Trans>
-                </Text>
+          <Tooltip label={<Trans id="Legal Person">Legal Person</Trans>} gutter={0} hasArrow>
+            <Link display="block" width="100%" onClick={handleStepClick(2)}>
+              <Stack spacing={1} width="100%">
+                <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
+                <Stack
+                  direction={{ base: 'column', md: 'row' }}
+                  alignItems={'center'}
+                  spacing={{ base: 0, md: 1 }}>
+                  <Box>
+                    <Icon
+                      as={getLabel(2)?.icon}
+                      sx={{
+                        path: {
+                          fill: getLabel(2)?.color
+                        }
+                      }}
+                      verticalAlign={{ base: 'baseline', lg: 'middle' }}
+                    />
+                  </Box>
+                  <Text
+                    noOfLines={2}
+                    color={textColor}
+                    fontSize={'sm'}
+                    fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
+                    textAlign="center">
+                    <Text as="span" display={{ base: 'block', md: 'inline' }} mr={2}>
+                      2
+                    </Text>
+                    <Text as="span">
+                      <Trans id="Legal Person">Legal Person</Trans>
+                    </Text>
+                  </Text>
+                </Stack>
               </Stack>
-            </Stack>
-          </Link>
+            </Link>
+          </Tooltip>
 
           <Link display="block" width="100%" onClick={handleStepClick(3)}>
             <Stack spacing={1} width="100%">
@@ -223,6 +233,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                         fill: getLabel(3)?.color
                       }
                     }}
+                    verticalAlign={{ base: 'baseline', lg: 'middle' }}
                   />
                 </Box>
                 <Text
@@ -230,67 +241,96 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                   fontSize={'sm'}
                   fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
                   textAlign="center">
-                  3 <Trans id="Contacts">Contacts</Trans>
+                  <Text as="span" display={{ base: 'block', md: 'inline' }} mr={2}>
+                    3
+                  </Text>
+                  <Text as="span">
+                    <Trans id="Contacts">Contacts</Trans>
+                  </Text>
                 </Text>
               </Stack>
             </Stack>
           </Link>
 
-          <Link display="block" width="100%" onClick={handleStepClick(4)}>
-            <Stack spacing={1} width="100%">
-              <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
-              <Stack
-                direction={{ base: 'column', md: 'row' }}
-                alignItems={['center']}
-                spacing={{ base: 0, md: 1 }}>
-                <Box>
-                  <Icon
-                    as={getLabel(4)?.icon}
-                    sx={{
-                      path: {
-                        fill: getLabel(4)?.color
-                      }
-                    }}
-                  />
-                </Box>
-                <Text
-                  color={textColor}
-                  fontSize={'sm'}
-                  fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
-                  textAlign="center">
-                  4 <Trans id="TRISA implementation">TRISA implementation</Trans>
-                </Text>
+          <Tooltip
+            label={<Trans id="TRISA Implemntation">TRISA Implemntation</Trans>}
+            gutter={0}
+            hasArrow>
+            <Link display="block" width="100%" onClick={handleStepClick(4)}>
+              <Stack spacing={1} width="100%">
+                <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
+                <Stack
+                  direction={{ base: 'column', md: 'row' }}
+                  alignItems={['center']}
+                  spacing={{ base: 0, md: 1 }}>
+                  <Box>
+                    <Icon
+                      as={getLabel(4)?.icon}
+                      sx={{
+                        path: {
+                          fill: getLabel(4)?.color
+                        }
+                      }}
+                      verticalAlign={{ base: 'baseline', lg: 'middle' }}
+                    />
+                  </Box>
+                  <Text
+                    noOfLines={2}
+                    color={textColor}
+                    fontSize={'sm'}
+                    fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
+                    textAlign="center">
+                    <Text as="span" display={{ base: 'block', md: 'inline' }} mr={2}>
+                      4
+                    </Text>
+                    <Text as="span">
+                      <Trans id="TRISA implementation">TRISA implementation</Trans>
+                    </Text>
+                  </Text>
+                </Stack>
               </Stack>
-            </Stack>
-          </Link>
+            </Link>
+          </Tooltip>
 
-          <Link display="block" width="100%" onClick={handleStepClick(5)}>
-            <Stack spacing={1} width="100%">
-              <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
-              <Stack
-                direction={{ base: 'column', md: 'row' }}
-                alignItems={['center']}
-                spacing={{ base: 0, md: 1 }}>
-                <Box>
-                  <Icon
-                    as={getLabel(5)?.icon}
-                    sx={{
-                      path: {
-                        fill: getLabel(5)?.color
-                      }
-                    }}
-                  />
-                </Box>
-                <Text
-                  color={textColor}
-                  fontSize={'sm'}
-                  fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
-                  textAlign="center">
-                  5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
-                </Text>
+          <Tooltip
+            label={<Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>}
+            gutter={0}
+            hasArrow>
+            <Link display="block" width="100%" onClick={handleStepClick(5)}>
+              <Stack spacing={1} width="100%">
+                <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
+                <Stack
+                  direction={{ base: 'column', md: 'row' }}
+                  alignItems={['center']}
+                  spacing={{ base: 0, md: 1 }}>
+                  <Box>
+                    <Icon
+                      as={getLabel(5)?.icon}
+                      sx={{
+                        path: {
+                          fill: getLabel(5)?.color
+                        }
+                      }}
+                      verticalAlign={{ base: 'baseline', lg: 'middle' }}
+                    />
+                  </Box>
+                  <Text
+                    noOfLines={2}
+                    color={textColor}
+                    fontSize={'sm'}
+                    fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
+                    textAlign="center">
+                    <Text as="span" display={{ base: 'block', md: 'inline' }} mr={2}>
+                      5
+                    </Text>
+                    <Text as="span" maxInlineSize={{ base: '1ch' }}>
+                      <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
+                    </Text>
+                  </Text>
+                </Stack>
               </Stack>
-            </Stack>
-          </Link>
+            </Link>
+          </Tooltip>
 
           <Link display="block" width="100%" onClick={handleStepClick(6)}>
             <Stack spacing={1} width="100%">
@@ -307,6 +347,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                         fill: getLabel(6)?.color
                       }
                     }}
+                    verticalAlign={{ base: 'baseline', lg: 'middle' }}
                   />
                 </Box>
                 <Text
@@ -314,12 +355,17 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                   fontSize={'sm'}
                   fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
                   textAlign="center">
-                  6 <Trans id="Review">Review</Trans>
+                  <Text as="span" display={{ base: 'block', md: 'inline' }} mr={2}>
+                    6
+                  </Text>
+                  <Text as="span">
+                    <Trans id="Review">Review</Trans>
+                  </Text>
                 </Text>
               </Stack>
             </Stack>
           </Link>
-        </Flex>
+        </SimpleGrid>
         <InvalidFormPrompt
           isOpen={isOpen}
           onClose={onClose}
