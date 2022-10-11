@@ -12,7 +12,7 @@ const initSentry = () => {
     if (!config.gitVersion) {
         throw new Error('Git revision is not set in environment variables');
     }
-    console.log(`AppVersion: ${config.appVersion} - GitRevision: ${config.gitVersion}`); // eslint-disable-line no-console
+    console.log(`AppVersion: ${config.appVersion || 'not set'} - GitRevision: ${config.gitVersion || 'not set'}`); // eslint-disable-line no-console
 
     if (process.env.REACT_APP_SENTRY_DSN) {
         let tracingOrigins = defaultTracingOrigins;
