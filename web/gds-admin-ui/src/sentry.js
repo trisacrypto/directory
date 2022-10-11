@@ -5,7 +5,14 @@ import config from './config';
 const defaultTracingOrigins = ['localhost', /^\//];
 
 const initSentry = () => {
-    console.log(config.appVersion)
+   // ensure environment variables app version and git revision are set
+    if (!config.appVersion()) {
+        throw new Error('App version is not set is not set')
+    }
+    if (!config.gitVersion()) {
+        throw new Error('Git revision is not set')
+    }
+    console.log(`AppVersion: ${config.appVersion()} - GitRevision: ${config.gitVersion()}`); // eslint-disable-line no-console
 
     if (process.env.REACT_APP_SENTRY_DSN) {
         let tracingOrigins = defaultTracingOrigins;

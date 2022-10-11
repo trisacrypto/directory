@@ -83,8 +83,8 @@
     "extract": "lingui extract",
     "compile": "lingui compile",
     "extract-c": "lingui extract --clean",
-    "dash": "node write-save-po-file.js",
-    "dash-compile": "node write-save-po-file.js && lingui compile",
+    "dash": "node scripts/write-save-po-file.js",
+    "dash-compile": "node scripts/write-save-po-file.js && lingui compile",
     "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "lint-staged": {
