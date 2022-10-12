@@ -7,14 +7,13 @@ import {
   Divider,
   VStack,
   Stack,
-  Heading,
   Link,
   Icon,
   Text,
   Collapse,
   List
 } from '@chakra-ui/react';
-import trisaLogo from '../../assets/trisa.svg';
+import trisaLogo from 'assets/TRISA-GDS-white.png';
 import NavItem, { StyledNavItem } from './NavItem';
 import MenuItems from '../../utils/menu';
 import { MdContactSupport } from 'react-icons/md';
@@ -22,6 +21,7 @@ import { IoLogoSlack } from 'react-icons/io';
 import { Fragment, useState } from 'react';
 import { Trans } from '@lingui/react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -40,12 +40,11 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       h="full"
       {...rest}>
       <Flex h="20" alignItems="center" mx="8" my={2} justifyContent="space-between">
-        <Stack width="100%" direction={['row']}>
-          <LazyLoadImage src={trisaLogo} alt="GDS UI" />
-          <Heading size="sm" color="#FFFFFF" lineHeight={1.35}>
-            <Trans id="Global Directory Service">Global Directory Service</Trans>
-          </Heading>
-        </Stack>
+        <ChakraRouterLink to="/dashboard/overview">
+          <Stack width="100%" direction={['row']} height="200px">
+            <LazyLoadImage src={trisaLogo} alt="GDS UI" />
+          </Stack>
+        </ChakraRouterLink>
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
       <VStack alignItems="flex-start" justifyContent="center" spacing={0}>

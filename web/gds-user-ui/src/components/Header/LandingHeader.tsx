@@ -12,7 +12,8 @@ import {
   DrawerContent,
   useDisclosure,
   DrawerCloseButton,
-  Button
+  Button,
+  Link
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -37,7 +38,6 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
     <Flex
       width="100%"
       position={'relative'}
-      p={{ base: 4, md: 8 }}
       bg={'transparent'}
       boxShadow="md"
       color={colors.system.blue}
@@ -45,7 +45,13 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
       <Container maxW={'5xl'}>
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
-            <Logo w={{ base: '150px', md: '200px' }} color={['colors.system.blue']} />
+            <Box>
+              <NavLink to={'/'}>
+                <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
+                  <Logo w={{ base: '50px', md: '120px' }} color={['colors.system.blue']} />
+                </Link>
+              </NavLink>
+            </Box>
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>
