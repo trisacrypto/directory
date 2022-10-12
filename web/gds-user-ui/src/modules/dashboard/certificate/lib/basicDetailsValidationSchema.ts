@@ -26,8 +26,8 @@ export const basicDetailsValidationSchema = yup.object().shape({
     })
     .min(
       minDate,
-      t`Date of incorporation / establishment must be later than ` +
-        dayjs(minDate).format(DATE_FORMAT) +
+      t`Date of incorporation / establishment must be later than` +
+        ` ${dayjs(minDate).format(DATE_FORMAT)}` +
         '.'
     )
     .max(new Date(), t`Date of incorporation / establishment must be earlier than current date.`)
