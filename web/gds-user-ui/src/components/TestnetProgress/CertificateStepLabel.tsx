@@ -156,7 +156,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
         fontFamily={'Open Sans'}
         width="100%">
         <Box display={'flex'} justifyContent={'space-between'}>
-          <Heading fontSize={['md', '2xl']}>
+          <Heading fontSize={['md', '2xl']} textTransform="capitalize">
             <Trans id="Certificate Progress">Certificate Progress</Trans>{' '}
           </Heading>
         </Box>
