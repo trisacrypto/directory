@@ -2,6 +2,7 @@ package bff
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -34,12 +35,31 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		return
 	}
 
-	// Add the collaborator to the organization
-	if err = org.AddCollaborator(collaborator); err != nil {
-		log.Error().Err(err).Msg("could not add new collaborator to organization")
+	// Make sure the collaborator is valid for storage
+	if err = collaborator.Validate(); err != nil {
+		log.Warn().Err(err).Msg("invalid collaborator in request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
+
+	// Don't overwrite an existing collaborator
+	id := collaborator.Key()
+	if _, ok := org.Collaborators[id]; ok {
+		log.Warn().Str("collabID", id).Msg("collaborator already exists")
+		c.JSON(http.StatusConflict, api.ErrorResponse("collaborator already exists"))
+		return
+	}
+
+	// Make sure the record has a created timestamp
+	if collaborator.CreatedAt == "" {
+		collaborator.CreatedAt = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+
+	// Add the collaborator to the organization
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*models.Collaborator)
+	}
+	org.Collaborators[id] = collaborator
 
 	// TODO: Send invite/verification email to the collaborator
 
@@ -69,6 +89,14 @@ func (s *Server) ReplaceCollaborator(c *gin.Context) {
 		return
 	}
 
+	// Get the collabID from the URL
+	collabID := c.Param("collabID")
+	if collabID == "" {
+		log.Warn().Msg("missing ID in replace collaborator request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("ID is required in order to replace a collaborator"))
+		return
+	}
+
 	// Unmarshal the collaborator from the PUT request
 	collaborator = &models.Collaborator{}
 	if err = c.ShouldBind(collaborator); err != nil {
@@ -77,17 +105,37 @@ func (s *Server) ReplaceCollaborator(c *gin.Context) {
 		return
 	}
 
-	// Replace the collaborator on the organization
-	if err = org.ReplaceCollaborator(collaborator); err != nil {
-		log.Error().Err(err).Msg("could not replace collaborator on organization")
+	// Make sure a 404 is returned if the collaborator does not exist
+	if _, ok := org.Collaborators[collabID]; !ok {
+		log.Warn().Str("collabID", collabID).Msg("collaborator does not exist")
+		c.JSON(http.StatusNotFound, api.ErrorResponse("collaborator does not exist"))
+		return
+	}
+
+	// Make sure the collaborator is valid for storage
+	// Note: The user will not be able to update the email address or ID
+	if err = collaborator.Validate(); err != nil {
+		log.Warn().Err(err).Msg("invalid collaborator")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
+	// Make sure the collaborator record has updated timestamps
+	collaborator.ModifiedAt = time.Now().UTC().Format(time.RFC3339Nano)
+	if collaborator.CreatedAt == "" {
+		collaborator.CreatedAt = collaborator.ModifiedAt
+	}
+
+	// Replace the collaborator on the organization
+	if org.Collaborators == nil {
+		org.Collaborators = make(map[string]*models.Collaborator)
+	}
+	org.Collaborators[collabID] = collaborator
+
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
-		c.JSON(http.StatusInternalServerError, "could not replace collaborator")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not replace collaborator"))
 		return
 	}
 
@@ -111,29 +159,28 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		return
 	}
 
-	// Unmarshal the collaborator from the DELETE request
-	collaborator = &models.Collaborator{}
-	if err = c.ShouldBind(collaborator); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+	// Get the collabID from the URL
+	collabID := c.Param("collabID")
+	if collabID == "" {
+		log.Warn().Msg("missing ID in delete collaborator request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("ID is required in order to delete a collaborator"))
 		return
 	}
 
-	// Make sure we can delete the collaborator by key
-	key := collaborator.Key()
-	if key == "" {
-		log.Warn().Err(err).Msg("missing key on collaborator")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("invalid collaborator in request"))
+	// Make sure a 404 is returned if the collaborator does not exist
+	if _, ok := org.Collaborators[collabID]; !ok {
+		log.Warn().Str("collabID", collabID).Msg("collaborator does not exist")
+		c.JSON(http.StatusNotFound, api.ErrorResponse("collaborator not found"))
 		return
 	}
 
 	// Delete the collaborator from the organization
-	delete(org.Collaborators, key)
+	delete(org.Collaborators, collabID)
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not save organization without collaborator")
-		c.JSON(http.StatusInternalServerError, "could not delete collaborator")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete collaborator"))
 		return
 	}
 

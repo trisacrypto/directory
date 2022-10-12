@@ -34,13 +34,15 @@ message Organization {
 // A Collaborator is a user that is associated with an organization. Collaborators are
 // uniquely identified by their email address and the Organization document they exist
 // on. Therefore, it is possible for a user to exist as a collaborator on multiple
+// organizations.
 message Collaborator {
-    string email = 1;
+    string id = 1;
+    string email = 2;
 
     // Metadata as RFC3339Nano Timestamps
-    string created_at = 2;
-    string modified_at = 3;
-    string verified_at = 4;
+    string created_at = 3;
+    string modified_at = 4;
+    string verified_at = 5;
 }
 
 // FormState contains the current state of an organization's registration form to

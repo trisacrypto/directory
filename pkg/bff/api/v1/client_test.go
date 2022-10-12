@@ -270,6 +270,7 @@ func TestAddCollaborator(t *testing.T) {
 
 func TestReplaceCollaborator(t *testing.T) {
 	fixture := &models.Collaborator{
+		Id:        "c160f8cc69a4f0bf2b0362752353d060",
 		Email:     "alice@example.com",
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
 	}
@@ -277,7 +278,7 @@ func TestReplaceCollaborator(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPut, r.Method)
-		require.Equal(t, "/v1/collaborators", r.URL.Path)
+		require.Equal(t, "/v1/collaborators/c160f8cc69a4f0bf2b0362752353d060", r.URL.Path)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -289,8 +290,14 @@ func TestReplaceCollaborator(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
+	// Should return an error if no key is present
+	_, err = client.ReplaceCollaborator(context.TODO(), &models.Collaborator{})
+	require.EqualError(t, err, api.ErrIDRequired.Error())
+
+	// Valid request should succeed and return the fixture
 	request := &models.Collaborator{
-		Email: "alice@example.com",
+		Id:    fixture.Id,
+		Email: fixture.Email,
 	}
 	collab, err := client.ReplaceCollaborator(context.TODO(), request)
 	require.NoError(t, err)
@@ -301,7 +308,7 @@ func TestDeleteCollaborator(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodDelete, r.Method)
-		require.Equal(t, "/v1/collaborators", r.URL.Path)
+		require.Equal(t, "/v1/collaborators/c160f8cc69a4f0bf2b0362752353d060", r.URL.Path)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
@@ -310,11 +317,12 @@ func TestDeleteCollaborator(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	request := &models.Collaborator{
-		Email: "alice@example.com",
-	}
-	err = client.DeleteCollaborator(context.TODO(), request)
-	require.NoError(t, err)
+	// Should return an error if no ID is present
+	err = client.DeleteCollaborator(context.TODO(), "")
+	require.EqualError(t, err, api.ErrIDRequired.Error())
+
+	// Valid request should succeed
+	require.NoError(t, client.DeleteCollaborator(context.TODO(), "c160f8cc69a4f0bf2b0362752353d060"))
 }
 
 func TestLoadRegistrationForm(t *testing.T) {
