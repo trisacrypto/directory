@@ -7,7 +7,9 @@ const _i18n = setupI18n();
 
 export const legalPersonValidationSchemam = yup.object().shape({
   entity: yup.object().shape({
-    country_of_registration: yup.string().required(_i18n._(t`Country of registration is required`)),
+    country_of_registration: yup
+      .string()
+      .required(_i18n._(t`Country of registration is required.`)),
     name: yup.object().shape({
       name_identifiers: yup.array(
         yup.object().shape({
@@ -15,14 +17,14 @@ export const legalPersonValidationSchemam = yup.object().shape({
             .string()
             .test(
               'notEmptyIfIdentifierTypeExist',
-              _i18n._(t`Legal name is required`),
+              _i18n._(t`Legal name is required.`),
               (value, ctx): any => {
                 return !(ctx.parent.legal_person_name_identifier_type && !value);
               }
             ),
           legal_person_name_identifier_type: yup.string().when('legal_person_name', {
             is: (value: string) => !!value,
-            then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
+            then: yup.string().required(_i18n._(t`Name Identifier Type is required.`))
           })
         })
       ),
@@ -32,14 +34,14 @@ export const legalPersonValidationSchemam = yup.object().shape({
             .string()
             .test(
               'notEmptyIfIdentifierTypeExist',
-              _i18n._(t`Legal name is required`),
+              _i18n._(t`Legal name is required.`),
               (value, ctx): any => {
                 return !(ctx.parent.legal_person_name_identifier_type && !value);
               }
             ),
           legal_person_name_identifier_type: yup.string().when('legal_person_name', {
             is: (value: string) => !!value,
-            then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
+            then: yup.string().required(_i18n._(t`Name Identifier Type is required.`))
           })
         })
       ),
@@ -56,7 +58,7 @@ export const legalPersonValidationSchemam = yup.object().shape({
             ),
           legal_person_name_identifier_type: yup.string().when('legal_person_name', {
             is: (value: string) => !!value,
-            then: yup.string().required(_i18n._(t`Name Identifier Type is required`))
+            then: yup.string().required(_i18n._(t`Name Identifier Type is required.`))
           })
         })
       )
@@ -91,7 +93,7 @@ export const legalPersonValidationSchemam = yup.object().shape({
         .string()
         .test(
           'registrationAuthority',
-          _i18n._(t`Registration Authority cannot be left empty`),
+          _i18n._(t`Registration Authority cannot be left empty.`),
           (value, ctx) => {
             if (
               ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&

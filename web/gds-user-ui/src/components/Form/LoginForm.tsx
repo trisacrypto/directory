@@ -14,8 +14,11 @@ interface IFormInputs {
 }
 
 const validationSchema = yup.object().shape({
-  username: yup.string().email('Email Address is not valid').required('Email Address is required'),
-  password: yup.string().required('Password is required')
+  username: yup
+    .string()
+    .email('Email Address is not valid.')
+    .required('Email Address is required.'),
+  password: yup.string().required('Password is required.')
 });
 
 const defaultValues = {

@@ -9,7 +9,7 @@ export const contactsValidationSchema = yup.object().shape({
   contacts: yup.object().shape({
     administrative: yup.object().shape({
       name: yup.string(),
-      email: yup.string().email(_i18n._(t`Email is not valid`)),
+      email: yup.string().email(_i18n._(t`Email is not valid.`)),
       phone: yup.string()
     }),
     technical: yup
@@ -18,21 +18,21 @@ export const contactsValidationSchema = yup.object().shape({
         name: yup.string().required(),
         email: yup
           .string()
-          .email(_i18n._(t`Email is not valid`))
-          .required(_i18n._(t`Email is required`)),
+          .email(_i18n._(t`Email is not valid.`))
+          .required(_i18n._(t`Email is required.`)),
         phone: yup.string()
       })
       .required(),
     billing: yup.object().shape({
       name: yup.string(),
-      email: yup.string().email(_i18n._(t`Email is not valid`)),
+      email: yup.string().email(_i18n._(t`Email is not valid.`)),
       phone: yup.string()
     }),
     legal: yup
       .object()
       .shape({
         name: yup.string().required(),
-        email: yup.string().email('Email is not valid').required('Email is required'),
+        email: yup.string().email('Email is not valid.').required('Email is required.'),
         phone: yup
           .string()
           .required(
