@@ -2,9 +2,12 @@ package bff_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
@@ -79,7 +82,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	s.requireError(err, http.StatusConflict, "collaborator already exists", "expected error when collaborator already exists")
 }
 
-func (s *bffTestSuite) TestReplaceCollaborator() {
+func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	require := s.Require()
 	defer s.ResetDB()
 
@@ -89,32 +92,27 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 		Permissions: []string{"read:nothing"},
 	}
 
-	// Client method requires an ID to make the request
-	request := &models.Collaborator{
-		Id: "invalid",
-	}
-
 	// Endpoint must be authenticated
 	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
-	_, err := s.client.ReplaceCollaborator(context.TODO(), request)
+	_, err := s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the update:collaborator permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
-	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
 	claims.Permissions = []string{"update:collaborators"}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
-	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic but should
 	// return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
-	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
@@ -126,40 +124,50 @@ func (s *bffTestSuite) TestReplaceCollaborator() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
 
 	// Should return an error if the collaborator does not exist
-	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusNotFound, "collaborator does not exist", "expected error when collaborator does not exist")
 
 	// Add a new collaborator to the organization
-	request = &models.Collaborator{
+	request := &models.Collaborator{
 		Email: "alice@example.com",
 	}
 	collab, err := s.client.AddCollaborator(context.TODO(), request)
 	require.NoError(err, "could not add collaborator to organization")
 
-	// Should return an error if the collaborator email is missing from the request
-	request = &models.Collaborator{
-		Id: collab.Id,
+	// Should return an error if the collaborator is not verified
+	params := &api.UpdateRolesParams{
+		Roles: []string{"notarole"},
 	}
-	_, err = s.client.ReplaceCollaborator(context.TODO(), request)
-	s.requireError(err, http.StatusBadRequest, "collaborator is missing email address", "expected error when collaborator email is missing")
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), collab.Id, params)
+	s.requireError(err, http.StatusBadRequest, "cannot update roles for unverified collaborator", "expected error when collaborator is not verified")
 
-	// Edit collaborator data
+	// Create a verified collaborator in the database
 	collab.VerifiedAt = time.Now().Format(time.RFC3339Nano)
-	modified, err := s.client.ReplaceCollaborator(context.TODO(), collab)
-	require.NoError(err, "could not replace collaborator in organization")
-	require.Equal(collab.Email, modified.Email, "expected email to match original email")
-	require.Equal(collab.CreatedAt, modified.CreatedAt, "expected created at timestamp to match original timestamp")
-	require.Equal(collab.VerifiedAt, modified.VerifiedAt, "expected verified at timestamp to match original timestamp")
+	collab.UserId = authtest.UserID
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	org.Collaborators[collab.Key()] = collab
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// Should return an error if there is an invalid role
+	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), collab.Id, params)
+	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("could not find role %q in 3 available roles", params.Roles[0]), "expected error when role is invalid")
+
+	// Successfully updating the roles of a collaborator
+	params.Roles = []string{"Organization Collaborator", "Organization Leader"}
+	modified, err := s.client.UpdateCollaboratorRoles(context.TODO(), collab.Id, params)
+	require.NoError(err, "could not update collaborator roles")
+	require.Equal(collab.Id, modified.Id, "expected collaborator ID to match")
 
 	// Updated collaborator should be in the database
 	org, err = s.DB().RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
-	retrieved, ok := org.Collaborators[collab.Key()]
+	_, ok := org.Collaborators[collab.Key()]
 	require.True(ok, "expected collaborator to be in the organization")
-	require.Equal(collab.Email, retrieved.Email, "expected email to match original email")
-	require.Equal(collab.CreatedAt, retrieved.CreatedAt, "expected created at timestamp to match original timestamp")
-	require.Equal(collab.VerifiedAt, retrieved.VerifiedAt, "expected verified at timestamp to match original timestamp")
+
+	// TODO: It's difficult to verify correctness without more deeply mocking the Auth0
+	// role management.
 }
 
 func (s *bffTestSuite) TestDeleteCollaborator() {
@@ -214,12 +222,34 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	collab, err = s.client.AddCollaborator(context.TODO(), collab)
 	require.NoError(err, "could not add collaborator to organization")
 
-	// Delete collaborator from the organization
-	err = s.client.DeleteCollaborator(context.TODO(), collab.Id)
-	require.NoError(err, "could not delete collaborator from organization")
-
-	// Deleted collaborator should not be in the database
+	// If the collaborator is not verified, then the record is just deleted from the
+	// organization
+	require.NoError(s.client.DeleteCollaborator(context.TODO(), collab.Id))
 	org, err = s.DB().RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
+
+	// Add the collaborator again
+	collab, err = s.client.AddCollaborator(context.TODO(), collab)
+	require.NoError(err, "could not add collaborator to organization")
+
+	// Configure a verified collaborator in the database
+	collab.VerifiedAt = time.Now().Format(time.RFC3339Nano)
+	collab.UserId = authtest.UserID
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	org.Collaborators[collab.Key()] = collab
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// If a verified collaborator is deleted, then the record should still be deleted
+	// from the organization
+	require.NoError(s.client.DeleteCollaborator(context.TODO(), collab.Id))
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
+
+	// The user app metadata should also be updated
+	appdata := &auth.AppMetadata{}
+	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
+	require.Empty(appdata.OrgID, "expected orgid in app metadata to be empty")
 }

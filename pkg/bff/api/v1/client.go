@@ -170,19 +170,19 @@ func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborato
 	return collaborator, nil
 }
 
-// Replace a collaborator in an organization.
-func (s *APIv1) ReplaceCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
+// Update a collaborator's roles in an organization.
+func (s *APIv1) UpdateCollaboratorRoles(ctx context.Context, id string, request *UpdateRolesParams) (collaborator *models.Collaborator, err error) {
 	// ID is required for the endpoint
-	if request.Id == "" {
+	if id == "" {
 		return nil, ErrIDRequired
 	}
 
 	// Construct the path from the request
-	path := fmt.Sprintf("/v1/collaborators/%s", request.Id)
+	path := fmt.Sprintf("/v1/collaborators/%s", id)
 
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPut, path, request, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, request, nil); err != nil {
 		return nil, err
 	}
 

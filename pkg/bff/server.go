@@ -349,7 +349,7 @@ func (s *Server) setupRoutes() (err error) {
 		collaborators := v1.Group("/collaborators")
 		{
 			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
-			collaborators.PUT("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.ReplaceCollaborator)
+			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)
 		}
 		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)

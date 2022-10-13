@@ -27,7 +27,7 @@ func TestValidateCollaborator(t *testing.T) {
 	// No error should be returned when all fields are valid
 	collab = &models.Collaborator{
 		Email: "alice@example.com",
-		Id:    "c160f8cc69a4f0bf2b0362752353d060",
+		Id:    "wWD4zGmk8L8rA2J1I1PQYA",
 	}
 	require.NoError(t, collab.Validate(), "expected no error when all fields are valid")
 }

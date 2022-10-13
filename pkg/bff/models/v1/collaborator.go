@@ -2,7 +2,7 @@ package models
 
 import (
 	"crypto/md5"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 )
 
@@ -13,18 +13,25 @@ func (collab *Collaborator) Key() string {
 	}
 
 	hash := md5.Sum([]byte(collab.Email))
-	return hex.EncodeToString(hash[:])
+	return base64.RawStdEncoding.EncodeToString(hash[:])
 }
 
 // Validate a collaborator record, ensuring that all the required fields exist for
 // storage and generating missing fields such as the ID.
 func (collab *Collaborator) Validate() error {
-	switch {
-	case collab.Email == "":
+	// Collaborator must be indexable by email address
+	if collab.Email == "" {
 		return errors.New("collaborator is missing email address")
-	case collab.Id == "":
-		collab.Id = collab.Key()
-	case collab.Id != collab.Key():
+	}
+
+	// Collaborator must have an ID
+	id := collab.Key()
+	if collab.Id == "" {
+		collab.Id = id
+	}
+
+	// Make sure the ID matches the email address
+	if collab.Id != id {
 		return errors.New("collaborator has invalid id")
 	}
 
