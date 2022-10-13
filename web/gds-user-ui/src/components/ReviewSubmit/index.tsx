@@ -12,8 +12,7 @@ import {
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
-import { t } from '@lingui/macro';
-import { Trans } from '@lingui/react';
+import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +27,9 @@ import {
   trisaImplementationTestnetFieldName
 } from 'modules/dashboard/certificate/lib';
 import WarningBox from 'components/WarningBox';
+import { setHasReachSubmitStep } from 'application/store/stepper.slice';
+import { useAppDispatch } from 'application/store';
+import { StepsIndexes } from 'constants/steps';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -48,9 +50,10 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const isSent = isTestNetSent || isMainNetSent;
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
-  const { jumpToLastStep } = useCertificateStepper();
+  const { jumpToLastStep, jumpToStep } = useCertificateStepper();
   const navigate = useNavigate();
   const { getValues } = useFormContext();
+  const dispatch = useAppDispatch();
 
   const isTestnetNetworkFieldsIncomplete =
     getValues(trisaImplementationTestnetFieldName).filter(Boolean).length !== 2;
@@ -75,6 +78,11 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const handleJumpToLastStep = () => {
     jumpToLastStep();
     navigate('/dashboard/certificate/registration');
+  };
+
+  const handleJumpToTrisaImplementationStep = () => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
+    jumpToStep(StepsIndexes.TRISA_IMPLEMENTATION);
   };
 
   return (
@@ -156,9 +164,15 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 {isTestnetNetworkFieldsIncomplete ? (
                   <WarningBox>
                     <Text>
-                      <Trans id="If you would like to register for TestNet, please provide a TestNet Endpoint and Common Name.">
-                        If you would like to register for TestNet, please provide a TestNet Endpoint
-                        and Common Name.
+                      <Trans>
+                        If you would like to register for TestNet, please provide a{' '}
+                        <Link
+                          color="#1F4CED"
+                          fontWeight={500}
+                          onClick={handleJumpToTrisaImplementationStep}>
+                          TestNet Endpoint and Common Name
+                        </Link>
+                        .
                       </Trans>
                     </Text>
                     <Text>
@@ -238,9 +252,15 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 {isMainnetNetworkIncomplete ? (
                   <WarningBox>
                     <Text>
-                      <Trans id="If you would like to register for MainNet, please provide a MainNet Endpoint and Common Name.">
-                        If you would like to register for MainNet, please provide a MainNet Endpoint
-                        and Common Name.
+                      <Trans>
+                        If you would like to register for MainNet, please provide a{' '}
+                        <Link
+                          color="#1F4CED"
+                          fontWeight={500}
+                          onClick={handleJumpToTrisaImplementationStep}>
+                          MainNet Endpoint and Common Name
+                        </Link>
+                        .
                       </Trans>
                     </Text>
                     <Text>
