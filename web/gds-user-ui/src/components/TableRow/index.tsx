@@ -8,13 +8,11 @@ type TableRowProps<T> = {
 
 function TableRow<T>({ row }: TableRowProps<T>) {
   return (
-    <>
-      <RowItem>
-        {Object.entries(row).map(([k, v]) => (
-          <Td key={k}>{v}</Td>
-        ))}
-      </RowItem>
-    </>
+    <RowItem>
+      {Object.entries(row).map(([k, v]) => (
+        <Td key={k}>{v}</Td>
+      ))}
+    </RowItem>
   );
 }
 

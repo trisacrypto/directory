@@ -1,11 +1,12 @@
 import { FiCompass } from 'react-icons/fi';
-import { FaRegLightbulb } from 'react-icons/fa';
+import { FaRegLightbulb, FaRegMoneyBillAlt } from 'react-icons/fa';
 import { BiCertification } from 'react-icons/bi';
 import { IconType } from 'react-icons';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { ComponentWithAs, IconProps } from '@chakra-ui/react';
 import { BsFillInfoCircleFill } from 'react-icons/bs';
 import { t } from '@lingui/macro';
+// import CertificateManagementIcon from 'assets/certificate-management.svg';
 
 type Menu = {
   title: string;
@@ -27,8 +28,14 @@ const MENU: Menu[] = [
     title: t`Certificate Management`,
     icon: BiCertification,
     activated: true,
-    path: '/dashboard/certificate-management',
+    // path: '/dashboard/certificate-management',
     children: [
+      {
+        title: t`Certificate Management`,
+        icon: FaRegMoneyBillAlt,
+        path: '/dashboard/certificate-management',
+        activated: true
+      },
       {
         title: t`Certificate Registration`,
         icon: CheckCircleIcon,
