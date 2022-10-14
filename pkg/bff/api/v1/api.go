@@ -22,7 +22,8 @@ type BFFClient interface {
 
 	// Authenticated Endpoints
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
-	ReplaceCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
+	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
+	DeleteCollaborator(_ context.Context, id string) error
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
@@ -63,6 +64,11 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// UpdateRolesParams contains a list of new roles for a collaborator.
+type UpdateRolesParams struct {
+	Roles []string `json:"roles"`
+}
 
 // LookupParams is converted into a GDS LookupRequest.
 type LookupParams struct {
