@@ -5,7 +5,6 @@ import {
   Flex,
   FlexProps,
   useColorModeValue,
-  Link,
   Container,
   Stack,
   Drawer,
@@ -46,13 +45,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
       <Container maxW={'5xl'}>
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
-            <Box>
-              <NavLink to={'/'}>
-                <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                  <Logo w={{ base: '50px', md: '100px' }} color={['colors.system.blue']} />
-                </Link>
-              </NavLink>
-            </Box>
+            <Logo w={{ base: '150px', md: '200px' }} color={['colors.system.blue']} />
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>
@@ -68,7 +61,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>
-              <MenuItem to="/#about">
+              <MenuItem to="https://trisa.io" data-testid="about">
                 <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
               <MenuItem data-testid="documentation" to={`${TRISA_BASE_URL}/${locale}`}>
@@ -105,7 +98,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                   }}
                 />
                 <DrawerBody mt="50px" px={5}>
-                  <MenuItem to="/#about" color="white" pb={0}>
+                  <MenuItem to="https://trisa.io" color="white" pb={0}>
                     <Trans id="About TRISA">About TRISA</Trans>
                   </MenuItem>
                   <MenuItem to={`${TRISA_BASE_URL}/${locale}`} color="white">
