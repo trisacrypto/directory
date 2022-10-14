@@ -96,11 +96,6 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 
 	// Get the collabID from the URL
 	collabID := c.Param("collabID")
-	if collabID == "" {
-		log.Warn().Msg("missing ID in replace collaborator request")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("ID is required in order to replace a collaborator"))
-		return
-	}
 
 	// Unmarshal the roles from the POST request
 	params := &api.UpdateRolesParams{}
@@ -202,11 +197,6 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 
 	// Get the collabID from the URL
 	collabID := c.Param("collabID")
-	if collabID == "" {
-		log.Warn().Msg("missing ID in delete collaborator request")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("ID is required in order to delete a collaborator"))
-		return
-	}
 
 	// Make sure a 404 is returned if the collaborator does not exist
 	var ok bool
