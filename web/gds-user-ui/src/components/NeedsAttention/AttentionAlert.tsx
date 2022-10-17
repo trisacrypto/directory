@@ -32,7 +32,7 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
       case AttentionAction.START_REGISTRATION:
         return (
           <>
-            <Alert status={severity.toLowerCase()} borderRadius={'10px'}>
+            <Alert bg="#D8EAF6" status={severity.toLowerCase()} borderRadius={'10px'}>
               <AlertIcon />
               <HStack justifyContent={'space-between'}>
                 <Text> {message}</Text>
@@ -43,7 +43,6 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
                   px={8}
                   as={'a'}
                   borderRadius={0}
-                  background="transparent"
                   color="#fff"
                   cursor="pointer"
                   _active={{ background: '#000' }}
@@ -51,7 +50,7 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
                   Start
                 </Button>
               </HStack>
-            </Alert>{' '}
+            </Alert>
           </>
         );
 
@@ -77,7 +76,7 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
                   Complete
                 </Button>
               </HStack>
-            </Alert>{' '}
+            </Alert>
           </>
         );
       case (AttentionAction.SUBMIT_TESTNET, AttentionAction.SUBMIT_MAINNET):
@@ -104,13 +103,13 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
                   </Button>
                 </Box>
               </HStack>
-            </Alert>{' '}
+            </Alert>
           </>
         );
 
       default:
         return (
-          <Alert status={AttentionSeverity.INFO} borderRadius={'10px'}>
+          <Alert bg="#D8EAF6" status={AttentionSeverity.INFO} borderRadius={'10px'}>
             <AlertIcon />
             {message}
           </Alert>
