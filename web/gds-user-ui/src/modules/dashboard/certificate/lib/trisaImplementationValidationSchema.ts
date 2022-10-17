@@ -19,7 +19,7 @@ export const trisaImplementationValidationSchema = yup.object().shape({
       .string()
       .notRequired()
       .matches(trisaEndpointPattern, {
-        message: _i18n._(t`TRISA endpoint is not valid`)
+        message: _i18n._(t`TRISA endpoint is not valid.`)
       }),
     common_name: yup
       .string()
@@ -36,7 +36,7 @@ export const trisaImplementationValidationSchema = yup.object().shape({
       .notRequired()
       .test(
         'uniqueMainetEndpoint',
-        _i18n._(t`TestNet and MainNet endpoints should not be the same`),
+        _i18n._(t`TestNet and MainNet endpoints should not be the same.`),
         (value, ctx: any) => {
           if (!value) {
             return true;
@@ -45,7 +45,7 @@ export const trisaImplementationValidationSchema = yup.object().shape({
         }
       )
       .matches(trisaEndpointPattern, {
-        message: _i18n._(t`TRISA endpoint is not valid`)
+        message: _i18n._(t`TRISA endpoint is not valid.`)
       }),
     common_name: yup
       .string()
@@ -63,12 +63,12 @@ export const trisaImplementationValidationSchema = yup.object().shape({
     // should show error when on of mainnet fields is empty
     .when(trisaImplementationMainnetFieldName, {
       is: (...values: string[]) => (values[0] && !values[1]) || (!values[0] && values[1]),
-      then: yup.string().required('Mainnet: Common Name or Endpoint is empty')
+      then: yup.string().required('Mainnet: Common Name or Endpoint is empty.')
     })
 
     // should show error when on of mainnet fields is empty
     .when(trisaImplementationTestnetFieldName, {
       is: (...values: string[]) => (values[0] && !values[1]) || (!values[0] && values[1]),
-      then: yup.string().required('Testnet: Common Name or Endpoint is empty')
+      then: yup.string().required('Testnet: Common Name or Endpoint is empty.')
     })
 });

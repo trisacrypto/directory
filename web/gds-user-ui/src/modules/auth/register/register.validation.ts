@@ -12,8 +12,8 @@ const passwordRegex =
 export const validationSchema = yup.object().shape({
   username: yup
     .string()
-    .email(t`Email is not valid`)
-    .required(t`Email is required`),
+    .email(t`Email is not valid.`)
+    .required(t`Email is required.`),
   password: yup
     .string()
     .matches(
@@ -28,5 +28,5 @@ export const validationSchema = yup.object().shape({
   * special characters (e.g. !@#$%^&*)
   `
     )
-    .required('Password is required')
+    .required('Password is required.')
 });

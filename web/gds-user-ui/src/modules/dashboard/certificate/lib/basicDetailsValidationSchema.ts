@@ -37,7 +37,7 @@ export const basicDetailsValidationSchema = yup.object().shape({
   organization_name: yup
     .string()
     .trim()
-    .required(_i18n._(t`Organization name is required`)),
+    .required(_i18n._(t`Organization name is required.`)),
   business_category: yup.string().nullable(true),
   vasp_categories: yup.array().of(yup.string()).nullable(true)
 });
