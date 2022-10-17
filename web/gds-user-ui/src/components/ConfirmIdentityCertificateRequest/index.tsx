@@ -1,5 +1,6 @@
 import {
   Button,
+  ButtonProps,
   Checkbox,
   Modal,
   ModalBody,
@@ -12,17 +13,17 @@ import {
   useDisclosure
 } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
+import { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 
-function ConfirmIdentityCertificate() {
+export type ConfirmIdentityCertificateProps = { children: ReactNode } & ButtonProps;
+
+function ConfirmIdentityCertificate({ children, ...rest }: ConfirmIdentityCertificateProps) {
   const { onClose, onOpen, isOpen } = useDisclosure();
   const { register } = useForm();
 
   return (
     <>
-      <Button bg="#55ACD8" color="#fff" onClick={onOpen}>
-        <Trans id="Request New Identity Certificate">Request New Identity Certificate</Trans>
-      </Button>
       <form>
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
@@ -67,6 +68,9 @@ function ConfirmIdentityCertificate() {
           </ModalContent>
         </Modal>
       </form>
+      <Button bg="#55ACD8" color="#fff" onClick={onOpen} {...rest}>
+        {children}
+      </Button>
     </>
   );
 }

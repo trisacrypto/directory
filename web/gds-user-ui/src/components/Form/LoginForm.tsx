@@ -7,6 +7,7 @@ import { Button, chakra, Stack, Text } from '@chakra-ui/react';
 import ChakraRouterLink from 'components/ChakraRouterLink';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import React from 'react';
 
 interface IFormInputs {
   username: string;
@@ -32,6 +33,9 @@ type LoginFormProps = {
 };
 
 function LoginForm(props: LoginFormProps) {
+  const [show, setShow] = React.useState(false);
+  const handleClick = () => setShow(!show);
+
   const {
     register,
     handleSubmit,
@@ -56,12 +60,19 @@ function LoginForm(props: LoginFormProps) {
           controlId="password"
           size="lg"
           placeholder={t`Password`}
-          type="password"
           isInvalid={getValueByPathname(errors, 'password')}
           formHelperText={getValueByPathname(errors, 'password')?.message}
+          hasBtn
+          handleFn={handleClick}
+          setBtnName={show ? 'Hide' : 'Show'}
+          type={show ? 'text' : 'password'}
           {...register('password')}
         />
-        <Stack direction={['column', 'row']} py="5" justifyContent="space-between">
+        <Stack
+          direction={['column', 'row']}
+          py="5"
+          justifyContent="space-between"
+          alignItems="center">
           <Button
             data-testid="login-btn"
             color={'white'}
@@ -73,7 +84,12 @@ function LoginForm(props: LoginFormProps) {
             <Trans id="Log In">Log In</Trans>
           </Button>
           <Text display="flex" alignItems="flex-end" style={{ marginRight: '2rem' }}>
-            <ChakraRouterLink to="/auth/reset" color="#1F4CED" fontSize="1rem">
+            <ChakraRouterLink
+              to="/auth/reset"
+              color="#1F4CED"
+              fontSize="md"
+              fontWeight={500}
+              _hover={{ textDecor: 'underline' }}>
               <Trans id="Forgot password?">Forgot password?</Trans>
             </ChakraRouterLink>
           </Text>
