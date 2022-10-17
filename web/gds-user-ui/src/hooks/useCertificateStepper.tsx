@@ -106,8 +106,8 @@ const useCertificateStepper = () => {
         toast({
           position: 'top-right',
           title: t`Under TRISA Implementation, please provide an Endpoint or Common Name for TestNet and/or MainNet`,
-          description: t`You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form.
-          Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.`,
+          description: t`Please provide an Endpoint and Common Name for TestNet and/or MainNet to advance to the final step. You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form. Please note that TestNet and MainNet are separate
+          networks that require different X.509 Identity Certificates. Please specify an Endpoint and Common Name for at least one network in Step 4. TRISA Implementation.`,
           status: 'error',
           duration: null,
           isClosable: true
