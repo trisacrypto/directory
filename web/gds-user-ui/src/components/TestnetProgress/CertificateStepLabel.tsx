@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import {
   Box,
   Icon,
@@ -7,7 +7,9 @@ import {
   Stack,
   Tooltip,
   Flex,
-  useColorModeValue
+  useColorModeValue,
+  useDisclosure,
+  Button
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
@@ -15,6 +17,9 @@ import { TStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
+import { useFormContext } from 'react-hook-form';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import InvalidFormPrompt from './InvalidFormPrompt';
 
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
@@ -38,10 +43,35 @@ type TStepLabel = {
   hasError?: boolean; // status of the step
   icon: any; // icon of the step
 };
+
+enum STEP {
+  BASIC_DETAILS = 1,
+  LEGAL_PERSON = 2,
+  CONTACTS = 3,
+  TRISA_IMPLEMENTATION = 4,
+  TRIXO_QUESTIONNAIRE = 5,
+  REVIEW = 6
+}
+
 const CertificateStepLabel: FC<StepLabelProps> = () => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const textColor = useColorModeValue('#3C4257', '#F7F8FC');
+  const { jumpToStep } = useCertificateStepper();
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const formContext = useFormContext();
+  const [selectedStep, setSelectedStep] = useState<number>(currentStep);
+  const [initialFormValues, setInitialFormValues] = useState<Record<string, any>>();
+
+  useEffect(() => {
+    setInitialFormValues(formContext.getValues());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isStepCompleted = (step: number) => {
+    const stepStatus = steps[step - 1]?.status;
+    return stepStatus === 'complete' || stepStatus === 'progress';
+  };
 
   // this function need some clean up
   const getLabel = (step: number): TStepLabel | undefined => {
@@ -99,6 +129,21 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
   };
   const isActiveStep = (step: number) => step === currentStep;
 
+  const handleStepClick = (step: number) => () => {
+    setSelectedStep(step);
+    if (formContext.formState.isDirty) {
+      onOpen();
+    } else {
+      jumpToStep(step);
+    }
+  };
+
+  const handleContinueClick = () => {
+    formContext.reset(initialFormValues);
+    jumpToStep(selectedStep);
+    onClose();
+  };
+
   return (
     <>
       <Stack
@@ -116,168 +161,250 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
           </Heading>
         </Box>
         <Flex gap={2}>
-          <Tooltip
-            label={getLabel(1)?.hasError && t`Missing required element`}
-            placement="top"
-            bg={'red'}>
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            onClick={handleStepClick(STEP.BASIC_DETAILS)}
+            disabled={!(() => isStepCompleted(STEP.BASIC_DETAILS))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            _hover={{ bg: 'transparent' }}>
+            <Tooltip
+              label={getLabel(STEP.BASIC_DETAILS)?.hasError && t`Missing required element`}
+              placement="top"
+              bg={'red'}>
+              <Stack spacing={1} width="100%">
+                <Box
+                  h="1"
+                  borderRadius={'50px'}
+                  bg={getLabel(STEP.BASIC_DETAILS)?.color}
+                  width={'100%'}
+                  key={1}
+                />
+                <Stack
+                  direction={{ base: 'column', md: 'row' }}
+                  alignItems={['center']}
+                  spacing={{ base: 0, md: 1 }}>
+                  <Box>
+                    <Icon
+                      as={getLabel(STEP.BASIC_DETAILS)?.icon}
+                      sx={{
+                        path: {
+                          fill: getLabel(STEP.BASIC_DETAILS)?.color
+                        }
+                      }}
+                    />
+                  </Box>
+                  <Text
+                    color={textColor}
+                    fontWeight={isActiveStep(STEP.BASIC_DETAILS) ? 'bold' : 'normal'}
+                    fontSize={'sm'}
+                    textAlign="center">
+                    1 <Trans id="Basic Details">Basic Details</Trans>
+                  </Text>
+                </Stack>
+              </Stack>
+            </Tooltip>
+          </Button>
+
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            _hover={{ bg: 'transparent' }}
+            disabled={!(() => isStepCompleted(STEP.LEGAL_PERSON))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            onClick={handleStepClick(STEP.LEGAL_PERSON)}>
             <Stack spacing={1} width="100%">
-              <Box h="1" borderRadius={'50px'} bg={getLabel(1)?.color} width={'100%'} key={1} />
+              <Box
+                h="1"
+                bg={getLabel(STEP.LEGAL_PERSON)?.color}
+                borderRadius={'50px'}
+                width={'100%'}
+              />
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                alignItems={'center'}
+                spacing={{ base: 0, md: 1 }}>
+                <Box>
+                  <Icon
+                    as={getLabel(STEP.LEGAL_PERSON)?.icon}
+                    sx={{
+                      path: {
+                        fill: getLabel(STEP.LEGAL_PERSON)?.color
+                      },
+                      verticalAlign: 'middle'
+                    }}
+                    verticalAlign={{ base: 'baseline', lg: 'middle' }}
+                  />
+                </Box>
+                <Text
+                  color={textColor}
+                  fontSize={'sm'}
+                  fontWeight={isActiveStep(STEP.LEGAL_PERSON) ? 'bold' : 'normal'}
+                  textAlign="center">
+                  2 <Trans id="Legal Person">Legal Person</Trans>
+                </Text>
+              </Stack>
+            </Stack>
+          </Button>
+
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            _hover={{ bg: 'transparent' }}
+            disabled={!(() => isStepCompleted(STEP.CONTACTS))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            onClick={handleStepClick(STEP.CONTACTS)}>
+            <Stack spacing={1} width="100%">
+              <Box h="1" bg={getLabel(STEP.CONTACTS)?.color} width={'100%'} borderRadius={'50px'} />
               <Stack
                 direction={{ base: 'column', md: 'row' }}
                 alignItems={['center']}
                 spacing={{ base: 0, md: 1 }}>
                 <Box>
                   <Icon
-                    as={getLabel(1)?.icon}
+                    as={getLabel(STEP.CONTACTS)?.icon}
                     sx={{
                       path: {
-                        fill: getLabel(1)?.color
+                        fill: getLabel(STEP.CONTACTS)?.color
                       }
                     }}
                   />
                 </Box>
                 <Text
                   color={textColor}
-                  fontWeight={isActiveStep(1) ? 'bold' : 'normal'}
                   fontSize={'sm'}
+                  fontWeight={isActiveStep(STEP.CONTACTS) ? 'bold' : 'normal'}
                   textAlign="center">
-                  1 <Trans id="Basic Details">Basic Details</Trans>
+                  3 <Trans id="Contacts">Contacts</Trans>
                 </Text>
               </Stack>
             </Stack>
-          </Tooltip>
+          </Button>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(2)?.color} borderRadius={'50px'} width={'100%'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={'center'}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(2)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(2)?.color
-                    },
-                    verticalAlign: 'middle'
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(2) ? 'bold' : 'normal'}
-                textAlign="center">
-                2 <Trans id="Legal Person">Legal Person</Trans>
-              </Text>
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            _hover={{ bg: 'transparent' }}
+            disabled={!(() => isStepCompleted(4))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            onClick={handleStepClick(4)}>
+            <Stack spacing={1} width="100%">
+              <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                alignItems={['center']}
+                spacing={{ base: 0, md: 1 }}>
+                <Box>
+                  <Icon
+                    as={getLabel(4)?.icon}
+                    sx={{
+                      path: {
+                        fill: getLabel(4)?.color
+                      }
+                    }}
+                  />
+                </Box>
+                <Text
+                  color={textColor}
+                  fontSize={'sm'}
+                  fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
+                  textAlign="center">
+                  4 <Trans id="TRISA implementation">TRISA implementation</Trans>
+                </Text>
+              </Stack>
             </Stack>
-          </Stack>
+          </Button>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(3)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(3)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(3)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(3) ? 'bold' : 'normal'}
-                textAlign="center">
-                3 <Trans id="Contacts">Contacts</Trans>
-              </Text>
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            _hover={{ bg: 'transparent' }}
+            disabled={!(() => isStepCompleted(STEP.TRIXO_QUESTIONNAIRE))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            onClick={handleStepClick(STEP.TRIXO_QUESTIONNAIRE)}>
+            <Stack spacing={1} width="100%">
+              <Box
+                h="1"
+                bg={getLabel(STEP.TRIXO_QUESTIONNAIRE)?.color}
+                width={'100%'}
+                borderRadius={'50px'}
+              />
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                alignItems={['center']}
+                spacing={{ base: 0, md: 1 }}>
+                <Box>
+                  <Icon
+                    as={getLabel(STEP.TRIXO_QUESTIONNAIRE)?.icon}
+                    sx={{
+                      path: {
+                        fill: getLabel(STEP.TRIXO_QUESTIONNAIRE)?.color
+                      }
+                    }}
+                  />
+                </Box>
+                <Text
+                  color={textColor}
+                  fontSize={'sm'}
+                  fontWeight={isActiveStep(STEP.TRIXO_QUESTIONNAIRE) ? 'bold' : 'normal'}
+                  textAlign="center">
+                  5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
+                </Text>
+              </Stack>
             </Stack>
-          </Stack>
+          </Button>
 
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(4)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(4)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(4)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(4) ? 'bold' : 'normal'}
-                textAlign="center">
-                4 <Trans id="TRISA implementation">TRISA implementation</Trans>
-              </Text>
+          <Button
+            bg="transparent"
+            display="block"
+            p={0}
+            width="100%"
+            _hover={{ bg: 'transparent' }}
+            disabled={!(() => isStepCompleted(STEP.REVIEW))()}
+            _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+            onClick={handleStepClick(STEP.REVIEW)}>
+            <Stack spacing={1} width="100%">
+              <Box h="1" bg={getLabel(STEP.REVIEW)?.color} width={'100%'} borderRadius={'50px'} />
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                alignItems={['center']}
+                spacing={{ base: 0, md: 1 }}>
+                <Box>
+                  <Icon
+                    as={getLabel(6)?.icon}
+                    sx={{
+                      path: {
+                        fill: getLabel(STEP.REVIEW)?.color
+                      }
+                    }}
+                  />
+                </Box>
+                <Text
+                  color={textColor}
+                  fontSize={'sm'}
+                  fontWeight={isActiveStep(STEP.REVIEW) ? 'bold' : 'normal'}
+                  textAlign="center">
+                  6 <Trans id="Review">Review</Trans>
+                </Text>
+              </Stack>
             </Stack>
-          </Stack>
-
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(5)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(5)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(5)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(5) ? 'bold' : 'normal'}
-                textAlign="center">
-                5 <Trans id="TRIXO Questionnaire">TRIXO Questionnaire</Trans>
-              </Text>
-            </Stack>
-          </Stack>
-
-          <Stack spacing={1} width="100%">
-            <Box h="1" bg={getLabel(6)?.color} width={'100%'} borderRadius={'50px'} />
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              alignItems={['center']}
-              spacing={{ base: 0, md: 1 }}>
-              <Box>
-                <Icon
-                  as={getLabel(6)?.icon}
-                  sx={{
-                    path: {
-                      fill: getLabel(6)?.color
-                    }
-                  }}
-                />
-              </Box>
-              <Text
-                color={textColor}
-                fontSize={'sm'}
-                fontWeight={isActiveStep(6) ? 'bold' : 'normal'}
-                textAlign="center">
-                6 <Trans id="Review">Review</Trans>
-              </Text>
-            </Stack>
-          </Stack>
+          </Button>
         </Flex>
+        <InvalidFormPrompt
+          isOpen={isOpen}
+          onClose={onClose}
+          handleContinueClick={handleContinueClick}
+        />
       </Stack>
     </>
   );

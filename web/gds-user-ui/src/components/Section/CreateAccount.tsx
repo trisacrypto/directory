@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Heading, Text, useColorModeValue } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
 import { Trans } from '@lingui/react';
@@ -18,10 +18,15 @@ interface CreateAccountProps {
 const CreateAccount: React.FC<CreateAccountProps> = (props) => {
   return (
     <AuthLayout>
-      <Text color={useColorModeValue('gray.600', 'white')}>
-        <Text as={'span'} fontWeight={'bold'}>
-          <Trans id="Create your TRISA account.">Create your TRISA account.</Trans>
-        </Text>{' '}
+      <Heading
+        fontWeight={'bold'}
+        color={useColorModeValue('gray.600', 'white')}
+        size="md"
+        textAlign="center"
+        textTransform="capitalize">
+        <Trans id="Create your TRISA account">Create your TRISA account</Trans>
+      </Heading>
+      <Text color={useColorModeValue('gray.600', 'white')} mt="4px!important" fontSize="md">
         <Trans id="We recommend that a senior compliance officer initially creates the account for the VASP. Additional accounts can be created later.">
           We recommend that a senior compliance officer initially creates the account for the VASP.
           Additional accounts can be created later.
@@ -41,13 +46,15 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
             color: useColorModeValue('gray.600', 'white')
           }}>
           <GoogleIcon h={24} />
-          <Text as={'span'} ml={3}>
+          <Text as={'span'} ml={3} fontSize="md">
             <Trans id="Continue with Google">Continue with Google</Trans>
           </Text>
         </Button>
       </Box>
-      <Text textAlign="center">Or</Text>
-      <Box bg={useColorModeValue('white', 'transparent')}>
+      <Text textAlign="center">or</Text>
+      <Box
+        color={useColorModeValue('gray.600', 'white')}
+        bg={useColorModeValue('white', 'transparent')}>
         <SignupForm
           handleSignUpWithEmail={props.handleSignUpWithEmail}
           isLoading={props.isLoading}

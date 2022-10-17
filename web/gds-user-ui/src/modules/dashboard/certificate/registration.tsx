@@ -8,7 +8,6 @@ import {
   Link,
   Flex,
   useDisclosure,
-  Button,
   Stack,
   useColorModeValue,
   chakra
@@ -36,9 +35,9 @@ import {
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
-import { t } from '@lingui/macro';
 import { getCurrentStep, getLastStep } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
+import StepButtons from 'components/StepsButtons';
 
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
@@ -277,26 +276,27 @@ const Certificate: React.FC = () => {
                     direction={'row'}
                     spacing={8}
                     justifyContent={'center'}
-                    py={6}>
+                    py={6}
+                    wrap="wrap"
+                    rowGap={2}>
                     {!hasReachSubmitStep && (
-                      <>
-                        {/* {!isFormSubmitted() && ( */}
-                        <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
+                      <StepButtons
+                        currentStep={currentStep}
+                        isCurrentStepLastStep={currentStep === lastStep}
+                        isDefaultValue={isDefaultValue}
+                        handlePreviousStep={handlePreviousStep}
+                        handleResetForm={handleResetForm}
+                      />
+                    )}
+                    {/* <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
                           {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
                         </Button>
-                        {/* )} */}
                         <Button type="submit" variant="secondary">
                           {currentStep === lastStep ? t`Next` : t`Save & Next`}
                         </Button>
-                        {/* add review button when reach to final step */}
-
-                        {/* {!isFormSubmitted() && ( */}
                         <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
                           <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                        </Button>
-                        {/* )} */}
-                      </>
-                    )}
+                        </Button> */}
                   </Stack>
                 </VStack>
               </chakra.form>

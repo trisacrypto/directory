@@ -1,23 +1,9 @@
 import React from 'react';
 import TableRow from '../TableRow';
-import OptionsMenu, { TMenuItem } from '../OptionsMenu';
+import CkLazyLoadImage from 'components/LazyImage';
+import PolygonIcon from 'assets/polygon.svg';
+import { IconButton } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
-
-const Menu = () => {
-  const MENU_ITEMS: TMenuItem[] = [
-    {
-      label: t`Edit`
-    },
-    {
-      label: t`Change Permissions`
-    },
-    {
-      label: t`Deactivate`
-    }
-  ];
-
-  return <OptionsMenu menuItems={MENU_ITEMS} />;
-};
 
 const rows = [
   {
@@ -26,7 +12,11 @@ const rows = [
     expirationDate: '14/01/2022',
     issueDate: '14/01/2022',
     status: 'active',
-    options: <Menu />
+    options: (
+      <IconButton aria-label={t`view details`} bg="transparent" _hover={{ bg: 'transparent' }}>
+        <CkLazyLoadImage mx="auto" src={PolygonIcon} />
+      </IconButton>
+    )
   },
   {
     id: '18002',
@@ -34,7 +24,11 @@ const rows = [
     expirationDate: '14/01/2022',
     issueDate: '14/01/2022',
     status: 'active',
-    options: <Menu />
+    options: (
+      <IconButton aria-label={t`view details`} bg="transparent" _hover={{ bg: 'transparent' }}>
+        <CkLazyLoadImage mx="auto" src={PolygonIcon} />
+      </IconButton>
+    )
   },
   {
     id: '18003',
@@ -42,7 +36,11 @@ const rows = [
     expirationDate: '14/01/2022',
     issueDate: '14/01/2022',
     status: 'active',
-    options: <Menu />
+    options: (
+      <IconButton aria-label={t`view details`} bg="transparent" _hover={{ bg: 'transparent' }}>
+        <CkLazyLoadImage mx="auto" src={PolygonIcon} />
+      </IconButton>
+    )
   }
 ];
 

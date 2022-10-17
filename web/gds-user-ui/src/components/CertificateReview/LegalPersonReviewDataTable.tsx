@@ -120,20 +120,13 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                   <Td paddingLeft={'0px !important'} pt={0}>
                     {data?.geographic_addresses?.map((address: any, index: number) => (
                       <React.Fragment key={index}>
-                        {data?.geographic_addresses?.length > 1 && (
-                          <Text py={1} fontWeight={'bold'}>
-                            Address {index + 1} : {(addressType as any)[address.address_type]}
-                          </Text>
-                        )}
+                        <Text py={1} fontWeight={'bold'}>
+                          Address {index + 1} : {(addressType as any)[address.address_type]}
+                        </Text>
                         {renderAddress(address)}
                       </React.Fragment>
                     ))}
                   </Td>
-                  {data?.geographic_addresses?.length === 1 && (
-                    <Td pt={0}>
-                      ({(addressType as any)[data?.geographic_addresses?.[0].address_type]})
-                    </Td>
-                  )}
                 </Tr>
               </Td>
             </Tr>

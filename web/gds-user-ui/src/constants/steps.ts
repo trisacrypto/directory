@@ -1,0 +1,8 @@
+export enum StepsIndexes {
+  BASIC_DETAILS = 1,
+  LEGAL_PERSON = 2,
+  CONTACTS = 3,
+  TRISA_IMPLEMENTATION = 4,
+  TRIXO_QUESTIONNAIRE = 5,
+  REVIEW = 6
+}

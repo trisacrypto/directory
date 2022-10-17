@@ -18,7 +18,7 @@ import { LANG_KEY } from 'constants/lang-key';
 yup.setLocale({
   string: {
     email: {
-      default: t`Email is not valid`,
+      default: t`Email is not valid.`,
       required: t``
     }
   }

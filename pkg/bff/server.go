@@ -346,8 +346,12 @@ func (s *Server) setupRoutes() (err error) {
 		v1.POST("/users/login", userinfo, s.Login)
 
 		// Authenticated routes
-		v1.POST("/collaborators", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
-		v1.PUT("/collaborators", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.ReplaceCollaborator)
+		collaborators := v1.Group("/collaborators")
+		{
+			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
+			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
+			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)
+		}
 		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)
 		v1.PUT("/register", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SaveRegisterForm)
 		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), userinfo, s.SubmitRegistration)
