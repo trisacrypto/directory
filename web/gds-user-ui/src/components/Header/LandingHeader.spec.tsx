@@ -9,9 +9,11 @@ describe('<LandingHeader />', () => {
       await waitFor(() => {
         dynamicActivate('en');
       });
-      const { debug } = render(<LandingHeader />, { locale: 'en' });
-      const documentation = screen.getByText(/documentation/i);
-      expect(documentation).toHaveAttribute('href', `${TRISA_BASE_URL}/en`);
+
+      render(<LandingHeader />, { locale: 'en' });
+
+      expect(screen.getByText(/documentation/i)).toHaveAttribute('href', `${TRISA_BASE_URL}/en`);
+      expect(screen.getByText(/about trisa/i)).toHaveAttribute('href', 'https://trisa.io');
     });
 
     it('should target the german website', async () => {
@@ -20,8 +22,7 @@ describe('<LandingHeader />', () => {
       });
       render(<LandingHeader />, { locale: 'de' });
 
-      const documentation = screen.getByText(/Dokumentation/i);
-      expect(documentation).toHaveAttribute('href', `${TRISA_BASE_URL}/de`);
+      expect(screen.getByText(/Dokumentation/i)).toHaveAttribute('href', `${TRISA_BASE_URL}/de`);
     });
 
     it('should target the french website', async () => {
@@ -30,8 +31,7 @@ describe('<LandingHeader />', () => {
       });
       render(<LandingHeader />, { locale: 'fr' });
 
-      const documentation = screen.getByText(/documentation/i);
-      expect(documentation).toHaveAttribute('href', `${TRISA_BASE_URL}/fr`);
+      expect(screen.getByText(/documentation/i)).toHaveAttribute('href', `${TRISA_BASE_URL}/fr`);
     });
   });
 });

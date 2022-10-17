@@ -57,36 +57,6 @@ func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	return nil
 }
 
-// Replace a collaborator on an organization record. The given collaborator record is
-// validated before being replaced on the organization.
-// Note: The caller is responsible for saving the updated organization record to the
-// database.
-func (org *Organization) ReplaceCollaborator(collab *Collaborator) (err error) {
-	// Make sure the collaborator is valid for storage
-	if err = collab.Validate(); err != nil {
-		return err
-	}
-
-	// Make sure the collaborator already exists on the organization
-	key := collab.Key()
-	if _, ok := org.Collaborators[key]; !ok {
-		return fmt.Errorf("collaborator %q does not exist", key)
-	}
-
-	// Make sure the record has updated timestamps
-	collab.ModifiedAt = time.Now().UTC().Format(time.RFC3339Nano)
-	if collab.CreatedAt == "" {
-		collab.CreatedAt = collab.ModifiedAt
-	}
-
-	// Replace the collaborator on the organization
-	if org.Collaborators == nil {
-		org.Collaborators = make(map[string]*Collaborator)
-	}
-	org.Collaborators[key] = collab
-	return nil
-}
-
 func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 	switch t := orgID.(type) {
 	case string:

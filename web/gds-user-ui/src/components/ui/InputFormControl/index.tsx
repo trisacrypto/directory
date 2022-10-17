@@ -84,7 +84,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
           />
           {hasBtn && (
             <InputRightElement width="4.5rem" height={'100%'}>
-              <Button color={'#000'} size="sm" onClick={handleFn}>
+              <Button size="sm" onClick={handleFn}>
                 {setBtnName || 'Change'}
               </Button>
             </InputRightElement>

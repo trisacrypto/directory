@@ -1,4 +1,4 @@
-import DashboardLayout from '../../layouts/DashboardLayout';
+// import DashboardLayout from '../../layouts/DashboardLayout';
 import NeedsAttention from '../NeedsAttention';
 import {
   Flex,
@@ -21,7 +21,7 @@ import { t } from '@lingui/macro';
 
 function CertificateManagement() {
   return (
-    <DashboardLayout>
+    <>
       <Heading marginBottom="30px">
         <Trans id="Certificate Management">Certificate Management</Trans>
       </Heading>
@@ -97,13 +97,13 @@ function CertificateManagement() {
           </TabPanels>
         </Tabs>
       </Box>
-      <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'}>
+      <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'} mx={4}>
         <Trans id="Sealing Certificate Inventory">Sealing Certificate Inventory</Trans>
       </Heading>
-      <Box>
+      <Box px={4}>
         <CertificateDataTable />
       </Box>
-    </DashboardLayout>
+    </>
   );
 }
 

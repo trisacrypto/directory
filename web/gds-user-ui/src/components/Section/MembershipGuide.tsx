@@ -67,10 +67,12 @@ const MembershipGuide = () => {
         <Stack
           justifyContent={'center'}
           alignContent={'center'}
-          alignItems={['center', 'stretch']}
+          alignItems={['center', null, 'stretch']}
           spacing={10}
-          direction={['column', 'row']}
-          py={'2rem'}>
+          direction={['column', null, 'row']}
+          py={'2rem'}
+          flexGrow={1}
+          marginY={{ base: '2rem!important', lg: '3rem!important' }}>
           {MembershipGuideText.map(({ stepNumber, header, description, buttonText, link }) => (
             <React.Fragment key={stepNumber}>
               <MembershipGuideCard

@@ -1,16 +1,6 @@
-import {
-  Stack,
-  Box,
-  Table,
-  TableCaption,
-  Heading,
-  Button,
-  Thead,
-  Tr,
-  Th,
-  Tbody
-} from '@chakra-ui/react';
+import { Stack, Box, Table, TableCaption, Heading, Thead, Tr, Th, Tbody } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
+import ConfirmIdentityCertificate from 'components/ConfirmIdentityCertificateRequest';
 import FormLayout from 'layouts/FormLayout';
 import Statistics from './Statistics';
 import X509TableRows from './X509TableRows';
@@ -27,11 +17,11 @@ function MainnetCertificates() {
                 <Heading fontSize={'1.2rem'}>
                   <Trans id="X.509 Identity Certificates">X.509 Identity Certificates</Trans>
                 </Heading>
-                <Button>
+                <ConfirmIdentityCertificate marginLeft="auto !important">
                   <Trans id="Request New Identity Certificate">
                     Request New Identity Certificate
                   </Trans>
-                </Button>
+                </ConfirmIdentityCertificate>
               </Stack>
             </TableCaption>
             <Thead>
