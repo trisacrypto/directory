@@ -37,6 +37,7 @@ const (
 	ClientID     = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
 	ClientSecret = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
 	Audience     = "http://localhost"
+	Name         = "Leopold Wentzel"
 	Email        = "leopold.wentzel@gmail.com"
 	UserID       = "test|abcdefg1234567890"
 	OrgID        = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
@@ -79,11 +80,13 @@ func Close() {
 
 // Server wraps an httptest.Server to provide a default handler for auth0 requests.
 type Server struct {
-	srv   *httptest.Server
-	mux   *http.ServeMux
-	URL   *url.URL
-	keys  *rsa.PrivateKey
-	users map[string]*management.User
+	srv       *httptest.Server
+	mux       *http.ServeMux
+	URL       *url.URL
+	keys      *rsa.PrivateKey
+	users     map[string]*management.User
+	userRoles map[string]*management.RoleList
+	roles     *management.RoleList
 }
 
 // New starts and returns a new Auth0 server using TLS. The caller should call close
@@ -99,11 +102,19 @@ func New() (s *Server, err error) {
 	// Create some default users without any associated app metadata
 	s.users = NewUsers()
 
+	// Create some default roles for the users
+	s.userRoles = NewUserRoles()
+
+	// Create a default role list
+	s.roles = NewRoles()
+
 	// Setup routes for the mux
 	s.mux = http.NewServeMux()
 	s.mux.HandleFunc("/.well-known/openid-configuration", s.OpenIDConfiguration)
 	s.mux.HandleFunc("/.well-known/jwks.json", s.JWKS)
 	s.mux.HandleFunc("/api/v2/users/"+UserID, s.Users)
+	s.mux.HandleFunc("/api/v2/users/"+UserID+"/roles", s.UserRoles)
+	s.mux.HandleFunc("/api/v2/roles", s.Roles)
 
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
@@ -232,6 +243,61 @@ func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func (s *Server) UserRoles(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.ListUserRoles(w, r)
+	case http.MethodPost:
+		s.AssignUserRoles(w, r)
+	case http.MethodDelete:
+		s.RemoveUserRoles(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) ListUserRoles(w http.ResponseWriter, r *http.Request) {
+	// Return the roles object from the map
+	// TODO: Parse the user id from the request
+	if roles, ok := s.userRoles[UserID]; ok {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(roles)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (s *Server) AssignUserRoles(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.userRoles[UserID]; ok {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (s *Server) RemoveUserRoles(w http.ResponseWriter, r *http.Request) {
+	// Note: This does not actually change the state on the server
+	if _, ok := s.userRoles[UserID]; ok {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (s *Server) Roles(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.GetRoles(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) GetRoles(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.roles)
 }
 
 func (s *Server) PatchUserAppMetadata(w http.ResponseWriter, r *http.Request) {
