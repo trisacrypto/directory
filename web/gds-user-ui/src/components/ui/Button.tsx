@@ -1,7 +1,7 @@
 import { Box, Button as CkButton } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 
-export default function Button(props: any) {
+export default function Button() {
   return (
     <Box w="80%" pt={7}>
       <CkButton w="full" colorScheme="red" variant="outline">
