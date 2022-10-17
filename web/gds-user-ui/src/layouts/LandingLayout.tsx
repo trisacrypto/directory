@@ -27,7 +27,6 @@ export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
 
   return (
     <Stack
-      // align="center"
       justifyContent="space-between"
       minW={'100%'}
       m="0 auto"

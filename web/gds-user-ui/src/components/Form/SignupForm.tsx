@@ -15,8 +15,11 @@ interface IFormInputs {
 }
 
 const validationSchema = yup.object().shape({
-  username: yup.string().email('Email Address is not valid').required('Email Address is required'),
-  password: yup.string().required('Password is required')
+  username: yup
+    .string()
+    .email('Email Address is not valid.')
+    .required('Email Address is required.'),
+  password: yup.string().required('Password is required.')
 });
 
 const defaultValues = {
@@ -74,12 +77,17 @@ function SignupForm(props: SignupFormProps) {
           isLoading={props.isLoading}
           _hover={{
             bg: '#10aaed'
-          }}>
-          <Trans id="Create an Account">Create an Account</Trans>
+          }}
+          fontSize="md">
+          <Trans id="Create Your Account">Create Your Account</Trans>
         </Button>
-        <Text textAlign="center">
+        <Text textAlign="center" fontSize="md">
           <Trans id="Already have an account?">Already have an account?</Trans>{' '}
-          <ChakraRouterLink to={'/auth/login'} color="link" _hover={{ textDecor: 'underline' }}>
+          <ChakraRouterLink
+            to={'/auth/login'}
+            color="link"
+            fontWeight={500}
+            _hover={{ textDecor: 'underline' }}>
             <Trans id="Log in.">Log in.</Trans>
           </ChakraRouterLink>
         </Text>

@@ -18,30 +18,16 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             class="css-1uuxm7r"
           >
             <div
-              class="css-0"
+              class="css-l65i91"
             >
               <a
-                aria-current="page"
-                class="active"
                 href="/"
               >
-                <a
-                  class="chakra-link css-htwawm"
-                >
-                  <div
-                    class="css-1p293e5"
-                  >
-                    <a
-                      href="/"
-                    >
-                      <img
-                        alt="Trisa logo"
-                        class="css-1czmu1r"
-                        src="trisa_logo.svg"
-                      />
-                    </a>
-                  </div>
-                </a>
+                <img
+                  alt="Trisa logo"
+                  class="css-uwwqev"
+                  src="trisa_logo.svg"
+                />
               </a>
             </div>
             <div
@@ -125,15 +111,15 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
               </div>
               <div
                 class="chakra-text css-dme2i4"
+                data-testid="about"
               >
                 <a
-                  href="/#about"
+                  class="chakra-link css-htwawm"
+                  href="https://trisa.io"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
-                  <a
-                    class="chakra-link css-htwawm"
-                  >
-                    About TRISA
-                  </a>
+                  About TRISA
                 </a>
               </div>
               <div
