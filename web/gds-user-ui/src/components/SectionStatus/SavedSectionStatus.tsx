@@ -1,11 +1,11 @@
 import Icon from '@chakra-ui/icon';
 import { CheckCircleIcon } from '@chakra-ui/icons';
-import { Box, Text } from '@chakra-ui/react';
+import { HStack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 
 const SavedSectionStatus: React.FC = () => {
   return (
-    <Box>
+    <HStack>
       <Icon
         as={CheckCircleIcon}
         w={5}
@@ -17,9 +17,9 @@ const SavedSectionStatus: React.FC = () => {
         }}
       />{' '}
       <Text as={'span'} fontSize={'sm'} pl={1}>
-        <Trans id="(Saved)"> (Saved)</Trans>
+        <Trans id="(Saved)">(Saved)</Trans>
       </Text>
-    </Box>
+    </HStack>
   );
 };
 

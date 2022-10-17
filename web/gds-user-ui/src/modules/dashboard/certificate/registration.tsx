@@ -276,7 +276,9 @@ const Certificate: React.FC = () => {
                     direction={'row'}
                     spacing={8}
                     justifyContent={'center'}
-                    py={6}>
+                    py={6}
+                    wrap="wrap"
+                    rowGap={2}>
                     {!hasReachSubmitStep && (
                       <StepButtons
                         currentStep={currentStep}
