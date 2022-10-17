@@ -67,6 +67,7 @@ func NewOpenIDConfiguration(u *url.URL) *OpenIDConfiguration {
 // NewUsers creates some default users for testing.
 func NewUsers() map[string]*management.User {
 	id := string(UserID)
+	name := string(Name)
 	email := string(Email)
 	createdAt := time.Now()
 	updatedAt := time.Now()
@@ -74,10 +75,47 @@ func NewUsers() map[string]*management.User {
 	return map[string]*management.User{
 		id: {
 			ID:        &id,
+			Name:      &name,
 			Email:     &email,
 			CreatedAt: &createdAt,
 			UpdatedAt: &updatedAt,
 			LastLogin: &lastLogin,
 		},
+	}
+}
+
+// NewUserRoles creates some default user roles for testing.
+func NewUserRoles() map[string]*management.RoleList {
+	names := []string{
+		"Organization Collaborator",
+	}
+
+	return map[string]*management.RoleList{
+		string(UserID): NewRoleList(names),
+	}
+}
+
+// NewRoles creates some default roles for testing.
+func NewRoles() *management.RoleList {
+	names := []string{
+		"Organization Collaborator",
+		"Organization Leader",
+		"TRISA Administrator",
+	}
+
+	return NewRoleList(names)
+}
+
+// NewRoleList initializes a role list with the given role names.
+func NewRoleList(names []string) *management.RoleList {
+	roles := []*management.Role{}
+	for _, name := range names {
+		n := name
+		roles = append(roles, &management.Role{
+			Name: &n,
+		})
+	}
+	return &management.RoleList{
+		Roles: roles,
 	}
 }

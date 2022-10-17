@@ -268,16 +268,18 @@ func TestAddCollaborator(t *testing.T) {
 	require.Equal(t, fixture.Email, collab.Email)
 }
 
-func TestReplaceCollaborator(t *testing.T) {
+func TestUpdateCollaboratorRoles(t *testing.T) {
 	fixture := &models.Collaborator{
+		Id:        "wWD4zGmk8L8rA2J1I1PQYA",
 		Email:     "alice@example.com",
+		Roles:     []string{"Organization Collaborator"},
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
 	}
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, http.MethodPut, r.Method)
-		require.Equal(t, "/v1/collaborators", r.URL.Path)
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/collaborators/wWD4zGmk8L8rA2J1I1PQYA", r.URL.Path)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -289,12 +291,38 @@ func TestReplaceCollaborator(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	request := &models.Collaborator{
-		Email: "alice@example.com",
+	// Should return an error if no ID is present
+	_, err = client.UpdateCollaboratorRoles(context.TODO(), "", &api.UpdateRolesParams{})
+	require.EqualError(t, err, api.ErrIDRequired.Error())
+
+	// Valid request should succeed and return the fixture
+	request := &api.UpdateRolesParams{
+		Roles: []string{"Organization Collaborator"},
 	}
-	collab, err := client.ReplaceCollaborator(context.TODO(), request)
+	collab, err := client.UpdateCollaboratorRoles(context.TODO(), fixture.Id, request)
 	require.NoError(t, err)
 	require.Equal(t, fixture.Email, collab.Email)
+}
+
+func TestDeleteCollaborator(t *testing.T) {
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v1/collaborators/wWD4zGmk8L8rA2J1I1PQYA", r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	// Should return an error if no ID is present
+	err = client.DeleteCollaborator(context.TODO(), "")
+	require.EqualError(t, err, api.ErrIDRequired.Error())
+
+	// Valid request should succeed
+	require.NoError(t, client.DeleteCollaborator(context.TODO(), "wWD4zGmk8L8rA2J1I1PQYA"))
 }
 
 func TestLoadRegistrationForm(t *testing.T) {

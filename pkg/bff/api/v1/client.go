@@ -170,11 +170,19 @@ func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborato
 	return collaborator, nil
 }
 
-// Replace a collaborator in an organization.
-func (s *APIv1) ReplaceCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
+// Update a collaborator's roles in an organization.
+func (s *APIv1) UpdateCollaboratorRoles(ctx context.Context, id string, request *UpdateRolesParams) (collaborator *models.Collaborator, err error) {
+	// ID is required for the endpoint
+	if id == "" {
+		return nil, ErrIDRequired
+	}
+
+	// Construct the path from the request
+	path := fmt.Sprintf("/v1/collaborators/%s", id)
+
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPut, "/v1/collaborators", request, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, path, request, nil); err != nil {
 		return nil, err
 	}
 
@@ -183,6 +191,28 @@ func (s *APIv1) ReplaceCollaborator(ctx context.Context, request *models.Collabo
 		return nil, err
 	}
 	return collaborator, nil
+}
+
+// Delete a collaborator from an organization.
+func (s *APIv1) DeleteCollaborator(ctx context.Context, id string) (err error) {
+	// ID is required for the endpoint
+	if id == "" {
+		return ErrIDRequired
+	}
+
+	// Construct the path from the request
+	path := fmt.Sprintf("/v1/collaborators/%s", id)
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, path, nil, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Load registration form data from the server to populate the front-end form.

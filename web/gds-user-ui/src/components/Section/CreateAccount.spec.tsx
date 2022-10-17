@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen, waitFor } from 'utils/test-utils';
 import CreateAccount from './CreateAccount';
-import { BrowserRouter as Router } from 'react-router-dom';
+
 const mockSignWithEmail = jest.fn((values) => {
   return Promise.resolve(values);
 });
@@ -32,7 +32,7 @@ describe('<CreateAccount />', () => {
     const password = screen.getByTestId('password-field');
     userEvent.type(password, 'AA!45aaa');
 
-    const submitButton = screen.getByRole('button', { name: /create an account/i });
+    const submitButton = screen.getByRole('button', { name: /create your account/i });
 
     userEvent.click(submitButton);
 
@@ -42,9 +42,6 @@ describe('<CreateAccount />', () => {
   });
 
   it('should throw validation error when all field are empty', async () => {
-    const mockHandleAuthFn = jest.fn();
-    const mockHandleSignUpWithEmail = jest.fn();
-
     render(
       <CreateAccount
         handleSocialAuth={mockSignWithEmail}
@@ -53,7 +50,7 @@ describe('<CreateAccount />', () => {
       { route: '/auth/login' }
     );
 
-    const submitButton = screen.getByRole('button', { name: /create an account/i });
+    const submitButton = screen.getByRole('button', { name: /create your account/i });
 
     userEvent.click(submitButton);
 
@@ -63,9 +60,6 @@ describe('<CreateAccount />', () => {
   });
 
   it('should call google login function', async () => {
-    const mockHandleAuthFn = jest.fn();
-    const mockHandleSignUpWithEmail = jest.fn();
-
     render(
       <CreateAccount
         handleSocialAuth={mockSignWithEmail}
