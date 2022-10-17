@@ -1,4 +1,4 @@
-import { Box, Button, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Heading, Text, useColorModeValue } from '@chakra-ui/react';
 
 import { GoogleIcon } from 'components/Icon';
 
@@ -15,9 +15,14 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail, isLoading }) => (
   <AuthLayout>
-    <Text fontWeight="bold" color={useColorModeValue('gray.600', 'white')}>
-      <Trans id="Log into your TRISA account.">Log into your TRISA account.</Trans>
-    </Text>
+    <Heading
+      fontWeight="bold"
+      color={useColorModeValue('gray.600', 'white')}
+      textTransform="capitalize"
+      textAlign="center"
+      size="md">
+      <Trans id="Log into your TRISA account">Log into your TRISA account</Trans>
+    </Heading>
     <Box>
       <Button
         data-testid="signin-with-google"
@@ -35,7 +40,7 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
           borderColor: 'transparent'
         }}>
         <GoogleIcon h={24} />
-        <Text as={'span'} ml={3}>
+        <Text as={'span'} ml={3} fontSize="md">
           <Trans id="Continue with Google">Continue with Google</Trans>
         </Text>
       </Button>
@@ -44,9 +49,13 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
 
     <Box bg={useColorModeValue('white', 'transparent')}>
       <LoginForm handleSignWithEmail={handleSignWithEmail} isLoading={isLoading} />
-      <Text textAlign="center" fontSize="1rem">
+      <Text textAlign="center" fontSize="md">
         <Trans id="Not a TRISA Member?">Not a TRISA Member?</Trans>{' '}
-        <ChakraRouterLink to="/auth/register" color={'#1F4CED'}>
+        <ChakraRouterLink
+          to="/auth/register"
+          color={'#1F4CED'}
+          fontWeight={500}
+          _hover={{ textDecor: 'underline' }}>
           <Trans id="Join the TRISA network today.">Join the TRISA network today.</Trans>
         </ChakraRouterLink>
       </Text>
