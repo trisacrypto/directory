@@ -131,7 +131,7 @@ const appRoutes = [
     name: 'Certificate Management',
     component: CertificateManagement,
     layout: 'dashboard',
-    route: '/dashboard/certificate-management'
+    route: '/certificate-management'
   },
   {
     path: '/dashboard/logout',
