@@ -7,8 +7,7 @@ import AboutTrisaSection from 'components/Section/AboutUs';
 import * as Sentry from '@sentry/react';
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
-import LandingHeader from 'components/Header/LandingHeader';
-import Footer from 'components/Footer/LandingFooter';
+import LandingLayout from 'layouts/LandingLayout';
 const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(false);
@@ -44,8 +43,7 @@ const HomePage: React.FC = () => {
     }
   };
   return (
-    <>
-      <LandingHeader />
+    <LandingLayout>
       <Head hasBtn isHomePage />
       <AboutTrisaSection />
       <JoinUsSection />
@@ -61,8 +59,7 @@ const HomePage: React.FC = () => {
         }}
         query={search}
       />
-      <Footer />
-    </>
+    </LandingLayout>
   );
 };
 

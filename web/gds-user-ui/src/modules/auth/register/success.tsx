@@ -28,8 +28,8 @@ const VerifyPage: React.FC = () => {
             </Trans>
           </Text>
 
-          <HStack spacing={4} py={3}>
-            <CircleChevronRight strokeWidth={2} size={36} color={'#55ACD8'} />
+          <HStack spacing={4} py={3} color={'#55ACD8'}>
+            <CircleChevronRight strokeWidth={2} size={36} />
             <Text as={'span'} ml={3}>
               <RouteLink to={'/auth/login'}>
                 <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
@@ -40,8 +40,8 @@ const VerifyPage: React.FC = () => {
               </RouteLink>
             </Text>
           </HStack>
-          <HStack spacing={4} pb={3}>
-            <CircleChevronRight strokeWidth={2} size={36} color={'#55ACD8'} />
+          <HStack spacing={4} pb={3} color={'#55ACD8'}>
+            <CircleChevronRight strokeWidth={2} size={36} />
             <Text as={'span'} ml={3}>
               <RouteLink to={'/getting-started'}>
                 <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
@@ -52,8 +52,8 @@ const VerifyPage: React.FC = () => {
               </RouteLink>
             </Text>
           </HStack>
-          <HStack spacing={4} pb={3}>
-            <CircleChevronRight strokeWidth={2} size={36} color={'#55ACD8'} />
+          <HStack spacing={4} pb={5} color={'#55ACD8'}>
+            <CircleChevronRight strokeWidth={2} size={36} />
             <Text as={'span'} ml={3}>
               <RouteLink to={'/'}>
                 <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>

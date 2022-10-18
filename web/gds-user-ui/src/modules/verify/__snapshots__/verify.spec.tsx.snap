@@ -6,7 +6,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
     class="chakra-stack css-1erbuhs"
   >
     <div
-      class="css-a4hqho"
+      class="css-1qrkqwb"
     >
       <div
         class="chakra-container css-1a3ltpp"
@@ -18,16 +18,30 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             class="css-1uuxm7r"
           >
             <div
-              class="css-l65i91"
+              class="css-0"
             >
               <a
+                aria-current="page"
+                class="active"
                 href="/"
               >
-                <img
-                  alt="Trisa logo"
-                  class="css-uwwqev"
-                  src="trisa_logo.svg"
-                />
+                <a
+                  class="chakra-link css-htwawm"
+                >
+                  <div
+                    class="css-afv3ew"
+                  >
+                    <a
+                      href="/"
+                    >
+                      <img
+                        alt="Trisa logo"
+                        class="css-11kikk4"
+                        src="TRISA-GDS.svg"
+                      />
+                    </a>
+                  </div>
+                </a>
               </a>
             </div>
             <div
