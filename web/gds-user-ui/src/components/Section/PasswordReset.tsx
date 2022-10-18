@@ -1,4 +1,4 @@
-import { Flex, Stack, useColorModeValue, Text } from '@chakra-ui/react';
+import { Flex, Stack, useColorModeValue, Heading } from '@chakra-ui/react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import SuccessMessage from 'components/ui/SuccessMessage';
@@ -68,14 +68,11 @@ const PasswordReset = () => {
         <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6} width={'100%'}>
           {message && <SuccessMessage message={message} handleClose={() => {}} />}
           <Stack align={'left'}>
-            <Text fontSize="lg" mb={3} fontWeight="bold">
+            <Heading size="md" mb={3} fontWeight="bold">
               <Trans id="Follow the instructions below to reset your TRISA password">
                 Follow the instructions below to reset your TRISA password
               </Trans>
-            </Text>
-            <Text fontSize={'sm'}>
-              <Trans id="Enter your email address">Enter your email address</Trans>
-            </Text>
+            </Heading>
           </Stack>
 
           <PasswordResetForm onSubmit={handleResetPassword} />

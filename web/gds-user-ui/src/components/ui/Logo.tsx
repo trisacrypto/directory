@@ -7,7 +7,7 @@ export default function Logo(props: BoxProps) {
   return (
     <Box {...props}>
       <Link to="/">
-        <CkLazyLoadImage src={TrisaLogo} alt="Trisa logo" objectFit="none" />
+        <CkLazyLoadImage src={TrisaLogo} alt="Trisa logo" objectFit={{ base: 'none' }} />
       </Link>
     </Box>
   );

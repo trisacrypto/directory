@@ -12,8 +12,7 @@ import {
   DrawerContent,
   useDisclosure,
   DrawerCloseButton,
-  Button,
-  Link
+  Button
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
 import Logo from 'components/ui/Logo';
@@ -25,6 +24,7 @@ import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 import useAuth from 'hooks/useAuth';
+import ChakraRouterLink from 'components/ChakraRouterLink';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show] = React.useState(false);
@@ -45,13 +45,9 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
       <Container maxW={'5xl'}>
         <Box flexBasis={{ base: '100%', md: 'auto' }}>
           <Flex align="center" justify={{ md: 'space-between' }}>
-            <Box>
-              <NavLink to={'/'}>
-                <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                  <Logo w={{ base: '50px', md: '120px' }} color={['colors.system.blue']} />
-                </Link>
-              </NavLink>
-            </Box>
+            <ChakraRouterLink to={'/'}>
+              <Logo w={{ base: '100px', md: '120px' }} />
+            </ChakraRouterLink>
             <Box ml="auto" display={{ base: 'block', sm: 'none' }} onClick={onOpen}>
               {show ? <CloseIcon color={iconColor} /> : <MenuIcon color={iconColor} />}
             </Box>

@@ -26,6 +26,7 @@ function PasswordResetForm({ onSubmit }: PasswordResetFormProps) {
             placeholder={t`Email Address`}
             type="email"
             size="lg"
+            label="Enter your email address"
             isInvalid={getValueByPathname(errors, 'email')}
             formHelperText={getValueByPathname(errors, 'email')?.message}
             controlId={''}
