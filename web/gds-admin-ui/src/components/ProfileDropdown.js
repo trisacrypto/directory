@@ -39,7 +39,7 @@ const ProfileDropdown = (props, state) => {
                     <div className="dropdown-header noti-title">
                         <h6 className="text-overflow m-0">Welcome!</h6>
                     </div>
-                    <a target="_top" href="mailto:info@rotational.io" className="dropdown-item notify-item">
+                    <a target="_top" href="mailto:support@rotational.io" className="dropdown-item notify-item">
                         <i className={`mdi mdi-help me-1`}></i>
                         <span>Support</span>
                     </a>
