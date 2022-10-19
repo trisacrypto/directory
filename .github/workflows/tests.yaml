@@ -100,7 +100,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v2
         with:
-          node-version: 16.8.0
+          node-version: "16.x.x"
           cache: "yarn"
           cache-dependency-path: ./web/gds-admin-ui/yarn.lock
 

@@ -1,15 +1,16 @@
 import React from 'react'
 import { Button } from 'react-bootstrap';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { updateReviewNote } from 'services/review-notes';
 import PropTypes from 'prop-types';
 import { updateReviewNoteApiResponseSuccess } from 'redux/vasp-details';
+import TextEditor from 'components/TextEditor';
 
 function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable }) {
-    const { register, handleSubmit, watch } = useForm({
+    const { register, handleSubmit, watch, control } = useForm({
         defaultValues: {
             note: note?.text
         }
@@ -45,7 +46,9 @@ function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <input {...register("noteId")} type="text" defaultValue={note?.id} hidden />
-            <textarea {...register("note", { required: true })} name="note" autoFocus className="form-control form-control-light mb-2" rows="3"></textarea>
+            <Controller name='note' control={control} render={({ field }) => (
+                <TextEditor {...field} className="mb-2" />
+            )} />
             <div className='d-flex gap-1'>
                 <Button type="submit" disabled={isSubmitting || !watchedNote} className='btn btn-success btn-sm'>Save</Button>
                 <Button onClick={handleCancelEditingClick} type="button" className='btn btn-sm btn-danger'>Cancel</Button>

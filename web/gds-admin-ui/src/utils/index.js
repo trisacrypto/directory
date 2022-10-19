@@ -253,4 +253,9 @@ export const validateIsoCode = (cc = '') => {
     return cc
 }
 
+export const isEditorContentEmpty = (text = '') => {
+    const regex = /(<([^>]+)>)/ig
+    return !text.replace(regex, "").length;
+}
+
 export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

@@ -4,7 +4,6 @@ import { Card, Col, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from 'constants/index';
 import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
 import dayjs from 'dayjs';
-import localizedFormat from 'dayjs/plugin/localizedFormat'
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
 import { BUSINESS_CATEGORY } from 'constants/basic-details';

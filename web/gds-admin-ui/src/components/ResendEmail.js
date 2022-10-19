@@ -5,7 +5,6 @@ import { useForm, useWatch } from "react-hook-form";
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { getCookie } from '../utils';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import { actionType, useModal } from 'contexts/modal';
 import { APICore } from 'helpers/api/apiCore';

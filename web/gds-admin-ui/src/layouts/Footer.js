@@ -10,6 +10,7 @@ const Footer = () => {
     useEffect(() => {
         getAppVersion().then(res => {
             setAppVersion(res.data)
+            // eslint-disable-next-line no-console
             console.log('version', res.data.version)
         }).catch(err => {
             console.error('[getAppVersion]', err)
