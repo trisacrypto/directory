@@ -283,7 +283,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 
 	// Construct the required parameters for the Sectigo request.
 	profile := c.certs.Profile()
-	batchName := fmt.Sprintf("%s-certreq-%s)", c.conf.DirectoryID, r.Id)
+	batchName := fmt.Sprintf("%s-certreq-%s", c.conf.DirectoryID, r.Id)
 
 	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
 		return fmt.Errorf("could not retrieve certificate request parameters for profile %q: %s", profile, err)
@@ -735,13 +735,15 @@ vaspsLoop:
 		}
 
 		// Calculate the number of days before the VASP's certificate expires.
-		notAfter := vasp.IdentityCertificate.NotAfter
-		if expirationDate, err = time.Parse(time.RFC3339, notAfter); err != nil {
+		if expirationDate, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
 			continue vaspsLoop
 		}
-		reissuanceDate := expirationDate.Add(-time.Hour * 240) // Calculate the reissuance date, 10 days before expiration
+
+		// Calculate the reissuance date, 10 days before expiration
+		reissuanceDate := expirationDate.Add(-time.Hour * 240)
 		timeBeforeExpiration := time.Until(expirationDate)
+		updateRequired := false
 
 		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
 		// NOTE: This computation returns fractional days rather than rounding up or down to the nearest day.
@@ -754,6 +756,7 @@ vaspsLoop:
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
 				continue vaspsLoop
 			}
+			updateRequired = true
 
 		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
 		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
@@ -779,19 +782,30 @@ vaspsLoop:
 				// we failed to send the email.
 				continue vaspsLoop
 			}
+			updateRequired = true
 
 		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
 		case daysBeforeExpiration <= 30:
+			// If the reminder fails do not stop processing and attempt to send reminder to admins
 			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
+			} else {
+				updateRequired = true
 			}
+
 			if _, err = c.email.SendExpiresAdminNotification(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
+				continue vaspsLoop
+			} else {
+				updateRequired = true
 			}
 		}
+
 		// We need to update the vasp record in the database so that the email logs are preserved.
-		if err = c.db.UpdateVASP(vasp); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+		if updateRequired {
+			if err = c.db.UpdateVASP(vasp); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+			}
 		}
 	}
 
