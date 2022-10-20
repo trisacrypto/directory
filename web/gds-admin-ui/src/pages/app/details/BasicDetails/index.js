@@ -98,7 +98,7 @@ function BasicDetails({ data }) {
                                 </Col>
                             </Row>
                             <Col>
-                                <p className="mb-2 fw-bold">Business categorie(s): <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
+                                <p className="mb-2 fw-bold">Business Category/Categories: <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
                             </Col>
                             <Col className='mt-4'>
                                 <TrisaDetails data={data} handleTrisaJsonExportClick={handleTrisaJsonExportClick} />

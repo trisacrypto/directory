@@ -29,8 +29,7 @@ function ReviewNoteForm({ handleReviewNoteSubmit, isSubmitting }) {
             <div className="text-end">
                 <div className="btn-group mb-2 ms-2">
                     <button type="submit" className="btn btn-primary btn-sm" disabled={!watchedNote || isSubmitting}>
-                        Submit
-                    </button>
+                        Submit </button>
                 </div>
             </div>
         </form>
