@@ -9,6 +9,7 @@ import {
     useExpanded,
 } from 'react-table';
 import classNames from 'classnames';
+import PropTypes from 'prop-types'
 
 // components
 import Pagination from './Pagination';
@@ -64,12 +65,13 @@ const Table = (props) => {
     const pagination = props['pagination'] || false;
     const isSelectable = props['isSelectable'] || false;
     const isExpandable = props['isExpandable'] || false;
+    const hiddenColumns = props['hiddenColumns'] || []
 
     const dataTable = useTable(
         {
             columns: props['columns'],
             data: props['data'],
-            initialState: { pageSize: props['pageSize'] || 10 },
+            initialState: { pageSize: props['pageSize'] || 10, hiddenColumns },
         },
         isSearchable && useGlobalFilter,
         isSortable && useSortBy,
@@ -182,5 +184,25 @@ const Table = (props) => {
         </>
     );
 };
+
+Table.propTypes = {
+    isSearchable: PropTypes.bool,
+    isSortable: PropTypes.bool,
+    pagination: PropTypes.bool,
+    isSelectable: PropTypes.bool,
+    isExpandable: PropTypes.bool,
+    hiddenColumns: PropTypes.arrayOf(PropTypes.string),
+    columns: PropTypes.arrayOf(PropTypes.object),
+    pageSize: PropTypes.number,
+    data: PropTypes.any,
+    sizePerPageList: PropTypes.arrayOf(PropTypes.shape({
+        text: PropTypes.string.isRequired,
+        value: PropTypes.number.isRequired
+    })),
+    onSelectedRows: PropTypes.func,
+    theadClass: PropTypes.string,
+    tableClass: PropTypes.string,
+    searchBoxClass: PropTypes.string
+}
 
 export default Table;

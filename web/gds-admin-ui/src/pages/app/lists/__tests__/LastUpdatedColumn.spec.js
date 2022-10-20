@@ -1,5 +1,5 @@
 import { render, screen } from "utils/test-utils"
-import { LastUpdatedColumn } from ".."
+import LastUpdatedColumn from "../LastUpdatedColumn"
 import faker from 'faker'
 import dayjs from 'dayjs'
 

@@ -7,39 +7,7 @@ import { fetchAutocomplete } from 'redux/actions';
 import { fetchAllAutocomplete } from 'redux/selectors';
 import { useHistory } from 'react-router-dom';
 import classNames from 'classnames';
-
-const Control = ({ children, ...props }) => {
-    const { handleClick } = props.selectProps;
-    return (
-        <components.Control {...props}>
-            <span onMouseDown={handleClick} className="mdi mdi-magnify search-icon"></span>
-            {children}
-        </components.Control>
-    );
-};
-
-const MenuList = (props) => {
-    const { options } = props.selectProps;
-
-    return (
-        <components.MenuList {...props}>
-            {/* menu header */}
-            <div className="dropdown-header noti-title">
-                <h5 className="text-overflow mb-2">
-                    Found <span className="text-danger">{options.length}</span> results
-                </h5>
-            </div>
-            {props.children}
-        </components.MenuList>
-    );
-};
-
-
-
-
-function formateOptions(options) {
-    return Object.entries(options).map(([k, v]) => ({ label: k, value: v }))
-}
+import { formateOptionsToLabelValueObject } from 'utils'
 
 
 const TopbarSearch = (props) => {
@@ -64,7 +32,7 @@ const TopbarSearch = (props) => {
     };
 
     const filteredOptions = (input = '') => {
-        const f = formateOptions(autocomplete)
+        const f = formateOptionsToLabelValueObject(autocomplete)
         return f.filter((option) => option.value.toLowerCase().includes(input.toLowerCase()) || option.label.toLowerCase().includes(input.toLowerCase()))
     }
 
@@ -127,4 +95,32 @@ const TopbarSearch = (props) => {
     );
 };
 
+const Control = ({ children, ...props }) => {
+    const { handleClick } = props.selectProps;
+    return (
+        <components.Control {...props}>
+            <span onMouseDown={handleClick} className="mdi mdi-magnify search-icon"></span>
+            {children}
+        </components.Control>
+    );
+};
+
+const MenuList = (props) => {
+    const { options } = props.selectProps;
+
+    return (
+        <components.MenuList {...props}>
+            {/* menu header */}
+            <div className="dropdown-header noti-title">
+                <h5 className="text-overflow mb-2">
+                    Found <span className="text-danger">{options.length}</span> results
+                </h5>
+            </div>
+            {props.children}
+        </components.MenuList>
+    );
+};
+
 export default TopbarSearch;
+
+
