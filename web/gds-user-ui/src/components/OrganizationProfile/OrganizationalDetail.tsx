@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Box, Heading, Stack, Text, SimpleGrid, List, ListItem, Tag } from '@chakra-ui/react';
 import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { getNationalIdentificationLabel } from 'constants/national-identification';
@@ -6,6 +6,9 @@ import { COUNTRIES } from 'constants/countries';
 import { renderAddress } from 'utils/address-utils';
 import { hasValue } from 'utils/utils';
 import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
+import Store from 'application/store';
+
 type OrganizationalDetailProps = {
   data: any;
 };
@@ -17,17 +20,30 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
   const [, setDivCntHeight] = useState(getCntDivEl);
   const orgRef = useRef<HTMLDivElement>(null);
   const cntRef = useRef<HTMLDivElement>(null);
+  const [profileStatus, setProfileStatus] = useState('');
   useLayoutEffect(() => {
     setDivOrgHeight(orgRef?.current?.clientHeight || 500);
     setDivCntHeight(cntRef?.current?.clientHeight || 500);
   }, [getOrgDivEl, getCntDivEl]);
+
+  console.log('[Organizational Detail]', data?.organization_name);
+
+  useEffect(() => {
+    const { mainnetSubmitted, testnetSubmitted } = Store.getState().stepper;
+    if (mainnetSubmitted || testnetSubmitted) {
+      setProfileStatus(data?.organization_name);
+    }
+  }, [data?.organization_name]);
 
   return (
     <Stack py={5} w="full">
       <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
         <Stack mb={5}>
           <Heading fontSize={20}>
-            <Trans id="TRISA Organization Profile">TRISA Organization Profile</Trans>
+            <Trans id="TRISA Organization Profile:">TRISA Organization Profile:</Trans>
+            <Text as={'span'} pl={2} color={'#2552C7'}>
+              [{profileStatus || t`pending registration`}]
+            </Text>
           </Heading>
         </Stack>
       </Stack>
