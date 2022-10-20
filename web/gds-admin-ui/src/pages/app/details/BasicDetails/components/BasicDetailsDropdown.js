@@ -15,6 +15,10 @@ import DeleteVaspModal from './DeleteVaspModal'
 import Ivms101RecordForm from './Ivms101RecordForm'
 import ReviewForm from './ReviewForm'
 import TrisaImplementationDetailsForm from './TrisaImplementationDetailsForm'
+import Print from './Print'
+import slugify from 'slugify'
+import toast from 'react-hot-toast';
+
 
 const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
     const { dispatch } = useModal()
@@ -22,14 +26,16 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
 
     const handleClose = () => dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp: { name: vasp?.name, id: vasp?.vasp?.id } } })
 
-    const generatePdfDocument = async (filename) => {
+    const generatePdfDocument = async () => {
+        const filename = Date.now() + '-' + slugify(vasp?.name || '')
         nProgress.start()
         try {
             const blob = await pdf(<VaspDocument vasp={vasp} notes={reviewNotes} />).toBlob()
             downloadFile(blob, `${filename}.pdf`, 'application/pdf')
             nProgress.done()
         } catch (error) {
-            console.error('Unable to export as PDF', error)
+            // TODO: catch this error with sentry
+            toast.error('Unable to export as PDF')
             nProgress.done()
         }
     };
@@ -102,9 +108,7 @@ const BasicDetailsDropDown = ({ isNotPendingReview, vasp }) => {
                     </>
                 }
 
-                <Dropdown.Item onClick={() => generatePdfDocument(vasp?.name)}>
-                    <i className="mdi mdi-printer me-1"></i>Print
-                </Dropdown.Item>
+                <Print onPrint={generatePdfDocument} />
                 <Dropdown.Item onClick={handleClose}>
                     <i className="mdi mdi-email me-1"></i>Resend
                 </Dropdown.Item>
