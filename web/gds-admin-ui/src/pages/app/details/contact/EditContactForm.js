@@ -12,8 +12,6 @@ import React from "react"
 import { clearContactErrorMessage, updateContact } from "redux/vasp-details"
 import { useParams } from "react-router-dom"
 
-// eslint-disable-next-line no-useless-escape
-
 const EditContactForm = ({ contactType }) => {
     const contacts = useSelector(getContacts)
     const { control, handleSubmit, formState: { isDirty } } = useForm({
@@ -23,7 +21,7 @@ const EditContactForm = ({ contactType }) => {
     const params = useParams()
     const dispatch = useDispatch()
     const safeDispatch = useSafeDispatch(dispatch)
-    const [isOpen, setIsOpen] = React.useContext(ModalContext)
+    const [, setIsOpen] = React.useContext(ModalContext)
     const isLoading = useSelector(getVaspDetailsLoadingState)
     const getVaspDetailsError = useSelector(getContactErrorState)
 
@@ -32,6 +30,7 @@ const EditContactForm = ({ contactType }) => {
         return () => {
             dispatch(clearContactErrorMessage())
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const onSubmit = (data) => {

@@ -4,7 +4,6 @@ import { Card, Col, Row } from 'react-bootstrap';
 import { Status, StatusLabel } from 'constants/index';
 import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
 import dayjs from 'dayjs';
-import localizedFormat from 'dayjs/plugin/localizedFormat'
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
 import { BUSINESS_CATEGORY } from 'constants/basic-details';
@@ -98,7 +97,7 @@ function BasicDetails({ data }) {
                                 </Col>
                             </Row>
                             <Col>
-                                <p className="mb-2 fw-bold">Business categorie(s): <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
+                                <p className="mb-2 fw-bold">Business Category/Categories: <span className="badge bg-primary rounded-pill px-1">{BUSINESS_CATEGORY[data?.vasp?.business_category]}</span></p>
                             </Col>
                             <Col className='mt-4'>
                                 <TrisaDetails data={data} handleTrisaJsonExportClick={handleTrisaJsonExportClick} />
