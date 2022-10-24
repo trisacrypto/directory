@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Garden
+                    Beauty
                      
                     <br />
-                    Automotive
+                    Shoes
                      
                     <br />
                     23
                      
-                    Murazik Green
+                    Seamus Ranch
                     <br />
-                    Coral Gables
+                    Springfield
                      
                     
                      
                     MA
                      
-                    24716-8630
+                    52062
                       
                     <br />
                     US
