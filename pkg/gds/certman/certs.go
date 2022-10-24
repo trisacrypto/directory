@@ -813,7 +813,7 @@ vaspsLoop:
 		if !bytes.Equal(sig, updated) {
 			// We need to update the vasp record in the database so that the email logs are preserved.
 			if err = c.db.UpdateVASP(vasp); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the VASP record in the database")
 				continue vaspsLoop
 			}
 		}
