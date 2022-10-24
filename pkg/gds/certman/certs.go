@@ -740,10 +740,16 @@ vaspsLoop:
 			continue vaspsLoop
 		}
 
+		// Compute VASP signature to check if it has been modified
+		var sig []byte
+		if sig, err = models.VASPSignature(vasp); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			continue vaspsLoop
+		}
+
 		// Calculate the reissuance date, 10 days before expiration
 		reissuanceDate := expirationDate.Add(-time.Hour * 240)
 		timeBeforeExpiration := time.Until(expirationDate)
-		updateRequired := false
 
 		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
 		// NOTE: This computation returns fractional days rather than rounding up or down to the nearest day.
@@ -756,7 +762,6 @@ vaspsLoop:
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
 				continue vaspsLoop
 			}
-			updateRequired = true
 
 		// Ten days before expiration, reissue the VASP's identity certificate, send the email with the created pkcs12
 		// password and send the whisper link, as well as notifying the TRISA admin that reissuance has started.
@@ -782,29 +787,34 @@ vaspsLoop:
 				// we failed to send the email.
 				continue vaspsLoop
 			}
-			updateRequired = true
 
 		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
 		case daysBeforeExpiration <= 30:
 			// If the reminder fails do not stop processing and attempt to send reminder to admins
 			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
-			} else {
-				updateRequired = true
 			}
 
 			if _, err = c.email.SendExpiresAdminNotification(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
 				continue vaspsLoop
-			} else {
-				updateRequired = true
 			}
 		}
 
-		// We need to update the vasp record in the database so that the email logs are preserved.
-		if updateRequired {
+		// Perform VASP hash check to determine if the VASP has been updated, and if it
+		// has, save the updates back to the database (otherwise do not save so that the
+		// last modified timestamp is not updated every day).
+		var updated []byte
+		if updated, err = models.VASPSignature(vasp); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			continue vaspsLoop
+		}
+
+		if !bytes.Equal(sig, updated) {
+			// We need to update the vasp record in the database so that the email logs are preserved.
 			if err = c.db.UpdateVASP(vasp); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+				continue vaspsLoop
 			}
 		}
 	}
