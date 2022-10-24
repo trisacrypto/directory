@@ -91,23 +91,23 @@ describe('defaultEndpointPrefix', () => {
                   <address
                     data-testid="addressField"
                   >
-                    Beauty
+                    Games
                      
                     <br />
-                    Shoes
+                    Kids
                      
                     <br />
                     23
                      
-                    Seamus Ranch
+                    Bethany View
                     <br />
-                    Springfield
+                    Fort Wayne
                      
                     
                      
                     MA
                      
-                    52062
+                    04755
                       
                     <br />
                     US

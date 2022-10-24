@@ -174,12 +174,13 @@ function getBase64Size(str) {
  * @param {string} target item to copy to clipboard
  * @returns Promise<void>
  */
-async function copyToClipboard(target = '') {
+async function copyToClipboard(data = '') {
     try {
-        await navigator.clipboard.writeText(target);
+        await navigator.clipboard.writeText(data);
         toast.success('Copied to clipboard')
     } catch (err) {
-        throw err
+        // TODO: catch error with sentry
+        console.error('[copyToClipboard]', err)
     }
 }
 
