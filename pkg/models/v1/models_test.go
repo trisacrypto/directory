@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/models/v1"
 	. "github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
@@ -888,7 +887,7 @@ func TestVASPSignature(t *testing.T) {
 	siga, err := VASPSignature(vaspa)
 	require.NoError(t, err, "could not compute vaspa signature")
 
-	vaspa.Extra, _ = anypb.New(&models.GDSExtraData{})
+	vaspa.Extra, _ = anypb.New(&GDSExtraData{})
 
 	_, err = CreateReviewNote(vaspa, "123", "admin@example.com", "this is a test note")
 	require.NoError(t, err, "could not add review note")
