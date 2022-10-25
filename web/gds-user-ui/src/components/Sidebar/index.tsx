@@ -14,7 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       <SidebarContent
         onClose={() => onClose}
         display={{ base: 'none', md: 'block' }}
-        bg="#363740"
+        bg="#000000"
       />
       <Drawer
         autoFocus={false}
