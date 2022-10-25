@@ -1,11 +1,10 @@
 
-import classNames from 'classnames';
 import React from 'react'
 import PropTypes from 'prop-types';
 import { Button, Col, Row } from 'react-bootstrap';
 import { formatPhoneNumberIntl, isValidPhoneNumber } from 'react-phone-number-input';
 import { formatDisplayedData, verifiedContactStatus } from 'utils';
-import { VERIFIED_CONTACT_STATUS, VERIFIED_CONTACT_STATUS_LABEL } from 'constants/index';
+import { VERIFIED_CONTACT_STATUS_LABEL, VERIFIED_CONTACT_STATUS } from 'constants/index';
 import DeleteContactModal from './DeleteContactModal';
 import { Modal, ModalContent, ModalOpenButton } from 'components/Modal';
 import EditContactModal from './EditContactModal';
@@ -13,18 +12,28 @@ import EditContactModal from './EditContactModal';
 
 function Contact({ data, type, verifiedContact }) {
     const status = verifiedContactStatus({ data, type, verifiedContact })
-    const getColor = (state) => {
+
+    const getIcons = React.useCallback((state) => {
         if (state === VERIFIED_CONTACT_STATUS.ALTERNATE_VERIFIED) {
-            return 'text-warning'
+            return <i className="mdi mdi-alert fs-4 text-warning"></i>
+
         }
         if (state === VERIFIED_CONTACT_STATUS.UNVERIFIED) {
-            return 'text-danger'
+            return <i className="mdi mdi-close-circle fs-4 text-danger"></i>
         }
-        return undefined
-    }
+
+        if (state === VERIFIED_CONTACT_STATUS.VERIFIED) {
+            return <i className='mdi mdi-check-all fs-4 text-success'></i>
+        }
+        return
+    }, [])
+
+    const hasIVMSRecord = !!data?.person
+    const hasValue = React.useMemo(() => data && Object.values(data).length, [data])
+
 
     return (
-        <div data-testid="contact-node" className={classNames(getColor(status))}>
+        <div data-testid="contact-node">
             <p className="fw-bold mb-1 mt-2"> <span className='text-capitalize'>{type}</span> contact
                 <Modal>
                     <ModalOpenButton>
@@ -46,15 +55,21 @@ function Contact({ data, type, verifiedContact }) {
                     <DeleteContactModal type={type} />
                 </Modal>
             </p>
-            <hr className='my-1' />
+            <hr className={'my-1'} />
             <Row>
-                <ul className='list-unstyled'>
-                    {data?.name ? <li>{formatDisplayedData(data?.name)}</li> : null}
-                    {data?.phone && isValidPhoneNumber(data.phone) ? <li>{formatDisplayedData(formatPhoneNumberIntl(data.phone))}</li> : null}
-                    {data?.email ? <li>{formatDisplayedData(data?.email)} <small data-testid="verifiedContactStatus" style={{ fontStyle: 'italic' }}>{VERIFIED_CONTACT_STATUS_LABEL[status]}</small> </li> : null}
-                    <li><small style={{ fontStyle: 'italic' }}>{data?.person ? 'Has IVMS101 Record' : 'No IVMS101 Data'}</small></li>
-                </ul>
+                <div className='d-flex gap-2'>
+                    <div className=''>
+                        {hasValue && getIcons(status)}
+                    </div>
+                    <ul className='list-unstyled'>
+                        {data?.name ? <li>{formatDisplayedData(data?.name)}</li> : null}
+                        {data?.phone && isValidPhoneNumber(data.phone) ? <li>{formatDisplayedData(formatPhoneNumberIntl(data.phone))}</li> : null}
+                        {data?.email ? <li>{formatDisplayedData(data?.email)} <small data-testid="verifiedContactStatus" style={{ fontStyle: 'italic' }}>{VERIFIED_CONTACT_STATUS_LABEL[status]}</small> </li> : null}
+                        <li><small style={{ fontStyle: 'italic' }}>{hasIVMSRecord ? 'Has IVMS101 Record' : 'No IVMS101 Data'}</small></li>
+                    </ul>
+                </div>
             </Row>
+
         </div>
     )
 }
