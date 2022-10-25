@@ -41,7 +41,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         <Stack mb={5}>
           <Heading fontSize={20}>
             <Trans id="TRISA Organization Profile:">TRISA Organization Profile:</Trans>
-            <Text as={'span'} pl={2} color={'#2552C7'}>
+            <Text as={'span'} pl={2} color={'#55ACD8'}>
               [{profileStatus || t`pending registration`}]
             </Text>
           </Heading>
