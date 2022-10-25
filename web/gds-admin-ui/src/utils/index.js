@@ -174,12 +174,13 @@ function getBase64Size(str) {
  * @param {string} target item to copy to clipboard
  * @returns Promise<void>
  */
-async function copyToClipboard(target = '') {
+async function copyToClipboard(data = '') {
     try {
-        await navigator.clipboard.writeText(target);
+        await navigator.clipboard.writeText(data);
         toast.success('Copied to clipboard')
     } catch (err) {
-        throw err
+        // TODO: catch error with sentry
+        console.error('[copyToClipboard]', err)
     }
 }
 
@@ -251,6 +252,11 @@ export const validateIsoCode = (cc = '') => {
     }
 
     return cc
+}
+
+export const isEditorContentEmpty = (text = '') => {
+    const regex = /(<([^>]+)>)/ig
+    return !text.replace(regex, "").length;
 }
 
 export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

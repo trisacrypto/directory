@@ -131,3 +131,36 @@ a[disabled] {
     font-size: 12px;
     line-height: 1.42857;
 }
+
+.quill {
+    background-color: #f1f3fa;
+    border: 2px solid var(--bs-light);
+    .ql-toolbar {
+        border: 0;
+    }
+
+    .ql-container {
+        border: 0px solid #f1f3fa73 !important;
+        .ql-editor {
+            background: #fff;
+            min-height: 9rem;
+            position: relative;
+
+            &:focus::after {
+                position: absolute;
+                transition: top 200ms linear;
+                content: '';
+                height: 100%;
+                width: 100%;
+                top: 0;
+                left: 0;
+                border: 2px solid var(--bs-primary);
+            }
+        }
+    }
+}
+
+blockquote {
+    border-left: 4px solid var(--bs-gray-400);
+    padding: 5px 10px;
+}

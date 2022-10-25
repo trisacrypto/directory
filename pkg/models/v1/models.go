@@ -1,6 +1,7 @@
 package models
 
 import (
+	"crypto/sha512"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -600,4 +602,17 @@ func ValidateVASP(vasp *pb.VASP, partial bool) (err error) {
 	default:
 		return err
 	}
+}
+
+// VASPSignature returns a SHA512 hash of the protocol buffer bytes that represents the
+// current data in the VASP. This signature can be used to compare two VASP records for
+// equality or to detect if a VASP record has been changed.
+func VASPSignature(vasp *pb.VASP) (_ []byte, err error) {
+	var data []byte
+	if data, err = proto.Marshal(vasp); err != nil {
+		return nil, err
+	}
+
+	sum := sha512.Sum512(data)
+	return sum[:], nil
 }

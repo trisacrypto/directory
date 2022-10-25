@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
 
 const ErrorPage = (): React$Element<React$FragmentType> => {
@@ -16,7 +16,7 @@ const ErrorPage = (): React$Element<React$FragmentType> => {
                                 <img src="/oops-icon.png" alt="" height="200" />
                                 <h4 className="text-uppercase mt-3">Sorry, Something went wrong </h4>
                                 <p className="text-muted mt-3">
-                                  An internal error occured. If the problem persists, contact trisa administrator
+                                    An internal error occured. If the problem persists, contact trisa administrator
                                 </p>
 
                                 <Link className="btn btn-info mt-3" to={"/"}>

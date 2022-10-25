@@ -7,11 +7,14 @@ import EditReviewNote from './EditReviewNote'
 import PropTypes from 'prop-types';
 import { deleteReviewNoteApiResponse } from 'redux/vasp-details'
 import TimeAgo from 'components/TimeAgo'
+import DOMPurify from 'dompurify';
+
 
 function ReviewNote({ note, vaspId }) {
     const [isEditable, setIsEditable] = React.useState(false);
     const dispatch = useDispatch()
     const safeDispatch = useSafeDispatch(dispatch)
+    const sanitizedNote = DOMPurify.sanitize(note.text)
 
     const handleDeleteClick = () => {
         if (note && vaspId) {
@@ -46,7 +49,7 @@ function ReviewNote({ note, vaspId }) {
                     </div>
                 </div>
                 <div>
-                    {isEditable ? <EditReviewNote note={note} vaspId={vaspId} setIsEditable={setIsEditable} handleCancelEditingClick={handleCancelEditingClick} /> : <p className='m-0' data-testid="note">{note.text}</p>}
+                    {isEditable ? <EditReviewNote note={note} vaspId={vaspId} setIsEditable={setIsEditable} handleCancelEditingClick={handleCancelEditingClick} /> : <div className='m-0' data-testid="note" dangerouslySetInnerHTML={{ __html: sanitizedNote }} />}
                 </div>
             </div>
         </div>
