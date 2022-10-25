@@ -10,6 +10,9 @@ import {
 } from 'react-table';
 import classNames from 'classnames';
 import PropTypes from 'prop-types'
+import qs from 'query-string'
+import { useHistory } from 'react-router-dom'
+import useQuery from 'hooks/useQuery'
 
 // components
 import Pagination from './Pagination';
@@ -66,12 +69,22 @@ const Table = (props) => {
     const isSelectable = props['isSelectable'] || false;
     const isExpandable = props['isExpandable'] || false;
     const hiddenColumns = props['hiddenColumns'] || []
+    const query = useQuery()
+    const history = useHistory()
 
     const dataTable = useTable(
         {
             columns: props['columns'],
             data: props['data'],
-            initialState: { pageSize: props['pageSize'] || 10, hiddenColumns },
+            initialState: {
+                pageSize: props['pageSize'] || 10, hiddenColumns,
+                sortBy: [{
+                    id: query.get('sortBy'),
+                    desc: JSON.parse(query.get('desc'))
+                }]
+            },
+            autoResetSortBy: false
+
         },
         isSearchable && useGlobalFilter,
         isSortable && useSortBy,
@@ -121,13 +134,27 @@ const Table = (props) => {
         }
     );
 
+    const sortBy = dataTable?.state.sortBy[0]
+
     React.useEffect(() => {
         props.onSelectedRows(dataTable.selectedFlatRows);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dataTable.selectedFlatRows])
 
-    let rows = pagination ? dataTable.page : dataTable.rows;
+    React.useEffect(() => {
+        if (sortBy?.id) {
+            const query = { sortBy: sortBy?.id || 'name', desc: sortBy?.desc || false }
+            history.push({ search: qs.stringify(query) })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortBy?.id, sortBy?.desc])
+
+    React.useEffect(() => {
+
+    })
+
+    const rows = pagination ? dataTable.page : dataTable.rows;
 
     return (
         <>
