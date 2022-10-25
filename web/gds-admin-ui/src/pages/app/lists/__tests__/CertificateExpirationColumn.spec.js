@@ -1,5 +1,5 @@
 import { render, screen } from "utils/test-utils"
-import { CertificateExpirationColumn } from ".."
+import CertificateExpirationColumn from "../CertificateExpirationColumn"
 import faker from 'faker'
 import dayjs from 'dayjs'
 

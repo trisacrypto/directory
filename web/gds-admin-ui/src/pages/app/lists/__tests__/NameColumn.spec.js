@@ -1,5 +1,5 @@
 import { render, screen } from "utils/test-utils"
-import { NameColumn } from ".."
+import NameColumn from "../NameColumn"
 import faker from 'faker'
 
 describe('<NameColumn />', () => {

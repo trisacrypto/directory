@@ -259,4 +259,8 @@ export const isEditorContentEmpty = (text = '') => {
     return !text.replace(regex, "").length;
 }
 
+export function formateOptionsToLabelValueObject(options) {
+    return Object.entries(options).map(([k, v]) => ({ label: k, value: v }))
+}
+
 export { isOptionAvailable, getMustComplyRegulations, getConductsCustomerKYC, getMustSafeguardPii, getSafeguardPii, isValidIvmsAddress, hasAddressField, hasAddressLine, hasAddressFieldAndLine, exportToCsv, copyToClipboard, getBase64Size, formatBytes, currencyFormatter as intlFormatter, verifiedContactStatus, generateMd5, formatDate, isValidHttpUrl, getDirectoryLogo, isTestNet, getDirectoryName, getDirectoryURL, getStatusClassName, formatDisplayedData, defaultEndpointPrefix, apiHost, getRatios, capitalizeFirstLetter, getCookie }

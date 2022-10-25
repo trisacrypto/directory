@@ -1,5 +1,5 @@
 import { render, screen } from "utils/test-utils"
-import { StatusColumn } from ".."
+import StatusColumn from "../StatusColumn"
 import faker from 'faker'
 import { StatusLabel, Status } from '../../../../constants/dashboard';
 

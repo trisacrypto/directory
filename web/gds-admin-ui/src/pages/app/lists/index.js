@@ -1,7 +1,6 @@
 import React from 'react';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Row, Col, Card, Button } from 'react-bootstrap';
-import classNames from 'classnames';
 import dayjs from 'dayjs';
 import Select from 'react-select'
 import qs from 'query-string'
@@ -12,68 +11,18 @@ import PageTitle from 'components/PageTitle';
 import Table from 'components/Table';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchVasps } from '../../../redux/dashboard/actions';
+import { fetchVasps } from 'redux/dashboard/actions';
 import { StatusLabel } from '../../../constants';
-import { exportToCsv, getStatusClassName } from '../../../utils';
+import { exportToCsv } from 'utils';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 import { getAllVasps, getVaspsLoadingState } from 'redux/selectors/vasps';
 import OvalLoader from 'components/OvalLoader';
+import NameColumn from './NameColumn';
+import CertificateExpirationColumn from './CertificateExpirationColumn';
+import LastUpdatedColumn from './LastUpdatedColumn';
+import StatusColumn from './StatusColumn';
 dayjs.extend(relativeTime)
 
-
-export const NameColumn = ({ row }) => {
-    const id = row?.original?.id || "";
-
-    return (
-        <React.Fragment>
-            <p className="m-0 d-inline-block align-middle font-16">
-                <Link to={`/vasps/${id}`} className="text-body">
-                    <span data-testid="name">
-                        {row.original.name || 'N/A'}
-                    </span>
-                    <span className="text-muted font-italic d-block" data-testid="commonName">
-                        {row.original.common_name || 'N/A'}
-                    </span>
-                </Link>
-            </p>
-        </React.Fragment>
-    );
-};
-
-export const CertificateExpirationColumn = ({ row }) => {
-
-    return (
-        <React.Fragment>
-            <p className="m-0 d-inline-block align-middle font-16" data-testid="certificate_expiration">
-                {row?.original?.certificate_expiration ? dayjs(row?.original?.certificate_expiration).format("MMM DD, YYYY h:mm:ss a") : 'N/A'}
-            </p>
-        </React.Fragment>
-    );
-};
-
-
-export const LastUpdatedColumn = ({ row }) => {
-
-    return <React.Fragment>
-        <p className="m-0 d-inline-block align-middle font-16">
-            <span data-testid="last_updated">
-                {row?.original?.last_updated ? dayjs(row?.original?.last_updated).fromNow() : 'N/A'}
-            </span>
-        </p>
-    </React.Fragment>
-}
-
-export const StatusColumn = ({ row }) => {
-    return (
-        <React.Fragment>
-            <span
-                data-testid="verification_status"
-                className={classNames('badge', getStatusClassName(row.original.verification_status))}>
-                {StatusLabel[row.original.verification_status] || 'N/A'}
-            </span>
-        </React.Fragment>
-    );
-};
 
 const columns = [
     {
@@ -81,6 +30,12 @@ const columns = [
         accessor: 'name',
         sort: true,
         Cell: NameColumn,
+    },
+    {
+        Header: 'Common Name',
+        accessor: 'common_name',
+        sort: true,
+        Cell: <></>,
     },
     {
         Header: 'Status',
@@ -129,6 +84,25 @@ const customStyles = {
     control: (styles) => ({ ...styles, paddingLeft: '9px !important' })
 };
 
+const sizePerPageList = [
+    {
+        text: '5',
+        value: 5,
+    },
+    {
+        text: '10',
+        value: 10,
+    },
+    {
+        text: '20',
+        value: 20,
+    },
+    {
+        text: '100',
+        value: 100
+    }
+];
+
 
 const VaspsList = () => {
     const location = useLocation()
@@ -142,25 +116,6 @@ const VaspsList = () => {
     const isLoading = useSelector(getVaspsLoadingState)
     const history = useHistory()
     const [selectedRows, setSelectedData] = React.useState([]);
-
-    const sizePerPageList = [
-        {
-            text: '5',
-            value: 5,
-        },
-        {
-            text: '10',
-            value: 10,
-        },
-        {
-            text: '20',
-            value: 20,
-        },
-        {
-            text: '100',
-            value: 100
-        }
-    ];
 
     React.useEffect(() => {
         safeDispatch(fetchVasps({ queryParams }))
@@ -239,10 +194,11 @@ const VaspsList = () => {
                                         data={data?.vasps}
                                         pageSize={data?.page_size || 100}
                                         sizePerPageList={sizePerPageList}
-                                        isSortable={true}
-                                        isSelectable={true}
-                                        pagination={true}
-                                        isSearchable={true}
+                                        hiddenColumns={['common_name']}
+                                        isSortable
+                                        isSelectable
+                                        pagination
+                                        isSearchable
                                         theadClass="table-light"
                                         searchBoxClass="mt-2 mb-3"
                                         onSelectedRows={onSelectedRows}
