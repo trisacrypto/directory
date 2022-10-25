@@ -1,0 +1,6 @@
+{
+  "cSpell.words": ["import", "State"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true
+}

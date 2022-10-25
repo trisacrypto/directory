@@ -88,8 +88,9 @@
     "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "lint-staged": {
-    "*.{js,ts,tsx,jsx,json,scss,css,md}": [
-      "prettier --single-quote  --write"
+    "**/*.{js,ts,jsx,json}": [
+      "eslint . --fix",
+      "prettier --write ."
     ]
   },
   "husky": {
