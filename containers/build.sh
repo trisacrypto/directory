@@ -149,6 +149,9 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_VASPDIRECTORY_CLIENT_ID} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
 
 docker buildx build \
@@ -157,6 +160,9 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_TRISATEST_CLIENT_ID} \
+    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
 
 # Build the Admin UI images for admin.trisatest.dev and admin.vaspdirectory.dev
@@ -168,6 +174,8 @@ docker buildx build \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
     --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
 
 docker buildx build \
@@ -178,6 +186,8 @@ docker buildx build \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_TRISATEST_CLIENT_ID} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
     --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
+    --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
+    --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
 
 # Retag the images to push to gcr.io
