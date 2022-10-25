@@ -147,6 +147,32 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "rereview",
+			Usage:  "change a VASP verification status after it has been reviewed",
+			Action: rereview,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to revoke the certificates of",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+				&cli.StringFlag{
+					Name:    "verification-state",
+					Aliases: []string{"state", "s"},
+					Usage:   "specify the verification status for the VASP",
+				},
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -484,6 +510,55 @@ func revokeCerts(c *cli.Context) (err error) {
 	}
 
 	fmt.Println("VASP registration revoked")
+	return nil
+}
+
+func rereview(c *cli.Context) (err error) {
+	var newStatus pb.VerificationState
+	if state := c.String("verification-state"); state != "" {
+		state = strings.Replace(strings.ToUpper(state), " ", "_", -1)
+		newStatus = pb.VerificationState(pb.VerificationState_value[state])
+	}
+
+	if newStatus == pb.VerificationState_NO_VERIFICATION {
+		return cli.Exit("verification-state needs to be specified", 1)
+	}
+
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	if vasp.VerificationStatus >= pb.VerificationState_VERIFIED {
+		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke instead", vasp.VerificationStatus), 1)
+	}
+
+	// Check with the user if we should continue with the certificate revocation
+	fmt.Printf("updating verification state for %s\n", vasp.CommonName)
+	if !c.Bool("yes") {
+		if !askForConfirmation(fmt.Sprintf("set VASP status to %q?", newStatus)) {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	// Set the VASP state to rejected
+	if err = models.UpdateVerificationStatus(
+		vasp,
+		newStatus,
+		"verification state updated by admins",
+		"support@rotational.io",
+	); err != nil {
+		return cli.Exit(fmt.Errorf("could not update VASP status: %s", err), 1)
+	}
+
+	if err = db.UpdateVASP(vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
+	}
+
+	fmt.Println("VASP verification state updated")
 	return nil
 }
 
