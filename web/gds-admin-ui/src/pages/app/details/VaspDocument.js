@@ -1,5 +1,6 @@
 import React from 'react';
 import { Page, Text, View, Font, Document, StyleSheet, Link } from '@react-pdf/renderer';
+import Html from 'react-pdf-html';
 import { formatDate, formatDisplayedData, getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, hasAddressField, hasAddressFieldAndLine, hasAddressLine, intlFormatter, verifiedContactStatus } from 'utils';
 import { BUSINESS_CATEGORY, NAME_IDENTIFIER_TYPE } from 'constants/basic-details';
 import { AddressTypeHeaders, StatusLabel, VERIFIED_CONTACT_STATUS_LABEL } from 'constants/index';
@@ -286,7 +287,9 @@ const ReviewNote = ({ note }) => {
         <View style={{ marginBottom: 5 }}>
             {note?.id ?
                 <View style={[styles.dFlex]}>
-                    <Text>{note?.text} <Text style={{ fontStyle: 'italic' }}>{note?.editor ? '(edited)' : ''}</Text></Text>
+                    <Text>
+                        <Html style={{ fontSize: 12 }}>{note?.text}</Html>
+                        <Text style={{ fontStyle: 'italic' }}>{note?.editor ? '(edited)' : ''}</Text></Text>
                 </View> : null
             }
             {note?.id ? <View>
