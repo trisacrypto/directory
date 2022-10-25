@@ -59,7 +59,7 @@ if [[ $# -eq 1 ]]; then
     case $1 in
         clean)
             echo "your k8s cluster context is $KUBECTX"
-            echo "removing issuer from GDS pod in $NAMESPACE"
+            echo "removing reissuer from GDS pod in $NAMESPACE"
             kubectl -n $NAMESPACE exec -it gds-0 -- rm /usr/local/bin/reissuer
             exit 0
             ;;

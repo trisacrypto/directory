@@ -1,7 +1,9 @@
 package models_test
 
 import (
+	"bytes"
 	"encoding/hex"
+	"os"
 	"testing"
 	"time"
 
@@ -10,7 +12,9 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestVASPExtra(t *testing.T) {
@@ -847,4 +851,74 @@ func TestUpdateVerificationStatus(t *testing.T) {
 	require.Equal(t, pb.VerificationState_REVIEWED, auditLog[1].CurrentState)
 	require.Equal(t, "review completed", auditLog[1].Description)
 	require.Equal(t, "pontoon@boatz.com", auditLog[1].Source)
+}
+
+func TestVASPSignature(t *testing.T) {
+	// Signature comparison assertion (can require equal or require not equal using cmp)
+	compare := func(a, b *pb.VASP, cmp require.BoolAssertionFunc, msg ...interface{}) {
+		siga, err := VASPSignature(a)
+		require.NoError(t, err, "could not get signature from vaspa")
+
+		sigb, err := VASPSignature(b)
+		require.NoError(t, err, "could not get signature from vaspb")
+
+		cmp(t, bytes.Equal(siga, sigb), msg...)
+	}
+
+	// empty VASPs should have the same signature
+	vaspa := &pb.VASP{}
+	vaspb := &pb.VASP{}
+	compare(vaspa, vaspb, require.True)
+
+	// load a VASP fixture from disk
+	vaspa, err := loadFixture("testdata/vasp.json")
+	require.NoError(t, err, "could not load vasp fixture from disk")
+
+	// full vasp should not be the same as empty vasp
+	compare(vaspa, vaspb, require.False)
+
+	// load a second VASP fixture from disk (different pointer)
+	vaspb, err = loadFixture("testdata/vasp.json")
+	require.NoError(t, err, "could not load vasp fixture from disk again")
+
+	compare(vaspa, vaspb, require.True)
+
+	// make changes to vaspa to ensure its signature changes
+	siga, err := VASPSignature(vaspa)
+	require.NoError(t, err, "could not compute vaspa signature")
+
+	vaspa.Extra, _ = anypb.New(&GDSExtraData{})
+
+	_, err = CreateReviewNote(vaspa, "123", "admin@example.com", "this is a test note")
+	require.NoError(t, err, "could not add review note")
+
+	siga2, err := VASPSignature(vaspa)
+	require.NoError(t, err, "could not compute vaspa signature")
+	require.NotEqual(t, siga, siga2, "changing vasp a did not change singature")
+
+	err = AppendAdminEmailLog(vaspa, "manual entry", "this is a test email log")
+	require.NoError(t, err, "could not append admin email log")
+
+	siga3, err := VASPSignature(vaspa)
+	require.NoError(t, err, "could not compute vaspa signature")
+	require.NotEqual(t, siga2, siga3, "changing vasp a did not change singature")
+}
+
+func loadFixture(path string) (vasp *pb.VASP, err error) {
+	pbjson := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: false,
+	}
+
+	var data []byte
+	if data, err = os.ReadFile(path); err != nil {
+		return nil, err
+	}
+
+	vasp = &pb.VASP{}
+	if err = pbjson.Unmarshal(data, vasp); err != nil {
+		return nil, err
+	}
+
+	return vasp, nil
 }

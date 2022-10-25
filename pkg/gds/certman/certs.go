@@ -283,7 +283,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 
 	// Construct the required parameters for the Sectigo request.
 	profile := c.certs.Profile()
-	batchName := fmt.Sprintf("%s-certreq-%s)", c.conf.DirectoryID, r.Id)
+	batchName := fmt.Sprintf("%s-certreq-%s", c.conf.DirectoryID, r.Id)
 
 	if params, err = models.GetCertificateRequestParams(r, profile); err != nil {
 		return fmt.Errorf("could not retrieve certificate request parameters for profile %q: %s", profile, err)
@@ -735,12 +735,20 @@ vaspsLoop:
 		}
 
 		// Calculate the number of days before the VASP's certificate expires.
-		notAfter := vasp.IdentityCertificate.NotAfter
-		if expirationDate, err = time.Parse(time.RFC3339, notAfter); err != nil {
+		if expirationDate, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
 			continue vaspsLoop
 		}
-		reissuanceDate := expirationDate.Add(-time.Hour * 240) // Calculate the reissuance date, 10 days before expiration
+
+		// Compute VASP signature to check if it has been modified
+		var sig []byte
+		if sig, err = models.VASPSignature(vasp); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			continue vaspsLoop
+		}
+
+		// Calculate the reissuance date, 10 days before expiration
+		reissuanceDate := expirationDate.Add(-time.Hour * 240)
 		timeBeforeExpiration := time.Until(expirationDate)
 
 		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
@@ -782,16 +790,32 @@ vaspsLoop:
 
 		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
 		case daysBeforeExpiration <= 30:
+			// If the reminder fails do not stop processing and attempt to send reminder to admins
 			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
 			}
+
 			if _, err = c.email.SendExpiresAdminNotification(vasp, 30, reissuanceDate); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
+				continue vaspsLoop
 			}
 		}
-		// We need to update the vasp record in the database so that the email logs are preserved.
-		if err = c.db.UpdateVASP(vasp); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the vasp record in the database")
+
+		// Perform VASP hash check to determine if the VASP has been updated, and if it
+		// has, save the updates back to the database (otherwise do not save so that the
+		// last modified timestamp is not updated every day).
+		var updated []byte
+		if updated, err = models.VASPSignature(vasp); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			continue vaspsLoop
+		}
+
+		if !bytes.Equal(sig, updated) {
+			// We need to update the vasp record in the database so that the email logs are preserved.
+			if err = c.db.UpdateVASP(vasp); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the VASP record in the database")
+				continue vaspsLoop
+			}
 		}
 	}
 
