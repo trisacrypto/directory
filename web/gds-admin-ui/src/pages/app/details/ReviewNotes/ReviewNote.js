@@ -39,8 +39,8 @@ function ReviewNote({ note, vaspId }) {
                         <h5 className="m-0" data-testid="author">{note.author}</h5>
                         {
                             note?.modified ?
-                                <small className='text-muted d-block fst-italic mb-1'>edited <TimeAgo time={note.updated} /></small> :
-                                <small className='text-muted d-block fst-italic mb-1'>created <TimeAgo time={note.created} /></small>
+                                <small className='text-muted d-block fst-italic mb-1'>edited <TimeAgo time={note?.modified} /></small> :
+                                <small className='text-muted d-block fst-italic mb-1'>created <TimeAgo time={note?.created} /></small>
                         }
                     </div>
                     <div hidden={isEditable}>
