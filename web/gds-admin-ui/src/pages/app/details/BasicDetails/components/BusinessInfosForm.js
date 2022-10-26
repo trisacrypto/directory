@@ -1,4 +1,3 @@
-
 import BusinessCategory from 'components/BusinessCategory'
 import Field from 'components/Field'
 import { ModalCloseButton, ModalContext } from 'components/Modal'
@@ -13,12 +12,15 @@ import { updateBusinessInfosResponse } from 'redux/vasp-details'
 import { getBusinessInfosFormInitialValues } from 'utils/form-references'
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
+import dayjs from 'dayjs'
 
 
 const schema = yup.object().shape({
     website: yup.string().url("website should be a valid url").trim().required(),
     established_on: yup.date().typeError("Date of Incorporation/Establishment should be a valid date").required()
 })
+
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 
 function BusinessInfosForm({ data }) {
@@ -34,6 +36,7 @@ function BusinessInfosForm({ data }) {
 
     const onSubmit = (data) => {
         if (params && params.id) {
+            data && (data.established_on = dayjs(data.established_on).format(DATE_FORMAT))
             safeDispatch(updateBusinessInfosResponse(params.id, data, setIsOpen))
         }
     }

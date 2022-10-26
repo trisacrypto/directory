@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import crypto from 'crypto'
 import toast from 'react-hot-toast';
 import { downloadFile, generateCSV } from 'helpers/api/utils';
+import _ from 'lodash'
 
 export * from './array';
 
@@ -36,11 +37,13 @@ function apiHost() {
 }
 
 function formatDisplayedData(target) {
-    if (typeof target === "boolean") {
+    if (_.isBoolean(target)) {
         return target.toString()
-    } else if (Array.isArray(target)) {
+    }
+    if (_.isArray(target)) {
         return target.length ? target.join(', ') : "N/A"
-    } else if (typeof target === "string") {
+    }
+    if (_.isString(target)) {
         return target ? target.trim() : "N/A"
     }
 
