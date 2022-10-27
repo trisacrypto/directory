@@ -1,8 +1,12 @@
 import React from "react";
 import dayjs from "dayjs";
+import PropTypes from 'prop-types'
+import invariant from 'tiny-invariant'
 
 export default function TimeAgo({ time }) {
     const [, setTime] = React.useState();
+
+    invariant(time, "time should not be null")
 
     React.useEffect(() => {
         const timer = setInterval(() => {
@@ -14,5 +18,9 @@ export default function TimeAgo({ time }) {
         };
     }, []);
 
-    return dayjs(time).fromNow()
+    return <span data-testid="time">{time ? dayjs(time).fromNow() : null}</span>
+}
+
+TimeAgo.propTypes = {
+    time: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 }

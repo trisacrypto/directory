@@ -6,9 +6,6 @@ import CertificateDetails from "pages/app/details/CertificateDetails"
 describe('CertificateDetails', () => {
 
     beforeEach(() => {
-        // const now = new Date(1638305340000).toISOString()
-        // Date.now = jest.fn(() => now)
-
         jest
             .useFakeTimers("modern")
             .setSystemTime(1638305340000);
