@@ -20,7 +20,7 @@ const Overview: React.FC = () => {
           onClick={() => navigate('/dashboard/certificate/registration')}
         />
       </Suspense>
-      <Suspense fallback="">
+      <Suspense fallback={t`Failed to load Network announcement , please reload`}>
         <NetworkAnnouncements />
       </Suspense>
       <Box fontSize={'md'} mx={'auto'} w={'100%'}>

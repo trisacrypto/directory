@@ -23,7 +23,6 @@ const NetworkAnnouncements = () => {
     <Flex
       border="1px solid #DFE0EB"
       fontFamily={'Open Sans'}
-      maxHeight={190}
       fontSize={'18px'}
       bg={'white'}
       p={5}
@@ -32,7 +31,7 @@ const NetworkAnnouncements = () => {
         fallback={
           <Text color={'red'} pt={20}>{t`An error has occurred to load announcements`}</Text>
         }>
-        <AnnouncementCarousel announcements={value?.data.announcements || []} />
+        <AnnouncementCarousel announcements={value?.data?.announcements || []} />
       </Sentry.ErrorBoundary>
     </Flex>
   );

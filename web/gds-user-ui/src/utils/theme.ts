@@ -19,7 +19,8 @@ export const colors = {
     white: '#E3EBEF',
     gray: '#5B5858',
     green: '#0A864F',
-    link: '#1F4CED'
+    link: '#1F4CED',
+    blue_light: '#D8EAF6'
   }
 };
 
