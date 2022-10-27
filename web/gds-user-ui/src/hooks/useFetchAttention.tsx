@@ -14,11 +14,12 @@ const useFetchAttention = () => {
       if (result.status === 200) {
         setAttentionResponse(result.data);
       } else {
+        console.log(result);
         setAttentionResponse([]);
       }
     } catch (err: any) {
       setAttentionError(err);
-      handleError(err, '[useFetchAttention] fetchAttentionData failed');
+      handleError(err, '[useFetchAttention] fetch Attention Data failed');
     } finally {
       setAttentionLoading(false);
     }
