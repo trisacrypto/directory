@@ -221,7 +221,8 @@ export const format2ShortDate = (date: any) => {
   const day = d.getDate();
   // convert month with 2 digits
   const month2Digits = month < 10 ? `0${month}` : month;
-  return `${year}-${month2Digits}-${day}`;
+  const day2Digits = day < 10 ? `0${day}` : day;
+  return `${year}-${month2Digits}-${day2Digits}`;
 };
 
 export const splitAndDisplay = (str: string, delimiter?: string, limit?: number) => {
