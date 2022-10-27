@@ -124,7 +124,7 @@ const ConfirmationModal = (props: any) => {
                   </chakra.tr>
                 </Box>
                 <Box mt={5}>
-                  <Alert status="info">
+                  <Alert status="info" bg="#D8EAF6">
                     <Box>
                       <AlertTitle>
                         <Trans id="Message from server:">Message from server:</Trans>

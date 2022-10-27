@@ -18,7 +18,7 @@ const useFetchAttention = () => {
       }
     } catch (err: any) {
       setAttentionError(err);
-      handleError(err, '[useFetchAttention] fetchAttentionData failed');
+      handleError(err, '[useFetchAttention] fetch Attention Data failed');
     } finally {
       setAttentionLoading(false);
     }

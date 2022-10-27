@@ -107,7 +107,7 @@ const AnnouncementCarousel: FC<AnnouncementProps> = ({ announcements }) => {
       {/* Slider */}
       <Slider {...settings} ref={(sl: any) => setSlider(sl)}>
         {announcements.map((announcement: any, index: any) => (
-          <Box key={index} height={'6xl'} position="relative">
+          <Box key={index} position="relative">
             <Container size="container.lg" position="relative" mt={5}>
               <Stack justifyContent={'center'}>
                 <HStack justifyContent={'space-between'}>
