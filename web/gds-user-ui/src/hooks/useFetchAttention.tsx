@@ -14,7 +14,6 @@ const useFetchAttention = () => {
       if (result.status === 200) {
         setAttentionResponse(result.data);
       } else {
-        console.log(result);
         setAttentionResponse([]);
       }
     } catch (err: any) {

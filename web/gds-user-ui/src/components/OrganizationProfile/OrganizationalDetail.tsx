@@ -26,7 +26,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
     setDivCntHeight(cntRef?.current?.clientHeight || 500);
   }, [getOrgDivEl, getCntDivEl]);
 
-  console.log('[Organizational Detail]', data?.organization_name);
+  // console.log('[Organizational Detail]', data?.organization_name);
 
   useEffect(() => {
     const { mainnetSubmitted, testnetSubmitted } = Store.getState().stepper;
