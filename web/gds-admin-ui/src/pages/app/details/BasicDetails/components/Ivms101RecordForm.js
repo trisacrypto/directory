@@ -16,6 +16,7 @@ import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
 import * as yup from 'yup'
 import { Typeahead } from 'react-bootstrap-typeahead';
+import { capitalizeFirstLetter } from 'utils';
 
 
 const validationSchema = yup.object().shape({
@@ -93,16 +94,18 @@ function Ivms101RecordForm({ data }) {
     const handleAddNewPhoneticNamesRow = () => {
         phoneticNameIdentifiersFieldArrayRef.current.addRow()
     }
-
     return (
         <div>
             <h3>Legal Person</h3>
             <p>Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.</p>
 
-            <Alert variant="danger" show={!!ivmsErrorState} className='col-sm-12' onClose={handleAlertClose} dismissible>
-                <Alert.Heading className='h5'>{ivmsErrorState?.status} {ivmsErrorState?.statusText}</Alert.Heading>
-                {ivmsErrorState?.message}
-            </Alert>
+            {
+                ivmsErrorState ? (
+                    <Alert variant="danger" show={!!ivmsErrorState} className='col-sm-12' onClose={handleAlertClose} dismissible>
+                        {capitalizeFirstLetter(ivmsErrorState)}
+                    </Alert>
+                ) : null
+            }
 
             <Form onSubmit={handleSubmit(onSubmit)}>
                 <NameIdentifiersFieldArray
