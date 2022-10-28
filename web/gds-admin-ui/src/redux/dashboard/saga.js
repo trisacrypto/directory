@@ -25,7 +25,7 @@ function* fetchSummary() {
 function* fetchPendingVasps() {
     NProgress.start()
     try {
-        const response = yield call(getVasps, "status=pending+review")
+        const response = yield call(getVasps, "status=pending+review&status=verified")
         const data = response.data
         yield put(fetchVaspsApiResponseSuccess(FetchVaspsActionTypes.API_RESPONSE_SUCCESS, data))
         NProgress.done()
