@@ -34,7 +34,7 @@ const MENU: Menu[] = [
         title: t`Certificate Management`,
         icon: FaRegMoneyBillAlt,
         path: '/dashboard/certificate-management',
-        activated: true
+        activated: process.env.REACT_APP_ENABLE_CERT_MANAGEMENT_FEAT === 'true' || false
       },
       {
         title: t`Certificate Registration`,
