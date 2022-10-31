@@ -5,11 +5,12 @@ import {
   Text,
   Heading,
   Stack,
-  Tooltip,
+  // Tooltip,
   Flex,
   useColorModeValue,
   useDisclosure,
-  Button
+  Button,
+  Tooltip
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
@@ -44,14 +45,14 @@ type TStepLabel = {
   icon: any; // icon of the step
 };
 
-enum STEP {
-  BASIC_DETAILS = 1,
-  LEGAL_PERSON = 2,
-  CONTACTS = 3,
-  TRISA_IMPLEMENTATION = 4,
-  TRIXO_QUESTIONNAIRE = 5,
-  REVIEW = 6
-}
+// enum STEP {
+//   BASIC_DETAILS = 1,
+//   LEGAL_PERSON = 2,
+//   CONTACTS = 3,
+//   TRISA_IMPLEMENTATION = 4,
+//   TRIXO_QUESTIONNAIRE = 5,
+//   REVIEW = 6
+// }
 
 const CertificateStepLabel: FC<StepLabelProps> = () => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
@@ -144,6 +145,27 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
     onClose();
   };
 
+  const stepLabels = [
+    {
+      label: t`Basic Details`
+    },
+    {
+      label: t`Legal Person`
+    },
+    {
+      label: t`Contacts`
+    },
+    {
+      label: t`TRISA implementation`
+    },
+    {
+      label: t`TRIXO Questionnaire`
+    },
+    {
+      label: t`Review`
+    }
+  ];
+
   return (
     <>
       <Stack
@@ -161,7 +183,58 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
           </Heading>
         </Box>
         <Flex gap={2}>
-          <Button
+          {stepLabels.map((stepLabel, idx: number) => {
+            const stepIndex = idx + 1;
+            return (
+              <Tooltip key={idx} label={stepLabel.label} gutter={0} hasArrow>
+                <Button
+                  bg="transparent"
+                  display="block"
+                  p={0}
+                  width="100%"
+                  height="100%"
+                  _hover={{ bg: 'transparent' }}
+                  disabled={!(() => isStepCompleted(stepIndex))()}
+                  _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
+                  onClick={handleStepClick(stepIndex)}>
+                  <Stack spacing={1} width="100%">
+                    <Box
+                      h="1"
+                      bg={getLabel(stepIndex)?.color}
+                      borderRadius={'50px'}
+                      width={'100%'}
+                    />
+                    <Stack
+                      direction={{ base: 'column', md: 'row' }}
+                      alignItems={{ base: 'center', lg: 'baseline' }}
+                      spacing={{ base: 0, md: 1 }}>
+                      <Box>
+                        <Icon
+                          as={getLabel(stepIndex)?.icon}
+                          sx={{
+                            path: {
+                              fill: getLabel(stepIndex)?.color
+                            },
+                            verticalAlign: 'middle'
+                          }}
+                          verticalAlign={{ base: 'baseline', lg: 'middle' }}
+                        />
+                      </Box>
+                      <Text
+                        color={textColor}
+                        fontSize={{ base: 'xs', md: 'sm' }}
+                        fontWeight={isActiveStep(stepIndex) ? 'bold' : 'normal'}
+                        textAlign="center"
+                        noOfLines={1}>
+                        {stepIndex} {stepLabel.label}
+                      </Text>
+                    </Stack>
+                  </Stack>
+                </Button>
+              </Tooltip>
+            );
+          })}
+          {/* <Button
             bg="transparent"
             display="block"
             p={0}
@@ -381,7 +454,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                 spacing={{ base: 0, md: 1 }}>
                 <Box>
                   <Icon
-                    as={getLabel(6)?.icon}
+                    as={getLabel(STEP.REVIEW)?.icon}
                     sx={{
                       path: {
                         fill: getLabel(STEP.REVIEW)?.color
@@ -398,7 +471,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                 </Text>
               </Stack>
             </Stack>
-          </Button>
+          </Button> */}
         </Flex>
         <InvalidFormPrompt
           isOpen={isOpen}
