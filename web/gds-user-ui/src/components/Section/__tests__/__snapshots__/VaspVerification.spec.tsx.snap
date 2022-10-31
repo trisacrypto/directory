@@ -1,194 +1,571 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<Line /> should match snapshot 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  color: var(--chakra-colors-black);
+  font-family: Open Sans;
+  font-size: var(--chakra-fontSizes-xl);
+}
+
+.emotion-1 {
+  width: 100%;
+  -webkit-margin-start: auto;
+  margin-inline-start: auto;
+  -webkit-margin-end: auto;
+  margin-inline-end: auto;
+  max-width: var(--chakra-sizes-5xl);
+  -webkit-padding-start: 1rem;
+  padding-inline-start: 1rem;
+  -webkit-padding-end: 1rem;
+  padding-inline-end: 1rem;
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+}
+
+.emotion-2>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 62em) {
+  .emotion-2 {
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+}
+
+.emotion-3 {
+  margin-top: var(--chakra-space-4);
+  margin-bottom: var(--chakra-space-4);
+  color: var(--chakra-colors-black);
+}
+
+.emotion-4 {
+  font-size: 1rem;
+  margin-top: var(--chakra-space-3);
+}
+
+.emotion-5 {
+  background: #E5EDF1;
+  padding: var(--chakra-space-6);
+}
+
+.emotion-6 {
+  font-size: 1rem;
+  color: var(--chakra-colors-black);
+}
+
+.emotion-7 {
+  -webkit-margin-start: var(--chakra-space-20);
+  margin-inline-start: var(--chakra-space-20);
+  -webkit-margin-end: var(--chakra-space-20);
+  margin-inline-end: var(--chakra-space-20);
+  padding-top: 10px;
+}
+
+.emotion-8 {
+  color: var(--chakra-colors-black);
+  gap: 10px;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-8 {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+  }
+}
+
+.emotion-9 {
+  grid-column: span 3/span 3;
+}
+
+.emotion-10 {
+  font-size: var(--chakra-fontSizes-lg);
+  font-weight: var(--chakra-fontWeights-bold);
+  line-height: var(--chakra-lineHeights-6);
+  margin-top: var(--chakra-space-2);
+}
+
+.emotion-11 {
+  margin-top: var(--chakra-space-2);
+  margin-bottom: var(--chakra-space-4);
+  font-size: 1rem;
+  padding: var(--chakra-space-2);
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-11 {
+    margin-bottom: 0px;
+    padding: var(--chakra-space-2);
+  }
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-11 {
+    padding: 0px;
+  }
+}
+
+.emotion-12 {
+  grid-column: span 2/span 2;
+}
+
+.emotion-19 {
+  font-size: var(--chakra-fontSizes-lg);
+  font-weight: var(--chakra-fontWeights-medium);
+  line-height: var(--chakra-lineHeights-6);
+  margin-top: var(--chakra-space-2);
+}
+
+.emotion-45 {
+  color: var(--chakra-colors-black);
+  grid-column-gap: var(--chakra-space-10);
+  grid-row-gap: var(--chakra-space-10);
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-45 {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+  }
+}
+
+.emotion-46 {
+  grid-column: span 3/span 3;
+  background: #E5EDF1;
+  margin-top: var(--chakra-space-5);
+  padding: var(--chakra-space-6);
+}
+
+.emotion-47 {
+  font-size: var(--chakra-fontSizes-lg);
+  font-weight: var(--chakra-fontWeights-bold);
+  line-height: var(--chakra-lineHeights-6);
+}
+
+.emotion-48 {
+  margin-top: var(--chakra-space-2);
+  font-size: 1rem;
+}
+
+.emotion-49 {
+  grid-column: span 2/span 2;
+  background: #E5EDF1;
+  margin-top: var(--chakra-space-5);
+  padding: var(--chakra-space-6);
+}
+
+.emotion-51 {
+  margin-top: var(--chakra-space-2);
+}
+
+.emotion-52 {
+  list-style-type: initial;
+  -webkit-margin-start: 1em;
+  margin-inline-start: 1em;
+  color: #1F4CED;
+}
+
+.emotion-53 {
+  font-size: 1rem;
+}
+
+.emotion-54 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: inherit;
+}
+
+.emotion-54:hover,
+.emotion-54[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-54:focus,
+.emotion-54[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-57 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-bottom: var(--chakra-space-20);
+  padding-top: var(--chakra-space-5);
+  text-align: center;
+}
+
+.emotion-57>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-57 {
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+  }
+
+  .emotion-57>*:not(style)~*:not(style) {
+    margin-top: 0px;
+    -webkit-margin-end: 0px;
+    margin-inline-end: 0px;
+    margin-bottom: 0px;
+    -webkit-margin-start: 0.5rem;
+    margin-inline-start: 0.5rem;
+  }
+}
+
+.emotion-58 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  font-size: var(--chakra-fontSizes-md);
+}
+
+.emotion-58>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-59 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: 300px;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: #55ACD8;
+  color: var(--chakra-colors-white);
+}
+
+.emotion-59:focus,
+.emotion-59[data-focus] {
+  border-color: var(--chakra-colors-transparent);
+}
+
+.emotion-59[disabled],
+.emotion-59[aria-disabled=true],
+.emotion-59[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-59:hover,
+.emotion-59[data-hover] {
+  background: #10aaed;
+}
+
+.emotion-59:active,
+.emotion-59[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-60 {
+  text-align: center;
+}
+
+.emotion-61 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: #1BCE9F;
+}
+
+.emotion-61:hover,
+.emotion-61[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-61:focus,
+.emotion-61[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
 <div>
   <div
-    class="css-1nkacyh"
+    class="emotion-0"
   >
     <div
-      class="chakra-container css-1a3ltpp"
+      class="chakra-container emotion-1"
     >
       <div
-        class="chakra-stack css-12m5edu"
+        class="chakra-stack emotion-2"
       >
         <div
-          class="css-1y81stp"
+          class="emotion-3"
         >
           <p
-            class="chakra-text css-1t2l67w"
+            class="chakra-text emotion-4"
           >
             TRISA members must complete a comprehensive multi-part verification form and due diligence process. Once verified, TRISA will issue TestNet and MainNet certificates for secure Travel Rule compliance.
           </p>
         </div>
         <div
-          class="css-7egbnq"
+          class="emotion-5"
         >
           <p
-            class="chakra-text css-1wbbpf0"
+            class="chakra-text emotion-6"
           >
             TRISA’s verification form includes five sections and may require information from several parties in your organization.
           </p>
         </div>
         <div
-          class="css-cspnrf"
+          class="emotion-7"
         >
           <div
-            class="css-1ipaw1x"
+            class="emotion-8"
           >
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 Sections & Details
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               />
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 Who to Ask
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               />
             </div>
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 1 Basic Details
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               >
                 Information about the VASP such as website, incorporation date, business and VASP category.
               </dd>
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ub76a4"
+                class="emotion-19"
               />
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
                 data-content="Who to ask"
               >
                 Business or Compliance Office
               </dd>
             </div>
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 2 Legal Person
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               >
                 Information that identifies your organization as a Legal Person. This section represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.
               </dd>
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ub76a4"
+                class="emotion-19"
               />
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
                 data-content="Who to ask"
               >
                 Business or Compliance Office
               </dd>
             </div>
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 3 Contacts
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               >
                 Contact information for representatives of your organization. Contacts include Technical, Legal/Compliance, Administrative, and Billing persons.
               </dd>
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ub76a4"
+                class="emotion-19"
               />
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
                 data-content="Who to ask"
               >
                 Business or Compliance Office
               </dd>
             </div>
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 4 TRISA Implementation
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               >
                 Technical information about your endpoint for certificate issuance. Each VASP is required to establish a TRISA endpoint for inter-VASP communication.
               </dd>
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ub76a4"
+                class="emotion-19"
               />
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
                 data-content="Who to ask"
               >
                 Technical Officer
               </dd>
             </div>
             <div
-              class="css-rklm6r"
+              class="emotion-9"
             >
               <dt
-                class="css-1ejj06g"
+                class="emotion-10"
               >
                 5 TRIXO Questionnaire
               </dt>
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
               >
                 Information to ensure that required compliance information exchanges are conducted correctly and safely. This includes information about jurisdiction and national regulator, Customer Due Diligence(CDD) and Travel Rule policies, and data protection policies.
               </dd>
             </div>
             <div
-              class="css-tuh9u2"
+              class="emotion-12"
             >
               <dt
-                class="css-1ub76a4"
+                class="emotion-19"
               />
               <dd
-                class="css-a3f1ip"
+                class="emotion-11"
                 data-content="Who to ask"
               >
                 Compliance Officer
@@ -196,42 +573,42 @@ exports[`<Line /> should match snapshot 1`] = `
             </div>
           </div>
           <div
-            class="css-gus2rx"
+            class="emotion-45"
           >
             <div
-              class="css-11j9xqf"
+              class="emotion-46"
             >
               <dt
-                class="css-kn4i7c"
+                class="emotion-47"
               >
                 Final Confirmation
               </dt>
               <dd
-                class="css-1n004p3"
+                class="emotion-48"
               >
                 For MainNet certificate requests, a member of TRISA’s verification team will review your submission and conduct a final due diligence phone call for physical verification. When physical verification is complete, TRISA will issue MainNet certificates. Requests for TestNet certificates do not require physical verification.
               </dd>
             </div>
             <div
-              class="css-gwmn0b"
+              class="emotion-49"
             >
               <dt
-                class="css-kn4i7c"
+                class="emotion-47"
               >
                 Need to Learn More?
               </dt>
               <dd
-                class="css-rltemf"
+                class="emotion-51"
               >
                 <ul
-                  class="css-xuskyr"
+                  class="emotion-52"
                   role="list"
                 >
                   <li
-                    class="css-14d0z92"
+                    class="emotion-53"
                   >
                     <a
-                      class="chakra-link css-f4h6uy"
+                      class="chakra-link emotion-54"
                       href="https://trisa.io/getting-started-with-trisa/"
                       rel="noopener noreferrer"
                       target="_blank"
@@ -240,10 +617,10 @@ exports[`<Line /> should match snapshot 1`] = `
                     </a>
                   </li>
                   <li
-                    class="css-14d0z92"
+                    class="emotion-53"
                   >
                     <a
-                      class="chakra-link css-f4h6uy"
+                      class="chakra-link emotion-54"
                       href="https://intervasp.org/"
                       rel="noopener noreferrer"
                       target="_blank"
@@ -257,23 +634,23 @@ exports[`<Line /> should match snapshot 1`] = `
           </div>
         </div>
         <div
-          class="chakra-stack css-jlnlin"
+          class="chakra-stack emotion-57"
         >
           <div
-            class="chakra-stack css-vnfttn"
+            class="chakra-stack emotion-58"
           >
             <a
               href="/auth/register"
             >
               <button
-                class="chakra-button css-1xatu72"
+                class="chakra-button emotion-59"
                 type="button"
               >
                 Create account
               </button>
             </a>
             <p
-              class="chakra-text css-xi606m"
+              class="chakra-text emotion-60"
             >
               Already have an account?
                
@@ -281,7 +658,7 @@ exports[`<Line /> should match snapshot 1`] = `
                 href="/auth/login"
               >
                 <a
-                  class="chakra-link css-1av0s05"
+                  class="chakra-link emotion-61"
                 >
                    
                   Log in.

@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-import { Box, Heading, VStack, Flex, Input, Stack } from '@chakra-ui/react';
+import { Heading, Stack } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
 import DashboardLayout from 'layouts/DashboardLayout';
 import InputFormControl from 'components/ui/InputFormControl';
-import Button from 'components/ui/Button';
 import UserDetails from 'components/UserDetails';
 
 const UserProfile: React.FC = () => {
-  const [userId, setUserId] = React.useState('');
   useState(() => {
     // fetch user information
   });
 
-  const handleUpdate = () => {
-  };
+  const handleUpdate = () => {};
   return (
     <DashboardLayout>
       <Heading marginBottom="69px">User Account</Heading>
