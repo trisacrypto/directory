@@ -1,7 +1,7 @@
 import { Box, BoxProps } from '@chakra-ui/react';
 import CkLazyLoadImage from 'components/LazyImage';
 import { Link } from 'react-router-dom';
-import TrisaLogo from 'assets/TRISA-GDS.svg';
+import TrisaLogo from 'assets/TRISA-GDS-black.png';
 
 export default function Logo(props: BoxProps) {
   return (
