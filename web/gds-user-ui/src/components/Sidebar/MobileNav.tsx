@@ -23,7 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
-import Logo from 'components/ui/Logo';
 import { Trans } from '@lingui/react';
 
 interface MobileProps extends FlexProps {
@@ -60,9 +59,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         aria-label="open menu"
         icon={<FiMenu />}
       />
-      <Show below="md">
-        <Logo sx={{ '& img': { width: '50%' } }} />
-      </Show>
       <HStack
         spacing={{ base: '0', md: '6' }}
         w={{ base: '100%', md: 'none' }}

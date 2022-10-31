@@ -4,7 +4,6 @@ import {
   DrawerContent,
   DrawerOverlay,
   useDisclosure,
-  Text,
   Flex,
   Box,
   Stack,
