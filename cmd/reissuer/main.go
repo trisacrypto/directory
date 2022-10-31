@@ -12,7 +12,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -424,7 +423,7 @@ func makeCertificateProto(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	if err = ioutil.WriteFile(c.String("out"), data, 0600); err != nil {
+	if err = os.WriteFile(c.String("out"), data, 0600); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -544,7 +543,6 @@ func rereview(c *cli.Context) (err error) {
 		}
 	}
 
-	// Set the VASP state to rejected
 	if err = models.UpdateVerificationStatus(
 		vasp,
 		newStatus,
@@ -552,6 +550,14 @@ func rereview(c *cli.Context) (err error) {
 		"support@rotational.io",
 	); err != nil {
 		return cli.Exit(fmt.Errorf("could not update VASP status: %s", err), 1)
+	}
+
+	if newStatus < pb.VerificationState_VERIFIED {
+		vasp.VerifiedOn = ""
+	}
+
+	if newStatus == pb.VerificationState_VERIFIED {
+		vasp.VerifiedOn = time.Now().Format(time.RFC3339Nano)
 	}
 
 	if err = db.UpdateVASP(vasp); err != nil {
