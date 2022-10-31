@@ -16,7 +16,6 @@ import {
   Link
 } from '@chakra-ui/react';
 import { MenuIcon, CloseIcon } from '../Icon';
-import Logo from 'components/ui/Logo';
 import MenuItem from 'components/Menu/Landing/MenuItem';
 import { colors } from 'utils/theme';
 import { Trans } from '@lingui/react';
@@ -25,6 +24,8 @@ import { NavLink } from 'react-router-dom';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 import { TRISA_BASE_URL } from 'constants/trisa-base-url';
 import useAuth from 'hooks/useAuth';
+import CkLazyLoadImage from 'components/LazyImage';
+import TrisaLogo from 'assets/TRISA-GDS-black.png';
 
 const LandingHeader = (props: FlexProps): JSX.Element => {
   const [show] = React.useState(false);
@@ -48,7 +49,14 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
             <Box>
               <NavLink to={'/'}>
                 <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                  <Logo w={{ base: '50px', md: '120px' }} color={['colors.system.blue']} />
+                  <CkLazyLoadImage
+                    src={TrisaLogo}
+                    alt="Trisa logo"
+                    objectFit="cover"
+                    height="100px"
+                    transform="translateX(-38px)"
+                    sx={{ aspectRatio: '2/1' }}
+                  />
                 </Link>
               </NavLink>
             </Box>

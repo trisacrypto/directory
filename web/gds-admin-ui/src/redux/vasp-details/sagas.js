@@ -6,7 +6,7 @@ import { getVasp, putContact, removeContact, updateVasp } from 'services/vasp'
 import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetchReviewNotesApiResponseError, fetchReviewNotesApiResponseSuccess, FetchVaspDetailsActionTypes, fetchVaspDetailsApiResponseError, UpdateTrixoActionTypes, updateTrixoResponseSuccess, updateTrixoResponseError, updateBusinessInfosResponseSuccess, updateBusinessInfosResponseError, UpdateBusinessInfosActionTypes, updateTrisaImplementationDetailsResponseSuccess, updateTrisaImplementationDetailsResponseError, UpdateTrisaImplementationDetailsActionTypes, updateIvms101ResponseError, UpdateIvms101ActionTypes, updateIvms101ResponseSuccess } from '.'
 import { deleteContactResponseError, fetchVaspDetailsApiResponse, updateContactResponseError } from './actions'
 import { DeleteContactActionTypes, UpdateContactActionTypes } from './constants'
-
+import getErrorMessage from 'utils/getError'
 
 function* fetchVaspDetails({ payload: { id, history } }) {
     NProgress.start()
@@ -51,20 +51,20 @@ function* updateTrisaDetails({ payload: { trisa, id, setIsOpen } }) {
 
         setIsOpen(false)
     } catch (error) {
-        const errorMessage = error.response && error.response.data ? { message: error.response.data['error'], errorStatus: error.response['status'], statusText: error.response['statusText'] } : 'Something went wrong'
-        yield put(updateTrisaImplementationDetailsResponseError(errorMessage))
+        const message = getErrorMessage(error)
+        yield put(updateTrisaImplementationDetailsResponseError(message))
     }
 }
 
 function* updateIvms({ payload: { ivms, id, setIsOpen } }) {
     try {
         const response = yield call(updateVasp, id, ivms)
-        yield put(updateIvms101ResponseSuccess(response.data))
 
+        yield put(updateIvms101ResponseSuccess(response.data))
         setIsOpen(false)
     } catch (error) {
-        const errorMessage = error.response && error.response.data ? { message: error.response.data['error'], errorStatus: error.response['status'], statusText: error.response['statusText'] } : 'Something went wrong'
-        yield put(updateIvms101ResponseError(errorMessage))
+        const message = getErrorMessage(error)
+        yield put(updateIvms101ResponseError(message))
     }
 }
 
