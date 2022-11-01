@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -76,6 +77,40 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, collaborator)
+}
+
+// ListCollaborators lists all the collaborators on the user's organization. The user
+// must have the read:collaborators permission to make this request.
+func (s *Server) ListCollaborators(c *gin.Context) {
+	var (
+		err          error
+		org 		*models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// NOTE: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response from the internal map
+	out := &api.ListCollaboratorsReply{
+		Collaborators: make([]*models.Collaborator, 0),
+	}
+
+	for _, collab := range org.Collaborators {
+		if err = s.LoadCollaboratorDetails(collab); err != nil {
+			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details from Auth0")
+		}
+		out.Collaborators = append(out.Collaborators, collab)
+	}
+
+	// Sort by email address so we return consistent responses
+	sort.Slice(out.Collaborators, func(i, j int) bool {
+		return out.Collaborators[i].Email < out.Collaborators[j].Email
+	})
+
+	c.JSON(http.StatusOK, out)
 }
 
 // UpdateCollaboratorRoles updates the roles of the collaborator ID in the request,
@@ -251,6 +286,11 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 // Auth0. The collaborator must have an user ID on it and the data in Auth0 will
 // overwrite the data on the collaborator record.
 func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
+	// If the user is not verified in Auth0 then we can't retrieve the details
+	if collab.VerifiedAt == "" {
+		return nil
+	}
+
 	// Record must have a user ID to query Auth0
 	if collab.UserId == "" {
 		return errors.New("collaborator does not have a user ID")

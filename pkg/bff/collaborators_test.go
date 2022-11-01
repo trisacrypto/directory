@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestAddCollaborator() {
@@ -80,6 +81,99 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
 	s.requireError(err, http.StatusConflict, "collaborator already exists", "expected error when collaborator already exists")
+}
+
+func (s *bffTestSuite) TestListCollaborators() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	_, err := s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the read:collaborators permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID
+	claims.Permissions = []string{"read:collaborators"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic but should
+	// return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
+
+	// Create an organization in the database without any collaborators
+	org, err := s.DB().CreateOrganization()
+	require.NoError(err, "could not create organization in the database")
+
+	// Create valid credentials with the organization ID
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+
+	// Should return an empty list if there are no collaborators in the organization
+	collabs, err := s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.Len(collabs.Collaborators, 0, "expected empty collaborators list to be returned")
+
+	// Add a new collaborator to the organization
+	leopold := &models.Collaborator{
+		Email: "leopold.wentzel@gmail.com",
+		UserId: authtest.UserID,
+		VerifiedAt: time.Now().Format(time.RFC3339Nano),
+	}
+	leopoldRoles := []string{authtest.UserRole}
+	org.Collaborators = make(map[string]*models.Collaborator)
+	org.Collaborators[leopold.Key()] = leopold
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// Should return a list with one collaborator in it
+	collabs, err = s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.Len(collabs.Collaborators, 1, "expected one collaborator in the list")
+	require.Equal(leopold.Email, collabs.Collaborators[0].Email, "expected collaborator email to match")
+
+	// Add some more collaborators to the organization
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	bob := &models.Collaborator{
+		Email: "bob@example.com",
+	}
+	org.Collaborators[bob.Key()] = bob
+
+	charlie := &models.Collaborator{
+		Email: "charlie@example.com",
+	}
+	org.Collaborators[charlie.Key()] = charlie
+
+	yogg := &models.Collaborator{
+		Email: "yogg-sothoth@hpl.org",
+	}
+	org.Collaborators[yogg.Key()] = yogg
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// Should return a list with collaborators ordered by email address
+	collabs, err = s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.True(proto.Equal(bob, collabs.Collaborators[0]), "expected bob to be first in the list")
+	require.True(proto.Equal(charlie, collabs.Collaborators[1]), "expected charlie to be second in the list")
+	require.Equal(leopold.Email, collabs.Collaborators[2].Email, "expected leopold to be third in the list")
+	require.Equal(authtest.Name, collabs.Collaborators[2].Name, "expected leopold name to be set")
+	require.Equal(leopoldRoles, collabs.Collaborators[2].Roles, "expected leopold roles to be set")
+	require.True(proto.Equal(yogg, collabs.Collaborators[3]), "expected yogg to be fourth in the list")
 }
 
 func (s *bffTestSuite) TestUpdateCollaboratorRoles() {

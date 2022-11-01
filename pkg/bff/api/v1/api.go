@@ -22,6 +22,7 @@ type BFFClient interface {
 
 	// Authenticated Endpoints
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
+	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
 	DeleteCollaborator(_ context.Context, id string) error
 	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
@@ -68,6 +69,11 @@ type StatusReply struct {
 // UpdateRolesParams contains a list of new roles for a collaborator.
 type UpdateRolesParams struct {
 	Roles []string `json:"roles"`
+}
+
+// ListCollaboratorsReply contains a list of collaborators.
+type ListCollaboratorsReply struct {
+	Collaborators []*models.Collaborator `json:"collaborators"`
 }
 
 // LookupParams is converted into a GDS LookupRequest.
