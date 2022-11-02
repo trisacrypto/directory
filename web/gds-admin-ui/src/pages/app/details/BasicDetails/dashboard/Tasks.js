@@ -11,6 +11,8 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { actionType, useModal } from 'contexts/modal';
 import OvalLoader from 'components/OvalLoader';
 import NoData from 'components/NoData';
+import filter from 'lodash/filter'
+import isRecent from 'utils/isRecent';
 dayjs.extend(relativeTime)
 
 
@@ -80,12 +82,13 @@ const PendingReviewsTable = ({ data }) => {
 }
 
 const Tasks = ({ data, isLoading }) => {
+    const recentVasps = React.useMemo(() => filter(data?.vasps, (vasp) => isRecent(vasp.last_updated)), [data])
 
     if (isLoading || !data) {
         return (
             <Card className='w-100'>
                 <Card.Body>
-                    <h4 className="header-title mb-3">Pending Reviews</h4>
+                    <h4 className="header-title mb-3">Pending and Recent Activity</h4>
                     <OvalLoader />
                 </Card.Body>
             </Card>
@@ -95,12 +98,12 @@ const Tasks = ({ data, isLoading }) => {
     return (
         <Card className='w-100'>
             <Card.Body>
-                <h4 className="header-title mb-3">Pending Reviews</h4>
+                <h4 className="header-title mb-3">Pending and Recent Activity</h4>
                 {
                     (isLoading || !data) && <OvalLoader />
                 }
                 {
-                    !data?.vasps?.length ? <NoData title='No available pending registrations' /> : <PendingReviewsTable data={data?.vasps} />
+                    !data?.vasps?.length ? <NoData title='No available pending registrations' /> : <PendingReviewsTable data={recentVasps} />
                 }
             </Card.Body>
         </Card>
