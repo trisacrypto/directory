@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
@@ -145,6 +146,16 @@ func (s *bffTestSuite) TestListCollaborators() {
 	require.NoError(err, "could not list collaborators")
 	require.Len(collabs.Collaborators, 1, "expected one collaborator in the list")
 	require.Equal(leopold.Email, collabs.Collaborators[0].Email, "expected collaborator email to match")
+	require.Equal(leopoldRoles, collabs.Collaborators[0].Roles, "expected collaborator roles to match")
+
+	// Collaborator should be updated in the database
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
+	collab, ok := org.Collaborators[leopold.Key()]
+	require.True(ok, "expected collaborator to be in the organization")
+	require.Equal(leopold.Email, collab.Email, "expected collaborator email in database to match")
+	require.Equal(leopoldRoles, collab.Roles, "expected collaborator roles in database to match")
 
 	// Add some more collaborators to the organization
 	org, err = s.DB().RetrieveOrganization(org.UUID())
@@ -346,4 +357,69 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	appdata := &auth.AppMetadata{}
 	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
 	require.Empty(appdata.OrgID, "expected orgid in app metadata to be empty")
+}
+
+func (s *bffTestSuite) TestInsortCollaborator() {
+	require := s.Require()
+
+	// Should handle nil values without panicking
+	require.Nil(bff.InsortCollaborator(nil, nil, nil))
+	require.Nil(bff.InsortCollaborator([]*models.Collaborator{}, nil, nil))
+	require.Nil(bff.InsortCollaborator([]*models.Collaborator{}, &models.Collaborator{}, nil))
+
+	// Create some collaborators
+	alice := &models.Collaborator{
+		Email: "alice@example.com",
+		CreatedAt: time.Date(2019, 1, 3, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+	bob := &models.Collaborator{
+		Email: "bob@example.com",
+		CreatedAt: time.Date(2019, 1, 2, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+	charlie := &models.Collaborator{
+		Email: "charlie@example.com",
+		CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+
+	// Test ordering by email
+	f := func(a, b *models.Collaborator) bool {
+		return a.Email < b.Email
+	}
+
+	// Insort some collaborators into a slice
+	collabs := bff.InsortCollaborator([]*models.Collaborator{}, charlie, f)
+	require.Len(collabs, 1, "expected one collaborator in the slice")
+	require.Equal(charlie.Email, collabs[0].Email, "wrong collaborator in the slice")
+
+	collabs = bff.InsortCollaborator(collabs, alice, f)
+	require.Len(collabs, 2, "expected two collaborators in the slice")
+	require.Equal(alice.Email, collabs[0].Email, "collaborator not in the correct position")
+	require.Equal(charlie.Email, collabs[1].Email, "collaborator not in the correct position")
+
+	collabs = bff.InsortCollaborator(collabs, bob, f)
+	require.Len(collabs, 3, "expected three collaborators in the slice")
+	require.Equal(alice.Email, collabs[0].Email, "collaborator not in the correct position")
+	require.Equal(bob.Email, collabs[1].Email, "collaborator not in the correct position")
+	require.Equal(charlie.Email, collabs[2].Email, "collaborator not in the correct position")
+
+	// Test ordering by timestamp
+	f = func(a, b *models.Collaborator) bool {
+		return a.CreatedAt < b.CreatedAt
+	}
+
+	// Insort some collaborators into a slice
+	collabs = bff.InsortCollaborator([]*models.Collaborator{}, charlie, f)
+	require.Len(collabs, 1, "expected one collaborator in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "wrong collaborator in the slice")
+
+	collabs = bff.InsortCollaborator(collabs, alice, f)
+	require.Len(collabs, 2, "expected two collaborators in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "collaborator not in the correct position")
+	require.Equal(alice.CreatedAt, collabs[1].CreatedAt, "collaborator not in the correct position")
+
+	collabs = bff.InsortCollaborator(collabs, bob, f)
+	require.Len(collabs, 3, "expected three collaborators in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "collaborator not in the correct position")
+	require.Equal(bob.CreatedAt, collabs[1].CreatedAt, "collaborator not in the correct position")
+	require.Equal(alice.CreatedAt, collabs[2].CreatedAt, "collaborator not in the correct position")
 }

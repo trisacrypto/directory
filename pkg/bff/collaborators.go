@@ -102,13 +102,18 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 		if err = s.LoadCollaboratorDetails(collab); err != nil {
 			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details from Auth0")
 		}
-		out.Collaborators = append(out.Collaborators, collab)
+
+		// Enforce consistent ordering by email address
+		out.Collaborators = InsortCollaborator(out.Collaborators, collab, func(a, b *models.Collaborator) bool {
+			return a.Email < b.Email
+		})
 	}
 
-	// Sort by email address so we return consistent responses
-	sort.Slice(out.Collaborators, func(i, j int) bool {
-		return out.Collaborators[i].Email < out.Collaborators[j].Email
-	})
+	// Collaborators exist on the organization record so we must persist the updated
+	// organization record to the database
+	if err = s.db.UpdateOrganization(org); err != nil {
+		log.Error().Err(err).Msg("could not save organization with updated collaborators")
+	}
 
 	c.JSON(http.StatusOK, out)
 }
@@ -318,4 +323,18 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 	}
 
 	return nil
+}
+
+// InsortCollaborator is a helper function to insert a collaborator into a sorted slice
+// using a custom sort function.
+func InsortCollaborator(collabs []*models.Collaborator, value *models.Collaborator, f func (a, b *models.Collaborator) bool) []*models.Collaborator {
+	if collabs == nil || value == nil || f == nil {
+		return nil
+	}
+
+	i := sort.Search(len(collabs), func(i int) bool { return f(value, collabs[i]) })
+	collabs = append(collabs, nil)
+	copy(collabs[i+1:], collabs[i:])
+	collabs[i] = value
+	return collabs
 }
