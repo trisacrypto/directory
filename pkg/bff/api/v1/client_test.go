@@ -268,6 +268,44 @@ func TestAddCollaborator(t *testing.T) {
 	require.Equal(t, fixture.Email, collab.Email)
 }
 
+func TestListCollaborators(t *testing.T) {
+	fixture := &api.ListCollaboratorsReply{
+		Collaborators: []*models.Collaborator{
+			{
+				Id:        "wWD4zGmk8L8rA2J1I1PQYA",
+				Email:     "alice@example.com",
+				Roles:     []string{"Organization Collaborator"},
+				CreatedAt: time.Now().Format(time.RFC3339Nano),
+			},
+			{
+				Id: 	  "cD4FGmk8L8rA2J1I1PQYA",
+				Email: "bob@example.com",
+				Roles: []string{"Organization Leader"},
+				CreatedAt: time.Now().Format(time.RFC3339Nano),
+			},
+		},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/collaborators", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	collabs, err := client.ListCollaborators(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, collabs)
+}
+
 func TestUpdateCollaboratorRoles(t *testing.T) {
 	fixture := &models.Collaborator{
 		Id:        "wWD4zGmk8L8rA2J1I1PQYA",

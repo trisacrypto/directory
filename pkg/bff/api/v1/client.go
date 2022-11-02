@@ -170,6 +170,21 @@ func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborato
 	return collaborator, nil
 }
 
+// List all collaborators on an organization.
+func (s *APIv1) ListCollaborators(ctx context.Context) (out *ListCollaboratorsReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/collaborators", nil, nil); err != nil {
+		return nil, err
+	}
+
+	out = &ListCollaboratorsReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Update a collaborator's roles in an organization.
 func (s *APIv1) UpdateCollaboratorRoles(ctx context.Context, id string, request *UpdateRolesParams) (collaborator *models.Collaborator, err error) {
 	// ID is required for the endpoint
