@@ -8,6 +8,7 @@ const DATE_FORMAT = 'DD/MM/YYYY';
 
 const _i18n = setupI18n();
 const minDate = '1970-01-01'; // it fix this issue https://github.com/jquense/yup/issues/325
+const fromMinDate = '1800-01-01';
 
 export const basicDetailsValidationSchema = yup.object().shape({
   website: yup
@@ -24,6 +25,12 @@ export const basicDetailsValidationSchema = yup.object().shape({
 
       return dayjs(originalValue).format(DATE_FORMAT);
     })
+    .min(
+      fromMinDate,
+      t`Date of incorporation / establishment must be later than` +
+        ` ${dayjs(minDate).format(DATE_FORMAT)}.` +
+        `Please select a date no earlier than 1800-01-01.`
+    )
     .min(
       minDate,
       t`Date of incorporation / establishment must be later than` +
