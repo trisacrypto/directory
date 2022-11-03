@@ -28,19 +28,11 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                 <a
                   class="chakra-link css-htwawm"
                 >
-                  <div
-                    class="css-afv3ew"
-                  >
-                    <a
-                      href="/"
-                    >
-                      <img
-                        alt="Trisa logo"
-                        class="css-11kikk4"
-                        src="TRISA-GDS.svg"
-                      />
-                    </a>
-                  </div>
+                  <img
+                    alt="Trisa logo"
+                    class="css-7nt20j"
+                    src="TRISA-GDS-black.png"
+                  />
                 </a>
               </a>
             </div>

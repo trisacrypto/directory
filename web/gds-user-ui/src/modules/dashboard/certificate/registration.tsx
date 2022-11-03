@@ -31,7 +31,8 @@ import {
   postRegistrationValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
-
+// add this line to a constant file
+const WAIT_DATA_LOADING_TIME = 3000;
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
@@ -217,7 +218,7 @@ const Certificate: React.FC = () => {
     };
     setTimeout(() => {
       fetchData();
-    }, 3000);
+    }, WAIT_DATA_LOADING_TIME);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
