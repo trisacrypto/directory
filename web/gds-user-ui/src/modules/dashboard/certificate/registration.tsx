@@ -57,7 +57,7 @@ const Certificate: React.FC = () => {
   const lastStep: number = useSelector(getLastStep);
   const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   const [registrationData, setRegistrationData] = useState<any>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
@@ -217,7 +217,7 @@ const Certificate: React.FC = () => {
     };
     setTimeout(() => {
       fetchData();
-    }, 1000);
+    }, 3000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
