@@ -12,8 +12,7 @@ import {
   FormControl,
   Input,
   Button,
-  InputRightElement,
-  MenuGroup
+  InputRightElement
 } from '@chakra-ui/react';
 import MembersRow from 'components/Tables/MembersRow';
 import Card from 'components/ui/Card';
@@ -38,20 +37,7 @@ const Members = ({ datas }: any) => {
             </InputRightElement>
           </FormControl>
         </Flex>
-        <Table
-          color={textColor}
-          width={'100%'}
-          sx={{
-            borderCollapse: 'separate',
-            borderSpacing: '0 10px',
-            Th: {
-              textTransform: 'capitalize',
-              color: '#858585',
-              fontWeight: 'bold',
-              borderBottom: 'none',
-              fontSize: '0.9rem'
-            }
-          }}>
+        <Table color={textColor} width={'100%'} variant="simple">
           <Thead>
             <Tr>
               <Th>Member Name</Th>

@@ -1,17 +1,5 @@
 import React, { FC } from 'react';
-import {
-  Tr,
-  Td,
-  Flex,
-  Text,
-  Icon,
-  IconButton,
-  Box,
-  Menu,
-  Button,
-  useColorModeValue,
-  MenuItem
-} from '@chakra-ui/react';
+import { Tr, Td, Flex, Text, Icon, Button } from '@chakra-ui/react';
 
 import { IoEllipse } from 'react-icons/io5';
 import { Trans } from '@lingui/react';
@@ -29,29 +17,10 @@ const isActivated = (status: boolean) => {
 };
 
 const CertificateRegistrationRow: FC<MembersProps> = (props) => {
-  const { name, isTestNet, isMainNet, memberId } = props;
-  const textColor = useColorModeValue('#858585', 'white');
+  const { name, isTestNet, isMainNet } = props;
+
   return (
-    <Tr
-      border="1px solid #23A7E0"
-      borderRadius={100}
-      sx={{
-        td: {
-          height: '66px',
-          borderTop: '1px solid #23A7E0',
-          borderBottom: '1px solid #23A7E0'
-        },
-        'td:first-child': {
-          border: '1px solid #23A7E0',
-          borderLeftRadius: 100,
-          borderRight: 'none'
-        },
-        'td:last-child': {
-          border: '1px solid #23A7E0',
-          borderRightRadius: 100,
-          borderLeft: 'none'
-        }
-      }}>
+    <Tr>
       <Td>
         <Flex py=".8rem" minWidth="100%" flexWrap="nowrap" textAlign={'left'} verticalAlign={''}>
           <Text fontSize="md" minWidth="100%">
