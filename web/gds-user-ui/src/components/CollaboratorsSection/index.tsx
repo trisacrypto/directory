@@ -103,7 +103,9 @@ const TableRows: React.FC = () => {
 
 const CollaboratorsSection: React.FC = () => {
   const { onOpen } = useDisclosure();
+  const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = React.useState(false);
   const modalHandler = () => {
+    setIsAddCollaboratorModalOpen(!isAddCollaboratorModalOpen);
     onOpen();
   };
 
@@ -114,6 +116,7 @@ const CollaboratorsSection: React.FC = () => {
           <Button minW="170px" onClick={modalHandler}>
             <Trans>Add Contact</Trans>
           </Button>
+          {isAddCollaboratorModalOpen && <AddCollaboratorModal />}
         </TableCaption>
         <Thead>
           <Tr>
