@@ -7,6 +7,7 @@ import Input from './components/Input';
 import Select from './components/Select';
 import Heading from './components/Heading';
 import { mode, StyleFunctionProps } from '@chakra-ui/theme-tools';
+import Table from './components/Table';
 
 const config = {
   cssVarPrefix: 'ck',
@@ -23,7 +24,8 @@ const theme = extendTheme({
     Button,
     Input,
     Select,
-    Heading
+    Heading,
+    Table
   },
   styles: {
     global: (props: StyleFunctionProps) => ({

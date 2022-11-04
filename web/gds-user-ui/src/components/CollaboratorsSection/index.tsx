@@ -137,7 +137,7 @@ const TableRows: React.FC = () => {
 const CollaboratorsSection: React.FC = () => {
   return (
     <FormLayout overflowX={'scroll'}>
-      <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
+      <Table variant="simple">
         <TableCaption placement="top" textAlign="start" p={0} m={0} fontSize={20}>
           <Trans id="Organization Collaborators">Organization Collaborators</Trans>
         </TableCaption>
