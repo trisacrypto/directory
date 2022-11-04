@@ -454,6 +454,8 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	require.NoError(err)
 	delta, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
+	hotel, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err)
 	expected := &admin.AutocompleteReply{
 		Names: map[string]string{
 			"trisa.charliebank.io":         charlie.Id,
@@ -462,6 +464,9 @@ func (s *gdsTestSuite) TestAutocomplete() {
 			"trisa.delta.io":               delta.Id,
 			"https://trisa.delta.io":       "https://trisa.delta.io",
 			"Delta Assets":                 delta.Id,
+			"trisa.hotel.io":               hotel.Id,
+			"https://trisa.hotel.io":       "https://trisa.hotel.io",
+			"Hotel Corp":                   hotel.Id,
 		},
 	}
 	require.Equal(expected, actual)
@@ -483,6 +488,8 @@ func (s *gdsTestSuite) TestListVASPs() {
 	charlie, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 	delta, err := s.fixtures.GetVASP("delta")
+	require.NoError(err)
+	hotel, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 
 	snippets := []admin.VASPSnippet{
@@ -507,6 +514,22 @@ func (s *gdsTestSuite) TestListVASPs() {
 			VerifiedContacts: map[string]bool{
 				"billing": true,
 				"legal":   true,
+			},
+		},
+		{
+			ID:                    hotel.Id,
+			Name:                  "Hotel Corp",
+			CommonName:            "trisa.hotel.io",
+			RegisteredDirectory:   "trisatest.net",
+			VerifiedOn:            hotel.VerifiedOn,
+			VerificationStatus:    pb.VerificationState_VERIFIED.String(),
+			CertificateSerial:     fmt.Sprintf("%X", hotel.IdentityCertificate.SerialNumber),
+			CertificateIssued:     hotel.IdentityCertificate.NotBefore,
+			CertificateExpiration: hotel.IdentityCertificate.NotAfter,
+			VerifiedContacts: map[string]bool{
+				"billing":   false,
+				"legal":     true,
+				"technical": true,
 			},
 		},
 	}
@@ -563,7 +586,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(100, actual.PageSize)
 	require.Len(actual.VASPs, 2)
 	sortByName(actual.VASPs)
-	require.Equal(snippets, actual.VASPs)
+	require.Equal(snippets[:2], actual.VASPs)
 
 	// List VASPs on multiple pages
 	request.path = "/v2/vasps?page=1&page_size=1"
@@ -588,7 +611,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Len(actual.VASPs, 1)
 	pageResults = append(pageResults, snippets[1])
 	sortByName(pageResults)
-	require.Equal(snippets, pageResults)
+	require.Equal(snippets[:2], pageResults)
 
 	request.path = "/v2/vasps?page=3&page_size=1"
 	actual = &admin.ListVASPsReply{}
@@ -598,7 +621,10 @@ func (s *gdsTestSuite) TestListVASPs() {
 	require.Equal(len(snippets), actual.Count)
 	require.Equal(3, actual.Page)
 	require.Equal(1, actual.PageSize)
-	require.Len(actual.VASPs, 0)
+	require.Len(actual.VASPs, 1)
+	pageResults = append(pageResults, snippets[2])
+	sortByName(pageResults)
+	require.Equal(snippets[:3], pageResults)
 }
 
 // Test the RetrieveVASP endpoint.
@@ -1921,14 +1947,14 @@ func (s *gdsTestSuite) TestReviewTimeline() {
 		Weeks: []admin.ReviewTimelineRecord{
 			{
 				Week:         "2021-08-23",
-				VASPsUpdated: 1,
+				VASPsUpdated: 2,
 				Registrations: map[string]int{
 					pb.VerificationState_NO_VERIFICATION.String():     0,
 					pb.VerificationState_SUBMITTED.String():           0,
 					pb.VerificationState_EMAIL_VERIFIED.String():      0,
 					pb.VerificationState_PENDING_REVIEW.String():      1,
 					pb.VerificationState_REVIEWED.String():            0,
-					pb.VerificationState_ISSUING_CERTIFICATE.String(): 0,
+					pb.VerificationState_ISSUING_CERTIFICATE.String(): 1,
 					pb.VerificationState_VERIFIED.String():            0,
 					pb.VerificationState_REJECTED.String():            0,
 					pb.VerificationState_APPEALED.String():            0,
