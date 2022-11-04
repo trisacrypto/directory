@@ -6,12 +6,12 @@ import {
   FormErrorMessage
 } from '@chakra-ui/react';
 import { ChakraStylesConfig, GroupBase, OptionsOrGroups, Select, Props } from 'chakra-react-select';
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 interface _FormControlProps extends Props {
   formHelperText?: any;
   controlId: string;
-  label?: string;
+  label?: string | ReactNode;
   name?: string;
   placeholder?: string;
   isDisabled?: boolean;
