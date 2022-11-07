@@ -16,7 +16,8 @@ import (
 
 const (
 	// TODO: do not hard code this value but make it a configuration
-	DefaultRole        = "Organization Collaborator"
+	CollaboratorRole   = "Organization Collaborator"
+	LeaderRole         = "Organization Leader"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
 	VASPsKey           = "vasps"
@@ -106,7 +107,7 @@ func (s *Server) Login(c *gin.Context) {
 	if len(roles.Roles) == 0 {
 		// Assign the user the organization collaborator role
 		var role *management.Role
-		if role, err = s.FindRoleByName(DefaultRole); err != nil {
+		if role, err = s.FindRoleByName(CollaboratorRole); err != nil {
 			log.Error().Err(err).Msg("could not identify the default role to assign the user")
 			c.JSON(http.StatusInternalServerError, "could not complete user login")
 			return
@@ -166,6 +167,17 @@ func (s *Server) Login(c *gin.Context) {
 	} else {
 		c.Status(http.StatusNoContent)
 	}
+}
+
+// ListUserRoles returns the set of assignable user roles.
+func (s *Server) ListUserRoles(c *gin.Context) {
+	// TODO: This is currently a static list which must be maintained to be in sync
+	// with the roles defined in Auth0.
+	reply := map[string]struct{}{
+		CollaboratorRole: {},
+		LeaderRole:       {},
+	}
+	c.JSON(http.StatusOK, reply)
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

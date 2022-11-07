@@ -344,6 +344,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
+		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
 		collaborators := v1.Group("/collaborators")

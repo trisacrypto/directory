@@ -239,6 +239,32 @@ func TestLogin(t *testing.T) {
 	require.Len(t, client.Jar.Cookies(u), 2, "expected two cookies set in the cookie jar")
 }
 
+func TestListUserRoles(t *testing.T) {
+	fixture := map[string]struct{}{
+		"collaborator": {},
+		"leader":       {},
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/users/roles", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.ListUserRoles(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestAddCollaborator(t *testing.T) {
 	fixture := &models.Collaborator{
 		Email:     "alice@example.com",
@@ -278,9 +304,9 @@ func TestListCollaborators(t *testing.T) {
 				CreatedAt: time.Now().Format(time.RFC3339Nano),
 			},
 			{
-				Id: 	  "cD4FGmk8L8rA2J1I1PQYA",
-				Email: "bob@example.com",
-				Roles: []string{"Organization Leader"},
+				Id:        "cD4FGmk8L8rA2J1I1PQYA",
+				Email:     "bob@example.com",
+				Roles:     []string{"Organization Leader"},
 				CreatedAt: time.Now().Format(time.RFC3339Nano),
 			},
 		},
