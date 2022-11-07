@@ -8,11 +8,9 @@ export const getAllCollaborators = async () => {
   });
   return response;
 };
-export const addCollaborator = async () => {
-  const response = await axiosInstance.get(`/collaborators`, {
-    headers: {
-      Authorization: `Bearer ${getCookie('access_token')}`
-    }
+export const addCollaborator = async (data: any) => {
+  const response = await axiosInstance.post(`/collaborators`, {
+    ...data
   });
   return response;
 };
