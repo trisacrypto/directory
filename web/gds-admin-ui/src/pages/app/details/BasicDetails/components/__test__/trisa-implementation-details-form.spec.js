@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "utils/test-utils"
 import TrisaImplementationDetailsForm from "pages/app/details/BasicDetails/components/TrisaImplementationDetailsForm"
 import { Modal } from 'components/Modal'
-import userEvent from "@testing-library/user-event"
 
 const TrisaForm = ({ data }) => {
     return <Modal>

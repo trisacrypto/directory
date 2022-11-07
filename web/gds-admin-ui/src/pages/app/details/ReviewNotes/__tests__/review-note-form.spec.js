@@ -1,6 +1,5 @@
 import { render, screen } from "utils/test-utils"
 import ReviewNoteForm from "pages/app/details/ReviewNotes/ReviewNoteForm"
-import userEvent from "@testing-library/user-event";
 
 
 const mockResponse = jest.fn(note => {
