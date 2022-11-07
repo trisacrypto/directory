@@ -6,84 +6,68 @@ import {
   Th,
   Thead,
   Tr,
-  Tag,
-  TagLabel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  IconButton,
-  MenuList,
-  VStack,
-  Button
+  Button,
+  chakra,
+  HStack,
+  Link,
+  useDisclosure,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Text,
+  Checkbox,
+  VStack
 } from '@chakra-ui/react';
-import { BsThreeDots } from 'react-icons/bs';
 import FormLayout from 'layouts/FormLayout';
 import React from 'react';
-import { Trans } from '@lingui/react';
+import { Trans } from '@lingui/macro';
+import { FiMail } from 'react-icons/fi';
+import InputFormControl from 'components/ui/InputFormControl';
+import EditCollaboratorModal from './EditCollaboratorModal';
+import DeleteCollaboratorModal from './DeleteCollaboratorModal';
 
 type Row = {
   id: string;
-  name: string;
-  permission: string;
-  added: string;
+  username: string;
   role: string;
-  status: string;
+  joined: string;
+  organization: string;
+  email: string;
 };
 
-const rows = [
+const rows: Row[] = [
   {
     id: '18001',
-    name: 'Jones Ferdinand',
-    permission: 'Owner',
-    added: '14/01/2022',
-    role: 'Compliance Officer',
-    status: 'active'
+    username: 'Jones Ferdinand',
+    email: 'jones.ferdinand@gmail.com',
+    role: 'Admin',
+    joined: '14/01/2022',
+    organization: 'Cypertrace, Inc'
   },
   {
     id: '18001',
-    name: 'Eason Yang',
-    permission: 'Editor',
-    added: '14/01/2022',
-    role: 'Director of Engineering',
-    status: 'active'
+    username: 'Eason Yang',
+    email: 'eason.yang@gmail.com',
+    role: 'Member',
+    joined: '14/01/2022',
+    organization: 'VASPnet, LLC'
   },
   {
     id: '18001',
-    name: 'Anusha Aggarwal',
-    permission: 'Viewer',
-    added: '14/01/2022',
-    role: 'General Manager',
-    status: 'active'
+    username: 'Anusha Aggarwal',
+    email: 'anusha.aggarwal@gmail.com',
+    role: 'Member',
+    joined: '14/01/2022',
+    organization: 'VASPnet, LLC'
   }
 ];
 
 const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <Tr
-      border="1px solid #23A7E0"
-      borderRadius={100}
-      css={{
-        'td:first-child': {
-          border: '1px solid #23A7E0',
-          borderRight: 'none',
-          borderTopLeftRadius: 100,
-          borderBottomLeftRadius: 100
-        },
-        'td:last-child': {
-          border: '1px solid #23A7E0',
-          borderLeft: 'none',
-          borderTopRightRadius: 100,
-          borderBottomRightRadius: 100,
-          textAlign: 'center'
-        },
-        'td:not(:first-child):not(:last-child)': {
-          borderTop: '1px solid #23A7E0',
-          borderBottom: '1px solid #23A7E0'
-        }
-      }}>
-      {children}
-    </Tr>
-  );
+  return <Tr>{children}</Tr>;
 };
 
 const TableRow: React.FC<{ row: Row }> = ({ row }) => {
@@ -91,32 +75,25 @@ const TableRow: React.FC<{ row: Row }> = ({ row }) => {
     <>
       <RowItem>
         <>
-          <Td>{row.id}</Td>
-          <Td>{row.name}</Td>
-          <Td>{row.permission}</Td>
-          <Td>{row.added}</Td>
-          <Td>{row.role}</Td>
-          <Td>
-            <Tag size="md" borderRadius="full" color="white" background="#60C4CA">
-              <TagLabel textTransform="capitalize">{row.status}</TagLabel>
-            </Tag>
+          <Td display="flex" flexDir="column">
+            <chakra.span display="block" textTransform="capitalize">
+              {row.username}
+            </chakra.span>
+            <chakra.span display="block" fontSize="sm" color="gray.700">
+              {row.email}
+            </chakra.span>
           </Td>
+          <Td textTransform="capitalize">{row.role}</Td>
+          <Td>{row.joined}</Td>
+          <Td textTransform="capitalize">{row.organization}</Td>
           <Td paddingY={0}>
-            <Menu>
-              <MenuButton
-                as={IconButton}
-                icon={<BsThreeDots />}
-                background="transparent"
-                _active={{ outline: 'none' }}
-                _focus={{ outline: 'none' }}
-                borderRadius={50}
-              />
-              <MenuList>
-                <MenuItem>Edit</MenuItem>
-                <MenuItem>Change Permissions</MenuItem>
-                <MenuItem>Deactivate</MenuItem>
-              </MenuList>
-            </Menu>
+            <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
+              <Link color="blue" href={`mailto:${row.email}`}>
+                <FiMail fontSize="26px" />
+              </Link>
+              <EditCollaboratorModal />
+              <DeleteCollaboratorModal />
+            </HStack>
           </Td>
         </>
       </RowItem>
@@ -135,34 +112,97 @@ const TableRows: React.FC = () => {
 };
 
 const CollaboratorsSection: React.FC = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <FormLayout overflowX={'scroll'}>
-      <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
-        <TableCaption placement="top" textAlign="start" p={0} m={0} fontSize={20}>
-          <Trans id="Organization Collaborators">Organization Collaborators</Trans>
+      <Table variant="simple">
+        <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
+          <Button minW="170px" onClick={onOpen}>
+            <Trans>Add Contact</Trans>
+          </Button>
+          <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent w="100%" maxW="600px" px={10}>
+              <ModalHeader textTransform="capitalize" textAlign="center" fontWeight={700} pb={1}>
+                Add New Contact
+              </ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <VStack>
+                  <Text>
+                    Please provide the name of the VASP and email address for the new contact.
+                  </Text>
+                  <Text>
+                    The contact will receive an email to create a TRISA Global Directory Service
+                    Account. The invitation to join is valid for 7 calendar days. The contact will
+                    be added as a member for the VASP. The contact will have the ability to
+                    contribute to certificate requests, check on the status of certificate requests,
+                    and complete other actions related to the organization’s TRISA membership.
+                  </Text>
+                </VStack>
+                <Checkbox mt={2} mb={4}>
+                  TRISA is a network of trusted members. I acknowledge that the contact is
+                  authorized to access the organization’s TRISA account information.
+                </Checkbox>
+
+                <InputFormControl
+                  controlId="vasp_name"
+                  label={
+                    <>
+                      <chakra.span fontWeight={700}>
+                        <Trans>VASP Name</Trans>
+                      </chakra.span>{' '}
+                      (<Trans>required</Trans>)
+                    </>
+                  }
+                />
+
+                <InputFormControl
+                  controlId="email"
+                  label={
+                    <>
+                      <chakra.span fontWeight={700}>
+                        <Trans>Email Address</Trans>
+                      </chakra.span>{' '}
+                      (<Trans>required</Trans>)
+                    </>
+                  }
+                />
+              </ModalBody>
+
+              <ModalFooter display="flex" flexDir="column" gap={3}>
+                <Button bg="orange" _hover={{ bg: 'orange' }} minW="150px">
+                  Invite
+                </Button>
+                <Button
+                  variant="ghost"
+                  color="link"
+                  fontWeight={400}
+                  onClick={onClose}
+                  minW="150px">
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </TableCaption>
         <Thead>
           <Tr>
             <Th>
-              <Trans id="User ID">User ID</Trans>
+              <Trans>Name & Email</Trans>
             </Th>
             <Th>
-              <Trans id="Name">Name</Trans>
+              <Trans>Role</Trans>
             </Th>
             <Th>
-              <Trans id="Permission">Permission</Trans>
+              <Trans>Joined</Trans>
             </Th>
             <Th>
-              <Trans id="Added">Added</Trans>
-            </Th>
-            <Th>
-              <Trans id="Role">Role</Trans>
-            </Th>
-            <Th>
-              <Trans id="Status">Status</Trans>
+              <Trans>Organization</Trans>
             </Th>
             <Th textAlign="center">
-              <Trans id="Action">Action</Trans>
+              <Trans>Actions</Trans>
             </Th>
           </Tr>
         </Thead>
@@ -170,11 +210,6 @@ const CollaboratorsSection: React.FC = () => {
           <TableRows />
         </Tbody>
       </Table>
-      <VStack align="center" w="100%">
-        <Button>
-          <Trans id="Add Contact">Add Contact</Trans>
-        </Button>
-      </VStack>
     </FormLayout>
   );
 };
