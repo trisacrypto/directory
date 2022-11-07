@@ -1,6 +1,6 @@
 import faker from 'faker'
-import Contact from "../pages/app/details/contact/Contact"
-import { VERIFIED_CONTACT_STATUS_LABEL } from "../constants"
+import Contact from "../Contact"
+import { VERIFIED_CONTACT_STATUS_LABEL } from "../../../../../constants"
 import { Modal } from "components/Modal"
 import { render, screen } from 'utils/test-utils'
 
