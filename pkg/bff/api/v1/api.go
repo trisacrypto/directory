@@ -18,7 +18,7 @@ type BFFClient interface {
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 
 	// User Management Endpoints
-	Login(context.Context) error
+	Login(context.Context, *LoginParams) error
 
 	// Authenticated Endpoints
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
@@ -65,6 +65,12 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// LoginParams contains additional information needed for post-authentication checks
+// during user login.
+type LoginParams struct {
+	OrgID string `json:"orgid"`
+}
 
 // UpdateRolesParams contains a list of new roles for a collaborator.
 type UpdateRolesParams struct {

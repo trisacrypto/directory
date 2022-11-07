@@ -107,3 +107,53 @@ func TestAppMetadata(t *testing.T) {
 	}
 
 }
+
+func TestEquals(t *testing.T) {
+	a := &AppMetadata{
+		OrgID: "67428be4-3fa4-4bf2-9e15-edbf043f8670",
+		VASPs: VASPs{
+			TestNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			MainNet: "2ac8d50a-ff4c-479e-8eec-a35d96d90911",
+		},
+		Organizations: map[string]struct{}{
+			"67428be4-3fa4-4bf2-9e15-edbf043f8670": {},
+		},
+	}
+
+	b := &AppMetadata{
+		OrgID: "b4f2e15e-dbf0-3f86-428b-4e3fa4f2e15e",
+		VASPs: VASPs{
+			TestNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			MainNet: "2ac8d50a-ff4c-479e-8eec-a35d96d90911",
+		},
+		Organizations: map[string]struct{}{
+			"67428be4-3fa4-4bf2-9e15-edbf043f8670": {},
+		},
+	}
+
+	// If the orgid is different, they are not equal
+	require.False(t, a.Equals(b), "orgids are different, but Equals returned true")
+
+	// If the VASPs are different, they are not equal
+	b.OrgID = a.OrgID
+	b.VASPs.MainNet = "00000000-0000-0000-0000-000000000000"
+	require.False(t, a.Equals(b), "VASPs are different, but Equals returned true")
+
+	// If the Organizations are different, they are not equal
+	b.VASPs.MainNet = a.VASPs.MainNet
+	b.Organizations = map[string]struct{}{
+		"00000000-0000-0000-0000-000000000000": {},
+		"67428be4-3fa4-4bf2-9e15-edbf043f8670": {},
+	}
+	require.False(t, a.Equals(b), "Organizations are different, but Equals returned true")
+	b.Organizations = map[string]struct{}{
+		"00000000-0000-0000-0000-000000000000": {},
+	}
+	require.False(t, a.Equals(b), "Organizations are different, but Equals returned true")
+
+	// Only equal if all fields are equal
+	b.Organizations = map[string]struct{}{
+		"67428be4-3fa4-4bf2-9e15-edbf043f8670": {},
+	}
+	require.True(t, a.Equals(b), "all fields are equal, but Equals returned false")
+}

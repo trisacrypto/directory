@@ -33,16 +33,8 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 		return nil, errors.New("missing organization ID in claims")
 	}
 
-	// Organizations are stored by UUID in the database
-	var id uuid.UUID
-	if id, err = models.ParseOrgID(claims.OrgID); err != nil {
-		log.Error().Err(err).Msg("could not parse orgID from claims")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
-		return nil, err
-	}
-
-	// Fetch the record from the database
-	if org, err = s.db.RetrieveOrganization(id); err != nil {
+	// Fetch the organization from the database
+	if org, err = s.OrganizationFromID(claims.OrgID); err != nil {
 		if errors.Is(err, storeerrors.ErrEntityNotFound) {
 			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
 			api.MustRefreshToken(c, "no organization found, try logging out and logging back in")
@@ -51,6 +43,22 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 
 		log.Error().Err(err).Msg("could not retrieve organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
+		return nil, err
+	}
+
+	return org, nil
+}
+
+func (s *Server) OrganizationFromID(id string) (org *models.Organization, err error) {
+	// Organizations are stored by UUID in the database
+	var uuid uuid.UUID
+	if uuid, err = models.ParseOrgID(id); err != nil {
+		log.Error().Err(err).Str("org_id", id).Msg("could not parse organization ID")
+		return nil, err
+	}
+
+	// Fetch the record from the database
+	if org, err = s.db.RetrieveOrganization(uuid); err != nil {
 		return nil, err
 	}
 
