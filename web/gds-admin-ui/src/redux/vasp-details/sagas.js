@@ -7,6 +7,8 @@ import { fetchVaspDetailsApiResponseSuccess, DeleteReviewNotesActionTypes, fetch
 import { deleteContactResponseError, fetchVaspDetailsApiResponse, updateContactResponseError } from './actions'
 import { DeleteContactActionTypes, UpdateContactActionTypes } from './constants'
 import getErrorMessage from 'utils/getError'
+import toast from 'react-hot-toast';
+
 
 function* fetchVaspDetails({ payload: { id, history } }) {
     NProgress.start()
@@ -16,6 +18,8 @@ function* fetchVaspDetails({ payload: { id, history } }) {
         NProgress.done()
     } catch (error) {
         yield put(fetchVaspDetailsApiResponseError(error.message))
+        toast.error(`VASP with ID ${id} doesn't exist`)
+        history.push('/')
         NProgress.done()
     }
 }
