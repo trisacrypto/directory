@@ -14,6 +14,7 @@ interface ProgressBarProps {
   registrationState?: any;
 }
 const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
+  console.log('[ProgressBar]');
   return (
     <>
       <CertificateSteps>
