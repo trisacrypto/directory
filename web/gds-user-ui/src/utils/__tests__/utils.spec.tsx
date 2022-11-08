@@ -142,6 +142,10 @@ describe('utils', () => {
     it('should return cyan when status is true', () => {
       expect(getColorScheme('false')).toBe('cyan');
     });
+
+    it('should return white color', () => {
+      expect(getColorScheme()).toBe('#eee');
+    });
   });
 
   describe('currentFormater', () => {

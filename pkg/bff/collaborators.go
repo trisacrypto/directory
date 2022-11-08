@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -76,6 +77,45 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, collaborator)
+}
+
+// ListCollaborators lists all the collaborators on the user's organization. The user
+// must have the read:collaborators permission to make this request.
+func (s *Server) ListCollaborators(c *gin.Context) {
+	var (
+		err          error
+		org 		*models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// NOTE: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response from the internal map
+	out := &api.ListCollaboratorsReply{
+		Collaborators: make([]*models.Collaborator, 0),
+	}
+
+	for _, collab := range org.Collaborators {
+		if err = s.LoadCollaboratorDetails(collab); err != nil {
+			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details from Auth0")
+		}
+
+		// Enforce consistent ordering by email address
+		out.Collaborators = InsortCollaborator(out.Collaborators, collab, func(a, b *models.Collaborator) bool {
+			return a.Email < b.Email
+		})
+	}
+
+	// Collaborators exist on the organization record so we must persist the updated
+	// organization record to the database
+	if err = s.db.UpdateOrganization(org); err != nil {
+		log.Error().Err(err).Msg("could not save organization with updated collaborators")
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 // UpdateCollaboratorRoles updates the roles of the collaborator ID in the request,
@@ -251,6 +291,11 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 // Auth0. The collaborator must have an user ID on it and the data in Auth0 will
 // overwrite the data on the collaborator record.
 func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
+	// If the user is not verified in Auth0 then we can't retrieve the details
+	if collab.VerifiedAt == "" {
+		return nil
+	}
+
 	// Record must have a user ID to query Auth0
 	if collab.UserId == "" {
 		return errors.New("collaborator does not have a user ID")
@@ -278,4 +323,18 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 	}
 
 	return nil
+}
+
+// InsortCollaborator is a helper function to insert a collaborator into a sorted slice
+// using a custom sort function.
+func InsortCollaborator(collabs []*models.Collaborator, value *models.Collaborator, f func (a, b *models.Collaborator) bool) []*models.Collaborator {
+	if collabs == nil || value == nil || f == nil {
+		return nil
+	}
+
+	i := sort.Search(len(collabs), func(i int) bool { return f(value, collabs[i]) })
+	collabs = append(collabs, nil)
+	copy(collabs[i+1:], collabs[i:])
+	collabs[i] = value
+	return collabs
 }

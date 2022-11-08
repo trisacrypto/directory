@@ -87,7 +87,7 @@ func NewUsers() map[string]*management.User {
 // NewUserRoles creates some default user roles for testing.
 func NewUserRoles() map[string]*management.RoleList {
 	names := []string{
-		"Organization Collaborator",
+		UserRole,
 	}
 
 	return map[string]*management.RoleList{

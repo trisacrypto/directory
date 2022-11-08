@@ -4,7 +4,7 @@ import PrivateRoute from './PrivateRoute';
 
 const Login = React.lazy(() => import('../pages/account/Login'));
 
-const Dashboard = React.lazy(() => import('../pages/app/dashboard'));
+const Dashboard = React.lazy(() => import('../pages/app/details/BasicDetails/dashboard'));
 const VaspsList = React.lazy(() => import('../pages/app/lists'));
 const VaspsDetails = React.lazy(() => import('../pages/app/details'))
 

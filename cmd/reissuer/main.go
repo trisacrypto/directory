@@ -12,7 +12,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -172,6 +171,27 @@ func main() {
 					Usage:   "specify the verification status for the VASP",
 				},
 			},
+		},
+		{
+			Name: "destroy",
+			Usage: "destroy a VASP record if it is in the rejected state",
+			Action: destroy,
+			Before: connectDB,
+			After: closeDB,
+		Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to revoke the certificates of",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+		},
 		},
 	}
 
@@ -424,7 +444,7 @@ func makeCertificateProto(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	if err = ioutil.WriteFile(c.String("out"), data, 0600); err != nil {
+	if err = os.WriteFile(c.String("out"), data, 0600); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -544,7 +564,6 @@ func rereview(c *cli.Context) (err error) {
 		}
 	}
 
-	// Set the VASP state to rejected
 	if err = models.UpdateVerificationStatus(
 		vasp,
 		newStatus,
@@ -554,11 +573,45 @@ func rereview(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not update VASP status: %s", err), 1)
 	}
 
+	if newStatus < pb.VerificationState_VERIFIED {
+		vasp.VerifiedOn = ""
+	}
+
+	if newStatus == pb.VerificationState_VERIFIED {
+		vasp.VerifiedOn = time.Now().Format(time.RFC3339Nano)
+	}
+
 	if err = db.UpdateVASP(vasp); err != nil {
 		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
 	}
 
 	fmt.Println("VASP verification state updated")
+	return nil
+}
+
+func destroy(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	if vasp.VerificationStatus <= pb.VerificationState_VERIFIED {
+		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke instead", vasp.VerificationStatus), 1)
+	}
+
+	fmt.Printf("destroying VASP record for %s\n", vasp.CommonName)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue with operation?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	if err = db.DeleteVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not delete record: %s", err), 1)
+	}
 	return nil
 }
 

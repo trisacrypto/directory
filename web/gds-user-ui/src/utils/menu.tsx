@@ -5,6 +5,7 @@ import { IconType } from 'react-icons';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { ComponentWithAs, IconProps } from '@chakra-ui/react';
 import { BsFillInfoCircleFill } from 'react-icons/bs';
+import { HiUserGroup } from 'react-icons/hi';
 import { t } from '@lingui/macro';
 // import CertificateManagementIcon from 'assets/certificate-management.svg';
 
@@ -34,7 +35,7 @@ const MENU: Menu[] = [
         title: t`Certificate Management`,
         icon: FaRegMoneyBillAlt,
         path: '/dashboard/certificate-management',
-        activated: true
+        activated: process.env.REACT_APP_ENABLE_CERT_MANAGEMENT_FEAT === 'true' || false
       },
       {
         title: t`Certificate Registration`,
@@ -49,6 +50,12 @@ const MENU: Menu[] = [
         activated: false
       }
     ]
+  },
+  {
+    title: t`Collaborators`,
+    activated: true,
+    icon: HiUserGroup,
+    path: '/dashboard/collaborators'
   },
   {
     title: t`Technical Resources`,

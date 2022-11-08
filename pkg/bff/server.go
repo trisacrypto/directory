@@ -348,6 +348,7 @@ func (s *Server) setupRoutes() (err error) {
 		// Authenticated routes
 		collaborators := v1.Group("/collaborators")
 		{
+			collaborators.GET("", auth.Authorize("read:collaborators"), s.ListCollaborators)
 			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
 			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)

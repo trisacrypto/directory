@@ -16,6 +16,7 @@ import AddressesFieldArray from './AddressesFieldArray';
 import NameIdentifiersFieldArray from './NameIdentifiersFieldArray';
 import * as yup from 'yup'
 import { Typeahead } from 'react-bootstrap-typeahead';
+import { capitalizeFirstLetter } from 'utils';
 
 
 const validationSchema = yup.object().shape({
@@ -33,7 +34,7 @@ const validationSchema = yup.object().shape({
 
 
 function Ivms101RecordForm({ data }) {
-    const { register, control, handleSubmit, formState: { isDirty, errors, dirtyFields }, watch, setValue } = useForm({
+    const { register, control, handleSubmit, formState: { isDirty, errors, dirtyFields, isSubmitting }, watch, setValue } = useForm({
         defaultValues: getIvms101RecordInitialValues(data),
         resolver: yupResolver(validationSchema)
     })
@@ -49,7 +50,6 @@ function Ivms101RecordForm({ data }) {
     const nationalIdentifierType = watch("national_identification.national_identifier_type")
     const isRegistrationAuthorityDisable = React.useCallback(() => nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX", [nationalIdentifierType])
     let _typeahead = React.useRef()
-
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             safeDispatch(clearIvms101ErrorMessage())
@@ -62,17 +62,16 @@ function Ivms101RecordForm({ data }) {
 
     React.useEffect(() => {
         if (nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX") {
-            // setValue("national_identification.registration_authority", undefined)
             _typeahead.current.clear()
         }
     }, [nationalIdentifierType, setValue])
 
     const onSubmit = async (data) => {
         delete data.national_identification.country_of_issue
+        delete data.national_identification.registration_authority
         const payload = {
             entity: data
         }
-
         if (params && params.id) {
             safeDispatch(updateIvms101Response(params.id, payload, setIsOpen))
         }
@@ -93,16 +92,18 @@ function Ivms101RecordForm({ data }) {
     const handleAddNewPhoneticNamesRow = () => {
         phoneticNameIdentifiersFieldArrayRef.current.addRow()
     }
-
     return (
         <div>
             <h3>Legal Person</h3>
             <p>Please enter the information that identify your organization as a Legal Person. This form represents the IVMS 101 data structure for legal persons and is strongly suggested for use as KYC information exchanged in TRISA transfers.</p>
 
-            <Alert variant="danger" show={!!ivmsErrorState} className='col-sm-12' onClose={handleAlertClose} dismissible>
-                <Alert.Heading className='h5'>{ivmsErrorState?.status} {ivmsErrorState?.statusText}</Alert.Heading>
-                {ivmsErrorState?.message}
-            </Alert>
+            {
+                ivmsErrorState ? (
+                    <Alert variant="danger" show={!!ivmsErrorState} className='col-sm-12' onClose={handleAlertClose} dismissible>
+                        {capitalizeFirstLetter(ivmsErrorState)}
+                    </Alert>
+                ) : null
+            }
 
             <Form onSubmit={handleSubmit(onSubmit)}>
                 <NameIdentifiersFieldArray
@@ -202,7 +203,7 @@ function Ivms101RecordForm({ data }) {
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>
                     </ModalCloseButton>
-                    <Button type='submit' disabled={isLoading || !isDirty}>Save</Button>
+                    <Button type='submit' disabled={isLoading || !isDirty || isSubmitting}>Save</Button>
                 </div>
             </Form>
         </div>

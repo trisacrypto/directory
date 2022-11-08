@@ -47,21 +47,7 @@ function CertificateRegistrationTable() {
 
   return (
     <Stack px={'60px'}>
-      <Table
-        color={textColor}
-        width={'100%'}
-        sx={{
-          borderCollapse: 'separate',
-          borderSpacing: '0 10px',
-          Th: {
-            textTransform: 'capitalize',
-            color: '#858585',
-            fontWeight: 'bold',
-            borderBottom: 'none',
-            fontSize: '0.9rem',
-            textAlign: 'center'
-          }
-        }}>
+      <Table color={textColor} width={'100%'} variant="simple">
         <Thead>
           <Tr>
             <Th>

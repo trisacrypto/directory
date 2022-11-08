@@ -1,58 +1,31 @@
 import React from 'react'
 import FileInformationCard from 'components/FileInformationCard';
-import PropTypes from 'prop-types'
-import { Card, Col, Dropdown, Row } from 'react-bootstrap';
+import { Card, Col, Row } from 'react-bootstrap';
 import { copyToClipboard, formatDisplayedData } from 'utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { downloadFile } from 'helpers/api/utils';
 import Details from './Details';
+import IdentityCertificateDropDown from './IdentityCertificateDropDown'
 dayjs.extend(relativeTime)
 
+const getExpireColorStyle = (notAfter) => {
+    const _notAfter = dayjs(notAfter).unix()
+    const threeMonthsFromNow = dayjs().add(3, 'month').unix()
 
-export const IdentityCertificateDropDown = ({ handleCopySignatureClick, handleCopySerialNumberClick }) => {
+    if (dayjs().unix() > _notAfter) {
+        return 'text-danger'
+    }
 
-    return (
-        <Dropdown className="float-end" align="end">
-            <Dropdown.Toggle
-                data-testid="certificate-details-3-dots"
-                variant="link"
-                tag="a"
-                className="card-drop arrow-none cursor-pointer p-0 shadow-none">
-                <i className="dripicons-dots-3"></i>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-                <Dropdown.Item data-testid="copy-signature" onClick={handleCopySignatureClick}>
-                    <i className="mdi mdi-content-copy me-1"></i>Copy signature
-                </Dropdown.Item>
-                <Dropdown.Item data-testid="copy-serial-number" onClick={handleCopySerialNumberClick}>
-                    <i className="mdi mdi-content-copy me-1"></i>Copy serial number
-                </Dropdown.Item>
-            </Dropdown.Menu>
-        </Dropdown>
-    )
-}
+    if (_notAfter < threeMonthsFromNow) {
+        return 'text-warning'
+    }
 
-IdentityCertificateDropDown.propTypes = {
-    handleCopySignatureClick: PropTypes.func.isRequired,
-    handleCopySerialNumberClick: PropTypes.func.isRequired,
+    return 'text-success'
 }
 
 function CertificateDetails({ data }) {
-    const getExpireColorStyle = (notAfter) => {
-        const _notAfter = dayjs(notAfter).unix()
-        const threeMonthsFromNow = dayjs().add(3, 'month').unix()
 
-        if (dayjs().unix() > _notAfter) {
-            return 'text-danger'
-        }
-
-        if (_notAfter < threeMonthsFromNow) {
-            return 'text-warning'
-        }
-
-        return 'text-success'
-    }
 
     const getBadgeClassName = () => {
         const threeMonthsFromNow = dayjs().add(3, 'month').unix()
