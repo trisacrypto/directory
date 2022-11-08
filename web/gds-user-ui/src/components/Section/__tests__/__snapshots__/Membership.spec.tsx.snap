@@ -1,24 +1,828 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<MembershipGuide /> should match snapshot 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  min-width: 100%;
+  margin: 0 auto;
+  font-family: Open Sans;
+  position: relative;
+  min-height: 100vh;
+}
+
+.emotion-0>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-1 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  width: 100%;
+  position: relative;
+  background: var(--chakra-colors-transparent);
+  box-shadow: var(--chakra-shadows-md);
+  color: #55ACD8;
+}
+
+.emotion-2 {
+  width: 100%;
+  -webkit-margin-start: auto;
+  margin-inline-start: auto;
+  -webkit-margin-end: auto;
+  margin-inline-end: auto;
+  max-width: var(--chakra-sizes-5xl);
+  -webkit-padding-start: 1rem;
+  padding-inline-start: 1rem;
+  -webkit-padding-end: 1rem;
+  padding-inline-end: 1rem;
+}
+
+.emotion-3 {
+  -webkit-flex-basis: 100%;
+  -ms-flex-preferred-size: 100%;
+  flex-basis: 100%;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-3 {
+    -webkit-flex-basis: auto;
+    -ms-flex-preferred-size: auto;
+    flex-basis: auto;
+  }
+}
+
+.emotion-4 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-4 {
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+  }
+}
+
+.emotion-6 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: inherit;
+}
+
+.emotion-6:hover,
+.emotion-6[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-6:focus,
+.emotion-6[data-focus] {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-6:active,
+.emotion-6[data-active] {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-7 {
+  object-fit: cover;
+  height: 100px;
+  -webkit-transform: translateX(-38px);
+  -moz-transform: translateX(-38px);
+  -ms-transform: translateX(-38px);
+  transform: translateX(-38px);
+  aspect-ratio: 2/1;
+}
+
+.emotion-8 {
+  margin-left: auto;
+  display: block;
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-8 {
+    display: none;
+  }
+}
+
+.emotion-9 {
+  display: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  -webkit-justify-content: flex-end;
+  justify-content: flex-end;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  margin-left: auto;
+}
+
+.emotion-9>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0.5rem;
+  margin-inline-start: 0.5rem;
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-9 {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+  }
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-9 {
+    margin-left: 0px;
+  }
+}
+
+.emotion-10 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-right: var(--chakra-space-2);
+}
+
+.emotion-10>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-11 {
+  width: 100%;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  position: relative;
+  max-width: 100px;
+  margin-left: var(--chakra-space-3);
+}
+
+.emotion-12 {
+  -webkit-padding-end: 2rem;
+  padding-inline-end: 2rem;
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  background: inherit;
+  padding-bottom: 1px;
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  height: var(--chakra-sizes-10);
+  border-radius: var(--chakra-radii-md);
+  border: 1px solid;
+  border-color: inherit;
+}
+
+.emotion-12>option,
+.emotion-12>optgroup {
+  background: var(--chakra-colors-white);
+}
+
+.emotion-12:hover,
+.emotion-12[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-12[aria-readonly=true],
+.emotion-12[readonly],
+.emotion-12[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-12[disabled],
+.emotion-12[aria-disabled=true],
+.emotion-12[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-12[aria-invalid=true],
+.emotion-12[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-12:focus,
+.emotion-12[data-focus] {
+  z-index: unset;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-13 {
+  width: 1.5rem;
+  height: 100%;
+  right: 0.5rem;
+  position: absolute;
+  color: currentColor;
+  font-size: 1.25rem;
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  pointer-events: none;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.emotion-13[disabled],
+.emotion-13[aria-disabled=true],
+.emotion-13[data-disabled] {
+  opacity: 0.5;
+}
+
+.emotion-14 {
+  margin-bottom: var(--chakra-space-4);
+  margin-right: var(--chakra-space-2);
+  -webkit-padding-start: var(--chakra-space-2);
+  padding-inline-start: var(--chakra-space-2);
+  -webkit-padding-end: var(--chakra-space-2);
+  padding-inline-end: var(--chakra-space-2);
+  padding-left: 0px;
+  display: block;
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-14 {
+    margin-bottom: 0px;
+    margin-right: var(--chakra-space-2);
+  }
+}
+
+.emotion-18 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-18>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-19 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+}
+
+.emotion-19:focus,
+.emotion-19[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-19[disabled],
+.emotion-19[aria-disabled=true],
+.emotion-19[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-19:hover[disabled],
+.emotion-19[data-hover][disabled],
+.emotion-19:hover[aria-disabled=true],
+.emotion-19[data-hover][aria-disabled=true],
+.emotion-19:hover[data-disabled],
+.emotion-19[data-hover][data-disabled] {
+  background: initial;
+}
+
+.emotion-20 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+
+.emotion-20>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-21 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  background-image: linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);
+  color: var(--chakra-colors-white);
+  width: 100%;
+  min-height: 286px;
+  padding-top: var(--chakra-space-12);
+  padding-bottom: var(--chakra-space-12);
+  font-size: var(--chakra-fontSizes-xl);
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-21 {
+    padding-top: var(--chakra-space-16);
+    padding-bottom: var(--chakra-space-16);
+  }
+}
+
+.emotion-22 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  text-align: center;
+  color: var(--chakra-colors-white);
+}
+
+.emotion-22>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-3);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-23 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-23>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-1);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-24 {
+  font-family: Open Sans,sans-serif!important;
+  font-weight: 700;
+  line-height: 1.33;
+  color: #fff;
+}
+
+@media screen and (min-width: 30em) {
+  .emotion-24 {
+    font-size: var(--chakra-fontSizes-2xl);
+  }
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-24 {
+    font-size: var(--chakra-fontSizes-4xl);
+    line-height: 1.2;
+  }
+}
+
+.emotion-25 {
+  margin-top: var(--chakra-space-2);
+}
+
+.emotion-27 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-content: center;
+  -ms-flex-line-pack: center;
+  align-content: center;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  margin-top: 2rem!important;
+  margin-bottom: 2rem!important;
+}
+
+.emotion-27>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-10);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-27 {
+    -webkit-align-items: stretch;
+    -webkit-box-align: stretch;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+  }
+
+  .emotion-27>*:not(style)~*:not(style) {
+    margin-top: 0px;
+    -webkit-margin-end: 0px;
+    margin-inline-end: 0px;
+    margin-bottom: 0px;
+    -webkit-margin-start: var(--chakra-space-10);
+    margin-inline-start: var(--chakra-space-10);
+  }
+}
+
+@media screen and (min-width: 62em) {
+  .emotion-27 {
+    margin-top: 3rem!important;
+    margin-bottom: 3rem!important;
+  }
+}
+
+.emotion-28 {
+  text-align: center;
+  width: 100%;
+  max-width: 300px;
+  min-height: 100%;
+}
+
+.emotion-29 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #E5EDF1;
+  padding: 1rem;
+  height: 100%;
+}
+
+.emotion-29>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-30 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-30>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-31 {
+  text-align: center;
+  font-size: var(--chakra-fontSizes-xl);
+  text-transform: capitalize;
+}
+
+.emotion-32 {
+  font-weight: var(--chakra-fontWeights-bold);
+  text-transform: capitalize;
+}
+
+.emotion-34 {
+  margin-top: auto!important;
+}
+
+.emotion-35 {
+  display: inline-block;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: 0px;
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+  border: 1px solid #221F1F;
+  text-transform: capitalize;
+}
+
+.emotion-35:focus,
+.emotion-35[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-35[disabled],
+.emotion-35[aria-disabled=true],
+.emotion-35[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-35:hover,
+.emotion-35[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-35:hover[disabled],
+.emotion-35[data-hover][disabled],
+.emotion-35:hover[aria-disabled=true],
+.emotion-35[data-hover][aria-disabled=true],
+.emotion-35:hover[data-disabled],
+.emotion-35[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-35:active,
+.emotion-35[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-52 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  background: #5B5858;
+  color: var(--chakra-colors-white);
+  width: 100%;
+  padding: var(--chakra-space-4);
+}
+
+.emotion-52>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-53 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.emotion-54 {
+  width: 100%;
+  text-align: center;
+  color: var(--chakra-colors-white);
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-55 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: #1BCE9F;
+}
+
+.emotion-55:hover,
+.emotion-55[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-55:focus,
+.emotion-55[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
 <div>
   <div
-    class="chakra-stack css-1erbuhs"
+    class="chakra-stack emotion-0"
   >
     <div
-      class="css-1qrkqwb"
+      class="emotion-1"
     >
       <div
-        class="chakra-container css-1a3ltpp"
+        class="chakra-container emotion-2"
       >
         <div
-          class="css-104xflu"
+          class="emotion-3"
         >
           <div
-            class="css-1uuxm7r"
+            class="emotion-4"
           >
             <div
-              class="css-0"
+              class="emotion-5"
             >
               <a
                 aria-current="page"
@@ -26,26 +830,18 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 href="/"
               >
                 <a
-                  class="chakra-link css-htwawm"
+                  class="chakra-link emotion-6"
                 >
-                  <div
-                    class="css-afv3ew"
-                  >
-                    <a
-                      href="/"
-                    >
-                      <img
-                        alt="Trisa logo"
-                        class="css-11kikk4"
-                        src="TRISA-GDS.svg"
-                      />
-                    </a>
-                  </div>
+                  <img
+                    alt="Trisa logo"
+                    class="emotion-7"
+                    src="TRISA-GDS-black.png"
+                  />
                 </a>
               </a>
             </div>
             <div
-              class="css-1ydjxjn"
+              class="emotion-8"
             >
               <svg
                 viewBox="0 0 20 20"
@@ -62,16 +858,16 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               </svg>
             </div>
             <div
-              class="chakra-stack css-sz9ruu"
+              class="chakra-stack emotion-9"
             >
               <div
-                class="chakra-stack css-1p6wuvz"
+                class="chakra-stack emotion-10"
               >
                 <div
-                  class="chakra-select__wrapper css-aq64ov"
+                  class="chakra-select__wrapper emotion-11"
                 >
                   <select
-                    class="chakra-select css-k7r2wc"
+                    class="chakra-select emotion-12"
                   >
                     <option
                       value="en"
@@ -105,7 +901,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                     </option>
                   </select>
                   <div
-                    class="chakra-select__icon-wrapper css-zj2dqk"
+                    class="chakra-select__icon-wrapper emotion-13"
                   >
                     <svg
                       aria-hidden="true"
@@ -124,11 +920,11 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 </div>
               </div>
               <div
-                class="chakra-text css-dme2i4"
+                class="chakra-text emotion-14"
                 data-testid="about"
               >
                 <a
-                  class="chakra-link css-htwawm"
+                  class="chakra-link emotion-6"
                   href="https://trisa.io"
                   rel="noopener noreferrer"
                   target="_blank"
@@ -137,11 +933,11 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 </a>
               </div>
               <div
-                class="chakra-text css-dme2i4"
+                class="chakra-text emotion-14"
                 data-testid="documentation"
               >
                 <a
-                  class="chakra-link css-htwawm"
+                  class="chakra-link emotion-6"
                   href="https://trisa.dev/en"
                   rel="noopener noreferrer"
                   target="_blank"
@@ -150,14 +946,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 </a>
               </div>
               <div
-                class="chakra-stack css-n21gh5"
+                class="chakra-stack emotion-18"
               >
                 <a
                   class=""
                   href="/auth/login"
                 >
                   <button
-                    class="chakra-button css-1t0rcyz"
+                    class="chakra-button emotion-19"
                     type="button"
                   >
                     Login
@@ -170,29 +966,29 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
       </div>
     </div>
     <div
-      class="chakra-stack css-8vjl7u"
+      class="chakra-stack emotion-20"
     >
       <div
-        class="css-zf3z9z"
+        class="emotion-21"
       >
         <div
-          class="chakra-stack css-1vqyy53"
+          class="chakra-stack emotion-22"
         >
           <div
-            class="chakra-stack css-126kq63"
+            class="chakra-stack emotion-23"
           >
             <h2
-              class="chakra-heading css-1y1itts"
+              class="chakra-heading emotion-24"
             >
               Welcome to TRISA’s network of Certified VASPs.
             </h2>
             <p
-              class="chakra-text css-rltemf"
+              class="chakra-text emotion-25"
             >
               Learn about the three-step process to become a member and verified VASP.
             </p>
             <p
-              class="chakra-text css-rltemf"
+              class="chakra-text emotion-25"
             >
               Create your account today.
             </p>
@@ -200,46 +996,46 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack css-zx6av3"
+        class="chakra-stack emotion-27"
       >
         <div
-          class="css-wsis5l"
+          class="emotion-28"
         >
           <div
-            class="chakra-stack css-ly7s1u"
+            class="chakra-stack emotion-29"
           >
             <div
-              class="chakra-stack css-owjkmg"
+              class="chakra-stack emotion-30"
             >
               <p
-                class="chakra-text css-wz7pgp"
+                class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step 
+                Step
                 1
               </p>
               <p
-                class="chakra-text css-8cgwqi"
+                class="chakra-text emotion-32"
                 data-testid="header"
               >
                 create your account
               </p>
               <p
-                class="chakra-text css-0"
+                class="chakra-text emotion-5"
                 data-testid="description"
               >
                 Create your TRISA account with your VASP email address. Add collaborators in your organization.
               </p>
             </div>
             <div
-              class="css-14d2w9n"
+              class="emotion-34"
             >
               <a
                 class=""
                 href="/auth/register"
               >
                 <button
-                  class="chakra-button css-vx0ruo"
+                  class="chakra-button emotion-35"
                   type="button"
                 >
                   Create Account
@@ -249,43 +1045,43 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
           </div>
         </div>
         <div
-          class="css-wsis5l"
+          class="emotion-28"
         >
           <div
-            class="chakra-stack css-ly7s1u"
+            class="chakra-stack emotion-29"
           >
             <div
-              class="chakra-stack css-owjkmg"
+              class="chakra-stack emotion-30"
             >
               <p
-                class="chakra-text css-wz7pgp"
+                class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step 
+                Step
                 2
               </p>
               <p
-                class="chakra-text css-8cgwqi"
+                class="chakra-text emotion-32"
                 data-testid="header"
               >
                 complete VASP verification
               </p>
               <p
-                class="chakra-text css-0"
+                class="chakra-text emotion-5"
                 data-testid="description"
               >
                 Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet.
               </p>
             </div>
             <div
-              class="css-14d2w9n"
+              class="emotion-34"
             >
               <a
                 class=""
                 href="/getting-started"
               >
                 <button
-                  class="chakra-button css-vx0ruo"
+                  class="chakra-button emotion-35"
                   type="button"
                 >
                   Learn More
@@ -295,43 +1091,43 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
           </div>
         </div>
         <div
-          class="css-wsis5l"
+          class="emotion-28"
         >
           <div
-            class="chakra-stack css-ly7s1u"
+            class="chakra-stack emotion-29"
           >
             <div
-              class="chakra-stack css-owjkmg"
+              class="chakra-stack emotion-30"
             >
               <p
-                class="chakra-text css-wz7pgp"
+                class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step 
+                Step
                 3
               </p>
               <p
-                class="chakra-text css-8cgwqi"
+                class="chakra-text emotion-32"
                 data-testid="header"
               >
                 Integrate and Comply
               </p>
               <p
-                class="chakra-text css-0"
+                class="chakra-text emotion-5"
                 data-testid="description"
               >
                 Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production.
               </p>
             </div>
             <div
-              class="css-14d2w9n"
+              class="emotion-34"
             >
               <a
                 class=""
                 href="/comply"
               >
                 <button
-                  class="chakra-button css-vx0ruo"
+                  class="chakra-button emotion-35"
                   type="button"
                 >
                   Learn More
@@ -346,57 +1142,57 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
       style="width: 100%;"
     >
       <div
-        class="chakra-stack css-1arqzha"
+        class="chakra-stack emotion-52"
       >
         <div
-          class="css-248241"
+          class="emotion-53"
         >
           <p
-            class="chakra-text css-q7d5fr"
+            class="chakra-text emotion-54"
           >
             A component of
-             
+
             <a
-              class="chakra-link css-1av0s05"
+              class="chakra-link emotion-55"
               href="https://trisa.io"
             >
               the TRISA architecture
             </a>
-             
+
             for Cryptocurrency Travel Rule compliance.
           </p>
           <p
-            class="chakra-text css-q7d5fr"
+            class="chakra-text emotion-54"
           >
             Created and maintained by
-             
+
             <a
-              class="chakra-link css-1av0s05"
+              class="chakra-link emotion-55"
               href="https://rotational.io"
             >
-               
+
               Rotational Labs
             </a>
-             
+
             in partnership with
-             
+
             <a
-              class="chakra-link css-1av0s05"
+              class="chakra-link emotion-55"
               href="https://cyphertrace.com"
             >
-               
+
               CipherTrace
             </a>
-             
+
             on behalf of
-             
+
             <a
-              class="chakra-link css-1av0s05"
+              class="chakra-link emotion-55"
               href="https://trisa.io"
             >
               TRISA
             </a>
-             
+
           </p>
         </div>
       </div>

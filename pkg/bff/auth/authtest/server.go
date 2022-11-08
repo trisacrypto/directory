@@ -40,6 +40,7 @@ const (
 	Name         = "Leopold Wentzel"
 	Email        = "leopold.wentzel@gmail.com"
 	UserID       = "test|abcdefg1234567890"
+	UserRole     = "Organization Collaborator"
 	OrgID        = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
 	MainNetVASP  = "87d92fd1-53cf-47d8-85b1-048e8a38ced9"
 	TestNetVASP  = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"

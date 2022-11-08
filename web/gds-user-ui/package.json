@@ -1,6 +1,6 @@
 {
   "name": "gds-user-ui",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
@@ -8,6 +8,7 @@
     "@chakra-ui/icons": "^1.1.7",
     "@chakra-ui/react": "^1.8.5",
     "@chakra-ui/storybook-addon": "^4.0.4",
+    "@emotion/jest": "^11.10.5",
     "@emotion/react": "^11",
     "@emotion/styled": "^11.10.4",
     "@hookform/resolvers": "^2.8.8",
@@ -68,7 +69,7 @@
     "cy:open": "cypress open",
     "start": "react-scripts start",
     "build": "yarn compile && react-scripts build",
-    "test": "react-scripts test --coverage --watchAll=false -u --passWithNoTests",
+    "test": "react-scripts test -u --coverage --watchAll=false --passWithNoTests",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public",
@@ -177,6 +178,9 @@
         "lines": 20,
         "statements": 20
       }
-    }
+    },
+    "snapshotSerializers": [
+      "@emotion/jest/serializer"
+    ]
   }
 }

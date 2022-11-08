@@ -344,10 +344,12 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/lookup", s.Lookup)
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
+		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
 		collaborators := v1.Group("/collaborators")
 		{
+			collaborators.GET("", auth.Authorize("read:collaborators"), s.ListCollaborators)
 			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
 			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)

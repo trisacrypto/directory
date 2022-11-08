@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react"
-import AuditLog from "../pages/app/details/AuditLog"
+import AuditLog from "../AuditLog"
 
 
 

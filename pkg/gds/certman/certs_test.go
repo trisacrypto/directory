@@ -216,6 +216,12 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
+	// Prevent emails from being sent to hotelVASP
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err, "could not get hotel VASP")
+	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.db.UpdateVASP(hotelVASP))
+
 	// Call the certman function at 29 days, which will send
 	// the thirty day cert reissuance reminder to echoVASP and
 	// the TRISA admin.
@@ -226,14 +232,14 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(charlieVASP.Id)
+	charlie, err := s.db.RetrieveVASP(charlieVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected emails have been sent, using
 	// the mock email client.
 	messages := []*emails.EmailMeta{
 		{
-			To:        v.Contacts.Technical.Email,
+			To:        charlie.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceReminderRE,
 			Reason:    "reissuance_reminder",
@@ -261,6 +267,10 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err, "could not get hotel VASP")
+	hotelVASP = s.setupVASP(hotelVASP)
+
 	// Call the certman function at 6 days, which will send
 	// the seven day cert reissuance reminder to echoVASP.
 	s.updateVaspIdentityCert(charlieVASP, 6)
@@ -270,14 +280,24 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(charlieVASP.Id)
+	charlie, err := s.db.RetrieveVASP(charlieVASP.Id)
+	require.NoError(err)
+
+	hotel, err := s.db.RetrieveVASP(hotelVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected email has been sent, using
 	// the mock email client.
 	messages := []*emails.EmailMeta{
 		{
-			To:        v.Contacts.Technical.Email,
+			To:        charlie.Contacts.Technical.Email,
+			From:      s.conf.Email.ServiceEmail,
+			Subject:   emails.ReissuanceReminderRE,
+			Reason:    "reissuance_reminder",
+			Timestamp: callTime,
+		},
+		{
+			To:        hotel.Contacts.Technical.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.ReissuanceReminderRE,
 			Reason:    "reissuance_reminder",
@@ -298,12 +318,16 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
-	// Set the second VASP in the fixtures.Small set's verification status
+	// Set other VASPs in the fixtures.Small set's verification status
 	// to REJECTED so that it does not get triggered for reissuance.
 	deltaVASP, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
 	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(deltaVASP))
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err)
+	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.db.UpdateVASP(hotelVASP))
 
 	// Capture the number of certificate requests on the charlie VASP
 	// before reissuance is triggered.

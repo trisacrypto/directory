@@ -34,7 +34,7 @@ const validationSchema = yup.object().shape({
 
 
 function Ivms101RecordForm({ data }) {
-    const { register, control, handleSubmit, formState: { isDirty, errors, dirtyFields }, watch, setValue } = useForm({
+    const { register, control, handleSubmit, formState: { isDirty, errors, dirtyFields, isSubmitting }, watch, setValue } = useForm({
         defaultValues: getIvms101RecordInitialValues(data),
         resolver: yupResolver(validationSchema)
     })
@@ -50,7 +50,6 @@ function Ivms101RecordForm({ data }) {
     const nationalIdentifierType = watch("national_identification.national_identifier_type")
     const isRegistrationAuthorityDisable = React.useCallback(() => nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX", [nationalIdentifierType])
     let _typeahead = React.useRef()
-
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             safeDispatch(clearIvms101ErrorMessage())
@@ -63,17 +62,16 @@ function Ivms101RecordForm({ data }) {
 
     React.useEffect(() => {
         if (nationalIdentifierType === "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX") {
-            // setValue("national_identification.registration_authority", undefined)
             _typeahead.current.clear()
         }
     }, [nationalIdentifierType, setValue])
 
     const onSubmit = async (data) => {
         delete data.national_identification.country_of_issue
+        delete data.national_identification.registration_authority
         const payload = {
             entity: data
         }
-
         if (params && params.id) {
             safeDispatch(updateIvms101Response(params.id, payload, setIsOpen))
         }
@@ -205,7 +203,7 @@ function Ivms101RecordForm({ data }) {
                     <ModalCloseButton>
                         <Button variant='danger' className="me-2">Cancel</Button>
                     </ModalCloseButton>
-                    <Button type='submit' disabled={isLoading || !isDirty}>Save</Button>
+                    <Button type='submit' disabled={isLoading || !isDirty || isSubmitting}>Save</Button>
                 </div>
             </Form>
         </div>

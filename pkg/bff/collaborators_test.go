@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestAddCollaborator() {
@@ -80,6 +82,109 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
 	s.requireError(err, http.StatusConflict, "collaborator already exists", "expected error when collaborator already exists")
+}
+
+func (s *bffTestSuite) TestListCollaborators() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	_, err := s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the read:collaborators permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID
+	claims.Permissions = []string{"read:collaborators"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic but should
+	// return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+	_, err = s.client.ListCollaborators(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
+
+	// Create an organization in the database without any collaborators
+	org, err := s.DB().CreateOrganization()
+	require.NoError(err, "could not create organization in the database")
+
+	// Create valid credentials with the organization ID
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
+
+	// Should return an empty list if there are no collaborators in the organization
+	collabs, err := s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.Len(collabs.Collaborators, 0, "expected empty collaborators list to be returned")
+
+	// Add a new collaborator to the organization
+	leopold := &models.Collaborator{
+		Email: "leopold.wentzel@gmail.com",
+		UserId: authtest.UserID,
+		VerifiedAt: time.Now().Format(time.RFC3339Nano),
+	}
+	leopoldRoles := []string{authtest.UserRole}
+	org.Collaborators = make(map[string]*models.Collaborator)
+	org.Collaborators[leopold.Key()] = leopold
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// Should return a list with one collaborator in it
+	collabs, err = s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.Len(collabs.Collaborators, 1, "expected one collaborator in the list")
+	require.Equal(leopold.Email, collabs.Collaborators[0].Email, "expected collaborator email to match")
+	require.Equal(leopoldRoles, collabs.Collaborators[0].Roles, "expected collaborator roles to match")
+
+	// Collaborator should be updated in the database
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
+	collab, ok := org.Collaborators[leopold.Key()]
+	require.True(ok, "expected collaborator to be in the organization")
+	require.Equal(leopold.Email, collab.Email, "expected collaborator email in database to match")
+	require.Equal(leopoldRoles, collab.Roles, "expected collaborator roles in database to match")
+
+	// Add some more collaborators to the organization
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	bob := &models.Collaborator{
+		Email: "bob@example.com",
+	}
+	org.Collaborators[bob.Key()] = bob
+
+	charlie := &models.Collaborator{
+		Email: "charlie@example.com",
+	}
+	org.Collaborators[charlie.Key()] = charlie
+
+	yogg := &models.Collaborator{
+		Email: "yogg-sothoth@hpl.org",
+	}
+	org.Collaborators[yogg.Key()] = yogg
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+
+	// Should return a list with collaborators ordered by email address
+	collabs, err = s.client.ListCollaborators(context.TODO())
+	require.NoError(err, "could not list collaborators")
+	require.True(proto.Equal(bob, collabs.Collaborators[0]), "expected bob to be first in the list")
+	require.True(proto.Equal(charlie, collabs.Collaborators[1]), "expected charlie to be second in the list")
+	require.Equal(leopold.Email, collabs.Collaborators[2].Email, "expected leopold to be third in the list")
+	require.Equal(authtest.Name, collabs.Collaborators[2].Name, "expected leopold name to be set")
+	require.Equal(leopoldRoles, collabs.Collaborators[2].Roles, "expected leopold roles to be set")
+	require.True(proto.Equal(yogg, collabs.Collaborators[3]), "expected yogg to be fourth in the list")
 }
 
 func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
@@ -252,4 +357,69 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	appdata := &auth.AppMetadata{}
 	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
 	require.Empty(appdata.OrgID, "expected orgid in app metadata to be empty")
+}
+
+func (s *bffTestSuite) TestInsortCollaborator() {
+	require := s.Require()
+
+	// Should handle nil values without panicking
+	require.Nil(bff.InsortCollaborator(nil, nil, nil))
+	require.Nil(bff.InsortCollaborator([]*models.Collaborator{}, nil, nil))
+	require.Nil(bff.InsortCollaborator([]*models.Collaborator{}, &models.Collaborator{}, nil))
+
+	// Create some collaborators
+	alice := &models.Collaborator{
+		Email: "alice@example.com",
+		CreatedAt: time.Date(2019, 1, 3, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+	bob := &models.Collaborator{
+		Email: "bob@example.com",
+		CreatedAt: time.Date(2019, 1, 2, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+	charlie := &models.Collaborator{
+		Email: "charlie@example.com",
+		CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
+	}
+
+	// Test ordering by email
+	f := func(a, b *models.Collaborator) bool {
+		return a.Email < b.Email
+	}
+
+	// Insort some collaborators into a slice
+	collabs := bff.InsortCollaborator([]*models.Collaborator{}, charlie, f)
+	require.Len(collabs, 1, "expected one collaborator in the slice")
+	require.Equal(charlie.Email, collabs[0].Email, "wrong collaborator in the slice")
+
+	collabs = bff.InsortCollaborator(collabs, alice, f)
+	require.Len(collabs, 2, "expected two collaborators in the slice")
+	require.Equal(alice.Email, collabs[0].Email, "collaborator not in the correct position")
+	require.Equal(charlie.Email, collabs[1].Email, "collaborator not in the correct position")
+
+	collabs = bff.InsortCollaborator(collabs, bob, f)
+	require.Len(collabs, 3, "expected three collaborators in the slice")
+	require.Equal(alice.Email, collabs[0].Email, "collaborator not in the correct position")
+	require.Equal(bob.Email, collabs[1].Email, "collaborator not in the correct position")
+	require.Equal(charlie.Email, collabs[2].Email, "collaborator not in the correct position")
+
+	// Test ordering by timestamp
+	f = func(a, b *models.Collaborator) bool {
+		return a.CreatedAt < b.CreatedAt
+	}
+
+	// Insort some collaborators into a slice
+	collabs = bff.InsortCollaborator([]*models.Collaborator{}, charlie, f)
+	require.Len(collabs, 1, "expected one collaborator in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "wrong collaborator in the slice")
+
+	collabs = bff.InsortCollaborator(collabs, alice, f)
+	require.Len(collabs, 2, "expected two collaborators in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "collaborator not in the correct position")
+	require.Equal(alice.CreatedAt, collabs[1].CreatedAt, "collaborator not in the correct position")
+
+	collabs = bff.InsortCollaborator(collabs, bob, f)
+	require.Len(collabs, 3, "expected three collaborators in the slice")
+	require.Equal(charlie.CreatedAt, collabs[0].CreatedAt, "collaborator not in the correct position")
+	require.Equal(bob.CreatedAt, collabs[1].CreatedAt, "collaborator not in the correct position")
+	require.Equal(alice.CreatedAt, collabs[2].CreatedAt, "collaborator not in the correct position")
 }
