@@ -322,3 +322,16 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// User should have the same role
 	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
 }
+
+func (s *bffTestSuite) TestListUserRoles() {
+	require := s.Require()
+
+	// Test listing the assignable roles
+	expected := []string{
+		bff.CollaboratorRole,
+		bff.LeaderRole,
+	}
+	roles, err := s.client.ListUserRoles(context.TODO())
+	require.NoError(err, "could not list assignable roles")
+	require.Equal(expected, roles, "roles do not match")
+}

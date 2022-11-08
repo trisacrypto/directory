@@ -275,6 +275,13 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	return nil
 }
 
+// ListUserRoles returns the list of assignable user roles.
+func (s *Server) ListUserRoles(c *gin.Context) {
+	// TODO: This is currently a static list which must be maintained to be in sync
+	// with the roles defined in Auth0.
+	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+}
+
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 	roles, err := s.auth0.Role.List()
 	if err != nil {
