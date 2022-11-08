@@ -135,6 +135,7 @@ type VASPSnippet struct {
 	VerifiedOn            string          `json:"verified_on,omitempty"`
 	Traveler              bool            `json:"traveler"`
 	CertificateSerial     string          `json:"certificate_serial_number,omitempty"`
+	CertificateIssued     string          `json:"certificate_issued,omitempty"`
 	CertificateExpiration string          `json:"certificate_expiration,omitempty"`
 	VerifiedContacts      map[string]bool `json:"verified_contacts"`
 }

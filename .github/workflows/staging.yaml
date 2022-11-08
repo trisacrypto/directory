@@ -116,6 +116,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -199,6 +205,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Set Environment
+        id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
 
       - name: Docker Metadata
         id: meta

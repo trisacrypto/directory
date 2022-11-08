@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Heading, VStack, Flex, Text, Stack } from '@chakra-ui/react';
+import { Box, Heading, VStack, Flex, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 type UserDetailsProps = {
   userId: string;
@@ -9,7 +9,13 @@ type UserDetailsProps = {
   permissions: string;
   lastLogin: string;
 };
-const UserDetails: React.FC<UserDetailsProps> = (props) => {
+const UserDetails: React.FC<UserDetailsProps> = ({
+  userId,
+  createdDate,
+  permissions,
+  lastLogin,
+  status
+}) => {
   return (
     <Flex mt={10}>
       <VStack spacing={4}>
@@ -17,20 +23,20 @@ const UserDetails: React.FC<UserDetailsProps> = (props) => {
           <Heading pb={3} size="md">
             <Trans id="User Details">User Details</Trans>
           </Heading>
-          <Text>
-            <Trans id="User ID:">User ID:</Trans> {props.userId}
+          <Text data-testid="user_id">
+            <Trans id="User ID:">User ID:</Trans> {userId}
           </Text>
-          <Text>
-            <Trans id="Profile Created:">Profile Created:</Trans> {props.createdDate}
+          <Text data-testid="profile_created">
+            <Trans id="Profile Created:">Profile Created:</Trans> {createdDate}
           </Text>
-          <Text>
-            <Trans id="Status:">Status:</Trans> {props.status}
+          <Text data-testid="status">
+            <Trans id="Status:">Status:</Trans> {status}
           </Text>
-          <Text>
-            <Trans id="Permission:">Permission:</Trans> {props.permissions}
+          <Text data-testid="permissions">
+            <Trans id="Permission:">Permission:</Trans> {permissions}
           </Text>
-          <Text>
-            <Trans id="Last Login:">Last Login:</Trans> {props.lastLogin}
+          <Text data-testid="last_login">
+            <Trans id="Last Login:">Last Login:</Trans> {lastLogin}
           </Text>
         </Box>
       </VStack>
