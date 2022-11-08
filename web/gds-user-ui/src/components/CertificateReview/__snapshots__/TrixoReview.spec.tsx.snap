@@ -1,127 +1,444 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<TrixoReview /> should match snapshot 1`] = `
+.emotion-0 {
+  border: 1px solid #DFE0EB;
+  font-family: Open Sans;
+  color: #252733;
+  background: var(--chakra-colors-white);
+  font-size: 18px;
+  padding: var(--chakra-space-5);
+  -webkit-padding-start: var(--chakra-space-5);
+  padding-inline-start: var(--chakra-space-5);
+  -webkit-padding-end: var(--chakra-space-5);
+  padding-inline-end: var(--chakra-space-5);
+}
+
+.emotion-1 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-1>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding-top: var(--chakra-space-4);
+  margin-left: 0px;
+}
+
+.emotion-3 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: 20px;
+  line-height: 1.33;
+  margin-bottom: 2rem;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-3 {
+    line-height: 1.2;
+  }
+}
+
+.emotion-4 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: 34px;
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: blue;
+  color: var(--chakra-colors-white);
+}
+
+.emotion-4:focus,
+.emotion-4[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-4[disabled],
+.emotion-4[aria-disabled=true],
+.emotion-4[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-4:hover,
+.emotion-4[data-hover] {
+  background: #10aaed;
+}
+
+.emotion-4:active,
+.emotion-4[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-5 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  font-size: 1rem;
+}
+
+.emotion-5>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-6 {
+  font-variant-numeric: lining-nums tabular-nums;
+  border-collapse: collapse;
+  width: var(--chakra-sizes-full);
+}
+
+.emotion-6 td:nth-child(2),
+.emotion-6 td:nth-child(3) {
+  font-weight: var(--chakra-fontWeights-semibold);
+}
+
+.emotion-6 td:nth-child(2) {
+  max-width: 75%;
+}
+
+.emotion-6 Tr {
+  border-style: hidden;
+}
+
+.emotion-6 td:first-child {
+  width: 50%;
+  padding-left: 1rem;
+}
+
+.emotion-6 td {
+  border-bottom: var(--chakra-borders-none);
+  -webkit-padding-start: 0px;
+  padding-inline-start: 0px;
+  padding-top: var(--chakra-space-2-5);
+  padding-bottom: var(--chakra-space-2-5);
+}
+
+.emotion-9 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+}
+
+.emotion-9[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-20 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  vertical-align: top;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  max-width: 100%;
+  font-weight: var(--chakra-fontWeights-medium);
+  line-height: 1.2;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  min-height: 1.25rem;
+  min-width: 1.25rem;
+  font-size: var(--chakra-fontSizes-xs);
+  -webkit-padding-start: var(--chakra-space-2);
+  padding-inline-start: var(--chakra-space-2);
+  -webkit-padding-end: var(--chakra-space-2);
+  padding-inline-end: var(--chakra-space-2);
+  border-radius: var(--chakra-radii-md);
+  background: var(--chakra-colors-red-100);
+  color: var(--chakra-colors-red-800);
+}
+
+.emotion-20:focus,
+.emotion-20[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-21 {
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--chakra-fontWeights-bold);
+}
+
+.emotion-25 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  font-weight: var(--chakra-fontWeights-bold);
+  background: #E5EDF1;
+  padding-left: 1rem!important;
+}
+
+.emotion-25[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-42 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0px;
+}
+
+.emotion-42[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-53 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: var(--chakra-space-1);
+}
+
+.emotion-53[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-63 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  background: #E5EDF1;
+  font-weight: var(--chakra-fontWeights-bold);
+  padding-left: 1rem!important;
+}
+
+.emotion-63[data-is-numeric=true] {
+  text-align: end;
+}
+
 <div>
   <div
-    class="css-18e1pym"
+    class="emotion-0"
   >
     <div
-      class="chakra-stack css-n21gh5"
+      class="chakra-stack emotion-1"
     >
       <div
-        class="css-18uk989"
+        class="emotion-2"
       >
         <h2
-          class="chakra-heading css-13m0iy4"
+          class="chakra-heading emotion-3"
         >
           Section 5: TRIXO Questionnaire
         </h2>
         <button
-          class="chakra-button css-10fawgy"
+          class="chakra-button emotion-4"
           type="button"
         >
           Edit
         </button>
       </div>
       <div
-        class="chakra-stack css-13yvh52"
+        class="chakra-stack emotion-5"
       >
         <table
-          class="chakra-table css-1jjmdzr"
+          class="chakra-table emotion-6"
           role="table"
         >
           <tbody
-            class="css-0"
+            class="emotion-7"
           >
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Primary National Jurisdiction
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Name of Primary Regulator
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Other Jurisdictions
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   />
                 </span>
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-1fa72hq"
+                class="emotion-25"
                 colspan="3"
                 role="gridcell"
               >
@@ -129,162 +446,162 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Does your organization have a programme that sets minimum Anti-Money Laundering (AML), Countering the Financing of Terrorism (CFT), Know your Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   >
                     N/A
                   </span>
                 </span>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Does your organization conduct Know your KYC/CDD before permitting its customers to send/receive virtual asset transfers?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   >
                     No
                   </span>
                 </span>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 At what threshold and currency does your organization conduct KYC checks?
               </td>
               <td
-                class="css-i257lr"
+                class="emotion-42"
                 role="gridcell"
               >
                 <p
-                  class="chakra-text css-0"
+                  class="chakra-text emotion-7"
                 >
                   $0.00
                    
                 </p>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   >
                     NO
                   </span>
                 </span>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Applicable Regulations
               </td>
               <td
-                class="css-134pck8"
+                class="emotion-53"
                 role="gridcell"
               />
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 What is the minimum threshold for Travel Rule compliance?
               </td>
               <td
-                class="css-i257lr"
+                class="emotion-42"
                 role="gridcell"
               >
                 <p
-                  class="chakra-text css-0"
+                  class="chakra-text emotion-7"
                 >
                   $0.00
                    
@@ -292,25 +609,25 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 </p>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-1eku6qd"
+                class="emotion-63"
                 colspan="3"
                 role="gridcell"
               >
@@ -318,69 +635,69 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Is your organization required by law to safeguard Personally Identifiable Information (PII)?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   >
                     NO
                   </span>
                 </span>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 Does your organization secure and protect Personally Identifiable Information (PII), including Personally Identifiable Information (PII) received from other VASPs under the Travel Rule?
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               >
                 <span
-                  class="css-kydp95"
+                  class="emotion-20"
                 >
                   <span
-                    class="css-12rgubf"
+                    class="emotion-21"
                   >
                     NO
                   </span>
                 </span>
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-9"
                 role="gridcell"
               />
             </tr>
