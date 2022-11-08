@@ -12,14 +12,10 @@ import Maintenance from 'components/Maintenance';
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-import CertificateManagement from '../../components/CertificateManagement';
+import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
-<<<<<<< HEAD
 import Collaborators from 'modules/dashboard/collaborator';
-=======
-import Collaborators from 'modules/dashboard/collaborators/Collaborators';
 import UserProfile from 'components/UserProfile';
->>>>>>> origin/main
 
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
