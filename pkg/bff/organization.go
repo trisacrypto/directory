@@ -53,7 +53,6 @@ func (s *Server) OrganizationFromID(id string) (org *models.Organization, err er
 	// Organizations are stored by UUID in the database
 	var uuid uuid.UUID
 	if uuid, err = models.ParseOrgID(id); err != nil {
-		log.Error().Err(err).Str("org_id", id).Msg("could not parse organization ID")
 		return nil, err
 	}
 

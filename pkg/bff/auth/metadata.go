@@ -9,9 +9,9 @@ import (
 // AppMetadata makes it easier to serialize and deserialize JSON from the auth0
 // app_metadata assigned to the user by the BFF (and ensures the data is structured).
 type AppMetadata struct {
-	OrgID         string              `json:"orgid"`
-	VASPs         VASPs               `json:"vasps"`
-	Organizations map[string]struct{} `json:"organizations"`
+	OrgID         string   `json:"orgid"`
+	VASPs         VASPs    `json:"vasps"`
+	Organizations []string `json:"organizations"`
 }
 
 type VASPs struct {
@@ -33,8 +33,8 @@ func (meta *AppMetadata) Equals(other *AppMetadata) bool {
 		return false
 	}
 
-	for i, org := range meta.Organizations {
-		if value, ok := other.Organizations[i]; !ok || value != org {
+	for i, value := range meta.Organizations {
+		if value != other.Organizations[i] {
 			return false
 		}
 	}
@@ -82,18 +82,15 @@ func (meta *AppMetadata) ClearOrganization() {
 // UpdateOrganization completely replaces the organization data in the app metadata
 // with data from the organization record.
 func (meta *AppMetadata) UpdateOrganization(org *models.Organization) {
+	meta.ClearOrganization()
 	meta.OrgID = org.Id
 
-	if org.Testnet != nil && org.Testnet.Id != "" {
+	if org.Testnet != nil {
 		meta.VASPs.TestNet = org.Testnet.Id
-	} else {
-		meta.VASPs.TestNet = ""
 	}
 
-	if org.Mainnet != nil && org.Mainnet.Id != "" {
+	if org.Mainnet != nil {
 		meta.VASPs.MainNet = org.Mainnet.Id
-	} else {
-		meta.VASPs.MainNet = ""
 	}
 }
 
@@ -101,15 +98,23 @@ func (meta *AppMetadata) UpdateOrganization(org *models.Organization) {
 // part of. This method is idempotent and will not add the organization ID if it
 // already exists.
 func (meta *AppMetadata) AddOrganization(orgID string) {
-	if meta.Organizations == nil {
-		meta.Organizations = make(map[string]struct{})
+	for _, id := range meta.Organizations {
+		if id == orgID {
+			return
+		}
 	}
-	meta.Organizations[orgID] = struct{}{}
+
+	meta.Organizations = append(meta.Organizations, orgID)
 }
 
 // RemoveOrganization removes an organization ID from the set of organizations the user
 // is a part of. This method is idempotent and will not error if the organization ID
 // does not exist in the metadata.
 func (meta *AppMetadata) RemoveOrganization(orgID string) {
-	delete(meta.Organizations, orgID)
+	for i, id := range meta.Organizations {
+		if id == orgID {
+			meta.Organizations = append(meta.Organizations[:i], meta.Organizations[i+1:]...)
+			return
+		}
+	}
 }

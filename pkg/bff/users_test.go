@@ -26,7 +26,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	s.auth.SetUserRoles([]string{})
-	require.NoError(s.client.Login(context.TODO(), &api.LoginParams{}))
+	require.NoError(s.client.Login(context.TODO(), nil))
 
 	// Appdata should contain a new organization
 	userMeta := &auth.AppMetadata{}
@@ -54,7 +54,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	s.auth.SetUserRoles([]string{bff.TSPRole})
-	require.NoError(s.client.Login(context.TODO(), &api.LoginParams{}))
+	require.NoError(s.client.Login(context.TODO(), nil))
 
 	// Appdata should contain a new organization and it should be added to the list
 	userMeta = &auth.AppMetadata{}
@@ -63,7 +63,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.Empty(userMeta.VASPs.TestNet, "app metadata should not contain a testnet VASP")
 	require.Empty(userMeta.VASPs.MainNet, "app metadata should not contain a mainnet VASP")
 	require.Len(userMeta.Organizations, 1, "app metadata organization list should contain one organization")
-	require.Equal(map[string]struct{}{userMeta.OrgID: {}}, userMeta.Organizations, "app metadata organization list should contain the new organization")
+	require.Equal([]string{userMeta.OrgID}, userMeta.Organizations, "app metadata organization list should contain the new organization")
 
 	// User should exist as a collaborator in the new organization
 	org, err = s.bff.OrganizationFromID(userMeta.OrgID)
@@ -103,7 +103,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	s.auth.SetUserRoles([]string{bff.LeaderRole})
 
 	// Returns an error if the organization does not exist
-	err = s.client.Login(context.TODO(), &api.LoginParams{})
+	err = s.client.Login(context.TODO(), nil)
 	s.requireError(err, http.StatusNotFound, "organization not found")
 
 	// Create the organization in the database without the collaborator
@@ -119,16 +119,14 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// User is not authorized to access the organization without being a collaborator
-	err = s.client.Login(context.TODO(), &api.LoginParams{})
+	err = s.client.Login(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "user is not authorized to access this organization")
 
 	// Make the user a TSP
 	newOrg, err := s.DB().CreateOrganization()
 	require.NoError(err, "could not create organization")
 	metadata.OrgID = org.Id
-	metadata.Organizations = map[string]struct{}{
-		newOrg.Id: {},
-	}
+	metadata.Organizations = []string{newOrg.Id}
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
@@ -142,13 +140,13 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// Valid login - appdata should be updated to include the added VASP
-	require.NoError(s.client.Login(context.TODO(), &api.LoginParams{}))
+	require.NoError(s.client.Login(context.TODO(), nil))
 	userMeta := &auth.AppMetadata{}
 	require.NoError(userMeta.Load(s.auth.GetUserAppMetadata()))
 	require.Equal(metadata.OrgID, userMeta.OrgID, "app metadata should contain the organization")
 	require.Equal(metadata.VASPs.TestNet, userMeta.VASPs.TestNet, "app metadata should contain the testnet VASP")
 	require.Equal(userMeta.VASPs.MainNet, userMeta.VASPs.MainNet, "app metadata should contain the mainnet VASP")
-	require.Equal(map[string]struct{}{org.Id: {}, newOrg.Id: {}}, userMeta.Organizations, "app metadata should contain the organizations")
+	require.ElementsMatch([]string{org.Id, newOrg.Id}, userMeta.Organizations, "app metadata should contain the organizations")
 
 	// User should exist as a collaborator in the organization
 	org, err = s.bff.OrganizationFromID(userMeta.OrgID)
@@ -301,9 +299,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
-	userMeta.Organizations = map[string]struct{}{
-		org.Id: {},
-	}
+	userMeta.Organizations = []string{org.Id}
 	appdata, err = userMeta.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
@@ -317,7 +313,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Equal(newOrg.Id, userMeta.OrgID, "app metadata should contain the organization")
 	require.Equal(newOrg.Testnet.Id, userMeta.VASPs.TestNet, "app metadata should contain the testnet VASP")
 	require.Equal(newOrg.Mainnet.Id, userMeta.VASPs.MainNet, "app metadata should contain the mainnet VASP")
-	require.Equal(map[string]struct{}{org.Id: {}, newOrg.Id: {}}, userMeta.Organizations, "app metadata organization list should contain both organizations")
+	require.ElementsMatch([]string{org.Id, newOrg.Id}, userMeta.Organizations, "app metadata organization list should contain both organizations")
 
 	// User should have the same role
 	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
