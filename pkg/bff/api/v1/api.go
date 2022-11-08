@@ -19,6 +19,7 @@ type BFFClient interface {
 
 	// User Management Endpoints
 	Login(context.Context) error
+	ListUserRoles(context.Context) ([]string, error)
 
 	// Authenticated Endpoints
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
