@@ -10,9 +10,9 @@ func (s *bffTestSuite) TestListUserRoles() {
 	require := s.Require()
 
 	// Test listing the assignable roles
-	expected := map[string]struct{}{
-		bff.CollaboratorRole: {},
-		bff.LeaderRole:       {},
+	expected := []string{
+		bff.CollaboratorRole,
+		bff.LeaderRole,
 	}
 	roles, err := s.client.ListUserRoles(context.TODO())
 	require.NoError(err, "could not list assignable roles")

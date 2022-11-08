@@ -240,10 +240,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestListUserRoles(t *testing.T) {
-	fixture := map[string]struct{}{
-		"collaborator": {},
-		"leader":       {},
-	}
+	fixture := []string{"leader", "collaborator"}
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

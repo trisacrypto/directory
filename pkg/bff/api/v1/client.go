@@ -156,7 +156,7 @@ func (s *APIv1) Login(ctx context.Context) (err error) {
 }
 
 // Return the set of assignable user roles.
-func (s *APIv1) ListUserRoles(ctx context.Context) (out map[string]struct{}, err error) {
+func (s *APIv1) ListUserRoles(ctx context.Context) (out []string, err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/users/roles", nil, nil); err != nil {
@@ -164,7 +164,7 @@ func (s *APIv1) ListUserRoles(ctx context.Context) (out map[string]struct{}, err
 	}
 
 	// Execute the request and get a response
-	out = make(map[string]struct{})
+	out = make([]string, 0)
 	if _, err = s.Do(req, &out, true); err != nil {
 		return nil, err
 	}

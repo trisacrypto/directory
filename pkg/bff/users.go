@@ -169,15 +169,11 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
-// ListUserRoles returns the set of assignable user roles.
+// ListUserRoles returns the list of assignable user roles.
 func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
-	reply := map[string]struct{}{
-		CollaboratorRole: {},
-		LeaderRole:       {},
-	}
-	c.JSON(http.StatusOK, reply)
+	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {
