@@ -155,6 +155,22 @@ func (s *APIv1) Login(ctx context.Context) (err error) {
 	return nil
 }
 
+// Return the set of assignable user roles.
+func (s *APIv1) ListUserRoles(ctx context.Context) (out []string, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/users/roles", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = make([]string, 0)
+	if _, err = s.Do(req, &out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Add a collaborator to an organization.
 func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
 	// Make the HTTP request

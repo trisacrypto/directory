@@ -8,7 +8,7 @@ import SealingCertificateTableRows from './SealingCertificateTableRows';
 function CertificateDataTable() {
   return (
     <FormLayout overflowX={'scroll'}>
-      <Table variant="unstyled" css={{ borderCollapse: 'separate', borderSpacing: '0 9px' }}>
+      <Table variant="simple">
         <TableCaption placement="top" textAlign="start" p={0} m={0}>
           <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
             <Heading fontSize={'1.2rem'}>

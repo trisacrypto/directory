@@ -172,6 +172,27 @@ func main() {
 				},
 			},
 		},
+		{
+			Name: "destroy",
+			Usage: "destroy a VASP record if it is in the rejected state",
+			Action: destroy,
+			Before: connectDB,
+			After: closeDB,
+		Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to revoke the certificates of",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+		},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -565,6 +586,32 @@ func rereview(c *cli.Context) (err error) {
 	}
 
 	fmt.Println("VASP verification state updated")
+	return nil
+}
+
+func destroy(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	if vasp.VerificationStatus <= pb.VerificationState_VERIFIED {
+		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke instead", vasp.VerificationStatus), 1)
+	}
+
+	fmt.Printf("destroying VASP record for %s\n", vasp.CommonName)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue with operation?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	if err = db.DeleteVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not delete record: %s", err), 1)
+	}
 	return nil
 }
 

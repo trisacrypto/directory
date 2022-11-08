@@ -53,6 +53,7 @@ var (
 		wire.NamespaceVASPs: {
 			"charliebank": {},
 			"delta":       {},
+			"hotel":       {},
 		},
 	}
 )
