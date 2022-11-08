@@ -1,44 +1,427 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<LegalPersonReview /> should match snapshot 1`] = `
+.emotion-0 {
+  border: 1px solid #DFE0EB;
+  font-family: Open Sans;
+  color: #252733;
+  background: var(--chakra-colors-white);
+  font-size: 18px;
+  padding: var(--chakra-space-5);
+  -webkit-padding-start: var(--chakra-space-5);
+  padding-inline-start: var(--chakra-space-5);
+  -webkit-padding-end: var(--chakra-space-5);
+  padding-inline-end: var(--chakra-space-5);
+}
+
+.emotion-1 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-1>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding-top: var(--chakra-space-4);
+  margin-left: 0px;
+}
+
+.emotion-3 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: 20px;
+  line-height: 1.33;
+  margin-bottom: 2rem;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-3 {
+    line-height: 1.2;
+  }
+}
+
+.emotion-4 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: 34px;
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: blue;
+  color: var(--chakra-colors-white);
+}
+
+.emotion-4:focus,
+.emotion-4[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-4[disabled],
+.emotion-4[aria-disabled=true],
+.emotion-4[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-4:hover,
+.emotion-4[data-hover] {
+  background: #10aaed;
+}
+
+.emotion-4:active,
+.emotion-4[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-5 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  font-size: 18px;
+}
+
+.emotion-5>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-6 {
+  font-variant-numeric: lining-nums tabular-nums;
+  border-collapse: collapse;
+  width: var(--chakra-sizes-full);
+}
+
+.emotion-6 td:nth-child(2),
+.emotion-6 td:nth-child(3) {
+  font-weight: var(--chakra-fontWeights-semibold);
+  padding-left: 0px;
+}
+
+.emotion-6 Tr {
+  border-style: hidden;
+}
+
+.emotion-6 td:first-child {
+  width: 50%;
+  padding-left: 1rem;
+}
+
+.emotion-6 td {
+  border-bottom: var(--chakra-borders-none);
+  -webkit-padding-start: 0px;
+  padding-inline-start: 0px;
+  padding-top: var(--chakra-space-2-5);
+  padding-bottom: var(--chakra-space-2-5);
+}
+
+.emotion-7 * {
+  font-size: 1rem;
+}
+
+.emotion-9 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  font-size: 1rem;
+  font-weight: var(--chakra-fontWeights-bold);
+  background: #E5EDF1;
+}
+
+.emotion-9[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-11 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 0px;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+}
+
+.emotion-11[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-12 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+}
+
+.emotion-12[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-13 {
+  font-variant-numeric: lining-nums tabular-nums;
+  border-collapse: collapse;
+  width: var(--chakra-sizes-full);
+}
+
+.emotion-16 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 0px;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 1rem!important;
+}
+
+.emotion-16[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-17 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0px;
+}
+
+.emotion-17[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-19 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 0px;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0px!important;
+}
+
+.emotion-19[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-22 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 0px;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0px;
+}
+
+.emotion-22[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-25 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: var(--chakra-space-4);
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0!important;
+}
+
+.emotion-25[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-29 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 2rem;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  font-size: 1rem;
+  font-weight: var(--chakra-fontWeights-bold);
+  background: #E5EDF1;
+}
+
+.emotion-29[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-30 {
+  margin-bottom: var(--chakra-space-1);
+}
+
+.emotion-39 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  vertical-align: top;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  max-width: 100%;
+  font-weight: var(--chakra-fontWeights-medium);
+  line-height: 1.2;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  min-height: var(--chakra-sizes-8);
+  min-width: var(--chakra-sizes-8);
+  font-size: var(--chakra-fontSizes-md);
+  border-radius: var(--chakra-radii-md);
+  -webkit-padding-start: var(--chakra-space-3);
+  padding-inline-start: var(--chakra-space-3);
+  -webkit-padding-end: var(--chakra-space-3);
+  padding-inline-end: var(--chakra-space-3);
+  background: blue;
+  color: var(--chakra-colors-white);
+}
+
+.emotion-39:focus,
+.emotion-39[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
 <div>
   <div
-    class="css-18e1pym"
+    class="emotion-0"
   >
     <div
-      class="chakra-stack css-n21gh5"
+      class="chakra-stack emotion-1"
     >
       <div
-        class="css-18uk989"
+        class="emotion-2"
       >
         <h2
-          class="chakra-heading css-13m0iy4"
+          class="chakra-heading emotion-3"
         >
           Section 2: Legal Person
         </h2>
         <button
-          class="chakra-button css-10fawgy"
+          class="chakra-button emotion-4"
           type="button"
         >
           Edit
         </button>
       </div>
       <div
-        class="chakra-stack css-16ztyi4"
+        class="chakra-stack emotion-5"
       >
         <table
-          class="chakra-table css-2zf4qf"
+          class="chakra-table emotion-6"
           role="table"
         >
           <tbody
-            class="css-1sxjzw4"
+            class="emotion-7"
           >
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-1b8pwgj"
+                class="emotion-9"
                 colspan="3"
                 role="gridcell"
               >
@@ -46,77 +429,77 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 The name and type of name by which the legal person is known.
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-12"
                 role="gridcell"
               >
                 <table
-                  class="chakra-table css-5605sr"
+                  class="chakra-table emotion-13"
                   role="table"
                 >
                   <tbody
-                    class="css-0"
+                    class="emotion-8"
                   />
                 </table>
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-1b1t9fp"
+                class="emotion-16"
                 role="gridcell"
               >
                 Addresses
               </td>
               <td
-                class="css-i257lr"
+                class="emotion-17"
                 role="gridcell"
               >
                 <tr
-                  class="css-0"
+                  class="emotion-8"
                   role="row"
                 >
                   <td
-                    class="css-1g75rv3"
+                    class="emotion-19"
                     role="gridcell"
                   />
                 </tr>
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-1b1t9fp"
+                class="emotion-16"
                 role="gridcell"
               >
                 Country of Registration
               </td>
               <td
-                class="css-18jx7ha"
+                class="emotion-22"
                 role="gridcell"
               >
                 <tbody
-                  class="css-0"
+                  class="emotion-8"
                 >
                   <tr
-                    class="css-0"
+                    class="emotion-8"
                     role="row"
                   >
                     <td
-                      class="css-1uy98i6"
+                      class="emotion-25"
                       role="gridcell"
                     >
                       N/A
@@ -126,102 +509,102 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-12"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-a3eb33"
+                class="emotion-29"
                 colspan="3"
                 role="gridcell"
               >
                 <p
-                  class="chakra-text css-92ucc9"
+                  class="chakra-text emotion-30"
                 >
                   National Identification
                 </p>
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-12"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 Identification Number
               </td>
               <td
-                class="css-i257lr"
+                class="emotion-17"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 Identification Type
               </td>
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 <span
-                  class="css-xo9vic"
+                  class="emotion-39"
                 />
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-xumdn4"
+                class="emotion-12"
                 role="gridcell"
               >
                 Country of Registration
               </td>
               <td
-                class="css-xumdn4"
+                class="emotion-12"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="css-0"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 Reg Authority
               </td>
               <td
-                class="css-oabm8g"
+                class="emotion-11"
                 role="gridcell"
               >
                 N/A

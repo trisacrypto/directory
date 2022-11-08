@@ -15,6 +15,7 @@ import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from '../../components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborators/Collaborators';
+import UserProfile from 'components/UserProfile';
 
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
@@ -133,6 +134,13 @@ const appRoutes = [
     component: CertificateManagement,
     layout: 'dashboard',
     route: '/certificate-management'
+  },
+  {
+    path: '/dashboard/user-profile',
+    name: 'Profile',
+    component: UserProfile,
+    layout: 'dashboard',
+    route: '/user-profile'
   },
   {
     path: '/dashboard/logout',
