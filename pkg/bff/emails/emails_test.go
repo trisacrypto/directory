@@ -70,7 +70,7 @@ func (s *EmailTestSuite) TestUserInviteEmail() {
 	require.NoError(err, "could not parse service email address")
 	inviter, err := mail.ParseAddress("Sonic the Hedgehog <sonic@gottagofast.com>")
 	require.NoError(err, "could not parse inviter email address")
-	recipient, err := mail.ParseAddress("Tails the Fox <patrick@rotational.io>")
+	recipient, err := mail.ParseAddress("Tails the Fox <tails@gottagofast.com>")
 	require.NoError(err, "could not parse email address")
 
 	// Init the mocked SendGrid client
