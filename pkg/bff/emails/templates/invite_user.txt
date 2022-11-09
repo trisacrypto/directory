@@ -1,0 +1,14 @@
+Greetings {{ .User }}
+
+You have been invited by {{ .Inviter }} to join the TRISA Global Directory Service (GDS) to collaborate on {{ .Organization }}.
+
+To accept the invitation, please {{ .InviteURL }} click this link. If you don't already have an account you will be asked to create one. Note that this invitation is valid for 7 calendar days.
+
+If you cannot click on the link, please copy and paste the link below into your browser address bar:
+
+{{ .InviteURL }}
+
+Please contact the TRISA admins at support@rotational.io if you encounter technical issues while accepting the invitation.
+
+Best Regards,
+TRISA Global Directory Service Team

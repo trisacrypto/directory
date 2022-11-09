@@ -18,6 +18,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -28,8 +30,8 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 	m = &EmailManager{conf: conf}
 	if conf.Testing {
 		log.Warn().Bool("testing", conf.Testing).Str("storage", conf.Storage).Msg("using mock sendgrid client")
-		m.client = &mockSendGridClient{
-			storage: conf.Storage,
+		m.client = &mock.SendGridClient{
+			Storage: conf.Storage,
 		}
 	} else {
 		m.client = sendgrid.NewSendClient(conf.SendGridAPIKey)
@@ -58,14 +60,9 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 // EmailManager allows the server to send rich emails using the SendGrid service.
 type EmailManager struct {
 	conf         config.EmailConfig
-	client       EmailClient
+	client       emails.EmailClient
 	serviceEmail *mail.Address
 	adminsEmail  *mail.Address
-}
-
-// EmailClient is an interface that can be implemented by SendGrid email clients.
-type EmailClient interface {
-	Send(email *sgmail.SGMailV3) (*rest.Response, error)
 }
 
 func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
