@@ -17,3 +17,11 @@ type RegistrationAuthority = {
 };
 
 type Locales = 'en' | 'fr' | 'ja' | 'de' | 'zh';
+
+type Certificate = {
+  serial_number: string;
+  issued_at: string | Date;
+  expires_at: string | Date;
+  revoked: boolean;
+  details: any;
+};
