@@ -2,9 +2,7 @@ package bff_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -683,11 +681,6 @@ func (s *bffTestSuite) TestCertificates() {
 	require.Empty(reply.Error, "expected no errors")
 	require.Len(reply.TestNet, 1, "wrong number of testnet certificates")
 	require.Len(reply.MainNet, 2, "wrong number of mainnet certificates")
-
-	// Marshal reply to JSON on disk
-	replyJSON, err := json.MarshalIndent(reply, "", "  ")
-	require.NoError(err, "could not marshal reply to JSON")
-	require.NoError(ioutil.WriteFile(filepath.Join("certs.json"), replyJSON, 0644), "could not write reply to disk")
 
 	// Verify the testnet certificate fields
 	expected := uniform.Details
