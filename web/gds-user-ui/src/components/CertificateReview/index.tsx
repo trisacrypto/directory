@@ -1,4 +1,3 @@
-/* eslint-disable max-depth */
 /* eslint-disable prefer-reflect */
 // TO DO: refactor certificate stepper to use react-query to fetch data and handle loading state
 // TO DO: Write clean code for this component and make it more easily testable
@@ -15,8 +14,8 @@ import {
 } from 'modules/dashboard/registration/service';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import Loader from 'components/Loader';
-import { refreshAndFetchUser } from 'utils/auth0.helper';
-import { setCookie } from 'utils/cookies';
+import { getRefreshToken } from 'utils/auth0.helper';
+
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 
 const CertificateReview = () => {
@@ -38,12 +37,7 @@ const CertificateReview = () => {
         setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
         if (response.status === 200) {
-          if (response?.data?.refresh_token) {
-            const user = (await refreshAndFetchUser()) as any;
-            if (user) {
-              setCookie('access_token', user?.accessToken);
-            }
-          }
+          await getRefreshToken(response?.data?.refresh_token);
           setIsTestNetSubmitting(false);
           setIsTestNetSent(true);
           testnetSubmissionState();
@@ -54,13 +48,7 @@ const CertificateReview = () => {
         setIsMainNetSubmitting(true);
         const response = await submitMainnetRegistration();
         if (response?.status === 200) {
-          if (response?.data?.refresh_token) {
-            // refresh token
-            const user = (await refreshAndFetchUser()) as any;
-            if (user) {
-              setCookie('access_token', user?.accessToken);
-            }
-          }
+          await getRefreshToken(response?.data?.refresh_token);
           setIsMainNetSubmitting(false);
 
           setIsMainNetSent(true);
