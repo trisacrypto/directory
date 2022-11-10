@@ -83,8 +83,8 @@ const CertificateReview = () => {
         isTestNetSent={isTestNetSent}
         isMainNetSent={isMainNetSent}
         result={result}
-        isTestNetLoading={isTestNetSubmitting}
-        isMainNetLoading={isMainNetSubmitting}
+        isTestNetSubmitting={isTestNetSubmitting}
+        isMainNetSubmitting={isMainNetSubmitting}
       />
     </Suspense>
   );
