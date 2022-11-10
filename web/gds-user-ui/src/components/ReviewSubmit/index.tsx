@@ -36,13 +36,17 @@ interface ReviewSubmitProps {
   isTestNetSent?: boolean;
   isMainNetSent?: boolean;
   result?: any;
+  isTestNetLoading?: boolean;
+  isMainNetLoading?: boolean;
 }
 
 const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   onSubmitHandler,
   isTestNetSent,
   isMainNetSent,
-  result
+  result,
+  isTestNetLoading,
+  isMainNetLoading
 }) => {
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
@@ -197,6 +201,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   data-testid="testnet-submit-btn"
                   size="lg"
                   py="2.5rem"
+                  isLoading={isTestNetLoading}
                   whiteSpace="normal"
                   maxW="200px"
                   width="100%"
@@ -283,6 +288,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   color="#fff"
                   size="lg"
                   py="2.5rem"
+                  isLoading={isMainNetLoading}
                   isDisabled={mainnet || isMainnetNetworkIncomplete}
                   whiteSpace="normal"
                   boxShadow="lg"

@@ -1,4 +1,7 @@
+/* eslint-disable max-depth */
 /* eslint-disable prefer-reflect */
+// TO DO: refactor certificate stepper to use react-query to fetch data and handle loading state
+// TO DO: Write clean code for this component and make it more easily testable
 
 import React, { lazy, Suspense, useState } from 'react';
 import { useToast } from '@chakra-ui/react';
@@ -12,7 +15,8 @@ import {
 } from 'modules/dashboard/registration/service';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import Loader from 'components/Loader';
-
+import { refreshAndFetchUser } from 'utils/auth0.helper';
+import { setCookie } from 'utils/cookies';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 
 const CertificateReview = () => {
@@ -24,21 +28,41 @@ const CertificateReview = () => {
   );
   const [isTestNetSent, setIsTestNetSent] = useState(false);
   const [isMainNetSent, setIsMainNetSent] = useState(false);
+  const [isTestNetSubmitting, setIsTestNetSubmitting] = useState(false);
+  const [isMainNetSubmitting, setIsMainNetSubmitting] = useState(false);
   const [result, setResult] = useState('');
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
       if (network === 'testnet') {
+        setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
         if (response.status === 200) {
+          if (response?.data?.refresh_token) {
+            const user = (await refreshAndFetchUser()) as any;
+            if (user) {
+              setCookie('access_token', user?.accessToken);
+            }
+          }
+          setIsTestNetSubmitting(false);
           setIsTestNetSent(true);
           testnetSubmissionState();
           setResult(response?.data);
         }
       }
       if (network === 'mainnet') {
+        setIsMainNetSubmitting(true);
         const response = await submitMainnetRegistration();
         if (response?.status === 200) {
+          if (response?.data?.refresh_token) {
+            // refresh token
+            const user = (await refreshAndFetchUser()) as any;
+            if (user) {
+              setCookie('access_token', user?.accessToken);
+            }
+          }
+          setIsMainNetSubmitting(false);
+
           setIsMainNetSent(true);
           mainnetSubmissionState();
           setResult(response?.data);
@@ -71,6 +95,8 @@ const CertificateReview = () => {
         isTestNetSent={isTestNetSent}
         isMainNetSent={isMainNetSent}
         result={result}
+        isTestNetLoading={isTestNetSubmitting}
+        isMainNetLoading={isMainNetSubmitting}
       />
     </Suspense>
   );
