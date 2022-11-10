@@ -7,8 +7,8 @@ import {
   Thead,
   Tr,
   Button,
-  chakra,
   HStack,
+  chakra,
   Link,
   useDisclosure
 } from '@chakra-ui/react';
@@ -18,7 +18,7 @@ import { Trans } from '@lingui/macro';
 import { FiMail } from 'react-icons/fi';
 import EditCollaboratorModal from './EditCollaboratorModal';
 import DeleteCollaboratorModal from './DeleteCollaboratorModal';
-import AddCollaboratorModal from './AddCollaboratorModal';
+import AddCollaboratorModal from 'components/AddCollaboratorModal';
 
 type Row = {
   id: string;

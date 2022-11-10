@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { Heading } from '@chakra-ui/react';
 import CollaboratorsSection from 'components/CollaboratorsSection';
 // import DashboardLayout from 'layouts/DashboardLayout';
-import { getAllCollaborators } from './service';
+import { getAllCollaborators } from 'components/AddCollaboratorModal/CollaboratorService';
 
 const Collaborators: React.FC = () => {
   const fetchAllCollaborators = useCallback(async () => {

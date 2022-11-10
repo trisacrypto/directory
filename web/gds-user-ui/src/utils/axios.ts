@@ -11,7 +11,30 @@ const axiosInstance = axios.create({
 
 axiosInstance.defaults.withCredentials = true;
 // intercept request and check if token has expired or not
-
+axiosInstance.interceptors.request.use(
+  async (config: any) => {
+    const token = getCookie('access_token');
+    const csrfToken = getCookie('csrf_token');
+    if (token) {
+      const { exp } = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = exp * 1000 < Date.now();
+      if (isExpired) {
+        const { accessToken } = await auth0CheckSession() as any;
+        setCookie('token', accessToken);
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    Promise.reject(error);
+  }
+);
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;

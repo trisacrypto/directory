@@ -17,7 +17,7 @@ interface _FormControlProps extends CheckboxProps {
 }
 
 const CheckboxFormControl = React.forwardRef<any, _FormControlProps>(
-  ({ formHelperText, controlId, name, isDisabled, isRequired, isInvalid }, ref) => {
+  ({ formHelperText, controlId, name, isDisabled, isRequired, isInvalid, ...rest }, ref) => {
     return (
       <FormControl isInvalid={isInvalid}>
         <FormLabel htmlFor={controlId}>{name}</FormLabel>
@@ -28,6 +28,7 @@ const CheckboxFormControl = React.forwardRef<any, _FormControlProps>(
             isDisabled={isDisabled}
             isRequired={isRequired}
             ref={ref}
+            {...rest}
           />
         </CheckboxGroup>
         {!isInvalid ? (

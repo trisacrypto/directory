@@ -5,12 +5,16 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallback from 'components/ErrorFallback';
 import { isMaintenanceMode } from './application/config/index';
 import Maintenance from 'components/Maintenance';
+import { QueryClient, QueryClientProvider } from 'react-query';
+const query = new QueryClient();
 const App: React.FC = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <QueryClientProvider client={query}>
       <BrowserRouter>
         <div className="App">{isMaintenanceMode() ? <Maintenance /> : <AppRouter />}</div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 };

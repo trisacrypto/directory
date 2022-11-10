@@ -1,5 +1,5 @@
 import { render } from 'utils/test-utils';
-import PhoneNumberInput from './PhoneNumberInput';
+import PhoneNumberInput from '../PhoneNumberInput';
 
 describe('<PhoneNumberInput />', () => {
   it('should ', () => {
