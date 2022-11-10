@@ -13,9 +13,11 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/fixtures"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -221,5 +223,28 @@ func (s *gdsTestSuite) SetVerificationStatus(id string, status pb.VerificationSt
 
 	// Set the verification status and write back to the database
 	vasp.VerificationStatus = status
+	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
+}
+
+// ClearContactEmailLogs clears the contact email logs on a VASP in the test database.
+// Tests which assert against state on the contact email logs should call this method
+// to ensure that the logs are empty before reaching the test point.
+func (s *gdsTestSuite) ClearContactEmailLogs(vasp *pb.VASP) {
+	require := s.Require()
+
+	contacts := vasp.Contacts
+	iter := models.NewContactIterator(contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		extra := &models.GDSContactExtraData{}
+		if contact.Extra != nil {
+			err := contact.Extra.UnmarshalTo(extra)
+			require.NoError(err, "could not unmarshal contact extra data")
+			extra.EmailLog = nil
+			contact.Extra, err = anypb.New(extra)
+			require.NoError(err, "could not marshal contact extra data")
+		}
+	}
+
 	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
 }
