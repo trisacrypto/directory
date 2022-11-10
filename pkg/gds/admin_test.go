@@ -1706,8 +1706,10 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.NoError(err)
 
 	// Clear email logs to make testing easier
-	s.ClearContactEmailLogs(charlie)
-	s.ClearContactEmailLogs(julietVASP)
+	require.NoError(fixtures.ClearContactEmailLogs(charlie), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(charlie))
+	require.NoError(fixtures.ClearContactEmailLogs(julietVASP), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(julietVASP))
 
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
@@ -1839,8 +1841,10 @@ func (s *gdsTestSuite) TestResend() {
 	require.NoError(err)
 
 	// Clear email logs to make testing easier
-	s.ClearContactEmailLogs(vaspErrored)
-	s.ClearContactEmailLogs(vaspRejected)
+	require.NoError(fixtures.ClearContactEmailLogs(vaspErrored), "could not clear vasp email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(vaspErrored), "could not update vasp")
+	require.NoError(fixtures.ClearContactEmailLogs(vaspRejected), "could not clear vasp email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(vaspRejected), "could not update vasp")
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{

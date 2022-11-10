@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/models/v1"
 	. "github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
@@ -917,12 +916,12 @@ func TestGetVASPEmailLog(t *testing.T) {
 
 	// Create a contact with some email log entries
 	now := time.Now()
-	verifyAdmin := &models.EmailLogEntry{
+	verifyAdmin := &EmailLogEntry{
 		Reason:    "verify_contact",
 		Subject:   "verify_admin",
 		Timestamp: now.Format(time.RFC3339),
 	}
-	reissuanceAdmin := &models.EmailLogEntry{
+	reissuanceAdmin := &EmailLogEntry{
 		Reason:    "reissuance",
 		Subject:   "reissuance_admin",
 		Timestamp: now.AddDate(0, 0, 1).Format(time.RFC3339),
@@ -931,11 +930,12 @@ func TestGetVASPEmailLog(t *testing.T) {
 		Email: "admin@example.com",
 	}
 	admin.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*models.EmailLogEntry{
+		EmailLog: []*EmailLogEntry{
 			verifyAdmin,
 			reissuanceAdmin,
 		},
 	})
+	require.NoError(t, err, "could not create admin contact")
 	vasp.Contacts = &pb.Contacts{
 		Administrative: admin,
 	}
@@ -945,9 +945,9 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 2)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[0].ContactType)
+	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[1].ContactType)
+	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 
 	// Add a second contact with no log entries
 	tech := &pb.Contact{
@@ -960,67 +960,69 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 2)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[0].ContactType)
+	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[1].ContactType)
+	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 
 	// Add some log entries to the second contact
-	verifyTech := &models.EmailLogEntry{
+	verifyTech := &EmailLogEntry{
 		Reason:    "verify_contact",
 		Subject:   "verify_tech",
 		Timestamp: now.Add(time.Hour).Format(time.RFC3339),
 	}
-	reissuanceTech := &models.EmailLogEntry{
+	reissuanceTech := &EmailLogEntry{
 		Reason:    "reissuance",
 		Subject:   "reissuance_tech",
 		Timestamp: now.Add(time.Hour * 2).Format(time.RFC3339),
 	}
 	tech.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*models.EmailLogEntry{
+		EmailLog: []*EmailLogEntry{
 			verifyTech,
 			reissuanceTech,
 		},
 	})
+	require.NoError(t, err, "could not create tech contact")
 
 	// Should properly merge the two email logs
 	emails, err = GetVASPEmailLog(vasp)
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 4)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[0].ContactType)
+	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, verifyTech.Subject, emails[1].Subject)
-	require.Equal(t, models.TechnicalContact, emails[1].ContactType)
+	require.Equal(t, TechnicalContact, emails[1].ContactType)
 	require.Equal(t, reissuanceTech.Subject, emails[2].Subject)
-	require.Equal(t, models.TechnicalContact, emails[2].ContactType)
+	require.Equal(t, TechnicalContact, emails[2].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[3].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[3].ContactType)
+	require.Equal(t, AdministrativeContact, emails[3].ContactType)
 
 	// Add a third contact with some log entries
 	billing := &pb.Contact{
 		Email: "billing@example.com",
 	}
-	verifyBilling := &models.EmailLogEntry{
+	verifyBilling := &EmailLogEntry{
 		Reason:    "verify_contact",
 		Subject:   "verify_billing",
 		Timestamp: now.Add(-time.Hour).Format(time.RFC3339),
 	}
-	resendBilling := &models.EmailLogEntry{
+	resendBilling := &EmailLogEntry{
 		Reason:    "resend",
 		Subject:   "resend_billing",
 		Timestamp: now.Add(time.Hour * 3).Format(time.RFC3339),
 	}
-	reissuanceBilling := &models.EmailLogEntry{
+	reissuanceBilling := &EmailLogEntry{
 		Reason:    "reissuance",
 		Subject:   "reissuance_billing",
 		Timestamp: now.AddDate(0, 0, 2).Format(time.RFC3339),
 	}
 	billing.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*models.EmailLogEntry{
+		EmailLog: []*EmailLogEntry{
 			verifyBilling,
 			resendBilling,
 			reissuanceBilling,
 		},
 	})
+	require.NoError(t, err, "could not create billing contact")
 	vasp.Contacts.Billing = billing
 
 	// Should properly merge the three email logs
@@ -1028,19 +1030,19 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 7)
 	require.Equal(t, verifyBilling.Subject, emails[0].Subject)
-	require.Equal(t, models.BillingContact, emails[0].ContactType)
+	require.Equal(t, BillingContact, emails[0].ContactType)
 	require.Equal(t, verifyAdmin.Subject, emails[1].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[1].ContactType)
+	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 	require.Equal(t, verifyTech.Subject, emails[2].Subject)
-	require.Equal(t, models.TechnicalContact, emails[2].ContactType)
+	require.Equal(t, TechnicalContact, emails[2].ContactType)
 	require.Equal(t, reissuanceTech.Subject, emails[3].Subject)
-	require.Equal(t, models.TechnicalContact, emails[3].ContactType)
+	require.Equal(t, TechnicalContact, emails[3].ContactType)
 	require.Equal(t, resendBilling.Subject, emails[4].Subject)
-	require.Equal(t, models.BillingContact, emails[4].ContactType)
+	require.Equal(t, BillingContact, emails[4].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[5].Subject)
-	require.Equal(t, models.AdministrativeContact, emails[5].ContactType)
+	require.Equal(t, AdministrativeContact, emails[5].ContactType)
 	require.Equal(t, reissuanceBilling.Subject, emails[6].Subject)
-	require.Equal(t, models.BillingContact, emails[6].ContactType)
+	require.Equal(t, BillingContact, emails[6].ContactType)
 }
 
 func loadFixture(path string) (vasp *pb.VASP, err error) {

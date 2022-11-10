@@ -25,7 +25,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -82,7 +81,8 @@ func (s *certTestSuite) TestCertManager() {
 	require.NoError(err, "could not get quebec certreq")
 
 	// Ensure that the email logs are cleared before the test
-	s.ClearContactEmailLogs(echoVASP)
+	require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+	require.NoError(s.db.UpdateVASP(echoVASP), "could not update echo VASP")
 
 	// Create a secret that the certificate manager can retrieve
 	sm := s.secret.With(quebecCertReq.Id)
@@ -1016,27 +1016,4 @@ func (s *certTestSuite) runCertManager(requestInterval time.Duration) {
 	// Make sure that the certificate manager is stopped before we proceed
 	s.certman.Stop()
 	wg.Wait()
-}
-
-// ClearContactEmailLogs clears the contact email logs on a VASP in the test database.
-// Tests which assert against state on the contact email logs should call this method
-// to ensure that the logs are empty before reaching the test point.
-func (s *certTestSuite) ClearContactEmailLogs(vasp *pb.VASP) {
-	require := s.Require()
-
-	contacts := vasp.Contacts
-	iter := models.NewContactIterator(contacts, false, false)
-	for iter.Next() {
-		contact, _ := iter.Value()
-		extra := &models.GDSContactExtraData{}
-		if contact.Extra != nil {
-			err := contact.Extra.UnmarshalTo(extra)
-			require.NoError(err, "could not unmarshal contact extra data")
-			extra.EmailLog = nil
-			contact.Extra, err = anypb.New(extra)
-			require.NoError(err, "could not marshal contact extra data")
-		}
-	}
-
-	require.NoError(s.db.UpdateVASP(vasp))
 }
