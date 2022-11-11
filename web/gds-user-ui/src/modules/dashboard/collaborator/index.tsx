@@ -1,27 +1,16 @@
-import { useEffect, useCallback } from 'react';
+import { Suspense } from 'react';
 import { Heading } from '@chakra-ui/react';
-import CollaboratorsSection from 'components/CollaboratorsSection';
+import CollaboratorsSection from 'components/Collaborators';
 // import DashboardLayout from 'layouts/DashboardLayout';
-import { getAllCollaborators } from 'components/AddCollaboratorModal/CollaboratorService';
 
+import Loader from 'components/Loader';
 const Collaborators: React.FC = () => {
-  const fetchAllCollaborators = useCallback(async () => {
-    try {
-      const res = await getAllCollaborators();
-      console.log(res);
-    } catch (err) {
-      console.log(err);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAllCollaborators();
-  }, [fetchAllCollaborators]);
-
   return (
     <>
       <Heading marginBottom="69px">Collaborators</Heading>
-      <CollaboratorsSection />
+      <Suspense fallback={<Loader />}>
+        <CollaboratorsSection />
+      </Suspense>
     </>
   );
 };

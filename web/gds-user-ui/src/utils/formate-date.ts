@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 export default function formatDate() {
   const dtToday = new Date();
 
@@ -11,3 +12,8 @@ export default function formatDate() {
 
   return maxDate;
 }
+
+// format to short date with dayjs library (https://day.js.org/)
+export const formatIsoDate = (date: any) => {
+  return dayjs(date).format('MMM D, YYYY');
+};

@@ -8,77 +8,75 @@ import {
   Tr,
   Button,
   HStack,
+  Stack,
   chakra,
   Link,
   useDisclosure
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
-import React from 'react';
+import React, { useState } from 'react';
 import { Trans } from '@lingui/macro';
 import { FiMail } from 'react-icons/fi';
 import EditCollaboratorModal from './EditCollaboratorModal';
 import DeleteCollaboratorModal from './DeleteCollaboratorModal';
 import AddCollaboratorModal from 'components/AddCollaboratorModal';
-
-type Row = {
-  id: string;
-  username: string;
-  role: string;
-  joined: string;
-  organization: string;
-  email: string;
-};
-
-const rows: Row[] = [
-  {
-    id: '18001',
-    username: 'Jones Ferdinand',
-    email: 'jones.ferdinand@gmail.com',
-    role: 'Admin',
-    joined: '14/01/2022',
-    organization: 'Cypertrace, Inc'
-  },
-  {
-    id: '18001',
-    username: 'Eason Yang',
-    email: 'eason.yang@gmail.com',
-    role: 'Member',
-    joined: '14/01/2022',
-    organization: 'VASPnet, LLC'
-  },
-  {
-    id: '18001',
-    username: 'Anusha Aggarwal',
-    email: 'anusha.aggarwal@gmail.com',
-    role: 'Member',
-    joined: '14/01/2022',
-    organization: 'VASPnet, LLC'
-  }
-];
+// import { getCollaborators, setCollaborators } from 'application/store/selectors/collaborator';
+import { useFetchCollaborators } from './useFetchCollaborator';
+// import { useDispatch } from 'react-redux';
+import type { Collaborator } from './CollaboratorType';
+import { formatIsoDate } from 'utils/formate-date';
+import { sortCollaboratorsByRecentDate } from './lib';
+import Loader from 'components/Loader';
+// const rows: Row[] = [
+//   {
+//     id: '18001',
+//     username: 'Jones Ferdinand',
+//     email: 'jones.ferdinand@gmail.com',
+//     role: 'Admin',
+//     joined: '14/01/2022',
+//     organization: 'Cypertrace, Inc'
+//   },
+//   {
+//     id: '18001',
+//     username: 'Eason Yang',
+//     email: 'eason.yang@gmail.com',
+//     role: 'Member',
+//     joined: '14/01/2022',
+//     organization: 'VASPnet, LLC'
+//   },
+//   {
+//     id: '18001',
+//     username: 'Anusha Aggarwal',
+//     email: 'anusha.aggarwal@gmail.com',
+//     role: 'Member',
+//     joined: '14/01/2022',
+//     organization: 'VASPnet, LLC'
+//   }
+// ];
 
 const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <Tr>{children}</Tr>;
 };
 
-const TableRow: React.FC<{ row: Row }> = ({ row }) => {
+const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
   return (
     <>
       <RowItem>
         <>
           <Td display="flex" flexDir="column">
             <chakra.span display="block" textTransform="capitalize">
-              {row.username}
+              {row?.name}
             </chakra.span>
             <chakra.span display="block" fontSize="sm" color="gray.700">
-              {row.email}
+              {row?.email}
             </chakra.span>
           </Td>
-          <Td textTransform="capitalize">{row.role}</Td>
-          <Td>{row.joined}</Td>
-          <Td textTransform="capitalize">{row.organization}</Td>
+          <Td textTransform="capitalize">{row?.roles}</Td>
+          <Td>{formatIsoDate(row?.created_at)}</Td>
+          <Td textTransform="capitalize"></Td>
           <Td paddingY={0}>
             <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
-              <Link color="blue" href={`mailto:${row.email}`}>
+              <Link color="blue" href={`mailto:${row?.email}`}>
                 <FiMail fontSize="26px" />
               </Link>
               <EditCollaboratorModal />
@@ -92,18 +90,33 @@ const TableRow: React.FC<{ row: Row }> = ({ row }) => {
 };
 
 const TableRows: React.FC = () => {
+  const { collaborators } = useFetchCollaborators();
+  console.log('[collaborators]', collaborators);
   return (
     <>
-      {rows.map((row) => (
-        <TableRow key={row.id} row={row} />
+      { sortCollaboratorsByRecentDate(collaborators?.data?.collaborators).map((collaborator: Collaborator) => (
+        <TableRow key={collaborator.id} row={collaborator} />
       ))}
     </>
   );
 };
 
 const CollaboratorsSection: React.FC = () => {
+  const { isFetchingCollaborators, hasCollaboratorsFailed } = useFetchCollaborators();
+
   const { onOpen, isOpen, onClose } = useDisclosure();
-  const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = React.useState(false);
+  const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = useState<boolean>(false);
+
+
+  if (isFetchingCollaborators) {
+    return <Loader />;
+  }
+
+  if(hasCollaboratorsFailed) {
+    return <Stack>Failed to fetch collaborators</Stack>;
+  }
+
+
   const modalHandler = () => {
     setIsAddCollaboratorModalOpen(!isAddCollaboratorModalOpen);
     onOpen();
@@ -112,8 +125,8 @@ const CollaboratorsSection: React.FC = () => {
     setIsAddCollaboratorModalOpen(!isAddCollaboratorModalOpen);
     onClose();
   };
+    return (
 
-  return (
     <FormLayout overflowX={'scroll'}>
       <Table variant="simple">
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
@@ -152,7 +165,7 @@ const CollaboratorsSection: React.FC = () => {
           <TableRows />
         </Tbody>
       </Table>
-    </FormLayout>
+        </FormLayout>
   );
 };
 export default CollaboratorsSection;

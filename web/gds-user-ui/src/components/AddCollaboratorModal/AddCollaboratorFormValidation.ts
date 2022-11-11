@@ -21,11 +21,13 @@ export const addCollaboratorFormValidationSchema = yup
 
 
 export const ADD_COLLABORATOR_FORM_METHOD = {
-    resolver: yupResolver(addCollaboratorFormValidationSchema),
+
     defaultValues: {
         email: '',
         name: '',
         agreed: false
-    }
+    },
+    resolver: yupResolver(addCollaboratorFormValidationSchema),
+    mode: 'onChange' as keyof typeof yupResolver
 };
 

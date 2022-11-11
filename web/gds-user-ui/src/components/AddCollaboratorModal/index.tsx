@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import {
-
   Link,
   Modal,
   ModalBody,
@@ -10,7 +9,8 @@ import {
   ModalHeader,
   ModalOverlay,
 } from '@chakra-ui/react';
-
+import type { NewCollaborator } from './AddCollaboratorType';
+import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 import AddCollaboratorForm from './AddCollaboratorForm';
 
 interface Props {
