@@ -20,19 +20,18 @@ import FormLayout from 'layouts/FormLayout';
 import { Certificate } from 'types/type';
 import Statistics from './Statistics';
 import PolygonIcon from 'assets/polygon.svg';
-import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
+import formatDisplayedDate from 'utils/formatDisplayedDate';
 
 type MainnetCertificatesProps = {
   data: Certificate[];
   network: 'mainnet' | 'testnet';
 };
 
-const DATE_FORMAT = 'DD-MM-YYYY';
-
 function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps) {
-  const handleDetailsClick = () => {
-    // eslint-disable-next-line no-warning-comments
-    // TODO: navigate the user to certificate details page
+  const navigate = useNavigate();
+  const handleDetailsClick = (certificateId: string) => {
+    navigate(`/dashboard/certificate-inventory/${certificateId}?network=${network}`);
   };
 
   return (
@@ -79,8 +78,8 @@ function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps)
                 data?.map((certificate, idx) => (
                   <Tr key={idx} data-testid="table-row">
                     <Td>{certificate.serial_number}</Td>
-                    <Td>{dayjs(certificate.issued_at).format(DATE_FORMAT)}</Td>
-                    <Td>{dayjs(certificate.expires_at).format(DATE_FORMAT)}</Td>
+                    <Td data-testid="issued_at">{formatDisplayedDate(certificate?.issued_at)}</Td>
+                    <Td data-testid="expired_at">{formatDisplayedDate(certificate?.expires_at)}</Td>
                     <Td>
                       {certificate.revoked ? (
                         <Badge
@@ -104,10 +103,11 @@ function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps)
                     </Td>
                     <Td textAlign="center">
                       <IconButton
-                        onClick={handleDetailsClick}
+                        onClick={() => handleDetailsClick(certificate?.serial_number)}
                         aria-label={t`view details`}
                         bg="transparent"
-                        _hover={{ bg: 'transparent' }}>
+                        _hover={{ bg: 'transparent' }}
+                        data-testid="details_btn">
                         <CkLazyLoadImage mx="auto" src={PolygonIcon} />
                       </IconButton>
                     </Td>

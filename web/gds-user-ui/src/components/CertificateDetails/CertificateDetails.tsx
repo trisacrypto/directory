@@ -1,12 +1,10 @@
 import { CopyIcon } from '@chakra-ui/icons';
 import {
-  Box,
+  Badge,
   Button,
   chakra,
-  Flex,
   Heading,
   HStack,
-  IconButton,
   Menu,
   MenuButton,
   MenuItem,
@@ -15,20 +13,66 @@ import {
   Text,
   VStack
 } from '@chakra-ui/react';
-import { Trans } from '@lingui/macro';
+import { t, Trans } from '@lingui/macro';
+import { getCertificates } from 'application/services/certificates';
+import { FileCard } from 'components/FileCard';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import FormLayout from 'layouts/FormLayout';
-import { FiDownload } from 'react-icons/fi';
+import { isArray } from 'lodash';
+import { useEffect, useState } from 'react';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useAsync } from 'react-use';
+import { Certificate } from 'types/type';
+import downloadFile from 'utils/downloadFile';
 
-function CertificateInventory() {
+type Params = {
+  certificateId: string;
+};
+
+const formatDisplayedValue = (displayedValue?: string[] | string) => {
+  if (isArray(displayedValue)) {
+    return displayedValue.join(',');
+  }
+
+  return displayedValue ? displayedValue : 'N/A';
+};
+
+function CertificateDetails() {
+  const [certificateDetails, setCertificateDetails] = useState<Certificate | null>(null);
   const navigate = useNavigate();
   const { jumpToLastStep } = useCertificateStepper();
+  const params = useParams<Params>();
+  const [searchParams] = useSearchParams();
+  const { value } = useAsync(getCertificates);
+  const certificateId = params?.certificateId;
+  const network = searchParams.get('network') as any;
+
+  useEffect(() => {
+    if (certificateId && network && value) {
+      const details = value[network]?.find(
+        (certificate: Certificate) => certificate?.serial_number === certificateId
+      );
+
+      setCertificateDetails(details);
+    }
+  }, [certificateId, network, value]);
 
   const handleEditClick = () => {
     navigate('/dashboard/certificate/registration');
     jumpToLastStep();
+  };
+
+  const handlePublicIdentityKeyDownloadClick = (data: string) => {
+    const filename = 'public-identity-key.pem';
+    const mimetype = 'application/x-pem-file';
+    downloadFile(data, filename, mimetype);
+  };
+
+  const handleTrustChainDownloadClick = (chain: string) => {
+    const filename = 'trust-chain-certificate.gz';
+    const mimetype = 'application/x-x509-ca-cert';
+    downloadFile(chain, filename, mimetype);
   };
 
   return (
@@ -85,37 +129,55 @@ function CertificateInventory() {
               <chakra.span fontWeight={700}>
                 <Trans>Status</Trans>:
               </chakra.span>{' '}
-              Verified
+              {certificateDetails?.revoked ? (
+                <Badge
+                  colorScheme="green"
+                  borderRadius="xl"
+                  fontWeight={600}
+                  textTransform="capitalize"
+                  data-testid="revoked">
+                  <Trans>Active</Trans>
+                </Badge>
+              ) : (
+                <Badge
+                  colorScheme="red"
+                  borderRadius="xl"
+                  fontWeight={600}
+                  textTransform="capitalize"
+                  data-testid="revoked">
+                  <Trans>Expired</Trans>
+                </Badge>
+              )}
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
                 <Trans>Serial Number</Trans>:
               </chakra.span>{' '}
-              S7NaVd8zt1YUEdwdfc7+Mg==
+              {certificateDetails?.serial_number || 'N/A'}
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
                 <Trans>Expires</Trans>:
               </chakra.span>{' '}
-              Tue, 18 Apr 2023 21:14:39 GMT
+              {certificateDetails?.expires_at || 'N/A'}
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
                 <Trans>Issuer</Trans>:
               </chakra.span>{' '}
-              CipherTrace Issuing CA
+              {certificateDetails?.details.issuer.common_name || 'N/A'}
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
                 <Trans>Subject</Trans>:
               </chakra.span>{' '}
-              trisa.alicevasp.io
+              {certificateDetails?.details?.subject?.common_name || 'N/A'}
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
                 <Trans>Endpoint</Trans>:
               </chakra.span>{' '}
-              trisa.alicevasp.io:443
+              {certificateDetails?.details?.endpoint || 'N/A'}
             </Text>
           </VStack>
         </FormLayout>
@@ -125,72 +187,24 @@ function CertificateInventory() {
           </Text>
 
           <Stack direction="row" justifyContent="start" w="100%" spacing={10}>
-            <HStack
-              border="1px solid #00000094"
-              borderRadius="10px"
-              p={3}
-              alignItems="center!important"
-              spacing={5}>
-              <Flex gap={2}>
-                <Flex
-                  bg="#23A7E04D"
-                  borderRadius="10px"
-                  fontWeight={700}
-                  color="rgba(85, 81, 81, 0.83)"
-                  justifyContent="center"
-                  alignItems="center"
-                  p={2}>
-                  .PEM
-                </Flex>
-                <Box>
-                  <Text fontWeight={700}>Public Identity Key</Text>
-                  <Text color="gray.600" fontSize="sm">
-                    2.49kb
-                  </Text>
-                </Box>
-              </Flex>
-              <IconButton
-                variant="ghost"
-                fontSize="30px"
-                color="blue"
-                p={3}
-                icon={<FiDownload />}
-                aria-label="download"
-              />
-            </HStack>
-            <HStack
-              border="1px solid #00000094"
-              borderRadius="10px"
-              p={3}
-              alignItems="center!important"
-              spacing={5}>
-              <Flex gap={2}>
-                <Flex
-                  bg="#23A7E04D"
-                  borderRadius="10px"
-                  fontWeight={700}
-                  color="rgba(85, 81, 81, 0.83)"
-                  justifyContent="center"
-                  alignItems="center"
-                  p={2}>
-                  .GZ
-                </Flex>
-                <Box>
-                  <Text fontWeight={700}>TRISA Trust Chain (CA)</Text>
-                  <Text color="gray.600" fontSize="sm">
-                    4.39 KB
-                  </Text>
-                </Box>
-              </Flex>
-              <IconButton
-                variant="ghost"
-                fontSize="30px"
-                color="blue"
-                p={3}
-                icon={<FiDownload />}
-                aria-label="download"
-              />
-            </HStack>
+            <FileCard
+              name={t`Public Identity Key`}
+              file={certificateDetails?.details?.data}
+              ext={`.PEM`}
+              onDownload={() =>
+                certificateDetails?.details?.data &&
+                handlePublicIdentityKeyDownloadClick(certificateDetails?.details?.data)
+              }
+            />
+            <FileCard
+              file={certificateDetails?.details?.chain}
+              name="TRISA Trust Chain (CA)"
+              ext=".GZ"
+              onDownload={() =>
+                certificateDetails?.details?.chain &&
+                handleTrustChainDownloadClick(certificateDetails?.details?.chain)
+              }
+            />
           </Stack>
         </FormLayout>
         <Stack direction="row" justifyContent="space-between" spacing={10}>
@@ -205,55 +219,55 @@ function CertificateInventory() {
                 <chakra.span fontWeight={700}>
                   <Trans>Common Name</Trans>:
                 </chakra.span>{' '}
-                Cyphertrace
+                {certificateDetails?.details?.issuer?.common_name || 'N/A'}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Country</Trans>:
                 </chakra.span>{' '}
-                United States
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.country)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Locality</Trans>:
                 </chakra.span>{' '}
-                Menlo Park
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.locality)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Organization</Trans>:
                 </chakra.span>{' '}
-                CipherTrace
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.organization)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Organization Unit</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.organizational_unit)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Postal Code</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.postal_code)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Province</Trans>:
                 </chakra.span>{' '}
-                California
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.province)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Serial Number</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {certificateDetails?.details?.issuer?.serial_number}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Street Address</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.issuer?.street_address)}
               </Text>
             </VStack>
           </FormLayout>
@@ -268,31 +282,31 @@ function CertificateInventory() {
                 <chakra.span fontWeight={700}>
                   <Trans>Common Name</Trans>:
                 </chakra.span>{' '}
-                Cyphertrace
+                {certificateDetails?.details?.subject?.common_name || 'N/A'}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Country</Trans>:
                 </chakra.span>{' '}
-                United States
+                {formatDisplayedValue(certificateDetails?.details?.subject?.country)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Locality</Trans>:
                 </chakra.span>{' '}
-                Menlo Park
+                {formatDisplayedValue(certificateDetails?.details?.subject?.locality)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Organization</Trans>:
                 </chakra.span>{' '}
-                CipherTrace
+                {formatDisplayedValue(certificateDetails?.details?.subject?.organization)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Organization Unit</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.subject?.organizational_unit)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
@@ -304,19 +318,19 @@ function CertificateInventory() {
                 <chakra.span fontWeight={700}>
                   <Trans>Province</Trans>:
                 </chakra.span>{' '}
-                California
+                {formatDisplayedValue(certificateDetails?.details?.subject?.province)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Serial Number</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.subject?.serial_number)}
               </Text>
               <Text>
                 <chakra.span fontWeight={700}>
                   <Trans>Street Address</Trans>:
                 </chakra.span>{' '}
-                N/A
+                {formatDisplayedValue(certificateDetails?.details?.subject?.street_address)}
               </Text>
             </VStack>
           </FormLayout>
@@ -326,4 +340,4 @@ function CertificateInventory() {
   );
 }
 
-export default CertificateInventory;
+export default CertificateDetails;

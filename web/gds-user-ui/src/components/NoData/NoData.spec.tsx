@@ -21,12 +21,54 @@ describe('<NoData />', () => {
   it('should match inline snapshot', () => {
     const { container } = render(<NoData />);
     expect(container).toMatchInlineSnapshot(`
+      .emotion-0 {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-align-items: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+      }
+
+      .emotion-0>*:not(style)~*:not(style) {
+        margin-top: 0.5rem;
+        -webkit-margin-end: 0px;
+        margin-inline-end: 0px;
+        margin-bottom: 0px;
+        -webkit-margin-start: 0px;
+        margin-inline-start: 0px;
+      }
+
+      .emotion-1 {
+        width: 1em;
+        height: 1em;
+        display: inline-block;
+        line-height: 1em;
+        -webkit-flex-shrink: 0;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        color: var(--chakra-colors-gray-300);
+        vertical-align: middle;
+        font-size: 5rem;
+      }
+
+      .emotion-2 {
+        text-transform: capitalize;
+      }
+
       <div>
         <div
-          class="chakra-stack css-1bppy43"
+          class="chakra-stack emotion-0"
         >
           <svg
-            class="chakra-icon css-1p10qzu"
+            class="chakra-icon emotion-1"
             focusable="false"
             viewBox="0 0 24 24"
           >
@@ -36,7 +78,7 @@ describe('<NoData />', () => {
             />
           </svg>
           <p
-            class="chakra-text css-10iahqc"
+            class="chakra-text emotion-2"
             data-testid="label"
           >
             No Data
