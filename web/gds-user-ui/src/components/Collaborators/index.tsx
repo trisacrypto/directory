@@ -18,7 +18,7 @@ import React, { useState } from 'react';
 import { Trans } from '@lingui/macro';
 import { FiMail } from 'react-icons/fi';
 import EditCollaboratorModal from './EditCollaboratorModal';
-import DeleteCollaboratorModal from './DeleteCollaboratorModal';
+import DeleteCollaboratorModal from './DeleteCollaborator/DeleteCollaboratorModal';
 import AddCollaboratorModal from 'components/AddCollaboratorModal';
 // import { getCollaborators, setCollaborators } from 'application/store/selectors/collaborator';
 import { useFetchCollaborators } from './useFetchCollaborator';
@@ -79,8 +79,8 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
               <Link color="blue" href={`mailto:${row?.email}`}>
                 <FiMail fontSize="26px" />
               </Link>
-              <EditCollaboratorModal />
-              <DeleteCollaboratorModal />
+              <EditCollaboratorModal collaboratorId={row.id} />
+              <DeleteCollaboratorModal collaboratorId={row.id} />
             </HStack>
           </Td>
         </>
@@ -94,9 +94,11 @@ const TableRows: React.FC = () => {
   console.log('[collaborators]', collaborators);
   return (
     <>
-      { sortCollaboratorsByRecentDate(collaborators?.data?.collaborators).map((collaborator: Collaborator) => (
-        <TableRow key={collaborator.id} row={collaborator} />
-      ))}
+      {sortCollaboratorsByRecentDate(collaborators?.data?.collaborators).map(
+        (collaborator: Collaborator) => (
+          <TableRow key={collaborator.id} row={collaborator} />
+        )
+      )}
     </>
   );
 };
@@ -107,15 +109,13 @@ const CollaboratorsSection: React.FC = () => {
   const { onOpen, isOpen, onClose } = useDisclosure();
   const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = useState<boolean>(false);
 
-
   if (isFetchingCollaborators) {
     return <Loader />;
   }
 
-  if(hasCollaboratorsFailed) {
+  if (hasCollaboratorsFailed) {
     return <Stack>Failed to fetch collaborators</Stack>;
   }
-
 
   const modalHandler = () => {
     setIsAddCollaboratorModalOpen(!isAddCollaboratorModalOpen);
@@ -125,8 +125,7 @@ const CollaboratorsSection: React.FC = () => {
     setIsAddCollaboratorModalOpen(!isAddCollaboratorModalOpen);
     onClose();
   };
-    return (
-
+  return (
     <FormLayout overflowX={'scroll'}>
       <Table variant="simple">
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
@@ -165,7 +164,7 @@ const CollaboratorsSection: React.FC = () => {
           <TableRows />
         </Tbody>
       </Table>
-        </FormLayout>
+    </FormLayout>
   );
 };
 export default CollaboratorsSection;

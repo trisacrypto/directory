@@ -14,12 +14,32 @@ import {
   useDisclosure,
   VStack
 } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import { Trans } from '@lingui/macro';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { FiEdit } from 'react-icons/fi';
-
-function EditCollaboratorModal() {
+import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
+import type { Collaborator } from 'components/Collaborators/CollaboratorType';
+interface Props {
+  collaboratorId: string;
+}
+function EditCollaboratorModal({ collaboratorId }: Props) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { collaborators } = useFetchCollaborators();
+  const [collaborator, setCollaborator] = useState<Collaborator>();
+
+  const updateHandler = () => {
+    // delete collaborator
+  };
+
+  useEffect(() => {
+    const col = collaborators?.data.collaborators.find(
+      (c: Collaborator) => c.id === collaboratorId
+    );
+    if (col) {
+      setCollaborator(col);
+    }
+  }, [collaboratorId, collaborators]);
 
   return (
     <Link color="blue" onClick={onOpen}>
@@ -40,8 +60,8 @@ function EditCollaboratorModal() {
                 <Text fontWeight={700}>
                   <Trans>Collaborator Name & Email</Trans>
                 </Text>
-                <Text textTransform="capitalize">Eason Yang</Text>
-                <Text>eyang@vaspnet.co.uk</Text>
+                <Text textTransform="capitalize">{collaborator?.name}</Text>
+                <Text>{collaborator?.email}</Text>
               </Box>
               <SelectFormControl
                 label={
@@ -57,10 +77,10 @@ function EditCollaboratorModal() {
           </ModalBody>
 
           <ModalFooter display="flex" flexDir="column" gap={3}>
-            <Button bg="orange" minW="150px" _hover={{ bg: 'orange' }} onClick={onClose}>
+            <Button bg="orange" minW="150px" _hover={{ bg: 'orange' }} onClick={updateHandler}>
               <Trans>Save</Trans>
             </Button>
-            <Button variant="ghost" minW="150px" color="link">
+            <Button variant="ghost" minW="150px" color="link" onClick={onClose}>
               <Trans>Close</Trans>
             </Button>
           </ModalFooter>
