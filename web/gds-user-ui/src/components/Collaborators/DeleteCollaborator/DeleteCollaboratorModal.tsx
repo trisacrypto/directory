@@ -130,6 +130,7 @@ function DeleteCollaboratorModal(props: Props) {
             <Button
               bg="orange"
               minW="150px"
+              data-testid="delete-collaborator-button"
               _hover={{ bg: 'orange' }}
               onClick={deleteHandler}
               isDisabled={!isDeleteChecked}

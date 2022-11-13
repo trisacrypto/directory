@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import { waitFor, screen } from '@testing-library/react';
-import { useQuery, useMutation, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, screen } from '@testing-library/react';
+import { useMutation } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import nock from 'nock';
@@ -10,8 +10,8 @@ import { act, render } from 'utils/test-utils';
 import { collaboratorMockValue } from 'components/AddCollaboratorModal/__mocks__';
 import * as useCollaborators from 'components/Collaborators/useFetchCollaborator';
 import * as useDeleteCollaborator from '../useDeleteCollaborator';
-// const mockUseQuery = useQuery as jest.Mock;
 const mockUseMutation = useMutation as jest.Mock;
+// mock chakra ui modal component to be able to test it
 
 const divWithChildrenMock = (children: any, identifier: any) => (
   <div data-testId={identifier}>{children}</div>
@@ -31,6 +31,7 @@ jest.mock('@chakra-ui/react', () => ({
   ModalCloseButton: jest.fn(() => divWithoutChildrenMock('close'))
 }));
 
+// mock deletecollaborator component render function
 function renderComponent() {
   const Props = {
     collaboratorId: '1'
@@ -44,7 +45,6 @@ const mockDeleteCollaborator = jest.fn();
 
 const useFetchCollaboratorsMock = jest.spyOn(useCollaborators, 'useFetchCollaborators');
 const useDeleteCollaboratorMock = jest.spyOn(useDeleteCollaborator, 'useDeleteCollaborator');
-
 describe('DeleteCollaboratorModal', () => {
   beforeAll(() => {
     act(() => {
@@ -65,7 +65,7 @@ describe('DeleteCollaboratorModal', () => {
     useDeleteCollaboratorMock.mockReturnValue({
       isDeleting: false,
       wasCollaboratorDeleted: false,
-      deleteCollaborator: mockUseMutation,
+      deleteCollaborator: mockDeleteCollaborator,
       hasCollaboratorFailed: false,
       errorMessage: '',
       reset(): void {
@@ -107,6 +107,14 @@ describe('DeleteCollaboratorModal', () => {
       collaboratorMockValue.data[0].name
     );
   });
+
+  // delete collaborator click event test
+  // it('should call deleteHandler function when delete button is clicked', () => {
+  //   renderComponent();
+  //   fireEvent.click(screen.getByTestId('delete-collaborator-button'));
+  //
+  //   expect(mockDeleteCollaborator).toHaveBeenCalled();
+  // });
 
   afterAll(() => {
     jest.clearAllMocks();
