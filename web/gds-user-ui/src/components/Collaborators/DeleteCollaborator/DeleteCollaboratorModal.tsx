@@ -112,8 +112,10 @@ function DeleteCollaboratorModal(props: Props) {
                 <Text fontWeight={700}>
                   <Trans id="Collaborator Name & Email">Collaborator Name & Email</Trans>
                 </Text>
-                <Text textTransform="capitalize">{collaborator?.name}</Text>
-                <Text>{collaborator?.email}</Text>
+                <Text textTransform="capitalize" data-testid="collaborator-name">
+                  {collaborator?.name}
+                </Text>
+                <Text data-testid="collaborator-email">{collaborator?.email}</Text>
               </Box>
               <Checkbox
                 isChecked={isDeleteChecked}

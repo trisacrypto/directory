@@ -6,6 +6,8 @@ import ErrorFallback from 'components/ErrorFallback';
 import { isMaintenanceMode } from './application/config/index';
 import Maintenance from 'components/Maintenance';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { isProdEnv } from 'application/config';
 const query = new QueryClient();
 const App: React.FC = () => {
   return (
@@ -14,6 +16,8 @@ const App: React.FC = () => {
         <BrowserRouter>
           <div className="App">{isMaintenanceMode() ? <Maintenance /> : <AppRouter />}</div>
         </BrowserRouter>
+
+        <ReactQueryDevtools initialIsOpen={!isProdEnv} />
       </QueryClientProvider>
     </ErrorBoundary>
   );

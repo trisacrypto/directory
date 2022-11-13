@@ -4,7 +4,7 @@ import { getAllCollaborators } from 'modules/dashboard/collaborator/Collaborator
 import type { getCollaborators } from 'modules/dashboard/collaborator/getCollaboratorType';
 
 export function useFetchCollaborators(): getCollaborators {
-    const query = useQuery(['GetCollaborators'], getAllCollaborators, {
+    const query = useQuery(['fetch-collaborators'], getAllCollaborators, {
         refetchOnWindowFocus: true,
         refetchOnMount: true,
         staleTime: 0,

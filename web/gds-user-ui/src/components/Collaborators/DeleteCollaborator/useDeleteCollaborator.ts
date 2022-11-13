@@ -3,7 +3,7 @@ import { deleteCollaborator as deleteCollaboratorService } from 'modules/dashboa
 import type { DeleteCollaboratorMutation } from 'components/Collaborators/DeleteCollaborator/DeleteCollaboratorType';
 
 export function useDeleteCollaborator(): DeleteCollaboratorMutation {
-    const mutation = useMutation(['deleteCollaborator'], deleteCollaboratorService);
+    const mutation = useMutation(['delete-Collaborator'], deleteCollaboratorService);
     return {
         deleteCollaborator: mutation.mutate,
         reset: mutation.reset,
