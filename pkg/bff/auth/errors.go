@@ -12,5 +12,7 @@ var (
 	ErrNoPermission     = errors.New("user does not have permission to perform this operation")
 	ErrNoAuthUser       = errors.New("could not identify authenticated user in request")
 	ErrNoAuthUserData   = errors.New("could not retrieve user data")
+	ErrIncompleteUser   = errors.New("user is missing required fields")
+	ErrUnverifiedUser   = errors.New("user is not verified")
 	ErrCSRFVerification = errors.New("csrf verification failed for request")
 )

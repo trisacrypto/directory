@@ -22,6 +22,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/store"
 	trtlstore "github.com/trisacrypto/directory/pkg/store/trtl"
+	emailmock "github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -997,7 +998,7 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 
 func (s *certTestSuite) teardownCertManager() {
 	require := s.Require()
-	emails.PurgeMockEmails()
+	emailmock.PurgeEmails()
 	s.db.Close()
 	s.fixtures.Reset()
 	require.NoError(os.RemoveAll(s.conf.CertMan.Storage))

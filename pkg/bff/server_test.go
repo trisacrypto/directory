@@ -101,6 +101,9 @@ func (s *bffTestSuite) SetupSuite() {
 			URL:      "trtl://bufnet/",
 			Insecure: true,
 		},
+		Email: config.EmailConfig{
+			Testing: true,
+		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
 

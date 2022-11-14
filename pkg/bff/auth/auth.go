@@ -31,11 +31,12 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 
 // Claims extracts custom data from the JWT token provided by Auth0
 type Claims struct {
-	Scope       string   `json:"scope"`
-	Permissions []string `json:"permissions"`
-	OrgID       string   `json:"https://vaspdirectory.net/orgid"`
-	VASPs       VASPs    `json:"https://vaspdirectory.net/vasps"`
-	Email       string   `json:"https://vaspdirectory.net/email"`
+	Scope         string   `json:"scope"`
+	Permissions   []string `json:"permissions"`
+	OrgID         string   `json:"https://vaspdirectory.net/orgid"`
+	VASPs         VASPs    `json:"https://vaspdirectory.net/vasps"`
+	Organizations []string `json:"https://vaspdirectory.net/organizations"`
+	Email         string   `json:"https://vaspdirectory.net/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.
@@ -246,6 +247,20 @@ func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 		if err != nil {
 			c.Error(err)
 			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))
+			return
+		}
+
+		// User must have complete identity data for downstream processing
+		if user.ID == nil || *user.ID == "" || user.Email == nil || *user.Email == "" {
+			c.Error(ErrIncompleteUser)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrIncompleteUser))
+			return
+		}
+
+		// User must be email verified to access the API
+		if user.EmailVerified == nil || !*user.EmailVerified {
+			c.Error(fmt.Errorf("user %s is not email verified", *user.ID))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse(ErrUnverifiedUser))
 			return
 		}
 
