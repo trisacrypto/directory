@@ -59,10 +59,11 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.Equal(params.Name, org.Name, "organization name does not match")
 	require.Equal(params.Domain, org.Domain, "organization domain does not match")
 
-	// User app metadata should be updated to include the organization
+	// User app metadata should be updated with the organization id
 	metadata := &auth.AppMetadata{}
 	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()))
-	require.Equal(reply.ID, metadata.OrgID, "app metadata org id does not match")
+	require.Len(metadata.Organizations, 1, "expected user to be a member of one organization")
+	require.Equal(reply.ID, metadata.Organizations[0], "expected user to be a member of the organization")
 
 	// Should not be able to create an organization with the same domain
 	metadata.Organizations = []string{reply.ID}
@@ -105,6 +106,12 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.NoError(err, "could not find organization in database")
 	require.Equal(params.Name, org.Name, "organization name does not match")
 	require.Equal(params.Domain, org.Domain, "organization domain does not match")
+
+	// User app metadata should be updated with the organization id
+	metadata = &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()))
+	require.Len(metadata.Organizations, 2, "wrong number of organizations in app metadata")
+	require.Equal(reply.ID, metadata.Organizations[1], "expected user to be a member of the organization")
 }
 
 func (s *bffTestSuite) TestListOrganizations() {

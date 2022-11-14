@@ -15,10 +15,9 @@ import (
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 )
 
-// CreateOrganization creates a new organization in the database and assigns the
-// current user to the organization. This endpoint returns an error if the organization
-// already exists, and the user must have the create:organizations permission to
-// perform this action.
+// CreateOrganization creates a new organization in the database. This endpoint returns
+// an error if the organization already exists and the user is assigned to it. The user
+// must have the create:organizations permission to perform this action.
 func (s *Server) CreateOrganization(c *gin.Context) {
 	var (
 		err  error
@@ -90,8 +89,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	}
 
 	// Assign the user to the organization
-	// TODO: Also need to add the org to the user's org list if they are a TSP
-	appdata.OrgID = org.Id
+	appdata.AddOrganization(org.Id)
 	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
 		log.Error().Err(err).Msg("could not update user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user app metadata"))
