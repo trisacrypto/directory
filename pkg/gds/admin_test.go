@@ -703,6 +703,44 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 				"timestamp":      "2021-10-21T15:52:08Z",
 			},
 		},
+		EmailLog: []map[string]interface{}{
+			{
+				"reason":    "verify_contact",
+				"subject":   "TRISA: Please verify your email address",
+				"timestamp": "2021-06-17T01:24:08Z",
+				"contact":   models.LegalContact,
+			},
+			{
+				"reason":    "verify_contact",
+				"subject":   "TRISA: Please verify your email address",
+				"timestamp": "2021-06-26T15:53:51Z",
+				"contact":   models.TechnicalContact,
+			},
+			{
+				"reason":    "deliver_certs",
+				"subject":   "Welcome to the TRISA network!",
+				"timestamp": "2021-08-19T15:47:59Z",
+				"contact":   models.LegalContact,
+			},
+			{
+				"reason":    "reissuance_reminder",
+				"subject":   "TRISA Identity Certificate Expiration",
+				"timestamp": "2021-09-03T07:06:22Z",
+				"contact":   models.LegalContact,
+			},
+			{
+				"reason":    "deliver_certs",
+				"subject":   "Welcome to the TRISA network!",
+				"timestamp": "2021-09-12T11:41:09Z",
+				"contact":   models.TechnicalContact,
+			},
+			{
+				"reason":    "reissuance_reminder",
+				"subject":   "TRISA Identity Certificate Expiration",
+				"timestamp": "2021-10-08T12:45:17Z",
+				"contact":   models.TechnicalContact,
+			},
+		},
 	}
 
 	actualVASP, err := fixtures.RemarshalProto(wire.NamespaceVASPs, actual.VASP)
@@ -1668,6 +1706,12 @@ func (s *gdsTestSuite) TestReviewReject() {
 	xray, err := s.fixtures.GetCertReq("xray")
 	require.NoError(err)
 
+	// Clear email logs to make testing easier
+	require.NoError(fixtures.ClearContactEmailLogs(charlie), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(charlie))
+	require.NoError(fixtures.ClearContactEmailLogs(julietVASP), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(julietVASP))
+
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
 		method: http.MethodPost,
@@ -1796,6 +1840,12 @@ func (s *gdsTestSuite) TestResend() {
 	require.NoError(err)
 	vaspRejected, err := s.fixtures.GetVASP("lima")
 	require.NoError(err)
+
+	// Clear email logs to make testing easier
+	require.NoError(fixtures.ClearContactEmailLogs(vaspErrored), "could not clear vasp email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(vaspErrored), "could not update vasp")
+	require.NoError(fixtures.ClearContactEmailLogs(vaspRejected), "could not clear vasp email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(vaspRejected), "could not update vasp")
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{

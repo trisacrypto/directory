@@ -81,6 +81,10 @@ func (s *certTestSuite) TestCertManager() {
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec certreq")
 
+	// Ensure that the email logs are cleared before the test
+	require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+	require.NoError(s.db.UpdateVASP(echoVASP), "could not update echo VASP")
+
 	// Create a secret that the certificate manager can retrieve
 	sm := s.secret.With(quebecCertReq.Id)
 	ctx := context.Background()

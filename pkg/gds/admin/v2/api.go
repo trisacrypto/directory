@@ -153,6 +153,7 @@ type RetrieveVASPReply struct {
 	VerifiedContacts map[string]string        `json:"verified_contacts"`
 	Traveler         bool                     `json:"traveler"`
 	AuditLog         []map[string]interface{} `json:"audit_log"`
+	EmailLog         []map[string]interface{} `json:"email_log"`
 }
 
 // UpdateVASPRequest allows the admin to PATCH a VASP record depending on the state
