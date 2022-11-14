@@ -13,11 +13,12 @@ import (
 // auth.Claims struct that uses this package for testing.
 type Claims struct {
 	jwt.RegisteredClaims
-	Email       string            `json:"https://vaspdirectory.net/email"`
-	OrgID       string            `json:"https://vaspdirectory.net/orgid"`
-	VASPs       map[string]string `json:"https://vaspdirectory.net/vasps"`
-	Scope       string            `json:"scope"`
-	Permissions []string          `json:"permissions"`
+	Email         string            `json:"https://vaspdirectory.net/email"`
+	OrgID         string            `json:"https://vaspdirectory.net/orgid"`
+	VASPs         map[string]string `json:"https://vaspdirectory.net/vasps"`
+	Organizations []string          `json:"https://vaspdirectory.net/organizations"`
+	Scope         string            `json:"scope"`
+	Permissions   []string          `json:"permissions"`
 }
 
 type OpenIDConfiguration struct {
@@ -72,14 +73,16 @@ func NewUsers() map[string]*management.User {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 	lastLogin := time.Now()
+	emailVerified := true
 	return map[string]*management.User{
 		id: {
-			ID:        &id,
-			Name:      &name,
-			Email:     &email,
-			CreatedAt: &createdAt,
-			UpdatedAt: &updatedAt,
-			LastLogin: &lastLogin,
+			ID:            &id,
+			Name:          &name,
+			Email:         &email,
+			CreatedAt:     &createdAt,
+			UpdatedAt:     &updatedAt,
+			LastLogin:     &lastLogin,
+			EmailVerified: &emailVerified,
 		},
 	}
 }
@@ -98,9 +101,10 @@ func NewUserRoles() map[string]*management.RoleList {
 // NewRoles creates some default roles for testing.
 func NewRoles() *management.RoleList {
 	names := []string{
-		"Organization Collaborator",
 		"Organization Leader",
+		"Organization Collaborator",
 		"TRISA Administrator",
+		"TRISA Service Provider",
 	}
 
 	return NewRoleList(names)
@@ -113,6 +117,7 @@ func NewRoleList(names []string) *management.RoleList {
 		n := name
 		roles = append(roles, &management.Role{
 			Name: &n,
+			ID:   &n,
 		})
 	}
 	return &management.RoleList{
