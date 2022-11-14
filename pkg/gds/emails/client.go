@@ -282,6 +282,8 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 		RegisteredDirectory: m.conf.DirectoryID,
 	}
 
+	ctx.Organization, _ = vasp.Name()
+
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	// Note: new contact iterator provides the contact email prioritization order.
@@ -352,6 +354,8 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
 
+	ctx.Organization, _ = vasp.Name()
+
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
 		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
@@ -383,7 +387,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 // a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
 // critical alert is raised.
 func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
-	ReissuanceData := ReissuanceReminderData{
+	ctx := ReissuanceReminderData{
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
 		Endpoint:            vasp.TrisaEndpoint,
@@ -391,9 +395,11 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		Reissuance:          reissuanceDate,
 	}
 
+	ctx.Organization, _ = vasp.Name()
+
 	if vasp.IdentityCertificate != nil {
-		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
-		if ReissuanceData.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		if ctx.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
 			return fmt.Errorf("could not parse vasp certificate expiration date for %s", vasp.Id)
 		}
 	}
@@ -421,11 +427,11 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		}
 
 		// Create the reissuance reminder email.
-		ReissuanceData.Name = contact.Name
+		ctx.Name = contact.Name
 		msg, err := ReissuanceReminderEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
 			contact.Name, contact.Email,
-			ReissuanceData,
+			ctx,
 		)
 		if err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
@@ -445,9 +451,9 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 
 // Helper function for SendContactReissuanceReminder that builds the list of verified contacts
 // to send reissuance reminder emails to based on the following logic:
-// 		1. Send to the Technical contact if verified, else
-// 		2. Send to the Administrative contact if verified, else
-// 		3. Send to all other verified contacts
+//  1. Send to the Technical contact if verified, else
+//  2. Send to the Administrative contact if verified, else
+//  3. Send to all other verified contacts
 func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
 	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
 		return nil, err
@@ -488,6 +494,8 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 		RegisteredDirectory: m.conf.DirectoryID,
 		Reissuance:          reissueDate,
 	}
+
+	ctx.Organization, _ = vasp.Name()
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
@@ -549,6 +557,8 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 		RegisteredDirectory: m.conf.DirectoryID,
 		WhisperURL:          whisperLink,
 	}
+
+	ctx.Organization, _ = vasp.Name()
 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors are occurring during delivery.
@@ -617,6 +627,8 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow
 		Reissuance:          reissueDate,
 		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
+
+	ctx.Organization, _ = vasp.Name()
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct

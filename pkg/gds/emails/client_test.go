@@ -14,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
@@ -44,6 +45,16 @@ func TestClientSendEmails(t *testing.T) {
 		Id:            uuid.NewString(),
 		CommonName:    "test.example.com",
 		TrisaEndpoint: "test.example.com:443",
+		Entity: &ivms101.LegalPerson{
+			Name: &ivms101.LegalPersonName{
+				NameIdentifiers: []*ivms101.LegalPersonNameId{
+					{
+						LegalPersonName:               "Acme, Inc.",
+						LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+					},
+				},
+			},
+		},
 		Contacts: &pb.Contacts{
 			Technical: &pb.Contact{
 				Name:  receipient.Name,
