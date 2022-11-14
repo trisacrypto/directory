@@ -27,6 +27,9 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 			Storage: conf.Storage,
 		}
 	} else {
+		if conf.SendGridAPIKey == "" {
+			return nil, errors.New("cannot create sendgrid client without API key")
+		}
 		m.client = sendgrid.NewSendClient(conf.SendGridAPIKey)
 	}
 

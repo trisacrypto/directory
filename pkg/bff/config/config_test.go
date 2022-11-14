@@ -152,6 +152,7 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_MAINNET_MEMBERS_ENDPOINT",
 		"GDS_BFF_DATABASE_URL",
+		"SENDGRID_API_KEY",
 	}
 
 	// Insecure must be true if no mTLS certs are provided
@@ -282,9 +283,16 @@ func TestMembersConfigValidation(t *testing.T) {
 
 func TestEmailConfigValidation(t *testing.T) {
 	conf := config.EmailConfig{}
-
-	conf.Storage = "fixtures/emails"
 	err := conf.Validate()
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
+
+	conf.SendGridAPIKey = "supersecretapikey"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
+
+	conf.ServiceEmail = "service@example.com"
+	conf.Storage = "fixtures/emails"
+	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
 
 	conf.Testing = true

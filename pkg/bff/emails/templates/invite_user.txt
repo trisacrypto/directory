@@ -8,7 +8,7 @@ If you cannot click on the link, please copy and paste the link below into your 
 
 {{ .InviteURL }}
 
-Please contact the TRISA admins at support@rotational.io if you encounter technical issues while accepting the invitation.
+Please contact the TRISA admins at support@rotational.io if you encounter technical issues while accepting the invitation. Do not reply to this email since this account is used for outgoing notifications only.
 
 Best Regards,
 TRISA Global Directory Service Team
