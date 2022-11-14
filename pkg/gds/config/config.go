@@ -225,8 +225,14 @@ func (c EmailConfig) Validate() error {
 		return errors.New("invalid configuration: admin review base URL must end in a /")
 	}
 
-	if c.Storage != "" && !c.Testing {
-		return errors.New("invalid configuration: email archiving is only supported in testing mode")
+	if !c.Testing {
+		if c.SendGridAPIKey == "" || c.ServiceEmail == "" {
+			return errors.New("invalid configuration: sendgrid api key and service email are required")
+		}
+
+		if c.Storage != "" {
+			return errors.New("invalid configuration: email archiving is only supported in testing mode")
+		}
 	}
 
 	return nil

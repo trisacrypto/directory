@@ -20,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/fixtures"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -962,7 +963,7 @@ func (s *gdsTestSuite) TestListCertificates() {
 func (s *gdsTestSuite) TestReplaceContact() {
 	s.LoadSmallFixtures()
 	defer s.ResetFixtures()
-	defer emails.PurgeMockEmails()
+	defer mock.PurgeEmails()
 	defer s.fixtures.LoadReferenceFixtures()
 
 	require := s.Require()
@@ -1655,7 +1656,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 func (s *gdsTestSuite) TestReviewReject() {
 	s.LoadFullFixtures()
 	defer s.ResetFixtures()
-	defer emails.PurgeMockEmails()
+	defer mock.PurgeEmails()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()
@@ -1786,7 +1787,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 func (s *gdsTestSuite) TestResend() {
 	s.LoadFullFixtures()
 	defer s.ResetFixtures()
-	defer emails.PurgeMockEmails()
+	defer mock.PurgeEmails()
 
 	require := s.Require()
 	a := s.svc.GetAdmin()

@@ -214,6 +214,9 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 			URL:      "trtl:///",
 			Insecure: true,
 		},
+		Email: config.EmailConfig{
+			Testing: true,
+		},
 	}.Mark()
 	require.NoError(err, "configuration is not valid")
 
