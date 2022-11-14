@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -540,4 +541,26 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 	default:
 		return nil, fmt.Errorf("unknown namespace %q", namespace)
 	}
+}
+
+// ClearContactEmailLogs clears the contact email logs on a VASP object. Tests which
+// assert against state on the contact email logs should call this method to ensure
+// that the logs are empty before reaching the test point.
+func ClearContactEmailLogs(vasp *pb.VASP) (err error) {
+	contacts := vasp.Contacts
+	iter := models.NewContactIterator(contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		extra := &models.GDSContactExtraData{}
+		if contact.Extra != nil {
+			if err = contact.Extra.UnmarshalTo(extra); err != nil {
+				return err
+			}
+			extra.EmailLog = nil
+			if contact.Extra, err = anypb.New(extra); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

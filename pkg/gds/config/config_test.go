@@ -184,6 +184,7 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_MEMBERS_CERT_POOL",
 		"GDS_DATABASE_CERT_PATH",
 		"GDS_DATABASE_POOL_PATH",
+		"SENDGRID_API_KEY",
 	}
 
 	// Collect required environment variables and cleanup after
@@ -241,15 +242,24 @@ func TestEmailConfigValidation(t *testing.T) {
 
 	conf.AdminReviewBaseURL += "/"
 	err = conf.Validate()
-	require.NoError(t, err)
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
 
+	conf.SendGridAPIKey = "supersecretapikey"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
+
+	conf.ServiceEmail = "service@example.com"
 	conf.Storage = "fixtures/emails"
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
 
+	conf.Storage = ""
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration in non-testing mode")
+
 	conf.Testing = true
 	err = conf.Validate()
-	require.NoError(t, err)
+	require.NoError(t, err, "expected valid configuration in testing mode")
 }
 
 func TestAdminConfigValidation(t *testing.T) {

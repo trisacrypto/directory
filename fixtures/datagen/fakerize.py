@@ -292,6 +292,23 @@ def make_person(vasp, verified=True, token="", rng=random.Random()):
     name = fake.name()
     domain = rng.choice(DOMAINS)
     email = name.lower().split()[0].split(".")[0] + "@" + vasp.replace(" ", "").lower() + domain
+    dates = make_dates(rng=rng)
+    email_log = [{
+        "timestamp": dates[0],
+        "reason": "verify_contact",
+        "subject": "TRISA: Please verify your email address",
+    }]
+    if verified:
+        email_log.append({
+            "timestamp": dates[1],
+            "reason": "deliver_certs",
+            "subject": "Welcome to the TRISA network!",
+        })
+        email_log.append({
+            "timestamp": dates[2],
+            "reason": "reissuance_reminder",
+            "subject": "TRISA Identity Certificate Expiration",
+        })
     return {
         "name": name,
         "email": email,
@@ -300,7 +317,7 @@ def make_person(vasp, verified=True, token="", rng=random.Random()):
             "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
             "verified": verified,
             "token": token,
-            "email_log": [],
+            "email_log": email_log,
         },
     }
 

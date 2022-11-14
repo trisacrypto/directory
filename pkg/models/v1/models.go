@@ -176,6 +176,67 @@ func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err erro
 	return nil
 }
 
+// VASPEmailEntry represents a log entry relevant to a single contact. It embeds an
+// email log entry and adds contact-specific information so that higher level methods
+// reading a unified contact log can distinguish between entries for different contacts.
+// TODO: This metadata should really be stored in the email log entry itself.
+type VASPEmailEntry struct {
+	*EmailLogEntry
+	ContactType string
+}
+
+// GetVASPEmailLog computes a unified email log which is a time ordered representation
+// of all the emails sent to a VASP's contacts.
+func GetVASPEmailLog(vasp *pb.VASP) (emails []*VASPEmailEntry, err error) {
+	emails = make([]*VASPEmailEntry, 0)
+
+	// Iterate over all the contacts on the VASP, this skips any nil contacts.
+	iter := NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		contact, kind := iter.Value()
+		var contactLog []*EmailLogEntry
+		if contactLog, err = GetEmailLog(contact); err != nil {
+			return nil, err
+		}
+
+		// Merge the contact log into the unified log while maintaining timestamp order
+		i, j := 0, 0
+		for i < len(emails) && j < len(contactLog) {
+			var logTime, contactTime time.Time
+			if logTime, err = time.Parse(time.RFC3339, emails[i].Timestamp); err != nil {
+				return nil, err
+			}
+
+			if contactTime, err = time.Parse(time.RFC3339, contactLog[j].Timestamp); err != nil {
+				return nil, err
+			}
+
+			if contactTime.Before(logTime) {
+				emails = append(emails, nil)
+				copy(emails[i+1:], emails[i:])
+				emails[i] = &VASPEmailEntry{
+					EmailLogEntry: contactLog[j],
+					ContactType:   kind,
+				}
+				j++
+			} else {
+				i++
+			}
+		}
+
+		// Append any remaining entries
+		for j < len(contactLog) {
+			emails = append(emails, &VASPEmailEntry{
+				EmailLogEntry: contactLog[j],
+				ContactType:   kind,
+			})
+			j++
+		}
+	}
+
+	return emails, nil
+}
+
 // TODO: cleanup the duplicated code between this function and contacts.GetSentEmailCount
 func GetSentAdminEmailCount(vasp *pb.VASP, reason string, timeWindowDays int) (sent int, err error) {
 	var adminEmailLog []*EmailLogEntry
