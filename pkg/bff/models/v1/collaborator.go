@@ -12,8 +12,9 @@ func (collab *Collaborator) Key() string {
 		return ""
 	}
 
+	// Key must be url-safe since it will be used in the URL path on various endpoints
 	hash := md5.Sum([]byte(collab.Email))
-	return base64.RawStdEncoding.EncodeToString(hash[:])
+	return base64.RawURLEncoding.EncodeToString(hash[:])
 }
 
 // Validate a collaborator record, ensuring that all the required fields exist for
