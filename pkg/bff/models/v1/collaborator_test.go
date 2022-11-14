@@ -7,6 +7,29 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
+func TestCollaboratorKeys(t *testing.T) {
+	// Should return an empty key when there is no email address
+	collab := &models.Collaborator{}
+	require.Empty(t, collab.Key(), "expected empty key when email address is missing")
+
+	// Should return a base64-encoded string that is url-safe and does not contain padding
+	// Note: This fixture generates a key with / and + characters using standard encoding
+	collab = &models.Collaborator{
+		Email: "fsdfsfds@local.dev",
+	}
+	reserved := []string{"+", "/", "="}
+	key := collab.Key()
+	require.Len(t, key, 22, "expected key to be 22 characters long")
+	for _, r := range reserved {
+		require.NotContains(t, key, r, "key contains reserved character")
+	}
+
+	// Different email addresses should return different keys
+	collab.Email = "alice@example.com"
+	require.Len(t, collab.Key(), 22, "expected key to be 22 characters long")
+	require.NotEqual(t, collab.Key(), key, "expected different key for different email address")
+}
+
 func TestValidateCollaborator(t *testing.T) {
 	// Collaborator must have an email address
 	collab := &models.Collaborator{}
