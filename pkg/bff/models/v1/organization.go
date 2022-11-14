@@ -57,6 +57,27 @@ func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	return nil
 }
 
+// Retrieve a collaborator by email address. Returns nil if the collaborator does not
+// exist on the organization.
+func (org *Organization) GetCollaborator(email string) (collab *Collaborator) {
+	// Create an intermediate object for consistent retrieval
+	obj := &Collaborator{Email: email}
+
+	var ok bool
+	if collab, ok = org.Collaborators[obj.Key()]; !ok {
+		return nil
+	}
+	return collab
+}
+
+// Delete a collaborator by email address. Note that this will not return an error if
+// the collaborator does not exist on the organization.
+func (org *Organization) DeleteCollaborator(email string) {
+	// Create an intermediate object for consistent indexing
+	obj := &Collaborator{Email: email}
+	delete(org.Collaborators, obj.Key())
+}
+
 func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 	switch t := orgID.(type) {
 	case string:
