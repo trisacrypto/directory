@@ -2,7 +2,6 @@ package bff_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -67,7 +66,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.NoError(err, "could not add collaborator to organization")
 	require.Equal(request.Email, collab.Email, "expected collaborator email to match request email")
 	require.NotEmpty(collab.CreatedAt, "expected collaborator to have a created at timestamp")
-	require.Empty(collab.VerifiedAt, "expected collaborator to not have a verified at timestamp")
+	require.False(collab.Verified, "expected collaborator to not be verified")
 
 	// Collaborator should be in the database
 	org, err = s.DB().RetrieveOrganization(org.UUID())
@@ -77,7 +76,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.True(ok, "expected collaborator to be in the organization")
 	require.Equal(request.Email, collab.Email, "expected collaborator email to match")
 	require.NotEmpty(collab.CreatedAt, "expected collaborator to have a created at timestamp")
-	require.Empty(collab.VerifiedAt, "expected collaborator to not have a verified at timestamp")
+	require.False(collab.Verified, "expected collaborator to not be verified")
 
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
@@ -132,9 +131,9 @@ func (s *bffTestSuite) TestListCollaborators() {
 
 	// Add a new collaborator to the organization
 	leopold := &models.Collaborator{
-		Email: "leopold.wentzel@gmail.com",
-		UserId: authtest.UserID,
-		VerifiedAt: time.Now().Format(time.RFC3339Nano),
+		Email:    "leopold.wentzel@gmail.com",
+		UserId:   authtest.UserID,
+		Verified: true,
 	}
 	leopoldRoles := []string{authtest.UserRole}
 	org.Collaborators = make(map[string]*models.Collaborator)
@@ -247,7 +246,7 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	s.requireError(err, http.StatusBadRequest, "cannot update roles for unverified collaborator", "expected error when collaborator is not verified")
 
 	// Create a verified collaborator in the database
-	collab.VerifiedAt = time.Now().Format(time.RFC3339Nano)
+	collab.Verified = true
 	collab.UserId = authtest.UserID
 	org, err = s.DB().RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
@@ -256,7 +255,7 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 
 	// Should return an error if there is an invalid role
 	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), collab.Id, params)
-	s.requireError(err, http.StatusBadRequest, fmt.Sprintf("could not find role %q in 3 available roles", params.Roles[0]), "expected error when role is invalid")
+	s.requireError(err, http.StatusBadRequest, bff.ErrInvalidUserRole.Error(), "expected error when role is invalid")
 
 	// Successfully updating the roles of a collaborator
 	params.Roles = []string{"Organization Collaborator", "Organization Leader"}
@@ -339,7 +338,7 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	require.NoError(err, "could not add collaborator to organization")
 
 	// Configure a verified collaborator in the database
-	collab.VerifiedAt = time.Now().Format(time.RFC3339Nano)
+	collab.Verified = true
 	collab.UserId = authtest.UserID
 	org, err = s.DB().RetrieveOrganization(org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
@@ -369,15 +368,15 @@ func (s *bffTestSuite) TestInsortCollaborator() {
 
 	// Create some collaborators
 	alice := &models.Collaborator{
-		Email: "alice@example.com",
+		Email:     "alice@example.com",
 		CreatedAt: time.Date(2019, 1, 3, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
 	}
 	bob := &models.Collaborator{
-		Email: "bob@example.com",
+		Email:     "bob@example.com",
 		CreatedAt: time.Date(2019, 1, 2, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
 	}
 	charlie := &models.Collaborator{
-		Email: "charlie@example.com",
+		Email:     "charlie@example.com",
 		CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339Nano),
 	}
 
