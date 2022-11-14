@@ -22,6 +22,8 @@ type BFFClient interface {
 	ListUserRoles(context.Context) ([]string, error)
 
 	// Authenticated Endpoints
+	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
+	ListOrganizations(context.Context) ([]*OrganizationReply, error)
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
@@ -66,6 +68,21 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// OrganizationParams is used to create new organizations.
+type OrganizationParams struct {
+	Name   string `json:"name"`
+	Domain string `json:"domain"`
+}
+
+// OrganizationReply contains high level information about an organization.
+type OrganizationReply struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Domain       string `json:"domain"`
+	CreatedAt    string `json:"created_at"`
+	RefreshToken bool   `json:"refresh_token,omitempty"`
+}
 
 // UpdateRolesParams contains a list of new roles for a collaborator.
 type UpdateRolesParams struct {

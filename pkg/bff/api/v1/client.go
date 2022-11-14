@@ -171,6 +171,38 @@ func (s *APIv1) ListUserRoles(ctx context.Context) (out []string, err error) {
 	return out, nil
 }
 
+// Create a new organization.
+func (s *APIv1) CreateOrganization(ctx context.Context, in *OrganizationParams) (out *OrganizationReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/organizations", in, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &OrganizationReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// List available organizations.
+func (s *APIv1) ListOrganizations(ctx context.Context) (out []*OrganizationReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/organizations", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = make([]*OrganizationReply, 0)
+	if _, err = s.Do(req, &out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Add a collaborator to an organization.
 func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
 	// Make the HTTP request

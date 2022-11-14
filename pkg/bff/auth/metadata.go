@@ -5,13 +5,40 @@ import "encoding/json"
 // AppMetadata makes it easier to serialize and deserialize JSON from the auth0
 // app_metadata assigned to the user by the BFF (and ensures the data is structured).
 type AppMetadata struct {
-	OrgID string `json:"orgid"`
-	VASPs VASPs  `json:"vasps"`
+	OrgID         string   `json:"orgid"`
+	VASPs         VASPs    `json:"vasps"`
+	Organizations []string `json:"organizations"`
 }
 
 type VASPs struct {
 	MainNet string `json:"mainnet"`
 	TestNet string `json:"testnet"`
+}
+
+func (meta *AppMetadata) Equals(other *AppMetadata) bool {
+	if meta.OrgID != other.OrgID {
+		return false
+	}
+
+	if meta.VASPs != other.VASPs {
+		return false
+	}
+
+	if len(meta.Organizations) != len(other.Organizations) {
+		return false
+	}
+
+	for i, value := range meta.Organizations {
+		if value != other.Organizations[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (meta *AppMetadata) GetOrganizations() []string {
+	return meta.Organizations
 }
 
 func (meta *AppMetadata) Load(appdata map[string]interface{}) (err error) {
