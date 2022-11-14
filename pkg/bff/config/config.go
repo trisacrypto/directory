@@ -38,6 +38,7 @@ type Config struct {
 	TestNet      NetworkConfig
 	MainNet      NetworkConfig
 	Database     config.StoreConfig
+	Email        EmailConfig
 	Sentry       sentry.Config
 	processed    bool
 }
@@ -79,6 +80,14 @@ type MTLSConfig struct {
 	Insecure bool   `split_words:"true"`
 	CertPath string `split_words:"true"`
 	PoolPath string `split_words:"true"`
+}
+
+// EmailConfig defines how emails are sent from the BFF.
+type EmailConfig struct {
+	ServiceEmail   string `envconfig:"GDS_BFF_SERVICE_EMAIL" default:"TRISA Directory Service <admin@vaspdirectory.net>"`
+	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
+	Testing        bool   `split_words:"true" default:"false"`
+	Storage        string `split_words:"true" default:""`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -128,6 +137,10 @@ func (c Config) Validate() (err error) {
 	}
 
 	if err = c.Database.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Email.Validate(); err != nil {
 		return err
 	}
 
@@ -239,4 +252,17 @@ func (c MTLSConfig) DialOption(endpoint string) (opt grpc.DialOption, err error)
 	}
 
 	return opt, nil
+}
+
+func (c EmailConfig) Validate() error {
+	if !c.Testing {
+		if c.SendGridAPIKey == "" || c.ServiceEmail == "" {
+			return errors.New("invalid configuration: sendgrid api key and service email are required")
+		}
+
+		if c.Storage != "" {
+			return errors.New("invalid configuration: email archiving is only supported in testing mode")
+		}
+	}
+	return nil
 }

@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	emailutils "github.com/trisacrypto/directory/pkg/utils/emails"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -37,7 +39,7 @@ func setupMIMEDir(t *testing.T) {
 // generateMIME writes an SGMailV3 email to a MIME file for manual inspection if the eyeball flag is set.
 func generateMIME(t *testing.T, msg *sgmail.SGMailV3, name string) {
 	if *eyeball {
-		err := emails.WriteMIME(msg, filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()), name))
+		err := emailutils.WriteMIME(msg, filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()), name))
 		require.NoError(t, err)
 	}
 }
@@ -241,7 +243,7 @@ func (suite *EmailTestSuite) BeforeTest(suiteName, testName string) {
 }
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
-	emails.PurgeMockEmails()
+	mock.PurgeEmails()
 }
 
 func (suite *EmailTestSuite) TearDownSuite() {
@@ -264,10 +266,10 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "verify-contact.mim")
 }
@@ -288,10 +290,10 @@ func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
 	msg, err := emails.ReviewRequestEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "review-request.mim")
 }
@@ -312,10 +314,10 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	msg, err := emails.RejectRegistrationEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reject-registration.mim")
 }
@@ -336,10 +338,10 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	msg, err := emails.DeliverCertsEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, "testdata/foo.zip", data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "deliver-certs.mim")
 }
@@ -371,10 +373,10 @@ func (suite *EmailTestSuite) TestSendExpiresAdminNotificationEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "expires-admin-notification.mim")
 }
@@ -406,10 +408,10 @@ func (suite *EmailTestSuite) TestSendReissuanceReminderEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-reminder.mim")
 }
@@ -439,10 +441,10 @@ func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-started.mim")
 }
@@ -474,10 +476,10 @@ func (suite *EmailTestSuite) TestSendReissuanceAdminNotificationEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-admin-notification.mim")
 }

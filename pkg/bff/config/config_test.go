@@ -54,6 +54,10 @@ var testEnv = map[string]string{
 	"GDS_BFF_DATABASE_INSECURE":             "true",
 	"GDS_BFF_DATABASE_CERT_PATH":            "fixtures/creds/certs.pem",
 	"GDS_BFF_DATABASE_POOL_PATH":            "fixtures/creds/pool.zip",
+	"GDS_BFF_SERVICE_EMAIL":                 "test@example.com",
+	"SENDGRID_API_KEY":                      "foo1234",
+	"GDS_BFF_EMAIL_TESTING":                 "true",
+	"GDS_BFF_EMAIL_STORAGE":                 "fixtures/emails",
 	"GDS_BFF_SENTRY_DSN":                    "https://something.ingest.sentry.io",
 	"GDS_BFF_SENTRY_ENVIRONMENT":            "test",
 	"GDS_BFF_SENTRY_RELEASE":                "1.4",
@@ -123,6 +127,10 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Database.Insecure)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_CERT_PATH"], conf.Database.CertPath)
 	require.Equal(t, testEnv["GDS_BFF_DATABASE_POOL_PATH"], conf.Database.PoolPath)
+	require.Equal(t, testEnv["GDS_BFF_SERVICE_EMAIL"], conf.Email.ServiceEmail)
+	require.Equal(t, testEnv["SENDGRID_API_KEY"], conf.Email.SendGridAPIKey)
+	require.True(t, conf.Email.Testing)
+	require.Equal(t, testEnv["GDS_BFF_EMAIL_STORAGE"], conf.Email.Storage)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
@@ -144,6 +152,7 @@ func TestRequiredConfig(t *testing.T) {
 		"GDS_BFF_MAINNET_DIRECTORY_ENDPOINT",
 		"GDS_BFF_MAINNET_MEMBERS_ENDPOINT",
 		"GDS_BFF_DATABASE_URL",
+		"SENDGRID_API_KEY",
 	}
 
 	// Insecure must be true if no mTLS certs are provided
@@ -268,6 +277,25 @@ func TestMembersConfigValidation(t *testing.T) {
 	require.EqualError(t, err, "invalid members configuration: connecting over mTLS requires certs and cert pool")
 
 	conf.MTLS.PoolPath = "fixtures/pool.zip"
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestEmailConfigValidation(t *testing.T) {
+	conf := config.EmailConfig{}
+	err := conf.Validate()
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
+
+	conf.SendGridAPIKey = "supersecretapikey"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: sendgrid api key and service email are required")
+
+	conf.ServiceEmail = "service@example.com"
+	conf.Storage = "fixtures/emails"
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
+
+	conf.Testing = true
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

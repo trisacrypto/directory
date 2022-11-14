@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -36,7 +37,7 @@ func (s *gdsTestSuite) TestRegister() {
 	s.SetupGDS()
 	defer s.ResetFixtures()
 	defer s.fixtures.LoadReferenceFixtures()
-	defer emails.PurgeMockEmails()
+	defer mock.PurgeEmails()
 	require := s.Require()
 	ctx := context.Background()
 	charlie, err := s.fixtures.GetVASP("charliebank")
@@ -384,7 +385,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	s.LoadFullFixtures()
 	s.SetupGDS()
 	defer s.ResetFixtures()
-	defer emails.PurgeMockEmails()
+	defer mock.PurgeEmails()
 	require := s.Require()
 	ctx := context.Background()
 
