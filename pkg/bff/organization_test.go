@@ -68,7 +68,7 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	metadata.Organizations = []string{reply.ID}
 	appdata, err := metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
-	s.auth.UseAppMetadata(appdata)
+	s.auth.SetUserAppMetadata(appdata)
 	_, err = s.client.CreateOrganization(context.TODO(), params)
 	s.requireError(err, http.StatusConflict, "organization with domain name already exists", "expected error when organization already exists")
 
@@ -92,7 +92,7 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	params.Domain = "bobvasp.io"
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
-	s.auth.UseAppMetadata(appdata)
+	s.auth.SetUserAppMetadata(appdata)
 	require.NoError(s.DB().DeleteOrganization(org.UUID()), "could not delete organization from database")
 	reply, err = s.client.CreateOrganization(context.TODO(), params)
 	require.NoError(err, "create organization call failed")
@@ -139,7 +139,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 	metadata.Organizations = []string{"00000000-0000-0000-0000-000000000000"}
 	appdata, err := metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
-	s.auth.UseAppMetadata(appdata)
+	s.auth.SetUserAppMetadata(appdata)
 	reply, err = s.client.ListOrganizations(context.TODO())
 	require.NoError(err, "list organizations call failed")
 	require.Empty(reply, "expected empty response")
@@ -167,7 +167,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 	metadata.Organizations = []string{alice.Id, bob.Id, charlie.Id}
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
-	s.auth.UseAppMetadata(appdata)
+	s.auth.SetUserAppMetadata(appdata)
 
 	expected := []*api.OrganizationReply{
 		{

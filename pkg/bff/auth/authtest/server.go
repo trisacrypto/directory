@@ -270,9 +270,19 @@ func (s *Server) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type RoleParams struct {
+	Roles []string `json:"roles"`
+}
+
 func (s *Server) AssignUserRoles(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.userRoles[UserID]; ok {
 		w.WriteHeader(http.StatusNoContent)
+		request := &RoleParams{}
+		json.NewDecoder(r.Body).Decode(request)
+		for _, role := range request.Roles {
+			r := role
+			s.userRoles[UserID].Roles = append(s.userRoles[UserID].Roles, &management.Role{Name: &r})
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -282,6 +292,16 @@ func (s *Server) RemoveUserRoles(w http.ResponseWriter, r *http.Request) {
 	// Note: This does not actually change the state on the server
 	if _, ok := s.userRoles[UserID]; ok {
 		w.WriteHeader(http.StatusNoContent)
+		request := &RoleParams{}
+		json.NewDecoder(r.Body).Decode(request)
+		for _, role := range request.Roles {
+			for i, r := range s.userRoles[UserID].Roles {
+				if *r.Name == role {
+					s.userRoles[UserID].Roles = append(s.userRoles[UserID].Roles[:i], s.userRoles[UserID].Roles[i+1:]...)
+					break
+				}
+			}
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -323,6 +343,36 @@ func (s *Server) GetUserAppMetadata() map[string]interface{} {
 }
 
 // Update the test user with unstructured app metadata.
-func (s *Server) UseAppMetadata(appdata map[string]interface{}) {
+func (s *Server) SetUserAppMetadata(appdata map[string]interface{}) {
 	s.users[UserID].AppMetadata = appdata
+}
+
+// Set the current user email.
+func (s *Server) SetUserEmail(email string) {
+	e := email
+	s.users[UserID].Email = &e
+}
+
+// Reset the current user email to the default.
+func (s *Server) ResetUserEmail() {
+	e := Email
+	s.users[UserID].Email = &e
+}
+
+// Reset the test user's app metadata to the default.
+func (s *Server) ResetUserAppMetadata() {
+	s.users[UserID].AppMetadata = map[string]interface{}{}
+}
+
+// Set the current user's roles.
+func (s *Server) SetUserRoles(roles []string) {
+	s.userRoles[UserID] = NewRoleList(roles)
+}
+
+// Get the current user's roles.
+func (s *Server) GetUserRoles() (names []string) {
+	for _, role := range s.userRoles[UserID].Roles {
+		names = append(names, *role.Name)
+	}
+	return names
 }

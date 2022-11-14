@@ -142,10 +142,10 @@ func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out
 }
 
 // Login post-processes an Auth0 login or registration and sets CSRF cookies.
-func (s *APIv1) Login(ctx context.Context) (err error) {
+func (s *APIv1) Login(ctx context.Context, in *LoginParams) (err error) {
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/users/login", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/users/login", in, nil); err != nil {
 		return err
 	}
 

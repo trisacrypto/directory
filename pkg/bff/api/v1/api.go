@@ -18,7 +18,7 @@ type BFFClient interface {
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 
 	// User Management Endpoints
-	Login(context.Context) error
+	Login(context.Context, *LoginParams) error
 	ListUserRoles(context.Context) ([]string, error)
 
 	// Authenticated Endpoints
@@ -82,6 +82,12 @@ type OrganizationReply struct {
 	Domain       string `json:"domain"`
 	CreatedAt    string `json:"created_at"`
 	RefreshToken bool   `json:"refresh_token,omitempty"`
+}
+
+// LoginParams contains additional information needed for post-authentication checks
+// during user login.
+type LoginParams struct {
+	OrgID string `json:"orgid"`
 }
 
 // UpdateRolesParams contains a list of new roles for a collaborator.

@@ -48,11 +48,11 @@ message Collaborator {
     string user_id = 3;
     string name = 4;
     repeated string roles = 5;
+    bool verified = 6;
 
     // Metadata as RFC3339Nano Timestamps
     string created_at = 10;
     string modified_at = 11;
-    string verified_at = 12;
 }
 
 // FormState contains the current state of an organization's registration form to

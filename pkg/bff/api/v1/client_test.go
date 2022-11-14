@@ -229,7 +229,7 @@ func TestLogin(t *testing.T) {
 	require.NoError(t, err, "couldn't create BFF client with https and credentials")
 
 	// Execute the Login request
-	err = bff.Login(context.TODO())
+	err = bff.Login(context.TODO(), &api.LoginParams{})
 	require.NoError(t, err, "could not login using the bff client")
 
 	// Check to ensure double cookies are set. This doesn't test our code, but ensures
