@@ -207,6 +207,9 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// Return an error if the user is not a collaborator in the organization
+	// Note: This is a critical test case because it ensures that a user cannot login
+	// to any organization by simply passing the orgID in the params. Instead, they
+	// must already be listed as a collaborator in the organization in the database.
 	err = s.client.Login(context.TODO(), params)
 	s.requireError(err, http.StatusUnauthorized, "user is not authorized to access this organization")
 

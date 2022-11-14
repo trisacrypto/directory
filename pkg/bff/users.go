@@ -134,6 +134,10 @@ func (s *Server) Login(c *gin.Context) {
 		}
 
 		// Retrieve the user's collaborator record from the organization
+		// Note: This is a critical security check because it ensures that the user was
+		// really invited by an organization leader via the AddCollaborator endpoint
+		// which started the invite workflow. Without this check, any user could log
+		// into any organization simply by providing the orgID in the request.
 		var collaborator *models.Collaborator
 		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
 			log.Debug().Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
