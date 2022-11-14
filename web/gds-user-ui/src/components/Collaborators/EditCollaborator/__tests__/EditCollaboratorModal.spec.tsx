@@ -5,13 +5,12 @@ import { useMutation } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import nock from 'nock';
-import DeleteCollaboratorModal from '../DeleteCollaboratorModal';
+import EditCollaboratorModal from '../EditCollaboratorModal';
 import { act, render } from 'utils/test-utils';
 import { collaboratorMockValue } from 'components/AddCollaboratorModal/__mocks__';
 import * as useCollaborators from 'components/Collaborators/useFetchCollaborator';
-import * as useDeleteCollaborator from '../useDeleteCollaborator';
+import * as useUpdateCollaborator from '../useUpdateCollaborator';
 const mockUseMutation = useMutation as jest.Mock;
-// mock chakra ui modal component to be able to test it
 
 const divWithChildrenMock = (children: any, identifier: any) => (
   <div data-testId={identifier}>{children}</div>
@@ -24,7 +23,7 @@ jest.mock('@chakra-ui/react', () => ({
   ModalOverlay: jest.fn(({ children }) => divWithChildrenMock(children, 'overlay')),
   ModalContent: jest.fn(({ children }) => divWithChildrenMock(children, 'content')),
   ModalHeader: jest.fn(({ children }) =>
-    divWithChildrenMock(children, 'delete-collaborator-modal')
+    divWithChildrenMock(children, 'update-collaborator-modal')
   ),
   ModalFooter: jest.fn(({ children }) => divWithChildrenMock(children, 'footer')),
   ModalBody: jest.fn(({ children }) => divWithChildrenMock(children, 'body')),
@@ -34,18 +33,19 @@ jest.mock('@chakra-ui/react', () => ({
 // render delete collaborator component
 function renderComponent() {
   const Props = {
-    collaboratorId: '1'
+    collaboratorId: '1',
+    roles: ['ADMIN']
   };
-  return render(<DeleteCollaboratorModal {...Props} />);
+  return render(<EditCollaboratorModal {...Props} />);
 }
 
 const mockCollaborators = jest.fn();
 const mockGetAllCollaborators = jest.fn();
-const mockDeleteCollaborator = jest.fn();
+const mockUpdateCollaborator = jest.fn();
 
 const useFetchCollaboratorsMock = jest.spyOn(useCollaborators, 'useFetchCollaborators');
-const useDeleteCollaboratorMock = jest.spyOn(useDeleteCollaborator, 'useDeleteCollaborator');
-describe('DeleteCollaboratorModal', () => {
+const useUpdateCollaboratorMock = jest.spyOn(useUpdateCollaborator, 'useUpdateCollaborator');
+describe('UpdateCollaboratorModal', () => {
   beforeAll(() => {
     act(() => {
       dynamicActivate('en');
@@ -62,10 +62,10 @@ describe('DeleteCollaboratorModal', () => {
       wasCollaboratorsFetched: false,
       isFetchingCollaborators: false
     });
-    useDeleteCollaboratorMock.mockReturnValue({
-      isDeleting: false,
-      wasCollaboratorDeleted: false,
-      deleteCollaborator: mockDeleteCollaborator,
+    useUpdateCollaboratorMock.mockReturnValue({
+      isUpdating: false,
+      wasCollaboratorUpdated: false,
+      updateCollaborator: mockUpdateCollaborator,
       hasCollaboratorFailed: false,
       errorMessage: '',
       reset(): void {
@@ -81,7 +81,7 @@ describe('DeleteCollaboratorModal', () => {
 
   it('should render the modal', () => {
     renderComponent();
-    expect(screen.getByTestId('delete-collaborator-modal')).toBeInTheDocument();
+    expect(screen.getByTestId('update-collaborator-modal')).toBeInTheDocument();
   });
 
   it('useCollaborators should be called', () => {
@@ -89,9 +89,9 @@ describe('DeleteCollaboratorModal', () => {
     expect(useFetchCollaboratorsMock).toHaveBeenCalled();
   });
 
-  it('useDeleteCollaborator should be called', () => {
+  it('useUpdateCollaborator should be called', () => {
     renderComponent();
-    expect(useDeleteCollaboratorMock).toHaveBeenCalled();
+    expect(useUpdateCollaboratorMock).toHaveBeenCalled();
   });
 
   it('should show collaborator email in the modal', () => {

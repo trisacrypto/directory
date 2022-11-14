@@ -17,7 +17,7 @@ import FormLayout from 'layouts/FormLayout';
 import React, { useState } from 'react';
 import { Trans } from '@lingui/macro';
 import { FiMail } from 'react-icons/fi';
-import EditCollaboratorModal from './EditCollaboratorModal';
+import EditCollaboratorModal from './EditCollaborator/EditCollaboratorModal';
 import DeleteCollaboratorModal from './DeleteCollaborator/DeleteCollaboratorModal';
 import AddCollaboratorModal from 'components/AddCollaboratorModal';
 // import { getCollaborators, setCollaborators } from 'application/store/selectors/collaborator';
@@ -27,6 +27,7 @@ import type { Collaborator } from './CollaboratorType';
 import { formatIsoDate } from 'utils/formate-date';
 import { sortCollaboratorsByRecentDate } from './lib';
 import Loader from 'components/Loader';
+import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
 // const rows: Row[] = [
 //   {
 //     id: '18001',
@@ -59,6 +60,7 @@ const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
+  const { roles: userRoles } = useFetchUserRoles();
   return (
     <>
       <RowItem>
@@ -79,8 +81,8 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
               <Link color="blue" href={`mailto:${row?.email}`}>
                 <FiMail fontSize="26px" />
               </Link>
-              <EditCollaboratorModal collaboratorId={row.id} />
-              <DeleteCollaboratorModal collaboratorId={row.id} />
+              <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
+              <DeleteCollaboratorModal collaboratorId={row?.id} />
             </HStack>
           </Td>
         </>
