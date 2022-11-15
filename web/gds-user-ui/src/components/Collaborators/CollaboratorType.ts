@@ -1,5 +1,5 @@
 export interface Collaborator {
-    id?: string;
+    id: string;
     email: string;
     user_id?: string;
     name: string;
