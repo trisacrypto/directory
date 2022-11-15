@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom'
 import dayjs from 'dayjs';
-import { StatusLabel } from 'constants/index';
+import { StatusLabel, Status as VerificationStatus } from 'constants/index';
 import TrisaFavicon from 'assets/images/trisa_favicon.png'
 import CiphertraceFavicon from 'assets/images/ciphertrace.ico'
 import SimpleBar from 'simplebar-react';
@@ -11,8 +12,52 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { actionType, useModal } from 'contexts/modal';
 import OvalLoader from 'components/OvalLoader';
 import NoData from 'components/NoData';
+import filter from 'lodash/filter';
+import isDate from 'lodash/isDate';
 dayjs.extend(relativeTime)
 
+/**
+ * Verifiy that the passed date is less than 30days
+ * @param {date} date 
+ * @returns 
+ */
+function isRecent(date = '') {
+
+    if (dayjs(date).isValid) {
+        const tirthyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+        const now = dayjs();
+        const dateDiff = now.diff(date)
+
+        return Math.abs(dateDiff) <= tirthyDaysInMs
+    }
+
+    return false
+}
+
+export const getRecentVasps = (vasps) => vasps?.filter(vasp => {
+    const now = dayjs()
+    const certificateExpirationDate = vasp?.certificate_expiration && dayjs(vasp?.certificate_expiration)
+    const certificateIssuedDate = vasp?.certificate_issued && dayjs(vasp?.certificate_issued)
+    const verificationStatus = vasp?.verification_status
+
+    if (certificateExpirationDate && certificateIssuedDate) {
+
+        if (dayjs(certificateExpirationDate).isValid() || dayjs(certificateIssuedDate).isValid()) {
+
+            if (verificationStatus === VerificationStatus.PENDING_REVIEW) {
+                return vasp
+            }
+
+            if (certificateExpirationDate.isAfter(now) && isRecent(certificateExpirationDate)) {
+                return vasp
+            }
+
+            if (certificateIssuedDate.isBefore(now) && isRecent(certificateIssuedDate)) {
+                return vasp
+            }
+        }
+    }
+})
 
 const PendingReviewsTable = ({ data }) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });
@@ -80,12 +125,13 @@ const PendingReviewsTable = ({ data }) => {
 }
 
 const Tasks = ({ data, isLoading }) => {
+    const recentVasps = getRecentVasps(data?.vasps || [])
 
     if (isLoading || !data) {
         return (
             <Card className='w-100'>
                 <Card.Body>
-                    <h4 className="header-title mb-3">Pending Reviews</h4>
+                    <h4 className="header-title mb-3">Pending and Recent Activity</h4>
                     <OvalLoader />
                 </Card.Body>
             </Card>
@@ -95,12 +141,12 @@ const Tasks = ({ data, isLoading }) => {
     return (
         <Card className='w-100'>
             <Card.Body>
-                <h4 className="header-title mb-3">Pending Reviews</h4>
+                <h4 className="header-title mb-3">Pending and Recent Activity</h4>
                 {
-                    (isLoading || !data) && <OvalLoader />
+                    (isLoading || !recentVasps) && <OvalLoader />
                 }
                 {
-                    !data?.vasps?.length ? <NoData title='No available pending registrations' /> : <PendingReviewsTable data={data?.vasps} />
+                    recentVasps?.length ? <PendingReviewsTable data={recentVasps} /> : <NoData title='No available pending registrations' />
                 }
             </Card.Body>
         </Card>
