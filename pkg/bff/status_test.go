@@ -185,6 +185,7 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 		Auth0: config.AuthConfig{
 			Domain:        "auth.localhost",
 			Audience:      "http://localhost",
+			RedirectURL:   "http://localhost/auth/callback",
 			ProviderCache: 5 * time.Minute,
 			Testing:       true,
 		},

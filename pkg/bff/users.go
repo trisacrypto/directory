@@ -3,6 +3,7 @@ package bff
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -290,6 +291,23 @@ func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
 	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+}
+
+// FindUserByEmail returns the Auth0 user record by email address.
+func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
+	var users []*management.User
+	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
+		return nil, err
+	}
+
+	switch len(users) {
+	case 0:
+		return nil, ErrUserEmailNotFound
+	case 1:
+		return users[0], nil
+	default:
+		return nil, ErrMultipleEmailUsers
+	}
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

@@ -48,6 +48,7 @@ type AuthConfig struct {
 	Domain        string        `split_words:"true" required:"true"`
 	Issuer        string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
 	Audience      string        `split_words:"true" required:"true"`
+	RedirectURL   string        `split_words:"true" required:"true"`
 	ProviderCache time.Duration `split_words:"true" default:"5m"`
 	ClientID      string        `split_words:"true"`
 	ClientSecret  string        `split_words:"true"`
@@ -170,6 +171,10 @@ func (c AuthConfig) Validate() error {
 		return err
 	}
 
+	if err := c.Redirect(); err != nil {
+		return err
+	}
+
 	if c.ProviderCache == 0 {
 		return errors.New("invalid configuration: auth0 provider cache duration should be longer than 0")
 	}
@@ -211,6 +216,23 @@ func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
+}
+
+func (c AuthConfig) Redirect() (err error) {
+	if c.RedirectURL == "" {
+		return errors.New("invalid configuration: auth0 redirect url must be configured")
+	}
+
+	// URL should not have a trailing slash
+	if strings.HasSuffix(c.RedirectURL, "/") {
+		return errors.New("invalid configuration: auth0 redirect url must not have a trailing slash")
+	}
+
+	if _, err = url.Parse(c.RedirectURL); err != nil {
+		return errors.New("invalid configuration: auth0 redirect url must be a valid url")
+	}
+
+	return nil
 }
 
 func (c AuthConfig) ClientCredentials() management.Option {

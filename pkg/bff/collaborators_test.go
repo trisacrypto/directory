@@ -10,12 +10,14 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"google.golang.org/protobuf/proto"
 )
 
 func (s *bffTestSuite) TestAddCollaborator() {
 	require := s.Require()
 	defer s.ResetDB()
+	defer mock.PurgeEmails()
 
 	// Create initial claims fixture
 	claims := &authtest.Claims{
@@ -77,6 +79,9 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.Equal(request.Email, collab.Email, "expected collaborator email to match")
 	require.NotEmpty(collab.CreatedAt, "expected collaborator to have a created at timestamp")
 	require.False(collab.Verified, "expected collaborator to not be verified")
+
+	// Email should be sent to the collaborator
+	require.Len(mock.Emails, 1, "expected one email to be sent")
 
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)

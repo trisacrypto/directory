@@ -9,4 +9,6 @@ var (
 	ErrEmptyAnnouncement  = errors.New("cannot post a zero-valued announcement")
 	ErrUnboundedRecent    = errors.New("cannot specify zero-valued not before otherwise announcements fetch is unbounded")
 	ErrInvalidUserRole    = errors.New("invalid user role specified")
+	ErrUserEmailNotFound  = errors.New("could not find user by email address")
+	ErrMultipleEmailUsers = errors.New("multiple users found by email address")
 )

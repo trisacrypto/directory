@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
 	"time"
 
@@ -23,12 +24,20 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	var (
 		err          error
 		collaborator *models.Collaborator
+		inviter      *management.User
 		org          *models.Organization
 	)
 
 	// Fetch the organization from the claims
 	// NOTE: This method handles the error logging and response
 	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// The invoking user is the inviter
+	if inviter, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("add collaborator handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user"))
 		return
 	}
 
@@ -66,8 +75,63 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 	org.Collaborators[id] = collaborator
 
-	// TODO: We can search the email address in Auth0 to see if the user already exists
-	// TODO: Send invite/verification email to the collaborator
+	// If the user doesn't exist in Auth0 then we need to create them
+	var user *management.User
+	if user, err = s.FindUserByEmail(collaborator.Email); err != nil {
+		if !errors.Is(err, ErrUserEmailNotFound) {
+			log.Error().Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+			return
+		}
+
+		// Create an unverified user in Auth0
+		// Note: If the user has already registered with a social IDP then they will need to link accounts
+		var verified bool
+		connection := "Username-Password-Authentication"
+		user.Email = &collaborator.Email
+		user.Connection = &connection
+		user.EmailVerified = &verified
+		if err = s.auth0.User.Create(user); err != nil {
+			log.Error().Err(err).Str("email", collaborator.Email).Msg("error creating user in Auth0")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+			return
+		}
+	}
+
+	// Generate the user verification link containing a redirect URL with the org ID
+	redirectURL := fmt.Sprintf("%s?orgid=%s", s.conf.Auth0.RedirectURL, org.Id)
+	expiration := int((time.Hour * 24 * 7).Seconds()) // 7 days
+	ticket := &management.Ticket{
+		UserID:              user.ID,
+		ResultURL:           &redirectURL,
+		TTLSec:              &expiration,
+		MarkEmailAsVerified: user.EmailVerified,
+	}
+	if err = s.auth0.Ticket.ChangePassword(ticket); err != nil {
+		log.Error().Err(err).Str("email", collaborator.Email).Msg("error creating password change ticket in Auth0")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
+	if ticket.Ticket == nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not retrieve password change ticket URL from Auth0")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
+
+	// Parse the ticket string into a URL
+	var inviteURL *url.URL
+	if inviteURL, err = url.Parse(*ticket.Ticket); err != nil {
+		log.Error().Err(err).Str("ticket", *ticket.Ticket).Msg("could not parse password change ticket URL")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
+
+	// Send the verification email to the user
+	if err = s.email.SendUserInvite(user, inviter, org, inviteURL); err != nil {
+		log.Error().Err(err).Str("email", *user.Email).Msg("error sending user invite email")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(org); err != nil {
