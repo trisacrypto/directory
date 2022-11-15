@@ -1,13 +1,13 @@
 import { Meta, Story } from '@storybook/react';
-import ConfirmIdentityCertificate, { ConfirmIdentityCertificateProps } from '.';
+import ConfirmIdentityCertificateModal, { ConfirmIdentityCertificateProps } from '.';
 
 export default {
   title: 'components/ConfirmIdentityCertificateRequest',
-  component: ConfirmIdentityCertificate
+  component: ConfirmIdentityCertificateModal
 } as Meta<ConfirmIdentityCertificateProps>;
 
 const Template: Story<ConfirmIdentityCertificateProps> = (args) => (
-  <ConfirmIdentityCertificate {...args} />
+  <ConfirmIdentityCertificateModal {...args} />
 );
 
 export const Standard = Template.bind({});
