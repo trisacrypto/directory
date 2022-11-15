@@ -12,7 +12,7 @@ Font.register({
     family: 'Source Sans Pro',
     fonts: [
         { src: 'https://fonts.gstatic.com/s/sourcesanspro/v14/6xK3dSBYKcSV-LCoeQqfX1RYOo3aPw.ttf' },
-        { src: 'http://fonts.gstatic.com/s/sourcesanspro/v14/fpTVHK8qsXbIeTHTrnQH6EfrksRSinjQUrHtm_nW72g.ttf', fontStyle: 'italic', fontWeight: 600 },
+        { src: 'https://fonts.gstatic.com/s/sourcesanspro/v14/fpTVHK8qsXbIeTHTrnQH6EfrksRSinjQUrHtm_nW72g.ttf', fontStyle: 'italic', fontWeight: 600 },
         { src: 'https://fonts.gstatic.com/s/sourcesanspro/v14/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rAkA.ttf', fontWeight: 600 },
     ],
     format: 'truetype'
