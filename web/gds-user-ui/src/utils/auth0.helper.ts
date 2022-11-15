@@ -1,7 +1,7 @@
 import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import jwt_decode from 'jwt-decode';
-
+import { setCookie } from 'utils/cookies';
 // initialize auth0
 const auth0Config = getAuth0Config();
 const authWeb = new auth0.WebAuth(auth0Config);
@@ -114,3 +114,15 @@ export const auth0SignWithSocial = (connection: string, options?: auth0.Authoriz
     connection
   });
 };
+
+export const getRefreshToken = async (hasRefreshToken: boolean) => {
+  if (hasRefreshToken) {
+    // refresh token
+    const user = (await refreshAndFetchUser()) as any;
+    if (user) {
+      setCookie('access_token', user?.accessToken);
+    }
+  }
+};
+
+

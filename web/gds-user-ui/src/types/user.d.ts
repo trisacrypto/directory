@@ -2,6 +2,7 @@ type TUserPermission = 'collaborators' | 'certificate' | 'admin';
 interface IUserState {
   name: string;
   email: string;
+  roles: string[];
   pictureUrl: string;
   permission?: TUserPermission;
 }
@@ -12,6 +13,7 @@ type TUser = {
   errorMessage?: string;
   isLoggedIn: boolean;
   user: IUserState | null;
+
 };
 
 type TUserRole = 'Organization Leader' | 'Organization Collaborator' | 'user';
