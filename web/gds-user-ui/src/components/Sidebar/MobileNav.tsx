@@ -89,6 +89,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
+            <MenuItem onClick={() => navigate('/dashboard/user-profile')}>
+              <Trans id="Profile">Profile</Trans>
+            </MenuItem>
             <MenuDivider />
             <MenuItem onClick={handleLogout}>
               <Trans id="Sign out">Sign out</Trans>

@@ -933,6 +933,25 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 		}
 	}
 
+	// Add a unified email log to the response
+	if emailLog, err := models.GetVASPEmailLog(vasp); err != nil {
+		log.Warn().Err(err).Msg("could not get email log for VASP detail")
+	} else {
+		out.EmailLog = make([]map[string]interface{}, 0)
+		for i, entry := range emailLog {
+			if rewiredEntry, err := wire.Rewire(entry); err != nil {
+				// If we cannot rewire an email log entry, do not serialize any email
+				// log entries to prevent confusion about what has happened in the log.
+				log.Warn().Err(err).Int("index", i).Msg("could not rewire email log entry for VASP detail")
+				out.EmailLog = nil
+				break
+			} else {
+				rewiredEntry["contact"] = entry.ContactType
+				out.EmailLog = append(out.EmailLog, rewiredEntry)
+			}
+		}
+	}
+
 	// Remove extra data from the VASP
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!

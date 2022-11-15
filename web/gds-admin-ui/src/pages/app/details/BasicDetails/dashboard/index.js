@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 // components
 import PageTitle from 'components/PageTitle';
-import { fecthRegistrationsReviews, fetchCertificates, fetchPendingVasps, fetchSummary } from 'redux/dashboard/actions';
+import { fecthRegistrationsReviews, fetchCertificates, fetchVasps, fetchSummary } from 'redux/dashboard/actions';
 
 import Statistics from './Statistics';
 import Status from './Status';
@@ -24,7 +24,7 @@ const ProjectDashboardPage = () => {
 
     React.useEffect(() => {
         safeDispatch(fetchCertificates());
-        safeDispatch(fetchPendingVasps());
+        safeDispatch(fetchVasps({}));
         safeDispatch(fetchSummary())
         safeDispatch(fecthRegistrationsReviews())
     }, [safeDispatch])

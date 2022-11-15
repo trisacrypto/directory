@@ -229,7 +229,7 @@ func TestLogin(t *testing.T) {
 	require.NoError(t, err, "couldn't create BFF client with https and credentials")
 
 	// Execute the Login request
-	err = bff.Login(context.TODO())
+	err = bff.Login(context.TODO(), &api.LoginParams{})
 	require.NoError(t, err, "could not login using the bff client")
 
 	// Check to ensure double cookies are set. This doesn't test our code, but ensures
@@ -237,6 +237,29 @@ func TestLogin(t *testing.T) {
 	u, err := url.Parse(ts.URL)
 	require.NoError(t, err, "could not parse test server url")
 	require.Len(t, client.Jar.Cookies(u), 2, "expected two cookies set in the cookie jar")
+}
+
+func TestListUserRoles(t *testing.T) {
+	fixture := []string{"leader", "collaborator"}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/users/roles", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.ListUserRoles(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
 }
 
 func TestAddCollaborator(t *testing.T) {
@@ -278,9 +301,9 @@ func TestListCollaborators(t *testing.T) {
 				CreatedAt: time.Now().Format(time.RFC3339Nano),
 			},
 			{
-				Id: 	  "cD4FGmk8L8rA2J1I1PQYA",
-				Email: "bob@example.com",
-				Roles: []string{"Organization Leader"},
+				Id:        "cD4FGmk8L8rA2J1I1PQYA",
+				Email:     "bob@example.com",
+				Roles:     []string{"Organization Leader"},
 				CreatedAt: time.Now().Format(time.RFC3339Nano),
 			},
 		},
