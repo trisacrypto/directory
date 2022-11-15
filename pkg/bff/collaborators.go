@@ -83,8 +83,8 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 // must have the read:collaborators permission to make this request.
 func (s *Server) ListCollaborators(c *gin.Context) {
 	var (
-		err          error
-		org 		*models.Organization
+		err error
+		org *models.Organization
 	)
 
 	// Fetch the organization from the claims
@@ -154,44 +154,19 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	}
 
 	// Collaborator needs to be a verified user in Auth0
-	if collaborator.VerifiedAt == "" || collaborator.UserId == "" {
+	if !collaborator.Verified || collaborator.UserId == "" {
 		log.Warn().Str("collabID", collabID).Msg("cannot update roles for unverified collaborator")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("cannot update roles for unverified collaborator"))
 		return
 	}
 
-	// Validate the specified roles in Auth0
-	var newRoles []*management.Role
-	for _, name := range params.Roles {
-		var role *management.Role
-		if role, err = s.FindRoleByName(name); err != nil {
-			log.Warn().Err(err).Str("role", name).Msg("could not find role in Auth0")
+	// Update the users's roles in Auth0
+	if err = s.AssignRoles(collaborator.UserId, params.Roles); err != nil {
+		if errors.Is(err, ErrInvalidUserRole) {
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
-			return
+		} else {
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update collaborator roles"))
 		}
-		newRoles = append(newRoles, role)
-	}
-
-	// Remove the user's existing roles so we can add the new ones
-	// TODO: There might be a more atomic way to do this in the management API
-	var userRoles *management.RoleList
-	if userRoles, err = s.auth0.User.Roles(collaborator.UserId); err != nil {
-		log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not fetch user roles from Auth0")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user roles from Auth0"))
-		return
-	}
-
-	if err = s.auth0.User.RemoveRoles(collaborator.UserId, userRoles.Roles); err != nil {
-		log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not update user roles in Auth0")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user roles in Auth0"))
-		fmt.Println(err)
-		return
-	}
-
-	// Add the new roles to the user
-	if err = s.auth0.User.AssignRoles(collaborator.UserId, newRoles); err != nil {
-		log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not update user roles in Auth0")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user roles in Auth0"))
 		return
 	}
 
@@ -248,7 +223,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 
 	// If the collabroator is already verified in Auth0, then remove them from the
 	// organization
-	if collaborator.VerifiedAt != "" && collaborator.UserId != "" {
+	if !collaborator.Verified && collaborator.UserId != "" {
 		// Fetch the user from Auth0
 		var user *management.User
 		if user, err = s.auth0.User.Read(collaborator.UserId); err != nil {
@@ -266,7 +241,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		}
 
 		// Update the app metadata with the removed organization
-		appdata.OrgID = ""
+		appdata.ClearOrganization()
 		if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
 			log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not save user app metadata")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save user app metadata"))
@@ -292,7 +267,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 // overwrite the data on the collaborator record.
 func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
 	// If the user is not verified in Auth0 then we can't retrieve the details
-	if collab.VerifiedAt == "" {
+	if !collab.Verified {
 		return nil
 	}
 
@@ -327,7 +302,7 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 
 // InsortCollaborator is a helper function to insert a collaborator into a sorted slice
 // using a custom sort function.
-func InsortCollaborator(collabs []*models.Collaborator, value *models.Collaborator, f func (a, b *models.Collaborator) bool) []*models.Collaborator {
+func InsortCollaborator(collabs []*models.Collaborator, value *models.Collaborator, f func(a, b *models.Collaborator) bool) []*models.Collaborator {
 	if collabs == nil || value == nil || f == nil {
 		return nil
 	}
