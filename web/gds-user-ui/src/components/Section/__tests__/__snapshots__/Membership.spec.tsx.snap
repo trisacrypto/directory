@@ -1019,7 +1019,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step
+                Step 
                 1
               </p>
               <p
@@ -1065,7 +1065,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step
+                Step 
                 2
               </p>
               <p
@@ -1111,7 +1111,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-31"
                 data-testid="step"
               >
-                Step
+                Step 
                 3
               </p>
               <p
@@ -1159,48 +1159,48 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
             class="chakra-text emotion-54"
           >
             A component of
-
+             
             <a
               class="chakra-link emotion-55"
               href="https://trisa.io"
             >
               the TRISA architecture
             </a>
-
+             
             for Cryptocurrency Travel Rule compliance.
           </p>
           <p
             class="chakra-text emotion-54"
           >
             Created and maintained by
-
+             
             <a
               class="chakra-link emotion-55"
               href="https://rotational.io"
             >
-
+               
               Rotational Labs
             </a>
-
+             
             in partnership with
-
+             
             <a
               class="chakra-link emotion-55"
               href="https://cyphertrace.com"
             >
-
+               
               CipherTrace
             </a>
-
+             
             on behalf of
-
+             
             <a
               class="chakra-link emotion-55"
               href="https://trisa.io"
             >
               TRISA
             </a>
-
+             
           </p>
         </div>
       </div>
