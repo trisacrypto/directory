@@ -152,7 +152,7 @@ function EditCollaboratorModal(props: Props) {
                   console.log('[selected role]', s.value);
                   setSelectedRole(s.value);
                 }}
-                value={selectedRole}
+                value={rolesOptions?.find((v) => v.value === selectedRole)}
                 name="role"
                 placeholder="Select Role"
               />
