@@ -11,7 +11,7 @@ exports[`<Tasks /> Should keep the same UI: pending-registrations 1`] = `
       <h4
         class="header-title mb-3"
       >
-        Pending Reviews
+        Pending and Recent Activity
       </h4>
       <div
         class="text-center flex flex-column justify-content-center"
