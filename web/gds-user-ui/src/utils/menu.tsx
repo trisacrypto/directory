@@ -48,6 +48,12 @@ const MENU: Menu[] = [
         icon: BsFillInfoCircleFill,
         path: '/dashboard/certificate/details',
         activated: false
+      },
+      {
+        title: t`Certificate Inventory`,
+        icon: BsFillInfoCircleFill,
+        path: '/dashboard/certificate-inventory',
+        activated: false
       }
     ]
   },

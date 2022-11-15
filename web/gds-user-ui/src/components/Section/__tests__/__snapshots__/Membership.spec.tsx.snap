@@ -934,7 +934,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 <a
                   class="chakra-link emotion-6"
                   href="https://trisa.io"
-                  rel="noopener noreferrer"
+                  rel="noopener"
                   target="_blank"
                 >
                   About TRISA
@@ -947,7 +947,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 <a
                   class="chakra-link emotion-6"
                   href="https://trisa.dev/en"
-                  rel="noopener noreferrer"
+                  rel="noopener"
                   target="_blank"
                 >
                   Documentation
