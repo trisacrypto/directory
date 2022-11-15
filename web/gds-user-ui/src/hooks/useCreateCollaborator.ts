@@ -13,7 +13,5 @@ export function useCreateCollaborator(): CollaboratorMutation {
         wasCollaboratorCreated: mutation.isSuccess,
         isCreating: mutation.isLoading,
         errorMessage: mutation.error,
-
-
     };
 }
