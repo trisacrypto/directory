@@ -1,29 +1,33 @@
 // create a custom toast component form chackra ui
-import React from 'react';
+
 import { useToast, UseToastOptions } from '@chakra-ui/react';
 
 interface IToastProps {
+  title: string;
   description?: string;
   status?: string;
   isClosable?: boolean;
   position?: string;
-  duration: number;
+  duration?: number;
 }
-const Toast = ({
+const CustomToast = ({
   description,
   position,
   status,
   isClosable,
-  duration
+  duration,
+  title
 }: IToastProps & UseToastOptions) => {
   const toast = useToast();
-  return toast({
+  toast({
+    title,
     status: status ? status : 'error',
     description,
     isClosable: isClosable ? isClosable : true,
     position: position ? position : 'top-right',
-    duration: duration ? duration : 5000
+    duration: duration ? duration : 9000
   });
+  return null;
 };
 
-export default Toast;
+export default CustomToast;

@@ -12,9 +12,9 @@ import Maintenance from 'components/Maintenance';
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-import CertificateManagement from '../../components/CertificateManagement';
+import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
-import Collaborators from 'modules/dashboard/collaborators/Collaborators';
+import Collaborators from 'modules/dashboard/collaborator';
 import UserProfile from 'components/UserProfile';
 
 const Overview = lazy(() => import('modules/dashboard/overview'));

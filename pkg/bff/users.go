@@ -265,15 +265,21 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	}
 
 	// Remove the existing roles from the user
-	if err = s.auth0.User.RemoveRoles(userID, userRoles.Roles); err != nil {
-		log.Error().Err(err).Str("user_id", userID).Msg("could not remove existing roles from user")
-		return err
+	// The management endpoint requires a non-empty list, otherwise it returns a 400
+	if len(userRoles.Roles) > 0 {
+		if err = s.auth0.User.RemoveRoles(userID, userRoles.Roles); err != nil {
+			log.Error().Err(err).Str("user_id", userID).Msg("could not remove existing roles from user")
+			return err
+		}
 	}
 
-	// Add the new roles to the user
-	if err = s.auth0.User.AssignRoles(userID, newRoles); err != nil {
-		log.Error().Err(err).Str("user_id", userID).Msg("could not add new roles to user")
-		return err
+	// Assign the new roles to the user
+	// The management endpoint requires a non-empty list, otherwise it returns a 400
+	if len(newRoles) > 0 {
+		if err = s.auth0.User.AssignRoles(userID, newRoles); err != nil {
+			log.Error().Err(err).Str("user_id", userID).Msg("could not add new roles to user")
+			return err
+		}
 	}
 
 	return nil

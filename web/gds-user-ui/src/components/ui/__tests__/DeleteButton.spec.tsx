@@ -1,5 +1,5 @@
 import { render } from 'utils/test-utils';
-import DeleteButton from './DeleteButton';
+import DeleteButton from '../DeleteButton';
 
 describe('<DeleteButton />', () => {
   it('should', () => {
