@@ -13,3 +13,12 @@ export const logUserInBff = async () => {
 
   return response;
 };
+export const getUserRoles = async () => {
+  const response = await axiosInstance.get(`/users/roles`, {
+    headers: {
+      Authorization: `Bearer ${getCookie('access_token')}`
+    }
+  });
+
+  return response;
+};

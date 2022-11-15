@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { setCookie } from 'utils/cookies';
-import { logUserInBff } from 'modules/auth/login/auth.service';
+import { logUserInBff, getUserRoles } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
   auth0SignIn,
@@ -66,6 +66,8 @@ export const getAuth0User: any = createAsyncThunk(
       setCookie('expires_in', expiresTime);
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
+        // get user roles
+        const getRoles = await getUserRoles() as any;
         // console.log('[getUser]', getUser);
         // check if user response contains refresh_token flag
         if (getUser?.data?.refresh_token) {
@@ -84,7 +86,8 @@ export const getAuth0User: any = createAsyncThunk(
             user: {
               name: newUserPayload?.idTokenPayload?.name,
               pictureUrl: newUserPayload?.idTokenPayload?.picture,
-              email: newUserPayload?.idTokenPayload?.email
+              email: newUserPayload?.idTokenPayload?.email,
+              roles: getRoles?.data?.roles
             }
           };
           return userInfo;
@@ -96,7 +99,8 @@ export const getAuth0User: any = createAsyncThunk(
             user: {
               name: getUserInfo?.idTokenPayload?.name,
               pictureUrl: getUserInfo?.idTokenPayload?.picture,
-              email: getUserInfo?.idTokenPayload?.email
+              email: getUserInfo?.idTokenPayload?.email,
+              roles: getRoles?.data?.roles
             }
           };
           return userInfo;
