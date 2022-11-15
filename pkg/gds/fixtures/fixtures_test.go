@@ -28,7 +28,7 @@ func TestFixtures(t *testing.T) {
 
 	expected := map[fixtures.FixtureType]map[string]int{
 		fixtures.Empty: {},
-		fixtures.Small: {wire.NamespaceVASPs: 2},
+		fixtures.Small: {wire.NamespaceVASPs: 3},
 		fixtures.Full:  {wire.NamespaceVASPs: 14, wire.NamespaceCerts: 3, wire.NamespaceCertReqs: 10},
 	}
 

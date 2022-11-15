@@ -1,4 +1,4 @@
-import Tasks from "pages/app/dashboard/Tasks"
+import Tasks from "pages/app/details/BasicDetails/dashboard/Tasks"
 import { render } from "utils/test-utils"
 
 describe("<Tasks />", () => {
