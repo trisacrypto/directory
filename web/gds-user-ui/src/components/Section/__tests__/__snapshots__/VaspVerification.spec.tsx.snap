@@ -610,7 +610,7 @@ exports[`<Line /> should match snapshot 1`] = `
                     <a
                       class="chakra-link emotion-54"
                       href="https://trisa.io/getting-started-with-trisa/"
-                      rel="noopener noreferrer"
+                      rel="noopener"
                       target="_blank"
                     >
                       Learn How TRISA Works
@@ -622,7 +622,7 @@ exports[`<Line /> should match snapshot 1`] = `
                     <a
                       class="chakra-link emotion-54"
                       href="https://intervasp.org/"
-                      rel="noopener noreferrer"
+                      rel="noopener"
                       target="_blank"
                     >
                       What is IVMS101?
