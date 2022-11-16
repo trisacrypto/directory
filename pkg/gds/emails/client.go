@@ -283,6 +283,9 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
@@ -355,6 +358,9 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
@@ -396,6 +402,9 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	if vasp.IdentityCertificate != nil {
 		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
@@ -496,6 +505,9 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
@@ -559,6 +571,9 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors are occurring during delivery.
@@ -629,6 +644,9 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow
 	}
 
 	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
 
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct

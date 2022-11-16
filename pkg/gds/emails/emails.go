@@ -30,8 +30,9 @@ func init() {
 //===========================================================================
 
 const (
-	UnknownDate = "unknown date"
-	DateFormat  = "Monday, January 2, 2006"
+	UnknownDate             = "unknown date"
+	DateFormat              = "Monday, January 2, 2006"
+	UnspecifiedOrganization = "Unknown Legal Name"
 )
 
 // VerifyContactData to complete the verify contact email templates.
