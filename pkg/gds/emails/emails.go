@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -30,8 +30,9 @@ func init() {
 //===========================================================================
 
 const (
-	UnknownDate = "unknown date"
-	DateFormat  = "Monday, January 2, 2006"
+	UnknownDate             = "unknown date"
+	DateFormat              = "Monday, January 2, 2006"
+	UnspecifiedOrganization = "Unknown Legal Name"
 )
 
 // VerifyContactData to complete the verify contact email templates.
@@ -101,15 +102,19 @@ func (d ReviewRequestData) AdminReviewURL() string {
 
 // RejectRegistrationData to complete reject registration email templates.
 type RejectRegistrationData struct {
-	Name   string // Used to address the email
-	VID    string // The ID of the VASP/Registration
-	Reason string // A description of why the registration request was rejected
+	Name                string // Used to address the email
+	VID                 string // The ID of the VASP/Registration
+	Organization        string // The name of the organization (if it exists)
+	CommonName          string // The common name assigned to the cert
+	RegisteredDirectory string // The directory name for the certificates being issued
+	Reason              string // A description of why the registration request was rejected
 }
 
 // DeliverCertsData to complete deliver certs email templates.
 type DeliverCertsData struct {
 	Name                string // Used to address the email
 	VID                 string // The ID of the VASP/Registration
+	Organization        string // The name of the organization (if it exists)
 	CommonName          string // The common name assigned to the cert
 	SerialNumber        string // The serial number of the certificate
 	Endpoint            string // The expected endpoint for the TRISA service
@@ -119,6 +124,7 @@ type DeliverCertsData struct {
 // ExpiresAdminNotificationData to complete expires admin notification email templates.
 type ExpiresAdminNotificationData struct {
 	VID                 string    // The ID of the VASP/Registration
+	Organization        string    // The name of the organization (if it exists)
 	CommonName          string    // The common name assigned to the cert
 	SerialNumber        string    // The serial number of the certificate
 	Endpoint            string    // The expected endpoint for the TRISA service
@@ -168,6 +174,7 @@ func (d ExpiresAdminNotificationData) ReissueDate() string {
 type ReissuanceReminderData struct {
 	Name                string    // Used to address the email
 	VID                 string    // The ID of the VASP/Registration
+	Organization        string    // The name of the organization (if it exists)
 	CommonName          string    // The common name assigned to the cert
 	SerialNumber        string    // The serial number of the certificate
 	Endpoint            string    // The expected endpoint for the TRISA service
@@ -196,6 +203,7 @@ func (d ReissuanceReminderData) ReissueDate() string {
 type ReissuanceStartedData struct {
 	Name                string // Used to address the email
 	VID                 string // The ID of the VASP/Registration
+	Organization        string // The name of the organization (if it exists)
 	CommonName          string // The common name assigned to the cert
 	Endpoint            string // The expected endpoint for the TRISA service
 	RegisteredDirectory string // The directory name for the certificates being issued
@@ -205,6 +213,7 @@ type ReissuanceStartedData struct {
 // ReissuanceAdminNotificationData to complete reissuance admin notification email templates.
 type ReissuanceAdminNotificationData struct {
 	VID                 string    // The ID of the VASP/Registration
+	Organization        string    // The name of the organization (if it exists)
 	CommonName          string    // The common name assigned to the cert
 	SerialNumber        string    // The serial number of the certificate
 	Endpoint            string    // The expected endpoint for the TRISA service
@@ -452,7 +461,7 @@ func render(name string, data interface{}) (_ string, err error) {
 func LoadAttachment(message *mail.SGMailV3, attachmentPath string) (err error) {
 	// Read and encode the attachment data
 	var data []byte
-	if data, err = ioutil.ReadFile(attachmentPath); err != nil {
+	if data, err = os.ReadFile(attachmentPath); err != nil {
 		return err
 	}
 	encoded := base64.StdEncoding.EncodeToString(data)
