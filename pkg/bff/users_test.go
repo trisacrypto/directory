@@ -3,6 +3,7 @@ package bff_test
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
@@ -45,6 +46,8 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.Equal(claims.Email, collab.Email, "collaborator email should match")
 	require.NotEmpty(collab.UserId, "collaborator user id should not be empty")
 	require.True(collab.Verified, "collaborator should be verified")
+	require.NotEmpty(collab.JoinedAt, "collaborator should have a joined at timestamp")
+	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator should have a last login timestamp")
 
 	// User should assume the leader role
 	require.Equal([]string{bff.LeaderRole}, s.auth.GetUserRoles(), "user should have the leader role")
@@ -74,6 +77,8 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.Equal(claims.Email, collab.Email, "collaborator email should match")
 	require.NotEmpty(collab.UserId, "collaborator user id should not be empty")
 	require.True(collab.Verified, "collaborator should be verified")
+	require.NotEmpty(collab.JoinedAt, "collaborator should have a joined at timestamp")
+	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator should have a last login timestamp")
 
 	// User should still have the TSP role
 	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
@@ -131,10 +136,13 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	s.auth.SetUserRoles([]string{bff.TSPRole})
+	now := time.Now().Format(time.RFC3339Nano)
 	collab := &models.Collaborator{
-		Email:    claims.Email,
-		UserId:   "auth0|5f7b5f1b0b8b9b0069b0b1d5",
-		Verified: true,
+		Email:     claims.Email,
+		UserId:    "auth0|5f7b5f1b0b8b9b0069b0b1d5",
+		Verified:  true,
+		JoinedAt:  now,
+		LastLogin: now,
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
@@ -157,6 +165,13 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	require.Equal(claims.Email, collab.Email, "collaborator email should match")
 	require.NotEmpty(collab.UserId, "collaborator user id should not be empty")
 	require.True(collab.Verified, "collaborator should be verified")
+
+	// Last login timestamp should be later than joined timestamp
+	lastLogin, err := time.Parse(time.RFC3339Nano, collab.LastLogin)
+	require.NoError(err, "could not parse last login timestamp")
+	joinedAt, err := time.Parse(time.RFC3339Nano, collab.JoinedAt)
+	require.NoError(err, "could not parse joined at timestamp")
+	require.True(lastLogin.After(joinedAt), "last login timestamp should be after joined at timestamp")
 
 	// User role should not change
 	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the leader role")
@@ -242,6 +257,14 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// User should have the same role
 	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
+	// Collaborator should contain updated timestamps
+	org, err = s.bff.OrganizationFromID(org.Id)
+	require.NoError(err, "could not get organization from ID")
+	collab = org.GetCollaborator(claims.Email)
+	require.NotNil(collab, "collaborator should exist in organization")
+	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
+	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
+
 	// Create a new organization in the database
 	newOrg, err := s.DB().CreateOrganization()
 	require.NoError(err, "could not create organization")
@@ -249,6 +272,8 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	newOrg.Mainnet = org.Testnet
 
 	// Add the collaborators to the new organization
+	collab.JoinedAt = ""
+	collab.LastLogin = ""
 	require.NoError(newOrg.AddCollaborator(collab), "could not add collaborator to organization")
 	require.NoError(newOrg.AddCollaborator(leader), "could not add collaborator to organization")
 	require.NoError(s.DB().UpdateOrganization(newOrg), "could not update organization")
@@ -266,6 +291,14 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 
 	// User should have the same role
 	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
+
+	// Collaborator should contain updated timestamps
+	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
+	require.NoError(err, "could not get organization from ID")
+	collab = newOrg.GetCollaborator(claims.Email)
+	require.NotNil(collab, "collaborator should exist in organization")
+	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
+	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
 
 	// Valid login - leader abandons the old organization and joins the new one
 	// TODO: Currently the Auth0 mock only supports one user at a time so these helpers
@@ -290,6 +323,14 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// Previous organization should be deleted since it has no collaborators
 	_, err = s.bff.OrganizationFromID(org.Id)
 	require.Error(err, "organization should be deleted")
+
+	// Leader's collab record should contain updated timestamps
+	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
+	require.NoError(err, "could not get organization from ID")
+	leader = newOrg.GetCollaborator(leader.Email)
+	require.NotNil(leader, "leader should exist in organization")
+	require.NotEmpty(leader.JoinedAt, "leader last login timestamp should not be empty")
+	require.Equal(leader.JoinedAt, leader.LastLogin, "leader joined at timestamp should not be empty")
 
 	// Add the user as a TSP collaborator in a few organizations
 	org, err = s.DB().CreateOrganization()
@@ -320,6 +361,14 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 
 	// User should have the same role
 	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
+
+	// Collaborator record should contain updated timestamps
+	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
+	require.NoError(err, "could not get organization from ID")
+	collab = newOrg.GetCollaborator(claims.Email)
+	require.NotNil(collab, "collaborator should exist in organization")
+	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
+	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
 }
 
 func (s *bffTestSuite) TestListUserRoles() {
