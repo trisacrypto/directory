@@ -234,7 +234,7 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	// If the user app metadata has changed, set the refresh flag in the response
-	if appdata.Equals(oldAppdata) {
+	if !appdata.Equals(oldAppdata) {
 		c.JSON(http.StatusOK, api.Reply{Success: true, RefreshToken: true})
 	} else {
 		c.Status(http.StatusNoContent)

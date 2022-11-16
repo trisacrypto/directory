@@ -45,6 +45,11 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	_, err = s.client.CreateOrganization(context.TODO(), params)
 	s.requireError(err, http.StatusBadRequest, "must provide domain in request params", "expected error when domain is not provided")
 
+	// Invalid domains are rejected
+	params.Domain = "alicevasp"
+	_, err = s.client.CreateOrganization(context.TODO(), params)
+	s.requireError(err, http.StatusBadRequest, "invalid domain provided", "expected error when domain is invalid")
+
 	// Valid request - organization should be created in the database
 	params.Domain = "alicevasp.io"
 	reply, err := s.client.CreateOrganization(context.TODO(), params)
@@ -71,26 +76,21 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	_, err = s.client.CreateOrganization(context.TODO(), params)
-	s.requireError(err, http.StatusConflict, "organization with domain name already exists", "expected error when organization already exists")
+	s.requireError(err, http.StatusConflict, "organization with domain already exists", "expected error when organization already exists")
 
 	// Uniqueness check should be case insensitive
 	params.Domain = "ALICEVASP.IO"
 	_, err = s.client.CreateOrganization(context.TODO(), params)
-	s.requireError(err, http.StatusConflict, "organization with domain name already exists", "expected error when organization already exists")
+	s.requireError(err, http.StatusConflict, "organization with domain already exists", "expected error when organization already exists")
 
 	// Uniqueness check should ignore leading and trailing whitespace
 	params.Domain = " aliceVASP.io "
 	_, err = s.client.CreateOrganization(context.TODO(), params)
-	s.requireError(err, http.StatusConflict, "organization with domain name already exists", "expected error when organization already exists")
-
-	// Uniqueness check should ignore trailing periods
-	params.Domain = "alicevasp.io."
-	_, err = s.client.CreateOrganization(context.TODO(), params)
-	s.requireError(err, http.StatusConflict, "organization with domain name already exists", "expected error when organization already exists")
+	s.requireError(err, http.StatusConflict, "organization with domain already exists", "expected error when organization already exists")
 
 	// Should not return an error if there is an organization on the app metadata that's not in the database
 	metadata.Organizations = []string{"00000000-0000-0000-0000-000000000000"}
-	params.Domain = "bobvasp.io"
+	params.Domain = " bobVASP.io "
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
@@ -99,13 +99,13 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.NoError(err, "create organization call failed")
 	require.NotEmpty(reply.ID, "expected organization id to be set")
 	require.Equal(params.Name, reply.Name, "expected name in reply to match")
-	require.Equal(params.Domain, reply.Domain, "expected domain in reply to match")
+	require.Equal("bobvasp.io", reply.Domain, "expected domain in reply to match")
 	require.NotEmpty(reply.CreatedAt, "expected created at timestamp to be set")
 	require.True(reply.RefreshToken, "refresh token should be set")
 	org, err = s.bff.OrganizationFromID(reply.ID)
 	require.NoError(err, "could not find organization in database")
 	require.Equal(params.Name, org.Name, "organization name does not match")
-	require.Equal(params.Domain, org.Domain, "organization domain does not match")
+	require.Equal("bobvasp.io", org.Domain, "organization domain does not match")
 
 	// User app metadata should be updated with the organization id
 	metadata = &auth.AppMetadata{}

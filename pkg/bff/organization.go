@@ -3,7 +3,6 @@ package bff
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
@@ -43,32 +42,33 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	params := &api.OrganizationParams{}
 	if err := c.ShouldBind(params); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
-		c.JSON(http.StatusBadRequest, &api.Reply{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
-	// Name is a required paramater
+	// Name is a required parameter
 	if params.Name == "" {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("must provide name in request params"))
 		return
 	}
 
-	// Domain is a required paramater
-	domain := normalizeDomain(params.Domain)
-	if domain == "" {
+	// Domain is a required parameter
+	if params.Domain == "" {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("must provide domain in request params"))
 		return
 	}
 
 	// Don't allow the user to create duplicate organizations
 	// TODO: Should we do a universal check against the database using an index?
-	for _, id := range appdata.GetOrganizations() {
-		if org, err := s.OrganizationFromID(id); err != nil {
-			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
-		} else if org.Domain == domain {
-			c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain name already exists"))
+	var domain string
+	if domain, err = s.ValidateOrganizationDomain(params.Domain, appdata); err != nil {
+		log.Error().Err(err).Str("domain", params.Domain).Msg("could not validate organization domain")
+		if errors.Is(err, ErrDomainAlreadyExists) {
+			c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain already exists"))
 			return
 		}
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("invalid domain provided"))
+		return
 	}
 
 	// Create a new organization in the database
@@ -149,9 +149,33 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// Normalize a domain name for matching purposes.
-func normalizeDomain(domain string) string {
-	return strings.ToLower(strings.TrimRight(strings.TrimSpace(domain), "."))
+// ValidateOrganizationDomain performs any necessary normalization and validation of an
+// organization domain name, ensuring that the domain is not already in use by another
+// organization on the specified app metadata and returning the normalized domain name
+// for storage.
+func (s *Server) ValidateOrganizationDomain(domain string, appdata *auth.AppMetadata) (string, error) {
+	var err error
+
+	// Normalize the domain
+	if domain, err = NormalizeDomain(domain); err != nil {
+		return "", err
+	}
+
+	// Check that the domain is valid
+	if err = ValidateDomain(domain); err != nil {
+		return "", err
+	}
+
+	// Check for duplicate domains
+	for _, id := range appdata.GetOrganizations() {
+		if org, err := s.OrganizationFromID(id); err != nil {
+			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+		} else if org.Domain == domain {
+			return "", ErrDomainAlreadyExists
+		}
+	}
+
+	return domain, nil
 }
 
 // OrganizationFromClaims is a helper method to retrieve the organization for a
