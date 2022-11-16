@@ -95,7 +95,10 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	var org *models.Organization
+	var (
+		org          *models.Organization
+		collaborator *models.Collaborator
+	)
 	if params.OrgID == "" && appdata.OrgID == "" {
 		// This is a new user so create a new organization for them
 		org, err = s.db.CreateOrganization()
@@ -106,7 +109,7 @@ func (s *Server) Login(c *gin.Context) {
 		}
 
 		// Add the user to the organization in the database
-		collaborator := &models.Collaborator{
+		collaborator = &models.Collaborator{
 			Email:    *user.Email,
 			UserId:   *user.ID,
 			Verified: *user.EmailVerified,
@@ -138,7 +141,6 @@ func (s *Server) Login(c *gin.Context) {
 		// really invited by an organization leader via the AddCollaborator endpoint
 		// which started the invite workflow. Without this check, any user could log
 		// into any organization simply by providing the orgID in the request.
-		var collaborator *models.Collaborator
 		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
 			log.Debug().Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
 			c.JSON(http.StatusUnauthorized, api.ErrorResponse("user is not authorized to access this organization"))
@@ -147,6 +149,12 @@ func (s *Server) Login(c *gin.Context) {
 
 		// Other endpoints expect the user's verification status to be up to date
 		collaborator.Verified = *user.EmailVerified
+	}
+
+	// Update collaborator metadata timestamps when the user logs in
+	collaborator.LastLogin = time.Now().Format(time.RFC3339Nano)
+	if collaborator.JoinedAt == "" {
+		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
 	if userRole == TSPRole {
