@@ -18,9 +18,6 @@ type RegistrationAuthority = {
 
 type Locales = 'en' | 'fr' | 'ja' | 'de' | 'zh';
 
-<<<<<<< HEAD
-
-=======
 type Certificate = {
   serial_number: string;
   issued_at: string | Date;
@@ -68,4 +65,3 @@ declare global {
     msSaveBlob?: (blob: any, defaultName?: string) => boolean;
   }
 }
->>>>>>> origin/main
