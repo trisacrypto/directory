@@ -221,8 +221,15 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := RejectRegistrationData{
-		VID:    vasp.Id,
-		Reason: reason,
+		VID:                 vasp.Id,
+		Reason:              reason,
+		CommonName:          vasp.CommonName,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	// Attempt at least one delivery, don't give up just because one email failed

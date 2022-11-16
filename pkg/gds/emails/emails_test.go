@@ -66,7 +66,7 @@ func TestEmailBuilders(t *testing.T) {
 	require.Equal(t, emails.ReviewRequestRE, mail.Subject)
 	generateMIME(t, mail, "review-request.mim")
 
-	rjdata := emails.RejectRegistrationData{Name: recipient, Reason: "not a good time", VID: "42"}
+	rjdata := emails.RejectRegistrationData{Name: recipient, Reason: "not a good time", VID: "42", CommonName: "example.com", Organization: "Acme, Inc.", RegisteredDirectory: "trisatest.dev"}
 	mail, err = emails.RejectRegistrationEmail(sender, senderEmail, recipient, recipientEmail, rjdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.RejectRegistrationRE, mail.Subject)
@@ -310,7 +310,7 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	email, err := emails.New(suite.conf)
 	require.NoError(err)
 
-	data := emails.RejectRegistrationData{Name: recipient.Name, Reason: "not a good time", VID: "42"}
+	data := emails.RejectRegistrationData{Name: recipient.Name, Reason: "not a good time", VID: "42", Organization: "Acme, Inc.", CommonName: "example.com", RegisteredDirectory: "trisatest.dev"}
 	msg, err := emails.RejectRegistrationEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))

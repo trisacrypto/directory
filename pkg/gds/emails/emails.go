@@ -102,9 +102,12 @@ func (d ReviewRequestData) AdminReviewURL() string {
 
 // RejectRegistrationData to complete reject registration email templates.
 type RejectRegistrationData struct {
-	Name   string // Used to address the email
-	VID    string // The ID of the VASP/Registration
-	Reason string // A description of why the registration request was rejected
+	Name                string // Used to address the email
+	VID                 string // The ID of the VASP/Registration
+	Organization        string // The name of the organization (if it exists)
+	CommonName          string // The common name assigned to the cert
+	RegisteredDirectory string // The directory name for the certificates being issued
+	Reason              string // A description of why the registration request was rejected
 }
 
 // DeliverCertsData to complete deliver certs email templates.
