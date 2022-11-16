@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -22,6 +21,9 @@ import { BsTrash } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
 import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 import { t } from '@lingui/macro';
+import { hasPermission } from 'utils/permission';
+import { USER_PERMISSION } from 'types/enums';
+import { isCurrentUser } from '../lib';
 interface Props {
   collaboratorId: string;
 }
@@ -47,6 +49,13 @@ function DeleteCollaboratorModal(props: Props) {
 
     setIsDeleteChecked(false);
     onClose();
+  };
+
+  const shouldDisableButton = () => {
+    if (isCurrentUser(collaborator?.email || '')) {
+      return true;
+    }
+    return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
   };
 
   useEffect(() => {
@@ -89,7 +98,17 @@ function DeleteCollaboratorModal(props: Props) {
   }, [hasCollaboratorFailed, toast, wasCollaboratorDeleted, errorMessage]);
 
   return (
-    <Link color="blue" onClick={onOpen}>
+    <Button
+      color="blue"
+      onClick={onOpen}
+      bg={'transparent'}
+      disabled={shouldDisableButton()}
+      _hover={{
+        bg: 'transparent'
+      }}
+      _focus={{
+        bg: 'transparent'
+      }}>
       <BsTrash fontSize="26px" />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -141,7 +160,7 @@ function DeleteCollaboratorModal(props: Props) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Link>
+    </Button>
   );
 }
 

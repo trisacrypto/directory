@@ -7,10 +7,11 @@ export const getUserPermissionFromStore = () => {
     return Store.getState()?.user?.user?.permission;
 };
 
-/* hasPermission function
-   @params permission: string | string[]
-   @return boolean
- */
+/**  hasPermission function
+ *   @params permission: string | string[]
+ *   @return boolean
+*/
+
 export const hasPermission = (permission: TUserPermission | TUserPermission[]) => {
     const userPermission = getUserPermissionFromStore();
     if (isArray(permission)) {
@@ -21,9 +22,9 @@ export const hasPermission = (permission: TUserPermission | TUserPermission[]) =
     return userPermission?.includes(permission);
 };
 
-/* hasRole function
-    @params role: string | string[]
-    @return boolean
+/**  hasRole function
+ *   @params role: string | string[]
+ *   @return boolean
 */
 
 export const hasRole = (role: TUserRole | TUserRole[]) => {

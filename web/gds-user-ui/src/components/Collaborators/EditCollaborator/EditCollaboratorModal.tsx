@@ -22,7 +22,9 @@ import { useUpdateCollaborator } from 'components/Collaborators/EditCollaborator
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 import React, { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
-
+import { hasPermission } from 'utils/permission';
+import { USER_PERMISSION } from 'types/enums';
+import { isCurrentUser } from '../lib';
 interface Props {
   collaboratorId: string;
   roles?: string[];
@@ -63,7 +65,12 @@ function EditCollaboratorModal(props: Props) {
     value: v
   }));
 
-  console.log('[roles options]', rolesOptions);
+  const shouldDisableButton = () => {
+    if (isCurrentUser(collaborator?.email || '')) {
+      return true;
+    }
+    return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
+  };
 
   useEffect(() => {
     let once = false;
@@ -121,6 +128,7 @@ function EditCollaboratorModal(props: Props) {
       color="blue"
       onClick={onOpen}
       bg={'transparent'}
+      disabled={shouldDisableButton()}
       _hover={{
         bg: 'transparent'
       }}
