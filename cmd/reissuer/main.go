@@ -156,7 +156,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "vasp",
 					Aliases:  []string{"vasp-id", "v"},
-					Usage:    "the VASP ID to revoke the certificates of",
+					Usage:    "the VASP ID to rereview",
 					Required: true,
 				},
 				&cli.BoolFlag{
@@ -173,16 +173,16 @@ func main() {
 			},
 		},
 		{
-			Name: "destroy",
-			Usage: "destroy a VASP record if it is in the rejected state",
+			Name:   "destroy",
+			Usage:  "destroy a VASP record if it is in the rejected state",
 			Action: destroy,
 			Before: connectDB,
-			After: closeDB,
-		Flags: []cli.Flag{
+			After:  closeDB,
+			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:     "vasp",
 					Aliases:  []string{"vasp-id", "v"},
-					Usage:    "the VASP ID to revoke the certificates of",
+					Usage:    "the VASP ID to destroy the record for",
 					Required: true,
 				},
 				&cli.BoolFlag{
@@ -191,7 +191,22 @@ func main() {
 					Usage:   "skip the confirmation prompt and immediately send notifications",
 					Value:   false,
 				},
+			},
 		},
+		{
+			Name:   "status",
+			Usage:  "inspect a VASP status and certificate requests",
+			Action: vaspStatus,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to get the status of",
+					Required: true,
+				},
+			},
 		},
 	}
 
@@ -552,7 +567,7 @@ func rereview(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
-	if vasp.VerificationStatus >= pb.VerificationState_VERIFIED {
+	if vasp.VerificationStatus == pb.VerificationState_VERIFIED {
 		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke instead", vasp.VerificationStatus), 1)
 	}
 
@@ -598,8 +613,8 @@ func destroy(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
-	if vasp.VerificationStatus <= pb.VerificationState_VERIFIED {
-		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke instead", vasp.VerificationStatus), 1)
+	if vasp.VerificationStatus == pb.VerificationState_VERIFIED {
+		return cli.Exit(fmt.Errorf("VASP is %q -- use revoke before destroying VASP record", vasp.VerificationStatus), 1)
 	}
 
 	fmt.Printf("destroying VASP record for %s\n", vasp.CommonName)
@@ -611,6 +626,35 @@ func destroy(c *cli.Context) (err error) {
 
 	if err = db.DeleteVASP(vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not delete record: %s", err), 1)
+	}
+	return nil
+}
+
+func vaspStatus(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	name, _ := vasp.Name()
+	fmt.Printf("Name: %s\nCommon Name: %s\nStatus: %s\n\n", name, vasp.CommonName, vasp.VerificationStatus)
+
+	certreqs, err := models.GetCertReqIDs(vasp)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	for i, certreq := range certreqs {
+		ca, err := db.RetrieveCertReq(certreq)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		fmt.Printf("Certificate Request %d:\n  Common Name: %s\n . Status: %s\n\n", i+1, ca.CommonName, ca.Status)
+
 	}
 	return nil
 }
