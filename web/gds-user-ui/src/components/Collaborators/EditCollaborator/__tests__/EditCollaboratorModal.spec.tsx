@@ -42,6 +42,7 @@ function renderComponent() {
 const mockCollaborators = jest.fn();
 const mockGetAllCollaborators = jest.fn();
 const mockUpdateCollaborator = jest.fn();
+const mockCollaboratorsData = collaboratorMockValue.data;
 
 const useFetchCollaboratorsMock = jest.spyOn(useCollaborators, 'useFetchCollaborators');
 const useUpdateCollaboratorMock = jest.spyOn(useUpdateCollaborator, 'useUpdateCollaborator');
@@ -51,12 +52,7 @@ describe('UpdateCollaboratorModal', () => {
       dynamicActivate('en');
     });
     useFetchCollaboratorsMock.mockReturnValue({
-      collaborators: {
-        data: {
-          collaborators: collaboratorMockValue.data
-        },
-        getAllCollaborators: mockGetAllCollaborators
-      },
+      collaborators: mockCollaboratorsData,
       getAllCollaborators: jest.fn(),
       hasCollaboratorsFailed: false,
       wasCollaboratorsFetched: false,

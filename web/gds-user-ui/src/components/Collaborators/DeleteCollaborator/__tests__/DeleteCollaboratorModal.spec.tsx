@@ -51,13 +51,8 @@ describe('DeleteCollaboratorModal', () => {
       dynamicActivate('en');
     });
     useFetchCollaboratorsMock.mockReturnValue({
-      collaborators: {
-        data: {
-          collaborators: collaboratorMockValue.data
-        },
-        getAllCollaborators: mockGetAllCollaborators
-      },
-      getAllCollaborators: jest.fn(),
+      collaborators: collaboratorMockValue.data,
+      getAllCollaborators: mockGetAllCollaborators,
       hasCollaboratorsFailed: false,
       wasCollaboratorsFetched: false,
       isFetchingCollaborators: false

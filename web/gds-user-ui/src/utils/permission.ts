@@ -13,7 +13,7 @@ export const getUserPermissionFromStore = () => {
  */
 export const hasPermission = (permission: TUserPermission | TUserPermission[]) => {
     const userPermission = getUserPermissionFromStore();
-    if (Array.isArray(permission)) {
+    if (isArray(permission)) {
         // all permission element should be in userPermission
         return permission.every((p) => userPermission.includes(p));
     }

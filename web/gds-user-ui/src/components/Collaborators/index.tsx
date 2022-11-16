@@ -31,7 +31,7 @@ import { sortCollaboratorsByRecentDate } from './lib';
 import Loader from 'components/Loader';
 import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
 import { USER_PERMISSION } from 'types/enums';
-import Store from 'application/store';
+import { hasPermission } from 'utils/permission';
 // const rows: any[] = [
 //   {
 //     id: '18002',
@@ -82,8 +82,7 @@ const getCollaboratorActivatedDate = (verifiedAt: any) => {
 };
 
 const isAuthorizedToInvite = () => {
-  const userPermission = Store.getState().user?.user?.permissions;
-  return userPermission?.includes(USER_PERMISSION.UPDATE_COLLABORATOR);
+  return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
 };
 
 const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
