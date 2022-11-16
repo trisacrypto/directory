@@ -168,9 +168,9 @@ const CollaboratorsSection: React.FC = () => {
       <Table variant="simple">
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
           <Tooltip
-            label={t`you do not have permission to invite a collaborator`}
-            isDisabled={isAuthorizedToInvite()}>
-            <Button minW="170px" onClick={modalHandler} isDisabled={!isAuthorizedToInvite()}>
+            label={t`you don't have permission to invite collaborators`}
+            isDisabled={!isAuthorizedToInvite()}>
+            <Button minW="170px" onClick={modalHandler} isDisabled={isAuthorizedToInvite()}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>

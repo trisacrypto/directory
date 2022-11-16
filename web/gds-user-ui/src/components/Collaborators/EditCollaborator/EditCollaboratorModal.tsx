@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   chakra,
-  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -118,7 +117,16 @@ function EditCollaboratorModal(props: Props) {
   }, [hasCollaboratorFailed, wasCollaboratorUpdated, errorMessage, toast]);
 
   return (
-    <Link color="blue" onClick={onOpen}>
+    <Button
+      color="blue"
+      onClick={onOpen}
+      bg={'transparent'}
+      _hover={{
+        bg: 'transparent'
+      }}
+      _focus={{
+        bg: 'transparent'
+      }}>
       <FiEdit fontSize="24px" />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -185,7 +193,7 @@ function EditCollaboratorModal(props: Props) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Link>
+    </Button>
   );
 }
 

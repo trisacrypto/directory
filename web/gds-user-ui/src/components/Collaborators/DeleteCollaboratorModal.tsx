@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -21,7 +20,16 @@ function DeleteCollaboratorModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Link color="blue" onClick={onOpen}>
+    <Button
+      color="blue"
+      onClick={onOpen}
+      bg={'transparent'}
+      _hover={{
+        bg: 'transparent'
+      }}
+      _focus={{
+        bg: 'transparent'
+      }}>
       <BsTrash fontSize="26px" />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -61,7 +69,7 @@ function DeleteCollaboratorModal() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Link>
+    </Button>
   );
 }
 
