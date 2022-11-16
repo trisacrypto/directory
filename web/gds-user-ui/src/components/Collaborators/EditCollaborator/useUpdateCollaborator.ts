@@ -3,7 +3,12 @@ import { updateCollaborator as updateCollaboratorService } from 'modules/dashboa
 import type { UpdateCollaboratorMutation } from 'components/Collaborators/EditCollaborator/UpdateCollaboratorType';
 
 export function useUpdateCollaborator(): UpdateCollaboratorMutation {
-    const mutation = useMutation(['update-Collaborator'], updateCollaboratorService);
+    const mutation = useMutation(['update-Collaborator'], updateCollaboratorService, {
+        onError: (error: any) => {
+            console.log('update-Collaborator-error', error);
+            console.log('update-Collaborator-error-response', error?.response.data?.error);
+        },
+    });
     return {
         updateCollaborator: mutation.mutate,
         reset: mutation.reset,
@@ -11,6 +16,6 @@ export function useUpdateCollaborator(): UpdateCollaboratorMutation {
         hasCollaboratorFailed: mutation.isError,
         wasCollaboratorUpdated: mutation.isSuccess,
         isUpdating: mutation.isLoading,
-        errorMessage: mutation.error,
+        errorMessage: mutation.error?.response.data?.error || mutation.error,
     };
 }

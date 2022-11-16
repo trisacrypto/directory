@@ -65,9 +65,7 @@ function DeleteCollaboratorModal(props: Props) {
   }, [wasCollaboratorDeleted, getAllCollaborators, toast]);
 
   useEffect(() => {
-    const col = collaborators?.data.collaborators.find(
-      (c: Collaborator) => c.id === collaboratorId
-    );
+    const col = collaborators?.find((c: Collaborator) => c.id === collaboratorId);
     if (col) {
       setCollaborator(col);
     }

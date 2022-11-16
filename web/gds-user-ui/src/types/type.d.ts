@@ -17,3 +17,5 @@ type RegistrationAuthority = {
 };
 
 type Locales = 'en' | 'fr' | 'ja' | 'de' | 'zh';
+
+

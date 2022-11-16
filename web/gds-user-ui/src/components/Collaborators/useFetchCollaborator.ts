@@ -7,11 +7,12 @@ export function useFetchCollaborators(): getCollaborators {
     const query = useQuery(['fetch-collaborators'], getAllCollaborators, {
         refetchOnWindowFocus: true,
         refetchOnMount: true,
-        staleTime: 0,
+        // set state time to 5 minutes
+        staleTime: 1000 * 60 * 5,
     });
     return {
         getAllCollaborators: query.refetch,
-        collaborators: query.data,
+        collaborators: query.data?.data?.collaborators,
         hasCollaboratorsFailed: query.isError,
         wasCollaboratorsFetched: query.isSuccess,
         isFetchingCollaborators: query.isLoading,

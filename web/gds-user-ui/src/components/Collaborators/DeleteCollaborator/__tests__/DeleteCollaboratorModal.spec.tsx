@@ -7,7 +7,7 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import nock from 'nock';
 import DeleteCollaboratorModal from '../DeleteCollaboratorModal';
 import { act, render } from 'utils/test-utils';
-import { collaboratorMockValue } from 'components/AddCollaboratorModal/__mocks__';
+import { collaboratorMockValue } from 'components/Collaborators/AddCollaborator/__mocks__';
 import * as useCollaborators from 'components/Collaborators/useFetchCollaborator';
 import * as useDeleteCollaborator from '../useDeleteCollaborator';
 const mockUseMutation = useMutation as jest.Mock;

@@ -68,9 +68,7 @@ function EditCollaboratorModal(props: Props) {
 
   useEffect(() => {
     let once = false;
-    const col = collaborators?.data?.collaborators.find(
-      (c: Collaborator) => c.id === collaboratorId
-    );
+    const col = collaborators?.find((c: Collaborator) => c.id === collaboratorId);
     if (col) {
       if (!once) {
         setCollaborator(col);
@@ -96,14 +94,21 @@ function EditCollaboratorModal(props: Props) {
     }
   }, [wasCollaboratorUpdated, getAllCollaborators, toast]);
 
+  // if we roles is set in collaborator, set the selectedRole to the first role
+  useEffect(() => {
+    if (collaborator?.roles) {
+      setSelectedRole(collaborator.roles[0]);
+    }
+  }, [collaborator]);
+
   useEffect(() => {
     if (hasCollaboratorFailed && !wasCollaboratorUpdated) {
-      const hasErrored =
-        errorMessage &&
-        t`An error occurred while updating the collaborator, please try again or contact support at support@trisa.io`;
+      // const hasErrored =
+      //   errorMessage &&
+      //   t`An error occurred while updating the collaborator, please try again or contact support at support@trisa.io`;
       toast({
         title: t`Collaborator is not updated`,
-        description: hasErrored || t`The collaborator has not been updated`,
+        description: errorMessage || t`The collaborator has not been updated`,
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -149,7 +154,6 @@ function EditCollaboratorModal(props: Props) {
                 options={rolesOptions}
                 controlId="role"
                 onChange={(s: any) => {
-                  console.log('[selected role]', s.value);
                   setSelectedRole(s.value);
                 }}
                 value={rolesOptions?.find((v) => v.value === selectedRole)}

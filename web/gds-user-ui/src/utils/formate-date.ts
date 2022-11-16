@@ -15,5 +15,9 @@ export default function formatDate() {
 
 // format to short date with dayjs library (https://day.js.org/)
 export const formatIsoDate = (date: any) => {
-  return dayjs(date).format('MMM D, YYYY');
+  // check if date arg is valid date
+  if (date && dayjs(date).isValid()) {
+    return dayjs(date).format('MMM D, YYYY');
+  }
+  return 'N/A';
 };
