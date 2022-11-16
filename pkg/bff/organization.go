@@ -71,19 +71,13 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		return
 	}
 
-	// Create a new organization in the database
-	var org *models.Organization
-	if org, err = s.db.CreateOrganization(); err != nil {
-		log.Error().Err(err).Msg("could not create organization in database")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
-		return
+	// Create a new organization in the database with the provided name and domain
+	org := &models.Organization{
+		Name:   params.Name,
+		Domain: domain,
 	}
-
-	// Update the organization with the request params
-	org.Name = params.Name
-	org.Domain = domain
-	if err = s.db.UpdateOrganization(org); err != nil {
-		log.Error().Err(err).Msg("could not update organization in database")
+	if _, err = s.db.CreateOrganization(org); err != nil {
+		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
 		return
 	}

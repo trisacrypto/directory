@@ -98,8 +98,8 @@ func (s *Server) Login(c *gin.Context) {
 	var org *models.Organization
 	if params.OrgID == "" && appdata.OrgID == "" {
 		// This is a new user so create a new organization for them
-		org, err = s.db.CreateOrganization()
-		if err != nil {
+		org = &models.Organization{}
+		if _, err = s.db.CreateOrganization(org); err != nil {
 			log.Error().Err(err).Msg("could not create organization for new user")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return

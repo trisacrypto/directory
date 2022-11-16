@@ -107,23 +107,25 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	s.requireError(err, http.StatusNotFound, "organization not found")
 
 	// Create the organization in the database without the collaborator
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{
+		Id: metadata.OrgID,
+		Testnet: &models.DirectoryRecord{
+			Id: metadata.VASPs.TestNet,
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: metadata.VASPs.MainNet,
+		},
+	}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization")
-	org.Id = metadata.OrgID
-	org.Testnet = &models.DirectoryRecord{
-		Id: metadata.VASPs.TestNet,
-	}
-	org.Mainnet = &models.DirectoryRecord{
-		Id: metadata.VASPs.MainNet,
-	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// User is not authorized to access the organization without being a collaborator
 	err = s.client.Login(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "user is not authorized to access this organization")
 
 	// Make the user a TSP
-	newOrg, err := s.DB().CreateOrganization()
+	newOrg := &models.Organization{}
+	_, err = s.DB().CreateOrganization(newOrg)
 	require.NoError(err, "could not create organization")
 	metadata.OrgID = org.Id
 	metadata.Organizations = []string{newOrg.Id}
@@ -195,16 +197,17 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	s.requireError(err, http.StatusNotFound, "organization not found")
 
 	// Create the organization in the database
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{
+		Id: params.OrgID,
+		Testnet: &models.DirectoryRecord{
+			Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization")
-	org.Id = params.OrgID
-	org.Testnet = &models.DirectoryRecord{
-		Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
-	}
-	org.Mainnet = &models.DirectoryRecord{
-		Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
-	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// Return an error if the user is not a collaborator in the organization
 	// Note: This is a critical test case because it ensures that a user cannot login
@@ -243,10 +246,12 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
 	// Create a new organization in the database
-	newOrg, err := s.DB().CreateOrganization()
+	newOrg := &models.Organization{
+		Testnet: org.Mainnet,
+		Mainnet: org.Testnet,
+	}
+	_, err = s.DB().CreateOrganization(newOrg)
 	require.NoError(err, "could not create organization")
-	newOrg.Testnet = org.Mainnet
-	newOrg.Mainnet = org.Testnet
 
 	// Add the collaborators to the new organization
 	require.NoError(newOrg.AddCollaborator(collab), "could not add collaborator to organization")
@@ -292,14 +297,16 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Error(err, "organization should be deleted")
 
 	// Add the user as a TSP collaborator in a few organizations
-	org, err = s.DB().CreateOrganization()
+	org = &models.Organization{
+		Testnet: &models.DirectoryRecord{
+			Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization")
-	org.Testnet = &models.DirectoryRecord{
-		Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
-	}
-	org.Mainnet = &models.DirectoryRecord{
-		Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
-	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 	userMeta.Organizations = []string{org.Id}

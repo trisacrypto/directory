@@ -47,7 +47,8 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -117,7 +118,8 @@ func (s *bffTestSuite) TestListCollaborators() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -220,7 +222,8 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -308,7 +311,8 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID

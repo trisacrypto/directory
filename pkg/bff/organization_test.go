@@ -7,6 +7,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
 func (s *bffTestSuite) TestCreateOrganization() {
@@ -152,23 +153,26 @@ func (s *bffTestSuite) TestListOrganizations() {
 	require.Empty(reply, "expected empty response")
 
 	// Create some organizations for the user
-	alice, err := s.DB().CreateOrganization()
+	alice := &models.Organization{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+	_, err = s.DB().CreateOrganization(alice)
 	require.NoError(err, "could not create organization")
-	alice.Name = "Alice VASP"
-	alice.Domain = "alicevasp.io"
-	require.NoError(s.DB().UpdateOrganization(alice), "could not update organization")
 
-	bob, err := s.DB().CreateOrganization()
+	bob := &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(bob)
 	require.NoError(err, "could not create organization")
-	bob.Name = "Bob VASP"
-	bob.Domain = "bobvasp.io"
-	require.NoError(s.DB().UpdateOrganization(bob), "could not update organization")
 
-	charlie, err := s.DB().CreateOrganization()
+	charlie := &models.Organization{
+		Name:   "Charlie VASP",
+		Domain: "charlievasp.io",
+	}
+	_, err = s.DB().CreateOrganization(charlie)
 	require.NoError(err, "could not create organization")
-	charlie.Name = "Charlie VASP"
-	charlie.Domain = "charlievasp.io"
-	require.NoError(s.DB().UpdateOrganization(charlie), "could not update organization")
 
 	// Update the app metadata to contain the organizations
 	metadata.Organizations = []string{alice.Id, bob.Id, charlie.Id}

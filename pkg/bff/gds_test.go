@@ -107,7 +107,8 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
@@ -183,7 +184,8 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database that does not contain a registration form
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
@@ -235,7 +237,8 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	// Test setup: create an organization with a valid registration form that has not
 	// been submitted yet - at the end of the test both mainnet and testnet should be
 	// submitted and the response from the directory updated on the organization.
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
@@ -399,7 +402,8 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	// Ensure that a bad argument error is returned if the registration form is not
 	// ready to submit. Create an organization that has a registration form without
 	// network details and valid claims to access the record.
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err := s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
@@ -442,7 +446,8 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	// Ensure that a conflict error is returned if the registration form has already
 	// been ready to submitted. Create an organization that has directory records for
 	// both networks and valid claims to access the record.
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err := s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
@@ -731,7 +736,8 @@ func (s *bffTestSuite) TestAttention() {
 	require.NoError(loadFixture(mainnetFixture, mainnetVASP))
 
 	// Create an organization in the database with no registration form
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err := s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create initial claims fixture
@@ -980,7 +986,8 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	defer s.ResetDB()
 
 	// Create an organization in the database with no directory records
-	org, err := s.DB().CreateOrganization()
+	org := &records.Organization{}
+	_, err := s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create initial claims fixture
