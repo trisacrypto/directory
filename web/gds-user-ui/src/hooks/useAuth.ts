@@ -28,7 +28,9 @@ const useAuth = () => {
             user: {
               name: userInfo?.name,
               email: userInfo?.email,
-              pictureUrl: userInfo?.picture
+              pictureUrl: userInfo?.picture,
+              roles: userInfo?.roles || []
+
             }
           };
           loginUser(u);
