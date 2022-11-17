@@ -101,8 +101,8 @@ func (s *Server) Login(c *gin.Context) {
 	)
 	if params.OrgID == "" && appdata.OrgID == "" {
 		// This is a new user so create a new organization for them
-		org, err = s.db.CreateOrganization()
-		if err != nil {
+		org = &models.Organization{}
+		if _, err = s.db.CreateOrganization(org); err != nil {
 			log.Error().Err(err).Msg("could not create organization for new user")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
@@ -242,7 +242,7 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	// If the user app metadata has changed, set the refresh flag in the response
-	if !oldAppdata.Equals(appdata) {
+	if !appdata.Equals(oldAppdata) {
 		c.JSON(http.StatusOK, api.Reply{Success: true, RefreshToken: true})
 	} else {
 		c.Status(http.StatusNoContent)

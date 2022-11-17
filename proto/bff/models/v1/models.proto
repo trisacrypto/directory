@@ -14,6 +14,7 @@ message Organization {
     string id = 1;
     string name = 2;
     string logo_url = 3;
+    string domain = 4;
 
     // Directory Registrations for Lookups
     // TODO: populate these details in the Registration Endpoint

@@ -86,7 +86,7 @@ type MockDB struct {
 	OnRetrieveAnnouncementMonth func(date string) (*bff.AnnouncementMonth, error)
 	OnUpdateAnnouncementMonth   func(o *bff.AnnouncementMonth) error
 	OnDeleteAnnouncementMonth   func(date string) error
-	OnCreateOrganization        func() (*bff.Organization, error)
+	OnCreateOrganization        func(o *bff.Organization) (string, error)
 	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
 	OnUpdateOrganization        func(o *bff.Organization) error
 	OnDeleteOrganization        func(id uuid.UUID) error
@@ -214,9 +214,9 @@ func (m *MockDB) DeleteAnnouncementMonth(date string) error {
 	return m.OnDeleteAnnouncementMonth(date)
 }
 
-func (m *MockDB) CreateOrganization() (*bff.Organization, error) {
+func (m *MockDB) CreateOrganization(o *bff.Organization) (string, error) {
 	state.CreateOrganizationInvoked = true
-	return m.OnCreateOrganization()
+	return m.OnCreateOrganization(o)
 }
 
 func (m *MockDB) RetrieveOrganization(id uuid.UUID) (*bff.Organization, error) {

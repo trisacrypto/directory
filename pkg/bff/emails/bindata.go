@@ -11,6 +11,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -84,7 +85,7 @@ func invite_userHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "invite_user.html", size: 872, mode: os.FileMode(0644), modTime: time.Unix(1668463456, 0)}
+	info := bindataFileInfo{name: "invite_user.html", size: 872, mode: os.FileMode(0644), modTime: time.Unix(1668643353, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x69, 0x52, 0x4c, 0x18, 0xa, 0xcb, 0x3c, 0x9d, 0xf5, 0x77, 0xb6, 0xcd, 0x35, 0x2d, 0x63, 0x92, 0x7d, 0x43, 0x10, 0x8c, 0x96, 0xd5, 0xf, 0xe, 0xd6, 0x32, 0x8b, 0x91, 0x57, 0xcb, 0xba, 0xa1}}
 	return a, nil
 }
@@ -104,7 +105,7 @@ func invite_userTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "invite_user.txt", size: 726, mode: os.FileMode(0644), modTime: time.Unix(1668463456, 0)}
+	info := bindataFileInfo{name: "invite_user.txt", size: 726, mode: os.FileMode(0644), modTime: time.Unix(1668643353, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x26, 0x6a, 0x32, 0x2e, 0x1d, 0xaa, 0xe0, 0x54, 0xfe, 0xfa, 0x5d, 0xaa, 0xce, 0x19, 0xed, 0xa2, 0xc, 0xc5, 0xb5, 0xc1, 0xcb, 0xdf, 0x5b, 0x18, 0x1d, 0xc3, 0xf4, 0x1b, 0x1a, 0xec, 0xa, 0x45}}
 	return a, nil
 }
@@ -211,13 +212,11 @@ const AssetDebug = false
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
 // following hierarchy:
-//
-//	data/
-//	  foo.txt
-//	  img/
-//	    a.png
-//	    b.png
-//
+//     data/
+//       foo.txt
+//       img/
+//         a.png
+//         b.png
 // then AssetDir("data") would return []string{"foo.txt", "img"},
 // AssetDir("data/img") would return []string{"a.png", "b.png"},
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error, and
@@ -268,7 +267,7 @@ func RestoreAsset(dir, name string) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(_filePath(dir, name), data, info.Mode())
+	err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
 	if err != nil {
 		return err
 	}
