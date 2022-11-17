@@ -12,6 +12,7 @@ Please review the primary details of your directory entry and current certificat
 
 ID: {{ .VID }}
 Registered Directory: {{ .RegisteredDirectory }}
+Organization: {{ .Organization }}
 Common Name: {{ .CommonName }}
 Serial Number: {{ .SerialNumber }}
 Endpoint: {{ .Endpoint }}
