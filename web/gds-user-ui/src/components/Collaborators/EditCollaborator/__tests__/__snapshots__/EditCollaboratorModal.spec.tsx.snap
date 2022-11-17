@@ -1,0 +1,698 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UpdateCollaboratorModal should render 1`] = `
+.emotion-0 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-transparent);
+  color: blue;
+}
+
+.emotion-0:focus,
+.emotion-0[data-focus] {
+  background: var(--chakra-colors-transparent);
+}
+
+.emotion-0[disabled],
+.emotion-0[aria-disabled=true],
+.emotion-0[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-0:hover,
+.emotion-0[data-hover] {
+  background: var(--chakra-colors-transparent);
+}
+
+.emotion-0:active,
+.emotion-0[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  margin-top: var(--chakra-space-2);
+}
+
+.emotion-2>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-4);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-4 {
+  font-weight: 700;
+}
+
+.emotion-5 {
+  text-transform: capitalize;
+}
+
+.emotion-7 {
+  width: 100%;
+  position: relative;
+}
+
+.emotion-8 {
+  display: block;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  margin-bottom: var(--chakra-space-2);
+  font-weight: var(--chakra-fontWeights-medium);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  opacity: 1;
+}
+
+.emotion-8[disabled],
+.emotion-8[aria-disabled=true],
+.emotion-8[data-disabled] {
+  opacity: 0.4;
+}
+
+.emotion-10 {
+  position: relative;
+  pointer-events: auto;
+}
+
+.emotion-11 {
+  z-index: 9999;
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  width: 1px;
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.emotion-13 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: auto;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0px;
+  overflow: hidden;
+  min-height: var(--chakra-sizes-10);
+}
+
+.emotion-13:hover,
+.emotion-13[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-13[aria-readonly=true],
+.emotion-13[readonly],
+.emotion-13[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-13[disabled],
+.emotion-13[aria-disabled=true],
+.emotion-13[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-13[aria-invalid=true],
+.emotion-13[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-13:focus,
+.emotion-13[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-14 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  padding: 0.125rem 1rem;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-15 {
+  color: var(--chakra-colors-gray-400);
+  -webkit-margin-start: 0.125rem;
+  margin-inline-start: 0.125rem;
+  -webkit-margin-end: 0.125rem;
+  margin-inline-end: 0.125rem;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.emotion-16 {
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  display: inline-grid;
+  grid-area: 1/1/2/3;
+  grid-template-columns: 0 min-content;
+  color: inherit;
+}
+
+.emotion-16::after {
+  content: attr(data-value) " ";
+  visibility: hidden;
+  white-space: pre;
+  padding: 0px;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-17 {
+  color: inherit;
+  background: 0;
+  opacity: 1;
+  width: 100%;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-18 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-align-self: stretch;
+  -ms-flex-item-align: stretch;
+  align-self: stretch;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+}
+
+.emotion-19 {
+  opacity: 1;
+  border: 0;
+  border-color: inherit;
+  border-style: solid;
+  border-left-width: 1px;
+  height: 100%;
+}
+
+.emotion-20 {
+  font-size: 20px;
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: 100%;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: var(--chakra-colors-gray-100);
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  border-width: 0;
+  cursor: pointer;
+}
+
+.emotion-21 {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+  vertical-align: middle;
+}
+
+.emotion-22 {
+  margin-top: var(--chakra-space-2);
+  color: var(--chakra-colors-gray-500);
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-23 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: 150px;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: orange;
+}
+
+.emotion-23:focus,
+.emotion-23[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-23[disabled],
+.emotion-23[aria-disabled=true],
+.emotion-23[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-23:hover,
+.emotion-23[data-hover] {
+  background: orange;
+}
+
+.emotion-23:active,
+.emotion-23[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-24 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: 150px;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  color: link;
+}
+
+.emotion-24:focus,
+.emotion-24[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-24[disabled],
+.emotion-24[aria-disabled=true],
+.emotion-24[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-24:hover,
+.emotion-24[data-hover] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-24:hover[disabled],
+.emotion-24[data-hover][disabled],
+.emotion-24:hover[aria-disabled=true],
+.emotion-24[data-hover][aria-disabled=true],
+.emotion-24:hover[data-disabled],
+.emotion-24[data-hover][data-disabled] {
+  background: initial;
+}
+
+.emotion-24:active,
+.emotion-24[data-active] {
+  background: var(--chakra-colors-gray-200);
+}
+
+<div>
+  <button
+    class="chakra-button emotion-0"
+    data-testid="collaborator-button"
+    disabled=""
+    type="button"
+  >
+    <svg
+      fill="none"
+      font-size="24px"
+      height="1em"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+      />
+      <path
+        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+      />
+    </svg>
+    <div
+      data-testid="modal"
+    >
+      <div
+        data-testid="overlay"
+      />
+      <div
+        data-testid="content"
+      >
+        <div
+          data-testid="update-collaborator-modal"
+        >
+          Edit collaborator Role
+        </div>
+        <div
+          data-testid="close"
+        />
+        <div
+          data-testid="body"
+        >
+          <p
+            class="chakra-text emotion-1"
+          >
+            Select the collaborator’s role and save.
+          </p>
+          <div
+            class="chakra-stack emotion-2"
+          >
+            <div
+              class="emotion-1"
+            >
+              <p
+                class="chakra-text emotion-4"
+              >
+                Collaborator Name & Email
+              </p>
+              <p
+                class="chakra-text emotion-5"
+                data-testid="collaborator-name"
+              >
+                test
+              </p>
+              <p
+                class="chakra-text emotion-1"
+                data-testid="collaborator-email"
+              >
+                test@local.dev
+              </p>
+            </div>
+            <div
+              class="chakra-form-control emotion-7"
+              role="group"
+            >
+              <label
+                class="chakra-form__label emotion-8"
+                for="role"
+                id="field-1-label"
+              >
+                <span
+                  class="emotion-4"
+                >
+                  Change Role
+                </span>
+              </label>
+              <div
+                class=" emotion-10"
+                id="role"
+              >
+                <span
+                  class="emotion-11"
+                  id="react-select-2-live-region"
+                />
+                <span
+                  aria-atomic="false"
+                  aria-live="polite"
+                  aria-relevant="additions text"
+                  class="emotion-11"
+                />
+                <div
+                  class=" emotion-13"
+                >
+                  <div
+                    class=" emotion-14"
+                  >
+                    <div
+                      class=" emotion-15"
+                      id="react-select-2-placeholder"
+                    >
+                      Select Role
+                    </div>
+                    <div
+                      class=" emotion-16"
+                      data-value=""
+                    >
+                      <input
+                        aria-autocomplete="list"
+                        aria-controls="react-select-2-listbox"
+                        aria-describedby="react-select-2-placeholder"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        aria-owns="react-select-2-listbox"
+                        autocapitalize="none"
+                        autocomplete="off"
+                        autocorrect="off"
+                        class=" emotion-17"
+                        id="field-1"
+                        role="combobox"
+                        spellcheck="false"
+                        tabindex="0"
+                        type="text"
+                        value=""
+                      />
+                    </div>
+                  </div>
+                  <div
+                    class=" emotion-18"
+                  >
+                    <hr
+                      aria-orientation="vertical"
+                      class="chakra-divider emotion-19"
+                    />
+                    <div
+                      aria-hidden="true"
+                      class=" emotion-20"
+                    >
+                      <svg
+                        class="chakra-icon emotion-21"
+                        focusable="false"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <input
+                  name="role"
+                  type="hidden"
+                  value=""
+                />
+              </div>
+              <div
+                class="chakra-form__helper-text emotion-22"
+                id="field-1-helptext"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          data-testid="footer"
+        >
+          <button
+            class="chakra-button emotion-23"
+            data-testid="update-collaborator-button"
+            type="button"
+          >
+            Save
+          </button>
+          <button
+            class="chakra-button emotion-24"
+            type="button"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </button>
+</div>
+`;

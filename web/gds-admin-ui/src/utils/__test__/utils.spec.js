@@ -1,4 +1,4 @@
-import { defaultEndpointPrefix } from "../utils";
+import { defaultEndpointPrefix } from "..";
 
 describe("defaultEndpointPrefix", () => {
 

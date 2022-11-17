@@ -6,6 +6,7 @@ The primary details of your directory entry are as follows:
 
 ID: {{ .VID }}
 Registered Directory: {{ .RegisteredDirectory }}
+Organization: {{ .Organization }}
 Common Name: {{ .CommonName }}
 Endpoint: {{ .Endpoint }}
 

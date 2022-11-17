@@ -610,26 +610,27 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 //===========================================================================
 
 // CreateOrganization creates a new organization record in the store, assigning a
-// unique ID and setting the created and modified timestamps.
-func (s *Store) CreateOrganization() (o *bff.Organization, err error) {
-	// Create an empty organization
-	ts := time.Now().Format(time.RFC3339Nano)
-	uu := uuid.New()
-	o = &bff.Organization{
-		Id:       uu.String(),
-		Created:  ts,
-		Modified: ts,
+// unique ID if it doesn't exist and setting the created and modified timestamps.
+func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
+	// Create the organization ID if not provided
+	if o.Id == "" {
+		o.Id = uuid.New().String()
 	}
+
+	// Set the created and modified timestamps
+	ts := time.Now().Format(time.RFC3339Nano)
+	o.Created = ts
+	o.Modified = ts
 
 	var data []byte
 	if data, err = proto.Marshal(o); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	if err = s.db.Put(uu[:], data, nil); err != nil {
-		return nil, err
+	if err = s.db.Put(o.Key(), data, nil); err != nil {
+		return "", err
 	}
-	return o, nil
+	return o.Id, nil
 }
 
 // RetrieveOrganization retrieves an organization record from the store by UUID.
