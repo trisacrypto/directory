@@ -5,7 +5,7 @@ jest.mock('application/store', () => ({
     getState: jest.fn().mockReturnValue({
         user: {
             user: {
-                permission: ['read:collaborators', 'create:collaborators', 'update:collaborators', 'approve:collaborators', 'read:certificates', 'create:certificates', 'update:certificates', 'read:vasp', 'create:vasp', 'update:vasp']
+                permissions: ['read:collaborators', 'create:collaborators', 'update:collaborators', 'approve:collaborators', 'read:certificates', 'create:certificates', 'update:certificates', 'read:vasp', 'create:vasp', 'update:vasp']
             }
         }
     })
