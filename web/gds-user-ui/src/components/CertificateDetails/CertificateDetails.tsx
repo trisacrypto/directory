@@ -45,6 +45,7 @@ function CertificateDetails() {
   const params = useParams<Params>();
   const [searchParams] = useSearchParams();
   const { value } = useAsync(getCertificates);
+
   const certificateId = params?.certificateId;
   const network = searchParams.get('network') as any;
 
