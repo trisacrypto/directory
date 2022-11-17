@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 import { t } from '@lingui/macro';
 import { USER_PERMISSION } from 'types/enums';
-import { useSafeDisableIconButton } from 'components/Collaborators/useSafeDisableButton';
+import { useSafeDisableIconButton } from 'components/Collaborators/useSafeDisableIconButton';
 interface Props {
   collaboratorId: string;
 }
