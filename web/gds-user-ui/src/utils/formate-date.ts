@@ -19,5 +19,5 @@ export const formatIsoDate = (date: any) => {
   if (date && dayjs(date).isValid()) {
     return dayjs(date).format('MMM D, YYYY');
   }
-  return 'N/A';
+  return '-';
 };

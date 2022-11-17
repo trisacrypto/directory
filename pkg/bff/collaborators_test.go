@@ -47,7 +47,8 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -117,7 +118,8 @@ func (s *bffTestSuite) TestListCollaborators() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -220,7 +222,8 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -308,7 +311,8 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
 
 	// Create an organization in the database without any collaborators
-	org, err := s.DB().CreateOrganization()
+	org := &models.Organization{}
+	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -345,6 +349,18 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	org.Collaborators[collab.Key()] = collab
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
 
+	// Make sure the user has some app metadata
+	userMeta := &auth.AppMetadata{
+		OrgID: org.Id,
+		VASPs: auth.VASPs{
+			MainNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			TestNet: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	appdata, err := userMeta.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+
 	// If a verified collaborator is deleted, then the record should still be deleted
 	// from the organization
 	require.NoError(s.client.DeleteCollaborator(context.TODO(), collab.Id))
@@ -352,10 +368,12 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
 
-	// The user app metadata should also be updated
-	appdata := &auth.AppMetadata{}
-	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
-	require.Empty(appdata.OrgID, "expected orgid in app metadata to be empty")
+	// The org in the user's app metadata should be cleared
+	userMeta = &auth.AppMetadata{}
+	require.NoError(userMeta.Load(s.auth.GetUserAppMetadata()))
+	require.Empty(userMeta.OrgID, "expected orgid in app metadata to be empty")
+	require.Empty(userMeta.VASPs.MainNet, "expected mainnet VASP in app metadata to be empty")
+	require.Empty(userMeta.VASPs.TestNet, "expected testnet VASP in app metadata to be empty")
 }
 
 func (s *bffTestSuite) TestInsortCollaborator() {

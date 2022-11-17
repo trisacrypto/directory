@@ -7,6 +7,7 @@ export interface Collaborator {
     roles: string[];
     created_at?: string;
     modified_at?: string;
+    joined_at?: string;
     organization?: string;
     verified_at?: string;
     status?: TCollaboratorStatus;
