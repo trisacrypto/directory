@@ -24,3 +24,5 @@ type TUserPermission = TUserCollaboratorPermission | TUserCertificatePermission 
 
 type TUserRole = 'Organization Leader' | 'Organization Collaborator';
 
+type TCollaboratorStatus = 'pending' | 'joined';
+

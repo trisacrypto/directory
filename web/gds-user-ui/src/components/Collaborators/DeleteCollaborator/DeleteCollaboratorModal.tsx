@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 import { t } from '@lingui/macro';
 import { USER_PERMISSION } from 'types/enums';
-import { useSafeDisableButton } from 'components/Collaborators/useSafeDisableButton';
+import { useSafeDisableIconButton } from 'components/Collaborators/useSafeDisableButton';
 interface Props {
   collaboratorId: string;
 }
@@ -43,7 +43,7 @@ function DeleteCollaboratorModal(props: Props) {
 
   const [isDeleteChecked, setIsDeleteChecked] = useState(false);
 
-  const { isDisabled: shouldDisableButton } = useSafeDisableButton(
+  const { isDisabled: isNotCurrentUserAndHasPermission } = useSafeDisableIconButton(
     USER_PERMISSION.UPDATE_COLLABORATOR,
     collaborator?.email as string
   );
@@ -101,7 +101,7 @@ function DeleteCollaboratorModal(props: Props) {
       onClick={onOpen}
       bg={'transparent'}
       data-testid="icon-collaborator-button"
-      disabled={!shouldDisableButton}
+      disabled={!isNotCurrentUserAndHasPermission}
       _hover={{
         bg: 'transparent'
       }}

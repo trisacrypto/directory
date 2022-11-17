@@ -64,27 +64,21 @@ import { isDate } from 'lodash';
 //   }
 // ];
 
-const getStatus = (joinedAt: any, verifiedAt?: any) => {
-  // handle when collaborator is current user when sc-11278 will be merged
+const getStatus = (joinedAt: any): any => {
+  console.log('joinedAt', joinedAt);
   if (joinedAt && isDate(joinedAt)) {
-    return 'Joined';
-  }
-  if (verifiedAt && isDate(verifiedAt)) {
     return 'Joined';
   }
   return 'Pending';
 };
 
 const getStatusBgColor = (joinedAt: string) => {
-  const status = getStatus(joinedAt);
-  console.log('[Collaborators] status', status);
+  const status = getStatus(joinedAt) as TCollaboratorStatus;
   switch (status && status.toLowerCase()) {
     case 'joined':
       return 'green.400';
     case 'pending':
       return 'yellow.400';
-    case 'inactive':
-      return 'red.400';
   }
 };
 
