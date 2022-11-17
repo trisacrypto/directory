@@ -4,15 +4,17 @@ import Store from 'application/store';
 import { isArray } from 'lodash';
 
 export const getUserPermissionFromStore = () => {
-    return Store.getState()?.user?.user?.permission;
+    return Store.getState()?.user?.user?.permissions;
 };
 
-/* hasPermission function
-   @params permission: string | string[]
-   @return boolean
- */
+/**  hasPermission function
+ *   @params permission: string | string[]
+ *   @return boolean
+*/
+
 export const hasPermission = (permission: TUserPermission | TUserPermission[]) => {
     const userPermission = getUserPermissionFromStore();
+    console.log('userPermission', userPermission);
     if (isArray(permission)) {
         // all permission element should be in userPermission
         return permission.every((p) => userPermission.includes(p));
@@ -21,9 +23,9 @@ export const hasPermission = (permission: TUserPermission | TUserPermission[]) =
     return userPermission?.includes(permission);
 };
 
-/* hasRole function
-    @params role: string | string[]
-    @return boolean
+/**  hasRole function
+ *   @params role: string | string[]
+ *   @return boolean
 */
 
 export const hasRole = (role: TUserRole | TUserRole[]) => {
