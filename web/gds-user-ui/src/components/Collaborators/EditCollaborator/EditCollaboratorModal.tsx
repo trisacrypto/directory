@@ -45,7 +45,7 @@ function EditCollaboratorModal(props: Props) {
     errorMessage
   } = useUpdateCollaborator();
 
-  const { isDisabled: shouldDisableButton } = useSafeDisableButton(
+  const { isDisabled: isNotCurrentUserAndHasPermission } = useSafeDisableButton(
     USER_PERMISSION.UPDATE_COLLABORATOR,
     collaborator?.email as string
   );
@@ -133,7 +133,7 @@ function EditCollaboratorModal(props: Props) {
       onClick={onOpen}
       data-testid="collaborator-button"
       bg={'transparent'}
-      disabled={shouldDisableButton}
+      disabled={!isNotCurrentUserAndHasPermission}
       _hover={{
         bg: 'transparent'
       }}

@@ -1,4 +1,5 @@
 import Store from 'application/store';
+
 // map collaborators and set date to date object
 export const mapCollaborators = (arr: any) => {
     return arr.map((collaborator: any) => {

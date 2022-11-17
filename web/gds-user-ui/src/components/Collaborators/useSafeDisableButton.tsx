@@ -7,12 +7,15 @@ export const useSafeDisableButton = (permission: TUserPermission, condition: str
   const [isDisabled, setIsDisabled] = useState(false);
 
   useEffect(() => {
-    if (isCurrentUser(condition)) {
-      setIsDisabled(true);
+    let once = false;
+    if (!once) {
+      once = true;
+      const d = !isCurrentUser(condition) && hasPermission(permission);
+      setIsDisabled(d);
     }
-    if (hasPermission(permission)) {
-      setIsDisabled(true);
-    }
+    return () => {
+      once = true;
+    };
   }, [permission, condition]);
 
   return { isDisabled };
