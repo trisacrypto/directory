@@ -500,6 +500,7 @@ exports[`UpdateCollaboratorModal should render 1`] = `
 <div>
   <button
     class="chakra-button emotion-0"
+    data-testid="edit-collaborator-button"
     disabled=""
     type="button"
   >

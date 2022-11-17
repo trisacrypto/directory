@@ -22,9 +22,8 @@ import { useUpdateCollaborator } from 'components/Collaborators/EditCollaborator
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 import React, { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
-import { hasPermission } from 'utils/permission';
 import { USER_PERMISSION } from 'types/enums';
-import { isCurrentUser } from '../lib';
+import { useSafeDisableButton } from 'components/Collaborators/useSafeDisableButton';
 interface Props {
   collaboratorId: string;
   roles?: string[];
@@ -46,6 +45,11 @@ function EditCollaboratorModal(props: Props) {
     errorMessage
   } = useUpdateCollaborator();
 
+  const { isDisabled: shouldDisableButton } = useSafeDisableButton(
+    USER_PERMISSION.UPDATE_COLLABORATOR,
+    collaborator?.email as string
+  );
+
   const updateHandler = () => {
     // update user role
     const collaboratorData = {
@@ -65,12 +69,12 @@ function EditCollaboratorModal(props: Props) {
     value: v
   }));
 
-  const shouldDisableButton = () => {
-    if (isCurrentUser(collaborator?.email || '')) {
-      return true;
-    }
-    return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
-  };
+  // const shouldDisableButton = () => {
+  //   if (isCurrentUser(collaborator?.email as string)) {
+  //     return true;
+  //   }
+  //   return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
+  // };
 
   useEffect(() => {
     let once = false;
@@ -127,8 +131,9 @@ function EditCollaboratorModal(props: Props) {
     <Button
       color="blue"
       onClick={onOpen}
+      data-testid="edit-collaborator-button"
       bg={'transparent'}
-      disabled={shouldDisableButton()}
+      disabled={shouldDisableButton}
       _hover={{
         bg: 'transparent'
       }}
