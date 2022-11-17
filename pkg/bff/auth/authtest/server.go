@@ -20,7 +20,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -318,7 +317,7 @@ func (s *Server) GenerateTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := fmt.Sprintf("https://example.com/tickets/1234")
+	url := "https://example.com/tickets/1234"
 	ticket.Ticket = &url
 
 	w.Header().Add("Content-Type", "application/json")
