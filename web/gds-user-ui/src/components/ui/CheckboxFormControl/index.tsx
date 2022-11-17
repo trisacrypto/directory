@@ -20,7 +20,7 @@ const CheckboxFormControl = React.forwardRef<any, _FormControlProps>(
   ({ formHelperText, controlId, name, isDisabled, isRequired, isInvalid, ...rest }, ref) => {
     return (
       <FormControl isInvalid={isInvalid}>
-        <FormLabel htmlFor={controlId}>{name}</FormLabel>
+        <FormLabel htmlFor={controlId}></FormLabel>
         <CheckboxGroup>
           <Checkbox
             id={controlId}
