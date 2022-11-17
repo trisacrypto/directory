@@ -103,6 +103,22 @@ describe('DeleteCollaboratorModal', () => {
     );
   });
 
+  // collaborator without update:collaborator permission should not be able to delete collaborator
+  it('should disable edit button if user does not have update:collaborator permission', () => {
+    // mock shouldDisableDeleteButton to return true
+    const mockShouldDisableDeleteButton = jest.fn().mockReturnValue(true);
+    jest.mock('components/Collaborators/useSafeDisableButton', () => ({
+      ...jest.requireActual('hooks/useSafeDisableButton'),
+      useSafeDisableButton: () => ({
+        isDisabled: mockShouldDisableDeleteButton()
+      })
+    }));
+    renderComponent();
+    const editButton = screen.getByTestId('delete-collaborator-button');
+    fireEvent.click(editButton);
+    expect(editButton).toBeDisabled();
+  });
+
   // it('should call deleteHandler function when delete button is clicked', () => {
   //   renderComponent();
   //   userEvent.click(screen.getByTestId('delete-collaborator-button'));

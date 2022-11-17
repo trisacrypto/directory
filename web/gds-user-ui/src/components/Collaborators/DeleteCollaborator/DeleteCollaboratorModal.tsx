@@ -21,9 +21,8 @@ import { BsTrash } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
 import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 import { t } from '@lingui/macro';
-import { hasPermission } from 'utils/permission';
 import { USER_PERMISSION } from 'types/enums';
-import { isCurrentUser } from '../lib';
+import { useSafeDisableButton } from 'components/Collaborators/useSafeDisableButton';
 interface Props {
   collaboratorId: string;
 }
@@ -39,9 +38,15 @@ function DeleteCollaboratorModal(props: Props) {
     hasCollaboratorFailed,
     errorMessage
   } = useDeleteCollaborator();
+
   const [collaborator, setCollaborator] = useState<Collaborator>();
 
   const [isDeleteChecked, setIsDeleteChecked] = useState(false);
+
+  const { isDisabled: shouldDisableButton } = useSafeDisableButton(
+    USER_PERMISSION.UPDATE_COLLABORATOR,
+    collaborator?.email as string
+  );
 
   const deleteHandler = () => {
     // delete collaborator
@@ -49,13 +54,6 @@ function DeleteCollaboratorModal(props: Props) {
 
     setIsDeleteChecked(false);
     onClose();
-  };
-
-  const shouldDisableButton = () => {
-    if (isCurrentUser(collaborator?.email || '')) {
-      return true;
-    }
-    return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
   };
 
   useEffect(() => {
@@ -102,7 +100,8 @@ function DeleteCollaboratorModal(props: Props) {
       color="blue"
       onClick={onOpen}
       bg={'transparent'}
-      disabled={shouldDisableButton()}
+      data-testid="delete-collaborator-button"
+      disabled={shouldDisableButton}
       _hover={{
         bg: 'transparent'
       }}
