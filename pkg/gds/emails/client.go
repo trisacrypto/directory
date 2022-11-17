@@ -18,6 +18,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/admin/v2"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -28,10 +30,13 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 	m = &EmailManager{conf: conf}
 	if conf.Testing {
 		log.Warn().Bool("testing", conf.Testing).Str("storage", conf.Storage).Msg("using mock sendgrid client")
-		m.client = &mockSendGridClient{
-			storage: conf.Storage,
+		m.client = &mock.SendGridClient{
+			Storage: conf.Storage,
 		}
 	} else {
+		if conf.SendGridAPIKey == "" {
+			return nil, errors.New("cannot create sendgrid client without API key")
+		}
 		m.client = sendgrid.NewSendClient(conf.SendGridAPIKey)
 	}
 
@@ -58,14 +63,9 @@ func New(conf config.EmailConfig) (m *EmailManager, err error) {
 // EmailManager allows the server to send rich emails using the SendGrid service.
 type EmailManager struct {
 	conf         config.EmailConfig
-	client       EmailClient
+	client       emails.EmailClient
 	serviceEmail *mail.Address
 	adminsEmail  *mail.Address
-}
-
-// EmailClient is an interface that can be implemented by SendGrid email clients.
-type EmailClient interface {
-	Send(email *sgmail.SGMailV3) (*rest.Response, error)
 }
 
 func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
@@ -221,8 +221,15 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := RejectRegistrationData{
-		VID:    vasp.Id,
-		Reason: reason,
+		VID:                 vasp.Id,
+		Reason:              reason,
+		CommonName:          vasp.CommonName,
+		RegisteredDirectory: vasp.RegisteredDirectory,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	// Attempt at least one delivery, don't give up just because one email failed
@@ -280,6 +287,11 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 		SerialNumber:        hex.EncodeToString(vasp.IdentityCertificate.SerialNumber),
 		Endpoint:            vasp.TrisaEndpoint,
 		RegisteredDirectory: m.conf.DirectoryID,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	// Attempt at least one delivery, don't give up just because one email failed
@@ -352,6 +364,11 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 		BaseURL:             m.conf.AdminReviewBaseURL,
 	}
 
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
+
 	if vasp.IdentityCertificate != nil {
 		// TODO: ensure the timestamp format is correct
 		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
@@ -383,7 +400,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 // a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
 // critical alert is raised.
 func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
-	ReissuanceData := ReissuanceReminderData{
+	ctx := ReissuanceReminderData{
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
 		Endpoint:            vasp.TrisaEndpoint,
@@ -391,9 +408,14 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		Reissuance:          reissuanceDate,
 	}
 
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
+	}
+
 	if vasp.IdentityCertificate != nil {
-		ReissuanceData.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
-		if ReissuanceData.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+		ctx.SerialNumber = strings.ToUpper(hex.EncodeToString(vasp.IdentityCertificate.SerialNumber))
+		if ctx.Expiration, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
 			return fmt.Errorf("could not parse vasp certificate expiration date for %s", vasp.Id)
 		}
 	}
@@ -421,11 +443,11 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		}
 
 		// Create the reissuance reminder email.
-		ReissuanceData.Name = contact.Name
+		ctx.Name = contact.Name
 		msg, err := ReissuanceReminderEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
 			contact.Name, contact.Email,
-			ReissuanceData,
+			ctx,
 		)
 		if err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
@@ -445,9 +467,9 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 
 // Helper function for SendContactReissuanceReminder that builds the list of verified contacts
 // to send reissuance reminder emails to based on the following logic:
-// 		1. Send to the Technical contact if verified, else
-// 		2. Send to the Administrative contact if verified, else
-// 		3. Send to all other verified contacts
+//  1. Send to the Technical contact if verified, else
+//  2. Send to the Administrative contact if verified, else
+//  3. Send to all other verified contacts
 func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
 	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
 		return nil, err
@@ -487,6 +509,11 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 		Endpoint:            vasp.TrisaEndpoint,
 		RegisteredDirectory: m.conf.DirectoryID,
 		Reissuance:          reissueDate,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	if vasp.IdentityCertificate != nil {
@@ -548,6 +575,11 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 		Endpoint:            vasp.TrisaEndpoint,
 		RegisteredDirectory: m.conf.DirectoryID,
 		WhisperURL:          whisperLink,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	// Attempt at least one delivery, don't give up just because one email failed.
@@ -616,6 +648,11 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow
 		RegisteredDirectory: m.conf.DirectoryID,
 		Reissuance:          reissueDate,
 		BaseURL:             m.conf.AdminReviewBaseURL,
+	}
+
+	ctx.Organization, _ = vasp.Name()
+	if ctx.Organization == "" {
+		ctx.Organization = UnspecifiedOrganization
 	}
 
 	if vasp.IdentityCertificate != nil {

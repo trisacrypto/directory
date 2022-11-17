@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
+	emailutils "github.com/trisacrypto/directory/pkg/utils/emails"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 )
 
@@ -37,7 +39,7 @@ func setupMIMEDir(t *testing.T) {
 // generateMIME writes an SGMailV3 email to a MIME file for manual inspection if the eyeball flag is set.
 func generateMIME(t *testing.T, msg *sgmail.SGMailV3, name string) {
 	if *eyeball {
-		err := emails.WriteMIME(msg, filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()), name))
+		err := emailutils.WriteMIME(msg, filepath.Join("testdata", fmt.Sprintf("eyeball%s", t.Name()), name))
 		require.NoError(t, err)
 	}
 }
@@ -64,13 +66,13 @@ func TestEmailBuilders(t *testing.T) {
 	require.Equal(t, emails.ReviewRequestRE, mail.Subject)
 	generateMIME(t, mail, "review-request.mim")
 
-	rjdata := emails.RejectRegistrationData{Name: recipient, Reason: "not a good time", VID: "42"}
+	rjdata := emails.RejectRegistrationData{Name: recipient, Reason: "not a good time", VID: "42", CommonName: "example.com", Organization: "Acme, Inc.", RegisteredDirectory: "trisatest.dev"}
 	mail, err = emails.RejectRegistrationEmail(sender, senderEmail, recipient, recipientEmail, rjdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.RejectRegistrationRE, mail.Subject)
 	generateMIME(t, mail, "reject-registration.mim")
 
-	dcdata := emails.DeliverCertsData{Name: recipient, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
+	dcdata := emails.DeliverCertsData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	mail, err = emails.DeliverCertsEmail(sender, senderEmail, recipient, recipientEmail, "testdata/foo.zip", dcdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.DeliverCertsRE, mail.Subject)
@@ -79,25 +81,25 @@ func TestEmailBuilders(t *testing.T) {
 	expires := time.Date(2022, time.July, 18, 12, 11, 35, 0, time.UTC)
 	reissuance := time.Date(2022, time.July, 25, 14, 0, 0, 0, time.UTC)
 
-	eandata := emails.ExpiresAdminNotificationData{VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	eandata := emails.ExpiresAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ExpiresAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, eandata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ExpiresAdminNotificationRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "expires-admin-notification.mim")
 
-	rmdata := emails.ReissuanceReminderData{Name: recipient, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance}
+	rmdata := emails.ReissuanceReminderData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance}
 	mail, err = emails.ReissuanceReminderEmail(sender, senderEmail, recipient, recipientEmail, rmdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceReminderRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "reissuance-reminder.mim")
 
-	rsdata := emails.ReissuanceStartedData{Name: recipient, VID: "42", CommonName: "example.com", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", WhisperURL: "http://localhost/secret"}
+	rsdata := emails.ReissuanceStartedData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", WhisperURL: "http://localhost/secret"}
 	mail, err = emails.ReissuanceStartedEmail(sender, senderEmail, recipient, recipientEmail, rsdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceStartedRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "reissuance-started.mim")
 
-	randata := emails.ReissuanceAdminNotificationData{VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	randata := emails.ReissuanceAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ReissuanceAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, randata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceAdminNotificationRE, mail.Subject, "incorrect subject")
@@ -241,7 +243,7 @@ func (suite *EmailTestSuite) BeforeTest(suiteName, testName string) {
 }
 
 func (suite *EmailTestSuite) AfterTest(suiteName, testName string) {
-	emails.PurgeMockEmails()
+	mock.PurgeEmails()
 }
 
 func (suite *EmailTestSuite) TearDownSuite() {
@@ -264,10 +266,10 @@ func (suite *EmailTestSuite) TestSendVerifyContactEmail() {
 	msg, err := emails.VerifyContactEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "verify-contact.mim")
 }
@@ -288,10 +290,10 @@ func (suite *EmailTestSuite) TestSendReviewRequestEmail() {
 	msg, err := emails.ReviewRequestEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "review-request.mim")
 }
@@ -308,14 +310,14 @@ func (suite *EmailTestSuite) TestSendRejectRegistrationEmail() {
 	email, err := emails.New(suite.conf)
 	require.NoError(err)
 
-	data := emails.RejectRegistrationData{Name: recipient.Name, Reason: "not a good time", VID: "42"}
+	data := emails.RejectRegistrationData{Name: recipient.Name, Reason: "not a good time", VID: "42", Organization: "Acme, Inc.", CommonName: "example.com", RegisteredDirectory: "trisatest.dev"}
 	msg, err := emails.RejectRegistrationEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reject-registration.mim")
 }
@@ -332,14 +334,14 @@ func (suite *EmailTestSuite) TestSendDeliverCertsEmail() {
 	email, err := emails.New(suite.conf)
 	require.NoError(err)
 
-	data := emails.DeliverCertsData{Name: recipient.Name, VID: "42", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
+	data := emails.DeliverCertsData{Name: recipient.Name, VID: "42", Organization: "Acme, Inc.", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443"}
 	msg, err := emails.DeliverCertsEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, "testdata/foo.zip", data)
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "deliver-certs.mim")
 }
@@ -359,6 +361,7 @@ func (suite *EmailTestSuite) TestSendExpiresAdminNotificationEmail() {
 	// Create the expires admin notification email.
 	data := emails.ExpiresAdminNotificationData{
 		VID:                 "42",
+		Organization:        "Acme, Inc.",
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
@@ -371,10 +374,10 @@ func (suite *EmailTestSuite) TestSendExpiresAdminNotificationEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "expires-admin-notification.mim")
 }
@@ -395,6 +398,7 @@ func (suite *EmailTestSuite) TestSendReissuanceReminderEmail() {
 	data := emails.ReissuanceReminderData{
 		Name:                recipient.Name,
 		VID:                 "42",
+		Organization:        "Acme, Inc.",
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
@@ -406,10 +410,10 @@ func (suite *EmailTestSuite) TestSendReissuanceReminderEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-reminder.mim")
 }
@@ -430,6 +434,7 @@ func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
 	data := emails.ReissuanceStartedData{
 		Name:                recipient.Name,
 		VID:                 "42",
+		Organization:        "Acme, Inc.",
 		CommonName:          "test.example.com",
 		Endpoint:            "test.example.com:443",
 		RegisteredDirectory: "trisatest.net",
@@ -439,10 +444,10 @@ func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-started.mim")
 }
@@ -462,6 +467,7 @@ func (suite *EmailTestSuite) TestSendReissuanceAdminNotificationEmail() {
 	// Create the reissuance admin notification email.
 	data := emails.ReissuanceAdminNotificationData{
 		VID:                 "42",
+		Organization:        "Acme, Inc.",
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
@@ -474,10 +480,10 @@ func (suite *EmailTestSuite) TestSendReissuanceAdminNotificationEmail() {
 
 	require.NoError(err)
 	require.NoError(email.Send(msg))
-	require.Len(emails.MockEmails, 1)
+	require.Len(mock.Emails, 1)
 	expected, err := json.Marshal(msg)
 	require.NoError(err)
-	require.Equal(expected, emails.MockEmails[0])
+	require.Equal(expected, mock.Emails[0])
 
 	generateMIME(suite.T(), msg, "reissuance-admin-notification.mim")
 }

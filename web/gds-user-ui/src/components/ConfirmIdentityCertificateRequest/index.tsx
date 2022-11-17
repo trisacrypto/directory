@@ -18,7 +18,7 @@ import { useForm } from 'react-hook-form';
 
 export type ConfirmIdentityCertificateProps = { children: ReactNode } & ButtonProps;
 
-function ConfirmIdentityCertificate({ children, ...rest }: ConfirmIdentityCertificateProps) {
+function ConfirmIdentityCertificateModal({ children, ...rest }: ConfirmIdentityCertificateProps) {
   const { onClose, onOpen, isOpen } = useDisclosure();
   const { register } = useForm();
 
@@ -75,4 +75,4 @@ function ConfirmIdentityCertificate({ children, ...rest }: ConfirmIdentityCertif
   );
 }
 
-export default ConfirmIdentityCertificate;
+export default ConfirmIdentityCertificateModal;

@@ -1,18 +1,27 @@
 <p>Hello TRISA Admins,</p>
 
-<p>A TRISA Identity Certificate automated reissuance for {{ .CommonName }} will soon begin as the identity certificates for this record will expire on {{ .ExpirationDate }}.</p>
+<p>
+  A TRISA Identity Certificate automated reissuance for {{ .CommonName }} will
+  soon begin as the identity certificates for this record will expire on {{
+  .ExpirationDate }}.
+</p>
 
-<p>The Global Directory Service will automatically reissue the certificates on {{ .ReissueDate }}. Please review the directory entry and VASP record for the current certificate to ensure the TRISA member should remain verified.</p>
+<p>
+  The Global Directory Service will automatically reissue the certificates on {{
+  .ReissueDate }}. Please review the directory entry and VASP record for the
+  current certificate to ensure the TRISA member should remain verified.
+</p>
 
 <p>Current certificate and directory entry details:</p>
 
 <ul>
-	<li><strong>ID:</strong> {{ .VID }}</li>
+  <li><strong>ID:</strong> {{ .VID }}</li>
   <li><strong>Registered Directory:</strong> {{ .RegisteredDirectory }}</li>
-	<li><strong>Common Name:</strong> {{ .CommonName }}</li>
+  <li><strong>Organization:</strong> {{ .Organization }}</li>
+  <li><strong>Common Name:</strong> {{ .CommonName }}</li>
   <li><strong>Endpoint:</strong> {{ .Endpoint }}</li>
-	<li><strong>Serial Number:</strong> {{ .SerialNumber }}</li>
-	<li><strong>Expiration:</strong> {{ .ExpirationDate }}</li>
+  <li><strong>Serial Number:</strong> {{ .SerialNumber }}</li>
+  <li><strong>Expiration:</strong> {{ .ExpirationDate }}</li>
   <li><strong>Reissuance:</strong> {{ .ReissueDate }}</li>
 </ul>
 
@@ -20,5 +29,7 @@
 
 <p><a href="{{ .AdminReviewURL }}">{{ .AdminReviewURL }}</a></p>
 
-<p>Best Regards,<br />
-TRISA Global Directory Service Team</p>
+<p>
+  Best Regards,<br />
+  TRISA Global Directory Service Team
+</p>
