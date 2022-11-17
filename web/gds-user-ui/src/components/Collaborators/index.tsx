@@ -32,6 +32,7 @@ import Loader from 'components/Loader';
 import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
 import { USER_PERMISSION } from 'types/enums';
 import { hasPermission } from 'utils/permission';
+import { isDate } from 'lodash';
 // const rows: any[] = [
 //   {
 //     id: '18002',
@@ -63,22 +64,28 @@ import { hasPermission } from 'utils/permission';
 //   }
 // ];
 
-const getStatusBgColor = (status: string) => {
+const getStatus = (joinedAt: any, verifiedAt?: any) => {
+  // handle when collaborator is current user when sc-11278 will be merged
+  if (joinedAt && isDate(joinedAt)) {
+    return 'Joined';
+  }
+  if (verifiedAt && isDate(verifiedAt)) {
+    return 'Joined';
+  }
+  return 'Pending';
+};
+
+const getStatusBgColor = (joinedAt: string) => {
+  const status = getStatus(joinedAt);
+  console.log('[Collaborators] status', status);
   switch (status && status.toLowerCase()) {
-    case 'completed':
+    case 'joined':
       return 'green.400';
     case 'pending':
       return 'yellow.400';
     case 'inactive':
       return 'red.400';
   }
-};
-
-const getCollaboratorActivatedDate = (verifiedAt: any) => {
-  if (verifiedAt) {
-    return formatIsoDate(verifiedAt);
-  }
-  return '-';
 };
 
 const isAuthorizedToInvite = () => {
@@ -105,15 +112,12 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
           </Td>
           <Td textTransform="capitalize">{row?.roles}</Td>
           <Td textTransform="capitalize">
-            <Tag
-              bg={row?.status ? getStatusBgColor(row?.status) : 'transparent'}
-              color={'white'}
-              size={'md'}>
-              {row?.status}
+            <Tag bg={getStatusBgColor(row?.joined_at as string)} color={'white'} size={'md'}>
+              {getStatus(row?.joined_at as string)}
             </Tag>
           </Td>
-          <Td>{getCollaboratorActivatedDate(row?.verified_at)}</Td>
           <Td>{formatIsoDate(row?.created_at)}</Td>
+          <Td>{formatIsoDate(row?.joined_at)}</Td>
           <Td textTransform="capitalize">{row?.organization}</Td>
           <Td paddingY={0}>
             <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
