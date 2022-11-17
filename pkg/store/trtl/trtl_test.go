@@ -648,11 +648,13 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	require.NoError(err)
 
 	// Create a new organization in the database
-	org, err := db.CreateOrganization()
+	org := &bff.Organization{}
+	id, err := db.CreateOrganization(org)
 	require.NoError(err)
 
 	// Verify that the created record has an ID and timestamps
 	require.NotEmpty(org.Id)
+	require.Equal(org.Id, id)
 	require.NotEmpty(org.Created)
 	require.Equal(org.Modified, org.Created)
 
