@@ -131,7 +131,7 @@ function EditCollaboratorModal(props: Props) {
     <Button
       color="blue"
       onClick={onOpen}
-      data-testid="edit-collaborator-button"
+      data-testid="collaborator-button"
       bg={'transparent'}
       disabled={shouldDisableButton}
       _hover={{

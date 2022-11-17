@@ -114,9 +114,9 @@ describe('DeleteCollaboratorModal', () => {
       })
     }));
     renderComponent();
-    const editButton = screen.getByTestId('delete-collaborator-button');
-    fireEvent.click(editButton);
-    expect(editButton).toBeDisabled();
+    const delButton = screen.getByTestId('icon-collaborator-button');
+    fireEvent.click(delButton);
+    expect(delButton).toBeDisabled();
   });
 
   // it('should call deleteHandler function when delete button is clicked', () => {

@@ -100,7 +100,7 @@ function DeleteCollaboratorModal(props: Props) {
       color="blue"
       onClick={onOpen}
       bg={'transparent'}
-      data-testid="delete-collaborator-button"
+      data-testid="icon-collaborator-button"
       disabled={shouldDisableButton}
       _hover={{
         bg: 'transparent'

@@ -115,7 +115,7 @@ describe('UpdateCollaboratorModal', () => {
       })
     }));
     renderComponent();
-    const editButton = screen.getByTestId('edit-collaborator-button');
+    const editButton = screen.getByTestId('collaborator-button');
     fireEvent.click(editButton);
     expect(editButton).toBeDisabled();
   });

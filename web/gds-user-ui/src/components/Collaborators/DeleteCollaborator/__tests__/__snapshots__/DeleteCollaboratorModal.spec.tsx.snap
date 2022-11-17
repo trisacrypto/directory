@@ -359,7 +359,7 @@ exports[`DeleteCollaboratorModal should render 1`] = `
 <div>
   <button
     class="chakra-button emotion-0"
-    data-testid="delete-collaborator-button"
+    data-testid="icon-collaborator-button"
     disabled=""
     type="button"
   >
