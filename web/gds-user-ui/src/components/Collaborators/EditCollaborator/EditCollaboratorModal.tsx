@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   chakra,
-  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -23,7 +22,8 @@ import { useUpdateCollaborator } from 'components/Collaborators/EditCollaborator
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 import React, { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
-
+import { USER_PERMISSION } from 'types/enums';
+import { useSafeDisableButton } from 'components/Collaborators/useSafeDisableButton';
 interface Props {
   collaboratorId: string;
   roles?: string[];
@@ -45,6 +45,11 @@ function EditCollaboratorModal(props: Props) {
     errorMessage
   } = useUpdateCollaborator();
 
+  const { isDisabled: shouldDisableButton } = useSafeDisableButton(
+    USER_PERMISSION.UPDATE_COLLABORATOR,
+    collaborator?.email as string
+  );
+
   const updateHandler = () => {
     // update user role
     const collaboratorData = {
@@ -64,7 +69,12 @@ function EditCollaboratorModal(props: Props) {
     value: v
   }));
 
-  console.log('[roles options]', rolesOptions);
+  // const shouldDisableButton = () => {
+  //   if (isCurrentUser(collaborator?.email as string)) {
+  //     return true;
+  //   }
+  //   return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
+  // };
 
   useEffect(() => {
     let once = false;
@@ -118,7 +128,18 @@ function EditCollaboratorModal(props: Props) {
   }, [hasCollaboratorFailed, wasCollaboratorUpdated, errorMessage, toast]);
 
   return (
-    <Link color="blue" onClick={onOpen}>
+    <Button
+      color="blue"
+      onClick={onOpen}
+      data-testid="collaborator-button"
+      bg={'transparent'}
+      disabled={shouldDisableButton}
+      _hover={{
+        bg: 'transparent'
+      }}
+      _focus={{
+        bg: 'transparent'
+      }}>
       <FiEdit fontSize="24px" />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -185,7 +206,7 @@ function EditCollaboratorModal(props: Props) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Link>
+    </Button>
   );
 }
 
