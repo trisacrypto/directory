@@ -171,6 +171,8 @@ services:
       - GDS_BFF_SENTRY_TRACK_PERFORMANCE
       - GDS_BFF_AUTH0_TESTING
       - GDS_BFF_AUTH0_DOMAIN=dev-bu-hbv3o.us.auth0.com
+      - GDS_BFF_AUTH0_CONNECTION_NAME=Username-Password-Authentication
+      - GDS_BFF_AUTH0_REDIRECT_URL=http://vaspdirectory.dev/auth/callback
       - GDS_BFF_AUTH0_ISSUER=https://auth.vaspdirectory.dev/
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev
       - GDS_BFF_AUTH0_CLIENT_ID

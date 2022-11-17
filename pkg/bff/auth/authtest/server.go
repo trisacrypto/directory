@@ -34,19 +34,20 @@ import (
 )
 
 const (
-	KeyID        = "StyqeY8Kl4Eam28KsUs"
-	ClientID     = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
-	ClientSecret = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
-	Audience     = "http://localhost"
-	RedirectURL  = "https://localhost/auth/callback"
-	Name         = "Leopold Wentzel"
-	Email        = "leopold.wentzel@gmail.com"
-	UserID       = "test|abcdefg1234567890"
-	UserRole     = "Organization Collaborator"
-	OrgID        = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
-	MainNetVASP  = "87d92fd1-53cf-47d8-85b1-048e8a38ced9"
-	TestNetVASP  = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"
-	Scope        = "openid profile email"
+	KeyID          = "StyqeY8Kl4Eam28KsUs"
+	ClientID       = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
+	ClientSecret   = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
+	Audience       = "http://localhost"
+	ConnectionName = "Username-Password-Authentication"
+	RedirectURL    = "https://localhost/auth/callback"
+	Name           = "Leopold Wentzel"
+	Email          = "leopold.wentzel@gmail.com"
+	UserID         = "test|abcdefg1234567890"
+	UserRole       = "Organization Collaborator"
+	OrgID          = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
+	MainNetVASP    = "87d92fd1-53cf-47d8-85b1-048e8a38ced9"
+	TestNetVASP    = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"
+	Scope          = "openid profile email"
 )
 
 var (
@@ -120,6 +121,7 @@ func New() (s *Server, err error) {
 	s.mux.HandleFunc("/api/v2/roles", s.Roles)
 	s.mux.HandleFunc("/api/v2/users-by-email", s.ListUsers)
 	s.mux.HandleFunc("/api/v2/tickets/password-change", s.GenerateTicket)
+	s.mux.HandleFunc("/api/v2/tickets/email-verification", s.GenerateTicket)
 
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
@@ -129,13 +131,14 @@ func New() (s *Server, err error) {
 // Config returns an AuthConfig that can be used to setup middleware.
 func (s *Server) Config() config.AuthConfig {
 	return config.AuthConfig{
-		Domain:        s.URL.Host,
-		Audience:      Audience,
-		RedirectURL:   RedirectURL,
-		ProviderCache: 30 * time.Second,
-		ClientID:      ClientID,
-		ClientSecret:  ClientSecret,
-		Testing:       true,
+		Domain:         s.URL.Host,
+		Audience:       Audience,
+		ConnectionName: ConnectionName,
+		RedirectURL:    RedirectURL,
+		ProviderCache:  30 * time.Second,
+		ClientID:       ClientID,
+		ClientSecret:   ClientSecret,
+		Testing:        true,
 	}
 }
 
