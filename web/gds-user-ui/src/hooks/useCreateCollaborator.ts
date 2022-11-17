@@ -1,7 +1,7 @@
 // create collaborator hook with axios and react-query
 import { useMutation } from '@tanstack/react-query';
 import { createCollaborator } from 'modules/dashboard/collaborator/CollaboratorService';
-import type { CollaboratorMutation } from 'components/AddCollaboratorModal/AddCollaboratorType';
+import type { CollaboratorMutation } from 'components/Collaborators/AddCollaborator/AddCollaboratorType';
 export function useCreateCollaborator(): CollaboratorMutation {
     const mutation = useMutation(['addCollaborator'], createCollaborator);
 

@@ -7,7 +7,7 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import nock from 'nock';
 import DeleteCollaboratorModal from '../DeleteCollaboratorModal';
 import { act, render } from 'utils/test-utils';
-import { collaboratorMockValue } from 'components/AddCollaboratorModal/__mocks__';
+import { collaboratorMockValue } from 'components/Collaborators/AddCollaborator/__mocks__';
 import * as useCollaborators from 'components/Collaborators/useFetchCollaborator';
 import * as useDeleteCollaborator from '../useDeleteCollaborator';
 const mockUseMutation = useMutation as jest.Mock;
@@ -31,7 +31,7 @@ jest.mock('@chakra-ui/react', () => ({
   ModalCloseButton: jest.fn(() => divWithoutChildrenMock('close'))
 }));
 
-// mock deletecollaborator component render function
+// render delete collaborator component
 function renderComponent() {
   const Props = {
     collaboratorId: '1'
@@ -51,13 +51,8 @@ describe('DeleteCollaboratorModal', () => {
       dynamicActivate('en');
     });
     useFetchCollaboratorsMock.mockReturnValue({
-      collaborators: {
-        data: {
-          collaborators: collaboratorMockValue.data
-        },
-        getAllCollaborators: mockGetAllCollaborators
-      },
-      getAllCollaborators: jest.fn(),
+      collaborators: collaboratorMockValue.data,
+      getAllCollaborators: mockGetAllCollaborators,
       hasCollaboratorsFailed: false,
       wasCollaboratorsFetched: false,
       isFetchingCollaborators: false
@@ -108,11 +103,26 @@ describe('DeleteCollaboratorModal', () => {
     );
   });
 
-  // delete collaborator click event test
+  // collaborator without update:collaborator permission should not be able to delete collaborator
+  it('should disable edit button if user does not have update:collaborator permission', () => {
+    // mock shouldDisableDeleteButton to return true
+    const mockShouldDisableDeleteButton = jest.fn().mockReturnValue(true);
+    jest.mock('components/Collaborators/useSafeDisableButton', () => ({
+      ...jest.requireActual('hooks/useSafeDisableButton'),
+      useSafeDisableButton: () => ({
+        isDisabled: mockShouldDisableDeleteButton()
+      })
+    }));
+    renderComponent();
+    const delButton = screen.getByTestId('icon-collaborator-button');
+    fireEvent.click(delButton);
+    expect(delButton).toBeDisabled();
+  });
+
   // it('should call deleteHandler function when delete button is clicked', () => {
   //   renderComponent();
-  //   fireEvent.click(screen.getByTestId('delete-collaborator-button'));
-  //
+  //   userEvent.click(screen.getByTestId('delete-collaborator-button'));
+
   //   expect(mockDeleteCollaborator).toHaveBeenCalled();
   // });
 
