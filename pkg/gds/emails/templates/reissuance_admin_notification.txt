@@ -6,6 +6,7 @@ Current certificate and directory entry details:
 
 ID: {{ .VID }}
 Registered Directory: {{ .RegisteredDirectory }}
+Organization: {{ .Organization }}
 Common Name: {{ .CommonName }}
 Endpoint: {{ .Endpoint }}
 Serial Number: {{ .SerialNumber }}

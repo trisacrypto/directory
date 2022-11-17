@@ -42,6 +42,10 @@ func (meta *AppMetadata) Equals(other *AppMetadata) bool {
 	return true
 }
 
+func (meta *AppMetadata) GetOrganizations() []string {
+	return meta.Organizations
+}
+
 func (meta *AppMetadata) Load(appdata map[string]interface{}) (err error) {
 	// Serialize appdata back to JSON
 	var data []byte

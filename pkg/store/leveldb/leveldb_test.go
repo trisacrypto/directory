@@ -415,11 +415,13 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 
 func (s *leveldbTestSuite) TestOrganizationStore() {
 	// Create a new organization in the database
-	org, err := s.db.CreateOrganization()
+	org := &bff.Organization{}
+	id, err := s.db.CreateOrganization(org)
 	s.NoError(err)
 
 	// Verify that the created record has an ID and timestamps
 	s.NotEmpty(org.Id)
+	s.Equal(org.Id, id)
 	s.NotEmpty(org.Created)
 	s.Equal(org.Modified, org.Created)
 
