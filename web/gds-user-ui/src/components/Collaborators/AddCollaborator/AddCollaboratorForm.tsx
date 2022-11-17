@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ADD_COLLABORATOR_FORM_METHOD } from './AddCollaboratorFormValidation';
 import type { NewCollaborator } from './AddCollaboratorType';
@@ -33,9 +33,9 @@ const AddCollaboratorForm: FC<Props> = (props) => {
     register,
     control,
     handleSubmit,
-    getValues: formValues,
     formState: { errors }
   } = useForm<NewCollaborator>(ADD_COLLABORATOR_FORM_METHOD) as any;
+  const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
     if (wasCollaboratorCreated) {
@@ -97,6 +97,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         mt={2}
         mb={4}
         {...register('agreed')}
+        onChange={(e) => setIsChecked(e.target.checked)}
         size="md"
         colorScheme="gray">
         <Trans id="TRISA is a network of trusted members. I acknowledge that the contact is authorized to access the organization’s TRISA account information.">
@@ -153,7 +154,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
           data-test="submit"
           minW="150px"
           type="submit"
-          isDisabled={formValues().agreed === false}
+          isDisabled={!isChecked}
           isLoading={isCreating}>
           Invite
         </Button>
