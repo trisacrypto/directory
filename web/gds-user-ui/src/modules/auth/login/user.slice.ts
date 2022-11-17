@@ -58,7 +58,7 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      // console.log('[getUserInfo]', getUserInfo);
+      console.log('[getUserInfo]', getUserInfo);
       const updatedTime = new Date(getUserInfo?.idTokenPayload?.updated_at).getTime() / 1000;
       const expiresTime = updatedTime + getUserInfo.expiresIn;
       setCookie('access_token', getUserInfo?.accessToken);
@@ -66,15 +66,9 @@ export const getAuth0User: any = createAsyncThunk(
       setCookie('expires_in', expiresTime);
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
-        // get user roles
         const getRoles = await getUserRoles() as any;
-        // console.log('[getUser]', getUser);
-        // check if user response contains refresh_token flag
         if (getUser?.data?.refresh_token) {
-          // refresh token
           const newUserPayload: any = await auth0CheckSession();
-          // get user info data
-          // console.log('[newUserPayload]', newUserPayload);
           setCookie('access_token', newUserPayload?.accessToken);
           setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
           // set expired time
@@ -87,7 +81,8 @@ export const getAuth0User: any = createAsyncThunk(
               name: newUserPayload?.idTokenPayload?.name,
               pictureUrl: newUserPayload?.idTokenPayload?.picture,
               email: newUserPayload?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles
+              roles: getRoles?.data?.roles,
+              permissions: newUserPayload?.idTokenPayload?.permissions,
             }
           };
           return userInfo;
@@ -100,7 +95,8 @@ export const getAuth0User: any = createAsyncThunk(
               name: getUserInfo?.idTokenPayload?.name,
               pictureUrl: getUserInfo?.idTokenPayload?.picture,
               email: getUserInfo?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles
+              roles: getRoles?.data?.roles,
+              permissions: getUserInfo?.idTokenPayload?.permissions,
             }
           };
           return userInfo;

@@ -1,3 +1,4 @@
+
 export interface Collaborator {
     id: string;
     email: string;
@@ -6,5 +7,11 @@ export interface Collaborator {
     roles: string[];
     created_at?: string;
     modified_at?: string;
+    joined_at?: string;
+    organization?: string;
     verified_at?: string;
+    status?: TCollaboratorStatus;
 }
+
+
+export type TCollaboratorStatus = 'pending' | 'completed' | 'rejected' | 'revoked';
