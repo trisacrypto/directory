@@ -2,7 +2,7 @@ import TrixoQuestionnaire from "pages/app/details/TrixoQuestionnaire"
 import countryCodeEmoji, { isoCountries } from "utils/country";
 import { render, screen } from "utils/test-utils"
 // eslint-disable-next-line jest/no-mocks-import
-import generateOtherJurisdictions from "../__mocks__/other-jurisdictions";
+import generateOtherJurisdictions from "../../../../../__mocks__/other-jurisdictions";
 
 
 describe("<TrixoQuestionnaire />", () => {

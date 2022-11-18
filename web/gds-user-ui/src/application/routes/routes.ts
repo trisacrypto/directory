@@ -21,7 +21,7 @@ const CertificateRegistrationPage = lazy(
   () => import('modules/dashboard/certificate/registration')
 );
 
-const CertificateInventory = lazy(() => import('components/CertificateDetails/CertificateDetails'));
+const CertificateInventory = lazy(() => import('components/CertificateInventory'));
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -137,11 +137,11 @@ const appRoutes = [
     route: '/certificate-management'
   },
   {
-    path: '/dashboard/certificate/certificate-inventory/:certificateId',
+    path: '/dashboard/certificate/certificate-inventory',
     name: 'Certificate Inventory',
     component: CertificateInventory,
     layout: 'dashboard',
-    route: '/certificate-inventory/:certificateId'
+    route: '/certificate-inventory'
   },
   {
     path: '/dashboard/logout',

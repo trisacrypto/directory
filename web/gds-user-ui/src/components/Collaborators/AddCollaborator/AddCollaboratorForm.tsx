@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ADD_COLLABORATOR_FORM_METHOD } from './AddCollaboratorFormValidation';
 import type { NewCollaborator } from './AddCollaboratorType';
@@ -33,9 +33,9 @@ const AddCollaboratorForm: FC<Props> = (props) => {
     register,
     control,
     handleSubmit,
-    getValues: formValues,
     formState: { errors }
   } = useForm<NewCollaborator>(ADD_COLLABORATOR_FORM_METHOD) as any;
+  const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
     if (wasCollaboratorCreated) {
@@ -76,12 +76,12 @@ const AddCollaboratorForm: FC<Props> = (props) => {
   return (
     <chakra.form onSubmit={handleSubmit(onSubmit)}>
       <VStack>
-        <Text>
+        <Text fontWeight={'bold'}>
           <Trans id="Please provide the name of the VASP and email address for the new contact.">
             Please provide the name of the VASP and email address for the new contact.
           </Trans>
         </Text>
-        <Text>
+        <Text fontSize="sm">
           <Trans id="The contact will receive an email to create a TRISA Global Directory Service Account. The invitation to join is valid for 7 calendar days. The contact will be added as a member for the VASP. The contact will have the ability to contribute to certificate requests, check on the status of certificate requests, and complete other actions related to the organization’s TRISA membership.">
             The contact will receive an email to create a TRISA Global Directory Service Account.
             The invitation to join is valid for 7 calendar days. The contact will be added as a
@@ -96,8 +96,9 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         controlId="agreed"
         mt={2}
         mb={4}
-        data-test="agreed"
         {...register('agreed')}
+        onChange={(e) => setIsChecked(e.target.checked)}
+        size="md"
         colorScheme="gray">
         <Trans id="TRISA is a network of trusted members. I acknowledge that the contact is authorized to access the organization’s TRISA account information.">
           TRISA is a network of trusted members. I acknowledge that the contact is authorized to
@@ -106,6 +107,13 @@ const AddCollaboratorForm: FC<Props> = (props) => {
       </CheckboxFormControl>
 
       {!isProdEnv ? <DevTool control={control} /> : null}
+      <Stack>
+        <Text fontWeight={'bold'} size={'md'}>
+          <Trans id="VASP">VASP</Trans>
+        </Text>
+        <Text>VASP Name</Text>
+      </Stack>
+
       <Stack py={5}>
         <InputFormControl
           controlId="name"
@@ -116,7 +124,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
           label={
             <>
               <chakra.span fontWeight={700}>
-                <Trans id="VASP Name">VASP Name</Trans>
+                <Trans id="Contact Name">Contact Name</Trans>
               </chakra.span>{' '}
               (<Trans id="required">required</Trans>)
             </>
@@ -146,7 +154,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
           data-test="submit"
           minW="150px"
           type="submit"
-          isDisabled={formValues().agreed === false}
+          isDisabled={!isChecked}
           isLoading={isCreating}>
           Invite
         </Button>
