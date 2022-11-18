@@ -44,7 +44,6 @@ describe('<MainnetTestnetCertificates />', () => {
         details: 'rzer'
       }
     ];
-
     render(<MainnetTestnetCertificates data={mockData} network={'mainnet'} />);
 
     expect(screen.getAllByTestId('table-row').length).toBe(2);
