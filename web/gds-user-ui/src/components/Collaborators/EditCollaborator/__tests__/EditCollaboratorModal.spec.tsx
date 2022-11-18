@@ -108,9 +108,9 @@ describe('UpdateCollaboratorModal', () => {
   it('should disable edit button if user does not have update:collaborator permission', () => {
     // mock shouldDisableDeleteButton to return true
     const mockShouldDisableDeleteButton = jest.fn().mockReturnValue(true);
-    jest.mock('components/Collaborators/useSafeDisableButton', () => ({
-      ...jest.requireActual('hooks/useSafeDisableButton'),
-      useSafeDisableButton: () => ({
+    jest.mock('components/Collaborators/useSafeDisableIconButton', () => ({
+      ...jest.requireActual('hooks/useSafeDisableIconButton'),
+      useSafeDisableIconButton: () => ({
         isDisabled: mockShouldDisableDeleteButton()
       })
     }));
