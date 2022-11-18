@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -13,13 +14,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/auth0/go-auth0/management"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/clive"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/store"
+	storeconfig "github.com/trisacrypto/directory/pkg/store/config"
+	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -95,6 +103,65 @@ func main() {
 						Usage:    "specify the path on disk where your access token is stored",
 						EnvVars:  []string{"AUTH0_TOKEN_CACHE"},
 						Required: true,
+					},
+				},
+			},
+			{
+				Name:     "migrate-users",
+				Usage:    "migrate Auth0 users to their organization's database record",
+				Category: "client",
+				Action:   migrateUsers,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "client-id",
+						Aliases:  []string{"c", "id"},
+						Usage:    "specify the Auth0 client ID to use for the migration",
+						EnvVars:  []string{"GDS_BFF_AUTH0_CLIENT_ID"},
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "client-secret",
+						Aliases:  []string{"s", "secret"},
+						Usage:    "specify the Auth0 client secret to use for the migration",
+						EnvVars:  []string{"GDS_BFF_AUTH0_CLIENT_SECRET"},
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "domain",
+						Aliases:  []string{"d"},
+						Usage:    "specify the Auth0 domain to use for the migration",
+						EnvVars:  []string{"GDS_BFF_AUTH0_DOMAIN"},
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "endpoint",
+						Aliases:  []string{"u", "url"},
+						Usage:    "specify the URL to the trtl server",
+						EnvVars:  []string{"GDS_BFF_DATABASE_URL"},
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:    "insecure",
+						Aliases: []string{"S"},
+						Usage:   "specify whether to skip TLS verification when connecting to the database",
+						EnvVars: []string{"GDS_BFF_DATABASE_INSECURE"},
+					},
+					&cli.StringFlag{
+						Name:    "cert-path",
+						Aliases: []string{"C"},
+						Usage:   "specify the path to the certs to use when connecting to the database",
+						EnvVars: []string{"GDS_BFF_DATABASE_CERT_PATH"},
+					},
+					&cli.StringFlag{
+						Name:    "pool-path",
+						Aliases: []string{"p"},
+						Usage:   "specify the path to the certs pool to use when connecting to the database",
+						EnvVars: []string{"GDS_BFF_DATABASE_POOL_PATH"},
+					},
+					&cli.BoolFlag{
+						Name:    "dry-run",
+						Aliases: []string{"D", "dryrun"},
+						Usage:   "specify whether to run the migration in dry-run mode, which will not write any changes to the database",
 					},
 				},
 			},
@@ -225,6 +292,97 @@ func announce(c *cli.Context) (err error) {
 	}
 
 	fmt.Println("announcement successfully posted!")
+	return nil
+}
+
+// Migrate Auth0 users to their organization's database record.
+func migrateUsers(c *cli.Context) (err error) {
+	// Don't write to the database if the dry-run flag is set
+	dryRun := c.Bool("dry-run")
+
+	// Create a new Auth0 client
+	authConf := config.AuthConfig{
+		ClientID:     c.String("client-id"),
+		ClientSecret: c.String("client-secret"),
+		Domain:       c.String("domain"),
+	}
+	var auth0 *management.Management
+	if auth0, err = auth.NewManagementClient(authConf); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Create a new database client
+	dbConf := storeconfig.StoreConfig{
+		URL:      c.String("url"),
+		Insecure: c.Bool("insecure"),
+		CertPath: c.String("cert-path"),
+		PoolPath: c.String("pool-path"),
+	}
+	var db store.Store
+	if db, err = store.Open(dbConf); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// List Auth0 users
+	var users *management.UserList
+	if users, err = auth0.User.List(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	for _, user := range users.Users {
+		// Get the user's organization
+		appdata := &auth.AppMetadata{}
+		if err = appdata.Load(user.AppMetadata); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if appdata.OrgID != "" {
+			// Retrieve user's organization from the database
+			var orgID uuid.UUID
+			if orgID, err = models.ParseOrgID(appdata.OrgID); err != nil {
+				return cli.Exit(err, 1)
+			}
+			var org *models.Organization
+			if org, err = db.RetrieveOrganization(orgID); err != nil {
+				if errors.Is(err, storeerrors.ErrEntityNotFound) {
+					fmt.Printf("found user %s with missing organization %s\n", *user.Email, appdata.OrgID)
+					org = &models.Organization{
+						Id: appdata.OrgID,
+					}
+
+					if !dryRun {
+						if _, err = db.CreateOrganization(org); err != nil {
+							return cli.Exit(err, 1)
+						}
+						fmt.Printf("created organization %s in database for user %s\n", appdata.OrgID, *user.Email)
+					}
+				} else {
+					return cli.Exit(err, 1)
+				}
+			}
+
+			// Update the user's organization in the database
+			if org.GetCollaborator(*user.Email) == nil {
+				fmt.Printf("user %s is not a collaborator in their organization: %s\n", *user.Email, org.Id)
+				collab := &models.Collaborator{
+					Email:  *user.Email,
+					UserId: *user.ID,
+				}
+
+				if err = org.AddCollaborator(collab); err != nil {
+					return cli.Exit(err, 1)
+				}
+				fmt.Printf("created user %s as collaborator in organization %s with collab id %s\n", *user.Email, org.Id, collab.Id)
+
+				if !dryRun {
+					if err = db.UpdateOrganization(org); err != nil {
+						return cli.Exit(err, 1)
+					}
+					fmt.Printf("updated organization %s in the database\n", org.Id)
+				}
+				fmt.Println()
+			}
+		}
+	}
 	return nil
 }
 
