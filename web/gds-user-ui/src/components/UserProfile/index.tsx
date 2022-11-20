@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import { FormLabel, Heading, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
 import InputFormControl, { _FormControlProps } from 'components/ui/InputFormControl';
-import { SimpleDashboardLayout } from 'layouts';
 import FormLayout from 'layouts/FormLayout';
 import UserProfileIcon from 'assets/ph_user-circle-plus-light.svg';
 import CkLazyLoadImage from 'components/LazyImage';
@@ -51,7 +50,7 @@ const PasswordInput = (props: _FormControlProps) => {
 
 function UserProfile() {
   return (
-    <SimpleDashboardLayout>
+    <>
       <Heading size="lg" mb={5}>
         <Trans>User Profile</Trans>
       </Heading>
@@ -172,7 +171,7 @@ function UserProfile() {
           </ProfileBlock>
         </VStack>
       </FormLayout>
-    </SimpleDashboardLayout>
+    </>
   );
 }
 

@@ -5,6 +5,7 @@ interface IUserState {
   roles: string[];
   pictureUrl: string;
   permissions?: TUserPermission[];
+  authType?: string;
 }
 type TUser = {
   isFetching?: boolean;
