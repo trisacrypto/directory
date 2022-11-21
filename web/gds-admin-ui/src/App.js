@@ -1,5 +1,8 @@
 import AuthProvider from 'contexts/auth/auth-provider';
+import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
+import { configureStore } from './redux/store';
+
 import './App.css';
 import './assets/scss/Creative.scss';
 
@@ -22,10 +25,13 @@ const toastOptions = {
 function App() {
   return (
     <div className="App">
-      <AuthProvider>
-        <Routes></Routes>
-      </AuthProvider>
-      <Toaster position='top-right' toastOptions={toastOptions} />
+      <Provider store={configureStore({})}>
+        <AuthProvider>
+          <Routes></Routes>
+        </AuthProvider>
+        <Toaster position='top-right' toastOptions={toastOptions} />
+
+      </Provider>
     </div>
   );
 }
