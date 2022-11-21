@@ -18,7 +18,6 @@ import CkLazyLoadImage from 'components/LazyImage';
 import { NoData } from 'components/NoData';
 import FormLayout from 'layouts/FormLayout';
 import { Certificate } from 'types/type';
-import Statistics from './Statistics';
 import PolygonIcon from 'assets/polygon.svg';
 import { useNavigate } from 'react-router-dom';
 import formatDisplayedDate from 'utils/formatDisplayedDate';
@@ -36,7 +35,6 @@ function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps)
 
   return (
     <Stack spacing={5}>
-      <Statistics />
       <Box>
         <FormLayout overflowX={'scroll'}>
           <Table variant="simple">
