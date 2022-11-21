@@ -22,6 +22,7 @@ type BFFClient interface {
 	ListUserRoles(context.Context) ([]string, error)
 
 	// Authenticated Endpoints
+	UserOrganization(context.Context) (*OrganizationReply, error)
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context) ([]*OrganizationReply, error)
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)

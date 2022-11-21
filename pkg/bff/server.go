@@ -353,6 +353,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
+		v1.GET("/users/organization", auth.Authorize("read:organizations"), s.UserOrganization)
 		organizations := v1.Group("/organizations")
 		{
 			organizations.GET("", auth.Authorize("read:organizations"), userinfo, s.ListOrganizations)

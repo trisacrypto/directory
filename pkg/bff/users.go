@@ -250,6 +250,31 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
+// UserOrganization returns the current organization that the user is logged into. The
+// user must have the read:organizations permission to perform this action.
+func (s *Server) UserOrganization(c *gin.Context) {
+	var (
+		err error
+		org *models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// Note: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response
+	reply := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.Name,
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+	}
+
+	c.JSON(http.StatusOK, reply)
+}
+
 // AssignRoles assigns a set of roles to a user by ID, removing the existing roles and
 // replacing them with the new set.
 func (s *Server) AssignRoles(userID string, roles []string) (err error) {
