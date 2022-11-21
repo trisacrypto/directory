@@ -22,7 +22,6 @@ import {
   Button,
   AlertDescription
 } from '@chakra-ui/react';
-import CertificateDataTable from './CertificateDataTable';
 import MainnetTestnetCertificates from './MainnetTestnetCertificates';
 import { t, Trans } from '@lingui/macro';
 import useGetCertificates from 'hooks/useGetCertificates';
@@ -221,12 +220,12 @@ function CertificateManagement() {
           </TabPanels>
         </Tabs>
       </Box>
-      <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'} mx={4}>
+      {/* <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'} mx={4}>
         <Trans>Sealing Certificate Inventory</Trans>
       </Heading>
       <Box px={4}>
         <CertificateDataTable />
-      </Box>
+      </Box> */}
     </>
   );
 }
