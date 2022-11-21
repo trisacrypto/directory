@@ -2,16 +2,8 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from '@testing-library/user-event'
 import BasicDetails from "pages/app/details/BasicDetails"
 import { render } from "utils/test-utils"
-import { render as rtlRender } from '@testing-library/react'
 import BasicDetailsDropDown from "pages/app/details/BasicDetails/components/BasicDetailsDropdown"
 import countryCodeEmoji from "utils/country"
-import VaspDetails from "pages/app/details"
-import { createMemoryHistory } from 'history'
-import { Router } from "react-router-dom"
-import { Provider } from "react-redux";
-import { configureStore } from "redux/store";
-import { ModalProvider } from "contexts/modal"
-import { Suspense } from "react"
 
 describe("BasicDetails", () => {
 
@@ -381,31 +373,6 @@ describe("BasicDetails", () => {
 
             const countryFlagEl = screen.getByTestId(/country-flag/i)
             expect(countryFlagEl.textContent).toBe(countryCodeEmoji(mockVaspData.vasp.entity.geographic_addresses[0].country))
-        })
-    })
-
-    describe("<VaspDetails />", () => {
-        const history = createMemoryHistory()
-
-        it("should render vasp detail correctly", () => {
-            const initialValue = {
-                VaspDetails: {
-                    loading: false,
-                    data: {}
-                }
-            }
-
-            rtlRender(
-                <Provider store={configureStore(initialValue)}>
-                    <Suspense fallback="loading...">
-                        <ModalProvider>
-                            <Router history={history}>
-                                <VaspDetails />
-                            </Router>
-                        </ModalProvider>
-                    </Suspense>
-                </Provider>
-            )
         })
     })
 })
