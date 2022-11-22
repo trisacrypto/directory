@@ -9,7 +9,7 @@ type AccountProps = {
   alt?: string;
 };
 
-export const Account = ({ vaspName, username, src, alt }: AccountProps) => (
+export const Account = ({ vaspName, username, src }: AccountProps) => (
   <Link to="/#" role="group">
     <HStack
       direction="row"
