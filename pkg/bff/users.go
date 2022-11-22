@@ -3,6 +3,7 @@ package bff
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -249,6 +250,31 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
+// UserOrganization returns the current organization that the user is logged into. The
+// user must have the read:organizations permission to perform this action.
+func (s *Server) UserOrganization(c *gin.Context) {
+	var (
+		err error
+		org *models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// Note: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response
+	reply := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.Name,
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+	}
+
+	c.JSON(http.StatusOK, reply)
+}
+
 // AssignRoles assigns a set of roles to a user by ID, removing the existing roles and
 // replacing them with the new set.
 func (s *Server) AssignRoles(userID string, roles []string) (err error) {
@@ -298,6 +324,23 @@ func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
 	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+}
+
+// FindUserByEmail returns the Auth0 user record by email address.
+func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
+	var users []*management.User
+	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
+		return nil, err
+	}
+
+	switch len(users) {
+	case 0:
+		return nil, ErrUserEmailNotFound
+	case 1:
+		return users[0], nil
+	default:
+		return nil, ErrMultipleEmailUsers
+	}
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

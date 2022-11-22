@@ -7,9 +7,11 @@ const defaultTracingOrigins = ['localhost', /^\//];
 const initSentry = () => {
     // ensure environment variables app version and git revision are set
     if (!config.appVersion) {
+        // eslint-disable-next-line no-console
         console.log('App version is not set in environment variables');
     }
     if (!config.gitVersion) {
+        // eslint-disable-next-line no-console
         console.log('Git revision is not set in environment variables');
     }
     console.log(`AppVersion: ${config.appVersion || ''} - GitRevision: ${config.gitVersion || ''}`); // eslint-disable-line no-console
