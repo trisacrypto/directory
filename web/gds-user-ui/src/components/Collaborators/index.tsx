@@ -31,7 +31,7 @@ import Loader from 'components/Loader';
 import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
 import { USER_PERMISSION, COLLABORATOR_STATUS } from 'types/enums';
 import { hasPermission } from 'utils/permission';
-import { isDate } from 'lodash';
+import { isDate } from 'utils/date';
 // const rows: any[] = [
 //   {
 //     id: '18002',
@@ -106,14 +106,14 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
           <Td textTransform="capitalize">{row?.roles}</Td>
           <Td textTransform="capitalize">
             <Tag bg={getStatusBgColor(row?.joined_at as any)} color={'white'} size={'md'}>
-              {getStatus(row?.joined_at as any)}
+              {getStatus(row?.joined_at)}
             </Tag>
           </Td>
           <Td>{formatIsoDate(row?.created_at)}</Td>
           <Td>{formatIsoDate(row?.joined_at)}</Td>
-          <Td textTransform="capitalize">{row?.organization}</Td>
+          {/* <Td textTransform="capitalize">{row?.organization}</Td> */}
           <Td paddingY={0}>
-            <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
+            <HStack width="100%" justifyContent="center" alignItems="center" spacing={2}>
               <Button
                 color="blue"
                 as={'a'}
@@ -125,7 +125,7 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
                 _focus={{
                   bg: 'transparent'
                 }}>
-                <FiMail fontSize="26px" />
+                <FiMail fontSize="24px" />
               </Button>
               <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
               <DeleteCollaboratorModal collaboratorId={row?.id} />
@@ -208,9 +208,9 @@ const CollaboratorsSection: React.FC = () => {
             <Th>
               <Trans>Joined</Trans>
             </Th>
-            <Th>
+            {/* <Th>
               <Trans>Organization</Trans>
-            </Th>
+            </Th> */}
             <Th textAlign="center">
               <Trans>Actions</Trans>
             </Th>
