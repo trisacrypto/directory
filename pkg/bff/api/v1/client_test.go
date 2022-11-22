@@ -292,6 +292,33 @@ func TestCreateOrganization(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestUserOrganization(t *testing.T) {
+	fixture := &api.OrganizationReply{
+		ID:     "8b2e9e78-baca-4c34-a382-8b285503c901",
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/users/organization", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.UserOrganization(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestListOrganizations(t *testing.T) {
 	fixture := []*api.OrganizationReply{
 		{

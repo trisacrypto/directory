@@ -20,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/bff/emails"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -93,6 +94,10 @@ func New(conf config.Config) (s *Server, err error) {
 			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
 		}
 
+		if s.email, err = emails.New(conf.Email); err != nil {
+			return nil, fmt.Errorf("could not connect to email service: %s", err)
+		}
+
 		if s.auth0, err = auth.NewManagementClient(s.conf.Auth0); err != nil {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
@@ -163,6 +168,7 @@ type Server struct {
 	mainnetGDS GlobalDirectoryClient
 	db         store.Store
 	auth0      *management.Management
+	email      *emails.EmailManager
 	started    time.Time
 	healthy    bool
 	url        string
@@ -347,6 +353,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
+		v1.GET("/users/organization", auth.Authorize("read:organizations"), s.UserOrganization)
 		organizations := v1.Group("/organizations")
 		{
 			organizations.GET("", auth.Authorize("read:organizations"), userinfo, s.ListOrganizations)
@@ -355,7 +362,7 @@ func (s *Server) setupRoutes() (err error) {
 		collaborators := v1.Group("/collaborators")
 		{
 			collaborators.GET("", auth.Authorize("read:collaborators"), s.ListCollaborators)
-			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.AddCollaborator)
+			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), userinfo, s.AddCollaborator)
 			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)
 		}
