@@ -113,7 +113,7 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
           <Td>{formatIsoDate(row?.joined_at)}</Td>
           {/* <Td textTransform="capitalize">{row?.organization}</Td> */}
           <Td paddingY={0}>
-            <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
+            <HStack width="100%" justifyContent="center" alignItems="center" spacing={2}>
               <Button
                 color="blue"
                 as={'a'}
@@ -125,7 +125,7 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
                 _focus={{
                   bg: 'transparent'
                 }}>
-                <FiMail fontSize="26px" />
+                <FiMail fontSize="24px" />
               </Button>
               <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
               <DeleteCollaboratorModal collaboratorId={row?.id} />
