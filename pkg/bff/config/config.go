@@ -45,13 +45,15 @@ type Config struct {
 
 // AuthConfig handles Auth0 configuration and authentication
 type AuthConfig struct {
-	Domain        string        `split_words:"true" required:"true"`
-	Issuer        string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
-	Audience      string        `split_words:"true" required:"true"`
-	ProviderCache time.Duration `split_words:"true" default:"5m"`
-	ClientID      string        `split_words:"true"`
-	ClientSecret  string        `split_words:"true"`
-	Testing       bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
+	Domain         string        `split_words:"true" required:"true"`
+	Issuer         string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
+	Audience       string        `split_words:"true" required:"true"`
+	ConnectionName string        `split_words:"true" required:"true"`
+	RedirectURL    string        `split_words:"true" required:"true"`
+	ProviderCache  time.Duration `split_words:"true" default:"5m"`
+	ClientID       string        `split_words:"true"`
+	ClientSecret   string        `split_words:"true"`
+	Testing        bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
 }
 
 // NetworkConfig contains sub configurations for connecting to specific GDS and members
@@ -166,7 +168,15 @@ func (c MembersConfig) Validate() error {
 }
 
 func (c AuthConfig) Validate() error {
+	if c.ConnectionName == "" {
+		return errors.New("invalid configuration: auth0 connection name is required")
+	}
+
 	if _, err := c.IssuerURL(); err != nil {
+		return err
+	}
+
+	if err := c.Redirect(); err != nil {
 		return err
 	}
 
@@ -211,6 +221,23 @@ func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
+}
+
+func (c AuthConfig) Redirect() (err error) {
+	if c.RedirectURL == "" {
+		return errors.New("invalid configuration: auth0 redirect url must be configured")
+	}
+
+	// URL should not have a trailing slash
+	if strings.HasSuffix(c.RedirectURL, "/") {
+		return errors.New("invalid configuration: auth0 redirect url must not have a trailing slash")
+	}
+
+	if _, err = url.Parse(c.RedirectURL); err != nil {
+		return errors.New("invalid configuration: auth0 redirect url must be a valid url")
+	}
+
+	return nil
 }
 
 func (c AuthConfig) ClientCredentials() management.Option {

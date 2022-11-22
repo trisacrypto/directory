@@ -102,7 +102,8 @@ func (s *bffTestSuite) SetupSuite() {
 			Insecure: true,
 		},
 		Email: config.EmailConfig{
-			Testing: true,
+			ServiceEmail: "service@example.com",
+			Testing:      true,
 		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/secrets"
 )
 
 // AddCollaborator creates a new collaborator with the email address in the request.
@@ -23,12 +25,20 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	var (
 		err          error
 		collaborator *models.Collaborator
+		inviter      *management.User
 		org          *models.Organization
 	)
 
 	// Fetch the organization from the claims
 	// NOTE: This method handles the error logging and response
 	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// The invoking user is the inviter
+	if inviter, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("add collaborator handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user"))
 		return
 	}
 
@@ -66,8 +76,46 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	}
 	org.Collaborators[id] = collaborator
 
-	// TODO: We can search the email address in Auth0 to see if the user already exists
-	// TODO: Send invite/verification email to the collaborator
+	// If the user doesn't exist in Auth0 then we need to create them
+	var user *management.User
+	if user, err = s.FindUserByEmail(collaborator.Email); err != nil {
+		if !errors.Is(err, ErrUserEmailNotFound) {
+			log.Error().Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+			return
+		}
+
+		// Create an unverified user in Auth0
+		// Note: If the user has already registered with another IDP then they will need to link accounts
+		var verifyEmail bool
+		password := secrets.CreateToken(32)
+		user = &management.User{
+			Email:       &collaborator.Email,
+			Password:    &password,
+			Connection:  &s.conf.Auth0.ConnectionName,
+			VerifyEmail: &verifyEmail,
+		}
+		if err = s.auth0.User.Create(user); err != nil {
+			log.Error().Err(err).Str("email", collaborator.Email).Msg("error creating user in Auth0")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+			return
+		}
+	}
+
+	// Generate the user verification link containing a redirect URL with the org ID
+	var inviteURL *url.URL
+	if inviteURL, err = s.GetAuth0UserInviteURL(user, org); err != nil {
+		log.Error().Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("error generating user invite URL")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
+
+	// Send the verification email to the user
+	if err = s.email.SendUserInvite(user, inviter, org, inviteURL); err != nil {
+		log.Error().Err(err).Str("email", *user.Email).Msg("error sending user invite email")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
+		return
+	}
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(org); err != nil {
@@ -298,6 +346,50 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 	}
 
 	return nil
+}
+
+// GetAuth0UserInviteURL generates a user ticket in Auth0 to invite the user to the
+// organization and returns the ticket URL. Depending on the current state of the user,
+// this will either be a password change ticket or an email verification ticket. The
+// caller is responsible for sending the user the ticket URL, which is usually done by
+// including it in the user invite email.
+func (s *Server) GetAuth0UserInviteURL(user *management.User, org *models.Organization) (inviteURL *url.URL, err error) {
+	// Ticket should include the redirect to the auth callback and should expire in 7 days
+	redirectURL := fmt.Sprintf("%s?orgid=%s", s.conf.Auth0.RedirectURL, org.Id)
+	expiration := int((time.Hour * 24 * 7).Seconds())
+	ticket := &management.Ticket{
+		UserID:    user.ID,
+		ResultURL: &redirectURL,
+		TTLSec:    &expiration,
+	}
+
+	if user.EmailVerified != nil && *user.EmailVerified {
+		// If the user is already verified they don't need to set their password. This
+		// generates a link which directs the user to the email verification page,
+		// although it will short circuit to the redirect URL if the user is already
+		// verified.
+		// TODO: This will not work for users whose primary connection is an external
+		// IDP such as Google and will instead return an error.
+		if err = s.auth0.Ticket.VerifyEmail(ticket); err != nil {
+			return nil, err
+		}
+	} else {
+		// This generates a link which directs the user to the password reset page,
+		// allowing them to properly set their password so they can log in.
+		if err = s.auth0.Ticket.ChangePassword(ticket); err != nil {
+			return nil, err
+		}
+	}
+	if ticket.Ticket == nil || *ticket.Ticket == "" {
+		return nil, errors.New("URL is missing from Auth0 ticket")
+	}
+
+	// Parse the ticket string into a URL
+	if inviteURL, err = url.Parse(*ticket.Ticket); err != nil {
+		return nil, err
+	}
+
+	return inviteURL, nil
 }
 
 // InsortCollaborator is a helper function to insert a collaborator into a sorted slice
