@@ -9,6 +9,21 @@ import {
   auth0CheckSession
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
+
+const setUserPayload = (userTokenPayload: any, roles: string) => {
+  const { email, name, picture, sub, sid, permissions } = userTokenPayload;
+  return {
+    email,
+    name,
+    pictureUrl: picture,
+    id: sid,
+    permissions,
+    roles,
+    authType: sub.split('|')[0]
+
+  };
+};
+
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
     auth0SignWithSocial('google-oauth2');
@@ -68,14 +83,7 @@ export const getAuth0User: any = createAsyncThunk(
 
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: newUserPayload?.idTokenPayload?.name,
-              pictureUrl: newUserPayload?.idTokenPayload?.picture,
-              email: newUserPayload?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: newUserPayload?.idTokenPayload?.permissions,
-              authType: newUserPayload?.idTokenPayload?.sub.split('|')[0]
-            }
+            user: setUserPayload(newUserPayload?.idTokenPayload, getRoles?.data?.roles) as any
           };
           return userInfo;
         }
@@ -86,14 +94,8 @@ export const getAuth0User: any = createAsyncThunk(
 
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: getUserInfo?.idTokenPayload?.name,
-              pictureUrl: getUserInfo?.idTokenPayload?.picture,
-              email: getUserInfo?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: getUserInfo?.idTokenPayload?.permissions,
-              authType: getUserInfo?.idTokenPayload?.sub.split('|')[0]
-            }
+            user: setUserPayload(getUserInfo?.idTokenPayload, getRoles?.data?.roles) as any
+
           };
           return userInfo;
         } else {

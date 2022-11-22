@@ -13,6 +13,7 @@ export const auth0SignIn = (options: auth0.CrossOriginLoginOptions) => {
         console.error('error', err);
         reject(err);
       } else {
+        console.log('authResult', authResult);
         resolve(authResult);
       }
     });

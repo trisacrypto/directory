@@ -5,11 +5,11 @@ import InputFormControl, { _FormControlProps } from 'components/ui/InputFormCont
 import FormLayout from 'layouts/FormLayout';
 import UserProfileIcon from 'assets/ph_user-circle-plus-light.svg';
 import CkLazyLoadImage from 'components/LazyImage';
-import AddLinkedAccountModal from './AddLinkedAccountModal';
-import RemoveLinkedAccountModal from './RemoveLinkedAccountModal';
 import ChangeNameModal from './ChangeNameModal';
-import ChangePasswordModal from './ChangePasswordModal';
-
+import { useSelector } from 'react-redux';
+import { userSelector } from 'modules/auth/login/user.slice';
+import UserDetails from './UserDetails';
+import { UserProfilePassword } from './UserProfilePassword';
 export const ProfileBlock = ({ title, children }: { title: ReactNode; children: ReactNode }) => {
   return (
     <VStack align="start" w="100%" spacing={5}>
@@ -39,16 +39,9 @@ const EditableInput = (props: _FormControlProps) => {
   );
 };
 
-const PasswordInput = (props: _FormControlProps) => {
-  return (
-    <HStack w="100%" align="start">
-      <InputFormControl {...props} />
-      <ChangePasswordModal />
-    </HStack>
-  );
-};
-
 function UserProfile() {
+  const { user } = useSelector(userSelector);
+  const isSocialConnection = () => user?.authType !== 'auth0';
   return (
     <>
       <Heading size="lg" mb={5}>
@@ -63,86 +56,41 @@ function UserProfile() {
                   <Text fontWeight={700}>
                     <Trans>Email Address</Trans>
                   </Text>
-                  <Text>jferdinand@vaspnet.co.uk</Text>
+                  <Text>{user?.email}</Text>
                 </VStack>
                 <VStack align="start">
                   <Text fontWeight={700}>
                     <Trans>Account ID</Trans>
                   </Text>
-                  <Text>0087765</Text>
+                  <Text>{user?.id}</Text>
                 </VStack>
               </VStack>
               <VStack>
-                <CkLazyLoadImage src={UserProfileIcon} mx="auto" />
+                <CkLazyLoadImage
+                  borderRadius="50%"
+                  src={user?.pictureUrl || UserProfileIcon}
+                  mx="auto"
+                />
               </VStack>
             </Stack>
 
             <EditableInput
               label={
                 <FormLabel fontWeight={700}>
-                  <Trans>First (Given) Name</Trans>
+                  <Trans>Fullname </Trans>
                 </FormLabel>
               }
-              controlId="first_given_name"
-            />
-            <EditableInput
-              label={
-                <FormLabel fontWeight={700}>
-                  <Trans>Last (Family) Name</Trans>
-                </FormLabel>
-              }
-              controlId="first_given_name"
+              isDisabled={true}
+              controlId="fullname"
+              value={user?.name}
             />
           </ProfileBlock>
 
-          <ProfileBlock title={<Trans>SECURITY</Trans>}>
-            <PasswordInput
-              type="password"
-              value="blablablabla"
-              label={
-                <FormLabel fontWeight={700}>
-                  <Trans>Password</Trans>
-                </FormLabel>
-              }
-              controlId="password"
-            />
-          </ProfileBlock>
+          {!isSocialConnection() && <UserProfilePassword />}
 
-          <ProfileBlock title={<Trans>USER DETAILS</Trans>}>
-            <VStack align="start">
-              <Text fontWeight={700} textTransform="capitalize">
-                <Trans>Profile Created</Trans>
-              </Text>
-              <Text>January 3, 2022</Text>
-            </VStack>
-            <VStack align="start">
-              <Text fontWeight={700} textTransform="capitalize">
-                <Trans>Role</Trans>
-              </Text>
-              <Text textTransform="capitalize">
-                <Trans>Organization Leader</Trans>
-              </Text>
-            </VStack>
-            <VStack align="start">
-              <Text fontWeight={700} textTransform="capitalize">
-                <Trans>Permissions</Trans>
-              </Text>
-              <Text>
-                <Trans>
-                  Create new organization, add/approve collaborators, submit certificate request,
-                  check status of certificate request
-                </Trans>
-              </Text>
-            </VStack>
-            <VStack align="start">
-              <Text fontWeight={700} textTransform="capitalize">
-                <Trans>Last Login</Trans>
-              </Text>
-              <Text>March 4, 2022</Text>
-            </VStack>
-          </ProfileBlock>
+          <UserDetails />
 
-          <ProfileBlock
+          {/* <ProfileBlock
             title={
               <>
                 <Trans>LINKED ACCOUNTS</Trans>
@@ -168,7 +116,7 @@ function UserProfile() {
               />
               <RemoveLinkedAccountModal />
             </HStack>
-          </ProfileBlock>
+          </ProfileBlock> */}
         </VStack>
       </FormLayout>
     </>
