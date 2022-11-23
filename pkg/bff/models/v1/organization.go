@@ -95,6 +95,7 @@ func ParseOrgID(orgID interface{}) (uuid.UUID, error) {
 func NewRegisterForm() *RegistrationForm {
 	// Make sure default values are populated for the frontend
 	return &RegistrationForm{
+		BusinessCategory: models.BusinessCategory_BUSINESS_ENTITY,
 		Entity: &ivms101.LegalPerson{
 			Name: &ivms101.LegalPersonName{
 				NameIdentifiers: []*ivms101.LegalPersonNameId{
@@ -110,7 +111,6 @@ func NewRegisterForm() *RegistrationForm {
 			},
 			NationalIdentification: &ivms101.NationalIdentification{
 				NationalIdentifierType: ivms101.NationalIdentifierTypeCode_NATIONAL_IDENTIFIER_TYPE_CODE_LEIX,
-				RegistrationAuthority:  "RA777777",
 			},
 		},
 		Contacts: &models.Contacts{

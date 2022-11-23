@@ -5,10 +5,10 @@ import type { getCollaborators } from 'modules/dashboard/collaborator/getCollabo
 
 export function useFetchCollaborators(): getCollaborators {
     const query = useQuery(['fetch-collaborators'], getAllCollaborators, {
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false,
         refetchOnMount: true,
-        // set state time to 5 minutes
-        staleTime: 1000 * 60 * 5,
+        // set state time to 15 minutes
+        staleTime: 1000 * 60 * 15,
     });
     return {
         getAllCollaborators: query.refetch,

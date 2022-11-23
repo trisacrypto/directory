@@ -1,116 +1,116 @@
 {
-    "website": "",
-    "business_category": "UNKNOWN_ENTITY",
-    "vasp_categories": [],
-    "established_on": "",
-    "organization_name": "",
-    "entity": {
-      "name": {
-        "name_identifiers": [
-          {
-            "legal_person_name": "",
-            "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
-          }
-        ],
-        "local_name_identifiers": [],
-        "phonetic_name_identifiers": []
-      },
-      "geographic_addresses": [
+  "website": "",
+  "business_category": "BUSINESS_ENTITY",
+  "vasp_categories": [],
+  "established_on": "",
+  "organization_name": "",
+  "entity": {
+    "name": {
+      "name_identifiers": [
         {
-          "address_type": "ADDRESS_TYPE_CODE_BIZZ",
-          "department": "",
-          "sub_department": "",
-          "street_name": "",
-          "building_number": "",
-          "building_name": "",
-          "floor": "",
-          "post_box": "",
-          "room": "",
-          "post_code": "",
-          "town_name": "",
-          "town_location_name": "",
-          "district_name": "",
-          "country_sub_division": "",
-          "address_line": [],
-          "country": ""
+          "legal_person_name": "",
+          "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
         }
       ],
-      "customer_number": "",
-      "national_identification": {
-        "national_identifier": "",
-        "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
-        "country_of_issue": "",
-        "registration_authority": "RA777777"
-      },
-      "country_of_registration": ""
+      "local_name_identifiers": [],
+      "phonetic_name_identifiers": []
     },
-    "contacts": {
-      "technical": {
-        "name": "",
-        "email": "",
-        "phone": "",
-        "person": null,
-        "extra": null
-      },
-      "administrative": {
-        "name": "",
-        "email": "",
-        "phone": "",
-        "person": null,
-        "extra": null
-      },
-      "legal": {
-        "name": "",
-        "email": "",
-        "phone": "",
-        "person": null,
-        "extra": null
-      },
-      "billing": {
-        "name": "",
-        "email": "",
-        "phone": "",
-        "person": null,
-        "extra": null
+    "geographic_addresses": [
+      {
+        "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+        "department": "",
+        "sub_department": "",
+        "street_name": "",
+        "building_number": "",
+        "building_name": "",
+        "floor": "",
+        "post_box": "",
+        "room": "",
+        "post_code": "",
+        "town_name": "",
+        "town_location_name": "",
+        "district_name": "",
+        "country_sub_division": "",
+        "address_line": [],
+        "country": ""
       }
+    ],
+    "customer_number": "",
+    "national_identification": {
+      "national_identifier": "",
+      "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
+      "country_of_issue": "",
+      "registration_authority": ""
     },
-    "trixo": {
-      "primary_national_jurisdiction": "",
-      "primary_regulator": "",
-      "financial_transfers_permitted": "no",
-      "other_jurisdictions": [],
-      "has_required_regulatory_program": "no",
-      "conducts_customer_kyc": false,
-      "kyc_threshold": 10,
-      "kyc_threshold_currency": "USD",
-      "must_comply_travel_rule": false,
-      "applicable_regulations": [
-        "FATF Recommendation 16"
-      ],
-      "compliance_threshold": 3000,
-      "compliance_threshold_currency": "USD",
-      "must_safeguard_pii": false,
-      "safeguards_pii": false
+    "country_of_registration": ""
+  },
+  "contacts": {
+    "technical": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "person": null,
+      "extra": null
     },
-    "testnet": {
-      "common_name": "",
-      "endpoint": "",
-      "dns_names": []
+    "administrative": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "person": null,
+      "extra": null
     },
-    "mainnet": {
-      "common_name": "",
-      "endpoint": "",
-      "dns_names": []
+    "legal": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "person": null,
+      "extra": null
     },
-    "state": {
-        "current": 1,
-        "ready_to_submit": false,
-        "started": "",
-        "steps": [
-            {
-                "key": 1,
-                "status": "progress"
-            }
-        ]
+    "billing": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "person": null,
+      "extra": null
     }
+  },
+  "trixo": {
+    "primary_national_jurisdiction": "",
+    "primary_regulator": "",
+    "financial_transfers_permitted": "no",
+    "other_jurisdictions": [],
+    "has_required_regulatory_program": "no",
+    "conducts_customer_kyc": false,
+    "kyc_threshold": 10,
+    "kyc_threshold_currency": "USD",
+    "must_comply_travel_rule": false,
+    "applicable_regulations": [
+      "FATF Recommendation 16"
+    ],
+    "compliance_threshold": 3000,
+    "compliance_threshold_currency": "USD",
+    "must_safeguard_pii": false,
+    "safeguards_pii": false
+  },
+  "testnet": {
+    "common_name": "",
+    "endpoint": "",
+    "dns_names": []
+  },
+  "mainnet": {
+    "common_name": "",
+    "endpoint": "",
+    "dns_names": []
+  },
+  "state": {
+    "current": 1,
+    "ready_to_submit": false,
+    "started": "",
+    "steps": [
+      {
+        "key": 1,
+        "status": "progress"
+      }
+    ]
+  }
 }
