@@ -123,7 +123,7 @@ func (s *Server) Login(c *gin.Context) {
 			return
 		}
 		org = &models.Organization{
-			Name: fmt.Sprintf("Registration By %s [Draft]", userName),
+			CreatedBy: userName,
 		}
 		if _, err = s.db.CreateOrganization(org); err != nil {
 			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
@@ -298,7 +298,7 @@ func (s *Server) UserOrganization(c *gin.Context) {
 	// Build the response
 	reply := &api.OrganizationReply{
 		ID:        org.Id,
-		Name:      org.Name,
+		Name:      org.ResolveName(),
 		Domain:    org.Domain,
 		CreatedAt: org.Created,
 	}

@@ -62,6 +62,7 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.True(reply.RefreshToken, "refresh token should be set")
 	org, err := s.bff.OrganizationFromID(reply.ID)
 	require.NoError(err, "could not find organization in database")
+	require.Equal(authtest.Name, org.CreatedBy, "expected created by to be set")
 	require.Equal(params.Name, org.Name, "organization name does not match")
 	require.Equal(params.Domain, org.Domain, "organization domain does not match")
 
