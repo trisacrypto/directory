@@ -67,6 +67,15 @@ func (s *Server) GetSummaries(ctx context.Context, testnetID, mainnetID string) 
 }
 
 // Overview endpoint is an authenticated endpoint that requires the read:vasp permission.
+//
+// @Summary Get summary information for the overview dashboard [read:vasp]
+// @Description Returns a high level summary representing the state of each directory service and VASP registrations.
+// @Tags overview
+// @Produce json
+// @Success 200 {object} api.OverviewReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /overview [get]
 func (s *Server) Overview(c *gin.Context) {
 	var err error
 
@@ -175,6 +184,19 @@ func (s *Server) Overview(c *gin.Context) {
 
 // MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
 // permission and returns details about a VASP member.
+//
+// @Summary Get details for a VASP [read:vasp]
+// @Description Returns details for a VASP by ID and directory.
+// @Tags members
+// @Accept json
+// @Produce json
+// @Param params body api.MemberDetailsParams true "VASP ID and directory"
+// @Success 200 {object} object "VASP details"
+// @Failure 400 {object} api.Reply "VASP ID and directory are required"
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /details [get]
 func (s *Server) MemberDetails(c *gin.Context) {
 	// Bind the parameters associated with the MemberDetails request
 	params := &api.MemberDetailsParams{}

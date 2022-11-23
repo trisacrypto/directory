@@ -18,6 +18,7 @@ var testEnv = map[string]string{
 	"GDS_BFF_CONSOLE_LOG":                   "true",
 	"GDS_BFF_ALLOW_ORIGINS":                 "https://vaspdirectory.net",
 	"GDS_BFF_COOKIE_DOMAIN":                 "vaspdirectory.net",
+	"GDS_BFF_SERVE_DOCS":                    "true",
 	"GDS_BFF_AUTH0_DOMAIN":                  "example.auth0.com",
 	"GDS_BFF_AUTH0_ISSUER":                  "https://auth.example.com",
 	"GDS_BFF_AUTH0_CONNECTION_NAME":         "Username-Password-Authentication",
@@ -93,6 +94,7 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.ConsoleLog)
 	require.Len(t, conf.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
+	require.True(t, conf.ServeDocs)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_DOMAIN"], conf.Auth0.Domain)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_ISSUER"], conf.Auth0.Issuer)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_AUDIENCE"], conf.Auth0.Audience)

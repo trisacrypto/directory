@@ -42,6 +42,18 @@ var (
 // a 500 error is returned. This endpoint passes through the response from GDS as JSON,
 // the result should contain a registered_directory field that identifies which network
 // the record is associated with.
+//
+// @Summary Lookup a VASP record by name or ID
+// @Description Lookup a VASP record in both TestNet and MainNet, returning either or both results.
+// @Tags GDS
+// @Accept json
+// @Produce json
+// @Param params body api.LookupParams true "Lookup parameters"
+// @Success 200 {object} api.LookupReply
+// @Failure 400 {object} api.Reply "Either ID or CommonName must be provided"
+// @Failure 404 {object} api.Reply "No results returned for query"
+// @Failure 500 {object} api.Reply "Internal server error"
+// @Router /lookup [get]
 func (s *Server) Lookup(c *gin.Context) {
 	// Bind the parameters associated with the lookup
 	params := &api.LookupParams{}
@@ -142,6 +154,19 @@ func (s *Server) Lookup(c *gin.Context) {
 
 // VerifyContact is currently a passthrough helper that forwards the verify contact
 // request from the user interface to the GDS that needs contact verification.
+//
+// @Summary Verify a VASP contact
+// @Description Verify a VASP contact using a TestNet or MainNet GDS.
+// @Tags GDS
+// @Accept json
+// @Produce json
+// @Param params body api.VerifyContactParams true "Verify contact parameters"
+// @Success 200 {object} api.VerifyContactReply
+// @Failure 400 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 409 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /verify [get]
 func (s *Server) VerifyContact(c *gin.Context) {
 	// Bind the parameters associated with the verify contact request
 	params := &api.VerifyContactParams{}
@@ -221,6 +246,15 @@ func (s *Server) VerifyContact(c *gin.Context) {
 }
 
 // Returns the user's current registration form if it's available
+//
+// @Summary Get the user's current registration form [read:vasp]
+// @Description Get the registration form associated with the user's organization.
+// @Tags registration
+// @Produce json
+// @Success 200 {object} object "Registration form"
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /register [get]
 func (s *Server) LoadRegisterForm(c *gin.Context) {
 	// Load the organization from the claims
 	// NOTE: this method will handle the error logging and response.
@@ -238,6 +272,19 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 // Saves the registration form on the BFF to allow multiple users to edit the
 // registration form before it is submitted to the directory service.
+//
+// @Summary Save a registration form to the database [update:vasp]
+// @Description Save a registration form to the user's organization in the database.
+// @Tags registration
+// @Accept json
+// @Produce json
+// @Param form body object true "Registration form"
+// @Success 200 {object} object "Registration form"
+// @Success 204 "Empty form was provided"
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /register [put]
 func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// Parse the incoming JSON data from the client request
 	var (
@@ -289,6 +336,18 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 // MainNet GDS server based on the URL endpoint. The endpoint will first load the saved
 // registration form from the front-end and will parse it for some basic validity
 // constraints - it will then submit the form and return any response from the directory.
+//
+// @Summary Submit a registration form to a directory service [update:vasp]
+// @Description Submit a registration form to the TestNet or MainNet directory service.
+// @Tags registration
+// @Produce json
+// @Param directory path string true "Directory service to submit the registration form to (testnet or mainnet)"
+// @Success 200 {object} api.RegisterReply
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 409 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /register/{directory} [post]
 func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Get the network from the URL
 	var err error
@@ -534,6 +593,15 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 }
 
 // Certificates returns the list of certificates for the authenticated user.
+//
+// @Summary List certificates for the user [read:vasp]
+// @Description Returns the certificates associated with the user's organization.
+// @Tags certificates
+// @Produce json
+// @Success 200 {object} api.CertificatesReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /certificates [get]
 func (s *Server) Certificates(c *gin.Context) {
 	var err error
 
@@ -745,6 +813,16 @@ func registrationMessage(vasp *pb.VASP, network string) (msg *api.AttentionMessa
 }
 
 // Attention returns the current attention messages for the authenticated user.
+//
+// @Summary Get attention alerts for the user [read:vasp]
+// @Description Get attention alerts for the user regarding their organization's VASP registration status.
+// @Tags registration
+// @Produce json
+// @Success 200 {object} api.AttentionReply
+// @Success 204 "No attention messages"
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /attention [get]
 func (s *Server) Attention(c *gin.Context) {
 	var err error
 
@@ -850,6 +928,14 @@ func (s *Server) Attention(c *gin.Context) {
 
 // RegistrationStatus returns the registration status for both testnet and mainnet for
 // the user.
+//
+// @Summary Get current registration status for the user [read:vasp]
+// @Description Returns timestamps indicating when the user has submitted their TestNet and MainNet registrations.
+// @Tags registration
+// @Produce json
+// @Success 200 {object} api.RegistrationStatus
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
 func (s *Server) RegistrationStatus(c *gin.Context) {
 	var err error
 

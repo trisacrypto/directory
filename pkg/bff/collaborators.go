@@ -19,8 +19,20 @@ import (
 
 // AddCollaborator creates a new collaborator with the email address in the request.
 // The endpoint adds the collaborator to the organization record associated with the
-// user and sends a verification email to the provided email address, so the user must
-// have the update:collaborators permission.
+// user and sends a verification email to the provided email address.
+//
+// @Summary Add collaborator [update:collaborators]
+// @Description Invite a new collaborator to the user's organization.
+// @Tags collaborators
+// @Accept json
+// @Produce json
+// @Param collaborator body models.Collaborator true "Collaborator to add"
+// @Success 200 {object} models.Collaborator
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply "Email address is required"
+// @Failure 409 {object} api.Reply "Collaborator already exists"
+// @Failure 500 {object} api.Reply
+// @Router /collaborators [post]
 func (s *Server) AddCollaborator(c *gin.Context) {
 	var (
 		err          error
@@ -127,8 +139,16 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	c.JSON(http.StatusOK, collaborator)
 }
 
-// ListCollaborators lists all the collaborators on the user's organization. The user
-// must have the read:collaborators permission to make this request.
+// ListCollaborators lists all the collaborators on the user's organization.
+//
+// @Summary List collaborators [read:collaborators]
+// @Description Returns all collaborators on the user's organization sorted by email address.
+// @Tags collaborators
+// @Produce json
+// @Success 200 {object} api.ListCollaboratorsReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /collaborators [get]
 func (s *Server) ListCollaborators(c *gin.Context) {
 	var (
 		err error
@@ -169,6 +189,20 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 // UpdateCollaboratorRoles updates the roles of the collaborator ID in the request,
 // ensuring that the roles are updated both on the organization record and in Auth0.
 // The user must have the update:collaborators permission to make this request.
+//
+// @Summary Update collaborator roles [update:collaborators]
+// @Description Replace the roles of the collaborator with the given ID.
+// @Tags collaborators
+// @Accept json
+// @Produce json
+// @Param id path string true "Collaborator ID"
+// @Param roles body api.UpdateRolesParams true "New roles for the collaborator"
+// @Success 200 {object} api.UpdateRolesParams
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /collaborators/{id} [post]
 func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	var (
 		err          error
@@ -245,6 +279,17 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 // organization. The user must have the update:collaborators permission.
 // Note: This does not return an error if the collaborator does not exist on the
 // organization and instead returns a 200 OK response.
+//
+// @Summary Delete collaborator [update:collaborators]
+// @Description Delete the collaborator with the given ID from the organization.
+// @Tags collaborators
+// @Produce json
+// @Param id path string true "Collaborator ID"
+// @Success 200 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /collaborators/{id} [delete]
 func (s *Server) DeleteCollaborator(c *gin.Context) {
 	var (
 		err          error
