@@ -34,6 +34,7 @@ type Config struct {
 	ConsoleLog   bool                `split_words:"true" default:"false"`
 	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
 	CookieDomain string              `split_words:"true"`
+	ServeDocs    bool                `split_words:"true" default:"false"`
 	Auth0        AuthConfig
 	TestNet      NetworkConfig
 	MainNet      NetworkConfig
