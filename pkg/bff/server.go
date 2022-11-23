@@ -385,14 +385,14 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/attention", auth.Authorize("read:vasp"), s.Attention)
 	}
 
+	// NotFound and NotAllowed routes
+	s.router.NoRoute(api.NotFound)
+	s.router.NoMethod(api.NotAllowed)
+
 	if s.conf.ServeDocs {
 		docs.SwaggerInfo.BasePath = "/v1"
 		s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
-
-	// NotFound and NotAllowed routes
-	s.router.NoRoute(api.NotFound)
-	s.router.NoMethod(api.NotAllowed)
 	return nil
 }
 
