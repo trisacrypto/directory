@@ -21,6 +21,14 @@ const (
 	subMonths        = -2
 )
 
+// @Summary Get announcements [read:announcements]
+// @Description Get the most recent network announcements
+// @Tags announcements
+// @Produce json
+// @Success 200 {object} api.AnnouncementsReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /announcements [get]
 func (s *Server) Announcements(c *gin.Context) {
 	// Only fetch the previous 10 announcements from the last two months
 	nbf := time.Now().AddDate(0, subMonths, 0)
@@ -42,6 +50,17 @@ func (s *Server) Announcements(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// @Summary Post an announcement [create:announcements]
+// @Description Post a new announcement to the network
+// @Tags announcements
+// @Accept json
+// @Produce json
+// @Param announcement body models.Announcement true "Announcement to post"
+// @Success 204
+// @Failure 400 {object} api.Reply "Post date and author are required"
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /announcements [post]
 func (s *Server) MakeAnnouncement(c *gin.Context) {
 	var (
 		id     string
