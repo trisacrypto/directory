@@ -17,6 +17,8 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 )
 
+const MaxCollaborators = 50
+
 // AddCollaborator creates a new collaborator with the email address in the request.
 // The endpoint adds the collaborator to the organization record associated with the
 // user and sends a verification email to the provided email address.
@@ -28,8 +30,9 @@ import (
 // @Produce json
 // @Param collaborator body models.Collaborator true "Collaborator to add"
 // @Success 200 {object} models.Collaborator
-// @Failure 400 {object} api.Reply
-// @Failure 401 {object} api.Reply "Email address is required"
+// @Failure 400 {object} api.Reply "Invalid collaborator, email address is required"
+// @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "Maximum number of collaborators reached"
 // @Failure 409 {object} api.Reply "Collaborator already exists"
 // @Failure 500 {object} api.Reply
 // @Router /collaborators [post]
@@ -66,6 +69,13 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	if err = collaborator.Validate(); err != nil {
 		log.Warn().Err(err).Msg("invalid collaborator in request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Limit the number of collaborators
+	if len(org.Collaborators) >= MaxCollaborators {
+		log.Warn().Int("current", len(org.Collaborators)).Int("maximum", MaxCollaborators).Msg("maximum number of collaborators reached")
+		c.JSON(http.StatusForbidden, api.ErrorResponse("maximum number of collaborators reached"))
 		return
 	}
 
