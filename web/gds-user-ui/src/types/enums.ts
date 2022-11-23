@@ -19,4 +19,7 @@ export const enum USER_PERMISSION {
   UPDATE_VASP = 'update:vasp',
 }
 
-
+export const enum COLLABORATOR_STATUS {
+  Pending = 'Pending',
+  Confirmed = 'Confirmed',
+}

@@ -369,6 +369,14 @@ func main() {
 			},
 		},
 		{
+			Name:     "metrics",
+			Usage:    "get some database metrics for each namespace",
+			Category: "utils",
+			Before:   initDBClient,
+			Action:   metrics,
+			Flags:    []cli.Flag{},
+		},
+		{
 			Name:      "uuid-key",
 			Aliases:   []string{"uuid"},
 			Usage:     "convert a uuid into base64 encoded bytes",
@@ -821,6 +829,68 @@ func gossipMigrate(c *cli.Context) (err error) {
 //===========================================================================
 // Utility Functions
 //===========================================================================
+
+var namespaces = [5]string{
+	wire.NamespaceVASPs,
+	wire.NamespaceCerts,
+	wire.NamespaceCertReqs,
+	wire.NamespaceAnnouncements,
+	wire.NamespaceOrganizations,
+}
+
+func metrics(c *cli.Context) (err error) {
+	// Create the request context
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	data := make(map[string]interface{})
+
+	for _, ns := range namespaces {
+		// Create a cursor request that returns no values, just keys in the specified namespace
+		req := &pb.CursorRequest{
+			Namespace: ns,
+			Options: &pb.Options{
+				ReturnMeta: true,
+			},
+		}
+
+		var stream pb.Trtl_CursorClient
+		if stream, err = dbClient.Cursor(ctx, req); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		var (
+			documents int64
+			bytes     int64
+		)
+
+		versions := make(map[uint64]int64)
+
+		for {
+			var rep *pb.KVPair
+			if rep, err = stream.Recv(); err != nil {
+				if err != io.EOF {
+					return cli.Exit(err, 1)
+				}
+				break
+			}
+
+			bytes += int64(len(rep.Value))
+			documents++
+			versions[rep.Meta.Version.Version]++
+
+		}
+
+		data[ns] = map[string]interface{}{
+			"documents": documents,
+			"bytes":     bytes,
+			"versions":  versions,
+		}
+	}
+
+	printJSON(data)
+	return nil
+}
 
 func uuidKey(c *cli.Context) (err error) {
 	for _, uuids := range c.Args().Slice() {
