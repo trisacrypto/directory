@@ -16,10 +16,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	docs "github.com/trisacrypto/directory/pkg/bff/docs"
 	"github.com/trisacrypto/directory/pkg/bff/emails"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -267,6 +270,10 @@ func (s *Server) SetURL(url string) {
 	log.Debug().Str("url", url).Msg("server url set")
 }
 
+// @title BFF API
+// @version 1.0
+// @description BFF server which supports the GDS user frontend
+// @BasePath /v1
 func (s *Server) setupRoutes() (err error) {
 	var (
 		authenticator gin.HandlerFunc
@@ -381,6 +388,11 @@ func (s *Server) setupRoutes() (err error) {
 	// NotFound and NotAllowed routes
 	s.router.NoRoute(api.NotFound)
 	s.router.NoMethod(api.NotAllowed)
+
+	if s.conf.ServeDocs {
+		docs.SwaggerInfo.BasePath = "/v1"
+		s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 	return nil
 }
 

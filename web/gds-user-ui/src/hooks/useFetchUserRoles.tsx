@@ -8,9 +8,9 @@ export function useFetchUserRoles(): any {
       return await axiosInstance.get('/users/roles');
     },
     {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       refetchOnMount: true,
-      staleTime: 0
+      staleTime: 1000 * 60 * 60 * 24
     }
   );
   return {

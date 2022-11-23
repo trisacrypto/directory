@@ -22,6 +22,14 @@ const (
 	serverStatusMaintenance = "maintenance"
 )
 
+// @Summary Get the status of the BFF server
+// @Description Returns the status of the BFF server, including the status of the directory services.
+// @Tags status
+// @Produce json
+// @Param nogds query bool false "If true, do not check the status of the directory services."
+// @Success 200 {object} api.StatusReply
+// @Failure 400 {object} api.Reply
+// @Router /status [get]
 func (s *Server) Status(c *gin.Context) {
 	// The available middleware handles stopping and maintenance mode. If the request
 	// has come this far, the status is necessarily ok.
