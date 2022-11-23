@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { logUserInBff, getUserRoles } from 'modules/auth/login/auth.service';
+import { logUserInBff, getUserRoles, getUserCurrentOrganizationAPI } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
   auth0SignIn,
@@ -10,7 +10,7 @@ import {
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
 
-const setUserPayload = (userTokenPayload: any, roles: string) => {
+const setUserPayload = (userTokenPayload: any, data: any) => {
   const { email, name, picture, sub, sid, permissions } = userTokenPayload;
   return {
     email,
@@ -18,7 +18,7 @@ const setUserPayload = (userTokenPayload: any, roles: string) => {
     pictureUrl: picture,
     id: sid,
     permissions,
-    roles,
+    ...data,
     authType: sub.split('|')[0]
 
   };
@@ -76,6 +76,8 @@ export const getAuth0User: any = createAsyncThunk(
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
         const getRoles = await getUserRoles() as any;
+        const userVASPInfo: any = await getUserCurrentOrganizationAPI();
+        console.log('[userVASPInfo]', userVASPInfo);
         if (getUser?.data?.refresh_token) {
           const newUserPayload: any = await auth0CheckSession();
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
@@ -83,7 +85,10 @@ export const getAuth0User: any = createAsyncThunk(
 
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: setUserPayload(newUserPayload?.idTokenPayload, getRoles?.data?.roles) as any
+            user: setUserPayload(newUserPayload?.idTokenPayload, {
+              roles: getRoles?.data?.roles,
+              vasp: userVASPInfo?.data?.organization
+            }) as IUserState
           };
           return userInfo;
         }
@@ -94,7 +99,12 @@ export const getAuth0User: any = createAsyncThunk(
 
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: setUserPayload(getUserInfo?.idTokenPayload, getRoles?.data?.roles) as any
+            user: setUserPayload(getUserInfo?.idTokenPayload,
+              {
+                roles: getRoles?.data?.roles,
+                vasp: userVASPInfo?.data
+
+              }) as IUserState
 
           };
           return userInfo;

@@ -11,6 +11,8 @@ import CustomToast from 'components/ui/CustomToast';
 import CheckboxFormControl from 'components/ui/CheckboxFormControl';
 import { t, Trans } from '@lingui/macro';
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
+import { useSelector } from 'react-redux';
+import { userSelector } from 'application/store/selectors/user';
 type Props = {
   onCloseModal: () => void;
 };
@@ -20,7 +22,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
   const mutation = useCreateCollaborator();
   const toast = useToast();
   const { getAllCollaborators } = useFetchCollaborators();
-
+  const { user } = useSelector(userSelector);
   const {
     createCollaborator,
     isCreating,
@@ -95,9 +97,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         <Text fontWeight={'bold'} size={'md'}>
           <Trans>VASP</Trans>
         </Text>
-        <Text>
-          <Trans>VASP Name</Trans>
-        </Text>
+        <Text>{user?.vasp?.name}</Text>
       </Stack>
 
       <Stack py={5}>
