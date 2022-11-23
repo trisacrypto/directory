@@ -26,8 +26,6 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
 
   // const deps = window.location.pathname;
   useEffect(() => {
-    // check if token is valid
-    // if not, redirect to login page
     if (isTokenExpired()) {
       setIsLoading(true);
       setTimeout(() => {

@@ -5,6 +5,11 @@ interface IUserState {
   roles: string[];
   pictureUrl: string;
   permissions?: TUserPermission[];
+  authType?: string; // auth0, google-oauth,facebook, etc for now we use sub key of idTokenPayload to identify auth type
+  id?: string;
+  lastLogin?: string;
+  createdAt?: string;
+  hasSetPassword?: boolean; // this is for user who sign up with social account who need to set password
 }
 type TUser = {
   isFetching?: boolean;
@@ -25,4 +30,6 @@ type TUserPermission = TUserCollaboratorPermission | TUserCertificatePermission 
 type TUserRole = 'Organization Leader' | 'Organization Collaborator';
 
 type TCollaboratorStatus = 'Pending' | 'Confirmed';
+
+type TUserAuthType = 'auth0' | 'google-oauth2' | 'facebook';
 

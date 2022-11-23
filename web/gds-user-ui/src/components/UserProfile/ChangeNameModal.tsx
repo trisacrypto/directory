@@ -17,6 +17,8 @@ import EditIcon from 'assets/edit-input.svg';
 import { Trans } from '@lingui/macro';
 import InputFormControl from 'components/ui/InputFormControl';
 
+// import { useForm } from 'react-hook-form';
+
 function ChangeNameModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
