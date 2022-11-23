@@ -140,6 +140,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         {...register('agreed')}
         onChange={(e) => setIsChecked(e.target.checked)}
         size="md"
+        borderColor={'black'}
         colorScheme="gray">
         <Trans>
           TRISA is a network of trusted members. I acknowledge that the contact is authorized to
