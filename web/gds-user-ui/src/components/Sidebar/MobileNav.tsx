@@ -89,7 +89,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
-            <MenuItem onClick={() => navigate('/dashboard/user-profile')}>
+            <MenuItem onClick={() => navigate('/dashboard/profile')}>
               <Trans id="Profile">Profile</Trans>
             </MenuItem>
             <MenuDivider />
