@@ -233,6 +233,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 func (s *bffTestSuite) TestSubmitRegistration() {
 	var err error
 	require := s.Require()
+	defer s.ResetDB()
 
 	// Test setup: create an organization with a valid registration form that has not
 	// been submitted yet - at the end of the test both mainnet and testnet should be
@@ -240,10 +241,6 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	org := &records.Organization{}
 	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
-	defer func() {
-		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
-	}()
 
 	// Save the registration form fixture on the organization
 	org.Registration = &records.RegistrationForm{}
@@ -388,12 +385,33 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registerd directory ")
 	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
 	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
+	require.Equal("криптовалютний кіоск, TOV", org.Name, "incorrect organization name")
+	require.Equal(authtest.UserID, org.CreatedBy, "incorrect organization created by")
 
 	// User metadata should be updated with the directory IDs
 	appdata := &auth.AppMetadata{}
 	require.NoError(appdata.Load(s.auth.GetUserAppMetadata()))
 	require.Equal("6041571e-09b4-47e7-870a-723f8032cd6c", appdata.VASPs.TestNet, "incorrect testnet directory id in user metadata")
 	require.Equal("5bafb054-5868-439e-9b3c-75db91810714", appdata.VASPs.MainNet, "incorrect mainnet directory id in user metadata")
+
+	// Test that registration does not overwrite a user-provided organization name
+	org.Name = "My Registration"
+	org.CreatedBy = authtest.UserID
+	org.Testnet.Submitted = ""
+	require.NoError(s.DB().UpdateOrganization(org))
+
+	err = s.testnet.gds.UseFixture(mock.RegisterRPC, "testdata/testnet/register_reply.json")
+	require.NoError(err, "could not load register reply fixture")
+
+	// Submit the registration form
+	_, err = s.client.SubmitRegistration(context.TODO(), "testnet")
+	require.NoError(err, "could not submit registration form")
+
+	// Ensure that the organization name was not overwritten
+	org, err = s.DB().RetrieveOrganization(org.UUID())
+	require.NoError(err, "could not retrieve organization from the database")
+	require.Equal("My Registration", org.Name, "organization name was overwritten")
+	require.Equal(authtest.UserID, org.CreatedBy, "incorrect organization created by")
 }
 
 func (s *bffTestSuite) TestSubmitRegistrationNotReady() {

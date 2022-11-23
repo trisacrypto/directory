@@ -434,6 +434,13 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		appdata.VASPs.MainNet = rep.Id
 	}
 
+	// Give auto-created organizations a real name
+	if org.CreatedBy == "" {
+		// This assumes that GDS has already validated the LegalPerson name
+		org.Name = org.Registration.Entity.Name.NameIdentifiers[0].LegalPersonName
+		org.CreatedBy = *user.ID
+	}
+
 	if err = s.db.UpdateOrganization(org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))

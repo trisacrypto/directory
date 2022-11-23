@@ -73,8 +73,9 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 
 	// Create a new organization in the database with the provided name and domain
 	org := &models.Organization{
-		Name:   params.Name,
-		Domain: domain,
+		Name:      params.Name,
+		Domain:    domain,
+		CreatedBy: *user.ID,
 	}
 	if _, err = s.db.CreateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")

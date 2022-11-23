@@ -102,9 +102,17 @@ func (s *Server) Login(c *gin.Context) {
 	)
 	if params.OrgID == "" && appdata.OrgID == "" {
 		// This is a new user so create a new organization for them
-		org = &models.Organization{}
+		var userName string
+		if userName, err = auth.UserDisplayName(user); err != nil {
+			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not get user display name")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
+			return
+		}
+		org = &models.Organization{
+			Name: fmt.Sprintf("Registration By %s [Draft]", userName),
+		}
 		if _, err = s.db.CreateOrganization(org); err != nil {
-			log.Error().Err(err).Msg("could not create organization for new user")
+			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}

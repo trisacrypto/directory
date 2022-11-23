@@ -11,6 +11,7 @@ import (
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
 	sgmail "github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/emails"
@@ -63,9 +64,7 @@ func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
 
 // SendUserInvite sends an email to a user inviting them to join an organization.
 func (m *EmailManager) SendUserInvite(user *management.User, inviter *management.User, org *models.Organization, inviteURL *url.URL) (err error) {
-	var (
-		userName, userEmail, inviterName, orgName string
-	)
+	var userEmail, userName string
 
 	if user.Email == nil || *user.Email == "" {
 		return errors.New("user has no email address")
@@ -76,31 +75,22 @@ func (m *EmailManager) SendUserInvite(user *management.User, inviter *management
 		userName = *user.Name
 	}
 
-	switch {
-	case inviter.Name != nil && *inviter.Name != "":
-		inviterName = *inviter.Name
-	case inviter.Email != nil && *inviter.Email != "":
-		inviterName = *inviter.Email
-	default:
-		return errors.New("inviter user has no name or email address")
+	ctx := InviteUserData{
+		InviteURL: inviteURL.String(),
 	}
 
 	if org.Name != "" {
-		orgName = org.Name
+		ctx.Organization = org.Name
 	} else {
-		orgName = "their organization"
+		ctx.Organization = "their organization"
 	}
 
-	ctx := InviteUserData{
-		Inviter:      inviterName,
-		Organization: orgName,
-		InviteURL:    inviteURL.String(),
+	if ctx.Inviter, err = auth.UserDisplayName(inviter); err != nil {
+		return err
 	}
 
-	if userName != "" {
-		ctx.User = userName
-	} else {
-		ctx.User = userEmail
+	if ctx.User, err = auth.UserDisplayName(user); err != nil {
+		return err
 	}
 
 	msg, err := InviteUserEmail(m.serviceEmail.Name, m.serviceEmail.Address, userName, userEmail, ctx)
