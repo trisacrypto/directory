@@ -10,7 +10,6 @@ import {
   HStack,
   Stack,
   chakra,
-  Link,
   Tag,
   Tooltip,
   useDisclosure
@@ -30,9 +29,9 @@ import { formatIsoDate } from 'utils/formate-date';
 import { sortCollaboratorsByRecentDate } from './lib';
 import Loader from 'components/Loader';
 import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
-import { USER_PERMISSION } from 'types/enums';
+import { USER_PERMISSION, COLLABORATOR_STATUS } from 'types/enums';
 import { hasPermission } from 'utils/permission';
-import { isDate } from 'lodash';
+import { isDate } from 'utils/date';
 // const rows: any[] = [
 //   {
 //     id: '18002',
@@ -67,17 +66,17 @@ import { isDate } from 'lodash';
 const getStatus = (joinedAt: any): any => {
   console.log('joinedAt', joinedAt);
   if (joinedAt && isDate(joinedAt)) {
-    return 'Joined';
+    return 'Confirmed';
   }
   return 'Pending';
 };
 
 const getStatusBgColor = (joinedAt: string) => {
   const status = getStatus(joinedAt) as TCollaboratorStatus;
-  switch (status && status.toLowerCase()) {
-    case 'joined':
+  switch (status) {
+    case COLLABORATOR_STATUS.Confirmed:
       return 'green.400';
-    case 'pending':
+    case COLLABORATOR_STATUS.Pending:
       return 'yellow.400';
   }
 };
@@ -106,18 +105,28 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
           </Td>
           <Td textTransform="capitalize">{row?.roles}</Td>
           <Td textTransform="capitalize">
-            <Tag bg={getStatusBgColor(row?.joined_at as string)} color={'white'} size={'md'}>
-              {getStatus(row?.joined_at as string)}
+            <Tag bg={getStatusBgColor(row?.joined_at as any)} color={'white'} size={'md'}>
+              {getStatus(row?.joined_at)}
             </Tag>
           </Td>
           <Td>{formatIsoDate(row?.created_at)}</Td>
           <Td>{formatIsoDate(row?.joined_at)}</Td>
-          <Td textTransform="capitalize">{row?.organization}</Td>
+          {/* <Td textTransform="capitalize">{row?.organization}</Td> */}
           <Td paddingY={0}>
-            <HStack width="100%" justifyContent="center" alignItems="center" spacing={5}>
-              <Link color="blue" href={`mailto:${row?.email}`}>
-                <FiMail fontSize="26px" />
-              </Link>
+            <HStack width="100%" justifyContent="center" alignItems="center" spacing={2}>
+              <Button
+                color="blue"
+                as={'a'}
+                href={`mailto:${row?.email}`}
+                bg={'transparent'}
+                _hover={{
+                  bg: 'transparent'
+                }}
+                _focus={{
+                  bg: 'transparent'
+                }}>
+                <FiMail fontSize="24px" />
+              </Button>
               <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
               <DeleteCollaboratorModal collaboratorId={row?.id} />
             </HStack>
@@ -199,9 +208,9 @@ const CollaboratorsSection: React.FC = () => {
             <Th>
               <Trans>Joined</Trans>
             </Th>
-            <Th>
+            {/* <Th>
               <Trans>Organization</Trans>
-            </Th>
+            </Th> */}
             <Th textAlign="center">
               <Trans>Actions</Trans>
             </Th>

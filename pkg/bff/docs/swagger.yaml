@@ -1,0 +1,898 @@
+basePath: /v1
+definitions:
+  api.AnnouncementsReply:
+    properties:
+      announcements:
+        items:
+          $ref: '#/definitions/models.Announcement'
+        type: array
+      last_updated:
+        type: string
+    type: object
+  api.AttentionMessage:
+    properties:
+      action:
+        type: string
+      message:
+        type: string
+      severity:
+        type: string
+    type: object
+  api.AttentionReply:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/api.AttentionMessage'
+        type: array
+    type: object
+  api.Certificate:
+    properties:
+      details:
+        additionalProperties: true
+        type: object
+      expires_at:
+        type: string
+      issued_at:
+        type: string
+      revoked:
+        type: boolean
+      serial_number:
+        type: string
+    type: object
+  api.CertificatesReply:
+    properties:
+      mainnet:
+        items:
+          $ref: '#/definitions/api.Certificate'
+        type: array
+      network_error:
+        $ref: '#/definitions/api.NetworkError'
+      testnet:
+        items:
+          $ref: '#/definitions/api.Certificate'
+        type: array
+    type: object
+  api.ListCollaboratorsReply:
+    properties:
+      collaborators:
+        items:
+          $ref: '#/definitions/models.Collaborator'
+        type: array
+    type: object
+  api.LoginParams:
+    properties:
+      orgid:
+        type: string
+    type: object
+  api.LookupParams:
+    properties:
+      commonName:
+        type: string
+      id:
+        type: string
+    type: object
+  api.LookupReply:
+    properties:
+      mainnet:
+        additionalProperties: true
+        type: object
+      testnet:
+        additionalProperties: true
+        type: object
+    type: object
+  api.MemberDetails:
+    properties:
+      certificate:
+        additionalProperties: true
+        type: object
+      country_code:
+        type: string
+      first_listed:
+        type: string
+      id:
+        type: string
+      last_updated:
+        type: string
+      status:
+        type: string
+      verified_on:
+        type: string
+    type: object
+  api.MemberDetailsParams:
+    properties:
+      directory:
+        type: string
+      id:
+        type: string
+    type: object
+  api.NetworkError:
+    properties:
+      mainnet:
+        type: string
+      testnet:
+        type: string
+    type: object
+  api.NetworkOverview:
+    properties:
+      certificates_issued:
+        type: integer
+      member_details:
+        $ref: '#/definitions/api.MemberDetails'
+      new_members:
+        type: integer
+      status:
+        type: string
+      vasps:
+        type: integer
+    type: object
+  api.OrganizationParams:
+    properties:
+      domain:
+        type: string
+      name:
+        type: string
+    type: object
+  api.OrganizationReply:
+    properties:
+      created_at:
+        type: string
+      domain:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      refresh_token:
+        type: boolean
+    type: object
+  api.OverviewReply:
+    properties:
+      error:
+        $ref: '#/definitions/api.NetworkError'
+      mainnet:
+        $ref: '#/definitions/api.NetworkOverview'
+      org_id:
+        type: string
+      testnet:
+        $ref: '#/definitions/api.NetworkOverview'
+    type: object
+  api.RegisterReply:
+    properties:
+      common_name:
+        type: string
+      error:
+        additionalProperties: true
+        type: object
+      id:
+        type: string
+      message:
+        type: string
+      pkcs12password:
+        type: string
+      refresh_token:
+        type: boolean
+      registered_directory:
+        type: string
+      status:
+        type: string
+    type: object
+  api.RegistrationStatus:
+    properties:
+      mainnet_submitted:
+        type: string
+      testnet_submitted:
+        type: string
+    type: object
+  api.Reply:
+    properties:
+      error:
+        type: string
+      refresh_token:
+        type: boolean
+      success:
+        type: boolean
+    type: object
+  api.StatusReply:
+    properties:
+      mainnet:
+        type: string
+      status:
+        type: string
+      testnet:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
+    type: object
+  api.UpdateRolesParams:
+    properties:
+      roles:
+        items:
+          type: string
+        type: array
+    type: object
+  api.VerifyContactParams:
+    properties:
+      directory:
+        type: string
+      id:
+        type: string
+      token:
+        type: string
+    type: object
+  api.VerifyContactReply:
+    properties:
+      error:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Announcement:
+    properties:
+      author:
+        type: string
+      body:
+        type: string
+      created:
+        description: Metadata as RFC3339Nano Timestamps
+        type: string
+      id:
+        type: string
+      modified:
+        type: string
+      post_date:
+        type: string
+      title:
+        type: string
+    type: object
+  models.Collaborator:
+    properties:
+      created_at:
+        description: Metadata as RFC3339Nano Timestamps
+        type: string
+      email:
+        type: string
+      id:
+        description: Identifiers used by the BFF
+        type: string
+      joined_at:
+        type: string
+      last_login:
+        type: string
+      modified_at:
+        type: string
+      name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      user_id:
+        description: User data cached from the authentication service
+        type: string
+      verified:
+        type: boolean
+    type: object
+info:
+  contact: {}
+  description: BFF server which supports the GDS user frontend
+  title: BFF API
+  version: "1.0"
+paths:
+  /announcements:
+    get:
+      description: Get the most recent network announcements
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.AnnouncementsReply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get announcements [read:announcements]
+      tags:
+      - announcements
+    post:
+      consumes:
+      - application/json
+      description: Post a new announcement to the network
+      parameters:
+      - description: Announcement to post
+        in: body
+        name: announcement
+        required: true
+        schema:
+          $ref: '#/definitions/models.Announcement'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Post date and author are required
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Post an announcement [create:announcements]
+      tags:
+      - announcements
+  /attention:
+    get:
+      description: Get attention alerts for the user regarding their organization's
+        VASP registration status.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.AttentionReply'
+        "204":
+          description: No attention messages
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get attention alerts for the user [read:vasp]
+      tags:
+      - registration
+  /certificates:
+    get:
+      description: Returns the certificates associated with the user's organization.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CertificatesReply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: List certificates for the user [read:vasp]
+      tags:
+      - certificates
+  /collaborators:
+    get:
+      description: Returns all collaborators on the user's organization sorted by
+        email address.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ListCollaboratorsReply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: List collaborators [read:collaborators]
+      tags:
+      - collaborators
+    post:
+      consumes:
+      - application/json
+      description: Invite a new collaborator to the user's organization.
+      parameters:
+      - description: Collaborator to add
+        in: body
+        name: collaborator
+        required: true
+        schema:
+          $ref: '#/definitions/models.Collaborator'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Collaborator'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Email address is required
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Collaborator already exists
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Add collaborator [update:collaborators]
+      tags:
+      - collaborators
+  /collaborators/{id}:
+    delete:
+      description: Delete the collaborator with the given ID from the organization.
+      parameters:
+      - description: Collaborator ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Delete collaborator [update:collaborators]
+      tags:
+      - collaborators
+    post:
+      consumes:
+      - application/json
+      description: Replace the roles of the collaborator with the given ID.
+      parameters:
+      - description: Collaborator ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New roles for the collaborator
+        in: body
+        name: roles
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateRolesParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UpdateRolesParams'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Update collaborator roles [update:collaborators]
+      tags:
+      - collaborators
+  /details:
+    get:
+      consumes:
+      - application/json
+      description: Returns details for a VASP by ID and directory.
+      parameters:
+      - description: VASP ID and directory
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.MemberDetailsParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: VASP details
+          schema:
+            type: object
+        "400":
+          description: VASP ID and directory are required
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get details for a VASP [read:vasp]
+      tags:
+      - members
+  /lookup:
+    get:
+      consumes:
+      - application/json
+      description: Lookup a VASP record in both TestNet and MainNet, returning either
+        or both results.
+      parameters:
+      - description: Lookup parameters
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.LookupParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.LookupReply'
+        "400":
+          description: Either ID or CommonName must be provided
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: No results returned for query
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Lookup a VASP record by name or ID
+      tags:
+      - GDS
+  /organizations:
+    get:
+      description: Return the list of organizations that the user is assigned to.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: list
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: List organizations [read:organizations]
+      tags:
+      - organizations
+    post:
+      consumes:
+      - application/json
+      description: Create a new organization with the specified name and domain for
+        the user.
+      parameters:
+      - description: Name and domain
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.OrganizationParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.OrganizationReply'
+        "400":
+          description: Must provide name and domain
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Domain already exists
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Create a new organization [create:organizations]
+      tags:
+      - organizations
+  /overview:
+    get:
+      description: Returns a high level summary representing the state of each directory
+        service and VASP registrations.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.OverviewReply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get summary information for the overview dashboard [read:vasp]
+      tags:
+      - overview
+  /register:
+    get:
+      description: Get the registration form associated with the user's organization.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration form
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get the user's current registration form [read:vasp]
+      tags:
+      - registration
+    put:
+      consumes:
+      - application/json
+      description: Save a registration form to the user's organization in the database.
+      parameters:
+      - description: Registration form
+        in: body
+        name: form
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration form
+          schema:
+            type: object
+        "204":
+          description: Empty form was provided
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Save a registration form to the database [update:vasp]
+      tags:
+      - registration
+  /register/{directory}:
+    post:
+      description: Submit a registration form to the TestNet or MainNet directory
+        service.
+      parameters:
+      - description: Directory service to submit the registration form to (testnet
+          or mainnet)
+        in: path
+        name: directory
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.RegisterReply'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Submit a registration form to a directory service [update:vasp]
+      tags:
+      - registration
+  /status:
+    get:
+      description: Returns the status of the BFF server, including the status of the
+        directory services.
+      parameters:
+      - description: If true, do not check the status of the directory services.
+        in: query
+        name: nogds
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.StatusReply'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get the status of the BFF server
+      tags:
+      - status
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Completes the user login process by assigning the user to an organization
+        and verifying that the user has the proper roles.
+      parameters:
+      - description: Login parameters
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful, token refresh required
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "204":
+          description: Login successful
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Login a user to the BFF
+      tags:
+      - users
+  /users/organization:
+    get:
+      description: Get high level info about the user's current organization
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.OrganizationReply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Get the user's current organization [read:organizations]
+      tags:
+      - users
+  /users/roles:
+    get:
+      description: Get the list of assignable user roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: list
+      summary: Get the list of assignable user roles
+      tags:
+      - users
+  /verify:
+    get:
+      consumes:
+      - application/json
+      description: Verify a VASP contact using a TestNet or MainNet GDS.
+      parameters:
+      - description: Verify contact parameters
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.VerifyContactParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.VerifyContactReply'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Verify a VASP contact
+      tags:
+      - GDS
+swagger: "2.0"

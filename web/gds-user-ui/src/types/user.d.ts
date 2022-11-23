@@ -29,7 +29,7 @@ type TUserPermission = TUserCollaboratorPermission | TUserCertificatePermission 
 
 type TUserRole = 'Organization Leader' | 'Organization Collaborator';
 
-type TCollaboratorStatus = 'pending' | 'joined';
+type TCollaboratorStatus = 'Pending' | 'Confirmed';
 
 type TUserAuthType = 'auth0' | 'google-oauth2' | 'facebook';
 
