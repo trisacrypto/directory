@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { setCookie } from 'utils/cookies';
 import { logUserInBff, getUserRoles } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
@@ -9,7 +8,21 @@ import {
   auth0Hash,
   auth0CheckSession
 } from 'utils/auth0.helper';
-import { handleError } from 'utils/utils';
+import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
+
+const setUserPayload = (userTokenPayload: any, roles: string) => {
+  const { email, name, picture, sub, sid, permissions } = userTokenPayload;
+  return {
+    email,
+    name,
+    pictureUrl: picture,
+    id: sid,
+    permissions,
+    roles,
+    authType: sub.split('|')[0]
+
+  };
+};
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -59,45 +72,30 @@ export const getAuth0User: any = createAsyncThunk(
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
-      const updatedTime = new Date(getUserInfo?.idTokenPayload?.updated_at).getTime() / 1000;
-      const expiresTime = updatedTime + getUserInfo.expiresIn;
-      setCookie('access_token', getUserInfo?.accessToken);
-      setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
-      setCookie('expires_in', expiresTime);
+
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();
         const getRoles = await getUserRoles() as any;
         if (getUser?.data?.refresh_token) {
           const newUserPayload: any = await auth0CheckSession();
-          setCookie('access_token', newUserPayload?.accessToken);
-          setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
-          // set expired time
-          const updated = new Date(newUserPayload?.idTokenPayload?.updated_at).getTime() / 1000;
-          const expires = updated + getUserInfo.expiresIn;
-          setCookie('expires_in', expires);
+          const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
+          setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
+
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: newUserPayload?.idTokenPayload?.name,
-              pictureUrl: newUserPayload?.idTokenPayload?.picture,
-              email: newUserPayload?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: newUserPayload?.idTokenPayload?.permissions,
-            }
+            user: setUserPayload(newUserPayload?.idTokenPayload, getRoles?.data?.roles) as any
           };
           return userInfo;
         }
         // return;
         if (getUser.status === 204) {
+          const expiresIn = getUserExpiresTime(getUserInfo?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
+          setUserCookies(getUserInfo?.accessToken, expiresIn, getUserInfo?.idTokenPayload?.locale || 'en');
+
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: getUserInfo?.idTokenPayload?.name,
-              pictureUrl: getUserInfo?.idTokenPayload?.picture,
-              email: getUserInfo?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: getUserInfo?.idTokenPayload?.permissions,
-            }
+            user: setUserPayload(getUserInfo?.idTokenPayload, getRoles?.data?.roles) as any
+
           };
           return userInfo;
         } else {

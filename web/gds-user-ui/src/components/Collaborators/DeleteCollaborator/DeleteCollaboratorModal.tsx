@@ -134,6 +134,7 @@ function DeleteCollaboratorModal(props: Props) {
                 <Text data-testid="collaborator-email">{collaborator?.email}</Text>
               </Box>
               <Checkbox
+                borderColor={'black'}
                 isChecked={isDeleteChecked}
                 colorScheme="gray"
                 onChange={(e) => setIsDeleteChecked(e.target.checked)}>

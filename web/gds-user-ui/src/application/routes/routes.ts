@@ -15,6 +15,7 @@ import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
+import Profile from 'modules/dashboard/profile';
 import SwitchOrganization from 'modules/dashboard/organization/SwitchOrganization';
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
@@ -156,6 +157,14 @@ const appRoutes = [
     component: Logout,
     layout: 'dashboard'
   },
+  {
+    path: '/dashboard/profile',
+    route: '/profile',
+    name: 'Profile',
+    component: Profile,
+    layout: 'dashboard'
+  },
+
   {
     path: '/dashboard/collaborators',
     route: '/collaborators',
