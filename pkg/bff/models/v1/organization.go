@@ -111,7 +111,6 @@ func NewRegisterForm() *RegistrationForm {
 			},
 			NationalIdentification: &ivms101.NationalIdentification{
 				NationalIdentifierType: ivms101.NationalIdentifierTypeCode_NATIONAL_IDENTIFIER_TYPE_CODE_LEIX,
-				RegistrationAuthority:  "RA777777",
 			},
 		},
 		Contacts: &models.Contacts{
