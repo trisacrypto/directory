@@ -11,6 +11,8 @@ import (
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
+const DefaultOrganizationName = "Draft Registration"
+
 var (
 	ErrInvalidOrgID = errors.New("invalid organization id")
 )
@@ -26,6 +28,50 @@ func (org *Organization) Key() []byte {
 
 func (org *Organization) UUID() uuid.UUID {
 	return uuid.MustParse(org.Id)
+}
+
+// ResolveName returns the name of the organization, parsing it from the registration
+// form if necessary. If no name is available, it returns a default name.
+func (org *Organization) ResolveName() string {
+	// If the name was already set by a TSP or user then return it
+	if org.Name != "" {
+		return org.Name
+	}
+
+	// Attempt to parse the name from the entity in the registration form
+	// See vasp.Name() for more details
+	if org.Registration != nil && org.Registration.Entity != nil && org.Registration.Entity.Name != nil {
+		names := make([]string, 3)
+		for _, name := range org.Registration.Entity.Name.NameIdentifiers {
+			var idx int
+			switch name.LegalPersonNameIdentifierType {
+			case ivms101.LegalPersonTrading:
+				idx = 0
+			case ivms101.LegalPersonShort:
+				idx = 1
+			case ivms101.LegalPersonLegal:
+				idx = 2
+			}
+
+			if names[idx] == "" {
+				names[idx] = name.LegalPersonName
+			}
+		}
+
+		for _, name := range names {
+			if name != "" {
+				return name
+			}
+		}
+	}
+
+	// Return a customized default name if a user name is available
+	if org.CreatedBy != "" {
+		return fmt.Sprintf("%s by %s", DefaultOrganizationName, org.CreatedBy)
+	}
+
+	// Return a generic name by default
+	return DefaultOrganizationName
 }
 
 // Add a new collaborator to an organization record. The given collaborator record is
