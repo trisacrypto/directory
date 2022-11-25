@@ -89,6 +89,11 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		Name:   params.Name,
 		Domain: domain,
 	}
+	if org.CreatedBy, err = auth.UserDisplayName(user); err != nil {
+		log.Error().Err(err).Msg("could not get user display name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not resolve name for user"))
+		return
+	}
 	if _, err = s.db.CreateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
@@ -155,7 +160,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		} else {
 			out = append(out, &api.OrganizationReply{
 				ID:        org.Id,
-				Name:      org.Name,
+				Name:      org.ResolveName(),
 				Domain:    org.Domain,
 				CreatedAt: org.Created,
 			})
