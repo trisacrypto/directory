@@ -16,7 +16,7 @@ const CallbackPage: React.FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getAuth0User(accessToken));
+    dispatch(getAuth0User({ hasToken: accessToken }));
   }, [accessToken, dispatch]);
 
   useEffect(() => {

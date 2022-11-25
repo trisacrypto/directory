@@ -60,6 +60,7 @@ function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
                     id={organization.id}
                     name={organization?.name}
                     domain={organization?.domain}
+                    onClose={onClose}
                   />
                 ))}
               </Stack>
