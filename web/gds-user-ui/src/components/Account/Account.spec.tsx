@@ -11,11 +11,12 @@ describe('<Account />', () => {
   });
 
   it('should display props correctly', () => {
-    const { name, domain } = {
+    const { name, domain, onClose } = {
       name: faker.internet.domainName(),
-      domain: faker.internet.userName()
+      domain: faker.internet.userName(),
+      onClose: jest.fn()
     };
-    render(<Account name={name} domain={domain} />);
+    render(<Account name={name} domain={domain} onClose={onClose} />);
 
     expect(screen.getByTestId('vaspName')).toBeInTheDocument();
     expect(screen.getByTestId('vaspDomain')).toBeInTheDocument();

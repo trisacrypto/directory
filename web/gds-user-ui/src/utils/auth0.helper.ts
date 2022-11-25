@@ -126,4 +126,11 @@ export const getRefreshToken = async (hasRefreshToken: boolean) => {
   }
 };
 
+export const refreshNewToken = async () => {
+  const user = (await refreshAndFetchUser()) as any;
+  if (user) {
+    setCookie('access_token', user?.accessToken);
+  }
+};
+
 
