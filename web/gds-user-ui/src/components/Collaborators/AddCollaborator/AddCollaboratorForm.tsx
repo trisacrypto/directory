@@ -97,7 +97,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         <Text fontWeight={'bold'} size={'md'}>
           <Trans>VASP</Trans>
         </Text>
-        <Text>{user?.vasp?.name}</Text>
+        <Text data-testid="vasp-name">{user?.vasp?.name}</Text>
       </Stack>
 
       <Stack py={5}>
