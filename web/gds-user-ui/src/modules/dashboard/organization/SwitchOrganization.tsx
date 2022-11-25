@@ -1,32 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import TransparentLoader from 'components/Loader/TransparentLoader';
 import { logUserInBff } from 'modules/auth/login/auth.service';
 import { refreshNewToken } from 'utils/auth0.helper';
-import { useDispatch } from 'react-redux';
-import { getAuth0User } from 'modules/auth/login/user.slice';
+import { useSelector, useDispatch } from 'react-redux';
+import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
+
+import { APP_PATH } from 'utils/constants';
 const SwitchOrganization: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
-
+  const { isLoggedIn } = useSelector(userSelector);
+  const navigate = useNavigate();
   const isCalled = useRef(false);
 
   useEffect(() => {
     const switchOrganization = async () => {
+      const accessToken = await refreshNewToken();
       const { data } = await logUserInBff({
         orgid: id
       });
       console.log('data', data);
-      const accessToken = await refreshNewToken();
+
       dispatch(getAuth0User({ hasToken: accessToken }));
     };
 
-    // const refreshNewTokenHandler = async () => {
-    //   await refreshNewToken();
-    // };
-
     if (!isCalled.current) {
-      // refreshNewTokenHandler();
       switchOrganization();
       isCalled.current = true;
     }
@@ -35,6 +34,12 @@ const SwitchOrganization: React.FC = () => {
       isCalled.current = false;
     };
   }, [id, dispatch]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate(APP_PATH.DASHBOARD);
+    }
+  }, [isLoggedIn, navigate]);
 
   return (
     <>
