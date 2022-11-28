@@ -3,6 +3,7 @@ package bff
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -41,6 +42,20 @@ const (
 // changed, this returns a response with the refresh_token field set to true,
 // indicating that the frontend should refresh the access token to ensure that the user
 // claims are up to date.
+//
+// @Summary Login a user to the BFF
+// @Description Completes the user login process by assigning the user to an organization and verifying that the user has the proper roles.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param params body api.LoginParams true "Login parameters"
+// @Success 200 {object} api.Reply "Login successful, token refresh required"
+// @Success 204 "Login successful"
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply "Organization not found"
+// @Failure 500 {object} api.Reply
+// @Router /users/login [post]
 func (s *Server) Login(c *gin.Context) {
 	var (
 		err   error
@@ -101,9 +116,17 @@ func (s *Server) Login(c *gin.Context) {
 	)
 	if params.OrgID == "" && appdata.OrgID == "" {
 		// This is a new user so create a new organization for them
-		org = &models.Organization{}
+		var userName string
+		if userName, err = auth.UserDisplayName(user); err != nil {
+			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not get user display name")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
+			return
+		}
+		org = &models.Organization{
+			CreatedBy: userName,
+		}
 		if _, err = s.db.CreateOrganization(org); err != nil {
-			log.Error().Err(err).Msg("could not create organization for new user")
+			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}
@@ -249,6 +272,40 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
+// UserOrganization returns the current organization that the user is logged into. The
+// user must have the read:organizations permission to perform this action.
+//
+// @Summary Get the user's current organization [read:organizations]
+// @Description Get high level info about the user's current organization
+// @Tags users
+// @Produce json
+// @Success 200 {object} api.OrganizationReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /users/organization [get]
+func (s *Server) UserOrganization(c *gin.Context) {
+	var (
+		err error
+		org *models.Organization
+	)
+
+	// Fetch the organization from the claims
+	// Note: This method handles the error logging and response
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Build the response
+	reply := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.ResolveName(),
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+	}
+
+	c.JSON(http.StatusOK, reply)
+}
+
 // AssignRoles assigns a set of roles to a user by ID, removing the existing roles and
 // replacing them with the new set.
 func (s *Server) AssignRoles(userID string, roles []string) (err error) {
@@ -294,10 +351,34 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 }
 
 // ListUserRoles returns the list of assignable user roles.
+//
+// @Summary Get the list of assignable user roles
+// @Description Get the list of assignable user roles
+// @Tags users
+// @Produce json
+// @Success 200 {list} string
+// @Router /users/roles [get]
 func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
 	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+}
+
+// FindUserByEmail returns the Auth0 user record by email address.
+func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
+	var users []*management.User
+	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
+		return nil, err
+	}
+
+	switch len(users) {
+	case 0:
+		return nil, ErrUserEmailNotFound
+	case 1:
+		return users[0], nil
+	default:
+		return nil, ErrMultipleEmailUsers
+	}
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

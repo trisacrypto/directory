@@ -6,11 +6,10 @@ import { useCreateCollaborator } from 'hooks/useCreateCollaborator';
 import { Button, Stack, Text, VStack, chakra, useToast } from '@chakra-ui/react';
 import { DevTool } from '@hookform/devtools';
 import { isProdEnv } from 'application/config';
-import { Trans } from '@lingui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import CustomToast from 'components/ui/CustomToast';
 import CheckboxFormControl from 'components/ui/CheckboxFormControl';
-import { t } from '@lingui/macro';
+import { t, Trans } from '@lingui/macro';
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 type Props = {
   onCloseModal: () => void;
@@ -75,43 +74,30 @@ const AddCollaboratorForm: FC<Props> = (props) => {
 
   return (
     <chakra.form onSubmit={handleSubmit(onSubmit)}>
-      <VStack>
+      <VStack mb={5}>
         <Text fontWeight={'bold'}>
-          <Trans id="Please provide the name of the VASP and email address for the new contact.">
-            Please provide the name of the VASP and email address for the new contact.
-          </Trans>
+          <Trans>Please provide the name and email address for the new contact</Trans>
         </Text>
         <Text fontSize="sm">
-          <Trans id="The contact will receive an email to create a TRISA Global Directory Service Account. The invitation to join is valid for 7 calendar days. The contact will be added as a member for the VASP. The contact will have the ability to contribute to certificate requests, check on the status of certificate requests, and complete other actions related to the organization’s TRISA membership.">
-            The contact will receive an email to create a TRISA Global Directory Service Account.
-            The invitation to join is valid for 7 calendar days. The contact will be added as a
-            member for the VASP. The contact will have the ability to contribute to certificate
-            requests, check on the status of certificate requests, and complete other actions
-            related to the organization’s TRISA membership.
+          <Trans>
+            The contact will receive an email to create a TRISA Global Directory Service (GDS)
+            account or join this organization if the contact already has a TRISA GDS account. The
+            invitation to join is valid for 7 calendar days. The contact will be added as a member
+            for the VASP. The contact will have the ability to contribute to certificate requests,
+            check on the status of certificate requests, and complete other actions related to the
+            organization’s TRISA membership.
           </Trans>
         </Text>
       </VStack>
 
-      <CheckboxFormControl
-        controlId="agreed"
-        mt={2}
-        mb={4}
-        {...register('agreed')}
-        onChange={(e) => setIsChecked(e.target.checked)}
-        size="md"
-        colorScheme="gray">
-        <Trans id="TRISA is a network of trusted members. I acknowledge that the contact is authorized to access the organization’s TRISA account information.">
-          TRISA is a network of trusted members. I acknowledge that the contact is authorized to
-          access the organization’s TRISA account information.
-        </Trans>
-      </CheckboxFormControl>
-
       {!isProdEnv ? <DevTool control={control} /> : null}
       <Stack>
         <Text fontWeight={'bold'} size={'md'}>
-          <Trans id="VASP">VASP</Trans>
+          <Trans>VASP</Trans>
         </Text>
-        <Text>VASP Name</Text>
+        <Text>
+          <Trans>VASP Name</Trans>
+        </Text>
       </Stack>
 
       <Stack py={5}>
@@ -124,9 +110,9 @@ const AddCollaboratorForm: FC<Props> = (props) => {
           label={
             <>
               <chakra.span fontWeight={700}>
-                <Trans id="Contact Name">Contact Name</Trans>
+                <Trans>Contact Name</Trans>
               </chakra.span>{' '}
-              (<Trans id="required">required</Trans>)
+              (<Trans>required</Trans>)
             </>
           }
         />
@@ -140,12 +126,27 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         label={
           <>
             <chakra.span fontWeight={700}>
-              <Trans id="Email Address">Email Address</Trans>
+              <Trans>Email Address</Trans>
             </chakra.span>{' '}
             (<Trans id="required">required</Trans>)
           </>
         }
       />
+
+      <CheckboxFormControl
+        controlId="agreed"
+        mt={2}
+        mb={4}
+        {...register('agreed')}
+        onChange={(e) => setIsChecked(e.target.checked)}
+        size="md"
+        borderColor={'black'}
+        colorScheme="gray">
+        <Trans>
+          TRISA is a network of trusted members. I acknowledge that the contact is authorized to
+          access the organization’s TRISA account information.
+        </Trans>
+      </CheckboxFormControl>
 
       <Stack display="flex" flexDir="column" gap={3} py={5}>
         <Button

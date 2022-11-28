@@ -33,18 +33,20 @@ import (
 )
 
 const (
-	KeyID        = "StyqeY8Kl4Eam28KsUs"
-	ClientID     = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
-	ClientSecret = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
-	Audience     = "http://localhost"
-	Name         = "Leopold Wentzel"
-	Email        = "leopold.wentzel@gmail.com"
-	UserID       = "test|abcdefg1234567890"
-	UserRole     = "Organization Collaborator"
-	OrgID        = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
-	MainNetVASP  = "87d92fd1-53cf-47d8-85b1-048e8a38ced9"
-	TestNetVASP  = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"
-	Scope        = "openid profile email"
+	KeyID          = "StyqeY8Kl4Eam28KsUs"
+	ClientID       = "a5laOSr0NOX1L53yBaNtumKOoExFxptc"
+	ClientSecret   = "me4JZSvBvPSnBaM0h0AoXgXPn1VBiBMz0bL7E/sV1isndP9lZ5ptm5NWA9IkKwEb"
+	Audience       = "http://localhost"
+	ConnectionName = "Username-Password-Authentication"
+	RedirectURL    = "https://localhost/auth/callback"
+	Name           = "Leopold Wentzel"
+	Email          = "leopold.wentzel@gmail.com"
+	UserID         = "test|abcdefg1234567890"
+	UserRole       = "Organization Collaborator"
+	OrgID          = "b1b9e9b1-9a44-4317-aefa-473971b4df42"
+	MainNetVASP    = "87d92fd1-53cf-47d8-85b1-048e8a38ced9"
+	TestNetVASP    = "d0082f55-d3ba-4726-a46d-85e3f5a2911f"
+	Scope          = "openid profile email"
 )
 
 var (
@@ -116,6 +118,9 @@ func New() (s *Server, err error) {
 	s.mux.HandleFunc("/api/v2/users/"+UserID, s.Users)
 	s.mux.HandleFunc("/api/v2/users/"+UserID+"/roles", s.UserRoles)
 	s.mux.HandleFunc("/api/v2/roles", s.Roles)
+	s.mux.HandleFunc("/api/v2/users-by-email", s.ListUsers)
+	s.mux.HandleFunc("/api/v2/tickets/password-change", s.GenerateTicket)
+	s.mux.HandleFunc("/api/v2/tickets/email-verification", s.GenerateTicket)
 
 	s.srv = httptest.NewTLSServer(s.mux)
 	s.URL, _ = url.Parse(s.srv.URL)
@@ -125,12 +130,14 @@ func New() (s *Server, err error) {
 // Config returns an AuthConfig that can be used to setup middleware.
 func (s *Server) Config() config.AuthConfig {
 	return config.AuthConfig{
-		Domain:        s.URL.Host,
-		Audience:      Audience,
-		ProviderCache: 30 * time.Second,
-		ClientID:      ClientID,
-		ClientSecret:  ClientSecret,
-		Testing:       true,
+		Domain:         s.URL.Host,
+		Audience:       Audience,
+		ConnectionName: ConnectionName,
+		RedirectURL:    RedirectURL,
+		ProviderCache:  30 * time.Second,
+		ClientID:       ClientID,
+		ClientSecret:   ClientSecret,
+		Testing:        true,
 	}
 }
 
@@ -228,6 +235,8 @@ func (s *Server) Users(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.GetUser(w, r)
+	case http.MethodPost:
+		s.CreateUser(w, r)
 	case http.MethodPatch:
 		s.PatchUserAppMetadata(w, r)
 	default:
@@ -246,6 +255,22 @@ func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
+	// Create a new user object
+	user := &management.User{}
+	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Add the user to the map
+	id := UserID
+	user.ID = &id
+	s.users[*user.ID] = user
+
+	w.WriteHeader(http.StatusCreated)
+}
+
 func (s *Server) UserRoles(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -254,6 +279,20 @@ func (s *Server) UserRoles(w http.ResponseWriter, r *http.Request) {
 		s.AssignUserRoles(w, r)
 	case http.MethodDelete:
 		s.RemoveUserRoles(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) ListUsers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		users := make([]*management.User, 0)
+		for _, user := range s.users {
+			users = append(users, user)
+		}
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(users)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -268,6 +307,21 @@ func (s *Server) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func (s *Server) GenerateTicket(w http.ResponseWriter, r *http.Request) {
+	// Create a new ticket object
+	ticket := &management.Ticket{}
+	if err := json.NewDecoder(r.Body).Decode(ticket); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	url := "https://example.com/tickets/1234"
+	ticket.Ticket = &url
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ticket)
 }
 
 type RoleParams struct {

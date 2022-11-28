@@ -18,8 +18,11 @@ var testEnv = map[string]string{
 	"GDS_BFF_CONSOLE_LOG":                   "true",
 	"GDS_BFF_ALLOW_ORIGINS":                 "https://vaspdirectory.net",
 	"GDS_BFF_COOKIE_DOMAIN":                 "vaspdirectory.net",
+	"GDS_BFF_SERVE_DOCS":                    "true",
 	"GDS_BFF_AUTH0_DOMAIN":                  "example.auth0.com",
 	"GDS_BFF_AUTH0_ISSUER":                  "https://auth.example.com",
+	"GDS_BFF_AUTH0_CONNECTION_NAME":         "Username-Password-Authentication",
+	"GDS_BFF_AUTH0_REDIRECT_URL":            "https://vaspdirectory.net/auth/callback",
 	"GDS_BFF_AUTH0_AUDIENCE":                "https://vaspdirectory.net",
 	"GDS_BFF_AUTH0_PROVIDER_CACHE":          "10m",
 	"GDS_BFF_AUTH0_CLIENT_ID":               "exampleid",
@@ -91,9 +94,12 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.ConsoleLog)
 	require.Len(t, conf.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
+	require.True(t, conf.ServeDocs)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_DOMAIN"], conf.Auth0.Domain)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_ISSUER"], conf.Auth0.Issuer)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_AUDIENCE"], conf.Auth0.Audience)
+	require.Equal(t, testEnv["GDS_BFF_AUTH0_CONNECTION_NAME"], conf.Auth0.ConnectionName)
+	require.Equal(t, testEnv["GDS_BFF_AUTH0_REDIRECT_URL"], conf.Auth0.RedirectURL)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_ID"], conf.Auth0.ClientID)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_SECRET"], conf.Auth0.ClientSecret)
 	require.True(t, conf.Auth0.Testing)
@@ -143,6 +149,8 @@ func TestRequiredConfig(t *testing.T) {
 	required := []string{
 		"GDS_BFF_AUTH0_DOMAIN",
 		"GDS_BFF_AUTH0_AUDIENCE",
+		"GDS_BFF_AUTH0_CONNECTION_NAME",
+		"GDS_BFF_AUTH0_REDIRECT_URL",
 		"GDS_BFF_AUTH0_CLIENT_ID",
 		"GDS_BFF_AUTH0_CLIENT_SECRET",
 		"GDS_BFF_TESTNET_DATABASE_URL",
@@ -199,17 +207,24 @@ func TestRequiredConfig(t *testing.T) {
 
 func TestAuthConfig(t *testing.T) {
 	conf := config.AuthConfig{
-		Domain:        "example.auth0.com",
-		Audience:      "https://vaspdirectory.net",
-		ProviderCache: 0,
-		Testing:       true,
+		Domain:         "example.auth0.com",
+		RedirectURL:    "https://vaspdirectory.net/auth/callback",
+		Audience:       "https://vaspdirectory.net",
+		ConnectionName: "Username-Password-Authentication",
+		ProviderCache:  0,
+		Testing:        true,
 	}
 
 	// Ensure that a provider cache is required
 	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 provider cache duration should be longer than 0")
 
-	// Ensure that client ID and secret are not required when testing
+	// Ensure that a connection name is required
 	conf.ProviderCache = 5 * time.Minute
+	conf.ConnectionName = ""
+	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 connection name is required")
+
+	// Ensure that client ID and secret are not required when testing
+	conf.ConnectionName = "Username-Password-Authentication"
 	require.NoError(t, conf.Validate(), "could not validate auth config")
 
 	// Ensure that client Id and secret are required when not testing
@@ -251,6 +266,14 @@ func TestAuthConfig(t *testing.T) {
 	u, err := conf.IssuerURL()
 	require.NoError(t, err, "could not parse issuer string")
 	require.Equal(t, conf.Issuer, u.String())
+
+	// Test empty redirect URL
+	conf.RedirectURL = ""
+	require.EqualError(t, conf.Redirect(), "invalid configuration: auth0 redirect url must be configured")
+
+	// Test invalid redirect URL
+	conf.RedirectURL = "https://vaspdirectory.net/auth/callback/"
+	require.EqualError(t, conf.Redirect(), "invalid configuration: auth0 redirect url must not have a trailing slash")
 }
 
 func TestMembersConfigValidation(t *testing.T) {

@@ -64,8 +64,9 @@ jobs:
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install github.com/swaggo/swag/cmd/swag@v1.8.7
 
       - name: Clone TRISA repository
         uses: actions/checkout@v3
@@ -221,8 +222,9 @@ jobs:
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install github.com/swaggo/swag/cmd/swag@v1.8.7
 
       - name: Clone TRISA repository
         uses: actions/checkout@v3

@@ -17,6 +17,19 @@ import (
 // CreateOrganization creates a new organization in the database. This endpoint returns
 // an error if the organization already exists and the user is assigned to it. The user
 // must have the create:organizations permission to perform this action.
+//
+// @Summary Create a new organization [create:organizations]
+// @Description Create a new organization with the specified name and domain for the user.
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param params body api.OrganizationParams true "Name and domain"
+// @Success 200 {object} api.OrganizationReply
+// @Failure 400 {object} api.Reply "Must provide name and domain"
+// @Failure 401 {object} api.Reply
+// @Failure 409 {object} api.Reply "Domain already exists"
+// @Failure 500 {object} api.Reply
+// @Router /organizations [post]
 func (s *Server) CreateOrganization(c *gin.Context) {
 	var (
 		err  error
@@ -76,6 +89,11 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		Name:   params.Name,
 		Domain: domain,
 	}
+	if org.CreatedBy, err = auth.UserDisplayName(user); err != nil {
+		log.Error().Err(err).Msg("could not get user display name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not resolve name for user"))
+		return
+	}
 	if _, err = s.db.CreateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
@@ -103,6 +121,15 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 
 // ListOrganizations returns a list of organizations that the user is a member of. The
 // user must have the read:organizations permission to perform this action.
+//
+// @Summary List organizations [read:organizations]
+// @Description Return the list of organizations that the user is assigned to.
+// @Tags organizations
+// @Produce json
+// @Success 200 {list} api.OrganizationReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /organizations [get]
 func (s *Server) ListOrganizations(c *gin.Context) {
 	var (
 		err  error
@@ -133,7 +160,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		} else {
 			out = append(out, &api.OrganizationReply{
 				ID:        org.Id,
-				Name:      org.Name,
+				Name:      org.ResolveName(),
 				Domain:    org.Domain,
 				CreatedAt: org.Created,
 			})

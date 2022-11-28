@@ -40,6 +40,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	// User should exist as a collaborator in the new organization
 	org, err := s.bff.OrganizationFromID(userMeta.OrgID)
 	require.NoError(err, "could not get organization from ID")
+	require.Equal(authtest.Name, org.CreatedBy, "organization created by should be set")
 	require.Len(org.Collaborators, 1, "organization should have one collaborator")
 	collab := org.GetCollaborator(claims.Email)
 	require.NotNil(collab, "collaborator should exist in organization")
@@ -389,4 +390,54 @@ func (s *bffTestSuite) TestListUserRoles() {
 	roles, err := s.client.ListUserRoles(context.TODO())
 	require.NoError(err, "could not list assignable roles")
 	require.Equal(expected, roles, "roles do not match")
+}
+
+func (s *bffTestSuite) TestUserOrganization() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	_, err := s.client.UserOrganization(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the read:organizations permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.UserOrganization(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID
+	claims.Permissions = []string{"read:organizations"}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	_, err = s.client.UserOrganization(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Valid claims but no record in the database - should not panic but should return
+	// an error
+	claims.OrgID = "67428be4-3fa4-4bf2-9e15-edbf043f8670"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	_, err = s.client.UserOrganization(context.TODO())
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when user claims are valid but the organization is not in the database")
+
+	// Successful request returns organization info
+	org := &models.Organization{
+		Id:     claims.OrgID,
+		Name:   "Alice VASP",
+		Domain: "alice.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization in the database")
+	expected := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.Name,
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+	}
+	reply, err := s.client.UserOrganization(context.TODO())
+	require.NoError(err, "could not get user organization info")
+	require.Equal(expected, reply, "organization info does not match")
 }

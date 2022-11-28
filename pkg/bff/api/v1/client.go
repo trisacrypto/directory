@@ -171,6 +171,22 @@ func (s *APIv1) ListUserRoles(ctx context.Context) (out []string, err error) {
 	return out, nil
 }
 
+// Get the user's current organization.
+func (s *APIv1) UserOrganization(ctx context.Context) (out *OrganizationReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/users/organization", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &OrganizationReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Create a new organization.
 func (s *APIv1) CreateOrganization(ctx context.Context, in *OrganizationParams) (out *OrganizationReply, err error) {
 	// Make the HTTP request

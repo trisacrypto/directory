@@ -13,6 +13,7 @@ export const auth0SignIn = (options: auth0.CrossOriginLoginOptions) => {
         console.error('error', err);
         reject(err);
       } else {
+        console.log('authResult', authResult);
         resolve(authResult);
       }
     });
@@ -122,6 +123,13 @@ export const getRefreshToken = async (hasRefreshToken: boolean) => {
     if (user) {
       setCookie('access_token', user?.accessToken);
     }
+  }
+};
+
+export const refreshNewToken = async () => {
+  const user = (await refreshAndFetchUser()) as any;
+  if (user) {
+    setCookie('access_token', user?.accessToken);
   }
 };
 
