@@ -224,13 +224,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid collaborator, email address is required",
                         "schema": {
                             "$ref": "#/definitions/api.Reply"
                         }
                     },
                     "401": {
-                        "description": "Email address is required",
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "403": {
+                        "description": "Maximum number of collaborators reached",
                         "schema": {
                             "$ref": "#/definitions/api.Reply"
                         }
