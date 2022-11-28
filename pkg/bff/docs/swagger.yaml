@@ -256,6 +256,8 @@ definitions:
         type: string
       email:
         type: string
+      expires_at:
+        type: string
       id:
         description: Identifiers used by the BFF
         type: string
@@ -810,6 +812,10 @@ paths:
             $ref: '#/definitions/api.Reply'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "403":
+          description: User invitation has expired
           schema:
             $ref: '#/definitions/api.Reply'
         "404":

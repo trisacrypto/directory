@@ -808,6 +808,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/api.Reply"
                         }
                     },
+                    "403": {
+                        "description": "User invitation has expired",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
                     "404": {
                         "description": "Organization not found",
                         "schema": {
@@ -1325,6 +1331,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "expires_at": {
                     "type": "string"
                 },
                 "id": {
