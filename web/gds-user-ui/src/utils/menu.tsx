@@ -29,12 +29,11 @@ const MENU: Menu[] = [
     title: t`Certificate Management`,
     icon: BiCertification,
     activated: true,
-    // path: '/dashboard/certificate-management',
     children: [
       {
-        title: t`Certificate Management`,
+        title: t`Certificate Inventory`,
         icon: FaRegMoneyBillAlt,
-        path: '/dashboard/certificate-management',
+        path: '/dashboard/certificate/inventory',
         activated: process.env.REACT_APP_ENABLE_CERT_MANAGEMENT_FEAT === 'true' || false
       },
       {
@@ -53,7 +52,7 @@ const MENU: Menu[] = [
         title: t`Certificate Inventory`,
         icon: BsFillInfoCircleFill,
         path: '/dashboard/certificate-inventory',
-        activated: true
+        activated: false
       }
     ]
   },

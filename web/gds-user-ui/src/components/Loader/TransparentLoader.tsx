@@ -6,6 +6,8 @@ interface LoaderProps {
 }
 // This loader is for containers that are loading
 const TransparentLoader: React.FC<LoaderProps> = (props) => {
+  const { title, opacity } = props;
+  const bgColor = opacity === 'full' ? 'rgba(255, 255, 255, 255)' : 'rgba(255,255,255,0.7)';
   return (
     <Flex
       position={'fixed'}
@@ -14,11 +16,11 @@ const TransparentLoader: React.FC<LoaderProps> = (props) => {
       top={0}
       right={0}
       bottom={0}
-      backgroundColor={'rgba(255,255,255,0.7)'}
+      backgroundColor={bgColor}
       zIndex={1}>
       <VStack spacing={4} m={'auto'} py={10}>
         <Spinner color="blue.500" size="xl" />
-        <Text>{props?.title}</Text>
+        <Text>{title}</Text>
       </VStack>
     </Flex>
   );

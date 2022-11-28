@@ -15,6 +15,7 @@ import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
+import Profile from 'modules/dashboard/profile';
 import SwitchOrganization from 'modules/dashboard/organization/SwitchOrganization';
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
@@ -135,14 +136,13 @@ const appRoutes = [
     component: SwitchOrganization,
     layout: 'dashboard',
     route: '/organization/switch'
-
   },
   {
     path: '/dashboard/certificate-management',
     name: 'Certificate Management',
     component: CertificateManagement,
     layout: 'dashboard',
-    route: '/certificate-management'
+    route: '/certificate/inventory'
   },
   {
     path: '/dashboard/certificate/certificate-inventory',
@@ -158,12 +158,34 @@ const appRoutes = [
     layout: 'dashboard'
   },
   {
+    path: '/dashboard/profile',
+    route: '/profile',
+    name: 'Profile',
+    component: Profile,
+    layout: 'dashboard'
+  },
+
+  {
     path: '/dashboard/collaborators',
     route: '/collaborators',
     name: 'Collaborators',
     component: Collaborators,
     layout: 'dashboard'
   },
+  {
+    path: '/dashboard/organization/switch/:id',
+    name: 'Switch Organization',
+    component: SwitchOrganization,
+    layout: 'dashboard',
+    route: '/organization/switch/:id'
+  },
+  // {
+  //   path: '/dashboard/organisation/select',
+  //   name: 'Certificate Inventory',
+  //   component: ChooseAnAccount,
+  //   layout: 'dashboard',
+  //   route: '/organisation/select'
+  // },
   //  -------ERROR ROUTES-------
   {
     path: '/not-found',

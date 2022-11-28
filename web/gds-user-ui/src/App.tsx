@@ -5,14 +5,15 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallback from 'components/ErrorFallback';
 import { isMaintenanceMode } from './application/config/index';
 import Maintenance from 'components/Maintenance';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { isProdEnv } from 'application/config';
-const query = new QueryClient();
+import { queryClient } from 'utils/react-query';
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <QueryClientProvider client={query}>
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <div className="App">{isMaintenanceMode() ? <Maintenance /> : <AppRouter />}</div>
         </BrowserRouter>

@@ -24,6 +24,70 @@ func TestOrganizationKey(t *testing.T) {
 	}, "if the organization id is not a uuid string, expect a panic")
 }
 
+func TestResolveName(t *testing.T) {
+	// If name is already set then just return it
+	org := &models.Organization{
+		Name: "Alice VASP",
+	}
+	require.Equal(t, "Alice VASP", org.ResolveName(), "expected name to be returned when already set")
+
+	// If registration is empty then return the generic default
+	org = &models.Organization{}
+	require.Equal(t, models.DefaultOrganizationName, org.ResolveName(), "expected default name to be returned when registration is nil")
+	org.Registration = &models.RegistrationForm{}
+	require.Equal(t, models.DefaultOrganizationName, org.ResolveName(), "expected default name to be returned when entity is nil")
+	org.Registration.Entity = &ivms101.LegalPerson{}
+	require.Equal(t, models.DefaultOrganizationName, org.ResolveName(), "expected default name to be returned when name is nil")
+	org.Registration.Entity.Name = &ivms101.LegalPersonName{}
+	require.Equal(t, models.DefaultOrganizationName, org.ResolveName(), "expected default name to be returned when name has no identifiers")
+
+	// Valid trading name
+	org.Registration.Entity.Name.NameIdentifiers = []*ivms101.LegalPersonNameId{
+		{
+			LegalPersonNameIdentifierType: ivms101.LegalPersonTrading,
+			LegalPersonName:               "ALV",
+		},
+	}
+	require.Equal(t, "ALV", org.ResolveName(), "expected trading name to be returned when set")
+
+	// Valid short name
+	org.Registration.Entity.Name.NameIdentifiers = []*ivms101.LegalPersonNameId{
+		{
+			LegalPersonNameIdentifierType: ivms101.LegalPersonShort,
+			LegalPersonName:               "Alice",
+		},
+	}
+	require.Equal(t, "Alice", org.ResolveName(), "expected short name to be returned when set")
+
+	// Valid legal name
+	org.Registration.Entity.Name.NameIdentifiers = []*ivms101.LegalPersonNameId{
+		{
+			LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+			LegalPersonName:               "Alice VASP",
+		},
+	}
+	require.Equal(t, "Alice VASP", org.ResolveName(), "expected legal name to be returned when set")
+
+	// Multiple valid names, should return trading name first
+	org.Registration.Entity.Name.NameIdentifiers = []*ivms101.LegalPersonNameId{
+		{
+			LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+			LegalPersonName:               "Alice VASP",
+		},
+		{
+			LegalPersonNameIdentifierType: ivms101.LegalPersonTrading,
+			LegalPersonName:               "ALV",
+		},
+	}
+	require.Equal(t, "ALV", org.ResolveName(), "expected first name to be returned")
+
+	// If no valid names are available but there is a user name, return the customized default
+	org = &models.Organization{
+		CreatedBy: "Leopold Wentzel",
+	}
+	require.Equal(t, "Draft Registration by Leopold Wentzel", org.ResolveName(), "expected customized default name to be returned when no valid names are available")
+}
+
 func TestParseOrgID(t *testing.T) {
 	example := uuid.New()
 
