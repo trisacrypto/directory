@@ -59,7 +59,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 
 	// Should return an error if the collaborator email is missing from the request
 	_, err = s.client.AddCollaborator(context.TODO(), &models.Collaborator{})
-	s.requireError(err, http.StatusBadRequest, "collaborator is missing email address", "expected error when collaborator email is missing")
+	s.requireError(err, http.StatusBadRequest, "collaborator record is invalid", "expected error when collaborator email is missing")
 
 	// Successfully adding a collaborator to the organization
 	request := &models.Collaborator{
@@ -70,6 +70,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.Equal(request.Email, collab.Email, "expected collaborator email to match request email")
 	require.NotEmpty(collab.CreatedAt, "expected collaborator to have a created at timestamp")
 	require.False(collab.Verified, "expected collaborator to not be verified")
+	require.NotEmpty(collab.ExpiresAt, "expected collaborator to have an expires at timestamp")
 
 	// Collaborator should be in the database
 	org, err = s.DB().RetrieveOrganization(org.UUID())
@@ -86,7 +87,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
-	s.requireError(err, http.StatusConflict, "collaborator already exists", "expected error when collaborator already exists")
+	s.requireError(err, http.StatusConflict, "collaborator already exists in organization", "expected error when collaborator already exists")
 }
 
 func (s *bffTestSuite) TestListCollaborators() {

@@ -81,13 +81,13 @@ func (org *Organization) ResolveName() string {
 func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	// Make sure the collaborator is valid for storage
 	if err = collab.Validate(); err != nil {
-		return err
+		return ErrInvalidCollaborator
 	}
 
 	// Don't overwrite an existing collaborator
 	key := collab.Key()
 	if _, ok := org.Collaborators[key]; ok {
-		return fmt.Errorf("collaborator %q already exists", key)
+		return ErrCollaboratorExists
 	}
 
 	// Make sure the record has a created timestamp
