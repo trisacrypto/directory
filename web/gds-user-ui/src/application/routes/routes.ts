@@ -142,7 +142,7 @@ const appRoutes = [
     name: 'Certificate Management',
     component: CertificateManagement,
     layout: 'dashboard',
-    route: '/certificate-management'
+    route: '/certificate/inventory'
   },
   {
     path: '/dashboard/certificate/certificate-inventory',
