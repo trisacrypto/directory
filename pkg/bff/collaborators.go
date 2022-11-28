@@ -16,7 +16,10 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
-const orgIDParam = "orgid"
+const (
+	MaxCollaborators = 50
+	orgIDParam       = "orgid"
+)
 
 // AddCollaborator creates a new collaborator with the email address in the request.
 // The endpoint adds the collaborator to the organization record associated with the
@@ -29,8 +32,9 @@ const orgIDParam = "orgid"
 // @Produce json
 // @Param collaborator body models.Collaborator true "Collaborator to add"
 // @Success 200 {object} models.Collaborator
-// @Failure 400 {object} api.Reply
-// @Failure 401 {object} api.Reply "Email address is required"
+// @Failure 400 {object} api.Reply "Invalid collaborator, email address is required"
+// @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "Maximum number of collaborators reached"
 // @Failure 409 {object} api.Reply "Collaborator already exists"
 // @Failure 500 {object} api.Reply
 // @Router /collaborators [post]
@@ -75,6 +79,9 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		case errors.Is(err, models.ErrCollaboratorExists):
 			log.Warn().Err(err).Str("email", collaborator.Email).Msg("collaborator already exists")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+		case errors.Is(err, models.ErrMaxCollaborators):
+			log.Warn().Err(err).Int("maximum", models.MaxCollaborators).Msg("maximum number of collaborators reached")
+			c.JSON(http.StatusForbidden, api.ErrorResponse(err))
 		default:
 			log.Error().Err(err).Msg("could not add collaborator")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))

@@ -11,7 +11,10 @@ import (
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
-const DefaultOrganizationName = "Draft Registration"
+const (
+	DefaultOrganizationName = "Draft Registration"
+	MaxCollaborators        = 50
+)
 
 var (
 	ErrInvalidOrgID = errors.New("invalid organization id")
@@ -82,6 +85,11 @@ func (org *Organization) AddCollaborator(collab *Collaborator) (err error) {
 	// Make sure the collaborator is valid for storage
 	if err = collab.Validate(); err != nil {
 		return ErrInvalidCollaborator
+	}
+
+	// Limit the number of collaborators
+	if len(org.Collaborators) >= MaxCollaborators {
+		return ErrMaxCollaborators
 	}
 
 	// Don't overwrite an existing collaborator
