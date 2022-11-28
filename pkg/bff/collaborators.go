@@ -16,10 +16,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
 
-const (
-	MaxCollaborators = 50
-	orgIDParam       = "orgid"
-)
+const orgIDParam = "orgid"
 
 // AddCollaborator creates a new collaborator with the email address in the request.
 // The endpoint adds the collaborator to the organization record associated with the
