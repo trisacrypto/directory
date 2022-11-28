@@ -130,6 +130,7 @@ export const refreshNewToken = async () => {
   const user = (await refreshAndFetchUser()) as any;
   if (user) {
     setCookie('access_token', user?.accessToken);
+    console.log('refreshNewToken', user?.accessToken);
   }
 };
 

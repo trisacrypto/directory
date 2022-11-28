@@ -17,7 +17,7 @@ export const Account = ({ domain, name, src, id, onClose }: AccountProps) => {
   };
   return (
     <>
-      <Link onClick={selectOrgHandler} to={''} role="group">
+      <Link onClick={selectOrgHandler} to={orgLink} role="group">
         <HStack
           direction="row"
           w="100%"
