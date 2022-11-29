@@ -15,3 +15,8 @@ export const APP_PATH = {
   SWITCH_ORGANIZATION: '/dashboard/switch',
 
 };
+
+export const STEPPER_NETWORK = {
+  MAINNET: 'mainnet',
+  TESTNET: 'testnet',
+};

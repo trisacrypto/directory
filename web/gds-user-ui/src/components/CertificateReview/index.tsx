@@ -15,7 +15,7 @@ import {
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import Loader from 'components/Loader';
 import { getRefreshToken } from 'utils/auth0.helper';
-
+import { STEPPER_NETWORK } from 'utils/constants';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 
 const CertificateReview = () => {
@@ -34,7 +34,7 @@ const CertificateReview = () => {
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
-      if (network === 'testnet') {
+      if (network === STEPPER_NETWORK.TESTNET) {
         setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
         if (response.status === 200) {
@@ -43,11 +43,9 @@ const CertificateReview = () => {
           setIsTestNetSent(true);
           testnetSubmissionState();
           setResult(response?.data);
-        } else {
-          setIsTestNetSubmitting(false);
         }
       }
-      if (network === 'mainnet') {
+      if (network === STEPPER_NETWORK.MAINNET) {
         setIsMainNetSubmitting(true);
         const response = await submitMainnetRegistration();
         if (response?.status === 200) {
@@ -57,11 +55,12 @@ const CertificateReview = () => {
           setIsMainNetSent(true);
           mainnetSubmissionState();
           setResult(response?.data);
-        } else {
-          setIsMainNetSubmitting(false);
         }
       }
     } catch (err: any) {
+      setIsMainNetSubmitting(false);
+      setIsTestNetSubmitting(false);
+
       if (!err?.response?.data?.success) {
         toast({
           position: 'top-right',
