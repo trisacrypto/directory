@@ -82,6 +82,7 @@ type OrganizationReply struct {
 	Name         string `json:"name"`
 	Domain       string `json:"domain"`
 	CreatedAt    string `json:"created_at"`
+	LastLogin    string `json:"last_login"`
 	RefreshToken bool   `json:"refresh_token,omitempty"`
 }
 
