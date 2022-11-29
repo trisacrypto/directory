@@ -26,10 +26,10 @@ func TestCertIssuer(t *testing.T) {
 
 func TestSerialNumber(t *testing.T) {
 	sn := server.SerialNumber()
-	sns := fmt.Sprintf("%X", sn)
+	sns := fmt.Sprintf("%32X", sn)
 	require.Len(t, sns, 32)
 
 	sn2 := server.SerialNumber()
-	sns2 := fmt.Sprintf("%X", sn2)
+	sns2 := fmt.Sprintf("%32X", sn2)
 	require.NotEqual(t, sns, sns2)
 }
