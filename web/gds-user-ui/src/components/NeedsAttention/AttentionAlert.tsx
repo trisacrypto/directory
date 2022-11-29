@@ -76,7 +76,8 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
             </HStack>
           </Alert>
         );
-      case (AttentionAction.SUBMIT_TESTNET, AttentionAction.SUBMIT_MAINNET):
+      case AttentionAction.SUBMIT_TESTNET:
+      case AttentionAction.SUBMIT_MAINNET:
         return (
           <Alert bg="#D8EAF6" status={severity.toLowerCase()} borderRadius={'10px'}>
             <AlertIcon />

@@ -9,7 +9,14 @@ export const APP_PATH = {
   PROFILE: '/dashboard/profile',
   PROFILE_EDIT: '/profile/edit',
   DASHBOARD: '/dashboard/overview',
-  CERTIFICATE_REGISTRATION: '/dashboard/certificate/registration',
-  SWITCH_ORGANIZATION: '/dashboard/organization/switch',
+  DASH_CERTIFICATE_REGISTRATION: '/dashboard/certificate/registration',
+  CERTIFICATE_REGISTRATION: '/certificate/registration',
+  CERTIFICATE_INVENTORY: '/dashboard/certificate/inventory',
+  SWITCH_ORGANIZATION: '/dashboard/switch',
 
+};
+
+export const STEPPER_NETWORK = {
+  MAINNET: 'mainnet',
+  TESTNET: 'testnet',
 };
