@@ -40,6 +40,7 @@ type Server struct {
 	conf    Config
 	srv     *http.Server
 	router  *gin.Engine
+	tokens  *Tokens
 	started time.Time
 	healthy bool
 	url     string
@@ -65,6 +66,10 @@ func New(conf Config) (s *Server, err error) {
 	s = &Server{
 		conf:  conf,
 		echan: make(chan error, 1),
+	}
+
+	if s.tokens, err = NewTokens(conf.Auth); err != nil {
+		return nil, err
 	}
 
 	// Create the router for handling HTTP requests
@@ -152,6 +157,12 @@ func (s *Server) SetHealth(health bool) {
 	log.Debug().Bool("healthy", health).Msg("server health set")
 }
 
+func (s *Server) URL() string {
+	s.RLock()
+	defer s.RUnlock()
+	return s.url
+}
+
 func (s *Server) setupRoutes() (err error) {
 	// Application Middleware
 	// NOTE: ordering is very important to how middlware is handled
@@ -175,6 +186,30 @@ func (s *Server) setupRoutes() (err error) {
 
 	// Heartbeat route (no authentication required)
 	s.router.GET("/status", s.Status)
+
+	// Authentication routes
+	s.router.POST("/auth/pwd", s.Login)
+	s.router.POST("/auth/refresh", s.Refresh)
+
+	// API routes
+	v1 := s.router.Group("/api/v1", s.Authenticate)
+	{
+		v1.PUT("/batches/createSingleCertBatch", s.CreateSingleCertBatch)
+		v1.POST("/batches/upload", s.UploadCSRBatch)
+		v1.GET("/batches/:id", s.BatchDetail)
+		v1.GET("/batches/:id/status", s.BatchStatus)
+		v1.GET("/batches/:id/processing_info", s.ProcessingInfo)
+		v1.GET("/batches/:id/download", s.Download)
+		v1.GET("/devices", s.LicensesUsed)
+		v1.GET("/authorities/allowed", s.UserAuthorities)
+		v1.GET("/authorities/:id/balanceavailable", s.AuthorityAvailableBalance)
+		v1.GET("/profiles", s.Profiles)
+		v1.GET("/profiles/:id/parameters", s.ProfileParams)
+		v1.GET("/profiles/:id", s.ProfileDetail)
+		v1.GET("/organizations/user", s.Organization)
+		v1.POST("/certificates/find", s.FindCertificate)
+		v1.POST("/certificates/:id/revoke", s.RevokeCertificate)
+	}
 
 	s.router.NoRoute(s.NotFound)
 	s.router.NoMethod(s.NotAllowed)

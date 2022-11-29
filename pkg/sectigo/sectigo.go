@@ -13,6 +13,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -123,6 +124,14 @@ func New(conf Config) (client *Sectigo, err error) {
 
 		if conf.Password == "" {
 			conf.Password = MockPassword
+		}
+
+		if conf.Endpoint != "" {
+			var u *url.URL
+			if u, err = url.Parse(conf.Endpoint); err != nil {
+				return nil, fmt.Errorf("could not parse sectigo endpoint: %w", err)
+			}
+			SetBaseURL(u)
 		}
 	}
 

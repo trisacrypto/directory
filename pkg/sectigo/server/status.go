@@ -54,3 +54,20 @@ func (s *Server) NotAllowed(c *gin.Context) {
 		"error":   "method not allowed",
 	})
 }
+
+func Err(e interface{}) gin.H {
+	rep := gin.H{"success": false}
+
+	switch t := e.(type) {
+	case string:
+		rep["error"] = t
+	case error:
+		rep["error"] = t.Error()
+	case gin.H:
+		return t
+	default:
+		rep["error"] = "something unexpected happened"
+	}
+
+	return rep
+}
