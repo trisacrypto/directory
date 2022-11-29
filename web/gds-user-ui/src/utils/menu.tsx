@@ -32,7 +32,7 @@ const MENU: Menu[] = [
       {
         title: t`Certificate Registration`,
         icon: CheckCircleIcon,
-        path: '/dashboard/certificate-form',
+        path: '/dashboard/certificate/registration',
         activated: true
       },
       {
