@@ -30,6 +30,7 @@ const CertificateReview = () => {
   const [isTestNetSubmitting, setIsTestNetSubmitting] = useState(false);
   const [isMainNetSubmitting, setIsMainNetSubmitting] = useState(false);
   const [result, setResult] = useState('');
+  // refactor this to use react-query
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
@@ -42,6 +43,8 @@ const CertificateReview = () => {
           setIsTestNetSent(true);
           testnetSubmissionState();
           setResult(response?.data);
+        } else {
+          setIsTestNetSubmitting(false);
         }
       }
       if (network === 'mainnet') {
@@ -54,6 +57,8 @@ const CertificateReview = () => {
           setIsMainNetSent(true);
           mainnetSubmissionState();
           setResult(response?.data);
+        } else {
+          setIsMainNetSubmitting(false);
         }
       }
     } catch (err: any) {

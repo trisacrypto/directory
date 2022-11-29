@@ -15,7 +15,7 @@ import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 import {
   getTestNetSubmittedStatus,
@@ -55,7 +55,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep, jumpToStep } = useCertificateStepper();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { getValues } = useFormContext();
   const dispatch = useAppDispatch();
 
@@ -81,7 +81,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 
   const handleJumpToLastStep = () => {
     jumpToLastStep();
-    navigate('/dashboard/certificate/registration');
+    // navigate('/dashboard/certificate/registration');
   };
 
   const handleJumpToTrisaImplementationStep = () => {
