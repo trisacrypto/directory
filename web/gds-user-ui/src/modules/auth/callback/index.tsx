@@ -20,7 +20,6 @@ const CallbackPage: React.FC = () => {
   }, [accessToken, dispatch]);
 
   useEffect(() => {
-    console.log('[isLoggingIn]', isLoggedIn);
     if (callbackError || isError) {
       navigate(`/auth/login?error_description=${error_description || errorMessage}`);
     }
