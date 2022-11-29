@@ -2,6 +2,7 @@ package bff_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -87,6 +88,17 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	// Should return an error if the collaborator already exists
 	_, err = s.client.AddCollaborator(context.TODO(), request)
 	s.requireError(err, http.StatusConflict, "collaborator already exists", "expected error when collaborator already exists")
+
+	// Test that number of collaborators on an organization is limited
+	err = s.client.DeleteCollaborator(context.TODO(), collab.Id)
+	require.NoError(err, "could not delete collaborator from organization")
+	for i := 0; i < bff.MaxCollaborators; i++ {
+		request.Email = fmt.Sprintf("alice%d@example.com", i)
+		_, err = s.client.AddCollaborator(context.TODO(), request)
+		require.NoError(err, "could not add collaborator to organization")
+	}
+	_, err = s.client.AddCollaborator(context.TODO(), request)
+	s.requireError(err, http.StatusForbidden, "maximum number of collaborators reached", "expected error when maximum number of collaborators is reached")
 }
 
 func (s *bffTestSuite) TestListCollaborators() {
