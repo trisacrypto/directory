@@ -41,6 +41,8 @@ type Server struct {
 	srv     *http.Server
 	router  *gin.Engine
 	tokens  *Tokens
+	store   *Store
+	certs   *Certs
 	started time.Time
 	healthy bool
 	url     string
@@ -69,6 +71,14 @@ func New(conf Config) (s *Server, err error) {
 	}
 
 	if s.tokens, err = NewTokens(conf.Auth); err != nil {
+		return nil, err
+	}
+
+	if s.store, err = NewStore(); err != nil {
+		return nil, err
+	}
+
+	if s.certs, err = NewCerts(conf); err != nil {
 		return nil, err
 	}
 

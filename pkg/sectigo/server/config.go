@@ -3,13 +3,10 @@ package server
 import (
 	"crypto"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
@@ -105,40 +102,7 @@ func (c Config) CA() (cert *x509.Certificate, priv crypto.PrivateKey, err error)
 		return cert, catls.PrivateKey, nil
 	}
 
-	// Generate a new self-signed certificate to issue certs
-	template := &x509.Certificate{
-		SerialNumber: SerialNumber(),
-		Subject: pkix.Name{
-			CommonName:   "trisa.dev",
-			Organization: []string{"TRISA", "Rotational"},
-			Country:      []string{"USA"},
-			Province:     []string{"MD"},
-			Locality:     []string{"Queenstown"},
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0),
-		IsCA:                  true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
-		BasicConstraintsValid: true,
-		DNSNames:              []string{"trisa.dev"},
-	}
-
-	var key *rsa.PrivateKey
-	if key, err = rsa.GenerateKey(rand.Reader, 4096); err != nil {
-		return nil, nil, err
-	}
-
-	var signed []byte
-	if signed, err = x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key); err != nil {
-		return nil, nil, err
-	}
-
-	if cert, err = x509.ParseCertificate(signed); err != nil {
-		return nil, nil, err
-	}
-
-	return cert, key, nil
+	return InitCA("trisa.dev")
 }
 
 func (c AuthConfig) Validate() error {
