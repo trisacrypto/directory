@@ -140,7 +140,11 @@ const userSlice: any = createSlice({
       state.user = null;
 
       return state;
-    }
+    },
+    setUserOrganization: (state: any, { payload }: any) => {
+      state.user.organization = payload.organization;
+    },
+
     // isloading: (state: any, { payload }: any) => {
   },
   extraReducers: {
@@ -164,7 +168,7 @@ const userSlice: any = createSlice({
 });
 
 export const userReducer = userSlice.reducer;
-export const { login, logout } = userSlice.actions;
+export const { login, logout, setUserOrganization } = userSlice.actions;
 // selectors
 export const userSelector = (state: any) => state.user;
 export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;

@@ -26,7 +26,7 @@ import { resetStore } from 'application/store';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
 import { Trans } from '@lingui/react';
 import ChooseAnOrganization from 'components/ChooseAnOrganization';
-
+import { colors } from 'utils/theme';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
@@ -74,6 +74,11 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         justifyContent="end">
         <HStack>
           <LanguagesDropdown />
+        </HStack>
+        <HStack>
+          <Text fontWeight={'bold'} color={colors.system.blue}>
+            {user?.organization?.name || 'N/A'}
+          </Text>
         </HStack>
         <Divider orientation="vertical" height={8} />
         <Menu>
