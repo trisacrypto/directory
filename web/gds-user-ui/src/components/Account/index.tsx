@@ -10,7 +10,7 @@ type AccountProps = {
 } & Partial<Organization>;
 
 export const Account = ({ domain, name, src, id, onClose }: AccountProps) => {
-  const orgLink = `${APP_PATH.SWITCH_ORGANIZATION}/${id}`;
+  const orgLink = `${APP_PATH.SWITCH_ORGANIZATION}/${id}?vaspName=${name}&vaspDomain=${domain}`;
   const selectOrgHandler = () => {
     onClose();
     window.location.href = orgLink;
