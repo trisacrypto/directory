@@ -33,8 +33,8 @@ type Config struct {
 	LogLevel     logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog   bool                `split_words:"true" default:"false"`
 	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
-	RegisterURL  string              `split_words:"true" required:"true"`
-	LoginURL     string              `split_words:"true" required:"true"`
+	RegisterURL  string              `split_words:"true" required:"true"` // Trailing slash is not allowed
+	LoginURL     string              `split_words:"true" required:"true"` // Trailing slash is not allowed
 	CookieDomain string              `split_words:"true"`
 	ServeDocs    bool                `split_words:"true" default:"false"`
 	Auth0        AuthConfig
