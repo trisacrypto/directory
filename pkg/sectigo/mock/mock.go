@@ -640,15 +640,9 @@ func (s *Server) findCertificate(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, &sectigo.FindCertificateResponse{
 		TotalCount: 1,
-		Items: []struct {
-			DeviceID     int    `json:"deviceId"`
-			CommonName   string `json:"commonName"`
-			SerialNumber string `json:"serialNumber"`
-			CreationDate string `json:"creationDate"`
-			Status       string `json:"status"`
-		}{
+		Items: []*sectigo.FindCertificateItem{
 			{
-				DeviceID:     42,
+				DeviceID:     "42",
 				CommonName:   in.CommonName,
 				SerialNumber: in.SerialNumber,
 				CreationDate: time.Now().Format(time.RFC3339),

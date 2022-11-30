@@ -16,6 +16,8 @@ const (
 	UsernameEnv = "SECTIGO_USERNAME"
 	PasswordEnv = "SECTIGO_PASSWORD"
 	ProfileEnv  = "SECTIGO_PROFILE"
+	EndpointEnv = "SECTIGO_ENDPOINT"
+	TestingEnv  = "SECTIGO_TESTING"
 )
 
 // Cache directory configuration
