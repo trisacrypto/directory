@@ -29,8 +29,8 @@ import { formatIsoDate } from 'utils/formate-date';
 import { sortCollaboratorsByRecentDate } from './lib';
 import Loader from 'components/Loader';
 import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
-import { USER_PERMISSION, COLLABORATOR_STATUS } from 'types/enums';
-import { hasPermission } from 'utils/permission';
+import { COLLABORATOR_STATUS } from 'types/enums';
+import { canInviteCollaborator } from 'utils/permission';
 import { isDate } from 'utils/date';
 // const rows: any[] = [
 //   {
@@ -79,10 +79,6 @@ const getStatusBgColor = (joinedAt: string) => {
     case COLLABORATOR_STATUS.Pending:
       return 'yellow.400';
   }
-};
-
-const isAuthorizedToInvite = () => {
-  return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
 };
 
 const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -176,8 +172,8 @@ const CollaboratorsSection: React.FC = () => {
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
           <Tooltip
             label={t`you do not have permission to invite a collaborator`}
-            isDisabled={isAuthorizedToInvite()}>
-            <Button minW="170px" onClick={modalHandler} isDisabled={!isAuthorizedToInvite()}>
+            isDisabled={canInviteCollaborator()}>
+            <Button minW="170px" onClick={modalHandler} isDisabled={true}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>
