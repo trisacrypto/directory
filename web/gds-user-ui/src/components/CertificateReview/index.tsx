@@ -15,7 +15,7 @@ import {
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import Loader from 'components/Loader';
 import { getRefreshToken } from 'utils/auth0.helper';
-
+import { STEPPER_NETWORK } from 'utils/constants';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 
 const CertificateReview = () => {
@@ -30,10 +30,11 @@ const CertificateReview = () => {
   const [isTestNetSubmitting, setIsTestNetSubmitting] = useState(false);
   const [isMainNetSubmitting, setIsMainNetSubmitting] = useState(false);
   const [result, setResult] = useState('');
+  // refactor this to use react-query
   const handleSubmitRegister = async (event: React.FormEvent, network: string) => {
     event.preventDefault();
     try {
-      if (network === 'testnet') {
+      if (network === STEPPER_NETWORK.TESTNET) {
         setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
         if (response.status === 200) {
@@ -44,7 +45,7 @@ const CertificateReview = () => {
           setResult(response?.data);
         }
       }
-      if (network === 'mainnet') {
+      if (network === STEPPER_NETWORK.MAINNET) {
         setIsMainNetSubmitting(true);
         const response = await submitMainnetRegistration();
         if (response?.status === 200) {
@@ -57,6 +58,9 @@ const CertificateReview = () => {
         }
       }
     } catch (err: any) {
+      setIsMainNetSubmitting(false);
+      setIsTestNetSubmitting(false);
+
       if (!err?.response?.data?.success) {
         toast({
           position: 'top-right',

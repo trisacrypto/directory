@@ -12,7 +12,7 @@ import Maintenance from 'components/Maintenance';
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-import CertificateManagement from 'components/CertificateManagement';
+// import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
 import Profile from 'modules/dashboard/profile';
@@ -131,25 +131,18 @@ const appRoutes = [
     route: '/certificate/registration'
   },
   {
-    path: '/dashboard/organization/switch',
+    path: '/dashboard/switch',
     name: 'Switch Organization',
     component: SwitchOrganization,
     layout: 'dashboard',
-    route: '/organization/switch'
+    route: '/switch'
   },
   {
-    path: '/dashboard/certificate-management',
-    name: 'Certificate Management',
-    component: CertificateManagement,
-    layout: 'dashboard',
-    route: '/certificate/inventory'
-  },
-  {
-    path: '/dashboard/certificate/certificate-inventory',
+    path: '/dashboard/certificate/inventory',
     name: 'Certificate Inventory',
     component: CertificateInventory,
     layout: 'dashboard',
-    route: '/certificate-inventory'
+    route: '/certificate/inventory'
   },
   {
     path: '/dashboard/logout',
@@ -179,13 +172,6 @@ const appRoutes = [
     layout: 'dashboard',
     route: '/organization/switch/:id'
   },
-  // {
-  //   path: '/dashboard/organisation/select',
-  //   name: 'Certificate Inventory',
-  //   component: ChooseAnAccount,
-  //   layout: 'dashboard',
-  //   route: '/organisation/select'
-  // },
   //  -------ERROR ROUTES-------
   {
     path: '/not-found',
