@@ -233,6 +233,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 func (s *bffTestSuite) TestSubmitRegistration() {
 	var err error
 	require := s.Require()
+	defer s.ResetDB()
 
 	// Test setup: create an organization with a valid registration form that has not
 	// been submitted yet - at the end of the test both mainnet and testnet should be
@@ -240,10 +241,6 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	org := &records.Organization{}
 	_, err = s.DB().CreateOrganization(org)
 	require.NoError(err, "could not create organization in the database")
-	defer func() {
-		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
-	}()
 
 	// Save the registration form fixture on the organization
 	org.Registration = &records.RegistrationForm{}

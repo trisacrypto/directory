@@ -89,6 +89,29 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		Name:   params.Name,
 		Domain: domain,
 	}
+
+	// CreatedBy is used to render the organization name for the frontend if no other
+	// organization name is available
+	if org.CreatedBy, err = auth.UserDisplayName(user); err != nil {
+		log.Error().Err(err).Msg("could not get user display name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not resolve name for user"))
+		return
+	}
+
+	// Add the user to their new organization
+	// Note: The UserInfo middleware ensures that these fields are present in the Auth0
+	// user record
+	collaborator := &models.Collaborator{
+		Email:    *user.Email,
+		UserId:   *user.ID,
+		Verified: *user.EmailVerified,
+	}
+	if err = org.AddCollaborator(collaborator); err != nil {
+		log.Error().Err(err).Str("user_id", collaborator.UserId).Msg("could not add user as collaborator in organization")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
+		return
+	}
+
 	if _, err = s.db.CreateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
@@ -155,7 +178,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		} else {
 			out = append(out, &api.OrganizationReply{
 				ID:        org.Id,
-				Name:      org.Name,
+				Name:      org.ResolveName(),
 				Domain:    org.Domain,
 				CreatedAt: org.Created,
 			})

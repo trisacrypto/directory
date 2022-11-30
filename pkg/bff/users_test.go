@@ -40,6 +40,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	// User should exist as a collaborator in the new organization
 	org, err := s.bff.OrganizationFromID(userMeta.OrgID)
 	require.NoError(err, "could not get organization from ID")
+	require.Equal(authtest.Name, org.CreatedBy, "organization created by should be set")
 	require.Len(org.Collaborators, 1, "organization should have one collaborator")
 	collab := org.GetCollaborator(claims.Email)
 	require.NotNil(collab, "collaborator should exist in organization")

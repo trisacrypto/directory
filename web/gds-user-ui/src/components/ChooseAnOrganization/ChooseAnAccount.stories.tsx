@@ -1,12 +1,12 @@
 import { Meta, Story } from '@storybook/react';
-import ChooseAnAccount, { ChooseAnAccountProps } from '.';
+import ChooseAnOrganization, { ChooseAnAccountProps } from '.';
 
 export default {
   title: 'components/ChooseAnAccount',
-  component: ChooseAnAccount
+  component: ChooseAnOrganization
 } as Meta<ChooseAnAccountProps>;
 
-const Template: Story<ChooseAnAccountProps> = (args) => <ChooseAnAccount {...args} />;
+const Template: Story<ChooseAnAccountProps> = (args) => <ChooseAnOrganization {...args} />;
 
 export const Standard = Template.bind({});
 Template.args = {};

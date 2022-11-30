@@ -9,6 +9,7 @@ import {
   auth0CheckSession
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
+import { getCookie } from 'utils/cookies';
 
 const setUserPayload = (userTokenPayload: any, data: any) => {
   const { email, name, picture, sub, sid, permissions } = userTokenPayload;
@@ -67,14 +68,17 @@ export const userSignupWithEmail = createAsyncThunk(
 
 export const getAuth0User: any = createAsyncThunk(
   'users/getuser',
-  async (hasToken: boolean, thunkAPI) => {
+  async (data: any, thunkAPI) => {
+    const { hasToken, orgId } = data;
     try {
       // then login with auth0
-      const getUserInfo: any = hasToken && (await auth0Hash());
+      const hasT = hasToken || getCookie('access_token');
+      const getUserInfo: any = hasT && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        const getUser = await logUserInBff();
+        const d = {};
+        const getUser = await logUserInBff(orgId ? { orgid: orgId } : d);
         const getRoles = await getUserRoles() as any;
         const userVASPInfo: any = await getUserCurrentOrganizationAPI();
         console.log('[userVASPInfo]', userVASPInfo);
@@ -146,7 +150,11 @@ const userSlice: any = createSlice({
       state.user = null;
 
       return state;
-    }
+    },
+    setUserOrganization: (state: any, { payload }: any) => {
+      state.user.organization = payload.organization;
+    },
+
     // isloading: (state: any, { payload }: any) => {
   },
   extraReducers: {
@@ -170,7 +178,7 @@ const userSlice: any = createSlice({
 });
 
 export const userReducer = userSlice.reducer;
-export const { login, logout } = userSlice.actions;
+export const { login, logout, setUserOrganization } = userSlice.actions;
 // selectors
 export const userSelector = (state: any) => state.user;
 export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;

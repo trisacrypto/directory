@@ -62,8 +62,17 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.True(reply.RefreshToken, "refresh token should be set")
 	org, err := s.bff.OrganizationFromID(reply.ID)
 	require.NoError(err, "could not find organization in database")
+	require.Equal(authtest.Name, org.CreatedBy, "expected created by to be set")
 	require.Equal(params.Name, org.Name, "organization name does not match")
 	require.Equal(params.Domain, org.Domain, "organization domain does not match")
+
+	// User should be added as a collaborator
+	require.Len(org.Collaborators, 1, "expected one collaborator")
+	collab := org.GetCollaborator(claims.Email)
+	require.NotNil(collab, "expected user to exist as collaborator in new organization")
+	require.Equal(authtest.Email, collab.Email, "expected collaborator email to match")
+	require.Equal(authtest.UserID, collab.UserId, "expected collaborator user id to match")
+	require.True(collab.Verified, "expected collaborator to be verified")
 
 	// User app metadata should be updated with the organization id
 	metadata := &auth.AppMetadata{}
@@ -107,6 +116,14 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	require.NoError(err, "could not find organization in database")
 	require.Equal(params.Name, org.Name, "organization name does not match")
 	require.Equal("bobvasp.io", org.Domain, "organization domain does not match")
+
+	// User should be added as a collaborator
+	require.Len(org.Collaborators, 1, "expected one collaborator")
+	collab = org.GetCollaborator(claims.Email)
+	require.NotNil(collab, "expected user to exist as collaborator in new organization")
+	require.Equal(authtest.Email, collab.Email, "expected collaborator email to match")
+	require.Equal(authtest.UserID, collab.UserId, "expected collaborator user id to match")
+	require.True(collab.Verified, "expected collaborator to be verified")
 
 	// User app metadata should be updated with the organization id
 	metadata = &auth.AppMetadata{}

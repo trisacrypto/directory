@@ -15,8 +15,8 @@ import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-
+// import { useNavigate } from 'react-router-dom';
+import { STEPPER_NETWORK } from 'utils/constants';
 import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
@@ -55,7 +55,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const [testnet, setTestnet] = useState(false);
   const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep, jumpToStep } = useCertificateStepper();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { getValues } = useFormContext();
   const dispatch = useAppDispatch();
 
@@ -81,7 +81,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 
   const handleJumpToLastStep = () => {
     jumpToLastStep();
-    navigate('/dashboard/certificate/registration');
+    // navigate('/dashboard/certificate/registration');
   };
 
   const handleJumpToTrisaImplementationStep = () => {
@@ -207,7 +207,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   width="100%"
                   boxShadow="lg"
                   onClick={(e) => {
-                    onSubmitHandler(e, 'testnet');
+                    onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
                   }}
                   _hover={{
                     bgColor: '#f55c35'
@@ -295,7 +295,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   data-testid="mainnet-submit-btn"
                   maxW="200px"
                   onClick={(e) => {
-                    onSubmitHandler(e, 'mainnet');
+                    onSubmitHandler(e, STEPPER_NETWORK.MAINNET);
                   }}
                   width="100%"
                   _hover={{
