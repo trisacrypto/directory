@@ -32,13 +32,10 @@ const SwitchOrganization: React.FC = () => {
           const PromiseArray = [refreshNewToken(), getUserCurrentOrganizationService()];
           const [, user] = await Promise.all(PromiseArray);
           if (user?.status === APP_STATUS_CODE.OK) {
-            const getUserOrgInfo: any = await getUserCurrentOrganizationService();
-            if (getUserOrgInfo.status === APP_STATUS_CODE.OK) {
-              dispatch(setUserOrganization(user?.data));
-              setIsLoading(false);
-              console.log('[should be redirected to dashboard]', APP_PATH.DASHBOARD);
-              navigate(APP_PATH.DASHBOARD);
-            }
+            dispatch(setUserOrganization(user?.data));
+            setIsLoading(false);
+            console.log('[should be redirected to dashboard]', APP_PATH.DASHBOARD);
+            navigate(APP_PATH.DASHBOARD);
           }
         }
       } catch (error) {
