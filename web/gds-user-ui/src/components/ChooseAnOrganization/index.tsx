@@ -13,10 +13,12 @@ import {
 } from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
+import { Trans } from '@lingui/macro';
 // import InputFormControl from 'components/ui/InputFormControl';
 // import SelectFormControl from 'components/ui/SelectFormControl';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
-
+import { userSelector } from 'modules/auth/login/user.slice';
+import { useSelector } from 'react-redux';
 // const OPTIONS = [
 //   { label: 'Newest registrations', value: 'NEWEST_REGISTRATIONS' },
 //   { label: 'Most recently logged in', value: 'MOST_RECENTLY_LOGGED_IN' },
@@ -30,6 +32,7 @@ export type ChooseAnAccountProps = {
 
 function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
   const { organizations } = useOrganizationListQuery();
+  const { user } = useSelector(userSelector);
 
   return (
     <>
@@ -43,7 +46,9 @@ function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
                 <HStack width="100%" justifyContent="end">
                   <AddNewVaspModal />
                 </HStack>
-                <Text fontWeight={700}>Select an VASP from the Managed VASP List</Text>
+                <Text fontWeight={700}>
+                  <Trans>Select a VASP from the Managed VASP List</Trans>
+                </Text>
                 {/* <Grid templateColumns="repeat(5, 1fr)" gap={4}>
                   <GridItem colSpan={3}>
                     <InputFormControl controlId="search" />
@@ -61,6 +66,7 @@ function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
                       id={organization.id}
                       name={organization?.name}
                       domain={organization?.domain}
+                      isCurrent={organization.id === user?.vasp?.id}
                       onClose={onClose}
                     />
                   ))

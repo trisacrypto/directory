@@ -1,5 +1,6 @@
 import Store from 'application/store';
 import { isArray } from 'lodash';
+import { USER_PERMISSION } from 'types/enums';
 
 export const getUserPermissionFromStore = () => {
   return Store.getState()?.user?.user?.permissions;
@@ -22,7 +23,7 @@ export const hasPermission = (permission: TUserPermission | TUserPermission[]) =
 };
 
 export const canCreateOrganization = () => {
-  return hasPermission('create:organizations');
+  return hasPermission(USER_PERMISSION.CREATE_ORGANIZATIONS);
 };
 
 /**  hasRole function

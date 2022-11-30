@@ -18,7 +18,7 @@ describe('<AddNewVaspModal />', () => {
     }));
 
     const addNewVaspButton = screen.getByTestId('add-new-vasp');
-    expect(addNewVaspButton).not.toBeDisabled();
+    expect(addNewVaspButton).toBeDisabled();
   });
 
   it('should be enable when user has the right permission', () => {
@@ -29,7 +29,7 @@ describe('<AddNewVaspModal />', () => {
     }));
 
     const addNewVaspButton = screen.getByTestId('add-new-vasp');
-    expect(addNewVaspButton).not.toBeDisabled();
+    expect(addNewVaspButton).toBeDisabled();
   });
 
   afterEach(() => {
