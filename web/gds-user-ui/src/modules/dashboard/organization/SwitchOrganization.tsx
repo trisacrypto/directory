@@ -29,12 +29,11 @@ const SwitchOrganization: React.FC = () => {
           orgid: id
         });
         if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
-          const PromiseArray = [refreshNewToken(), getUserCurrentOrganizationService()];
-          const [, user] = await Promise.all(PromiseArray);
+          const token = (await refreshNewToken()) as any;
+          const user = token && (await getUserCurrentOrganizationService());
           if (user?.status === APP_STATUS_CODE.OK) {
             dispatch(setUserOrganization(user?.data));
             setIsLoading(false);
-            console.log('[should be redirected to dashboard]', APP_PATH.DASHBOARD);
             navigate(APP_PATH.DASHBOARD);
           }
         }

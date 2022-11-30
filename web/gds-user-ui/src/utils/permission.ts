@@ -40,3 +40,8 @@ export const hasRole = (role: TUserRole | TUserRole[]) => {
 
   return userRole?.includes(role);
 };
+
+
+export const canInviteCollaborator = () => {
+  return hasPermission(USER_PERMISSION.UPDATE_COLLABORATOR);
+};
