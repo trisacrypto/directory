@@ -65,9 +65,11 @@ function AddNewVaspModal() {
     });
   };
 
+  // you dont' have permission to create a new organization
+
   return (
     <>
-      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={canCreateOrganization()}>
+      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={!canCreateOrganization()}>
         + Add New VASP
       </Button>
 

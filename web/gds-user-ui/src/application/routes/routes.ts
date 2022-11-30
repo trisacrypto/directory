@@ -12,7 +12,7 @@ import Maintenance from 'components/Maintenance';
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-// import CertificateManagement from 'components/CertificateManagement';
+import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
 import Profile from 'modules/dashboard/profile';
@@ -22,7 +22,7 @@ const CertificateRegistrationPage = lazy(
   () => import('modules/dashboard/certificate/registration')
 );
 
-const CertificateInventory = lazy(() => import('components/CertificateInventory'));
+// const CertificateInventory = lazy(() => import('components/CertificateInventory'));
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -140,7 +140,7 @@ const appRoutes = [
   {
     path: '/dashboard/certificate/inventory',
     name: 'Certificate Inventory',
-    component: CertificateInventory,
+    component: CertificateManagement,
     layout: 'dashboard',
     route: '/certificate/inventory'
   },

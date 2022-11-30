@@ -19,18 +19,24 @@ const SwitchOrganization: React.FC = () => {
   const navigate = useNavigate();
   const isCalled = useRef(false);
   const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const switchOrganization = async () => {
       try {
+        setIsLoading(true);
         const logged = await logUserInBff({
           orgid: id
         });
         if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
-          await refreshNewToken();
-          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
-          dispatch(setUserOrganization(getUserOrgInfo.data));
-          navigate(APP_PATH.DASHBOARD);
+          const PromiseArray = [refreshNewToken(), getUserCurrentOrganizationService()];
+          const [, user] = await Promise.all(PromiseArray);
+          if (user?.status === APP_STATUS_CODE.OK) {
+            dispatch(setUserOrganization(user?.data));
+            setIsLoading(false);
+            console.log('[should be redirected to dashboard]', APP_PATH.DASHBOARD);
+            navigate(APP_PATH.DASHBOARD);
+          }
         }
       } catch (error) {
         setIsError(true);
@@ -41,8 +47,8 @@ const SwitchOrganization: React.FC = () => {
           duration: 9000,
           isClosable: true
         });
-
-        console.log('error', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -54,7 +60,7 @@ const SwitchOrganization: React.FC = () => {
     return () => {
       isCalled.current = false;
     };
-  }, [id, navigate, dispatch, toast, query, vaspName]);
+  }, [id, navigate, dispatch, toast, vaspName]);
 
   const renderTitle = () => {
     if (isError) {
@@ -70,7 +76,7 @@ const SwitchOrganization: React.FC = () => {
     );
   };
 
-  return <>{!isError && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
+  return <>{isLoading && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
 };
 
 export default SwitchOrganization;
