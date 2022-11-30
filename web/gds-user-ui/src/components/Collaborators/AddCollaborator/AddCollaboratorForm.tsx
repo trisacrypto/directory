@@ -12,7 +12,7 @@ import CheckboxFormControl from 'components/ui/CheckboxFormControl';
 import { t, Trans } from '@lingui/macro';
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 import { useSelector } from 'react-redux';
-import { userSelector } from 'application/store/selectors/user';
+import { userSelector } from 'modules/auth/login/user.slice';
 type Props = {
   onCloseModal: () => void;
 };
@@ -97,7 +97,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         <Text fontWeight={'bold'} size={'md'}>
           <Trans>VASP</Trans>
         </Text>
-        <Text data-testid="vasp-name">{user?.vasp?.name}</Text>
+        <Text data-testid="vasp-name">{user?.vasp?.name || 'No VASP name found'}</Text>
       </Stack>
 
       <Stack py={5}>

@@ -179,6 +179,7 @@
   "jest": {
     "resetMocks": false,
     "coverageThreshold": {
+
       "global": {
         "branches": 10,
         "functions": 18,
