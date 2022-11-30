@@ -13,6 +13,9 @@ const (
 	BatchStatusNotAcceptable    = "NOT_ACCEPTABLE"
 	BatchStatusReadyForDownload = "READY_FOR_DOWNLOAD"
 	BatchStatusCollected        = "COLLECTED"
+	BatchStatusExpired          = "REMOVED_AFTER_EXPIRATION"
+	BatchStatusBroken           = "BROKEN"
+	BatchStatusRevoked          = "REVOKED"
 )
 
 // AuthenticationRequest to POST data to the authenticateEP
@@ -137,14 +140,16 @@ type FindCertificateRequest struct {
 
 // FindCertificateResponse from the findCertificateEP
 type FindCertificateResponse struct {
-	TotalCount int `json:"totalCount"`
-	Items      []struct {
-		DeviceID     int    `json:"deviceId"`
-		CommonName   string `json:"commonName"`
-		SerialNumber string `json:"serialNumber"`
-		CreationDate string `json:"creationDate"`
-		Status       string `json:"status"`
-	} `json:"items"`
+	TotalCount int                    `json:"totalCount"`
+	Items      []*FindCertificateItem `json:"items"`
+}
+
+type FindCertificateItem struct {
+	DeviceID     string `json:"deviceId"`
+	CommonName   string `json:"commonName"`
+	SerialNumber string `json:"serialNumber"`
+	CreationDate string `json:"creationDate"`
+	Status       string `json:"status"`
 }
 
 // CRLReason specifies the RFC 5280 certificate revocation reason codes.
