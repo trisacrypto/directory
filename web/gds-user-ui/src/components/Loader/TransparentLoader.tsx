@@ -1,7 +1,7 @@
 import { Spinner, Flex, Text, VStack } from '@chakra-ui/react';
 
 interface LoaderProps {
-  title?: string;
+  title?: any;
   opacity?: 'md' | 'full';
 }
 // This loader is for containers that are loading

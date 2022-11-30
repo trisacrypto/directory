@@ -172,13 +172,6 @@ const appRoutes = [
     layout: 'dashboard',
     route: '/organization/switch/:id'
   },
-  // {
-  //   path: '/dashboard/organisation/select',
-  //   name: 'Certificate Inventory',
-  //   component: ChooseAnAccount,
-  //   layout: 'dashboard',
-  //   route: '/organisation/select'
-  // },
   //  -------ERROR ROUTES-------
   {
     path: '/not-found',
