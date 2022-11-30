@@ -15,7 +15,8 @@ import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { queryClient } from 'utils/react-query';
 import { FETCH_ORGANIZATION } from 'constants/query-keys';
-import AddNewVaspForm from './AddNewVaspForm';
+import { canCreateOrganization } from 'utils/permission';
+import AddNewVaspForm from '../AddNewVaspForm/AddNewVaspForm';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required(t`The VASP Name is required.`),
@@ -66,8 +67,8 @@ function AddNewVaspModal() {
 
   return (
     <>
-      <Button onClick={onOpen}>
-        + <Trans>Add New VASP</Trans>
+      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={canCreateOrganization()}>
+        + Add New VASP
       </Button>
 
       <Modal blockScrollOnMount isOpen={isOpen} onClose={closeModal}>
