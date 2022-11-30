@@ -1,9 +1,8 @@
 import { Stack, chakra, ModalFooter, Button, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
-import React from 'react';
+import CheckboxFormControl from 'components/ui/CheckboxFormControl';
+import InputFormControl from 'components/ui/InputFormControl';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
-import CheckboxFormControl from './ui/CheckboxFormControl';
-import InputFormControl from './ui/InputFormControl';
 
 type AddNewVaspFormProps = {
   onSubmit: SubmitHandler<any>;

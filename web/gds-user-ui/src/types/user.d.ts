@@ -1,9 +1,9 @@
 interface IVasp {
   id: string;
   created_at?: string;
-  domain?: string,
-  name?: string,
-  refresh_token?: string,
+  domain?: string;
+  name?: string;
+  refresh_token?: string;
 }
 
 interface IUserState {
@@ -26,19 +26,29 @@ type TUser = {
   errorMessage?: string;
   isLoggedIn: boolean;
   user: IUserState | null;
-
 };
 
-type TUserCollaboratorPermission = 'read:collaborators' | 'create:collaborators' | 'update:collaborators' | 'approve:collaborators';
-type TUserCertificatePermission = 'read:certificates' | 'create:certificates' | 'update:certificates' | 'revoke:certificates';
+type TUserCollaboratorPermission =
+  | 'read:collaborators'
+  | 'create:collaborators'
+  | 'update:collaborators'
+  | 'approve:collaborators';
+type TUserCertificatePermission =
+  | 'read:certificates'
+  | 'create:certificates'
+  | 'update:certificates'
+  | 'revoke:certificates';
 type TVaspPermission = 'read:vasp' | 'create:vasp' | 'update:vasp';
+type TOrgnization = 'create:organizations' | 'read:organizations' | 'update:organizations';
 
-type TUserPermission = TUserCollaboratorPermission | TUserCertificatePermission | TVaspPermission;
+type TUserPermission =
+  | TUserCollaboratorPermission
+  | TUserCertificatePermission
+  | TVaspPermission
+  | TOrgnization;
 
 type TUserRole = 'Organization Leader' | 'Organization Collaborator';
 
 type TCollaboratorStatus = 'Pending' | 'Confirmed';
 
 type TUserAuthType = 'auth0' | 'google-oauth2' | 'facebook';
-
-

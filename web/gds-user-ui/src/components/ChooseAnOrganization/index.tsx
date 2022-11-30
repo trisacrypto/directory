@@ -12,7 +12,7 @@ import {
   Text
 } from '@chakra-ui/react';
 import { Account } from 'components/Account';
-import AddNewVaspModal from 'components/AddNewVaspModal';
+import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 // import InputFormControl from 'components/ui/InputFormControl';
 // import SelectFormControl from 'components/ui/SelectFormControl';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
