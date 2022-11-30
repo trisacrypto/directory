@@ -37,7 +37,6 @@ function AddNewVaspForm({ onSubmit, isCreatingVasp, closeModal }: AddNewVaspForm
           isInvalid={!!errors.name}
           data-testid="name"
           formHelperText={errors.name?.message}
-          isDisabled={!accept || isCreatingVasp}
           {...register('name')}
           label={
             <>
@@ -53,7 +52,6 @@ function AddNewVaspForm({ onSubmit, isCreatingVasp, closeModal }: AddNewVaspForm
           isInvalid={!!errors.domain}
           data-testid="domain"
           formHelperText={errors.domain?.message}
-          isDisabled={!accept || isCreatingVasp}
           placeholder="https://"
           {...register('domain')}
           label={

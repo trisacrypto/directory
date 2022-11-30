@@ -135,7 +135,7 @@ const appRoutes = [
     name: 'Switch Organization',
     component: SwitchOrganization,
     layout: 'dashboard',
-    route: '/switch'
+    route: '/organization/switch'
   },
   {
     path: '/dashboard/certificate/inventory',

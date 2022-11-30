@@ -489,8 +489,9 @@ exports[`AddCollaboratorForm should render 1`] = `
       </p>
       <p
         class="chakra-text emotion-0"
+        data-testid="vasp-name"
       >
-        VASP Name
+        No VASP name found
       </p>
     </div>
     <div
