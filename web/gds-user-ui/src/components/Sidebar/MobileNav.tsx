@@ -14,6 +14,7 @@ import {
   MenuItem,
   MenuDivider,
   Show,
+  Tooltip,
   useDisclosure
 } from '@chakra-ui/react';
 import { FiMenu } from 'react-icons/fi';
@@ -25,6 +26,7 @@ import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
 import { Trans } from '@lingui/react';
+import { t } from '@lingui/macro';
 import ChooseAnOrganization from 'components/ChooseAnOrganization';
 import { colors } from 'utils/theme';
 interface MobileProps extends FlexProps {
@@ -76,9 +78,11 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <LanguagesDropdown />
         </HStack>
         <HStack>
-          <Text fontWeight={'bold'} color={colors.system.blue}>
-            {user?.vasp?.name || 'N/A'}
-          </Text>
+          <Tooltip label={t`Current Organization name`} hasArrow>
+            <Text fontWeight={'bold'} color={colors.system.blue}>
+              {user?.vasp?.name || 'N/A'}
+            </Text>
+          </Tooltip>
         </HStack>
         <Divider orientation="vertical" height={8} />
         <Menu>
