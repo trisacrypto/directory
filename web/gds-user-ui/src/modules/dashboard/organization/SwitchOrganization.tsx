@@ -13,8 +13,7 @@ import { APP_PATH, APP_STATUS_CODE } from 'utils/constants';
 const SwitchOrganization: React.FC = () => {
   const toast = useToast();
   const { id } = useParams<{ id: string }>();
-  const query = useQuery();
-  const vaspName = query.get('vaspName');
+  const { vaspName } = useQuery<{ vaspName: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isCalled = useRef(false);
@@ -33,8 +32,11 @@ const SwitchOrganization: React.FC = () => {
           const user = token && (await getUserCurrentOrganizationService());
           if (user?.status === APP_STATUS_CODE.OK) {
             dispatch(setUserOrganization(user?.data));
-            setIsLoading(false);
-            navigate(APP_PATH.DASHBOARD);
+
+            setTimeout(() => {
+              navigate(APP_PATH.DASHBOARD);
+              setIsLoading(false);
+            }, 1000);
           }
         }
       } catch (error) {
@@ -46,8 +48,6 @@ const SwitchOrganization: React.FC = () => {
           duration: 9000,
           isClosable: true
         });
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -75,7 +75,7 @@ const SwitchOrganization: React.FC = () => {
     );
   };
 
-  return <>{isLoading && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
+  return <>{isLoading && !isError && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
 };
 
 export default SwitchOrganization;

@@ -5,8 +5,7 @@ import type { UpdateCollaboratorMutation } from 'components/Collaborators/EditCo
 export function useUpdateCollaborator(): UpdateCollaboratorMutation {
     const mutation = useMutation(['update-Collaborator'], updateCollaboratorService, {
         onError: (error: any) => {
-            console.log('update-Collaborator-error', error);
-            console.log('update-Collaborator-error-response', error?.response.data?.error);
+            console.log(error);
         },
     });
     return {
