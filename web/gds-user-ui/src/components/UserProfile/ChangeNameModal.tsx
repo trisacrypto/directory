@@ -29,6 +29,7 @@ function ChangeNameModal() {
         icon={<CkLazyLoadImage src={EditIcon} mx="auto" w="25px" />}
         variant="unstyled"
         marginTop="32px!important"
+        isDisabled={true}
         onClick={onOpen}
       />
       <Modal isOpen={isOpen} onClose={onClose}>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useQuery from 'hooks/useQuery';
 import TransparentLoader from 'components/Loader/TransparentLoader';
-import { logUserInBff } from 'modules/auth/login/auth.service';
+import { logUserInBff, getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
 import { refreshNewToken } from 'utils/auth0.helper';
 import { useDispatch } from 'react-redux';
 import { useToast, Text } from '@chakra-ui/react';
@@ -28,11 +28,8 @@ const SwitchOrganization: React.FC = () => {
         });
         if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
           await refreshNewToken();
-          dispatch(
-            setUserOrganization({
-              organization: vaspName
-            })
-          );
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+          dispatch(setUserOrganization(getUserOrgInfo.data));
           navigate(APP_PATH.DASHBOARD);
         }
       } catch (error) {

@@ -1,9 +1,8 @@
 import { Stack, chakra, ModalFooter, Button, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
-import React from 'react';
+import CheckboxFormControl from 'components/ui/CheckboxFormControl';
+import InputFormControl from 'components/ui/InputFormControl';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
-import CheckboxFormControl from './ui/CheckboxFormControl';
-import InputFormControl from './ui/InputFormControl';
 
 type AddNewVaspFormProps = {
   onSubmit: SubmitHandler<any>;
@@ -37,7 +36,6 @@ function AddNewVaspForm({ onSubmit, isCreatingVasp, closeModal }: AddNewVaspForm
           isInvalid={!!errors.name}
           data-testid="name"
           formHelperText={errors.name?.message}
-          isDisabled={!accept || isCreatingVasp}
           {...register('name')}
           label={
             <>
@@ -53,7 +51,6 @@ function AddNewVaspForm({ onSubmit, isCreatingVasp, closeModal }: AddNewVaspForm
           isInvalid={!!errors.domain}
           data-testid="domain"
           formHelperText={errors.domain?.message}
-          isDisabled={!accept || isCreatingVasp}
           placeholder="https://"
           {...register('domain')}
           label={
