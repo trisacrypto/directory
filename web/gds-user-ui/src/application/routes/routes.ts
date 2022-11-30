@@ -165,13 +165,13 @@ const appRoutes = [
     component: Collaborators,
     layout: 'dashboard'
   },
-  // {
-  //   path: '/dashboard/organisation/select',
-  //   name: 'Certificate Inventory',
-  //   component: ChooseAnAccount,
-  //   layout: 'dashboard',
-  //   route: '/organisation/select'
-  // },
+  {
+    path: '/dashboard/organization/switch/:id',
+    name: 'Switch Organization',
+    component: SwitchOrganization,
+    layout: 'dashboard',
+    route: '/organization/switch/:id'
+  },
   //  -------ERROR ROUTES-------
   {
     path: '/not-found',

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { logUserInBff, getUserRoles, getUserCurrentOrganizationAPI } from 'modules/auth/login/auth.service';
+import { logUserInBff, getUserRoles, getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
   auth0SignIn,
@@ -9,17 +9,18 @@ import {
   auth0CheckSession
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
-import { getCookie } from 'utils/cookies';
 
-const setUserPayload = (userTokenPayload: any, data: any) => {
+const setUserPayload = (userTokenPayload: any, data: Partial<IUserState>) => {
   const { email, name, picture, sub, sid, permissions } = userTokenPayload;
+  const { vasp, roles } = data;
   return {
     email,
     name,
     pictureUrl: picture,
     id: sid,
     permissions,
-    ...data,
+    roles,
+    vasp,
     authType: sub.split('|')[0]
 
   };
@@ -68,20 +69,17 @@ export const userSignupWithEmail = createAsyncThunk(
 
 export const getAuth0User: any = createAsyncThunk(
   'users/getuser',
-  async (data: any, thunkAPI) => {
-    const { hasToken, orgId } = data;
+  async (hasToken: boolean, thunkAPI) => {
     try {
       // then login with auth0
-      const hasT = hasToken || getCookie('access_token');
-      const getUserInfo: any = hasT && (await auth0Hash());
+      const getUserInfo: any = hasToken && (await auth0Hash());
       console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        const d = {};
-        const getUser = await logUserInBff(orgId ? { orgid: orgId } : d);
+        const getUser = await logUserInBff();
         const getRoles = await getUserRoles() as any;
-        const userVASPInfo: any = await getUserCurrentOrganizationAPI();
-        console.log('[userVASPInfo]', userVASPInfo);
+        const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+        console.log('[userVASPInfo]', getUserOrgInfo);
         if (getUser?.data?.refresh_token) {
           const newUserPayload: any = await auth0CheckSession();
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
@@ -90,8 +88,8 @@ export const getAuth0User: any = createAsyncThunk(
           const userInfo: TUser = {
             isLoggedIn: true,
             user: setUserPayload(newUserPayload?.idTokenPayload, {
-              roles: getRoles?.data?.roles,
-              vasp: userVASPInfo?.data?.organization
+              roles: getRoles?.data,
+              vasp: getUserOrgInfo?.data
             }) as IUserState
           };
           return userInfo;
@@ -105,8 +103,8 @@ export const getAuth0User: any = createAsyncThunk(
             isLoggedIn: true,
             user: setUserPayload(getUserInfo?.idTokenPayload,
               {
-                roles: getRoles?.data?.roles,
-                vasp: userVASPInfo?.data
+                roles: getRoles?.data,
+                vasp: getUserOrgInfo?.data
 
               }) as IUserState
 
@@ -152,8 +150,8 @@ const userSlice: any = createSlice({
       return state;
     },
     setUserOrganization: (state: any, { payload }: any) => {
-      state.user.organization = payload.organization;
-    },
+      state.user.vasp = payload;
+    }
 
     // isloading: (state: any, { payload }: any) => {
   },

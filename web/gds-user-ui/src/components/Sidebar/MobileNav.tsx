@@ -77,7 +77,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         </HStack>
         <HStack>
           <Text fontWeight={'bold'} color={colors.system.blue}>
-            {user?.organization?.name || 'N/A'}
+            {user?.vasp?.name || 'N/A'}
           </Text>
         </HStack>
         <Divider orientation="vertical" height={8} />
