@@ -1,6 +1,6 @@
 import {
-  Grid,
-  GridItem,
+  // Grid,
+  // GridItem,
   HStack,
   Modal,
   ModalBody,
@@ -13,15 +13,15 @@ import {
 } from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal';
-import InputFormControl from 'components/ui/InputFormControl';
-import SelectFormControl from 'components/ui/SelectFormControl';
+// import InputFormControl from 'components/ui/InputFormControl';
+// import SelectFormControl from 'components/ui/SelectFormControl';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
 
-const OPTIONS = [
-  { label: 'Newest registrations', value: 'NEWEST_REGISTRATIONS' },
-  { label: 'Most recently logged in', value: 'MOST_RECENTLY_LOGGED_IN' },
-  { label: 'Alphabetical', value: 'ALPHABETICAL' }
-];
+// const OPTIONS = [
+//   { label: 'Newest registrations', value: 'NEWEST_REGISTRATIONS' },
+//   { label: 'Most recently logged in', value: 'MOST_RECENTLY_LOGGED_IN' },
+//   { label: 'Alphabetical', value: 'ALPHABETICAL' }
+// ];
 
 export type ChooseAnAccountProps = {
   isOpen: boolean;
@@ -44,25 +44,29 @@ function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
                   <AddNewVaspModal />
                 </HStack>
                 <Text fontWeight={700}>Select an VASP from the Managed VASP List</Text>
-                <Grid templateColumns="repeat(5, 1fr)" gap={4}>
+                {/* <Grid templateColumns="repeat(5, 1fr)" gap={4}>
                   <GridItem colSpan={3}>
                     <InputFormControl controlId="search" />
                   </GridItem>
                   <GridItem colSpan={2}>
                     <SelectFormControl controlId="filter" options={OPTIONS} />
                   </GridItem>
-                </Grid>
+                </Grid> */}
               </div>
               <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-                {organizations?.map((organization) => (
-                  <Account
-                    key={organization.id}
-                    id={organization.id}
-                    name={organization?.name}
-                    domain={organization?.domain}
-                    onClose={onClose}
-                  />
-                ))}
+                {organizations && organizations?.length > 0 ? (
+                  organizations?.map((organization) => (
+                    <Account
+                      key={organization.id}
+                      id={organization.id}
+                      name={organization?.name}
+                      domain={organization?.domain}
+                      onClose={onClose}
+                    />
+                  ))
+                ) : (
+                  <Text>No VASPs found</Text>
+                )}
               </Stack>
             </Stack>
           </ModalBody>
