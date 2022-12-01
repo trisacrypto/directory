@@ -18,17 +18,17 @@ const useSwitchOrganization = (organizationId: string) => {
         const logged = await logUserInBff({
           orgid: organizationId
         });
-        if (logged.status === APP_STATUS_CODE.OK) {
+        if (logged.status === APP_STATUS_CODE.OK || logged.status === APP_STATUS_CODE.NO_CONTENT) {
           const token = (await refreshNewToken()) as any;
           const user = token && (await getUserCurrentOrganizationService());
           dispatch(setUserOrganization(user?.data));
           setIsLoading(false);
         }
-        if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
-          const user = await getUserCurrentOrganizationService();
-          dispatch(setUserOrganization(user?.data));
-          setIsLoading(false);
-        }
+        // if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
+        //   const user = await getUserCurrentOrganizationService();
+        //   dispatch(setUserOrganization(user?.data));
+        //   setIsLoading(false);
+        // }
       } catch (error) {
         setIsError(true);
       }
