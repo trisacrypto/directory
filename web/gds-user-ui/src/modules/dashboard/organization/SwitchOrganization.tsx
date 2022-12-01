@@ -16,8 +16,7 @@ const SwitchOrganization: React.FC = () => {
 
   if (isError) {
     toast({
-      title: 'Error',
-      description: 'Something went wrong',
+      title: 'Organization not found',
       status: 'error',
       duration: 5000,
       isClosable: true,

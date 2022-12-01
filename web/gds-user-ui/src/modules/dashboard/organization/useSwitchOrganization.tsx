@@ -21,11 +21,8 @@ const useSwitchOrganization = (organizationId: string) => {
         if (logged.status === APP_STATUS_CODE.OK) {
           const token = (await refreshNewToken()) as any;
           const user = token && (await getUserCurrentOrganizationService());
-
-          if (user?.status === APP_STATUS_CODE.OK) {
-            dispatch(setUserOrganization(user?.data));
-            setIsLoading(false);
-          }
+          dispatch(setUserOrganization(user?.data));
+          setIsLoading(false);
         }
         if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
           const user = await getUserCurrentOrganizationService();
