@@ -13,8 +13,7 @@ import { APP_PATH, APP_STATUS_CODE } from 'utils/constants';
 const SwitchOrganization: React.FC = () => {
   const toast = useToast();
   const { id } = useParams<{ id: string }>();
-  const query = useQuery();
-  const vaspName = query.get('vaspName');
+  const { vaspName } = useQuery<{ vaspName: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isCalled = useRef(false);
@@ -46,8 +45,6 @@ const SwitchOrganization: React.FC = () => {
           duration: 9000,
           isClosable: true
         });
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -75,7 +72,7 @@ const SwitchOrganization: React.FC = () => {
     );
   };
 
-  return <>{isLoading && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
+  return <>{isLoading && !isError && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
 };
 
 export default SwitchOrganization;

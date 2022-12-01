@@ -51,7 +51,7 @@ const useAuth = () => {
       const currentTime = new Date().getTime() / 1000;
 
       if (currentTime > +getExpiryTime) {
-        console.log('token expired');
+        // console.log('token expired');
         clearCookies();
         logoutUser();
         return false;

@@ -55,7 +55,7 @@ function AddNewVaspModal() {
         closeModal();
       },
       onError: (error) => {
-        console.log('[mutate] error', error.response?.data.error);
+        // console.log('[mutate] error', error.response?.data.error);
         toast({
           title: error.response?.data?.error || error.message,
           status: 'error',
