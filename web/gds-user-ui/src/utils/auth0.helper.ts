@@ -128,7 +128,6 @@ export const getRefreshToken = async (hasRefreshToken: boolean) => {
 
 export const refreshNewToken = async () => {
   const user = (await refreshAndFetchUser()) as any;
-  console.log('[user?.accessToken]', user?.accessToken);
   if (user) {
     setCookie('access_token', user?.accessToken);
     return !!user?.accessToken;
