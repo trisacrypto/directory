@@ -33,9 +33,8 @@ const SwitchOrganization: React.FC = () => {
           if (user?.status === APP_STATUS_CODE.OK) {
             dispatch(setUserOrganization(user?.data));
             setTimeout(() => {
-              navigate(APP_PATH.DASHBOARD);
-
               setIsLoading(false);
+              navigate(APP_PATH.DASHBOARD);
             }, 1000);
           }
         }
