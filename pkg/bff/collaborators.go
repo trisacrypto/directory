@@ -379,26 +379,21 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 		return errors.New("collaborator does not have a user ID")
 	}
 
-	// Load the user details
-	// Note: This assumes that the user does not change or have multiple email addresses
-	var user *management.User
-	if user, err = s.auth0.User.Read(collab.UserId); err != nil {
-		return fmt.Errorf("could not load user %q from Auth0: %w", collab.UserId, err)
+	// Fetcg the user details from Auth0
+	var data interface{}
+	var profile *auth.UserDetails
+	if data, err = s.users.Get(collab.UserId); err != nil {
+		return err
 	}
 
-	if user.Name != nil {
-		collab.Name = *user.Name
+	var ok bool
+	if profile, ok = data.(*auth.UserDetails); !ok {
+		return errors.New("could not cast user profile from cache")
 	}
 
-	// Load the user roles
-	var roles *management.RoleList
-	if roles, err = s.auth0.User.Roles(collab.UserId); err != nil {
-		return fmt.Errorf("could not load roles for user %q from Auth0: %w", collab.UserId, err)
-	}
-	collab.Roles = make([]string, len(roles.Roles))
-	for i, role := range roles.Roles {
-		collab.Roles[i] = *role.Name
-	}
+	// Refresh the collaborator record with the details
+	collab.Name = profile.Name
+	collab.Roles = profile.Roles
 
 	return nil
 }

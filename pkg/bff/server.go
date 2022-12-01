@@ -104,6 +104,9 @@ func New(conf config.Config) (s *Server, err error) {
 		if s.auth0, err = auth.NewManagementClient(s.conf.Auth0); err != nil {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
+
+		s.users = auth.NewUserCache(s.conf.UserCache, s.auth0.User)
+
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
 	}
 
@@ -172,6 +175,7 @@ type Server struct {
 	db         store.Store
 	auth0      *management.Management
 	email      *emails.EmailManager
+	users      *auth.UserCache
 	started    time.Time
 	healthy    bool
 	url        string

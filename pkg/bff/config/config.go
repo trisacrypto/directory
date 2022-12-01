@@ -41,6 +41,7 @@ type Config struct {
 	Database     config.StoreConfig
 	Email        EmailConfig
 	Sentry       sentry.Config
+	UserCache    CacheConfig
 	processed    bool
 }
 
@@ -91,6 +92,12 @@ type EmailConfig struct {
 	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	Testing        bool   `split_words:"true" default:"false"`
 	Storage        string `split_words:"true" default:""`
+}
+
+type CacheConfig struct {
+	TTLMean  time.Duration `split_words:"true" default:"5m"`
+	TTLSigma time.Duration `split_words:"true" default:"1m"`
+	MaxSize  int           `split_words:"true" default:"1000"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
