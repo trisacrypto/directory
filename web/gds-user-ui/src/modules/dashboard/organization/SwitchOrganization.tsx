@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import useQuery from 'hooks/useQuery';
 import TransparentLoader from 'components/Loader/TransparentLoader';
 import { logUserInBff, getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
@@ -15,8 +15,8 @@ const SwitchOrganization: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { vaspName } = useQuery<{ vaspName: string }>();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const isCalled = useRef(false);
+  // const navigate = useNavigate();
+  // const isCalled = useRef(false);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,14 +28,15 @@ const SwitchOrganization: React.FC = () => {
           orgid: id
         });
         if (logged.status === APP_STATUS_CODE.NO_CONTENT) {
+          console.log('TEST switchOrganization -----', logged);
           const token = (await refreshNewToken()) as any;
+          console.log('TEST token generate --------', token);
           const user = token && (await getUserCurrentOrganizationService());
+
           if (user?.status === APP_STATUS_CODE.OK) {
+            console.log('[TEST user is there ----]', user);
             dispatch(setUserOrganization(user?.data));
-            setTimeout(() => {
-              setIsLoading(false);
-              navigate(APP_PATH.DASHBOARD);
-            }, 1000);
+            setIsLoading(false);
           }
         }
       } catch (error) {
@@ -50,15 +51,17 @@ const SwitchOrganization: React.FC = () => {
       }
     };
 
-    if (!isCalled.current) {
-      switchOrganization();
-      isCalled.current = true;
-    }
+    switchOrganization();
 
-    return () => {
-      isCalled.current = false;
-    };
-  }, [id, navigate, dispatch, toast, vaspName]);
+    // if (!isCalled.current) {
+    //   switchOrganization();
+    //   isCalled.current = true;
+    // }
+
+    // return () => {
+    //   isCalled.current = false;
+    // };
+  }, [id]);
 
   const renderTitle = () => {
     if (isError) {
@@ -74,7 +77,15 @@ const SwitchOrganization: React.FC = () => {
     );
   };
 
-  return <>{isLoading && !isError && <TransparentLoader title={renderTitle()} opacity="full" />}</>;
+  return (
+    <>
+      {isLoading && !isError ? (
+        <TransparentLoader title={renderTitle()} opacity="full" />
+      ) : (
+        <Navigate to={APP_PATH.DASHBOARD} />
+      )}
+    </>
+  );
 };
 
 export default SwitchOrganization;
