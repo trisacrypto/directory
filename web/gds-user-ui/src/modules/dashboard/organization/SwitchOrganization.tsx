@@ -32,8 +32,11 @@ const SwitchOrganization: React.FC = () => {
           const user = token && (await getUserCurrentOrganizationService());
           if (user?.status === APP_STATUS_CODE.OK) {
             dispatch(setUserOrganization(user?.data));
-            setIsLoading(false);
-            navigate(APP_PATH.DASHBOARD);
+            setTimeout(() => {
+              navigate(APP_PATH.DASHBOARD);
+
+              setIsLoading(false);
+            }, 1000);
           }
         }
       } catch (error) {
