@@ -59,8 +59,11 @@ type UserCache struct {
 }
 
 func NewUserCache(conf config.CacheConfig, client *management.UserManager) *UserCache {
+	ttl := cache.NewTTLCache(conf)
+	ttl.SetFetcher(NewUserFetcher(client))
+	ttl.SetStore(cache.NewTTLStore(conf.TTLMean, conf.TTLSigma))
 	return &UserCache{
-		cache: cache.NewTTLCache(conf, NewUserFetcher(client), cache.NewStructStore()),
+		cache: ttl,
 	}
 }
 

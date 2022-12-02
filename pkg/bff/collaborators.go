@@ -379,16 +379,10 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 		return errors.New("collaborator does not have a user ID")
 	}
 
-	// Fetcg the user details from Auth0
-	var data interface{}
+	// Fetch the user details from Auth0
 	var profile *auth.UserDetails
-	if data, err = s.users.Get(collab.UserId); err != nil {
+	if profile, err = s.users.Get(collab.UserId); err != nil {
 		return err
-	}
-
-	var ok bool
-	if profile, ok = data.(*auth.UserDetails); !ok {
-		return errors.New("could not cast user profile from cache")
 	}
 
 	// Refresh the collaborator record with the details

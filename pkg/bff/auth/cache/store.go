@@ -3,32 +3,27 @@ package cache
 import (
 	"math/rand"
 	"time"
-
-	"github.com/trisacrypto/directory/pkg/bff/config"
 )
 
-type ResourceFetcher interface {
-	Get(key string) (interface{}, error)
-}
-
-// TTLStore is a key-value store that manages expiration for keys.
-type TTLStore interface {
+// KeyValueStore allows keys to be stored, retrieved, and deleted.
+type KeyValueStore interface {
 	Get(key string) (interface{}, error)
 	Put(key string, value interface{}) error
 	Delete(key string) error
 }
 
-type StructStore struct {
-	conf    config.CacheConfig
-	fetcher ResourceFetcher
-	entries map[string]interface{}
+// TTLStore is an in-memory key value store with values that expire.
+type TTLStore struct {
+	ttlMean  time.Duration
+	ttlSigma time.Duration
+	entries  map[string]*ttlEntry
 }
 
-func NewStructStore(conf config.CacheConfig, fetcher ResourceFetcher) *StructStore {
-	return &StructStore{
-		conf:    conf,
-		fetcher: fetcher,
-		entries: make(map[string]interface{}),
+func NewTTLStore(ttlMean, ttlSigma time.Duration) *TTLStore {
+	return &TTLStore{
+		ttlMean:  ttlMean,
+		ttlSigma: ttlSigma,
+		entries:  make(map[string]*ttlEntry),
 	}
 }
 
@@ -37,38 +32,43 @@ type ttlEntry struct {
 	expires time.Time
 }
 
-func expiration(mean, sigma time.Duration) time.Time {
-	// Add a normal distribution of jitter to the TTL to avoid cache stampedes
-	ns := rand.NormFloat64() * float64(sigma)
-	return time.Now().Add(mean + time.Duration(ns))
-}
+// TTLStore implements the KeyValueStore interface
+var _ KeyValueStore = &TTLStore{}
 
-func NewTTLEntry(conf config.CacheConfig) *ttlEntry {
-	return &ttlEntry{
-		expires: expiration(conf.TTLMean, conf.TTLSigma),
-	}
-}
-
-// StructStore implements the TTLStore interface
-var _ TTLStore = &StructStore{}
-
-func (s *StructStore) Get(key string) (value interface{}, err error) {
-	var ok bool
-	if data, ok = s.entries[key]; !ok || time.Now().After(value.(*ttlEntry).expires) {
-		if value, err = s.fetcher.Get(key); err != nil {
-			return nil, err
-		}
+// Get returns the value by key or an error if the key is missing or the value has
+// expired.
+func (s *TTLStore) Get(key string) (value interface{}, err error) {
+	var (
+		entry *ttlEntry
+		ok    bool
+	)
+	if entry, ok = s.entries[key]; !ok {
+		return nil, ErrKeyNotFound
 	}
 
-	return value, nil
+	if time.Now().After(entry.expires) {
+		return nil, ErrValueExpired
+	}
+
+	return entry.value, nil
 }
 
-func (s *StructStore) Put(key string, value interface{}) error {
-	s.entries[key] = value
+func (s *TTLStore) Put(key string, value interface{}) error {
+	s.entries[key] = &ttlEntry{
+		value:   value,
+		expires: expiration(s.ttlMean, s.ttlSigma),
+	}
 	return nil
 }
 
-func (s *StructStore) Delete(key string) error {
+func (s *TTLStore) Delete(key string) error {
 	delete(s.entries, key)
 	return nil
+}
+
+// Helper to compute expiration times for TTL entries.
+func expiration(mean, sigma time.Duration) time.Time {
+	// Use a normal distribution of jitter to avoid cache stampedes
+	ns := rand.NormFloat64() * float64(sigma)
+	return time.Now().Add(mean + time.Duration(ns))
 }

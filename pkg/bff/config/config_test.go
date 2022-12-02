@@ -67,6 +67,11 @@ var testEnv = map[string]string{
 	"GDS_BFF_SENTRY_DEBUG":                  "true",
 	"GDS_BFF_SENTRY_TRACK_PERFORMANCE":      "true",
 	"GDS_BFF_SENTRY_SAMPLE_RATE":            "0.2",
+	"GDS_BFF_USER_CACHE_ENABLED":            "true",
+	"GDS_BFF_USER_CACHE_TTL_MEAN":           "1m",
+	"GDS_BFF_USER_CACHE_TTL_SIGMA":          "5s",
+	"GDS_BFF_USER_CACHE_MAX_ENTRIES":        "1000",
+	"GDS_BFF_USER_CACHE_EVICTION_FRACTION":  "0.1",
 }
 
 func TestConfig(t *testing.T) {
@@ -140,6 +145,11 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
+	require.True(t, conf.UserCache.Enabled)
+	require.Equal(t, 5*time.Minute, conf.UserCache.TTLMean)
+	require.Equal(t, 10*time.Second, conf.UserCache.TTLSigma)
+	require.Equal(t, 1000, conf.UserCache.MaxEntries)
+	require.Equal(t, 0.1, conf.UserCache.EvictionFraction)
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
 	require.Equal(t, 0.2, conf.Sentry.SampleRate)
@@ -319,6 +329,39 @@ func TestEmailConfigValidation(t *testing.T) {
 	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
 
 	conf.Testing = true
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestCacheConfigValidation(t *testing.T) {
+	conf := config.CacheConfig{
+		Enabled:          true,
+		TTLSigma:         time.Second,
+		MaxEntries:       100,
+		EvictionFraction: 0.1,
+	}
+	err := conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache ttl mean must be greater than 0")
+
+	conf.TTLMean = time.Minute
+	conf.TTLSigma = 0
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache ttl sigma must be greater than 0")
+
+	conf.TTLSigma = time.Second
+	conf.MaxEntries = 0
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache max entries must be greater than 0")
+
+	conf.MaxEntries = 100
+	conf.EvictionFraction = 0
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache eviction fraction must be between 0 and 1")
+	conf.EvictionFraction = 1.2
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache eviction fraction must be between 0 and 1")
+
+	conf.Enabled = false
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

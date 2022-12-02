@@ -95,9 +95,11 @@ type EmailConfig struct {
 }
 
 type CacheConfig struct {
-	TTLMean  time.Duration `split_words:"true" default:"5m"`
-	TTLSigma time.Duration `split_words:"true" default:"1m"`
-	MaxSize  int           `split_words:"true" default:"1000"`
+	Enabled          bool          `split_words:"true" default:"true"`
+	TTLMean          time.Duration `split_words:"true" default:"5m"`
+	TTLSigma         time.Duration `split_words:"true" default:"10s"`
+	MaxEntries       int           `split_words:"true" default:"1000"`
+	EvictionFraction float64       `split_words:"true" default:"0.1"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -155,6 +157,10 @@ func (c Config) Validate() (err error) {
 	}
 
 	if err = c.Sentry.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.UserCache.Validate(); err != nil {
 		return err
 	}
 
@@ -297,6 +303,27 @@ func (c EmailConfig) Validate() error {
 
 		if c.Storage != "" {
 			return errors.New("invalid configuration: email archiving is only supported in testing mode")
+		}
+	}
+	return nil
+}
+
+func (c CacheConfig) Validate() error {
+	if c.Enabled {
+		if c.TTLMean == 0 {
+			return errors.New("invalid configuration: cache ttl mean must be greater than 0")
+		}
+
+		if c.TTLSigma == 0 {
+			return errors.New("invalid configuration: cache ttl sigma must be greater than 0")
+		}
+
+		if c.MaxEntries <= 0 {
+			return errors.New("invalid configuration: cache max entries must be greater than 0")
+		}
+
+		if c.EvictionFraction == 0 || c.EvictionFraction > 1 {
+			return errors.New("invalid configuration: cache eviction fraction must be between 0 and 1")
 		}
 	}
 	return nil
