@@ -111,6 +111,7 @@ exports[`DeleteCollaboratorModal should render 1`] = `
   align-items: center;
   vertical-align: top;
   position: relative;
+  border-color: var(--chakra-colors-black);
 }
 
 .emotion-7[disabled],
@@ -460,7 +461,7 @@ exports[`DeleteCollaboratorModal should render 1`] = `
             disabled=""
             type="button"
           >
-            Save
+            Delete
           </button>
           <button
             class="chakra-button emotion-11"

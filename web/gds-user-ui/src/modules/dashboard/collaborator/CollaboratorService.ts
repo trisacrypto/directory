@@ -14,7 +14,6 @@ export const createCollaborator = async (data: any): Promise<any> => {
   const response: any = await axiosInstance.post(`/collaborators`, {
     ...data
   });
-  console.log('response', response);
   return response;
 };
 

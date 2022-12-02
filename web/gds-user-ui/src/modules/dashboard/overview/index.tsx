@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { t } from '@lingui/macro';
 import MetricsTabs from 'components/MetricsTabs';
 import TrisaOrganizationProfile from 'components/TrisaOrganizationProfile';
+import { APP_PATH } from 'utils/constants';
 
 const Overview: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const Overview: React.FC = () => {
         <NeedsAttention
           text={t`Start Certificate Registration`}
           buttonText={'Start'}
-          onClick={() => navigate('/dashboard/certificate/registration')}
+          onClick={() => navigate(APP_PATH.DASH_CERTIFICATE_REGISTRATION)}
         />
       </Suspense>
       <Suspense fallback={t`Failed to load Network announcement , please reload`}>

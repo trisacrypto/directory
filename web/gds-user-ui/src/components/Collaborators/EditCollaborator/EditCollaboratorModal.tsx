@@ -24,6 +24,7 @@ import React, { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
 import { USER_PERMISSION } from 'types/enums';
 import { useSafeDisableIconButton } from 'components/Collaborators/useSafeDisableIconButton';
+
 interface Props {
   collaboratorId: string;
   roles?: string[];
