@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"testing"
 	"time"
 
 	"github.com/auth0/go-auth0/management"
@@ -68,6 +69,10 @@ type authTestSuite struct {
 	suite.Suite
 	srv   *authtest.Server
 	auth0 *management.Management
+}
+
+func TestUserAuth(t *testing.T) {
+	suite.Run(t, new(authTestSuite))
 }
 
 func (s *authTestSuite) SetupSuite() {
