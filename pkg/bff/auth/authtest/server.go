@@ -130,14 +130,12 @@ func New() (s *Server, err error) {
 // Config returns an AuthConfig that can be used to setup middleware.
 func (s *Server) Config() config.AuthConfig {
 	return config.AuthConfig{
-		Domain:         s.URL.Host,
-		Audience:       Audience,
-		ConnectionName: ConnectionName,
-		RedirectURL:    RedirectURL,
-		ProviderCache:  30 * time.Second,
-		ClientID:       ClientID,
-		ClientSecret:   ClientSecret,
-		Testing:        true,
+		Domain:        s.URL.Host,
+		Audience:      Audience,
+		ProviderCache: 30 * time.Second,
+		ClientID:      ClientID,
+		ClientSecret:  ClientSecret,
+		Testing:       true,
 	}
 }
 
