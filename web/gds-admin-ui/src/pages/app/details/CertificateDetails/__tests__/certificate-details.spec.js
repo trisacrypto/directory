@@ -1,6 +1,11 @@
-import { render, screen, fireEvent } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 import CertificateDetails from "pages/app/details/CertificateDetails"
+
+Object.assign(navigator, {
+    clipboard: {
+        writeText: () => { },
+    }
+})
 
 
 describe('CertificateDetails', () => {
@@ -85,11 +90,6 @@ describe('CertificateDetails', () => {
     })
 
     describe('IdentityCertificateDropDown', () => {
-        Object.assign(navigator, {
-            clipboard: {
-                writeText: () => { },
-            }
-        })
 
         beforeEach(() => {
             jest.spyOn(navigator.clipboard, "writeText");
@@ -103,10 +103,14 @@ describe('CertificateDetails', () => {
             render(<CertificateDetails data={data} />)
             const threeDots = screen.getByTestId('certificate-details-3-dots')
 
-            fireEvent.click(threeDots)
+            await act(async () => {
+                fireEvent.click(threeDots)
+
+            })
 
             const copySignatureElement = screen.getByTestId('copy-signature')
             fireEvent.click(copySignatureElement)
+
             expect(navigator.clipboard.writeText).toHaveBeenCalledWith(data.signature);
 
         })
@@ -118,8 +122,9 @@ describe('CertificateDetails', () => {
             render(<CertificateDetails data={data} />)
             const threeDots = screen.getByTestId('certificate-details-3-dots')
 
-            fireEvent.click(threeDots)
-
+            await act(async () => {
+                fireEvent.click(threeDots)
+            })
             const serialNumberElement = screen.getByTestId('copy-serial-number')
 
             fireEvent.click(serialNumberElement)
