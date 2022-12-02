@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
 import UserDetails from './UserDetails';
 import { UserProfilePassword } from './UserProfilePassword';
+
 export const ProfileBlock = ({ title, children }: { title: ReactNode; children: ReactNode }) => {
   return (
     <VStack align="start" w="100%" spacing={5}>
@@ -89,34 +90,6 @@ function UserProfile() {
           {!isSocialConnection() && <UserProfilePassword />}
 
           <UserDetails />
-
-          {/* <ProfileBlock
-            title={
-              <>
-                <Trans>LINKED ACCOUNTS</Trans>
-                <AddLinkedAccountModal />
-              </>
-            }>
-            <Text>
-              <Trans>
-                If you have additional accounts with the TRISA Global Directory Service, you can
-                link them here. You will be required to log in to the linked account to verify
-                account ownership.
-              </Trans>
-            </Text>
-            <HStack w="100%">
-              <InputFormControl
-                label={
-                  <FormLabel fontWeight={700}>
-                    <Trans>Linked Account</Trans>
-                  </FormLabel>
-                }
-                controlId="linked_account"
-                placeholder="sdze"
-              />
-              <RemoveLinkedAccountModal />
-            </HStack>
-          </ProfileBlock> */}
         </VStack>
       </FormLayout>
     </>

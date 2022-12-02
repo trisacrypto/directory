@@ -3,6 +3,7 @@ import { Text, VStack, Tag } from '@chakra-ui/react';
 import { ProfileBlock } from './index';
 import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
+
 export default function UserDetails() {
   const { user } = useSelector(userSelector);
   return (
@@ -37,7 +38,7 @@ export default function UserDetails() {
         <Text fontWeight={700} textTransform="capitalize">
           <Trans>Last Login</Trans>
         </Text>
-        <Text>{user?.lastLogin || '-'}</Text>
+        <Text>{user?.lastLogin}</Text>
       </VStack>
     </ProfileBlock>
   );

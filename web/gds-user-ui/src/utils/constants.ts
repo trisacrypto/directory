@@ -31,3 +31,9 @@ export const APP_STATUS_CODE = {
   SERVICE_UNAVAILABLE: 503,
   OK: 200,
 };
+
+export const AUTH0_NAMESPACES = {
+  ROLE: 'https://vaspdirectory.net/role',
+  CREATED_AT: 'https://vaspdirectory.net/created_at',
+  LAST_LOGIN: 'https://vaspdirectory.net/last_login',
+};

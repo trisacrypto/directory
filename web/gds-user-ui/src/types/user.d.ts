@@ -17,6 +17,7 @@ interface IUserState {
   lastLogin?: string;
   createdAt?: string;
   vasp?: IVasp;
+  role?: string,
   hasSetPassword?: boolean; // this is for user who sign up with social account who need to set password
 }
 type TUser = {
