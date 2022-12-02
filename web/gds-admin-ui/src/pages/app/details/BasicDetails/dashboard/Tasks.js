@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom'
@@ -12,8 +11,6 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { actionType, useModal } from 'contexts/modal';
 import OvalLoader from 'components/OvalLoader';
 import NoData from 'components/NoData';
-import filter from 'lodash/filter';
-import isDate from 'lodash/isDate';
 dayjs.extend(relativeTime)
 
 /**
