@@ -1,5 +1,4 @@
-import { screen, waitFor } from "@testing-library/react"
-import userEvent from '@testing-library/user-event'
+import { screen, act, fireEvent } from "@testing-library/react"
 import BasicDetails from "pages/app/details/BasicDetails"
 import { render } from "utils/test-utils"
 import BasicDetailsDropDown from "pages/app/details/BasicDetails/components/BasicDetailsDropdown"
@@ -18,7 +17,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).not.toHaveClass('disabled')
@@ -34,7 +33,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -50,7 +49,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -66,7 +65,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -82,7 +81,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -98,7 +97,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -114,7 +113,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -130,7 +129,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -146,7 +145,7 @@ describe("BasicDetails", () => {
             render(<BasicDetails data={mockVaspData} />)
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
 
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             const dropdown = screen.getByTestId(/reviewItem/i)
 
             expect(dropdown).toHaveClass('disabled')
@@ -166,7 +165,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled()
         })
@@ -183,7 +182,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled()
             expect(screen.getByRole('button', { name: /delete/i })).not.toHaveClass("disabled")
@@ -201,7 +200,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled()
         })
@@ -217,7 +216,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             expect(screen.getByRole('button', { name: /delete/i })).not.toHaveClass('disabled')
         })
 
@@ -232,7 +231,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).not.toHaveClass('disabled')
         })
@@ -248,7 +247,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
 
@@ -263,7 +262,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
@@ -279,7 +278,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
@@ -294,7 +293,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
@@ -309,7 +308,7 @@ describe("BasicDetails", () => {
             render(<BasicDetailsDropDown vasp={mockVaspData} isNotPendingReview={isNotPendingReviewMock} />)
 
             const dropdownDots = screen.getByTestId(/dripicons-dots-3/i)
-            await waitFor(() => userEvent.click(dropdownDots))
+            await act(async () => fireEvent.click(dropdownDots))
 
             expect(screen.getByRole('button', { name: /delete/i })).toHaveClass('disabled')
         })
