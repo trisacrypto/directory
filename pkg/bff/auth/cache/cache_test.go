@@ -105,21 +105,21 @@ func TestTTLCache(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < conf.MaxEntries*2; i++ {
 		i := i
+		wg.Add(1)
 		go func() {
 			val, err := items.Get(strconv.Itoa(i))
 			require.NoError(t, err, "could not get key from cache")
 			require.NotNil(t, val, "cache should return a value")
 			wg.Done()
 		}()
-		wg.Add(1)
 
+		wg.Add(1)
 		go func() {
 			val, err := items.Get(strconv.Itoa(i))
 			require.NoError(t, err, "could not get key from cache")
 			require.NotNil(t, val, "cache should return a value")
 			wg.Done()
 		}()
-		wg.Add(1)
 	}
 	wg.Wait()
 }
