@@ -35,11 +35,11 @@ describe('<UserDetails />  ', () => {
     expect(screen.getByTestId('user_role').textContent).toBe(userDetailsMock.role);
     expect(screen.getByTestId('user_last_login').textContent).toBe(userDetailsMock.lastLogin);
     // get all permissions by index and check if they are in the array
-    expect(screen.getAllByTestId('user_permissions')[0].textContent).toBe(
-      userDetailsMock.permissions[0]
+    expect(screen.getAllByTestId('user_permissions')).toHaveLength(
+      userDetailsMock.permissions.length
     );
+    // afterEach(() => {
+    //   useSelector.mockClear();
+    // });
   });
-  // afterEach(() => {
-  //   useSelector.mockClear();
-  // });
 });
