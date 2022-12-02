@@ -126,7 +126,7 @@ function CertificateManagement() {
   return (
     <>
       <Heading marginBottom="30px">
-        <Trans id="Certificate Management">Certificate Management</Trans>
+        <Trans id="Certificate Management">Certificate Inventory</Trans>
       </Heading>
       <CertificateValidityAlert hasValidMainnet={true} hasValidTestNet={false} />
       <NeedsAttention text={t`Complete Certficate Registration`} buttonText={t`Continue`} />

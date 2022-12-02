@@ -1,44 +1,48 @@
-import React, { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import React from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import useQuery from 'hooks/useQuery';
 import TransparentLoader from 'components/Loader/TransparentLoader';
-import { logUserInBff } from 'modules/auth/login/auth.service';
-import { refreshNewToken } from 'utils/auth0.helper';
-import { useDispatch } from 'react-redux';
-import { getAuth0User } from 'modules/auth/login/user.slice';
+
+import { useToast, Text } from '@chakra-ui/react';
+import { colors } from 'utils/theme';
+import { useSwitchOrganization } from './useSwitchOrganization';
+// import { getAuth0User } from 'modules/auth/login/user.slice';
+import { APP_PATH } from 'utils/constants';
 const SwitchOrganization: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const dispatch = useDispatch();
+  const toast = useToast();
+  const { id } = useParams<{ id: string }>() as any;
+  const { vaspName } = useQuery<{ vaspName: string }>();
+  const { isLoading, isError } = useSwitchOrganization(id);
 
-  const isCalled = useRef(false);
+  if (isError) {
+    toast({
+      title: 'Organization not found',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+      position: 'top-right'
+    });
+    return <Navigate to={APP_PATH.DASHBOARD} />;
+  }
 
-  useEffect(() => {
-    const switchOrganization = async () => {
-      const { data } = await logUserInBff({
-        orgid: id
-      });
-      console.log('data', data);
-      const accessToken = await refreshNewToken();
-      dispatch(getAuth0User({ hasToken: accessToken }));
-    };
-
-    // const refreshNewTokenHandler = async () => {
-    //   await refreshNewToken();
-    // };
-
-    if (!isCalled.current) {
-      // refreshNewTokenHandler();
-      switchOrganization();
-      isCalled.current = true;
-    }
-
-    return () => {
-      isCalled.current = false;
-    };
-  }, [id, dispatch]);
+  const renderLoadingTitle = () => {
+    return (
+      <Text as={'span'}>
+        Switching to{' '}
+        <Text as={'span'} color={colors.system.blue} fontWeight={'bold'}>
+          {vaspName} ...
+        </Text>
+      </Text>
+    );
+  };
 
   return (
     <>
-      <TransparentLoader title="Switching organization ..." opacity="full" />
+      {isLoading && !isError ? (
+        <TransparentLoader title={renderLoadingTitle()} opacity="full" />
+      ) : (
+        <Navigate to={APP_PATH.DASHBOARD} />
+      )}
     </>
   );
 };

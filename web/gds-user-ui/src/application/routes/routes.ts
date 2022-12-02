@@ -12,7 +12,7 @@ import Maintenance from 'components/Maintenance';
 
 import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
-// import CertificateManagement from 'components/CertificateManagement';
+import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
 import Profile from 'modules/dashboard/profile';
@@ -22,7 +22,7 @@ const CertificateRegistrationPage = lazy(
   () => import('modules/dashboard/certificate/registration')
 );
 
-const CertificateInventory = lazy(() => import('components/CertificateInventory'));
+// const CertificateInventory = lazy(() => import('components/CertificateInventory'));
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -135,12 +135,12 @@ const appRoutes = [
     name: 'Switch Organization',
     component: SwitchOrganization,
     layout: 'dashboard',
-    route: '/switch'
+    route: '/organization/switch'
   },
   {
     path: '/dashboard/certificate/inventory',
     name: 'Certificate Inventory',
-    component: CertificateInventory,
+    component: CertificateManagement,
     layout: 'dashboard',
     route: '/certificate/inventory'
   },
@@ -172,13 +172,6 @@ const appRoutes = [
     layout: 'dashboard',
     route: '/organization/switch/:id'
   },
-  // {
-  //   path: '/dashboard/organisation/select',
-  //   name: 'Certificate Inventory',
-  //   component: ChooseAnAccount,
-  //   layout: 'dashboard',
-  //   route: '/organisation/select'
-  // },
   //  -------ERROR ROUTES-------
   {
     path: '/not-found',

@@ -12,3 +12,9 @@ export const getUserRoles = async () => {
 
   return response;
 };
+
+export const getUserCurrentOrganizationService = async () => {
+  const response = await axiosInstance.get(`/users/organization`);
+
+  return response;
+};
