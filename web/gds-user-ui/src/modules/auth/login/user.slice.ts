@@ -73,7 +73,7 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo);
+      // console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const getUser = await logUserInBff();

@@ -17,6 +17,7 @@ export const enum USER_PERMISSION {
   READ_VASP = 'read:vasp',
   CREATE_VASP = 'create:vasp',
   UPDATE_VASP = 'update:vasp',
+  CREATE_ORGANIZATIONS = 'create:organizations',
 }
 
 export const enum COLLABORATOR_STATUS {

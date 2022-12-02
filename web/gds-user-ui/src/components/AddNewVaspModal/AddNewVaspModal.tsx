@@ -55,7 +55,7 @@ function AddNewVaspModal() {
         closeModal();
       },
       onError: (error) => {
-        console.log('[mutate] error', error.response?.data.error);
+        // console.log('[mutate] error', error.response?.data.error);
         toast({
           title: error.response?.data?.error || error.message,
           status: 'error',
@@ -65,9 +65,11 @@ function AddNewVaspModal() {
     });
   };
 
+  // you dont' have permission to create a new organization
+
   return (
     <>
-      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={canCreateOrganization()}>
+      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={!canCreateOrganization()}>
         + Add New VASP
       </Button>
 
