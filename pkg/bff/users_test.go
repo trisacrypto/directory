@@ -401,6 +401,33 @@ func (s *bffTestSuite) TestListUserRoles() {
 	require.Equal(expected, roles, "roles do not match")
 }
 
+func (s *bffTestSuite) TestUpdateUser() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email: "leopold.wentzel@gmail.com",
+	}
+
+	// Endpoint must be authenticated
+	err := s.client.UpdateUser(context.TODO(), &api.UpdateUserParams{})
+	s.requireError(err, http.StatusUnauthorized, "could not identify authenticated user in request", "expected error when user is not authenticated")
+
+	// Should return an error if no params are provided
+	require.NoError(s.SetClientCredentials(claims), "could not create user token")
+	err = s.client.UpdateUser(context.TODO(), &api.UpdateUserParams{})
+	s.requireError(err, http.StatusBadRequest, "no fields were provided", "expected error when no params are provided")
+
+	// Successfully updating the user's name
+	params := &api.UpdateUserParams{
+		Name: "Leopold De Wentzel",
+	}
+	require.NoError(s.client.UpdateUser(context.TODO(), params), "could not update user")
+	user := s.auth.GetUser()
+	require.Equal(params.Name, *user.Name, "user name should be updated")
+	require.Equal(authtest.Email, *user.Email, "user email should not be updated")
+}
+
 func (s *bffTestSuite) TestUserOrganization() {
 	require := s.Require()
 

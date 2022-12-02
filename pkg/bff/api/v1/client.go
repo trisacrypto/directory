@@ -171,6 +171,20 @@ func (s *APIv1) ListUserRoles(ctx context.Context) (out []string, err error) {
 	return out, nil
 }
 
+// Update the user's profile.
+func (s *APIv1) UpdateUser(ctx context.Context, in *UpdateUserParams) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPatch, "/v1/users", in, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Get the user's current organization.
 func (s *APIv1) UserOrganization(ctx context.Context) (out *OrganizationReply, err error) {
 	// Make the HTTP request
