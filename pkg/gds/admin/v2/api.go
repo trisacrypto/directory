@@ -20,6 +20,7 @@ type DirectoryAdministrationClient interface {
 	Summary(ctx context.Context) (out *SummaryReply, err error)
 	Autocomplete(ctx context.Context) (out *AutocompleteReply, err error)
 	ReviewTimeline(ctx context.Context, params *ReviewTimelineParams) (out *ReviewTimelineReply, err error)
+	ListCountries(ctx context.Context) (out []*CountryRecord, err error)
 	ListVASPs(ctx context.Context, params *ListVASPsParams) (out *ListVASPsReply, err error)
 	RetrieveVASP(ctx context.Context, id string) (out *RetrieveVASPReply, err error)
 	UpdateVASP(ctx context.Context, in *UpdateVASPRequest) (out *UpdateVASPReply, err error)
@@ -100,6 +101,12 @@ type ReviewTimelineRecord struct {
 // ReviewTimelineReply returns a list of time series records containing registration counts.
 type ReviewTimelineReply struct {
 	Weeks []ReviewTimelineRecord `json:"weeks"`
+}
+
+// CountryRecord contains aggregate information relating to VASP registrations in a single country.
+type CountryRecord struct {
+	ISOCode       string `json:"iso_code"`
+	Registrations int    `json:"registrations"`
 }
 
 //===========================================================================

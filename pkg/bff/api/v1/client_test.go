@@ -262,6 +262,27 @@ func TestListUserRoles(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestUpdateUser(t *testing.T) {
+	fixture := &api.UpdateUserParams{
+		Name: "John Doe",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPatch, r.Method)
+		require.Equal(t, "/v1/users", r.URL.Path)
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	err = client.UpdateUser(context.TODO(), fixture)
+	require.NoError(t, err)
+}
+
 func TestCreateOrganization(t *testing.T) {
 	fixture := &api.OrganizationReply{
 		ID:     "8b2e9e78-baca-4c34-a382-8b285503c901",
