@@ -428,7 +428,7 @@ func (s *bffTestSuite) TestUserOrganization() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"read:organizations"}
+	claims.Permissions = []string{auth.ReadOrganizations}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.UserOrganization(context.TODO())
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
