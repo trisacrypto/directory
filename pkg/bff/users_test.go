@@ -242,11 +242,20 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 
 	// Add the user as a collaborator in the organization
 	collab := &models.Collaborator{
-		Email:    claims.Email,
-		UserId:   "auth0|5f7b5f1b0b8b9b0069b0b1d5",
-		Verified: true,
+		Email:     claims.Email,
+		UserId:    "auth0|5f7b5f1b0b8b9b0069b0b1d5",
+		Verified:  true,
+		ExpiresAt: time.Now().Add(-time.Hour).Format(time.RFC3339Nano),
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+
+	// User should not be able to access the organization if the invitation has expired
+	err = s.client.Login(context.TODO(), params)
+	s.requireError(err, http.StatusForbidden, "user invitation has expired")
+
+	// Configure a valid invitation
+	collab.ExpiresAt = time.Now().Add(time.Hour).Format(time.RFC3339Nano)
 	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
 
 	// Valid login - appdata should be updated with the organization

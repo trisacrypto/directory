@@ -182,13 +182,13 @@ func (s *bffTestSuite) TestMaintenanceMode() {
 		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
+		LoginURL:     "http://localhost/login",
+		RegisterURL:  "http://localhost/register",
 		Auth0: config.AuthConfig{
-			Domain:         "auth.localhost",
-			Audience:       "http://localhost",
-			ConnectionName: "Username-Password-Authentication",
-			RedirectURL:    "http://localhost/auth/callback",
-			ProviderCache:  5 * time.Minute,
-			Testing:        true,
+			Domain:        "auth.localhost",
+			Audience:      "http://localhost",
+			ProviderCache: 5 * time.Minute,
+			Testing:       true,
 		},
 		TestNet: config.NetworkConfig{
 			Directory: config.DirectoryConfig{

@@ -3,6 +3,7 @@ package bff_test
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
@@ -174,6 +175,10 @@ func (s *bffTestSuite) TestListOrganizations() {
 		Name:   "Alice VASP",
 		Domain: "alicevasp.io",
 	}
+	aliceCollab := &models.Collaborator{
+		Email: claims.Email,
+	}
+	require.NoError(alice.AddCollaborator(aliceCollab))
 	_, err = s.DB().CreateOrganization(alice)
 	require.NoError(err, "could not create organization")
 
@@ -181,6 +186,11 @@ func (s *bffTestSuite) TestListOrganizations() {
 		Name:   "Bob VASP",
 		Domain: "bobvasp.io",
 	}
+	bobCollab := &models.Collaborator{
+		Email:     claims.Email,
+		LastLogin: time.Now().Format(time.RFC3339Nano),
+	}
+	require.NoError(bob.AddCollaborator(bobCollab))
 	_, err = s.DB().CreateOrganization(bob)
 	require.NoError(err, "could not create organization")
 
@@ -188,11 +198,23 @@ func (s *bffTestSuite) TestListOrganizations() {
 		Name:   "Charlie VASP",
 		Domain: "charlievasp.io",
 	}
+	charlieCollab := &models.Collaborator{
+		Email:     claims.Email,
+		LastLogin: time.Now().Format(time.RFC3339Nano),
+	}
+	require.NoError(charlie.AddCollaborator(charlieCollab))
 	_, err = s.DB().CreateOrganization(charlie)
 	require.NoError(err, "could not create organization")
 
+	delta := &models.Organization{
+		Name:   "Delta VASP",
+		Domain: "deltavasp.io",
+	}
+	_, err = s.DB().CreateOrganization(delta)
+	require.NoError(err, "could not create organization")
+
 	// Update the app metadata to contain the organizations
-	metadata.Organizations = []string{alice.Id, bob.Id, charlie.Id}
+	metadata.Organizations = []string{alice.Id, bob.Id, charlie.Id, delta.Id}
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
@@ -209,16 +231,19 @@ func (s *bffTestSuite) TestListOrganizations() {
 			Name:      bob.Name,
 			Domain:    bob.Domain,
 			CreatedAt: bob.Created,
+			LastLogin: bobCollab.LastLogin,
 		},
 		{
 			ID:        charlie.Id,
 			Name:      charlie.Name,
 			Domain:    charlie.Domain,
 			CreatedAt: charlie.Created,
+			LastLogin: charlieCollab.LastLogin,
 		},
 	}
 
-	// Should return all organizations the user is a member of
+	// Should return all organizations the user is a collaborator on
+	// If the user is not a collaborator, the endpoint should not return an error
 	reply, err = s.client.ListOrganizations(context.TODO())
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "expected returned organizations to match")

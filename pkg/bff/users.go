@@ -53,6 +53,7 @@ const (
 // @Success 204 "Login successful"
 // @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "User invitation has expired"
 // @Failure 404 {object} api.Reply "Organization not found"
 // @Failure 500 {object} api.Reply
 // @Router /users/login [post]
@@ -170,8 +171,16 @@ func (s *Server) Login(c *gin.Context) {
 			return
 		}
 
+		// Verify that pending invitations have not expired
+		if err = collaborator.ValidateInvitation(); err != nil {
+			log.Debug().Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
+			c.JSON(http.StatusForbidden, api.ErrorResponse("user invitation has expired"))
+			return
+		}
+
 		// Other endpoints expect the user's verification status to be up to date
 		collaborator.Verified = *user.EmailVerified
+		collaborator.ExpiresAt = ""
 	}
 
 	// Update collaborator metadata timestamps when the user logs in

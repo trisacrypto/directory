@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
+	"time"
 )
 
 // Returns the key which uniquely identifies this collaborator.
@@ -37,5 +38,24 @@ func (collab *Collaborator) Validate() error {
 	}
 
 	// TODO: More comprehensive validation may be required
+	return nil
+}
+
+// Helper to determine if a collaborator invite is valid based on the expiration date.
+// If there is no expiration date, this method assumes that the collaborator invitation
+// is still valid.
+func (collab *Collaborator) ValidateInvitation() (err error) {
+	if collab.ExpiresAt == "" {
+		return nil
+	}
+
+	var expiration time.Time
+	if expiration, err = time.Parse(time.RFC3339Nano, collab.ExpiresAt); err != nil {
+		return err
+	}
+
+	if expiration.Before(time.Now()) {
+		return errors.New("collaborator invite has expired")
+	}
 	return nil
 }
