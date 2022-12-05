@@ -173,7 +173,7 @@ const CollaboratorsSection: React.FC = () => {
           <Tooltip
             label={t`you do not have permission to invite a collaborator`}
             isDisabled={canInviteCollaborator()}>
-            <Button minW="170px" onClick={modalHandler} isDisabled={true}>
+            <Button minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>
