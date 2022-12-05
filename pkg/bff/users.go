@@ -288,6 +288,61 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
+// UpdateUser updates the user's profile information in Auth0.
+//
+// @Summary Update the user's profile
+// @Description Update the user's profile information in Auth0.
+// @Tags users
+// @Accept json
+// @Success 204 {object} api.Reply
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /users [patch]
+func (s *Server) UpdateUser(c *gin.Context) {
+	var (
+		user *management.User
+		err  error
+	)
+
+	// Parse the params from the request body
+	params := &api.UpdateUserParams{}
+	if err = c.ShouldBind(params); err != nil {
+		log.Error().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Fetch the user from the context
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("login handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to login"))
+		return
+	}
+
+	// At least one field must be provided
+	if *params == (api.UpdateUserParams{}) {
+		log.Warn().Msg("no fields were provided to update user")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("no fields were provided"))
+		return
+	}
+
+	// Update the user's name if provided
+	patch := &management.User{}
+	if params.Name != "" {
+		patch.Name = &params.Name
+	}
+
+	// Commit the update to Auth0
+	if err = s.auth0.User.Update(*user.ID, patch); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not update user name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user name"))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // UserOrganization returns the current organization that the user is logged into. The
 // user must have the read:organizations permission to perform this action.
 //
