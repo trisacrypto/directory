@@ -338,6 +338,14 @@ func main() {
 				},
 			},
 			{
+				Name:     "admin:countries",
+				Usage:    "request a list of countries with VASP registrations",
+				Category: "admin",
+				Action:   adminListCountries,
+				Before:   initAdminClient,
+				Flags:    []cli.Flag{},
+			},
+			{
 				Name:     "admin:status",
 				Usage:    "perform a health check against the admin API",
 				Category: "admin",
@@ -1001,6 +1009,18 @@ func adminReviewTimeline(c *cli.Context) (err error) {
 
 	var rep *admin.ReviewTimelineReply
 	if rep, err = adminClient.ReviewTimeline(ctx, params); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return printJSON(rep)
+}
+
+func adminListCountries(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	var rep []*admin.CountryRecord
+	if rep, err = adminClient.ListCountries(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 
