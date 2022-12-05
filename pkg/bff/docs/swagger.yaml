@@ -790,6 +790,31 @@ paths:
       summary: Get the status of the BFF server
       tags:
       - status
+  /users:
+    patch:
+      consumes:
+      - application/json
+      description: Update the user's profile information in Auth0.
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Update the user's profile
+      tags:
+      - users
   /users/login:
     post:
       consumes:
