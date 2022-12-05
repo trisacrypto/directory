@@ -22,6 +22,7 @@ type BFFClient interface {
 	ListUserRoles(context.Context) ([]string, error)
 
 	// Authenticated Endpoints
+	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context) ([]*OrganizationReply, error)
@@ -69,6 +70,11 @@ type StatusReply struct {
 //===========================================================================
 // BFF v1 API Requests and Responses
 //===========================================================================
+
+// UpdateUserParams is used to update the user's profile information.
+type UpdateUserParams struct {
+	Name string `json:"name,omitempty"`
+}
 
 // OrganizationParams is used to create new organizations.
 type OrganizationParams struct {

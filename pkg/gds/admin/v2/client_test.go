@@ -370,6 +370,42 @@ func TestReviewTimeline(t *testing.T) {
 	require.Equal(t, fixture_reply.Weeks, out.Weeks)
 }
 
+func TestListCountries(t *testing.T) {
+	fixture := []*admin.CountryRecord{
+		{
+			ISOCode:       "US",
+			Registrations: 10,
+		},
+		{
+			ISOCode:       "CA",
+			Registrations: 5,
+		},
+		{
+			ISOCode:       "GB",
+			Registrations: 2,
+		},
+	}
+
+	// Create test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v2/countries", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := admin.New(ts.URL, nil)
+	require.NoError(t, err)
+
+	out, err := client.ListCountries(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestListVASPs(t *testing.T) {
 	fixture := &admin.ListVASPsReply{
 		VASPs: []admin.VASPSnippet{
