@@ -16,9 +16,6 @@ import (
 
 const (
 	// TODO: Need to make sure these roles are in sync with the roles in Auth0
-	LeaderRole         = "Organization Leader"
-	CollaboratorRole   = "Organization Collaborator"
-	TSPRole            = "TRISA Service Provider"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
 	VASPsKey           = "vasps"
@@ -79,6 +76,14 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user's claims
+	var claims *auth.Claims
+	if claims, err = auth.GetClaims(c); err != nil {
+		log.Error().Err(err).Msg("could not fetch user claims")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
+		return
+	}
+
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
 	appdata := &auth.AppMetadata{}
@@ -100,7 +105,7 @@ func (s *Server) Login(c *gin.Context) {
 	switch len(roles.Roles) {
 	case 0:
 		// Default users to the organization collaborator role
-		userRole = CollaboratorRole
+		userRole = auth.CollaboratorRole
 	case 1:
 		prevRole = *roles.Roles[0].Name
 		userRole = prevRole
@@ -189,21 +194,23 @@ func (s *Server) Login(c *gin.Context) {
 		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
-	if userRole == TSPRole {
-		// TSP users can be added to multiple organizations
+	if claims.HasPermission(auth.SwitchOrganizations) {
+		// If the user can be in multiple organizations, add the selected organization
+		// to the user's list.
 		appdata.AddOrganization(org.Id)
 	} else {
-		// Organizations with one collaborator need a leader to add other collaborators
-		if userRole == CollaboratorRole && len(org.Collaborators) == 1 {
-			userRole = LeaderRole
+		// Make sure users are able to add collaborators if they are the only member of
+		// their organization.
+		if !claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) == 1 {
+			userRole = auth.LeaderRole
 		}
 
 		// Non-TSP users can only exist in one organization
 		if appdata.OrgID != "" && org.Id != appdata.OrgID {
-			// When switching to a new organization, make sure leader roles are not
-			// unintentionally preserved
-			if userRole == LeaderRole && len(org.Collaborators) > 1 {
-				userRole = CollaboratorRole
+			// Users should not be able to add collaborators if they are migrated to an
+			// existing organization.
+			if claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) > 1 {
+				userRole = auth.CollaboratorRole
 			}
 
 			// Remove the collaborator record from the previous organization
@@ -370,7 +377,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
-	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+	c.JSON(http.StatusOK, []string{auth.CollaboratorRole, auth.LeaderRole})
 }
 
 // FindUserByEmail returns the Auth0 user record by email address.

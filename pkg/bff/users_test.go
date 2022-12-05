@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
@@ -51,13 +50,15 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator should have a last login timestamp")
 
 	// User should assume the leader role
-	require.Equal([]string{bff.LeaderRole}, s.auth.GetUserRoles(), "user should have the leader role")
+	require.Equal([]string{auth.LeaderRole}, s.auth.GetUserRoles(), "user should have the leader role")
 
 	// New TSP users should have the new organization added to the app metadata
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	s.auth.SetUserRoles([]string{bff.TSPRole})
+	s.auth.SetUserRoles([]string{"TRISA Service Provider"})
+	claims.Permissions = []string{auth.SwitchOrganizations, auth.UpdateCollaborators}
+	require.NoError(s.SetClientCredentials(claims), "could not set client credentials")
 	require.NoError(s.client.Login(context.TODO(), nil))
 
 	// Appdata should contain a new organization and it should be added to the list
@@ -82,7 +83,7 @@ func (s *bffTestSuite) TestNewUserLogin() {
 	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator should have a last login timestamp")
 
 	// User should still have the TSP role
-	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
+	require.Equal([]string{"TRISA Service Provider"}, s.auth.GetUserRoles(), "user should have the TSP role")
 
 	// TODO: The endpoint should return a 200 with the refresh_token flag set
 }
@@ -94,7 +95,8 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 
 	// Test the existing user case - orgID in app metadata but not params
 	claims := &authtest.Claims{
-		Email: "leopold.wentzel@gmail.com",
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{auth.UpdateCollaborators},
 	}
 	metadata := &auth.AppMetadata{
 		OrgID: "67428be4-3fa4-4bf2-9e15-edbf043f8670",
@@ -106,7 +108,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	appdata, err := metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	s.auth.SetUserRoles([]string{bff.LeaderRole})
+	s.auth.SetUserRoles([]string{auth.LeaderRole})
 
 	// Returns an error if the organization does not exist
 	err = s.client.Login(context.TODO(), nil)
@@ -138,7 +140,9 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	s.auth.SetUserRoles([]string{bff.TSPRole})
+	s.auth.SetUserRoles([]string{"TRISA Service Provider"})
+	claims.Permissions = []string{auth.SwitchOrganizations, auth.UpdateCollaborators}
+	require.NoError(s.SetClientCredentials(claims), "could not set client credentials")
 	now := time.Now().Format(time.RFC3339Nano)
 	collab := &models.Collaborator{
 		Email:     claims.Email,
@@ -177,7 +181,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 	require.True(lastLogin.After(joinedAt), "last login timestamp should be after joined at timestamp")
 
 	// User role should not change
-	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the leader role")
+	require.Equal([]string{"TRISA Service Provider"}, s.auth.GetUserRoles(), "user should have the leader role")
 
 	// User should be able to login to the same organization if requested
 	params := &api.LoginParams{
@@ -206,7 +210,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	params := &api.LoginParams{
 		OrgID: "67428be4-3fa4-4bf2-9e15-edbf043f8670",
 	}
-	s.auth.SetUserRoles([]string{bff.CollaboratorRole})
+	s.auth.SetUserRoles([]string{auth.CollaboratorRole})
 
 	// Return an error if the organization does not exist
 	err := s.client.Login(context.TODO(), params)
@@ -268,7 +272,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Empty(userMeta.Organizations, "app metadata organization list should be empty")
 
 	// User should have the same role
-	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
+	require.Equal([]string{auth.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
 	// Collaborator should contain updated timestamps
 	org, err = s.bff.OrganizationFromID(org.Id)
@@ -295,7 +299,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 
 	// Valid login - collab abandons the old organization and joins the new one
 	params.OrgID = newOrg.Id
-	s.auth.SetUserRoles([]string{bff.CollaboratorRole})
+	s.auth.SetUserRoles([]string{auth.CollaboratorRole})
 	require.NoError(s.client.Login(context.TODO(), params))
 	userMeta = &auth.AppMetadata{}
 	require.NoError(userMeta.Load(s.auth.GetUserAppMetadata()))
@@ -305,7 +309,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Empty(userMeta.Organizations, "app metadata organization list should be empty")
 
 	// User should have the same role
-	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
+	require.Equal([]string{auth.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
 	// Collaborator should contain updated timestamps
 	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
@@ -319,7 +323,9 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// TODO: Currently the Auth0 mock only supports one user at a time so these helpers
 	// are a workaround to make sure we get the correct user data at test time
 	s.auth.SetUserEmail(leader.Email)
-	s.auth.SetUserRoles([]string{bff.LeaderRole})
+	s.auth.SetUserRoles([]string{auth.LeaderRole})
+	claims.Permissions = []string{auth.UpdateCollaborators}
+	require.NoError(s.SetClientCredentials(claims), "could not set client credentials")
 	userMeta.OrgID = org.Id
 	appdata, err := userMeta.Dump()
 	require.NoError(err, "could not dump app metadata")
@@ -333,7 +339,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.Empty(userMeta.Organizations, "app metadata organization list should be empty")
 
 	// Leader user should be demoted to a collaborator in the new organization
-	require.Equal([]string{bff.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
+	require.Equal([]string{auth.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
 	// Previous organization should be deleted since it has no collaborators
 	_, err = s.bff.OrganizationFromID(org.Id)
@@ -364,7 +370,9 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	appdata, err = userMeta.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	s.auth.SetUserRoles([]string{bff.TSPRole})
+	s.auth.SetUserRoles([]string{"TRISA Service Provider"})
+	claims.Permissions = []string{auth.SwitchOrganizations, auth.UpdateCollaborators}
+	require.NoError(s.SetClientCredentials(claims), "could not set client credentials")
 
 	// Valid TSP user login - appdata should be updated with the organization list
 	params.OrgID = newOrg.Id
@@ -377,7 +385,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	require.ElementsMatch([]string{org.Id, newOrg.Id}, userMeta.Organizations, "app metadata organization list should contain both organizations")
 
 	// User should have the same role
-	require.Equal([]string{bff.TSPRole}, s.auth.GetUserRoles(), "user should have the TSP role")
+	require.Equal([]string{"TRISA Service Provider"}, s.auth.GetUserRoles(), "user should have the TSP role")
 
 	// Collaborator record should contain updated timestamps
 	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
@@ -393,8 +401,8 @@ func (s *bffTestSuite) TestListUserRoles() {
 
 	// Test listing the assignable roles
 	expected := []string{
-		bff.CollaboratorRole,
-		bff.LeaderRole,
+		auth.CollaboratorRole,
+		auth.LeaderRole,
 	}
 	roles, err := s.client.ListUserRoles(context.TODO())
 	require.NoError(err, "could not list assignable roles")
