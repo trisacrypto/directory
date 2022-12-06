@@ -8,22 +8,28 @@ import { useNavigate, useLocation } from 'react-router-dom';
 type LandingLayoutProp = {
   children?: React.ReactNode;
 };
-
+import useSearchParams from 'hooks/useQueryParams';
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated();
-
+  const { orgid } = useSearchParams();
   // if user is logged for login pathname redirect to dashboard
   useEffect(() => {
     if (
       isLoggedIn &&
       (location.pathname === APP_PATH.LOGIN || location.pathname === APP_PATH.REGISTER)
     ) {
+      if (orgid) {
+        const link = `${APP_PATH.SWITCH_ORGANIZATION}/${orgid}`;
+        navigate(link);
+        return;
+      }
       navigate('/dashboard/overview');
     }
-  }, [isLoggedIn, location.pathname, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, location.pathname, orgid]);
 
   return (
     <Stack
