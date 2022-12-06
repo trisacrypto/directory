@@ -5,10 +5,12 @@ import Footer from 'components/Footer/LandingFooter';
 import useAuth from 'hooks/useAuth';
 import { APP_PATH } from 'utils/constants';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useSearchParams from 'hooks/useQueryParams';
+
 type LandingLayoutProp = {
   children?: React.ReactNode;
 };
-import useSearchParams from 'hooks/useQueryParams';
+
 export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
