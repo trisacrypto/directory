@@ -23,7 +23,7 @@ export default function LandingLayout(props: LandingLayoutProp): JSX.Element {
       isLoggedIn &&
       (location.pathname === APP_PATH.LOGIN || location.pathname === APP_PATH.REGISTER)
     ) {
-      if (orgid) {
+      if (orgid && location.pathname === APP_PATH.LOGIN) {
         const link = `${APP_PATH.SWITCH_ORGANIZATION}/${orgid}`;
         navigate(link);
         return;
