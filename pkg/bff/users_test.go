@@ -244,11 +244,9 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	}
 	require.NoError(org.AddCollaborator(leader), "could not add collaborator to organization")
 
-	// Add the user as a collaborator in the organization
+	// Add the user as an unverified collaborator in the organization
 	collab := &models.Collaborator{
 		Email:     claims.Email,
-		UserId:    "auth0|5f7b5f1b0b8b9b0069b0b1d5",
-		Verified:  true,
 		ExpiresAt: time.Now().Add(-time.Hour).Format(time.RFC3339Nano),
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
@@ -274,11 +272,13 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// User should have the same role
 	require.Equal([]string{auth.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
-	// Collaborator should contain updated timestamps
+	// Collaborator should now be verified
 	org, err = s.bff.OrganizationFromID(org.Id)
 	require.NoError(err, "could not get organization from ID")
 	collab = org.GetCollaborator(claims.Email)
 	require.NotNil(collab, "collaborator should exist in organization")
+	require.Equal(authtest.UserID, collab.UserId, "collaborator user id should match")
+	require.True(collab.Verified, "collaborator should be verified")
 	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
 	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
 
@@ -311,11 +311,13 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// User should have the same role
 	require.Equal([]string{auth.CollaboratorRole}, s.auth.GetUserRoles(), "user should have the collaborator role")
 
-	// Collaborator should contain updated timestamps
+	// Collaborator should be verified in the new organization
 	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
 	require.NoError(err, "could not get organization from ID")
 	collab = newOrg.GetCollaborator(claims.Email)
 	require.NotNil(collab, "collaborator should exist in organization")
+	require.Equal(authtest.UserID, collab.UserId, "collaborator user id should match")
+	require.True(collab.Verified, "collaborator should be verified")
 	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
 	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
 
@@ -345,11 +347,13 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	_, err = s.bff.OrganizationFromID(org.Id)
 	require.Error(err, "organization should be deleted")
 
-	// Leader's collab record should contain updated timestamps
+	// Leader should be a verified collaborator in the new organization
 	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
 	require.NoError(err, "could not get organization from ID")
 	leader = newOrg.GetCollaborator(leader.Email)
 	require.NotNil(leader, "leader should exist in organization")
+	require.Equal(authtest.UserID, leader.UserId, "leader user id should match")
+	require.True(leader.Verified, "leader should be verified")
 	require.NotEmpty(leader.JoinedAt, "leader last login timestamp should not be empty")
 	require.Equal(leader.JoinedAt, leader.LastLogin, "leader joined at timestamp should not be empty")
 
@@ -387,11 +391,13 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	// User should have the same role
 	require.Equal([]string{"TRISA Service Provider"}, s.auth.GetUserRoles(), "user should have the TSP role")
 
-	// Collaborator record should contain updated timestamps
+	// Collaborator should be verified in the new organization
 	newOrg, err = s.bff.OrganizationFromID(newOrg.Id)
 	require.NoError(err, "could not get organization from ID")
 	collab = newOrg.GetCollaborator(claims.Email)
 	require.NotNil(collab, "collaborator should exist in organization")
+	require.Equal(authtest.UserID, collab.UserId, "collaborator user id should match")
+	require.True(collab.Verified, "collaborator should be verified")
 	require.NotEmpty(collab.JoinedAt, "collaborator last login timestamp should not be empty")
 	require.Equal(collab.JoinedAt, collab.LastLogin, "collaborator joined at timestamp should not be empty")
 }

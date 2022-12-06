@@ -185,6 +185,7 @@ func (s *Server) Login(c *gin.Context) {
 
 		// Other endpoints expect the user's verification status to be up to date
 		collaborator.Verified = *user.EmailVerified
+		collaborator.UserId = *user.ID
 		collaborator.ExpiresAt = ""
 	}
 

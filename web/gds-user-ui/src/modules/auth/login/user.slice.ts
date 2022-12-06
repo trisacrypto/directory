@@ -58,10 +58,14 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo);
+      // console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        const getUser = await logUserInBff();
+        const hasOrgId = localStorage.getItem('orgId') as any;
+        const getUser = await logUserInBff(hasOrgId ? { orgid: hasOrgId } : {}) as any;
+        if (getUser && hasOrgId) {
+          localStorage.removeItem('orgId');
+        }
         const getRoles = await getUserRoles() as any;
         const getUserOrgInfo: any = await getUserCurrentOrganizationService();
         if (getUser?.data?.refresh_token) {
