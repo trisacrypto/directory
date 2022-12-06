@@ -67,7 +67,8 @@ function AddNewVaspForm({ onSubmit, isCreatingVasp, closeModal }: AddNewVaspForm
         controlId="accept"
         data-testid="accept"
         {...register('accept', { required: true })}
-        colorScheme="gray">
+        colorScheme="gray"
+        borderColor="black">
         <Trans>
           TRISA is a network of trusted members. I acknowledge that the new VASP has a legitimate
           business purpose to join TRISA.
