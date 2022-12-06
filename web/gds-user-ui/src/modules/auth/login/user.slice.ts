@@ -63,7 +63,7 @@ export const getAuth0User: any = createAsyncThunk(
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const hasOrgId = localStorage.getItem('orgId') as any;
         const getUser = await logUserInBff(hasOrgId ? { orgId: hasOrgId } : {}) as any;
-        if (getUser & hasOrgId) {
+        if (getUser && hasOrgId) {
           localStorage.removeItem('orgId');
         }
         const getRoles = await getUserRoles() as any;
