@@ -32,7 +32,7 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Organization name is required
-	claims.Permissions = []string{"create:organizations"}
+	claims.Permissions = []string{auth.CreateOrganizations}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	params := &api.OrganizationParams{
 		Domain: "alicevasp.io",
@@ -153,7 +153,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Should return empty response when user has no organizations
-	claims.Permissions = []string{"read:organizations"}
+	claims.Permissions = []string{auth.ReadOrganizations}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	reply, err := s.client.ListOrganizations(context.TODO())
 	require.NoError(err, "list organizations call failed")
