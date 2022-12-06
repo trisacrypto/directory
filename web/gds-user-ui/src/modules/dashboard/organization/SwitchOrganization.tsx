@@ -6,13 +6,15 @@ import TransparentLoader from 'components/Loader/TransparentLoader';
 import { useToast, Text } from '@chakra-ui/react';
 import { colors } from 'utils/theme';
 import { useSwitchOrganization } from './useSwitchOrganization';
-// import { getAuth0User } from 'modules/auth/login/user.slice';
+import { userSelector } from 'modules/auth/login/user.slice';
+import { useSelector } from 'react-redux';
 import { APP_PATH } from 'utils/constants';
 const SwitchOrganization: React.FC = () => {
   const toast = useToast();
   const { id } = useParams<{ id: string }>() as any;
   const { vaspName } = useQuery<{ vaspName: string }>();
   const { isLoading, isError } = useSwitchOrganization(id);
+  const { user } = useSelector(userSelector);
 
   if (isError) {
     toast({
@@ -30,7 +32,7 @@ const SwitchOrganization: React.FC = () => {
       <Text as={'span'}>
         Switching to{' '}
         <Text as={'span'} color={colors.system.blue} fontWeight={'bold'}>
-          {vaspName} ...
+          {vaspName || user?.vaps?.name} ...
         </Text>
       </Text>
     );
