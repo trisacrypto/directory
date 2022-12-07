@@ -66,13 +66,15 @@ function UserProfile() {
                   <Text mt={'0 !important'}>{user?.id}</Text>
                 </div>
               </VStack>
-              <VStack>
+              <Stack>
                 <CkLazyLoadImage
                   borderRadius="50%"
                   src={user?.pictureUrl || UserProfileIcon}
                   mx="auto"
+                  w="100px"
+                  h="100px"
                 />
-              </VStack>
+              </Stack>
             </Stack>
 
             <EditableInput
