@@ -58,7 +58,7 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      // console.log('[getUserInfo]', getUserInfo);
+      console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const hasOrgId = localStorage.getItem('orgId') as any;
@@ -66,12 +66,15 @@ export const getAuth0User: any = createAsyncThunk(
         if (getUser && hasOrgId) {
           localStorage.removeItem('orgId');
         }
-        const getRoles = await getUserRoles() as any;
-        const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+
         if (getUser?.data?.refresh_token) {
+          console.log('[getAuth0User] refresh token', getUser?.data);
           const newUserPayload: any = await auth0CheckSession();
+          console.log('[newUserPayload ]', newUserPayload);
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
           setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -86,6 +89,8 @@ export const getAuth0User: any = createAsyncThunk(
         if (getUser.status === 204) {
           const expiresIn = getUserExpiresTime(getUserInfo?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
           setUserCookies(getUserInfo?.accessToken, expiresIn, getUserInfo?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
             isLoggedIn: true,

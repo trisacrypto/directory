@@ -31,7 +31,7 @@ const UserDetails: React.FC = () => {
             <Trans>Permissions</Trans>
           </Text>
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {user?.permissions.map((permission: string, index: string) => (
+            {user?.permissions?.map((permission: string, index: string) => (
               <Tag
                 key={index}
                 bg={'blue'}
