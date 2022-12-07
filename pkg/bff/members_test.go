@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
@@ -120,7 +121,7 @@ func (s *bffTestSuite) TestOverview() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 
 	// If all endpoints return an error, we should still return a response
@@ -290,7 +291,7 @@ func (s *bffTestSuite) TestMemberDetails() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid permissions for the rest of the tests
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 
 	// Test that both ID and directory must be set
