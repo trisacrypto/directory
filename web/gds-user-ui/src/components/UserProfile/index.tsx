@@ -52,19 +52,19 @@ function UserProfile() {
         <VStack w="100%" align="start" spacing={8}>
           <ProfileBlock title={<Trans>Login & Identity</Trans>}>
             <Stack direction="row" justifyContent="space-between" w="100%">
-              <VStack align="start">
-                <VStack align="start">
+              <VStack align="start" spacing={3}>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Email Address</Trans>
                   </Text>
-                  <Text>{user?.email}</Text>
-                </VStack>
-                <VStack align="start">
+                  <Text mt={'0 !important'}>{user?.email}</Text>
+                </div>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Account ID</Trans>
                   </Text>
-                  <Text>{user?.id}</Text>
-                </VStack>
+                  <Text mt={'0 !important'}>{user?.id}</Text>
+                </div>
               </VStack>
               <VStack>
                 <CkLazyLoadImage
@@ -78,7 +78,7 @@ function UserProfile() {
             <EditableInput
               label={
                 <FormLabel fontWeight={700}>
-                  <Trans>Fullname </Trans>
+                  <Trans>Full name</Trans>
                 </FormLabel>
               }
               isDisabled={true}
