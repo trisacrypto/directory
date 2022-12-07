@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/google/uuid"
@@ -200,8 +202,10 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	fmt.Println(org.ResolveName())
-	fmt.Println(auth.UserDisplayName(user))
+	username, _ := auth.UserDisplayName(user)
+	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
+		return cli.Exit("canceled at request of user", 0)
+	}
 	return nil
 }
 
@@ -218,6 +222,28 @@ func printJSON(msg interface{}) (err error) {
 	}
 	fmt.Println("")
 	return nil
+}
+
+func askForConfirmation(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not interpret response: %s", err)
+			os.Exit(1)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
 }
 
 func GetOrg(id string) (_ *models.Organization, err error) {
