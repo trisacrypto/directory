@@ -6,6 +6,29 @@ import (
 	"github.com/auth0/go-auth0/management"
 )
 
+// TODO: Should these be configurable?
+const (
+	// BFF Organization management
+	ReadOrganizations   = "read:organizations"
+	CreateOrganizations = "create:organizations"
+	SwitchOrganizations = "switch:organizations"
+
+	// Collaborators management
+	ReadCollaborators   = "read:collaborators"
+	UpdateCollaborators = "update:collaborators"
+
+	// GDS Registration management
+	ReadVASP   = "read:vasp"
+	UpdateVASP = "update:vasp"
+
+	// Posting announcements
+	CreateAnnouncements = "create:announcements"
+
+	// User roles
+	LeaderRole       = "Organization Leader"
+	CollaboratorRole = "Organization Collaborator"
+)
+
 // UserDisplayName is a helper to get the user's display name from the Auth0 user
 // record. This should be used when the backend needs to retrieve a user-facing display
 // name for the user and returns an error if no name is available.

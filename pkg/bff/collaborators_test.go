@@ -37,7 +37,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"update:collaborators"}
+	claims.Permissions = []string{auth.UpdateCollaborators}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
 	_, err = s.client.AddCollaborator(context.TODO(), &models.Collaborator{})
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -123,7 +123,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"read:collaborators"}
+	claims.Permissions = []string{auth.ReadCollaborators}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
 	_, err = s.client.ListCollaborators(context.TODO())
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -227,7 +227,7 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"update:collaborators"}
+	claims.Permissions = []string{auth.UpdateCollaborators}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
 	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), "invalid", &api.UpdateRolesParams{})
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -316,7 +316,7 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"update:collaborators"}
+	claims.Permissions = []string{auth.UpdateCollaborators}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid credentials")
 	err = s.client.DeleteCollaborator(context.TODO(), "invalid")
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
