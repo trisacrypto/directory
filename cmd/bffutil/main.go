@@ -204,7 +204,7 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	// Get the user appdata
+	// Get the user appdata, roles, and permissions
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
 		return cli.Exit(err, 1)
@@ -220,22 +220,66 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	var curOrg *models.Organization
-	if appdata.OrgID != "" {
-		if curOrg, err = GetOrg(appdata.OrgID); err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
-
-	// Give information about current state
-	// TODO: handle case where curOrg is nil.
-	username, _ := auth.UserDisplayName(user)
-	fmt.Printf("User is currently a member of %q with %s and switch organizations is %t\n", curOrg.ResolveName(), StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions))
-
 	// Ask if we should proceed
+	username, _ := auth.UserDisplayName(user)
+	fmt.Printf("User %s (%s, switch_organizations=%t) has appdata.OrgID %q\n", username, StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions), appdata.OrgID)
 	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
 		return cli.Exit("canceled at request of user", 0)
 	}
+
+	// Add the user to the new organization
+	collaborator := &models.Collaborator{
+		Email:    *user.Email,
+		UserId:   *user.ID,
+		Verified: *user.EmailVerified,
+	}
+
+	if err = org.AddCollaborator(collaborator); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = db.UpdateOrganization(org); err != nil {
+		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
+	}
+
+	if HasPermission(auth.SwitchOrganizations, permissions) {
+		// If the user has the switch organizations permission then we just add them to
+		// the new organization but do not remove them from the old organization
+		appdata.AddOrganization(org.Id)
+	} else {
+		// If the user does not have the switch organizations permission, remove them
+		// from their current organization and add them to the new organization.
+		if appdata.OrgID != "" {
+			var curOrg *models.Organization
+			if curOrg, err = GetOrg(appdata.OrgID); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			curOrg.DeleteCollaborator(*user.Email)
+
+			if len(curOrg.Collaborators) == 0 {
+				// If there are no more collaborators in the current org, delete it.
+				if err = db.DeleteOrganization(curOrg.UUID()); err != nil {
+					return cli.Exit(fmt.Errorf("could not delete user's current organization: %w", err), 1)
+				}
+			} else {
+				if err = db.UpdateOrganization(curOrg); err != nil {
+					return cli.Exit(fmt.Errorf("could not update user's current organization: %w", err), 1)
+				}
+			}
+		}
+	}
+
+	// Update user's app metadata to reflect the user's currently selected organization.
+	appdata.UpdateOrganization(org)
+	if user.AppMetadata, err = appdata.Dump(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = auth0.User.Update(*user.ID, user); err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	return nil
 }
 
