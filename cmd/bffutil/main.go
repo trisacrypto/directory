@@ -272,14 +272,9 @@ func addCollab(c *cli.Context) (err error) {
 
 	// Update user's app metadata to reflect the user's currently selected organization.
 	appdata.UpdateOrganization(org)
-	if user.AppMetadata, err = appdata.Dump(); err != nil {
+	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
-
-	if err = auth0.User.Update(*user.ID, user); err != nil {
-		return cli.Exit(err, 1)
-	}
-
 	return nil
 }
 
@@ -366,4 +361,17 @@ func HasPermission(perm string, permissions *management.PermissionList) bool {
 		}
 	}
 	return false
+}
+
+func SaveAppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+	// Create a blank user with no data but the app data
+	user := &management.User{}
+	if user.AppMetadata, err = appdata.Dump(); err != nil {
+		return err
+	}
+
+	if err = auth0.User.Update(uid, user); err != nil {
+		return err
+	}
+	return nil
 }
