@@ -13,10 +13,10 @@ export const auth0SignIn = (options: auth0.CrossOriginLoginOptions) => {
   return new Promise((resolve, reject) => {
     authWeb.login(options, (err: any, authResult: any) => {
       if (err) {
-        console.error('error', err);
+        // console.error('error', err);
         reject(err);
       } else {
-        console.log('authResult', authResult);
+        // console.log('authResult', authResult);
         resolve(authResult);
       }
     });
