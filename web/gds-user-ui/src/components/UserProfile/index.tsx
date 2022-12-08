@@ -65,14 +65,19 @@ function UserProfile() {
                   </Text>
                   <Text mt={'0 !important'}>{user?.id}</Text>
                 </div>
+                <div>
+                  <Text fontWeight={700}>
+                    <Trans>Provider</Trans>
+                  </Text>
+                  <Text mt={'0 !important'}>{user?.authType}</Text>
+                </div>
               </VStack>
               <Stack>
                 <CkLazyLoadImage
                   borderRadius="50%"
                   src={user?.pictureUrl || UserProfileIcon}
                   mx="auto"
-                  w="100px"
-                  h="100px"
+                  h="150px"
                 />
               </Stack>
             </Stack>

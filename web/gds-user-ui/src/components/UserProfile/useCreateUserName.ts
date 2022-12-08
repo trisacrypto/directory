@@ -3,7 +3,15 @@ import { useMutation } from '@tanstack/react-query';
 import { queryStrings } from 'utils/react-query';
 import { updateUserFullName } from 'application/api/user';
 
-export default function UseCreateFullName() {
+type UpdateNameMutation = {
+    updateName: (name: string) => void;
+    isUpdating: boolean;
+    hasUpdateFailed: boolean;
+    errorMessage?: any;
+    wasUpdated: boolean;
+};
+
+export function useCreateFullName(): UpdateNameMutation {
     const mutation = useMutation([queryStrings.updateNameKey], updateUserFullName, {
         onError: (error) => {
             console.log('success', error);

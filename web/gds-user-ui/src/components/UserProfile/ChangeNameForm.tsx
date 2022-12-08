@@ -1,11 +1,14 @@
-import { Button, FormLabel, VStack } from '@chakra-ui/react';
-import { FC } from 'react';
+import { Button, FormLabel, VStack, useToast } from '@chakra-ui/react';
+import { FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import InputFormControl from 'components/ui/InputFormControl';
 import { Trans } from '@lingui/macro';
 import * as yup from 'yup';
-// import useCreateUserName  from 'hooks/useCreateUserName';
+import { useCreateFullName } from './useCreateUserName';
+import { setUserName, userSelector } from 'modules/auth/login/user.slice';
+
+import { useSelector } from 'react-redux';
 type Props = {
   onCloseModal: () => void;
 };
@@ -16,7 +19,11 @@ type TName = {
 };
 
 const ChangeNameForm: FC<Props> = (props) => {
+  const toast = useToast();
+  const { user } = useSelector(userSelector);
   const { onCloseModal } = props;
+  const { updateName, isUpdating, wasUpdated, hasUpdateFailed } = useCreateFullName();
+  const [userFullName, setUserFullName] = useState<string>('');
 
   const {
     handleSubmit,
@@ -33,13 +40,46 @@ const ChangeNameForm: FC<Props> = (props) => {
   });
 
   const onSubmit = (data: TName) => {
-    console.log('submit', data);
+    const fullname = `${data.first_name} ${data.last_name}`;
+    updateName(fullname);
+    setUserFullName(fullname);
   };
+
+  useEffect(() => {
+    if (wasUpdated) {
+      setUserName(userFullName);
+      onCloseModal();
+    }
+  }, [wasUpdated, onCloseModal, userFullName]);
+
+  useEffect(() => {
+    if (hasUpdateFailed) {
+      onCloseModal();
+      toast({
+        position: 'top-right',
+        title: 'Failed to update name',
+        isClosable: true,
+        status: 'error',
+        duration: 9000
+      });
+    }
+  }, [hasUpdateFailed, onCloseModal, toast]);
 
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack align="start">
+          <InputFormControl
+            label={
+              <FormLabel fontWeight={700}>
+                <Trans>Current Name</Trans>
+              </FormLabel>
+            }
+            value={user?.name}
+            isDisabled
+            data-testid="current_name"
+            controlId="current_name"
+          />
           <InputFormControl
             label={
               <FormLabel fontWeight={700}>
@@ -67,10 +107,16 @@ const ChangeNameForm: FC<Props> = (props) => {
         </VStack>
 
         <VStack display="flex" flexDir="column" rowGap={2}>
-          <Button bg="orange" _hover={{ bg: 'orange' }} minW="150px" type="submit">
+          <Button
+            bg="orange"
+            _hover={{ bg: 'orange' }}
+            minW="150px"
+            type="submit"
+            isLoading={isUpdating}
+            disabled={isUpdating}>
             Save
           </Button>
-          <Button variant="ghost" onClick={onCloseModal}>
+          <Button variant="ghost" onClick={onCloseModal} isDisabled={isUpdating}>
             Cancel
           </Button>
         </VStack>
