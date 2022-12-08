@@ -192,17 +192,47 @@ func detailOrgs(c *cli.Context) (err error) {
 }
 
 func addCollab(c *cli.Context) (err error) {
+	// Collect the organization from the database
 	var org *models.Organization
 	if org, err = GetOrg(c.String("org")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
+	// Fetch the user from auth0.
 	var user *management.User
 	if user, err = auth0.User.Read(c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
+	// Get the user appdata
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var roles *management.RoleList
+	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var permissions *management.PermissionList
+	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var curOrg *models.Organization
+	if appdata.OrgID != "" {
+		if curOrg, err = GetOrg(appdata.OrgID); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	// Give information about current state
+	// TODO: handle case where curOrg is nil.
 	username, _ := auth.UserDisplayName(user)
+	fmt.Printf("User is currently a member of %q with %s and switch organizations is %t\n", curOrg.ResolveName(), StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions))
+
+	// Ask if we should proceed
 	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
 		return cli.Exit("canceled at request of user", 0)
 	}
@@ -268,4 +298,28 @@ func Before(funcs ...cli.BeforeFunc) cli.BeforeFunc {
 		}
 		return nil
 	}
+}
+
+func StringifyRoles(roles *management.RoleList) string {
+	switch roles.Total {
+	case 0:
+		return "no roles"
+	case 1:
+		return fmt.Sprintf("role %s", roles.Roles[0].GetName())
+	default:
+		names := make([]string, 0, roles.Total)
+		for _, role := range roles.Roles {
+			names = append(names, role.GetName())
+		}
+		return fmt.Sprintf("roles %s", strings.Join(names, ", "))
+	}
+}
+
+func HasPermission(perm string, permissions *management.PermissionList) bool {
+	for _, permission := range permissions.Permissions {
+		if permission.GetName() == perm {
+			return true
+		}
+	}
+	return false
 }
