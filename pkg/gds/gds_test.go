@@ -211,44 +211,73 @@ func (s *gdsTestSuite) TestLookup() {
 	require := s.Require()
 	ctx := context.Background()
 
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
-	require.NoError(err)
-
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect(ctx))
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	// Supplied VASP ID does not exist
-	request := &api.LookupRequest{
-		Id: "abc12345-41aa-11ec-9d29-acde48001122",
-	}
-	_, err = client.Lookup(ctx, request)
-	require.Error(err)
+	s.Run("IDNotFound", func() {
+		// Supplied VASP ID does not exist
+		require := s.Require()
+		request := &api.LookupRequest{
+			Id: "abc12345-41aa-11ec-9d29-acde48001122",
+		}
+		_, err := client.Lookup(ctx, request)
+		require.EqualError(err, "rpc error: code = NotFound desc = could not find VASP by ID")
+	})
 
-	expected := &api.LookupReply{
-		Id:                  charlieVASP.Id,
-		RegisteredDirectory: charlieVASP.RegisteredDirectory,
-		CommonName:          charlieVASP.CommonName,
-		Endpoint:            charlieVASP.TrisaEndpoint,
-		IdentityCertificate: charlieVASP.IdentityCertificate,
-		Country:             charlieVASP.Entity.CountryOfRegistration,
-		VerifiedOn:          charlieVASP.VerifiedOn,
-		Name:                "CharlieBank",
-	}
+	s.Run("CommonNameNotFound", func() {
+		// Supplied Common Name does not exist
+		require := s.Require()
+		request := &api.LookupRequest{
+			CommonName: "invalid.name",
+		}
+		_, err := client.Lookup(ctx, request)
+		require.EqualError(err, "rpc error: code = NotFound desc = could not find VASP by common name")
+	})
 
-	// VASP exists in the database
-	request.Id = charlieVASP.Id
-	reply, err := client.Lookup(ctx, request)
-	require.NoError(err)
-	require.True(proto.Equal(expected, reply))
-	// TODO: Check that a signing certificate is returned
+	s.Run("VerifiedRequired", func() {
+		// The VASP must be verified or it is not found
+		require := s.Require()
+		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		require.NoError(err)
+		require.NotEqual(charlieVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to not be in verified state")
 
-	// Supplied Common Name does not exist
-	request.Id = ""
-	request.CommonName = "invalid.name"
-	_, err = client.Lookup(ctx, request)
-	require.Error(err)
+		request := &api.LookupRequest{
+			Id: charlieVASP.Id,
+		}
+		_, err = client.Lookup(ctx, request)
+		require.EqualError(err, "rpc error: code = NotFound desc = no VASP record available")
+	})
+
+	s.Run("Found", func() {
+		// Expect lookup to succeed
+		require := s.Require()
+		hotelVASP, err := s.fixtures.GetVASP("hotel")
+		require.NoError(err)
+		require.Equal(hotelVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
+
+		expected := &api.LookupReply{
+			Id:                  hotelVASP.Id,
+			RegisteredDirectory: hotelVASP.RegisteredDirectory,
+			CommonName:          hotelVASP.CommonName,
+			Endpoint:            hotelVASP.TrisaEndpoint,
+			SigningCertificate:  hotelVASP.SigningCertificates[len(hotelVASP.SigningCertificates)-1],
+			IdentityCertificate: hotelVASP.IdentityCertificate,
+			Country:             hotelVASP.Entity.CountryOfRegistration,
+			VerifiedOn:          hotelVASP.VerifiedOn,
+			Name:                "Hotel Corp",
+		}
+
+		// VASP exists in the database
+		request := &api.LookupRequest{
+			Id: hotelVASP.Id,
+		}
+		reply, err := client.Lookup(ctx, request)
+		require.NoError(err)
+		require.Equal(expected.Name, reply.Name)
+		require.True(proto.Equal(expected, reply))
+	})
 }
 
 // TestSearch tests that the Search RPC returns the correct search results.
@@ -264,118 +293,175 @@ func (s *gdsTestSuite) TestSearch() {
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	// No search criteria - should not return anything
-	request := &api.SearchRequest{}
-	reply, err := client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 0)
-
-	// Search by name
-	request.Name = []string{"CharlieBank"}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
+	// Collect some fixtures
 	charlieVASP, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
-	require.Equal(charlieVASP.Id, reply.Results[0].Id)
-	require.Equal(charlieVASP.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
-	require.Equal(charlieVASP.CommonName, reply.Results[0].CommonName)
-	require.Equal(charlieVASP.TrisaEndpoint, reply.Results[0].Endpoint)
+	require.NotEqual(charlieVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to not be in verified state")
 
-	// Fuzzy search by case-insensitive prefix
-	request.Name = []string{"NOV"}
-	reply, err = client.Search(ctx, request)
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
-	bobVASP, err := s.fixtures.GetVASP("novembercash")
-	require.NoError(err)
-	require.Equal(bobVASP.Id, reply.Results[0].Id)
+	require.Equal(hotelVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
 
-	// Prefix search must have at least three characters
-	request.Name = []string{"ch"}
-	reply, err = client.Search(ctx, request)
+	novemberVASP, err := s.fixtures.GetVASP("novembercash")
 	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 0)
+	require.Equal(novemberVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
 
-	// Multiple results
-	request.Name = []string{"CharlieBank", "Delta Assets"}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 2)
+	s.Run("Empty", func() {
+		// No search criteria - should not return anything
+		require := s.Require()
+		request := &api.SearchRequest{}
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 0)
+	})
 
-	// Search by website
-	request = &api.SearchRequest{
-		Website: []string{"https://trisa.charliebank.io"},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
+	s.Run("ByName", func() {
+		// Search by name
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name: []string{"Hotel Corp"},
+		}
 
-	// Filter by country
-	request = &api.SearchRequest{
-		Name:    []string{"CharlieBank"},
-		Country: []string{charlieVASP.Entity.CountryOfRegistration},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
 
-	// Filter by country - no results
-	request = &api.SearchRequest{
-		Name:    []string{"CharlieBank"},
-		Country: []string{"US"},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 0)
+		require.Equal(hotelVASP.Id, reply.Results[0].Id)
+		require.Equal(hotelVASP.RegisteredDirectory, reply.Results[0].RegisteredDirectory)
+		require.Equal(hotelVASP.CommonName, reply.Results[0].CommonName)
+		require.Equal(hotelVASP.TrisaEndpoint, reply.Results[0].Endpoint)
+	})
 
-	// Filter by category
-	request = &api.SearchRequest{
-		Name:             []string{"CharlieBank"},
-		BusinessCategory: []pb.BusinessCategory{charlieVASP.BusinessCategory},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
+	s.Run("Verified", func() {
+		// Only verified results are returned
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name: []string{"CharlieBank", "Hotel Corp"},
+		}
 
-	// Filter by business category - no results
-	request = &api.SearchRequest{
-		Name:             []string{"CharlieBank"},
-		BusinessCategory: []pb.BusinessCategory{pb.BusinessCategory_GOVERNMENT_ENTITY},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 0)
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+		require.Equal(hotelVASP.Id, reply.Results[0].Id)
+	})
 
-	// Filter by VASP category
-	request = &api.SearchRequest{
-		Name:         []string{"CharlieBank"},
-		VaspCategory: []string{"P2P"},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 1)
+	s.Run("FuzzyPrefix", func() {
+		// Fuzzy search by case-insensitive prefix
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name: []string{"NOV"},
+		}
 
-	// Filter by VASP category - no results
-	request = &api.SearchRequest{
-		Name:         []string{"CharlieBank"},
-		VaspCategory: []string{"Project"},
-	}
-	reply, err = client.Search(ctx, request)
-	require.NoError(err)
-	require.Empty(reply.Error)
-	require.Len(reply.Results, 0)
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+		require.Equal(novemberVASP.Id, reply.Results[0].Id)
+
+		// Prefix search must have at least three characters
+		request.Name = []string{"no"}
+		reply, err = client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 0)
+	})
+
+	s.Run("MultipleResults", func() {
+		// Multiple results
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name: []string{"Hotel Corp", "November"},
+		}
+
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 2)
+	})
+
+	s.Run("Website", func() {
+		// Search by website
+		require := s.Require()
+		request := &api.SearchRequest{
+			Website: []string{"https://trisa.hotel.io"},
+		}
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+	})
+
+	s.Run("Country", func() {
+		// Filter by country
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name:    []string{"Hotel Corp"},
+			Country: []string{hotelVASP.Entity.CountryOfRegistration},
+		}
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+
+		// Filter by country - no results
+		request = &api.SearchRequest{
+			Name:    []string{"Hotel Corp"},
+			Country: []string{"GY"},
+		}
+		reply, err = client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 0)
+	})
+
+	s.Run("Category", func() {
+		// Filter by category
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name:             []string{"Hotel Corp"},
+			BusinessCategory: []pb.BusinessCategory{hotelVASP.BusinessCategory},
+		}
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+
+		// Filter by business category - no results
+		request = &api.SearchRequest{
+			Name:             []string{"Hotel Corp"},
+			BusinessCategory: []pb.BusinessCategory{pb.BusinessCategory_GOVERNMENT_ENTITY},
+		}
+		reply, err = client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 0)
+	})
+
+	s.Run("VASPCategory", func() {
+		// Filter by VASP category
+		require := s.Require()
+		request := &api.SearchRequest{
+			Name:         []string{"Hotel Corp"},
+			VaspCategory: []string{"Mixer"},
+		}
+		reply, err := client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 1)
+
+		// Filter by VASP category - no results
+		request = &api.SearchRequest{
+			Name:         []string{"Hotel Corp"},
+			VaspCategory: []string{"Project"},
+		}
+		reply, err = client.Search(ctx, request)
+		require.NoError(err)
+		require.Empty(reply.Error)
+		require.Len(reply.Results, 0)
+	})
 }
 
 // TestVerifyContact tests that the VerifyContact RPC correctly verifies the VASP
