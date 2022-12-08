@@ -13,7 +13,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
       <SidebarContent
         onClose={() => onClose}
-        display={{ base: 'none', md: 'block' }}
+        display={{ base: 'none', md: 'flex' }}
+        flexDirection={{ md: 'column' }}
         bg="#000000"
       />
       <Drawer
@@ -25,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         onOverlayClick={onClose}
         size="full">
         <DrawerContent>
-          <SidebarContent onClose={onClose} />
+          <SidebarContent bg="#000000" onClose={onClose} />
         </DrawerContent>
       </Drawer>
       <MobileNav onOpen={onOpen} />
