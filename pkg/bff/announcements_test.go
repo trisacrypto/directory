@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/bff"
+	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
@@ -42,7 +43,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 
 	// Should be able to return empty results even when nothing is in the database
@@ -125,7 +126,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
-	claims.Permissions = []string{"create:announcements"}
+	claims.Permissions = []string{auth.CreateAnnouncements}
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 
 	// Should be able to make an announcement
