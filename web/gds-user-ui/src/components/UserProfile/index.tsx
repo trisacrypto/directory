@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
 import UserDetails from './UserDetails';
 import { UserProfilePassword } from './UserProfilePassword';
-
+import { isSocialLogin } from 'utils/auth';
 export const ProfileBlock = ({ title, children }: { title: ReactNode; children: ReactNode }) => {
   return (
     <VStack align="start" w="100%" spacing={5}>
@@ -42,7 +42,6 @@ const EditableInput = (props: _FormControlProps) => {
 
 function UserProfile() {
   const { user } = useSelector(userSelector);
-  const isSocialConnection = () => user?.authType !== 'auth0';
   return (
     <>
       <Heading size="lg" mb={5}>
@@ -94,7 +93,7 @@ function UserProfile() {
             />
           </ProfileBlock>
 
-          {!isSocialConnection() && <UserProfilePassword />}
+          {!isSocialLogin() && <UserProfilePassword />}
 
           <UserDetails />
         </VStack>

@@ -149,7 +149,7 @@ export const setUserPayload = (userTokenPayload: any, data: Partial<IUserState>)
     roles,
     role: userTokenPayload[AUTH0_NAMESPACES.ROLE],
     lastLogin: dayjs(userTokenPayload[AUTH0_NAMESPACES.LAST_LOGIN]).format('MMM D, YYYY HH:mm:ss'),
-    createAt: dayjs(userTokenPayload[AUTH0_NAMESPACES.CREATED_AT]).format('YYYY-MM-DD HH:mm:ss'),
+    createAt: dayjs(userTokenPayload[AUTH0_NAMESPACES.CREATED_AT]).format('MMM D, YYYY HH:mm:ss'),
     vasp,
     authType: sub.split('|')[0]
   };
