@@ -33,6 +33,8 @@ type Config struct {
 	LogLevel     logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog   bool                `split_words:"true" default:"false"`
 	AllowOrigins []string            `split_words:"true" default:"http://localhost,http://localhost:3000,http://localhost:3003"`
+	RegisterURL  string              `split_words:"true" required:"true"` // Trailing slash is not allowed
+	LoginURL     string              `split_words:"true" required:"true"` // Trailing slash is not allowed
 	CookieDomain string              `split_words:"true"`
 	ServeDocs    bool                `split_words:"true" default:"false"`
 	Auth0        AuthConfig
@@ -46,15 +48,13 @@ type Config struct {
 
 // AuthConfig handles Auth0 configuration and authentication
 type AuthConfig struct {
-	Domain         string        `split_words:"true" required:"true"`
-	Issuer         string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
-	Audience       string        `split_words:"true" required:"true"`
-	ConnectionName string        `split_words:"true" required:"true"`
-	RedirectURL    string        `split_words:"true" required:"true"`
-	ProviderCache  time.Duration `split_words:"true" default:"5m"`
-	ClientID       string        `split_words:"true"`
-	ClientSecret   string        `split_words:"true"`
-	Testing        bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
+	Domain        string        `split_words:"true" required:"true"`
+	Issuer        string        `split_words:"true" required:"false"` // Set to the custom domain if enabled in Auth0 (ensure trailing slash is set if required!)
+	Audience      string        `split_words:"true" required:"true"`
+	ProviderCache time.Duration `split_words:"true" default:"5m"`
+	ClientID      string        `split_words:"true"`
+	ClientSecret  string        `split_words:"true"`
+	Testing       bool          `split_words:"true" default:"false"` // If true a mock authenticator is used for testing
 }
 
 // NetworkConfig contains sub configurations for connecting to specific GDS and members
@@ -127,6 +127,14 @@ func (c Config) Mark() (Config, error) {
 
 // Validate the config to make sure that it is usable to run the GDS BFF server.
 func (c Config) Validate() (err error) {
+	if err = validateURL(c.LoginURL); err != nil {
+		return fmt.Errorf("invalid configuration: invalid login url: %w", err)
+	}
+
+	if err = validateURL(c.RegisterURL); err != nil {
+		return fmt.Errorf("invalid configuration: invalid register url: %w", err)
+	}
+
 	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
 		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
 	}
@@ -169,15 +177,7 @@ func (c MembersConfig) Validate() error {
 }
 
 func (c AuthConfig) Validate() error {
-	if c.ConnectionName == "" {
-		return errors.New("invalid configuration: auth0 connection name is required")
-	}
-
 	if _, err := c.IssuerURL(); err != nil {
-		return err
-	}
-
-	if err := c.Redirect(); err != nil {
 		return err
 	}
 
@@ -222,23 +222,6 @@ func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
 		return nil, errors.New("invalid configuration: specify auth0 domain of the configured tenant")
 	}
 	return u, nil
-}
-
-func (c AuthConfig) Redirect() (err error) {
-	if c.RedirectURL == "" {
-		return errors.New("invalid configuration: auth0 redirect url must be configured")
-	}
-
-	// URL should not have a trailing slash
-	if strings.HasSuffix(c.RedirectURL, "/") {
-		return errors.New("invalid configuration: auth0 redirect url must not have a trailing slash")
-	}
-
-	if _, err = url.Parse(c.RedirectURL); err != nil {
-		return errors.New("invalid configuration: auth0 redirect url must be a valid url")
-	}
-
-	return nil
 }
 
 func (c AuthConfig) ClientCredentials() management.Option {
@@ -292,5 +275,22 @@ func (c EmailConfig) Validate() error {
 			return errors.New("invalid configuration: email archiving is only supported in testing mode")
 		}
 	}
+	return nil
+}
+
+func validateURL(path string) (err error) {
+	if path == "" {
+		return errors.New("url is empty")
+	}
+
+	// URL should not have a trailing slash
+	if strings.HasSuffix(path, "/") {
+		return errors.New("url must not have a trailing slash")
+	}
+
+	if _, err = url.Parse(path); err != nil {
+		return errors.New("url is not parseable")
+	}
+
 	return nil
 }

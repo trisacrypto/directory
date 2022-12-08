@@ -21,9 +21,7 @@ import { FiMail } from 'react-icons/fi';
 import EditCollaboratorModal from './EditCollaborator/EditCollaboratorModal';
 import DeleteCollaboratorModal from './DeleteCollaborator/DeleteCollaboratorModal';
 import AddCollaboratorModal from 'components/Collaborators/AddCollaborator';
-// import { getCollaborators, setCollaborators } from 'application/store/selectors/collaborator';
 import { useFetchCollaborators } from './useFetchCollaborator';
-// import { useDispatch } from 'react-redux';
 import type { Collaborator } from './CollaboratorType';
 import { formatIsoDate } from 'utils/formate-date';
 import { sortCollaboratorsByRecentDate } from './lib';
@@ -32,36 +30,6 @@ import { useFetchUserRoles } from 'hooks/useFetchUserRoles';
 import { COLLABORATOR_STATUS } from 'types/enums';
 import { canInviteCollaborator } from 'utils/permission';
 import { isDate } from 'utils/date';
-// const rows: any[] = [
-//   {
-//     id: '18002',
-//     username: 'Jones Ferdinand',
-//     email: 'jones.ferdinand@gmail.com',
-//     role: 'Admin',
-//     joined: '14/01/2022',
-//     status: 'Completed',
-//     verified_at: '14/01/2022',
-//     organization: 'Cypertrace, Inc'
-//   },
-//   {
-//     id: '18003',
-//     username: 'Eason Yang',
-//     email: 'eason.yang@gmail.com',
-//     role: 'Member',
-//     joined: '14/01/2022',
-//     status: 'Completed',
-//     organization: 'VASPnet, LLC'
-//   },
-//   {
-//     id: '18001',
-//     username: 'Anusha Aggarwal',
-//     email: 'anusha.aggarwal@gmail.com',
-//     role: 'Member',
-//     joined: '14/01/2022',
-//     status: 'Pending',
-//     organization: 'VASPnet, LLC'
-//   }
-// ];
 
 const getStatus = (joinedAt: any): any => {
   console.log('joinedAt', joinedAt);
@@ -81,55 +49,44 @@ const getStatusBgColor = (joinedAt: string) => {
   }
 };
 
-const RowItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <Tr>{children}</Tr>;
-};
-
 const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
   const { roles: userRoles } = useFetchUserRoles();
   return (
-    <>
-      <RowItem>
-        <>
-          <Td display="flex" flexDir="column">
-            <chakra.span display="block" textTransform="capitalize">
-              {row?.name}
-            </chakra.span>
-            <chakra.span display="block" fontSize="sm" color="gray.700">
-              {row?.email}
-            </chakra.span>
-          </Td>
-          <Td textTransform="capitalize">{row?.roles}</Td>
-          <Td textTransform="capitalize">
-            <Tag bg={getStatusBgColor(row?.joined_at as any)} color={'white'} size={'md'}>
-              {getStatus(row?.joined_at)}
-            </Tag>
-          </Td>
-          <Td>{formatIsoDate(row?.created_at)}</Td>
-          <Td>{formatIsoDate(row?.joined_at)}</Td>
-          {/* <Td textTransform="capitalize">{row?.organization}</Td> */}
-          <Td paddingY={0}>
-            <HStack width="100%" justifyContent="center" alignItems="center" spacing={2}>
-              <Button
-                color="blue"
-                as={'a'}
-                href={`mailto:${row?.email}`}
-                bg={'transparent'}
-                _hover={{
-                  bg: 'transparent'
-                }}
-                _focus={{
-                  bg: 'transparent'
-                }}>
-                <FiMail fontSize="24px" />
-              </Button>
-              <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
-              <DeleteCollaboratorModal collaboratorId={row?.id} />
-            </HStack>
-          </Td>
-        </>
-      </RowItem>
-    </>
+    <Tr>
+      <Td>
+        <chakra.span display="block">{row?.name}</chakra.span>
+        <chakra.span display="block" fontSize="sm" color="gray.700">
+          {row?.email}
+        </chakra.span>
+      </Td>
+      <Td>{row?.roles}</Td>
+      <Td>
+        <Tag bg={getStatusBgColor(row?.joined_at as any)} color={'white'} size={'md'}>
+          {getStatus(row?.joined_at)}
+        </Tag>
+      </Td>
+      <Td>{formatIsoDate(row?.created_at)}</Td>
+      <Td>{formatIsoDate(row?.joined_at)}</Td>
+      <Td paddingY={0}>
+        <HStack width="100%" justifyContent="center" alignItems="center">
+          <Button
+            color="blue"
+            as={'a'}
+            href={`mailto:${row?.email}`}
+            bg={'transparent'}
+            _hover={{
+              bg: 'transparent'
+            }}
+            _focus={{
+              bg: 'transparent'
+            }}>
+            <FiMail fontSize="24px" />
+          </Button>
+          <EditCollaboratorModal collaboratorId={row?.id} roles={userRoles?.data} />
+          <DeleteCollaboratorModal collaboratorId={row?.id} />
+        </HStack>
+      </Td>
+    </Tr>
   );
 };
 
@@ -173,7 +130,7 @@ const CollaboratorsSection: React.FC = () => {
           <Tooltip
             label={t`you do not have permission to invite a collaborator`}
             isDisabled={canInviteCollaborator()}>
-            <Button minW="170px" onClick={modalHandler} isDisabled={true}>
+            <Button minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>
@@ -190,7 +147,7 @@ const CollaboratorsSection: React.FC = () => {
         <Thead>
           <Tr>
             <Th>
-              <Trans>Contact Detail</Trans>
+              <Trans>Contact Details</Trans>
             </Th>
             <Th>
               <Trans>Role</Trans>
@@ -204,9 +161,6 @@ const CollaboratorsSection: React.FC = () => {
             <Th>
               <Trans>Joined</Trans>
             </Th>
-            {/* <Th>
-              <Trans>Organization</Trans>
-            </Th> */}
             <Th textAlign="center">
               <Trans>Actions</Trans>
             </Th>

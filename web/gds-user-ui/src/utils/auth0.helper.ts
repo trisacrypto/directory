@@ -2,6 +2,8 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import jwt_decode from 'jwt-decode';
 import { setCookie } from 'utils/cookies';
+import { AUTH0_NAMESPACES } from 'utils/constants';
+import dayjs from "dayjs";
 // initialize auth0
 const auth0Config = getAuth0Config();
 const authWeb = new auth0.WebAuth(auth0Config);
@@ -132,6 +134,25 @@ export const refreshNewToken = async () => {
     setCookie('access_token', user?.accessToken);
     return !!user?.accessToken;
   }
+};
+
+export const setUserPayload = (userTokenPayload: any, data: Partial<IUserState>) => {
+  const { email, name, picture, sub, permissions } = userTokenPayload;
+  const { vasp, roles } = data;
+  return {
+    email,
+    name,
+    pictureUrl: picture,
+    id: sub.split('|')[1],
+    permissions,
+    roles,
+    role: userTokenPayload[AUTH0_NAMESPACES.ROLE],
+    lastLogin: dayjs(userTokenPayload[AUTH0_NAMESPACES.LAST_LOGIN]).format('MMM D, YYYY HH:mm:ss'),
+    createAt: dayjs(userTokenPayload[AUTH0_NAMESPACES.CREATED_AT]).format('YYYY-MM-DD HH:mm:ss'),
+    vasp,
+    authType: sub.split('|')[0]
+
+  };
 };
 
 

@@ -15,6 +15,9 @@ const Table: ComponentStyleConfig = {
         textTransform: 'capitalize',
         fontWeight: 700,
         fontSize: 'sm'
+      },
+      td: {
+        fontSize: 14
       }
     }
   },

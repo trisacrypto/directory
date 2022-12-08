@@ -278,6 +278,25 @@ func (s *APIv2) ReviewTimeline(ctx context.Context, in *ReviewTimelineParams) (o
 	return out, nil
 }
 
+func (s *APIv2) ListCountries(ctx context.Context) (out []*CountryRecord, err error) {
+	// Must be authenticated
+	if err = s.checkAuthentication(ctx); err != nil {
+		return nil, err
+	}
+
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v2/countries", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	if _, err = s.Do(req, &out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s *APIv2) ListVASPs(ctx context.Context, in *ListVASPsParams) (out *ListVASPsReply, err error) {
 	// Create the query params from the input
 	var params url.Values

@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
 import UserDetails from './UserDetails';
 import { UserProfilePassword } from './UserProfilePassword';
+
 export const ProfileBlock = ({ title, children }: { title: ReactNode; children: ReactNode }) => {
   return (
     <VStack align="start" w="100%" spacing={5}>
@@ -51,19 +52,19 @@ function UserProfile() {
         <VStack w="100%" align="start" spacing={8}>
           <ProfileBlock title={<Trans>Login & Identity</Trans>}>
             <Stack direction="row" justifyContent="space-between" w="100%">
-              <VStack align="start">
-                <VStack align="start">
+              <VStack align="start" spacing={3}>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Email Address</Trans>
                   </Text>
-                  <Text>{user?.email}</Text>
-                </VStack>
-                <VStack align="start">
+                  <Text mt={'0 !important'}>{user?.email}</Text>
+                </div>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Account ID</Trans>
                   </Text>
-                  <Text>{user?.id}</Text>
-                </VStack>
+                  <Text mt={'0 !important'}>{user?.id}</Text>
+                </div>
               </VStack>
               <VStack>
                 <CkLazyLoadImage
@@ -77,7 +78,7 @@ function UserProfile() {
             <EditableInput
               label={
                 <FormLabel fontWeight={700}>
-                  <Trans>Fullname </Trans>
+                  <Trans>Full name</Trans>
                 </FormLabel>
               }
               isDisabled={true}
@@ -89,34 +90,6 @@ function UserProfile() {
           {!isSocialConnection() && <UserProfilePassword />}
 
           <UserDetails />
-
-          {/* <ProfileBlock
-            title={
-              <>
-                <Trans>LINKED ACCOUNTS</Trans>
-                <AddLinkedAccountModal />
-              </>
-            }>
-            <Text>
-              <Trans>
-                If you have additional accounts with the TRISA Global Directory Service, you can
-                link them here. You will be required to log in to the linked account to verify
-                account ownership.
-              </Trans>
-            </Text>
-            <HStack w="100%">
-              <InputFormControl
-                label={
-                  <FormLabel fontWeight={700}>
-                    <Trans>Linked Account</Trans>
-                  </FormLabel>
-                }
-                controlId="linked_account"
-                placeholder="sdze"
-              />
-              <RemoveLinkedAccountModal />
-            </HStack>
-          </ProfileBlock> */}
         </VStack>
       </FormLayout>
     </>

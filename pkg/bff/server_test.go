@@ -68,6 +68,8 @@ func (s *bffTestSuite) SetupSuite() {
 		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
+		LoginURL:     "http://localhost/auth/login",
+		RegisterURL:  "http://localhost/auth/register",
 		Auth0:        s.auth.Config(),
 		TestNet: config.NetworkConfig{
 			Directory: config.DirectoryConfig{
