@@ -10,6 +10,7 @@ import {
 import CkLazyLoadImage from 'components/LazyImage';
 import EditIcon from 'assets/edit-input.svg';
 import ChangeNameForm from './ChangeNameForm';
+import { isSocialLogin } from 'utils/auth';
 
 function ChangeNameModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -22,6 +23,7 @@ function ChangeNameModal() {
         variant="unstyled"
         marginTop="32px!important"
         onClick={onOpen}
+        isDisabled={isSocialLogin()}
       />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />

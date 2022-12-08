@@ -3,7 +3,8 @@ import getAuth0Config from 'application/config/auth0';
 import jwt_decode from 'jwt-decode';
 import { setCookie } from 'utils/cookies';
 import { AUTH0_NAMESPACES } from 'utils/constants';
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
+
 // initialize auth0
 const auth0Config = getAuth0Config();
 const authWeb = new auth0.WebAuth(auth0Config);
@@ -151,8 +152,5 @@ export const setUserPayload = (userTokenPayload: any, data: Partial<IUserState>)
     createAt: dayjs(userTokenPayload[AUTH0_NAMESPACES.CREATED_AT]).format('YYYY-MM-DD HH:mm:ss'),
     vasp,
     authType: sub.split('|')[0]
-
   };
 };
-
-

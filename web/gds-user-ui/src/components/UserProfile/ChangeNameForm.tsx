@@ -7,8 +7,8 @@ import { Trans } from '@lingui/macro';
 import * as yup from 'yup';
 import { useCreateFullName } from './useCreateUserName';
 import { setUserName, userSelector } from 'modules/auth/login/user.slice';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { useSelector } from 'react-redux';
 type Props = {
   onCloseModal: () => void;
 };
@@ -20,6 +20,7 @@ type TName = {
 
 const ChangeNameForm: FC<Props> = (props) => {
   const toast = useToast();
+  const dispatch = useDispatch();
   const { user } = useSelector(userSelector);
   const { onCloseModal } = props;
   const { updateName, isUpdating, wasUpdated, hasUpdateFailed } = useCreateFullName();
@@ -42,15 +43,23 @@ const ChangeNameForm: FC<Props> = (props) => {
   const onSubmit = (data: TName) => {
     const fullname = `${data.first_name} ${data.last_name}`;
     updateName(fullname);
+
     setUserFullName(fullname);
   };
 
   useEffect(() => {
     if (wasUpdated) {
-      setUserName(userFullName);
+      dispatch(setUserName(userFullName));
       onCloseModal();
+      toast({
+        position: 'top-right',
+        title: 'Name updated successfully',
+        isClosable: true,
+        status: 'success',
+        duration: 9000
+      });
     }
-  }, [wasUpdated, onCloseModal, userFullName]);
+  }, [wasUpdated, onCloseModal, userFullName, toast, dispatch]);
 
   useEffect(() => {
     if (hasUpdateFailed) {
