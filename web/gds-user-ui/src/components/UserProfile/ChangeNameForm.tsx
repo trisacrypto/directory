@@ -121,6 +121,7 @@ const ChangeNameForm: FC<Props> = (props) => {
             _hover={{ bg: 'orange' }}
             minW="150px"
             type="submit"
+            data-testid="save_button"
             isLoading={isUpdating}
             disabled={isUpdating}>
             Save
