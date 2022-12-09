@@ -22,6 +22,7 @@ import { Fragment, useState } from 'react';
 import { Trans } from '@lingui/react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import ChakraRouterLink from 'components/ChakraRouterLink';
+import Version from 'components/Footer/Version';
 
 interface SidebarProps extends BoxProps {
   onClose: () => void;
@@ -132,6 +133,9 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             </Text>
           </StyledNavItem>
         </List>
+      </VStack>
+      <VStack width="100%" mt="auto">
+        <Version />
       </VStack>
     </Box>
   );

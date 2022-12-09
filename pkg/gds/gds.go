@@ -318,7 +318,12 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		return nil, status.Error(codes.InvalidArgument, "please supply ID and registered directory or common name for lookup")
 	}
 
-	// TODO: should lookups only return verified peers?
+	// Lookup should only return verified peers
+	if vasp.VerificationStatus != pb.VerificationState_VERIFIED {
+		return nil, status.Error(codes.NotFound, "no VASP record available")
+	}
+
+	// Prepare the response for the lookup
 	out = &api.LookupReply{
 		Id:                  vasp.Id,
 		RegisteredDirectory: vasp.RegisteredDirectory,
@@ -371,6 +376,11 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 		Results: make([]*api.SearchReply_Result, 0, len(vasps)),
 	}
 	for _, vasp := range vasps {
+		// Filter out any VASPs that are not verified
+		if vasp.VerificationStatus != pb.VerificationState_VERIFIED {
+			continue
+		}
+
 		out.Results = append(out.Results, &api.SearchReply_Result{
 			Id:                  vasp.Id,
 			RegisteredDirectory: vasp.RegisteredDirectory,
