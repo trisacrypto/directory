@@ -146,7 +146,10 @@ const userSlice: any = createSlice({
     },
     setUserOrganization: (state: any, { payload }: any) => {
       state.user.vasp = payload;
-    }
+    },
+    setUserName(state: any, { payload }: any) {
+      state.user.name = payload;
+    },
 
     // isloading: (state: any, { payload }: any) => {
   },
@@ -171,7 +174,7 @@ const userSlice: any = createSlice({
 });
 
 export const userReducer = userSlice.reducer;
-export const { login, logout, setUserOrganization } = userSlice.actions;
+export const { login, logout, setUserOrganization, setUserName } = userSlice.actions;
 // selectors
 export const userSelector = (state: any) => state.user;
 export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;
