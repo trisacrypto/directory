@@ -53,8 +53,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
     navigate('/');
   };
 
-  console.log('[] canCreateOrganization', canCreateOrganization());
-
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
