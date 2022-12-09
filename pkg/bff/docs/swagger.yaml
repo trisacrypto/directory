@@ -140,6 +140,8 @@ definitions:
         type: string
       id:
         type: string
+      last_login:
+        type: string
       name:
         type: string
       refresh_token:
@@ -255,6 +257,8 @@ definitions:
         description: Metadata as RFC3339Nano Timestamps
         type: string
       email:
+        type: string
+      expires_at:
         type: string
       id:
         description: Identifiers used by the BFF
@@ -786,6 +790,31 @@ paths:
       summary: Get the status of the BFF server
       tags:
       - status
+  /users:
+    patch:
+      consumes:
+      - application/json
+      description: Update the user's profile information in Auth0.
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Update the user's profile
+      tags:
+      - users
   /users/login:
     post:
       consumes:
@@ -814,6 +843,10 @@ paths:
             $ref: '#/definitions/api.Reply'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "403":
+          description: User invitation has expired
           schema:
             $ref: '#/definitions/api.Reply'
         "404":

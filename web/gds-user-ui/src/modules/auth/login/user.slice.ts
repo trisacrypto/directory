@@ -6,25 +6,10 @@ import {
   auth0SignUp,
   auth0SignWithSocial,
   auth0Hash,
-  auth0CheckSession
+  auth0CheckSession,
+  setUserPayload
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
-
-const setUserPayload = (userTokenPayload: any, data: Partial<IUserState>) => {
-  const { email, name, picture, sub, sid, permissions } = userTokenPayload;
-  const { vasp, roles } = data;
-  return {
-    email,
-    name,
-    pictureUrl: picture,
-    id: sid,
-    permissions,
-    roles,
-    vasp,
-    authType: sub.split('|')[0]
-
-  };
-};
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -76,10 +61,13 @@ export const getAuth0User: any = createAsyncThunk(
       // console.log('[getUserInfo]', getUserInfo);
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        const getUser = await logUserInBff();
+        const hasOrgId = localStorage.getItem('orgId') as any;
+        const getUser = await logUserInBff(hasOrgId ? { orgid: hasOrgId } : {}) as any;
+        if (getUser && hasOrgId) {
+          localStorage.removeItem('orgId');
+        }
         const getRoles = await getUserRoles() as any;
         const getUserOrgInfo: any = await getUserCurrentOrganizationService();
-        console.log('[userVASPInfo]', getUserOrgInfo);
         if (getUser?.data?.refresh_token) {
           const newUserPayload: any = await auth0CheckSession();
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);

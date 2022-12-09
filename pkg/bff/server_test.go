@@ -68,6 +68,8 @@ func (s *bffTestSuite) SetupSuite() {
 		ConsoleLog:   false,
 		AllowOrigins: []string{"http://localhost"},
 		CookieDomain: "localhost",
+		LoginURL:     "http://localhost/auth/login",
+		RegisterURL:  "http://localhost/auth/register",
 		Auth0:        s.auth.Config(),
 		TestNet: config.NetworkConfig{
 			Directory: config.DirectoryConfig{
@@ -106,11 +108,9 @@ func (s *bffTestSuite) SetupSuite() {
 			Testing:      true,
 		},
 		UserCache: config.CacheConfig{
-			Enabled:          false,
-			TTLMean:          1 * time.Minute,
-			TTLSigma:         10 * time.Second,
-			MaxEntries:       1000,
-			EvictionFraction: 0.1,
+			Enabled:    true,
+			Expiration: 1 * time.Minute,
+			Size:       100,
 		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")

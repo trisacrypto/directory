@@ -12,7 +12,7 @@ const StartPage: React.FC = () => {
   const { auth0SignIn, auth0SignWithSocial } = useCustomAuth0();
 
   const { loginUser } = useAuth();
-  const { q, error_description } = useSearchParams();
+  const { q, error_description, orgid } = useSearchParams();
   const toast = useCustomToast();
   useEffect(() => {
     // rend tost if q is not empty
@@ -35,8 +35,11 @@ const StartPage: React.FC = () => {
         description: message
       });
     }
+    if (orgid) {
+      localStorage.setItem('orgId', orgid);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, error_description]);
+  }, [q, error_description, orgid]);
 
   // clean cookies
 

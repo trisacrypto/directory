@@ -2,7 +2,6 @@ package bff
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -14,10 +13,9 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
-	"github.com/trisacrypto/directory/pkg/gds/secrets"
 )
 
-const MaxCollaborators = 50
+const orgIDParam = "orgid"
 
 // AddCollaborator creates a new collaborator with the email address in the request.
 // The endpoint adds the collaborator to the organization record associated with the
@@ -65,41 +63,31 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		return
 	}
 
-	// Make sure the collaborator is valid for storage
-	if err = collaborator.Validate(); err != nil {
-		log.Warn().Err(err).Msg("invalid collaborator in request")
-		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
-		return
-	}
-
-	// Limit the number of collaborators
-	if len(org.Collaborators) >= MaxCollaborators {
-		log.Warn().Int("current", len(org.Collaborators)).Int("maximum", MaxCollaborators).Msg("maximum number of collaborators reached")
-		c.JSON(http.StatusForbidden, api.ErrorResponse("maximum number of collaborators reached"))
-		return
-	}
-
-	// Don't overwrite an existing collaborator
-	id := collaborator.Key()
-	if _, ok := org.Collaborators[id]; ok {
-		log.Warn().Str("collabID", id).Msg("collaborator already exists")
-		c.JSON(http.StatusConflict, api.ErrorResponse("collaborator already exists"))
-		return
-	}
-
-	// Make sure the record has a created timestamp
-	if collaborator.CreatedAt == "" {
-		collaborator.CreatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-	}
+	// Collaborator invites are valid for seven days
+	collaborator.ExpiresAt = time.Now().AddDate(0, 0, 7).Format(time.RFC3339Nano)
 
 	// Add the collaborator to the organization
-	if org.Collaborators == nil {
-		org.Collaborators = make(map[string]*models.Collaborator)
+	if err = org.AddCollaborator(collaborator); err != nil {
+		switch {
+		case errors.Is(err, models.ErrInvalidCollaborator):
+			log.Warn().Err(err).Msg("invalid collaborator")
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		case errors.Is(err, models.ErrCollaboratorExists):
+			log.Warn().Err(err).Str("email", collaborator.Email).Msg("collaborator already exists")
+			c.JSON(http.StatusConflict, api.ErrorResponse(err))
+		case errors.Is(err, models.ErrMaxCollaborators):
+			log.Warn().Err(err).Int("maximum", models.MaxCollaborators).Msg("maximum number of collaborators reached")
+			c.JSON(http.StatusForbidden, api.ErrorResponse(err))
+		default:
+			log.Error().Err(err).Msg("could not add collaborator")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		}
+		return
 	}
-	org.Collaborators[id] = collaborator
 
-	// If the user doesn't exist in Auth0 then we need to create them
+	// Handle both users who have already registered and completely new users
 	var user *management.User
+	var baseURL string
 	if user, err = s.FindUserByEmail(collaborator.Email); err != nil {
 		if !errors.Is(err, ErrUserEmailNotFound) {
 			log.Error().Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
@@ -107,32 +95,28 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 			return
 		}
 
-		// Create an unverified user in Auth0
-		// Note: If the user has already registered with another IDP then they will need to link accounts
-		var verifyEmail bool
-		password := secrets.CreateToken(32)
+		// If the user doesn't exist in Auth0 then direct them to the signup page
+		baseURL = s.conf.RegisterURL
 		user = &management.User{
-			Email:       &collaborator.Email,
-			Password:    &password,
-			Connection:  &s.conf.Auth0.ConnectionName,
-			VerifyEmail: &verifyEmail,
+			Email: &collaborator.Email,
 		}
-		if err = s.auth0.User.Create(user); err != nil {
-			log.Error().Err(err).Str("email", collaborator.Email).Msg("error creating user in Auth0")
-			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
-			return
-		}
+	} else {
+		// If the user already exists then direct them to the login page
+		baseURL = s.conf.LoginURL
 	}
 
-	// Generate the user verification link containing a redirect URL with the org ID
+	// Include the organization ID in the invite URL
 	var inviteURL *url.URL
-	if inviteURL, err = s.GetAuth0UserInviteURL(user, org); err != nil {
-		log.Error().Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("error generating user invite URL")
+	if inviteURL, err = url.Parse(baseURL); err != nil {
+		log.Error().Err(err).Str("url", baseURL).Msg("could not parse invite URL")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
 		return
 	}
+	q := inviteURL.Query()
+	q.Set(orgIDParam, org.Id)
+	inviteURL.RawQuery = q.Encode()
 
-	// Send the verification email to the user
+	// Send the invite email to the user
 	if err = s.email.SendUserInvite(user, inviter, org, inviteURL); err != nil {
 		log.Error().Err(err).Str("email", *user.Email).Msg("error sending user invite email")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
@@ -178,7 +162,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 
 	for _, collab := range org.Collaborators {
 		if err = s.LoadCollaboratorDetails(collab); err != nil {
-			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details from Auth0")
+			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details")
 		}
 
 		// Enforce consistent ordering by email address
@@ -366,7 +350,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 }
 
 // LoadCollaboratorDetails updates a collaborator record with the user details in
-// Auth0. The collaborator must have an user ID on it and the data in Auth0 will
+// Auth0. The collaborator must have a user ID on it and the data in Auth0 will
 // overwrite the data on the collaborator record.
 func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
 	// If the user is not verified in Auth0 then we can't retrieve the details
@@ -379,9 +363,9 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 		return errors.New("collaborator does not have a user ID")
 	}
 
-	// Fetch the user details from Auth0
-	var profile *auth.UserDetails
-	if profile, err = s.users.Get(collab.UserId); err != nil {
+	// Fetch the user profile from Auth0
+	var profile *auth.UserProfile
+	if profile, err = s.FetchUserProfile(collab.UserId); err != nil {
 		return err
 	}
 
@@ -392,48 +376,38 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 	return nil
 }
 
-// GetAuth0UserInviteURL generates a user ticket in Auth0 to invite the user to the
-// organization and returns the ticket URL. Depending on the current state of the user,
-// this will either be a password change ticket or an email verification ticket. The
-// caller is responsible for sending the user the ticket URL, which is usually done by
-// including it in the user invite email.
-func (s *Server) GetAuth0UserInviteURL(user *management.User, org *models.Organization) (inviteURL *url.URL, err error) {
-	// Ticket should include the redirect to the auth callback and should expire in 7 days
-	redirectURL := fmt.Sprintf("%s?orgid=%s", s.conf.Auth0.RedirectURL, org.Id)
-	expiration := int((time.Hour * 24 * 7).Seconds())
-	ticket := &management.Ticket{
-		UserID:    user.ID,
-		ResultURL: &redirectURL,
-		TTLSec:    &expiration,
-	}
-
-	if user.EmailVerified != nil && *user.EmailVerified {
-		// If the user is already verified they don't need to set their password. This
-		// generates a link which directs the user to the email verification page,
-		// although it will short circuit to the redirect URL if the user is already
-		// verified.
-		// TODO: This will not work for users whose primary connection is an external
-		// IDP such as Google and will instead return an error.
-		if err = s.auth0.Ticket.VerifyEmail(ticket); err != nil {
+// FetchUserProfile fetches a user profile by ID from the user cache or Auth0 if
+// necessary.
+func (s *Server) FetchUserProfile(id string) (profile *auth.UserProfile, err error) {
+	if data, ok := s.users.Get(id); !ok {
+		// If we can't get the profile from the cache then fetch it from Auth0
+		var user *management.User
+		if user, err = s.auth0.User.Read(id); err != nil {
 			return nil, err
 		}
-	} else {
-		// This generates a link which directs the user to the password reset page,
-		// allowing them to properly set their password so they can log in.
-		if err = s.auth0.Ticket.ChangePassword(ticket); err != nil {
+
+		profile = &auth.UserProfile{}
+		if user.Name != nil {
+			profile.Name = *user.Name
+		}
+
+		var roles *management.RoleList
+		if roles, err = s.auth0.User.Roles(id); err != nil {
 			return nil, err
 		}
-	}
-	if ticket.Ticket == nil || *ticket.Ticket == "" {
-		return nil, errors.New("URL is missing from Auth0 ticket")
+
+		profile.Roles = make([]string, len(roles.Roles))
+		for i, role := range roles.Roles {
+			profile.Roles[i] = *role.Name
+		}
+
+		// Add the fetched profile to the cache
+		s.users.Add(id, profile)
+	} else if profile, ok = data.(*auth.UserProfile); !ok {
+		return nil, errors.New("error asserting data from cache to UserProfile")
 	}
 
-	// Parse the ticket string into a URL
-	if inviteURL, err = url.Parse(*ticket.Ticket); err != nil {
-		return nil, err
-	}
-
-	return inviteURL, nil
+	return profile, nil
 }
 
 // InsortCollaborator is a helper function to insert a collaborator into a sorted slice

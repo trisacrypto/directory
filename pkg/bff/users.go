@@ -16,9 +16,6 @@ import (
 
 const (
 	// TODO: Need to make sure these roles are in sync with the roles in Auth0
-	LeaderRole         = "Organization Leader"
-	CollaboratorRole   = "Organization Collaborator"
-	TSPRole            = "TRISA Service Provider"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
 	VASPsKey           = "vasps"
@@ -53,6 +50,7 @@ const (
 // @Success 204 "Login successful"
 // @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "User invitation has expired"
 // @Failure 404 {object} api.Reply "Organization not found"
 // @Failure 500 {object} api.Reply
 // @Router /users/login [post]
@@ -78,6 +76,14 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user's claims
+	var claims *auth.Claims
+	if claims, err = auth.GetClaims(c); err != nil {
+		log.Error().Err(err).Msg("could not fetch user claims")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
+		return
+	}
+
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
 	appdata := &auth.AppMetadata{}
@@ -99,7 +105,7 @@ func (s *Server) Login(c *gin.Context) {
 	switch len(roles.Roles) {
 	case 0:
 		// Default users to the organization collaborator role
-		userRole = CollaboratorRole
+		userRole = auth.CollaboratorRole
 	case 1:
 		prevRole = *roles.Roles[0].Name
 		userRole = prevRole
@@ -170,8 +176,17 @@ func (s *Server) Login(c *gin.Context) {
 			return
 		}
 
+		// Verify that pending invitations have not expired
+		if err = collaborator.ValidateInvitation(); err != nil {
+			log.Debug().Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
+			c.JSON(http.StatusForbidden, api.ErrorResponse("user invitation has expired"))
+			return
+		}
+
 		// Other endpoints expect the user's verification status to be up to date
 		collaborator.Verified = *user.EmailVerified
+		collaborator.UserId = *user.ID
+		collaborator.ExpiresAt = ""
 	}
 
 	// Update collaborator metadata timestamps when the user logs in
@@ -180,21 +195,23 @@ func (s *Server) Login(c *gin.Context) {
 		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
-	if userRole == TSPRole {
-		// TSP users can be added to multiple organizations
+	if claims.HasPermission(auth.SwitchOrganizations) {
+		// If the user can be in multiple organizations, add the selected organization
+		// to the user's list.
 		appdata.AddOrganization(org.Id)
 	} else {
-		// Organizations with one collaborator need a leader to add other collaborators
-		if userRole == CollaboratorRole && len(org.Collaborators) == 1 {
-			userRole = LeaderRole
+		// Make sure users are able to add collaborators if they are the only member of
+		// their organization.
+		if !claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) == 1 {
+			userRole = auth.LeaderRole
 		}
 
 		// Non-TSP users can only exist in one organization
 		if appdata.OrgID != "" && org.Id != appdata.OrgID {
-			// When switching to a new organization, make sure leader roles are not
-			// unintentionally preserved
-			if userRole == LeaderRole && len(org.Collaborators) > 1 {
-				userRole = CollaboratorRole
+			// Users should not be able to add collaborators if they are migrated to an
+			// existing organization.
+			if claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) > 1 {
+				userRole = auth.CollaboratorRole
 			}
 
 			// Remove the collaborator record from the previous organization
@@ -272,6 +289,65 @@ func (s *Server) Login(c *gin.Context) {
 	}
 }
 
+// UpdateUser updates the user's profile information in Auth0.
+//
+// @Summary Update the user's profile
+// @Description Update the user's profile information in Auth0.
+// @Tags users
+// @Accept json
+// @Success 204 {object} api.Reply
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /users [patch]
+func (s *Server) UpdateUser(c *gin.Context) {
+	var (
+		user *management.User
+		err  error
+	)
+
+	// Parse the params from the request body
+	params := &api.UpdateUserParams{}
+	if err = c.ShouldBind(params); err != nil {
+		log.Error().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Fetch the user from the context
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("login handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to login"))
+		return
+	}
+
+	// At least one field must be provided
+	if *params == (api.UpdateUserParams{}) {
+		log.Warn().Msg("no fields were provided to update user")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("no fields were provided"))
+		return
+	}
+
+	// Update the user's name if provided
+	patch := &management.User{}
+	if params.Name != "" {
+		patch.Name = &params.Name
+	}
+
+	// Commit the update to Auth0
+	if err = s.auth0.User.Update(*user.ID, patch); err != nil {
+		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not update user name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user name"))
+		return
+	}
+
+	// Invalidate the user's cache entry so that the updated profile is returned from
+	// the backend.
+	s.users.Remove(*user.ID)
+
+	c.Status(http.StatusNoContent)
+}
+
 // UserOrganization returns the current organization that the user is logged into. The
 // user must have the read:organizations permission to perform this action.
 //
@@ -347,6 +423,9 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 		}
 	}
 
+	// Invalidate the user's cache entry so updated roles are returned from the backend
+	s.users.Remove(userID)
+
 	return nil
 }
 
@@ -361,7 +440,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
-	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+	c.JSON(http.StatusOK, []string{auth.CollaboratorRole, auth.LeaderRole})
 }
 
 // FindUserByEmail returns the Auth0 user record by email address.

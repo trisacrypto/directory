@@ -21,6 +21,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/auth/cache"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	docs "github.com/trisacrypto/directory/pkg/bff/docs"
 	"github.com/trisacrypto/directory/pkg/bff/emails"
@@ -105,7 +106,9 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
 
-		s.users = auth.NewUserCache(s.conf.UserCache, s.auth0.User)
+		if s.users, err = cache.New(s.conf.UserCache); err != nil {
+			return nil, fmt.Errorf("could not initialize user cache: %s", err)
+		}
 
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
 	}
@@ -175,7 +178,7 @@ type Server struct {
 	db         store.Store
 	auth0      *management.Management
 	email      *emails.EmailManager
-	users      *auth.UserCache
+	users      *cache.TTLCache
 	started    time.Time
 	healthy    bool
 	url        string
@@ -364,29 +367,30 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
-		v1.GET("/users/organization", auth.Authorize("read:organizations"), s.UserOrganization)
+		v1.GET("/users/organization", auth.Authorize(auth.ReadOrganizations), s.UserOrganization)
+		v1.PATCH("/users", userinfo, s.UpdateUser)
 		organizations := v1.Group("/organizations")
 		{
-			organizations.GET("", auth.Authorize("read:organizations"), userinfo, s.ListOrganizations)
-			organizations.POST("", auth.DoubleCookie(), auth.Authorize("create:organizations"), userinfo, s.CreateOrganization)
+			organizations.GET("", auth.Authorize(auth.ReadOrganizations), userinfo, s.ListOrganizations)
+			organizations.POST("", auth.DoubleCookie(), auth.Authorize(auth.CreateOrganizations), userinfo, s.CreateOrganization)
 		}
 		collaborators := v1.Group("/collaborators")
 		{
-			collaborators.GET("", auth.Authorize("read:collaborators"), s.ListCollaborators)
-			collaborators.POST("", auth.DoubleCookie(), auth.Authorize("update:collaborators"), userinfo, s.AddCollaborator)
-			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.UpdateCollaboratorRoles)
-			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize("update:collaborators"), s.DeleteCollaborator)
+			collaborators.GET("", auth.Authorize(auth.ReadCollaborators), s.ListCollaborators)
+			collaborators.POST("", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), userinfo, s.AddCollaborator)
+			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.UpdateCollaboratorRoles)
+			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.DeleteCollaborator)
 		}
-		v1.GET("/register", auth.Authorize("read:vasp"), s.LoadRegisterForm)
-		v1.PUT("/register", auth.DoubleCookie(), auth.Authorize("update:vasp"), s.SaveRegisterForm)
-		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize("update:vasp"), userinfo, s.SubmitRegistration)
-		v1.GET("/registration", auth.Authorize("read:vasp"), s.RegistrationStatus)
-		v1.GET("/overview", auth.Authorize("read:vasp"), s.Overview)
-		v1.GET("/announcements", auth.Authorize("read:vasp"), s.Announcements)
+		v1.GET("/register", auth.Authorize(auth.ReadVASP), s.LoadRegisterForm)
+		v1.PUT("/register", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.SaveRegisterForm)
+		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), userinfo, s.SubmitRegistration)
+		v1.GET("/registration", auth.Authorize(auth.ReadVASP), s.RegistrationStatus)
+		v1.GET("/overview", auth.Authorize(auth.ReadVASP), s.Overview)
+		v1.GET("/announcements", auth.Authorize(auth.ReadVASP), s.Announcements)
 		v1.POST("/announcements", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
-		v1.GET("/certificates", auth.Authorize("read:vasp"), s.Certificates)
-		v1.GET("/details", auth.Authorize("read:vasp"), s.MemberDetails)
-		v1.GET("/attention", auth.Authorize("read:vasp"), s.Attention)
+		v1.GET("/certificates", auth.Authorize(auth.ReadVASP), s.Certificates)
+		v1.GET("/details", auth.Authorize(auth.ReadVASP), s.MemberDetails)
+		v1.GET("/attention", auth.Authorize(auth.ReadVASP), s.Attention)
 	}
 
 	// NotFound and NotAllowed routes

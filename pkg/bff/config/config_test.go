@@ -18,11 +18,11 @@ var testEnv = map[string]string{
 	"GDS_BFF_CONSOLE_LOG":                   "true",
 	"GDS_BFF_ALLOW_ORIGINS":                 "https://vaspdirectory.net",
 	"GDS_BFF_COOKIE_DOMAIN":                 "vaspdirectory.net",
+	"GDS_BFF_LOGIN_URL":                     "https://vaspdirectory.net/auth/login",
+	"GDS_BFF_REGISTER_URL":                  "https://vaspdirectory.net/auth/register",
 	"GDS_BFF_SERVE_DOCS":                    "true",
 	"GDS_BFF_AUTH0_DOMAIN":                  "example.auth0.com",
 	"GDS_BFF_AUTH0_ISSUER":                  "https://auth.example.com",
-	"GDS_BFF_AUTH0_CONNECTION_NAME":         "Username-Password-Authentication",
-	"GDS_BFF_AUTH0_REDIRECT_URL":            "https://vaspdirectory.net/auth/callback",
 	"GDS_BFF_AUTH0_AUDIENCE":                "https://vaspdirectory.net",
 	"GDS_BFF_AUTH0_PROVIDER_CACHE":          "10m",
 	"GDS_BFF_AUTH0_CLIENT_ID":               "exampleid",
@@ -68,10 +68,8 @@ var testEnv = map[string]string{
 	"GDS_BFF_SENTRY_TRACK_PERFORMANCE":      "true",
 	"GDS_BFF_SENTRY_SAMPLE_RATE":            "0.2",
 	"GDS_BFF_USER_CACHE_ENABLED":            "true",
-	"GDS_BFF_USER_CACHE_TTL_MEAN":           "1m",
-	"GDS_BFF_USER_CACHE_TTL_SIGMA":          "5s",
-	"GDS_BFF_USER_CACHE_MAX_ENTRIES":        "1000",
-	"GDS_BFF_USER_CACHE_EVICTION_FRACTION":  "0.1",
+	"GDS_BFF_USER_CACHE_EXPIRATION":         "10h",
+	"GDS_BFF_USER_CACHE_SIZE":               "1000",
 }
 
 func TestConfig(t *testing.T) {
@@ -99,12 +97,12 @@ func TestConfig(t *testing.T) {
 	require.True(t, conf.ConsoleLog)
 	require.Len(t, conf.AllowOrigins, 1)
 	require.Equal(t, testEnv["GDS_BFF_COOKIE_DOMAIN"], conf.CookieDomain)
+	require.Equal(t, testEnv["GDS_BFF_LOGIN_URL"], conf.LoginURL)
+	require.Equal(t, testEnv["GDS_BFF_REGISTER_URL"], conf.RegisterURL)
 	require.True(t, conf.ServeDocs)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_DOMAIN"], conf.Auth0.Domain)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_ISSUER"], conf.Auth0.Issuer)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_AUDIENCE"], conf.Auth0.Audience)
-	require.Equal(t, testEnv["GDS_BFF_AUTH0_CONNECTION_NAME"], conf.Auth0.ConnectionName)
-	require.Equal(t, testEnv["GDS_BFF_AUTH0_REDIRECT_URL"], conf.Auth0.RedirectURL)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_ID"], conf.Auth0.ClientID)
 	require.Equal(t, testEnv["GDS_BFF_AUTH0_CLIENT_SECRET"], conf.Auth0.ClientSecret)
 	require.True(t, conf.Auth0.Testing)
@@ -146,10 +144,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
 	require.True(t, conf.UserCache.Enabled)
-	require.Equal(t, 5*time.Minute, conf.UserCache.TTLMean)
-	require.Equal(t, 10*time.Second, conf.UserCache.TTLSigma)
-	require.Equal(t, 1000, conf.UserCache.MaxEntries)
-	require.Equal(t, 0.1, conf.UserCache.EvictionFraction)
+	require.Equal(t, 10*time.Hour, conf.UserCache.Expiration)
+	require.Equal(t, uint(1000), conf.UserCache.Size)
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
 	require.Equal(t, 0.2, conf.Sentry.SampleRate)
@@ -157,10 +153,10 @@ func TestConfig(t *testing.T) {
 
 func TestRequiredConfig(t *testing.T) {
 	required := []string{
+		"GDS_BFF_LOGIN_URL",
+		"GDS_BFF_REGISTER_URL",
 		"GDS_BFF_AUTH0_DOMAIN",
 		"GDS_BFF_AUTH0_AUDIENCE",
-		"GDS_BFF_AUTH0_CONNECTION_NAME",
-		"GDS_BFF_AUTH0_REDIRECT_URL",
 		"GDS_BFF_AUTH0_CLIENT_ID",
 		"GDS_BFF_AUTH0_CLIENT_SECRET",
 		"GDS_BFF_TESTNET_DATABASE_URL",
@@ -217,27 +213,17 @@ func TestRequiredConfig(t *testing.T) {
 
 func TestAuthConfig(t *testing.T) {
 	conf := config.AuthConfig{
-		Domain:         "example.auth0.com",
-		RedirectURL:    "https://vaspdirectory.net/auth/callback",
-		Audience:       "https://vaspdirectory.net",
-		ConnectionName: "Username-Password-Authentication",
-		ProviderCache:  0,
-		Testing:        true,
+		Domain:        "example.auth0.com",
+		Audience:      "https://vaspdirectory.net",
+		ProviderCache: 0,
+		Testing:       true,
 	}
 
 	// Ensure that a provider cache is required
 	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 provider cache duration should be longer than 0")
 
-	// Ensure that a connection name is required
-	conf.ProviderCache = 5 * time.Minute
-	conf.ConnectionName = ""
-	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 connection name is required")
-
-	// Ensure that client ID and secret are not required when testing
-	conf.ConnectionName = "Username-Password-Authentication"
-	require.NoError(t, conf.Validate(), "could not validate auth config")
-
 	// Ensure that client Id and secret are required when not testing
+	conf.ProviderCache = 5 * time.Minute
 	conf.Testing = false
 	require.EqualError(t, conf.Validate(), "invalid configuration: auth0 client id is required in production")
 	conf.ClientID = "exampleid"
@@ -276,14 +262,6 @@ func TestAuthConfig(t *testing.T) {
 	u, err := conf.IssuerURL()
 	require.NoError(t, err, "could not parse issuer string")
 	require.Equal(t, conf.Issuer, u.String())
-
-	// Test empty redirect URL
-	conf.RedirectURL = ""
-	require.EqualError(t, conf.Redirect(), "invalid configuration: auth0 redirect url must be configured")
-
-	// Test invalid redirect URL
-	conf.RedirectURL = "https://vaspdirectory.net/auth/callback/"
-	require.EqualError(t, conf.Redirect(), "invalid configuration: auth0 redirect url must not have a trailing slash")
 }
 
 func TestMembersConfigValidation(t *testing.T) {
@@ -335,31 +313,16 @@ func TestEmailConfigValidation(t *testing.T) {
 
 func TestCacheConfigValidation(t *testing.T) {
 	conf := config.CacheConfig{
-		Enabled:          true,
-		TTLSigma:         time.Second,
-		MaxEntries:       100,
-		EvictionFraction: 0.1,
+		Size:    100,
+		Enabled: true,
 	}
 	err := conf.Validate()
-	require.EqualError(t, err, "invalid configuration: cache ttl mean must be greater than 0")
+	require.EqualError(t, err, "invalid configuration: cache expiration must be greater than 0")
 
-	conf.TTLMean = time.Minute
-	conf.TTLSigma = 0
+	conf.Expiration = time.Hour
+	conf.Size = 0
 	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: cache ttl sigma must be greater than 0")
-
-	conf.TTLSigma = time.Second
-	conf.MaxEntries = 0
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: cache max entries must be greater than 0")
-
-	conf.MaxEntries = 100
-	conf.EvictionFraction = 0
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: cache eviction fraction must be between 0 and 1")
-	conf.EvictionFraction = 1.2
-	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: cache eviction fraction must be between 0 and 1")
+	require.EqualError(t, err, "invalid configuration: cache size must be greater than 0")
 
 	conf.Enabled = false
 	err = conf.Validate()
