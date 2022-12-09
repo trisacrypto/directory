@@ -40,13 +40,12 @@ export const getRecentVasps = (vasps) => vasps?.filter(vasp => {
     const certificateIssuedDate = vasp?.certificate_issued && dayjs(vasp?.certificate_issued)
     const verificationStatus = vasp?.verification_status
 
+    if (verificationStatus === VerificationStatus.PENDING_REVIEW) {
+        return vasp
+    }
     if (certificateExpirationDate && certificateIssuedDate) {
 
         if (dayjs(certificateExpirationDate).isValid() || dayjs(certificateIssuedDate).isValid()) {
-
-            if (verificationStatus === VerificationStatus.PENDING_REVIEW) {
-                return vasp
-            }
 
             if (certificateExpirationDate.isAfter(now) && isRecent(certificateExpirationDate)) {
                 return vasp
