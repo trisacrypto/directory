@@ -33,9 +33,9 @@ const ErrorPageNotFound = (): React$Element<React$FragmentType> => {
                                             {state?.error ? state?.error : "It's looking like you may have taken a wrong turn."}
                                         </p>
 
-                                        {/* <Link className="btn btn-info mt-3" to="/login">
+                                        <Link className="btn btn-primary mt-3" to="/">
                                             <i className="mdi mdi-reply"></i> Return Home
-                                        </Link> */}
+                                        </Link>
                                     </div>
                                 </Card.Body>
                             </Card>
