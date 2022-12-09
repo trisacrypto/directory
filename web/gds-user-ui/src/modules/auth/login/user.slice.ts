@@ -7,7 +7,8 @@ import {
   auth0SignWithSocial,
   auth0Hash,
   auth0CheckSession,
-  setUserPayload
+  setUserPayload,
+  refreshAndSetPermission
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
 
@@ -66,12 +67,16 @@ export const getAuth0User: any = createAsyncThunk(
         if (getUser && hasOrgId) {
           localStorage.removeItem('orgId');
         }
-        const getRoles = await getUserRoles() as any;
-        const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+
         if (getUser?.data?.refresh_token) {
-          const newUserPayload: any = await auth0CheckSession();
+          let newUserPayload: any = await auth0CheckSession();
+          if (!newUserPayload?.idTokenPayload?.permissions) {
+            newUserPayload = await refreshAndSetPermission();
+          }
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
           setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -86,6 +91,8 @@ export const getAuth0User: any = createAsyncThunk(
         if (getUser.status === 204) {
           const expiresIn = getUserExpiresTime(getUserInfo?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
           setUserCookies(getUserInfo?.accessToken, expiresIn, getUserInfo?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
             isLoggedIn: true,
@@ -139,7 +146,10 @@ const userSlice: any = createSlice({
     },
     setUserOrganization: (state: any, { payload }: any) => {
       state.user.vasp = payload;
-    }
+    },
+    setUserName(state: any, { payload }: any) {
+      state.user.name = payload;
+    },
 
     // isloading: (state: any, { payload }: any) => {
   },
@@ -164,7 +174,7 @@ const userSlice: any = createSlice({
 });
 
 export const userReducer = userSlice.reducer;
-export const { login, logout, setUserOrganization } = userSlice.actions;
+export const { login, logout, setUserOrganization, setUserName } = userSlice.actions;
 // selectors
 export const userSelector = (state: any) => state.user;
 export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;

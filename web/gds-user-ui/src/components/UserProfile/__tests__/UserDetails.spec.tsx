@@ -1,16 +1,16 @@
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { act, render, screen } from 'utils/test-utils';
 import UserDetails from '../UserDetails';
-
+const userDetailsMock = {
+  createAt: '2021-05-05T12:00:00.000Z',
+  role: 'admin',
+  permissions: ['admin', 'user'],
+  lastLogin: '2021-05-05T12:00:00.000Z'
+};
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockReturnValueOnce({
-    user: {
-      createAt: '2021-05-05T12:00:00.000Z',
-      role: 'admin',
-      permissions: ['admin', 'user'],
-      lastLogin: '2021-05-05T12:00:00.000Z'
-    }
+    user: userDetailsMock
   })
 }));
 
@@ -22,13 +22,6 @@ describe('<UserDetails />  ', () => {
   });
 
   it('should render user details', () => {
-    const userDetailsMock = {
-      createAt: '2021-05-05T12:00:00.000Z',
-      role: 'admin',
-      permissions: ['admin', 'user'],
-      lastLogin: '2021-05-05T12:00:00.000Z'
-    };
-
     render(<UserDetails />);
 
     expect(screen.getByTestId('user_created_At').textContent).toBe(userDetailsMock.createAt);

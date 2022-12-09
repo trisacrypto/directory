@@ -30,13 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </DrawerContent>
       </Drawer>
       <MobileNav onOpen={onOpen} />
-      <Box
-        ml={{ base: 0, md: 274 }}
-        pt={10}
-        px="10"
-        height="100%"
-        background="#F7F8FC"
-        overflow="scroll">
+      <Box ml={{ base: 0, md: 274 }} pt={10} px="10" height="100%" overflow="scroll">
         {children}
       </Box>
     </Box>
