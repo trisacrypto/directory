@@ -32,7 +32,6 @@ import { canInviteCollaborator } from 'utils/permission';
 import { isDate } from 'utils/date';
 
 const getStatus = (joinedAt: any): any => {
-  console.log('joinedAt', joinedAt);
   if (joinedAt && isDate(joinedAt)) {
     return 'Confirmed';
   }
