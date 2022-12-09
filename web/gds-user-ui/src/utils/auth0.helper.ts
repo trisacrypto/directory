@@ -111,6 +111,15 @@ export const refreshAndFetchUser = () => {
   });
 };
 
+export const refreshAndSetPermission = async () => {
+  const user = (await refreshAndFetchUser()) as any;
+  if (user) {
+    const decodeToken: any = jwt_decode(user.accessToken);
+    user.idTokenPayload.permissions = decodeToken.permissions;
+    return user;
+  }
+};
+
 export const auth0SignWithSocial = (connection: string, options?: auth0.AuthorizeOptions) => {
   return authWeb.authorize({
     ...options,

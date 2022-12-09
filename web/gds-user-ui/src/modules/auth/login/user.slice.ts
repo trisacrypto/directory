@@ -7,7 +7,8 @@ import {
   auth0SignWithSocial,
   auth0Hash,
   auth0CheckSession,
-  setUserPayload
+  setUserPayload,
+  refreshAndSetPermission
 } from 'utils/auth0.helper';
 import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
 
@@ -68,9 +69,10 @@ export const getAuth0User: any = createAsyncThunk(
         }
 
         if (getUser?.data?.refresh_token) {
-          console.log('[getAuth0User] refresh token', getUser?.data);
-          const newUserPayload: any = await auth0CheckSession();
-          console.log('[newUserPayload ]', newUserPayload);
+          let newUserPayload: any = await auth0CheckSession();
+          if (!newUserPayload?.idTokenPayload?.permissions) {
+            newUserPayload = await refreshAndSetPermission();
+          }
           const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
           setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
           const getRoles = await getUserRoles() as any;
