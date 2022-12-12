@@ -3,8 +3,8 @@ import { t } from '@lingui/macro';
 import {
   getAppGitVersion,
   getAppVersionNumber,
-  getBffAndGdsVersion
-  // isProdEnv
+  getBffAndGdsVersion,
+  isProdEnv
 } from 'application/config';
 import { useEffect, useState } from 'react';
 
@@ -24,7 +24,7 @@ function Version() {
     fetchAsyncBffAndGdsVersion();
   }, []);
 
-  // if (!isProdEnv) return null;
+  if (!isProdEnv) return null;
 
   //  log this out in the console
   console.log('appVersion', appVersion);

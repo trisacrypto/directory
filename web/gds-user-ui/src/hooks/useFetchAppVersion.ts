@@ -24,7 +24,7 @@ const useFetchAppVersion = () => {
         };
 
         fetchAppVersion();
-    }, []);
+    }, [appGitVersion, appVersion, bffAndGdsVersion]);
 
     return { appVersion, appGitVersion, bffAndGdsVersion };
 };
