@@ -23,6 +23,7 @@ import { Fragment, useState } from 'react';
 import { Trans } from '@lingui/react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import ChakraRouterLink from 'components/ChakraRouterLink';
+import HDivider from 'components/ui/HDivider';
 // import Version from 'components/Footer/Version';
 import useFetchAppVersion from 'hooks/useFetchAppVersion';
 interface SidebarProps extends BoxProps {
@@ -138,6 +139,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       </VStack>
       <HStack
         fontSize="0.6em"
+        px={2}
         justifyContent="center"
         mx={'auto'}
         position={'absolute'}
@@ -146,10 +148,10 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         color="gray.600"
         width="100%">
         {/* <Text>APP: {appVersion || 'N/A'}</Text>
-        <Text>{' | '}</Text> */}
+        <HDivider /> */}
         <Text>GIT: {appGitVersion || 'N/A'}</Text>
-        <Text>{' | '}</Text>
-        <Text>BFF & GDS:{bffAndGdsVersion || 'N/A'}</Text>
+        <HDivider />
+        <Text>BFF & GDS: {bffAndGdsVersion || 'N/A'}</Text>
       </HStack>
     </Box>
   );

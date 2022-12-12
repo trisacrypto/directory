@@ -805,6 +805,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   box-shadow: var(--chakra-shadows-outline);
 }
 
+.emotion-60 {
+  width: 100%;
+  text-align: center;
+  color: var(--chakra-colors-white);
+  font-size: 12px;
+  padding-top: var(--chakra-space-1);
+}
+
 <div>
   <div
     class="chakra-stack emotion-0"
@@ -1193,6 +1201,26 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               TRISA
             </a>
              
+          </p>
+          <p
+            class="chakra-text emotion-60"
+          >
+            <span
+              class="chakra-text emotion-5"
+            >
+              App version 1.0.0
+               - 
+            </span>
+            <span
+              class="chakra-text emotion-5"
+              data-testid="git-revision"
+            >
+              Git Revision
+               
+              2022.0.0
+               -
+               
+            </span>
           </p>
         </div>
       </div>
