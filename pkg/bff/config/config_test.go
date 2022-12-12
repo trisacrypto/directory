@@ -67,6 +67,9 @@ var testEnv = map[string]string{
 	"GDS_BFF_SENTRY_DEBUG":                  "true",
 	"GDS_BFF_SENTRY_TRACK_PERFORMANCE":      "true",
 	"GDS_BFF_SENTRY_SAMPLE_RATE":            "0.2",
+	"GDS_BFF_USER_CACHE_ENABLED":            "true",
+	"GDS_BFF_USER_CACHE_EXPIRATION":         "10h",
+	"GDS_BFF_USER_CACHE_SIZE":               "1000",
 }
 
 func TestConfig(t *testing.T) {
@@ -140,6 +143,9 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
 	require.Equal(t, testEnv["GDS_BFF_SENTRY_RELEASE"], conf.Sentry.Release)
+	require.True(t, conf.UserCache.Enabled)
+	require.Equal(t, 10*time.Hour, conf.UserCache.Expiration)
+	require.Equal(t, uint(1000), conf.UserCache.Size)
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
 	require.Equal(t, 0.2, conf.Sentry.SampleRate)
@@ -301,6 +307,24 @@ func TestEmailConfigValidation(t *testing.T) {
 	require.EqualError(t, err, "invalid configuration: email archiving is only supported in testing mode")
 
 	conf.Testing = true
+	err = conf.Validate()
+	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestCacheConfigValidation(t *testing.T) {
+	conf := config.CacheConfig{
+		Size:    100,
+		Enabled: true,
+	}
+	err := conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache expiration must be greater than 0")
+
+	conf.Expiration = time.Hour
+	conf.Size = 0
+	err = conf.Validate()
+	require.EqualError(t, err, "invalid configuration: cache size must be greater than 0")
+
+	conf.Enabled = false
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
 }

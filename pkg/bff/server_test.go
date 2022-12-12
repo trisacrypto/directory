@@ -107,6 +107,11 @@ func (s *bffTestSuite) SetupSuite() {
 			ServiceEmail: "service@example.com",
 			Testing:      true,
 		},
+		UserCache: config.CacheConfig{
+			Enabled:    true,
+			Expiration: 1 * time.Minute,
+			Size:       100,
+		},
 	}.Mark()
 	require.NoError(err, "could not mark configuration")
 

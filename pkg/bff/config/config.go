@@ -37,6 +37,7 @@ type Config struct {
 	LoginURL     string              `split_words:"true" required:"true"` // Trailing slash is not allowed
 	CookieDomain string              `split_words:"true"`
 	ServeDocs    bool                `split_words:"true" default:"false"`
+	UserCache    CacheConfig         `split_words:"true"`
 	Auth0        AuthConfig
 	TestNet      NetworkConfig
 	MainNet      NetworkConfig
@@ -91,6 +92,12 @@ type EmailConfig struct {
 	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	Testing        bool   `split_words:"true" default:"false"`
 	Storage        string `split_words:"true" default:""`
+}
+
+type CacheConfig struct {
+	Enabled    bool          `split_words:"true" default:"false"`
+	Size       uint          `split_words:"true" default:"16384"`
+	Expiration time.Duration `split_words:"true" default:"8h"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
@@ -156,6 +163,10 @@ func (c Config) Validate() (err error) {
 	}
 
 	if err = c.Sentry.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.UserCache.Validate(); err != nil {
 		return err
 	}
 
@@ -273,6 +284,19 @@ func (c EmailConfig) Validate() error {
 
 		if c.Storage != "" {
 			return errors.New("invalid configuration: email archiving is only supported in testing mode")
+		}
+	}
+	return nil
+}
+
+func (c CacheConfig) Validate() error {
+	if c.Enabled {
+		if c.Size == 0 {
+			return errors.New("invalid configuration: cache size must be greater than 0")
+		}
+
+		if c.Expiration == 0 {
+			return errors.New("invalid configuration: cache expiration must be greater than 0")
 		}
 	}
 	return nil

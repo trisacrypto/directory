@@ -178,6 +178,9 @@ services:
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev
       - GDS_BFF_AUTH0_CLIENT_ID
       - GDS_BFF_AUTH0_CLIENT_SECRET
+      - GDS_BFF_USER_CACHE_ENABLED
+      - GDS_BFF_USER_CACHE_SIZE=100
+      - GDS_BFF_USER_CACHE_EXPIRATION=5m
 
     profiles:
       - api

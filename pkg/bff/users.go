@@ -341,6 +341,10 @@ func (s *Server) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Invalidate the user's cache entry so that the updated profile is returned from
+	// the backend.
+	s.users.Remove(*user.ID)
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -418,6 +422,9 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 			return err
 		}
 	}
+
+	// Invalidate the user's cache entry so updated roles are returned from the backend
+	s.users.Remove(userID)
 
 	return nil
 }
