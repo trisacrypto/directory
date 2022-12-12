@@ -25,8 +25,8 @@ jobs:
       - name: Set Environment
         id: vars
         run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "revision=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: meta
@@ -109,8 +109,8 @@ jobs:
       - name: Set Environment
         id: vars
         run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "revision=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: meta
@@ -193,8 +193,8 @@ jobs:
       - name: Set Environment
         id: vars
         run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "revision=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: meta
@@ -454,8 +454,8 @@ jobs:
       - name: Set Environment
         id: vars
         run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "revision=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: meta
@@ -614,8 +614,8 @@ jobs:
       - name: Set Environment
         id: vars
         run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=revision::$(git rev-parse --short HEAD)"
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "revision=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: meta
