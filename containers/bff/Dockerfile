@@ -29,6 +29,7 @@ RUN go test -timeout 180s ./...
 
 # Build binaries
 RUN go build -v -o /go/bin/bff -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/bff
+RUN go build -v -o /go/bin/bffutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/bffutil
 RUN go build -v -o /go/bin/trtl -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/trtl
 
 # Final Stage
@@ -44,6 +45,7 @@ RUN set -x && apt-get update && \
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /go/bin/bff /usr/local/bin/bff
+COPY --from=builder /go/bin/bffutil /usr/local/bin/bffutil
 COPY --from=builder /go/bin/trtl /usr/local/bin/trtl
 
 CMD [ "/usr/local/bin/bff", "serve" ]
