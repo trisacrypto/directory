@@ -164,3 +164,28 @@ blockquote {
     border-left: 4px solid var(--bs-gray-400);
     padding: 5px 10px;
 }
+
+.ͼ1 .cm-scroller {
+    font-family: 'Posterama Regular', sans-serif;
+}
+
+#editor-tabpane-preview .wmde-markdown {
+    font-size: 13px !important;
+}
+
+.md-editor {
+    --color-border-shadow: auto !important;
+    background-color: transparent;
+
+    .md-editor-toolbar-mode {
+        display: none;
+    }
+
+    .cm-gutters {
+        display: none;
+    }
+}
+
+code:not(.code-highlight) {
+    background-color: #d3dbe766 !important;
+}
