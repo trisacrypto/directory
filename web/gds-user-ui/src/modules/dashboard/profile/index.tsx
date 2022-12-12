@@ -1,5 +1,5 @@
-import React, { useState, Suspense } from 'react';
-import Loader from 'components/Loader';
+import React, { useState } from 'react';
+import { Stack } from '@chakra-ui/react';
 import Profile from 'components/UserProfile';
 
 const UserProfile: React.FC = () => {
@@ -10,9 +10,9 @@ const UserProfile: React.FC = () => {
   // const handleUpdate = () => {};
   return (
     <>
-      <Suspense fallback={<Loader />}>
+      <Stack my={5}>
         <Profile />
-      </Suspense>
+      </Stack>
     </>
   );
 };
