@@ -107,12 +107,8 @@ func New(conf config.Config) (s *Server, err error) {
 		}
 
 		// Initialize the user cache or use a no-op cache if disabled
-		if s.conf.UserCache.Enabled {
-			if s.users, err = cache.NewTTL(s.conf.UserCache); err != nil {
-				return nil, fmt.Errorf("could not initialize user cache: %s", err)
-			}
-		} else {
-			s.users = &cache.Disabled{}
+		if s.users, err = cache.New(s.conf.UserCache); err != nil {
+			return nil, fmt.Errorf("could not initialize user cache: %s", err)
 		}
 
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")

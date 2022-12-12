@@ -9,6 +9,23 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/cache"
 )
 
+func TestEnableCache(t *testing.T) {
+	// If the cache is disabled then the disabled cache should be returned
+	conf := config.CacheConfig{}
+	items, err := cache.New(conf)
+	require.NoError(t, err, "could not create cache")
+	require.IsType(t, &cache.Disabled{}, items, "cache should be disabled")
+
+	// If the cache is enabled then the TTL cache should be returned
+	conf = config.CacheConfig{
+		Enabled: true,
+		Size:    100,
+	}
+	items, err = cache.New(conf)
+	require.NoError(t, err, "could not create cache")
+	require.IsType(t, &cache.TTL{}, items, "cache should be enabled")
+}
+
 func TestTTLCache(t *testing.T) {
 	// Configure the cache
 	conf := config.CacheConfig{

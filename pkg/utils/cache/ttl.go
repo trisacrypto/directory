@@ -14,6 +14,13 @@ type TTL struct {
 	lru  *lru.Cache
 }
 
+func New(conf config.CacheConfig) (Cache, error) {
+	if !conf.Enabled {
+		return &Disabled{}, nil
+	}
+	return NewTTL(conf)
+}
+
 func NewTTL(conf config.CacheConfig) (cache *TTL, err error) {
 	cache = &TTL{
 		conf: conf,
