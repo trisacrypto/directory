@@ -60,6 +60,7 @@ var (
 	preVASPs         = []byte("vasps::")
 	preCerts         = []byte("certs::")
 	preCertReqs      = []byte("certreqs::")
+	preOrganizations = []byte("organizations::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -609,6 +610,15 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 // OrganizationStore Implementation
 //===========================================================================
 
+// ListOrganizations returns an iterator to retrieve all organizations.
+func (s *Store) ListOrganizations() iterator.OrganizationIterator {
+	return &organizationIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preOrganizations), nil),
+		},
+	}
+}
+
 // CreateOrganization creates a new organization record in the store, assigning a
 // unique ID if it doesn't exist and setting the created and modified timestamps.
 func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
@@ -627,6 +637,7 @@ func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
 		return "", err
 	}
 
+	// TODO: this needs to be prefixed by a namespace
 	if err = s.db.Put(o.Key(), data, nil); err != nil {
 		return "", err
 	}
@@ -639,6 +650,7 @@ func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err err
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
+	// TODO: this needs to be prefixed by a namespace
 	var val []byte
 	if val, err = s.db.Get(id[:], nil); err != nil {
 		if err == leveldb.ErrNotFound {
@@ -672,6 +684,7 @@ func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
 		return err
 	}
 
+	// TODO: this needs to be prefixed by a namespace
 	if err = s.db.Put([]byte(o.Key()), data, nil); err != nil {
 		return err
 	}
@@ -684,6 +697,7 @@ func (s *Store) DeleteOrganization(id uuid.UUID) (err error) {
 		return storeerrors.ErrEntityNotFound
 	}
 
+	// TODO: this needs to be prefixed by a namespace
 	if err = s.db.Delete(id[:], nil); err != nil {
 		return err
 	}
