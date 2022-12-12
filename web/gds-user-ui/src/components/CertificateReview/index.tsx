@@ -16,9 +16,9 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import Loader from 'components/Loader';
 import { getRefreshToken } from 'utils/auth0.helper';
 import { STEPPER_NETWORK } from 'utils/constants';
-import { setUserName } from 'modules/auth/login/user.slice';
+import { getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
+import { setUserOrganization } from 'modules/auth/login/user.slice';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
-
 const CertificateReview = () => {
   const toast = useToast();
   const dispatch = useDispatch();
@@ -79,10 +79,14 @@ const CertificateReview = () => {
     }
   };
   useEffect(() => {
+    const fetchOrg = async () => {
+      const org = await getUserCurrentOrganizationService();
+      dispatch(setUserOrganization(org?.data));
+    };
     if (isTestNetSent || isMainNetSent) {
-      dispatch(setUserName(result?.organization_name));
+      fetchOrg();
     }
-  }, [isTestNetSent, isMainNetSent, result, dispatch]);
+  }, [isTestNetSent, isMainNetSent, dispatch]);
 
   if (!hasReachSubmitStep) {
     return <ReviewsSummary />;
