@@ -160,6 +160,8 @@ func listOrgs(c *cli.Context) (err error) {
 		item["created"] = org.Created
 		item["modified"] = org.Modified
 		item["nCollaborators"] = len(org.Collaborators)
+		item["testnet"] = org.Testnet
+		item["mainnet"] = org.Mainnet
 
 		orgs = append(orgs, item)
 	}
@@ -218,6 +220,11 @@ func addCollab(c *cli.Context) (err error) {
 	var permissions *management.PermissionList
 	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
 		return cli.Exit(err, 1)
+	}
+
+	// Check if the user is already in the organization
+	if appdata.OrgID == org.Id {
+		return cli.Exit("user is already a collaborator in this organization", 0)
 	}
 
 	// Ask if we should proceed
