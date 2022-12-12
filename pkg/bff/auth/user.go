@@ -29,6 +29,13 @@ const (
 	CollaboratorRole = "Organization Collaborator"
 )
 
+// UserProfile is a subset of the Auth0 user record that can be safely cached on the
+// BFF server.
+type UserProfile struct {
+	Name  string
+	Roles []string
+}
+
 // UserDisplayName is a helper to get the user's display name from the Auth0 user
 // record. This should be used when the backend needs to retrieve a user-facing display
 // name for the user and returns an error if no name is available.
