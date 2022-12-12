@@ -7,26 +7,27 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 )
 
-// TTLCache is a wrapper around a thread-safe LRU cache that adds a time-to-live value
-// to each entry.
-type TTLCache struct {
+// TTL is a wrapper around a thread-safe LRU cache that adds a time-to-live value to
+// each entry.
+type TTL struct {
 	conf config.CacheConfig
 	lru  *lru.Cache
 }
 
-func New(conf config.CacheConfig) (cache *TTLCache, err error) {
-	cache = &TTLCache{
+func NewTTL(conf config.CacheConfig) (cache *TTL, err error) {
+	cache = &TTL{
 		conf: conf,
 	}
 
-	if conf.Enabled {
-		if cache.lru, err = lru.New(int(conf.Size)); err != nil {
-			return nil, err
-		}
+	if cache.lru, err = lru.New(int(conf.Size)); err != nil {
+		return nil, err
 	}
 
 	return cache, nil
 }
+
+// TTL implements the Cache interface
+var _ Cache = &TTL{}
 
 // ttlEntry stores the data and expiration time
 type ttlEntry struct {
@@ -41,11 +42,7 @@ func (e *ttlEntry) Expired() bool {
 
 // Get returns data from the cache by key or false if the key does not exist or has
 // expired.
-func (c *TTLCache) Get(key interface{}) (data interface{}, ok bool) {
-	if !c.conf.Enabled {
-		return nil, false
-	}
-
+func (c *TTL) Get(key interface{}) (data interface{}, ok bool) {
 	// This will panic if the value is not a ttlEntry so we must prevent external
 	// packages from accessing the underlying cache directly.
 	var value interface{}
@@ -57,19 +54,15 @@ func (c *TTLCache) Get(key interface{}) (data interface{}, ok bool) {
 }
 
 // Add stores data in the cache by key.
-func (c *TTLCache) Add(key interface{}, data interface{}) {
-	if c.conf.Enabled {
-		// Create a new entry and store it in the cache
-		c.lru.Add(key, &ttlEntry{
-			data:    data,
-			expires: time.Now().Add(c.conf.Expiration),
-		})
-	}
+func (c *TTL) Add(key interface{}, data interface{}) {
+	// Create a new entry and store it in the cache
+	c.lru.Add(key, &ttlEntry{
+		data:    data,
+		expires: time.Now().Add(c.conf.Expiration),
+	})
 }
 
 // Remove removes data from the cache by key.
-func (c *TTLCache) Remove(key interface{}) {
-	if c.conf.Enabled {
-		c.lru.Remove(key)
-	}
+func (c *TTL) Remove(key interface{}) {
+	c.lru.Remove(key)
 }

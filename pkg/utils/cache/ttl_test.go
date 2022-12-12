@@ -5,30 +5,21 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/bff/auth/cache"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/utils/cache"
 )
 
 func TestTTLCache(t *testing.T) {
-	// Disabled cache does not return values
-	conf := config.CacheConfig{}
-	items, err := cache.New(conf)
-	require.NoError(t, err, "could not create cache")
-	items.Add("foo", "bar")
-	_, ok := items.Get("foo")
-	require.False(t, ok, "cache should not return values when disabled")
-
-	// Test with an enabled cache
-	conf = config.CacheConfig{
-		Enabled:    true,
+	// Configure the cache
+	conf := config.CacheConfig{
 		Size:       100,
 		Expiration: time.Millisecond,
 	}
-	items, err = cache.New(conf)
+	items, err := cache.NewTTL(conf)
 	require.NoError(t, err, "could not create cache")
 
 	// Should return false for a non-existent key
-	_, ok = items.Get("foo")
+	_, ok := items.Get("foo")
 	require.False(t, ok, "cache should not return a value for a non-existent key")
 
 	// Should be able to add and get a value
@@ -50,11 +41,10 @@ func TestTTLCache(t *testing.T) {
 
 	// Fill up the cache
 	conf = config.CacheConfig{
-		Enabled:    true,
 		Size:       100,
 		Expiration: time.Minute,
 	}
-	items, err = cache.New(conf)
+	items, err = cache.NewTTL(conf)
 	require.NoError(t, err, "could not create cache")
 	for i := 0; i < int(conf.Size); i++ {
 		items.Add(i, i)

@@ -21,11 +21,11 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
-	"github.com/trisacrypto/directory/pkg/bff/auth/cache"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	docs "github.com/trisacrypto/directory/pkg/bff/docs"
 	"github.com/trisacrypto/directory/pkg/bff/emails"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/cache"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
@@ -106,8 +106,13 @@ func New(conf config.Config) (s *Server, err error) {
 			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
 		}
 
-		if s.users, err = cache.New(s.conf.UserCache); err != nil {
-			return nil, fmt.Errorf("could not initialize user cache: %s", err)
+		// Initialize the user cache or use a no-op cache if disabled
+		if s.conf.UserCache.Enabled {
+			if s.users, err = cache.NewTTL(s.conf.UserCache); err != nil {
+				return nil, fmt.Errorf("could not initialize user cache: %s", err)
+			}
+		} else {
+			s.users = &cache.Disabled{}
 		}
 
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
@@ -178,7 +183,7 @@ type Server struct {
 	db         store.Store
 	auth0      *management.Management
 	email      *emails.EmailManager
-	users      *cache.TTLCache
+	users      cache.Cache
 	started    time.Time
 	healthy    bool
 	url        string

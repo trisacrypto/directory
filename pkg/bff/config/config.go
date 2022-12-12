@@ -37,13 +37,13 @@ type Config struct {
 	LoginURL     string              `split_words:"true" required:"true"` // Trailing slash is not allowed
 	CookieDomain string              `split_words:"true"`
 	ServeDocs    bool                `split_words:"true" default:"false"`
+	UserCache    CacheConfig         `split_words:"true"`
 	Auth0        AuthConfig
 	TestNet      NetworkConfig
 	MainNet      NetworkConfig
 	Database     config.StoreConfig
 	Email        EmailConfig
 	Sentry       sentry.Config
-	UserCache    CacheConfig `split_words:"true"`
 	processed    bool
 }
 
@@ -96,8 +96,8 @@ type EmailConfig struct {
 
 type CacheConfig struct {
 	Enabled    bool          `split_words:"true" default:"false"`
-	Size       uint          `split_words:"true" default:"1024"`
-	Expiration time.Duration `split_words:"true" default:"12h"`
+	Size       uint          `split_words:"true" default:"16384"`
+	Expiration time.Duration `split_words:"true" default:"8h"`
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.

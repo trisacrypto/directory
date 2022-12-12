@@ -404,7 +404,7 @@ func (s *Server) FetchUserProfile(id string) (profile *auth.UserProfile, err err
 		// Add the fetched profile to the cache
 		s.users.Add(id, profile)
 	} else if profile, ok = data.(*auth.UserProfile); !ok {
-		return nil, errors.New("error asserting data from cache to UserProfile")
+		return nil, errors.New("invalid user profile cache entry")
 	}
 
 	return profile, nil
