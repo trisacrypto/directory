@@ -37,3 +37,8 @@ export const AUTH0_NAMESPACES = {
   CREATED_AT: 'https://vaspdirectory.net/created_at',
   LAST_LOGIN: 'https://vaspdirectory.net/last_login',
 };
+
+export const AUTH0_TYPE = {
+  AUTH0: 'auth0',
+  GOOGLE: 'google-oauth2',
+};

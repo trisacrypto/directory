@@ -77,8 +77,8 @@ const AddCollaboratorForm: FC<Props> = (props) => {
   return (
     <chakra.form onSubmit={handleSubmit(onSubmit)}>
       <VStack mb={5}>
-        <Text fontWeight={'bold'}>
-          <Trans>Please provide the name and email address for the new contact</Trans>
+        <Text fontSize="sm" fontWeight={'bold'}>
+          <Trans>Please Provide the Name and Email Address</Trans>
         </Text>
         <Text fontSize="sm">
           <Trans>
@@ -162,7 +162,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         <Button
           variant="outline"
           mb={4}
-          color="link"
+          color="ghost"
           data-test="cancel"
           disabled={isCreating}
           fontWeight={400}
