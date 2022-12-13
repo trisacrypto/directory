@@ -29,6 +29,7 @@ import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import ChooseAnOrganization from 'components/ChooseAnOrganization';
 import { colors } from 'utils/theme';
+import { canCreateOrganization } from 'utils/permission';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
@@ -51,6 +52,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
     resetStore();
     navigate('/');
   };
+
+  console.log('[] canCreateOrganization', canCreateOrganization());
+
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -86,7 +90,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         </HStack>
         <Divider orientation="vertical" height={8} />
         <Menu>
-          <MenuButton transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
+          <MenuButton data-testid="menu" transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
             <HStack>
               <Show above="lg">
                 <Text fontSize="sm" color="blackAlpha.700">
@@ -109,10 +113,12 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
             <MenuItem onClick={() => navigate('/dashboard/profile')}>
               <Trans id="Profile">Profile</Trans>
             </MenuItem>
-            <MenuItem onClick={onAccountSwitchOpen}>
-              <Trans id="Switch Accounts">Switch accounts</Trans>
-              <ChooseAnOrganization isOpen={isAccountSwitchOpen} onClose={onAccountSwitchClose} />
-            </MenuItem>
+            {canCreateOrganization() ? (
+              <MenuItem onClick={onAccountSwitchOpen} data-testid="switch_accounts">
+                <Trans id="Switch Accounts">Switch accounts</Trans>
+                <ChooseAnOrganization isOpen={isAccountSwitchOpen} onClose={onAccountSwitchClose} />
+              </MenuItem>
+            ) : null}
             <MenuDivider />
             <MenuItem onClick={handleLogout}>
               <Trans id="Sign out">Sign out</Trans>

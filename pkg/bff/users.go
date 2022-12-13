@@ -16,9 +16,6 @@ import (
 
 const (
 	// TODO: Need to make sure these roles are in sync with the roles in Auth0
-	LeaderRole         = "Organization Leader"
-	CollaboratorRole   = "Organization Collaborator"
-	TSPRole            = "TRISA Service Provider"
 	DoubleCookieMaxAge = 24 * time.Hour
 	OrgIDKey           = "orgid"
 	VASPsKey           = "vasps"
@@ -79,6 +76,14 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user's claims
+	var claims *auth.Claims
+	if claims, err = auth.GetClaims(c); err != nil {
+		log.Error().Err(err).Msg("could not fetch user claims")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
+		return
+	}
+
 	// Ensure the user resources are correctly populated.
 	// If the user is not associated with an organization, create it.
 	appdata := &auth.AppMetadata{}
@@ -100,7 +105,7 @@ func (s *Server) Login(c *gin.Context) {
 	switch len(roles.Roles) {
 	case 0:
 		// Default users to the organization collaborator role
-		userRole = CollaboratorRole
+		userRole = auth.CollaboratorRole
 	case 1:
 		prevRole = *roles.Roles[0].Name
 		userRole = prevRole
@@ -180,6 +185,7 @@ func (s *Server) Login(c *gin.Context) {
 
 		// Other endpoints expect the user's verification status to be up to date
 		collaborator.Verified = *user.EmailVerified
+		collaborator.UserId = *user.ID
 		collaborator.ExpiresAt = ""
 	}
 
@@ -189,21 +195,23 @@ func (s *Server) Login(c *gin.Context) {
 		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
-	if userRole == TSPRole {
-		// TSP users can be added to multiple organizations
+	if claims.HasPermission(auth.SwitchOrganizations) {
+		// If the user can be in multiple organizations, add the selected organization
+		// to the user's list.
 		appdata.AddOrganization(org.Id)
 	} else {
-		// Organizations with one collaborator need a leader to add other collaborators
-		if userRole == CollaboratorRole && len(org.Collaborators) == 1 {
-			userRole = LeaderRole
+		// Make sure users are able to add collaborators if they are the only member of
+		// their organization.
+		if !claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) == 1 {
+			userRole = auth.LeaderRole
 		}
 
 		// Non-TSP users can only exist in one organization
 		if appdata.OrgID != "" && org.Id != appdata.OrgID {
-			// When switching to a new organization, make sure leader roles are not
-			// unintentionally preserved
-			if userRole == LeaderRole && len(org.Collaborators) > 1 {
-				userRole = CollaboratorRole
+			// Users should not be able to add collaborators if they are migrated to an
+			// existing organization.
+			if claims.HasPermission(auth.UpdateCollaborators) && len(org.Collaborators) > 1 {
+				userRole = auth.CollaboratorRole
 			}
 
 			// Remove the collaborator record from the previous organization
@@ -333,6 +341,10 @@ func (s *Server) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Invalidate the user's cache entry so that the updated profile is returned from
+	// the backend.
+	s.users.Remove(*user.ID)
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -411,6 +423,9 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 		}
 	}
 
+	// Invalidate the user's cache entry so updated roles are returned from the backend
+	s.users.Remove(userID)
+
 	return nil
 }
 
@@ -425,24 +440,30 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 func (s *Server) ListUserRoles(c *gin.Context) {
 	// TODO: This is currently a static list which must be maintained to be in sync
 	// with the roles defined in Auth0.
-	c.JSON(http.StatusOK, []string{CollaboratorRole, LeaderRole})
+	c.JSON(http.StatusOK, []string{auth.CollaboratorRole, auth.LeaderRole})
 }
 
-// FindUserByEmail returns the Auth0 user record by email address.
+// FindUserByEmail returns the Auth0 user record by email address. This method returns
+// an ErrUserEmailNotFound error if the user does not exist and returns the first user
+// if there are multiple users with the same email address.
 func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
 	var users []*management.User
 	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
 		return nil, err
 	}
 
-	switch len(users) {
-	case 0:
+	if len(users) == 0 {
 		return nil, ErrUserEmailNotFound
-	case 1:
-		return users[0], nil
-	default:
-		return nil, ErrMultipleEmailUsers
 	}
+
+	if len(users) > 1 {
+		// TODO: This can happen if the user has authenticated with Auth0 using
+		// multiple identities (e.g. email and Google). We might be able to handle this
+		// by linking the identities.
+		log.Warn().Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
+	}
+
+	return users[0], nil
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

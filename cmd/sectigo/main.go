@@ -266,6 +266,11 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "validate",
+			Usage:  "validate the current server configuration",
+			Action: validate,
+		},
 	}
 
 	app.Run(os.Args)
@@ -586,6 +591,15 @@ func serve(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 	return nil
+}
+
+// validate checks the current trtl configuration and prints the status.
+func validate(c *cli.Context) (err error) {
+	var conf server.Config
+	if conf, err = server.NewConfig(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(conf)
 }
 
 func printJSON(data interface{}) (err error) {

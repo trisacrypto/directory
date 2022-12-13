@@ -43,3 +43,4 @@ export const canInviteCollaborator = () => {
 export const canCreateOrganization = () => {
   return hasPermission(USER_PERMISSION.CREATE_ORGANIZATIONS);
 };
+

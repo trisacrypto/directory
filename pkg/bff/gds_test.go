@@ -92,7 +92,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must not panic if it does not
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 
 	_, err = s.client.LoadRegistrationForm(context.TODO())
@@ -172,7 +172,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must panic if it does not
-	claims.Permissions = []string{"update:vasp"}
+	claims.Permissions = []string{auth.UpdateVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 	_, err = s.client.SaveRegistrationForm(context.TODO(), form)
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -287,7 +287,7 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 		// Claims must have an organization ID and the server must panic if it does not
-		claims.Permissions = []string{"update:vasp"}
+		claims.Permissions = []string{auth.UpdateVASP}
 		require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 		_, err = s.client.SubmitRegistration(context.TODO(), network)
 		s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -626,7 +626,7 @@ func (s *bffTestSuite) TestCertificates() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Set valid credentials for the remainder of the tests
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	claims.VASPs["testnet"] = testnetVASP.Id
 	claims.VASPs["mainnet"] = mainnetVASP.Id
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
@@ -754,7 +754,7 @@ func (s *bffTestSuite) TestAttention() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.Attention(context.TODO())
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
@@ -1004,7 +1004,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID
-	claims.Permissions = []string{"read:vasp"}
+	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
 	_, err = s.client.RegistrationStatus(context.TODO())
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")

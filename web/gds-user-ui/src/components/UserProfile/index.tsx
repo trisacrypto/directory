@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
 import UserDetails from './UserDetails';
 import { UserProfilePassword } from './UserProfilePassword';
-
+import { isSocialLogin } from 'utils/auth';
 export const ProfileBlock = ({ title, children }: { title: ReactNode; children: ReactNode }) => {
   return (
     <VStack align="start" w="100%" spacing={5}>
@@ -42,7 +42,6 @@ const EditableInput = (props: _FormControlProps) => {
 
 function UserProfile() {
   const { user } = useSelector(userSelector);
-  const isSocialConnection = () => user?.authType !== 'auth0';
   return (
     <>
       <Heading size="lg" mb={5}>
@@ -52,33 +51,40 @@ function UserProfile() {
         <VStack w="100%" align="start" spacing={8}>
           <ProfileBlock title={<Trans>Login & Identity</Trans>}>
             <Stack direction="row" justifyContent="space-between" w="100%">
-              <VStack align="start">
-                <VStack align="start">
+              <VStack align="start" spacing={3}>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Email Address</Trans>
                   </Text>
-                  <Text>{user?.email}</Text>
-                </VStack>
-                <VStack align="start">
+                  <Text mt={'0 !important'}>{user?.email}</Text>
+                </div>
+                <div>
                   <Text fontWeight={700}>
                     <Trans>Account ID</Trans>
                   </Text>
-                  <Text>{user?.id}</Text>
-                </VStack>
+                  <Text mt={'0 !important'}>{user?.id}</Text>
+                </div>
+                <div>
+                  <Text fontWeight={700}>
+                    <Trans>Provider</Trans>
+                  </Text>
+                  <Text mt={'0 !important'}>{user?.authType}</Text>
+                </div>
               </VStack>
-              <VStack>
+              <Stack>
                 <CkLazyLoadImage
                   borderRadius="50%"
                   src={user?.pictureUrl || UserProfileIcon}
                   mx="auto"
+                  h="150px"
                 />
-              </VStack>
+              </Stack>
             </Stack>
 
             <EditableInput
               label={
                 <FormLabel fontWeight={700}>
-                  <Trans>Fullname </Trans>
+                  <Trans>Full name</Trans>
                 </FormLabel>
               }
               isDisabled={true}
@@ -87,7 +93,7 @@ function UserProfile() {
             />
           </ProfileBlock>
 
-          {!isSocialConnection() && <UserProfilePassword />}
+          {!isSocialLogin() && <UserProfilePassword />}
 
           <UserDetails />
         </VStack>

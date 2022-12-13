@@ -127,6 +127,7 @@ type AnnouncementStore interface {
 
 // OrganizationStore describes how services interact with the Organization records.
 type OrganizationStore interface {
+	ListOrganizations() iterator.OrganizationIterator
 	CreateOrganization(o *bff.Organization) (string, error)
 	RetrieveOrganization(id uuid.UUID) (*bff.Organization, error)
 	UpdateOrganization(o *bff.Organization) error
